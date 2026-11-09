@@ -10,7 +10,12 @@ defines general current-position handback. Its retained-worker runtime wiring
 is committed, with production checkpoint `da55414f` and subsequent focused
 component passes. The later `58af0a53` probe passes cold CALL and indirect-JMP
 handback but fails its overall checker at a post-RET continuation. Candidate
-`bccf877c` adds untested harness fixes; further live validation is blocked.
+`bccf877c` records subsequent harness fixes. The later bounded mmap1
+[learning run](../bench/results/10.176.26.71/tests/mmap1-continuation-2d8eb6e3-20261109/README.md)
+ends at its settlement deadline and recovers normally, without accepted
+throughput. The [release-unit correction](../bench/results/10.176.26.71/tests/release-units-40edde00-20261109/README.md)
+passes focused component checks and a provider build; it has not been loaded
+or measured.
 
 ## Preparation and entry
 

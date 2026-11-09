@@ -1,0 +1,223 @@
+{
+  "boot_id": "1eeab914-c1d7-4c69-bc7c-1db2921c3135",
+  "checks": [
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-u",
+        "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/work/tests/unit/run.py",
+        "codegen/test_release_units.py",
+        "-v"
+      ],
+      "artifact": null,
+      "log": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/receipts/codegen-test_release_units.log",
+      "log_sha256": "0337c39925ce81ea5f5a89e5b3d20344897d988b6c80bd8ce17027789f1f5fb5",
+      "name": "codegen-test_release_units",
+      "returncode": 0,
+      "skip_lines": [],
+      "status": "passed",
+      "tail": "test_decoder_stops_before_call_and_jump_release_suffixes (__main__.ReleaseUnitTests.test_decoder_stops_before_call_and_jump_release_suffixes) ... /mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:184: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'starargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  res = ast.Call(func=ast.Name(id='ExprAssign',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:184: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'kwargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  res = ast.Call(func=ast.Name(id='ExprAssign',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:99: DeprecationWarning: arg.__init__ got an unexpected keyword argument 'ctx'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  return ast.arg(arg=name, ctx=ctx)\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:209: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'starargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  dst = ast.Call(func=ast.Name(id='ExprCond',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:209: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'kwargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  dst = ast.Call(func=ast.Name(id='ExprCond',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:230: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'starargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  blocks[-1][-1].append(ast.Call(func=ast.Name(id='ExprAssign',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:230: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'kwargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  blocks[-1][-1].append(ast.Call(func=ast.Name(id='ExprAssign',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:248: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'starargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  jmp_end = ast.Call(func=ast.Name(id='ExprAssign',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:248: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'kwargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  jmp_end = ast.Call(func=ast.Name(id='ExprAssign',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:260: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'starargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  assignblk = ast.Call(func=ast.Name(id='AssignBlock',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:260: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'kwargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  assignblk = ast.Call(func=ast.Name(id='AssignBlock',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:274: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'starargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  sub_blocks[-1] = ast.Call(func=ast.Name(id='IRBlock',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:274: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'kwargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  sub_blocks[-1] = ast.Call(func=ast.Name(id='IRBlock',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:88: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'starargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  return ast.Call(func=ast.Name(id='ExprCompose',\n/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/lib/python3.14/site-packages/miasm/core/sembuilder.py:88: DeprecationWarning: Call.__init__ got an unexpected keyword argument 'kwargs'. Support for arbitrary keyword arguments is deprecated and will be removed in Python 3.15.\n  return ast.Call(func=ast.Name(id='ExprCompose',\nok\ntest_deferred_callee_does_not_fetch_callers_continuation_early (__main__.ReleaseUnitTests.test_deferred_callee_does_not_fetch_callers_continuation_early) ... ok\ntest_downgrade_and_read_release_end_unit_without_reacquisition (__main__.ReleaseUnitTests.test_downgrade_and_read_release_end_unit_without_reacquisition) ... ok\ntest_early_decoder_inner_clobber_stop_requires_retained_service (__main__.ReleaseUnitTests.test_early_decoder_inner_clobber_stop_requires_retained_service) ... ok\ntest_first_release_ends_unit_for_any_source_object (__main__.ReleaseUnitTests.test_first_release_ends_unit_for_any_source_object) ... ok\ntest_flat_terminal_clobber_keeps_existing_image_requirements (__main__.ReleaseUnitTests.test_flat_terminal_clobber_keeps_existing_image_requirements) ... ok\ntest_indirect_native_return_contract_is_distinct_from_fresh_native_exit (__main__.ReleaseUnitTests.test_indirect_native_return_contract_is_distinct_from_fresh_native_exit) ... ok\ntest_indirect_ordinary_target_in_deferred_set_is_not_a_native_return (__main__.ReleaseUnitTests.test_indirect_ordinary_target_in_deferred_set_is_not_a_native_return) ... ok\ntest_indirect_release_callees_need_a_release_free_return_path (__main__.ReleaseUnitTests.test_indirect_release_callees_need_a_release_free_return_path) ... ok\ntest_indirect_tail_return_contract_preserves_only_possible_return_paths (__main__.ReleaseUnitTests.test_indirect_tail_return_contract_preserves_only_possible_return_paths) ... ok\ntest_native_release_descriptors_keep_call_word_and_exclude_suffix (__main__.ReleaseUnitTests.test_native_release_descriptors_keep_call_word_and_exclude_suffix) ... ok\ntest_nested_callee_release_stops_every_callers_suffix (__main__.ReleaseUnitTests.test_nested_callee_release_stops_every_callers_suffix) ... ok\ntest_ordinary_return_retains_actual_call_return_dispatch (__main__.ReleaseUnitTests.test_ordinary_return_retains_actual_call_return_dispatch) ... ok\ntest_release_in_callee_does_not_select_callers_suffix_or_history_island (__main__.ReleaseUnitTests.test_release_in_callee_does_not_select_callers_suffix_or_history_island) ... ok\ntest_release_tail_and_cycle_do_not_invent_a_callee_return (__main__.ReleaseUnitTests.test_release_tail_and_cycle_do_not_invent_a_callee_return) ... ok\ntest_returning_branch_keeps_callers_suffix_without_release_branch_suffix (__main__.ReleaseUnitTests.test_returning_branch_keeps_callers_suffix_without_release_branch_suffix) ... ok\ntest_work_refusal_does_not_mutate_decoded_blocks (__main__.ReleaseUnitTests.test_work_refusal_does_not_mutate_decoded_blocks) ... ok\n\n----------------------------------------------------------------------\nRan 17 tests in 0.178s\n\nOK\n",
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-u",
+        "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/work/tests/unit/run.py",
+        "execution/test_release_units.py",
+        "-v"
+      ],
+      "artifact": null,
+      "log": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/receipts/execution-test_release_units.log",
+      "log_sha256": "a8def997a6b72cad5a70b23b50801f501c7ee0791907e3d94c05208beddae78c",
+      "name": "execution-test_release_units",
+      "returncode": 0,
+      "skip_lines": [],
+      "status": "passed",
+      "tail": "PASS production release units: five KD boundaries, three Native releases, ordinary CALL and refusal ordering\nrelease boundary refused incomplete CALL: pending\nrelease boundary refused incomplete CALL: unadvanced\nrelease unit mutation detected: resume_after_kd_release\nrelease unit mutation detected: resume_after_native_release\nrelease unit mutation detected: consume_release_call_twice\nrelease unit mutation detected: finish_at_downgrade\n",
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-u",
+        "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/work/tests/unit/run.py",
+        "execution/test_jit_entry_scope.py",
+        "-v"
+      ],
+      "artifact": null,
+      "log": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/receipts/execution-test_jit_entry_scope.log",
+      "log_sha256": "cb0b398eed60d7e987866ef2ee18ed4ccfccac857134e0c1a77798bf4a4b92e3",
+      "name": "execution-test_jit_entry_scope",
+      "returncode": 0,
+      "skip_lines": [],
+      "status": "passed",
+      "tail": "production JIT entry scope: 9501 checks, 0 failures\nentry/hostcall mutation detected: mismatch-terminal-bypasses-publication-gate\nentry/hostcall mutation detected: tail-skips-source-site-lease\nentry/hostcall mutation detected: tail-skips-source-end-lease\nentry/hostcall mutation detected: tail-skips-caller-return-lease\nentry/hostcall mutation detected: tail-accepts-call-opcode\nentry/hostcall mutation detected: tail-accepts-four-cs-prefixes\nentry/hostcall mutation detected: tail-accepts-cs-memory-operand\nentry/hostcall mutation detected: tail-skips-image-requirement\nentry/hostcall mutation detected: indirect-cs-accepts-four-prefixes\nentry/hostcall mutation detected: indirect-cs-accepts-memory-operand\nentry/hostcall mutation detected: indirect-accepts-jump-opcode\nentry/hostcall mutation detected: indirect-accepts-wrong-return-word\nentry/hostcall mutation detected: indirect-skips-source-site-lease\nentry/hostcall mutation detected: indirect-skips-source-tail-lease\nentry/hostcall mutation detected: indirect-learns-terminal-target\nentry/hostcall mutation detected: terminal-target-never-recognized\nentry/hostcall mutation detected: indirect-keeps-source-site-as-restore-tag\nentry/hostcall mutation detected: instruction-marker-still-disables\nentry/hostcall mutation detected: instruction-marker-reopens-entry\nentry/hostcall mutation detected: direct-entry-executor-is-waiter\nentry/hostcall mutation detected: direct-counts-not-observed\nentry/hostcall mutation detected: direct-limit-accepts-under-quota\nentry/hostcall mutation detected: direct-image-needs-pristine-packet\nentry/hostcall mutation detected: mutex-generic-skips-materialization\nentry/hostcall mutation detected: mutex-batch-final-completion-disabled\nentry/hostcall mutation detected: mutex-batch-wrong-backend-endpoint\nentry/hostcall mutation detected: mutex-batch-uses-private-stack\nentry/hostcall mutation detected: mutex-batch-skips-ledger-admission\nentry/hostcall mutation detected: batch-clobber-uses-legacy-entry\nentry/hostcall mutation detected: batch-clobber-uses-legacy-unlock\nentry/hostcall mutation detected: batch-completion-abi-inverted\nentry/hostcall mutation detected: dispatch-rehashes-entry\nentry/hostcall mutation detected: dispatch-reuses-old-ready-result\nentry/hostcall mutation detected: ready-ignores-closing\nentry/hostcall mutation detected: ready-plain-status-read\nentry/hostcall mutation detected: timing-clock-ignores-disable\nentry/hostcall mutation detected: timing-wrapper-not-counted\nentry/hostcall mutation detected: timing-overflow-not-marked\nentry/hostcall mutation detected: timing-hostcall-misclassified\nentry/hostcall mutation detected: scalar-argument-truncated\nentry/hostcall mutation detected: scalar-wrong-argument-register\nentry/hostcall mutation detected: scalar-result-sign-extended\nentry/hostcall mutation detected: service-flags-bypassed\nentry/hostcall mutation detected: unresolved-service-matched\nentry/hostcall mutation detected: shared-service-budget-bypassed\nentry/hostcall mutation detected: service-return-not-consumed\nentry/hostcall mutation detected: service-error-ignored\nentry/hostcall mutation detected: service-error-allows-replay\nentry/hostcall mutation detected: quota-invokes-excess-service\nentry/hostcall mutation detected: quota-consumes-pending-return\nentry/hostcall mutation detected: quota-retains-stale-control-phase\nentry/hostcall mutation detected: quota-skips-return-source-pin\nentry/hostcall mutation detected: quota-requests-callee-learning\nentry/hostcall mutation detected: string-result-sign-extended\nentry/hostcall mutation detected: string-quota-bypassed\nentry/hostcall mutation detected: string-requirement-bypassed\nentry/hostcall mutation detected: string-return-pin-bypassed\nentry/hostcall mutation detected: copy-result-truncated\n",
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-u",
+        "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/work/tests/unit/run.py",
+        "mutex/test_rwsem_read_release.py",
+        "-v"
+      ],
+      "artifact": null,
+      "log": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/receipts/mutex-test_rwsem_read_release.log",
+      "log_sha256": "12b753d80e7f9d5018feaadfecb5fe6eb9442e8205ea0453f109776fd11abded",
+      "name": "mutex-test_rwsem_read_release",
+      "returncode": 0,
+      "skip_lines": [],
+      "status": "passed",
+      "tail": "PASS production reader release: last credit is final object access; post-final notification negative control detected\n",
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-u",
+        "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/work/tests/unit/run.py",
+        "execution/test_native_service_join.py",
+        "-v"
+      ],
+      "artifact": null,
+      "log": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/receipts/execution-test_native_service_join.log",
+      "log_sha256": "b4228bbbacb8420a66a96b1054b174627a34d12c8d44b7a414cb5b85d59ec63a",
+      "name": "execution-test_native_service_join",
+      "returncode": 0,
+      "skip_lines": [],
+      "status": "passed",
+      "tail": "PASS production Native service join: write; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives\nPASS production Native service join: downgrade; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives\nPASS production Native service join: read; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives\nPASS production Native service join: release; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives\n",
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-u",
+        "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/work/tests/unit/run.py",
+        "mutex/test_admission.py",
+        "-v"
+      ],
+      "artifact": null,
+      "log": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/receipts/mutex-test_admission.log",
+      "log_sha256": "fbf813feb8c538e8e9d320d18440000260219ab638c9504744ebc8363e31d776",
+      "name": "mutex-test_admission",
+      "returncode": 0,
+      "skip_lines": [],
+      "status": "passed",
+      "tail": "PASS production canonical admission: 15 cases; actual queue, phase, PICKUP and cancellation paths; deterministic primitives only\ncanonical admission mutation detected: signal_before_actual_grant\ncanonical admission mutation detected: missing_fresh_reader_drain\ncanonical admission mutation detected: executor_signal_instead_of_origin\ncanonical admission mutation detected: writer_bypasses_queued_readers\n",
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module",
+        "KDIR=/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+        "-j4",
+        "W=1",
+        "KDLOCK_SELFTEST=0",
+        "KDLOCK_NUMA=1",
+        "KDLOCK_SPIN_BATCH=1024",
+        "KDLOCK_MUTEX_BATCH=1024",
+        "KDLOCK_MUTEX_NUMA_BOUNDARY=1024",
+        "KDLOCK_JIT_IMAGES=128",
+        "KDLOCK_MUTEX_DIAGNOSTICS=0"
+      ],
+      "artifact": {
+        "bytes": 7782104,
+        "path": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module/kdlock_km.ko",
+        "sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c"
+      },
+      "log": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/receipts/provider-build-only.log",
+      "log_sha256": "8b462dd3db0d66d80874905f97308e97d37ddca5477c1191e21665dfc948674e",
+      "name": "provider-build-only",
+      "returncode": 0,
+      "skip_lines": [],
+      "status": "passed",
+      "tail": "make: Entering directory '/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module'\nmake -C /mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build M=/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module modules\nmake[1]: Entering directory '/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build'\nmake[2]: Entering directory '/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module'\nwarning: the compiler differs from the one used to build the kernel\n  The kernel was built by: x86_64-linux-gnu-gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\n  You are using:           gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\n  CC [M]  kd_main.o\n  CC [M]  kd_bench.o\n  CC [M]  kd_api_provider.o\n  CC [M]  kd_lock.o\n  CC [M]  kd_hotlock.o\n  CC [M]  sys.o\n  CC [M]  kd_spin_runtime.o\n  CC [M]  kd_source.o\n  CC [M]  kd_family.o\n  CC [M]  kd_spin_entry.o\n  CC [M]  kd_mutex_tasks.o\n  CC [M]  kd_wait_queue.o\n  CC [M]  kd_admission.o\n  CC [M]  kd_mutex_local.o\n  CC [M]  kd_mutex_osq.o\n  CC [M]  kd_rwsem.o\n  CC [M]  kd_rwsem_api.o\n  CC [M]  kd_rwsem_provider.o\n  CC [M]  kd_service_api.o\n  CC [M]  kd_service_calls.o\n  AS [M]  kd_service_call_entry.o\n  LD [M]  kdlock_km.o\nkdlock_km.o: warning: objtool: kd_spin_restore_request+0x6a: 'naked' return found in MITIGATION_RETHUNK build\nkdlock_km.o: warning: objtool: jump_to_saved_regs+0x43: 'naked' return found in MITIGATION_RETHUNK build\nkdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x73: 'naked' return found in MITIGATION_RETHUNK build\nkdlock_km.o: warning: objtool: kd_jump_to_saved_regs_with_flags+0x60: return with modified stack frame\nkdlock_km.o: warning: objtool: kd_mutex_resume_completed+0x17c: undefined stack state\nkdlock_km.o: warning: objtool: run_combiner+0x131e: call without frame pointer save/setup\nkdlock_km.o: warning: objtool: _kd_mutex_lock_abi+0x266: call without frame pointer save/setup\nkdlock_km.o: warning: objtool: kd_service_origin_bridge+0x2b: call without frame pointer save/setup\nkdlock_km.o: warning: objtool: kd_service_origin_terminal_bridge+0x17: call without frame pointer save/setup\nkdlock_km.o: warning: objtool: kd_service_memory_bridge+0x2b: call without frame pointer save/setup\n  MODPOST Module.symvers\n  CC [M]  kdlock_km.mod.o\n  CC [M]  .module-common.o\n  LD [M]  kdlock_km.ko\n  BTF [M] kdlock_km.ko\nmake[2]: Leaving directory '/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module'\nmake[1]: Leaving directory '/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build'\nmake: Leaving directory '/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module'\n",
+      "timeout_seconds": 480
+    }
+  ],
+  "checks_bundle_sha256": "db55e8b1ae39781dfea0f8d8c7a0f6ab10a412dfa0727edba52a64d279dbc341",
+  "final_idle": {
+    "modules": [],
+    "source_processes": [],
+    "tasks": []
+  },
+  "frozen_source_unchanged": true,
+  "guest_output": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz",
+  "kernel_inputs_unchanged": true,
+  "live_workload_run": false,
+  "local_output": "/tmp/kdlock-batch-checks-ads4eary",
+  "module_loaded": false,
+  "original_host_receipts_unchanged": true,
+  "original_manifest_set_unchanged": true,
+  "passed": true,
+  "performance_measured": false,
+  "prepared_source_unchanged": true,
+  "provider": {
+    "bytes": 7782104,
+    "elf_build_ids": [
+      "978e03eca714cffd6bb7a17bbce0a726eab1f5cd"
+    ],
+    "path": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module/kdlock_km.ko",
+    "sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+    "undefined_interface_symbols": [
+      "kd_api_cancel_selector",
+      "kd_api_query_current",
+      "kd_api_register_provider",
+      "kd_api_select_current",
+      "kd_api_sites",
+      "kd_api_unregister_provider",
+      "kd_rwsem_provider_controls",
+      "kd_rwsem_provider_resume",
+      "kd_rwsem_provider_sites",
+      "kd_rwsem_register_provider",
+      "kd_rwsem_unregister_provider"
+    ],
+    "vermagic": "7.0.0-38-kdscope5 SMP preempt mod_unload modversions"
+  },
+  "provider_preparation_manifest_sha256": "4e8ac6e1b8c99bad164fa1da185a3f0b665673bfd07b93db59c7daf323f37eb6",
+  "provider_warning_lines": [
+    "warning: the compiler differs from the one used to build the kernel",
+    "kdlock_km.o: warning: objtool: kd_spin_restore_request+0x6a: 'naked' return found in MITIGATION_RETHUNK build",
+    "kdlock_km.o: warning: objtool: jump_to_saved_regs+0x43: 'naked' return found in MITIGATION_RETHUNK build",
+    "kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x73: 'naked' return found in MITIGATION_RETHUNK build",
+    "kdlock_km.o: warning: objtool: kd_jump_to_saved_regs_with_flags+0x60: return with modified stack frame",
+    "kdlock_km.o: warning: objtool: kd_mutex_resume_completed+0x17c: undefined stack state",
+    "kdlock_km.o: warning: objtool: run_combiner+0x131e: call without frame pointer save/setup",
+    "kdlock_km.o: warning: objtool: _kd_mutex_lock_abi+0x266: call without frame pointer save/setup",
+    "kdlock_km.o: warning: objtool: kd_service_origin_bridge+0x2b: call without frame pointer save/setup",
+    "kdlock_km.o: warning: objtool: kd_service_origin_terminal_bridge+0x17: call without frame pointer save/setup",
+    "kdlock_km.o: warning: objtool: kd_service_memory_bridge+0x2b: call without frame pointer save/setup"
+  ],
+  "running_release": "7.0.0-38-kdlock1",
+  "schema": 1,
+  "source_archive_sha256": "d371659483cf43a13ae6e0635562dc85cd4f5105dbef6cff2cf4b70834515109",
+  "source_commit": "40edde00525b71207246bbde4935767cbcb21fb7",
+  "source_files": 1099,
+  "work_source_unchanged": true
+}
