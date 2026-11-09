@@ -1,2 +1,0 @@
-0xffffffffc0000f22 0xffffffffc0e318d0
-0xffffffffc0e318e7 0xffffffff814f469a

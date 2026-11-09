@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "<stdin>", line 5, in <module>
-  File "/tmp/kdlock-qemu-stable-pool-capture-host-20261030.py", line 182, in capture
-    require(all(after[key] == host['qemu'][0][key] for key in ('pid', 'start_ticks', 'args', 'tasks')),
-  File "/tmp/kdlock-qemu-stable-pool-capture-host-20261030.py", line 23, in require
-    raise ValueError(message)
-ValueError: QEMU process/task identities or placement changed across monitor observation

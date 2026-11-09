@@ -1,7 +1,7 @@
 # kdlock redesign documentation set
 
 **Status:** integrated design for review, not an implementation claim  
-**Target:** Linux 7, x86_64, non-PREEMPT_RT  
+**Target:** Linux 7.0, x86_64, non-PREEMPT_RT
 **Revision:** 1.6, path-specific frontiers and local flags-stack contract
 **Scope:** a complete kdlock redesign for general lock replacement, independent of the ongoing mmap1 workstream
 
@@ -31,7 +31,7 @@ This set guides a refactor or rewrite. The latest explicit user directions and s
 
 | Class | Origin and force | Examples |
 | --- | --- | --- |
-| F | Explicit fixed user direction | Original UB-derived JIT/GS lowering, lock-integrated helpers, optional unique selection, source-operation boundaries, exact no-replay handback, cumulative learning, general replacement, one core/two reference levels and Linux 7 x86_64 non-PREEMPT_RT |
+| F | Explicit fixed user direction | Original UB-derived JIT/GS lowering, lock-integrated helpers, optional unique selection, source-operation boundaries, exact no-replay handback, cumulative learning, general replacement, one core/two reference levels and Linux 7.0 x86_64 non-PREEMPT_RT |
 | S | Semantic correctness or native-API obligation | Required exclusion/concurrency, API results, unique grant/release authority, actual context effects, ordering, exact continuation and last-user lifetime |
 | P | Target mechanism/policy requiring a deliberate choice | Adapter ABI, integration compatibility, backend/queues, reader placement, pinning/waiting, capacities, node control, update/reclamation and rollout |
 | E | Historical/current source or execution evidence | Pinned packet offsets/two-word adapter, node arrays, 32-row ledger, existing owner routing, support limits and recorded receipts |
@@ -57,7 +57,7 @@ The files are one design. A proposal in one file is not an implementation claim 
 
 ## Established target directions and semantic requirements (F/S)
 
-- The target is Linux 7 on x86_64 without PREEMPT_RT. Support depends on the exact kernel revision, configuration and API variant.
+- The target is Linux 7.0 on x86_64 without PREEMPT_RT. Support depends on the exact kernel revision, configuration and API variant.
 - The goal is general lock replacement with valid local/native routes. No mmap/munmap-specific structure, dispatch key, function-name exception or execution architecture is selected.
 - kdlock is the lock. Its delegation and JIT helpers execute within lock acquisition, combining, waiting and release paths. No background execution worker is required by this architecture.
 - Delegation is optional. Publishing eligibility does not irrevocably assign the source continuation to another task.
@@ -77,7 +77,7 @@ The files are one design. A proposal in one file is not an implementation claim 
 - Reader concurrency, mode, result and context semantics hold under the execution placement explicitly selected by C10. No unselected remote-reader or other unsupported route is enabled by this document.
 - Intentional lock boundaries and permanent capability frontiers are distinct from ordinary learning misses. Compiler budgets have precise resource classes and bounded forward behavior.
 - Observability separates application completion, local execution, fragment completion, native handback and whole-root JIT return, with actual exit cursor/reason and ownership phase when attribution matters.
-- This delivery specifies documentation and a future implementation plan. It does not implement code, modify the ongoing mmap1 task, approve kernel installation or assert performance.
+- This baseline specifies the active design and incremental implementation plan. It contains no implementation, does not establish kernel integration and asserts no performance result.
 
 ## Vocabulary
 
@@ -116,4 +116,4 @@ The source program, not frame depth or the first symbol containing "unlock," det
 
 Fixed F directions and S obligations are not mechanism questions. Decisions C01 through C12 select integration/compatibility, storage, adapter ABI, grant authority/arbitration, generation binding, learning/update policies and API/context/reader lanes. They cannot replace the original JIT, duplicate W state, weaken semantics or substitute an application-specific design. Choosing an extension requires its own scope and proof; leaving it open neither prohibits it permanently nor authorizes it now. See the plan's prioritized confirmation list.
 
-The verified delivery target is the existing **restructure the kdlock** session, thread `01a1bc4f-fc6c-7be3-8fe9-be6744999b40` on `remote-ssh-discovered:380G10-1`, project `/home/eric/vm/vm-shared/kdlock`. The files are individual Markdown documents for incremental audit; no ZIP is required.
+This Linux 7.0-only baseline keeps the five individual Markdown documents for incremental audit. The complete unsanitized design snapshot remains recoverable through the archive reference named in the repository README.

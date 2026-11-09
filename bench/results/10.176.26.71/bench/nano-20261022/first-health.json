@@ -1,8 +1,0 @@
-{
-  "idle": true,
-  "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
-  "kernel": "6.1.159-kdclobber2",
-  "per_session_kernel_faults": [],
-  "captured": 1792679500.544546,
-  "scope": "idle after first progress-validation failure; interim boundary, not completed matrix"
-}

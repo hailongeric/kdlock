@@ -1,6 +1,0 @@
-{
-  "cleanup_performed": false,
-  "drain_verified": false,
-  "message": "Guest returned no final receipt; inspect guest stdout/stderr, exit=255",
-  "type": "RuntimeError"
-}

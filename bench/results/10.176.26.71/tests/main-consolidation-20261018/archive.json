@@ -1,8 +1,0 @@
-{
-  "path": "bench/results/10.176.26.71/raw/tests/main-consolidation-20261018/evidence.tar.gz",
-  "sha256": "b04153312ff2208b8ee8f4f51f1f4d44cc7b3b2635b0bd896c15c581d02fbcbb",
-  "bytes": 269970,
-  "members": 27,
-  "guest": "/mnt/kdlock-builds/main-consolidation-20261018",
-  "result": "PASS"
-}

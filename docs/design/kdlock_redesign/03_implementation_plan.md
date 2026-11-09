@@ -24,7 +24,7 @@ These requirements govern either refactoring or clean reimplementation; they do 
 - AS01 explicitly assumes general flags/SIMD correct with no separate general handling in this iteration. PUSHFQ/POPFQ alone require the specified intermediate-GPR local lowering; no general subsystem, shadow state or blanket gate is selected.
 - Miss handback preserves the unfinished current continuation without replay.
 - Learning is cumulative, source-versioned and independent of current execution.
-- Linux 7 x86_64 non-PREEMPT_RT, native lock/API/context semantics and exact physical release obligations remain the target.
+- Linux 7.0 x86_64 non-PREEMPT_RT, native lock/API/context semantics and exact physical release obligations remain the target.
 - Reader concurrency, modes, API results and actual context obligations remain correct under the explicitly chosen placement. Origin-local is a conservative proposed initial lane; remote-reader execution is neither permanently banned nor authorized.
 
 Minimal bounded structured recursion, call-local control and lock-local ordering are starting P, not a claim that a complete current S_W exists. A fresh core/node/backend/adapter is allowed. Extra records/refcounts need a concrete reason. The choices below require review; proposed defaults are not user acceptance or implementation authorization.
@@ -155,7 +155,7 @@ Keep deliberate boundaries/capability dispositions separate from ordinary covera
 
 Select additional reader/writer, signalable, mode, mixed-family and context/configuration lanes under C01/C10. Origin-local readers are the conservative proposed initial lane, not a fixed rewrite restriction. Remote reader placement, debug/lockdep configurations and IRQ-related extensions remain unselected/unvalidated until explicitly scoped and proved; the current support exclusions do not permanently decide the target.
 
-Do not copy TCLock's historical killable shortcut, disabled downgrade, forced caller changes or borrowed-stack/task metadata as if those were faithful Linux 7 semantics. Do not infer that one-CAS mutex-to-spin success proves contended mixed support.
+Do not copy TCLock's historical killable shortcut, disabled downgrade, forced caller changes or borrowed-stack/task metadata as if those were faithful Linux 7.0 semantics. Do not infer that one-CAS mutex-to-spin success proves contended mixed support.
 
 **Gate:** the support matrix records each successful route; unsupported ones take a valid pre-effect local route or admitted exact suffix.
 

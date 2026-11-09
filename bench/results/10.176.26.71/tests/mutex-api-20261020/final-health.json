@@ -1,8 +1,0 @@
-{
-  "idle": true,
-  "project_modules_remaining": [],
-  "kernel_release": "6.1.159-kdclobber2",
-  "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
-  "online_cpus": "0-63",
-  "preemption": "none (voluntary) full"
-}

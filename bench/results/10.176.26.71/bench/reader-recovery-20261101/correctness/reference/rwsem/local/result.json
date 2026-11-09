@@ -1,1 +1,0 @@
-{"errors": 0, "api_checks": 17, "readers_slept": 2, "writer_slept": 1, "late_reader_slept": 1, "cancellation_checks": 10, "colocated": 1, "idle": 1, "outer_readers_slept": 2, "outer_writer_slept": 1, "downgrade_checks": 1, "publication_checks": 3}

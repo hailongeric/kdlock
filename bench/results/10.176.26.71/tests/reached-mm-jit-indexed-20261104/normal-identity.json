@@ -1,1 +1,0 @@
-{"idle": true, "release": "7.0.0-38-kdlock1", "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62", "boot_id": "0a2b2a34-caf7-4c63-9b38-d4f29a5a2d7d", "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0", "root_free": 3889049600, "build_free": 9383280640}

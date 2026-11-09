@@ -1,7 +1,0 @@
-model,workers,native_pairs_per_second,pilot_pairs_per_second,change_percent,nominal_seconds,passed,drained,scored,instrumentation,worker_attributed_proof,generations_before,generations_after,history_changed
-threads,1,281886.5,201283.0,-28.594310121272215,2,True,True,False,none,False,unavailable,1/1,True
-threads,8,225144.5,49296.5,-78.10450621711834,2,True,True,False,none,False,1/1,2/2,True
-threads,32,199676.5,18189.5,-90.89051540867354,2,True,True,False,none,False,2/2,3/3,True
-processes,1,354007.5,234467.5,-33.76764616568858,2,True,True,False,none,False,3/3,4/4,True
-processes,8,1692926.0,381426.0,-77.4694227627197,2,True,True,False,none,False,4/4,5/5,True
-processes,32,1793531.0,400205.5,-77.68616767705716,2,True,True,False,none,False,5/5,6/6,True

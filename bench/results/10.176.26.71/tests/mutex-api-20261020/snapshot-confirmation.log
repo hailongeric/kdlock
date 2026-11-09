@@ -1,5 +1,0 @@
-Benchmark host: eric@10.176.26.71
-Monitor: /tmp/qemu-monitor.sock
-Command: run_vm.sh monitor "info snapshots"
-Listed on all disks:
---        before-mutex-kdonly-20261017T140354Z 18.1 GiB 2026-10-17 22:09:19 56:16:21.455
