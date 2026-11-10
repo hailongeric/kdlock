@@ -93,7 +93,7 @@ void kd_jit_source_use_init(struct kd_jit_source_use *use)
 static bool kind_valid(enum kd_jit_source_use_kind kind)
 {
 	return kind == KD_JIT_SOURCE_USE_BUILD || kind == KD_JIT_SOURCE_USE_IMAGE ||
-	       kind == KD_JIT_SOURCE_USE_FEEDBACK;
+	       kind == KD_JIT_SOURCE_USE_FEEDBACK || kind == KD_JIT_SOURCE_USE_NATIVE;
 }
 
 static int link_use_locked(struct kd_jit_source_epoch *epoch,

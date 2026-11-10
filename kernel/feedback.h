@@ -95,6 +95,7 @@ enum kd_jit_feedback_record_phase {
 	KD_JIT_FEEDBACK_RECORDING,
 	KD_JIT_FEEDBACK_PENDING,
 	KD_JIT_FEEDBACK_ACKNOWLEDGED,
+	KD_JIT_FEEDBACK_SETTLED,
 	KD_JIT_FEEDBACK_RELEASING,
 };
 
@@ -185,5 +186,44 @@ int kd_jit_feedback_claim_ack(struct kd_jit_feedback_claim *claim,
 		unsigned int count);
 int kd_jit_feedback_claim_end(struct kd_jit_feedback_claim *claim,
 		const void *holder);
+
+/* Actual host archival result, distinct from emitted coverage. The caller has
+ * durably stored the exact copied claim facts and source/producer provenance;
+ * content_id is the 32-byte identity of those stored bytes. Its immutable
+ * backing and all claim/control observers remain retained through settlement.
+ */
+struct kd_jit_feedback_archive {
+	unsigned char content_id[32];
+	struct kd_jit_feedback_claim *claim;
+	const void *claim_holder;
+	struct kd_jit_source_epoch *epoch;
+	const struct kd_jit_feedback_claim_item *items;
+	unsigned int count;
+};
+
+struct kd_jit_feedback_settlement {
+	const void *identity;
+	const struct kd_jit_feedback_archive *archive;
+	struct kd_jit_feedback_claim *claim;
+	const void *claim_holder;
+	const struct kd_jit_feedback_claim_item *items;
+	unsigned int count;
+};
+
+/* Private fresh receipt; not proof of a completed archive or settlement. */
+void kd_jit_feedback_settlement_init(struct kd_jit_feedback_settlement *receipt);
+/* Shutdown only: source admission is independently closed, epoch is CLOSED
+ * with no BUILD/IMAGE/NATIVE users, and every selected producer is closed after
+ * its images retired. Validate exact archived pending reservations, then mark
+ * SETTLED atomically and return a distinct actual settlement receipt. This is
+ * never a coverage ACK and admits no execution. Other/later records survive.
+ * Caller serializes source shutdown, archive/receipt storage and claim APIs.
+ * Actual durable archival is a host duty; identities alone do not perform it.
+ * claim_end later releases settled holds after every archive/transport observer
+ * ends. No mutation/provider backing is released by this metadata operation.
+ */
+int kd_jit_feedback_claim_settle(struct kd_jit_feedback_claim *claim,
+		const void *holder, const struct kd_jit_feedback_archive *archive,
+		struct kd_jit_feedback_settlement *receipt);
 
 #endif

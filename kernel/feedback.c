@@ -332,7 +332,8 @@ static bool member_locked(struct kd_jit_feedback_claim *claim,
 		record->fact.identity == item->identity &&
 		record->fact.incarnation == item->incarnation && record->fact.epoch == claim->epoch &&
 		(record->phase == KD_JIT_FEEDBACK_PENDING ||
-		 (!pending_only && record->phase == KD_JIT_FEEDBACK_ACKNOWLEDGED));
+		 (!pending_only && (record->phase == KD_JIT_FEEDBACK_ACKNOWLEDGED ||
+				 record->phase == KD_JIT_FEEDBACK_SETTLED)));
 }
 
 static int check_locked(struct kd_jit_feedback_claim *claim, const void *holder,
@@ -424,7 +425,8 @@ int kd_jit_feedback_claim_end(struct kd_jit_feedback_claim *claim,
 			raw_spin_unlock(&pool->guard);
 			continue;
 		}
-		if (record->phase == KD_JIT_FEEDBACK_ACKNOWLEDGED) {
+		if (record->phase == KD_JIT_FEEDBACK_ACKNOWLEDGED ||
+		    record->phase == KD_JIT_FEEDBACK_SETTLED) {
 			record->phase = KD_JIT_FEEDBACK_RELEASING;
 			list_del_init(&record->link);
 		} else if (record->phase != KD_JIT_FEEDBACK_RELEASING) {
@@ -446,5 +448,83 @@ int kd_jit_feedback_claim_end(struct kd_jit_feedback_claim *claim,
 		recycle(record);
 	}
 	kd_jit_feedback_claim_init(claim);
+	return 0;
+}
+
+void kd_jit_feedback_settlement_init(struct kd_jit_feedback_settlement *receipt)
+{
+	receipt->identity = NULL;
+	receipt->archive = NULL;
+	receipt->claim = NULL;
+	receipt->claim_holder = NULL;
+	receipt->items = NULL;
+	receipt->count = 0;
+}
+
+static bool source_shutdown_ready(struct kd_jit_source_epoch *epoch)
+{
+	struct kd_jit_source_use *use;
+	bool ready = true;
+
+	raw_spin_lock(&epoch->guard);
+	if (epoch->phase != KD_JIT_SOURCE_CLOSED)
+		ready = false;
+	list_for_each_entry(use, &epoch->users, epoch_link)
+		if (use->kind != KD_JIT_SOURCE_USE_FEEDBACK) {
+			ready = false;
+			break;
+		}
+	raw_spin_unlock(&epoch->guard);
+	return ready;
+}
+
+int kd_jit_feedback_claim_settle(struct kd_jit_feedback_claim *claim,
+		const void *holder, const struct kd_jit_feedback_archive *archive,
+		struct kd_jit_feedback_settlement *receipt)
+{
+	struct kd_jit_feedback_pool *pool;
+	unsigned int index;
+	int result;
+
+	if (!claim || !holder || !archive || !receipt || archive->claim != claim ||
+	    archive->claim_holder != holder || archive->epoch != claim->epoch ||
+	    (archive->count && !archive->items))
+		return -EINVAL;
+	if (receipt->identity)
+		return receipt->identity == receipt && receipt->archive == archive &&
+		       receipt->claim == claim && receipt->claim_holder == holder ? 0 : -ESTALE;
+	result = kd_jit_feedback_claim_check(claim, holder, archive->items, archive->count);
+	if (result)
+		return result;
+	if (!source_shutdown_ready(archive->epoch))
+		return -EBUSY;
+	for (index = 0; index < archive->count; ++index) {
+		struct kd_jit_feedback_producer *producer =
+			archive->items[index].record->producer_use.producer;
+		bool closed;
+
+		if (!producer)
+			return -ESTALE;
+		raw_spin_lock(&producer->guard);
+		closed = producer->closed && !producer->released && !has_image_locked(producer);
+		raw_spin_unlock(&producer->guard);
+		if (!closed)
+			return -EBUSY;
+	}
+	pool = claim->pool;
+	raw_spin_lock(&pool->guard);
+	result = check_locked(claim, holder, archive->items, archive->count, true);
+	if (!result)
+		for (index = 0; index < archive->count; ++index)
+			archive->items[index].record->phase = KD_JIT_FEEDBACK_SETTLED;
+	raw_spin_unlock(&pool->guard);
+	if (result)
+		return result;
+	receipt->archive = archive;
+	receipt->claim = claim;
+	receipt->claim_holder = holder;
+	receipt->items = archive->items;
+	receipt->count = archive->count;
+	receipt->identity = receipt;
 	return 0;
 }

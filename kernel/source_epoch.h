@@ -46,6 +46,7 @@ enum kd_jit_source_use_kind {
 	KD_JIT_SOURCE_USE_BUILD,
 	KD_JIT_SOURCE_USE_IMAGE,
 	KD_JIT_SOURCE_USE_FEEDBACK,
+	KD_JIT_SOURCE_USE_NATIVE,
 };
 
 enum kd_jit_source_phase {
