@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-2.0-only
+config KDLOCK_REBUILD
+	bool "kdlock private mutex core for source rebuild"
+	depends on X86_64 && !PREEMPT_RT
+	help
+	  Package the private ordinary-mutex core into the kernel. The selected
+	  Linux 7.0 task_struct field must already be integrated. This option
+	  supplies no mutex aliases, task provisioning or lifecycle hooks, source
+	  provider, executable-image transport or additional API/context lane.
+
+	  Enabling this option establishes no build, execution or performance
+	  evidence. See kernel/integration/BUILDING.md in the kdlock package.
