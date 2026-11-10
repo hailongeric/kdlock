@@ -25,6 +25,12 @@ ACK request [publication]; reply [ack, publication, claim, holder, epoch] plus
 actual acknowledged record/incarnation rows. CLAIM_END request/reply
 [claim, holder]. ABORT request/reply [candidate-or-zero, claim, holder].
 
+SOURCE_EXPORT request has no fixed words/rows/blobs. Its reply fixed words are
+[epoch, configuration, load, GS, boundary_count, actual_slot, current_image_or_0],
+followed by region_count rows [start, byte_length, raw_bytes], boundary_count
+[site, kind] pairs and one version blob. The slot/base values are observations;
+BUILD_START must validate and retain the actual matching base separately.
+
 All normal replies and requests without rows have row_count zero. QUERY is
 unframed: six words then exact cached input and output bytes. No file is opened
 or ioctl performed by this codec.
@@ -251,7 +257,7 @@ def decode_source(payload: bytes, bounds: SourceExportLimits, limits: WireLimits
         cursor += length
         return result
 
-    fixed = tuple(take() for _ in range(5))
+    fixed = tuple(take() for _ in range(7))
     if fixed[4] > bounds.boundaries:
         raise ValueError("source boundary count exceeds its explicit limit")
     regions, used = [], 0

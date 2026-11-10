@@ -69,7 +69,7 @@ from disassem.learning import (
     LearningLimits, MergeDisposition, candidate_input_keys,
 )
 from disassem.lowering import CodegenLimits, EntryMetadata, lower_compilation
-from disassem.session import ProducerCatalog, ProducerMetadata, copied_claim
+from disassem.session import ProducerCatalog, ProducerMetadata, copied_claim, source_export_from_frame
 from disassem.wire import (
     Operation, SourceExportLimits, WireLimits, decode, decode_source, encode, token,
     token_word,
@@ -355,23 +355,29 @@ class RuntimePipelineTests(unittest.TestCase):
     def test_copied_source_export_preserves_identity_bytes_and_typed_boundaries(self):
         regions = self.snapshot.regions
         version = self.epoch.version
-        body = struct.pack("<5Q", token_word(self.epoch.identity), token_word(self.epoch.configuration_identity),
-                           token_word(self.epoch.load_identity), self.epoch.current_task_gs_offset, 1)
-        for region in regions:
-            body += struct.pack("<2Q", region.start, len(region.data)) + region.data
-        body += struct.pack("<2Q", BASE, 1) + U64.pack(len(version)) + version
-        raw = struct.pack("<4Q", 1, int(Operation.SOURCE_EXPORT), 32 + len(body), len(regions)) + body
-        frame = decode_source(raw, self.source_bounds, self.wire)
-        exported = SourceSnapshot(frame.version.decode("utf-8"),
-                                  tuple(SourceRegion(start, data) for start, data in frame.regions),
-                                  tuple(SourceSite(site, BoundaryKind.LOCK) for site, kind in frame.boundaries if kind == 1))
-        self.assertEqual(frame.fixed[:4], (11, 12, 13, self.config["gs_offset"]))
-        self.assertEqual(exported.regions, self.snapshot.regions)
-        plan = compile_fragment_plan(exported, BASE, self.discovery)
-        self.assertEqual(plan.fragment.body_sites, frozenset())
-        self.assertEqual(plan.fragment.boundaries[0].site, BASE)
-        with self.assertRaises(ValueError):
-            decode_source(raw, replace(self.source_bounds, source_bytes=0), self.wire)
+        slot = 0x7000  # Copied scalar fixture, never a guessed live kernel address.
+        for current_image in (0, 0x7100):
+            with self.subTest(current_image=current_image):
+                body = struct.pack("<7Q", token_word(self.epoch.identity), token_word(self.epoch.configuration_identity),
+                                   token_word(self.epoch.load_identity), self.epoch.current_task_gs_offset,
+                                   1, slot, current_image)
+                for region in regions:
+                    body += struct.pack("<2Q", region.start, len(region.data)) + region.data
+                body += struct.pack("<2Q", BASE, 1) + U64.pack(len(version)) + version
+                raw = struct.pack("<4Q", 1, int(Operation.SOURCE_EXPORT), 32 + len(body), len(regions)) + body
+                frame = decode_source(raw, self.source_bounds, self.wire)
+                exported = source_export_from_frame(frame, raw)
+                self.assertEqual(frame.fixed[:4], (11, 12, 13, self.config["gs_offset"]))
+                self.assertEqual(exported.epoch, self.epoch)
+                self.assertEqual(exported.snapshot.regions, self.snapshot.regions)
+                self.assertEqual(exported.slot_identity, slot)
+                self.assertEqual(exported.expected_old_image_identity, current_image)
+                self.assertEqual(exported.raw_reply, raw)
+                plan = compile_fragment_plan(exported.snapshot, BASE, self.discovery)
+                self.assertEqual(plan.fragment.body_sites, frozenset())
+                self.assertEqual(plan.fragment.boundaries[0].site, BASE)
+                with self.assertRaises(ValueError):
+                    decode_source(raw, replace(self.source_bounds, source_bytes=0), self.wire)
 
     def test_direct_call_default_five_does_not_limit_observed_indirect_depth(self):
         addresses = tuple(0x3000 + index * 0x10 for index in range(7))

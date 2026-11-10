@@ -32,7 +32,7 @@ from .lowering import CodegenLimits, EntryMetadata, LoweredImage
 from .image_builder import BuiltImage, GNUImageBuilder
 from .wire import (
     ABI, ENVELOPE, IOCTL, WORD_MAX, Operation, RecoveredExchange, WireLimits,
-    SourceExportLimits, decode, decode_query, decode_source, encode, signed, token, token_word, word,
+    SourceExportLimits, SourceFrame, decode, decode_query, decode_source, encode, signed, token, token_word, word,
 )
 
 
@@ -664,7 +664,32 @@ class FeedbackSession(ChannelWorkflow):
 class ExportedSource:
     epoch: EpochBinding
     snapshot: SourceSnapshot
+    slot_identity: int
+    expected_old_image_identity: int
     raw_reply: bytes
+
+
+def source_export_from_frame(frame: SourceFrame, raw_reply: bytes) -> ExportedSource:
+    """Compose actual copied source and slot/base observations without guessing.
+
+    Slot/base use the exact u64 channel values accepted by SessionConfig, with
+    zero representing an empty slot. They are observations, not BASELINE holds;
+    BUILD_START independently validates/pins the fresh actual matching base.
+    """
+    if not isinstance(frame, SourceFrame) or not isinstance(raw_reply, bytes):
+        raise TypeError("source export requires its decoded typed frame and retained raw bytes")
+    epoch, configuration, load, gs_offset, _boundary_count, slot, current_image = frame.fixed
+    token(slot)
+    word(current_image)
+    binding = EpochBinding(token(epoch), frame.version, token(configuration), token(load), gs_offset)
+    kinds = {1: BoundaryKind.LOCK, 2: BoundaryKind.UNLOCK,
+             3: BoundaryKind.MODE_CHANGE, 4: BoundaryKind.SPECIAL_INSTRUCTION}
+    if any(kind not in kinds for _site, kind in frame.boundaries):
+        raise ValueError("exported source boundary has an unknown exact kind")
+    snapshot = SourceSnapshot(frame.version.decode("utf-8", errors="strict"),
+                              tuple(SourceRegion(start, data) for start, data in frame.regions),
+                              tuple(SourceSite(site, kinds[kind]) for site, kind in frame.boundaries))
+    return ExportedSource(binding, snapshot, slot, current_image, raw_reply)
 
 
 class SourceExportPhase(Enum):
@@ -693,16 +718,7 @@ class SourceExportSession(ChannelWorkflow):
             self._send(Operation.SOURCE_EXPORT, self._frame(Operation.SOURCE_EXPORT, ()), SourceExportPhase.REPLY)
         elif self.phase is SourceExportPhase.REPLY:
             frame = decode_source(self._reply, self.bounds, self.transport.limits)
-            epoch, configuration, load, gs_offset, _boundary_count = frame.fixed
-            binding = EpochBinding(token(epoch), frame.version, token(configuration), token(load), gs_offset)
-            kinds = {1: BoundaryKind.LOCK, 2: BoundaryKind.UNLOCK,
-                     3: BoundaryKind.MODE_CHANGE, 4: BoundaryKind.SPECIAL_INSTRUCTION}
-            if any(kind not in kinds for _site, kind in frame.boundaries):
-                raise ValueError("exported source boundary has an unknown exact kind")
-            snapshot = SourceSnapshot(frame.version.decode("utf-8", errors="strict"),
-                                      tuple(SourceRegion(start, data) for start, data in frame.regions),
-                                      tuple(SourceSite(site, kinds[kind]) for site, kind in frame.boundaries))
-            self._result = ExportedSource(binding, snapshot, self._reply)
+            self._result = source_export_from_frame(frame, self._reply)
             self.phase = SourceExportPhase.COMPLETE
         return self.phase
 

@@ -490,7 +490,8 @@ static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input
 {
 	const struct kd_jit_source_description *source = &runtime->config.source->epoch.description;
 	struct rt_writer writer;
-	size_t total = 32 + 5 * 8;
+	size_t total = 32 + 7 * 8;
+	const struct kd_jit_image *lookup_image;
 	unsigned int index;
 	unsigned int boundaries = runtime->config.boundary_count;
 	bool lock_present = false, unlock_present = false;
@@ -513,6 +514,12 @@ static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input
 	rt_put(&writer, (unsigned long)source->load_identity);
 	rt_put(&writer, source->current_task_gs_offset);
 	rt_put(&writer, boundaries);
+	raw_spin_lock(&runtime->slot.guard);
+	lookup_image = rcu_dereference_protected(runtime->slot.image,
+					       lockdep_is_held(&runtime->slot.guard));
+	raw_spin_unlock(&runtime->slot.guard);
+	rt_put(&writer, (unsigned long)&runtime->slot);
+	rt_put(&writer, (unsigned long)lookup_image);
 	for (index = 0; index < source->region_count; ++index) {
 		rt_put(&writer, source->regions[index].start);
 		rt_blob(&writer, source->regions[index].bytes, source->regions[index].length);
