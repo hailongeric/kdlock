@@ -109,14 +109,22 @@ closes before replacement; publication requires all active users to drain and
 old readers pass a grace period before reclamation. JIT entry reserves a
 separate claimed pending-exit use, which ordinary put cannot drop early.
 
+Source commit `a65016e3` adds opt-in [Kbuild](Kbuild)/[Kconfig](Kconfig)
+packaging for the 15 C units and three concrete assembly entries, with the fixed
+Linux 7.0/x86_64/non-RT C target gate. It excludes the unexpanded image wrapper
+and supplies no automatic API conversion or provider/lifecycle policy. The
+[build guide](kernel/integration/BUILDING.md) records exact-tree prerequisites;
+no build-system parser or build has run.
+
 Overall integration remains incomplete. Actual task allocation/fork/exit and
 provider glue, actual coherent live-source lease acquisition/mutation admission,
 executable allocation/publication orchestration, C08 compiler transport/cumulative
-feedback policy and exact kernel/build wiring remain work. No deployment pool count or complete auxiliary/control-stack budget is configured.
+feedback policy and actual target-kernel/source/build integration remain work. No deployment pool count or complete auxiliary/control-stack budget is configured.
 Generated execution requires a distinct physical task
 and admitted nonoverlapping executor/source/wait-control stacks. W's own body
 uses a native route; a runtime instruction budget does not establish stack
-separation. No build system or runtime support is claimed yet.
+separation. The build packaging is unparsed and uncompiled; no runtime support
+is claimed.
 
 All new components have source/static review only. Ten focused private planner
 cases passed earlier on `13f2630f` with Python 3.10.12; they validate only that

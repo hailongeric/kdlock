@@ -256,11 +256,19 @@ SOURCE self-drain avoidance and independent native-text/finalizer lifetimes.
 All these additions remain source/static review only; no import, assembly,
 build, behavioral check or VM execution has run.
 
+Reviewed source commit `a65016e3` adds the opt-in Kconfig/Kbuild group and fixed
+Linux 7.0/x86_64/non-RT C target gate. It lists all 15 runtime C units and the
+three concrete assembly entries, excluding the unexpanded per-image wrapper.
+[The build guide](../../../kernel/integration/BUILDING.md) separates package
+structure from actual target-tree insertion, task-field integration, provisioning
+and provider duties. No Kconfig/Kbuild parser, preprocessing, compilation,
+assembly, linking, enablement or kernel execution has run.
+
 Remaining whole-lane implementation work includes actual task allocation/fork/
 exit and provider glue, concrete pool/control-stack provisioning, actual coherent
 live-source lease acquisition/mutation admission, executable allocation/publication
 orchestration, C08 compiler transport/persistent cumulative feedback/ACK policy,
-and exact kernel/build wiring. The source interfaces do not choose deployment
+and actual target-kernel/source/build integration. The source interfaces do not choose deployment
 capacities, lifecycle hook placement or
 publication/feedback organization. Assembly/build/runtime, lifetime/progress and
 acceptance validation are separate unrun evidence gaps. Selected stable object
