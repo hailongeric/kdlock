@@ -1,0 +1,199 @@
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+source = Path('/mnt/kdlock-builds/kdlock-main-work/live2-2cc70fce-01a1bc4f/input')
+original = Path('/mnt/kdlock-builds/kdlock-main-work/live2-runtime-2cc70fce-20261111-01')
+assessment = original / 'recovery-assessment-01'
+receipts = original / 'approved-recovery-01'
+receipts.mkdir(mode=0o700)
+sys.path.insert(0, str(source))
+from disassem.session import FdTransport, ProducerCatalog, copied_claim, source_export_from_frame
+from disassem.wire import Operation, WireLimits, SourceExportLimits, decode, decode_source, encode, token, token_word
+from disassem.compiler import SourceSnapshot, SourceSite
+from disassem.fragment import BoundaryKind
+from disassem.learning import LearningCoordinator, LearningLimits
+from disassem.archive import write_archive
+
+limits = WireLimits(2 * 1024 * 1024, 4096, 256, 256, 512 * 1024)
+record = {'utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    'authorization': 'Parent approved exact re-QUERY/ABORT4/END5/SHUTDOWN6/ARCHIVE7/SETTLE8/END9/destroy/normal unload.',
+    'source': str(source), 'phase': 'INITIAL', 'exchanges': [],
+    'history_limit': 'Only actual immutable source and the saved empty claim are restored. No candidate/compiler/producer receipt is synthesized.'}
+transport = None
+control = -1
+
+def save():
+    (receipts / 'result.json').write_text(json.dumps(record, indent=2, sort_keys=True) + '\n')
+
+def phase(name):
+    record['phase'] = name
+    save()
+
+def fixture_status(name):
+    os.lseek(control, 0, os.SEEK_SET)
+    raw = os.read(control, 16384)
+    (receipts / name).write_bytes(raw)
+    values = dict(item.split('=', 1) for item in raw.decode('ascii').split())
+    return values
+
+def send(operation, sequence, fixed=(), rows=(), blobs=(), bounds=()):
+    payload = encode(operation, fixed, rows, blobs, bounds, limits)
+    name = f'{sequence:02d}-{operation.name.lower()}'
+    (receipts / (name + '-request.bin')).write_bytes(payload)
+    phase(name + '_DISPATCHING')
+    result = transport.exchange(operation, payload)
+    (receipts / (name + '-reply.bin')).write_bytes(result.payload)
+    item = {'operation': int(operation), 'sequence': result.sequence, 'status': result.status,
+            'request_length': len(payload), 'reply_length': len(result.payload)}
+    record['exchanges'].append(item)
+    phase(name + '_REPLIED')
+    if result.sequence != sequence or result.status != 0:
+        raise RuntimeError('unexpected actual sequence/status: ' + repr(item))
+    return result.payload
+
+def exact(operation, sequence, fixed):
+    raw = send(operation, sequence, fixed)
+    frame = decode(raw, operation, len(fixed), 0, (), limits)
+    if frame.fixed != fixed:
+        raise RuntimeError('actual reply identity differs: ' + repr(frame.fixed))
+    return raw
+
+try:
+    record['boot_id'] = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    record['release'] = os.uname().release
+    record['taint_before'] = Path('/proc/sys/kernel/tainted').read_text().strip()
+    if record['boot_id'] != 'dea66234-7f70-4e5b-acb6-40a6f2884919' or record['release'] != '7.0.0-38-kdrebuild2':
+        raise RuntimeError('running identity differs from approved recovery')
+    (receipts / 'dmesg-before.txt').write_bytes(subprocess.run(['dmesg'], check=True, capture_output=True).stdout)
+    control = os.open('/dev/kd_runtime_fixture_ctl', os.O_RDWR | os.O_CLOEXEC)
+    values = fixture_status('fixture-before.txt')
+    if values['workers'] != '0' or values['locks_clear'] != '1' or values['runtime'] != '1':
+        raise RuntimeError('fixture is not at approved inactive state')
+    source_raw = (original / 'source-export.bin').read_bytes()
+    exported = source_export_from_frame(decode_source(source_raw, SourceExportLimits(2, 64, 128 * 1024), limits), source_raw)
+    metadata = json.loads((original / 'source-metadata.json').read_text())
+    snapshot = SourceSnapshot(metadata['version'], exported.snapshot.regions,
+        tuple(SourceSite(item['site'], BoundaryKind(item['boundary']) if item['boundary'] is not None else None)
+              for item in metadata['sites']))
+    coordinator = LearningCoordinator(exported.epoch, snapshot, LearningLimits(4096, 32, 16, 16, 16))
+    producers = ProducerCatalog(16, ())
+    saved_claim_raw = (original / 'cycle-1/claim.bin').read_bytes()
+    saved_frame = decode(saved_claim_raw, Operation.CLAIM, 3, 12, (limits.version_bytes,), limits)
+    if saved_frame.fixed != (18379471558651707392, 4097, 18379471558810037824) or saved_frame.rows or saved_frame.blobs[0] != exported.epoch.version:
+        raise RuntimeError('saved exact empty claim changed')
+    saved_claim = copied_claim(saved_claim_raw, Operation.CLAIM, coordinator, producers, 4097, 4096, limits)
+    coordinator.record_claim(saved_claim)
+    transport = FdTransport.open('/dev/kd_runtime_fixture', limits, 4 * 1024 * 1024 + 48)
+    actual_ioctl = transport._ioctl
+    def capture(flight):
+        result = actual_ioctl(flight)
+        prefix = f'{flight.sequence:02d}-{flight.operation.name.lower()}'
+        (receipts / (prefix + '-envelope.bin')).write_bytes(bytes(flight.header))
+        if flight.operation is Operation.QUERY:
+            (receipts / '00-query-raw.bin').write_bytes(result.payload)
+        return result
+    transport._ioctl = capture
+    phase('REQUERY')
+    cached = transport.query()
+    expected = json.loads((assessment / 'result.json').read_text())['cache']
+    if ((cached.operation, cached.sequence, cached.status) != (2, 3, 0)
+            or cached.request != (assessment / 'cached-request.bin').read_bytes()
+            or cached.response != (assessment / 'cached-response.bin').read_bytes()
+            or (receipts / '00-query-raw.bin').read_bytes() != (assessment / 'query-raw.bin').read_bytes()):
+        raise RuntimeError('actual re-QUERY differs from approved byte-exact cache')
+    record['cache_rechecked'] = expected
+    transport.adopt_recovery(cached)
+    phase('RECONCILED_ACTUAL_CACHE')
+    exact(Operation.ABORT, 4, (18379471558775858176, 18379471558651707392, 4097))
+    exact(Operation.CLAIM_END, 5, (18379471558651707392, 4097))
+    coordinator.end_claim(saved_claim.identity, saved_claim.holder_identity)
+    shutdown_raw = send(Operation.SHUTDOWN, 6)
+    shutdown = decode(shutdown_raw, Operation.SHUTDOWN, 1, 0, (), limits)
+    if shutdown.fixed != (18379471558810037824,):
+        raise RuntimeError('actual shutdown epoch changed')
+    coordinator.close_epoch()
+    record['actual_shutdown_native_image_drain_checked'] = True
+    archive_raw = send(Operation.ARCHIVE_CLAIM, 7, (18379471558810037824, 8192, 4096))
+    archive_frame = decode(archive_raw, Operation.ARCHIVE_CLAIM, 3, 12, (limits.version_bytes,), limits)
+    if (archive_frame.rows or archive_frame.fixed[1:] != (8192, 18379471558810037824)
+            or archive_frame.blobs[0] != exported.epoch.version):
+        raise RuntimeError('archive claim is nonempty or differs; retain it for reconciliation')
+    archive_claim = copied_claim(archive_raw, Operation.ARCHIVE_CLAIM, coordinator, producers, 8192, 4096, limits)
+    coordinator.record_claim(archive_claim)
+    phase('DURABLE_ARCHIVE_WRITE')
+    archive = write_archive(str(receipts / 'shutdown-archive.json'), coordinator=coordinator,
+        claim=archive_claim, raw_claim=archive_raw, construction_context=(
+            ('evidence', 'kernel-mechanism recovery; initial host construction failed before staging'),
+            ('original_result', str(original / 'result.json')),
+            ('source_metadata', str(original / 'source-metadata.json')),
+            ('original_empty_claim_sha256', hashlib.sha256(saved_claim_raw).hexdigest()),
+            ('module_sha256', '378bf139407bf57de1b4d708db3c6548a5d25537219b8ce83c2232c89010267e')),
+        byte_limit=64 * 1024 * 1024, file_mode=0o600)
+    if archive.keys:
+        raise RuntimeError('archive unexpectedly contains facts')
+    record['archive'] = {'identity': archive.identity.hex(), 'path': archive.path, 'bytes': archive.byte_length,
+        'claim': token_word(archive_claim.identity), 'holder': 8192, 'count': 0}
+    settlement_raw = send(Operation.SETTLE, 8, (token_word(archive_claim.identity), 8192),
+        blobs=(archive.identity,), bounds=(32,))
+    settlement = decode(settlement_raw, Operation.SETTLE, 3, 2, (), limits)
+    if (not settlement.fixed[0] or settlement.fixed[1:] != (token_word(archive_claim.identity), 8192) or settlement.rows):
+        raise RuntimeError('actual settlement identity/keys differ')
+    record['settlement_identity'] = settlement.fixed[0]
+    exact(Operation.CLAIM_END, 9, (token_word(archive_claim.identity), 8192))
+    coordinator.end_claim(archive_claim.identity, archive_claim.holder_identity)
+    transport.close()
+    transport = None
+    phase('CHANNEL_CLOSED_AFTER_EXACT_END')
+    values = fixture_status('fixture-before-destroy.txt')
+    if values['workers'] != '0' or values['locks_clear'] != '1':
+        raise RuntimeError('fixture not inactive before ordinary destroy')
+    payload = b'destroy\n'
+    if os.write(control, payload) != len(payload):
+        raise RuntimeError('ordinary destroy did not consume exact command')
+    values = fixture_status('fixture-after-destroy.txt')
+    if values['runtime'] != '0' or values['workers'] != '0' or values['locks_clear'] != '1':
+        raise RuntimeError('ordinary destroy status differs')
+    os.close(control)
+    control = -1
+    phase('DESTROY_RETURNED_AND_CONTROL_CLOSED')
+    result = subprocess.run(['/usr/sbin/rmmod', 'kd_runtime_fixture'], capture_output=True)
+    (receipts / 'rmmod-stdout.txt').write_bytes(result.stdout)
+    (receipts / 'rmmod-stderr.txt').write_bytes(result.stderr)
+    record['rmmod_returncode'] = result.returncode
+    if result.returncode:
+        raise RuntimeError('normal rmmod failed')
+    modules = Path('/proc/modules').read_text()
+    (receipts / 'modules-after.txt').write_text(modules)
+    if any(line.split()[0] == 'kd_runtime_fixture' for line in modules.splitlines()):
+        raise RuntimeError('module remains after successful ordinary rmmod')
+    record['device_paths_after'] = {name: Path('/dev/' + name).exists() for name in ('kd_runtime_fixture', 'kd_runtime_fixture_ctl')}
+    if any(record['device_paths_after'].values()):
+        raise RuntimeError('fixture device remains after ordinary unload')
+    (receipts / 'dmesg-after.txt').write_bytes(subprocess.run(['dmesg'], check=True, capture_output=True).stdout)
+    record['taint_after'] = Path('/proc/sys/kernel/tainted').read_text().strip()
+    record['boot_id_after'] = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    record['status'] = 'APPROVED_EXACT_RECOVERY_COMPLETE'
+    phase('NORMAL_UNLOAD_VERIFIED')
+except BaseException as error:
+    record['status'] = 'STOPPED_RETAINED_PHASE'
+    record['error'] = repr(error)
+    record['retained_inflight_sequence'] = transport.pending_sequence if transport is not None else None
+    raise
+finally:
+    # No protocol cleanup is attempted on failure. Closing the inspection/process
+    # fd leaves the configured kernel session and cached actual effects retained.
+    if transport is not None:
+        os.close(transport.fd)
+    if control >= 0:
+        os.close(control)
+    record['end_utc'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    record['files'] = {path.name: {'bytes': path.stat().st_size,
+        'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+        for path in receipts.iterdir() if path.is_file() and path.name != 'result.json'}
+    save()
+    print(json.dumps(record, indent=2, sort_keys=True))

@@ -1,0 +1,12 @@
+{
+  "utc": "2026-11-10T17:45:50.857819+00:00",
+  "boot_id": "dea66234-7f70-4e5b-acb6-40a6f2884919",
+  "taint": "12288",
+  "fixture_module_present": false,
+  "devices": {
+    "kd_runtime_fixture": false,
+    "kd_runtime_fixture_ctl": false
+  },
+  "observer_pid": 5503,
+  "activity_policy": "Raw ps readback; no timeout/drain inference."
+}

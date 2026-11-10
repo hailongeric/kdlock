@@ -1,0 +1,198 @@
+{
+  "actual_shutdown_native_image_drain_checked": true,
+  "archive": {
+    "bytes": 6499,
+    "claim": 18379471558651708312,
+    "count": 0,
+    "holder": 8192,
+    "identity": "0e9ad9999a75678e90ada110943be3d1157143a3ad9f791268a66481e7f09795",
+    "path": "/mnt/kdlock-builds/kdlock-main-work/live2-runtime-2cc70fce-20261111-01/approved-recovery-01/shutdown-archive.json"
+  },
+  "authorization": "Parent approved exact re-QUERY/ABORT4/END5/SHUTDOWN6/ARCHIVE7/SETTLE8/END9/destroy/normal unload.",
+  "boot_id": "dea66234-7f70-4e5b-acb6-40a6f2884919",
+  "boot_id_after": "dea66234-7f70-4e5b-acb6-40a6f2884919",
+  "cache_rechecked": {
+    "operation": 2,
+    "request_length": 72,
+    "response_length": 227,
+    "sequence": 3,
+    "status": 0
+  },
+  "device_paths_after": {
+    "kd_runtime_fixture": false,
+    "kd_runtime_fixture_ctl": false
+  },
+  "end_utc": "2026-11-10T17:44:55.881916+00:00",
+  "exchanges": [
+    {
+      "operation": 7,
+      "reply_length": 56,
+      "request_length": 56,
+      "sequence": 4,
+      "status": 0
+    },
+    {
+      "operation": 6,
+      "reply_length": 48,
+      "request_length": 48,
+      "sequence": 5,
+      "status": 0
+    },
+    {
+      "operation": 9,
+      "reply_length": 40,
+      "request_length": 32,
+      "sequence": 6,
+      "status": 0
+    },
+    {
+      "operation": 10,
+      "reply_length": 266,
+      "request_length": 56,
+      "sequence": 7,
+      "status": 0
+    },
+    {
+      "operation": 11,
+      "reply_length": 56,
+      "request_length": 88,
+      "sequence": 8,
+      "status": 0
+    },
+    {
+      "operation": 6,
+      "reply_length": 48,
+      "request_length": 48,
+      "sequence": 9,
+      "status": 0
+    }
+  ],
+  "files": {
+    "00-query-envelope.bin": {
+      "bytes": 72,
+      "sha256": "8365910a9e14631dc3f7389a77dd87466ef42eee48ddc09afde47bfe88a96cd9"
+    },
+    "00-query-raw.bin": {
+      "bytes": 347,
+      "sha256": "6c41393e864e53b98c39571c50e36e95c0d737ca4db8eb2d092ae6b5d2a328ea"
+    },
+    "04-abort-envelope.bin": {
+      "bytes": 72,
+      "sha256": "7e6bce04b2a288b5cf60876c7feefb37db44ea7fd784c9e95966c19147c29b3b"
+    },
+    "04-abort-reply.bin": {
+      "bytes": 56,
+      "sha256": "69c6b9abae0c803977cd60272ba0c7aa94daa8cc068e2ec16fae09e2d582cc3a"
+    },
+    "04-abort-request.bin": {
+      "bytes": 56,
+      "sha256": "69c6b9abae0c803977cd60272ba0c7aa94daa8cc068e2ec16fae09e2d582cc3a"
+    },
+    "05-claim_end-envelope.bin": {
+      "bytes": 72,
+      "sha256": "f668ab10bc1f911b53719f6f4ac65c89408bb1d035bf9bb762cec4c888e0c386"
+    },
+    "05-claim_end-reply.bin": {
+      "bytes": 48,
+      "sha256": "51ac5402edd1bb57b7330d4f891a5373d76395add13a28155aa4f2f31c1315bd"
+    },
+    "05-claim_end-request.bin": {
+      "bytes": 48,
+      "sha256": "51ac5402edd1bb57b7330d4f891a5373d76395add13a28155aa4f2f31c1315bd"
+    },
+    "06-shutdown-envelope.bin": {
+      "bytes": 72,
+      "sha256": "adeb83f876c95e6d326fd6c7181ecdd81b244ccb51788056058bf95fff8719da"
+    },
+    "06-shutdown-reply.bin": {
+      "bytes": 40,
+      "sha256": "95cb2ccaf3b07ab3ef1b27b6995b6884696998e3118b378ee4bcebfacc01578b"
+    },
+    "06-shutdown-request.bin": {
+      "bytes": 32,
+      "sha256": "bad33eb94ee55a7729de94b24e3f610dd27152857d28d9608acb0090ef926ea5"
+    },
+    "07-archive_claim-envelope.bin": {
+      "bytes": 72,
+      "sha256": "b67e59ea801a74fcd28c0bb35edb38231067cbb17acb7bc66335a84a5ab92ccc"
+    },
+    "07-archive_claim-reply.bin": {
+      "bytes": 266,
+      "sha256": "b7bc826be116bbc4f4ea7ec1f1e8374fe50e2fab575ac04b959ac27ee78950bf"
+    },
+    "07-archive_claim-request.bin": {
+      "bytes": 56,
+      "sha256": "5856e52eb12e3392057dc241fa5546d1d36abcb5cc4a70638b1ec9288c99d4de"
+    },
+    "08-settle-envelope.bin": {
+      "bytes": 72,
+      "sha256": "f72cba3e719e676a08099bff87add3b557cc5d27c0d0e218e27a488522797450"
+    },
+    "08-settle-reply.bin": {
+      "bytes": 56,
+      "sha256": "4a3f9ef25c5cecc7bc70894dc96d21a07e6753f5e13f869b789c7730a583666a"
+    },
+    "08-settle-request.bin": {
+      "bytes": 88,
+      "sha256": "8c619a865fd1c383d2d6a73c7aa5cbdbea836a7d0feb90312dda0d23a96fa88e"
+    },
+    "09-claim_end-envelope.bin": {
+      "bytes": 72,
+      "sha256": "5182e35adfd27640cef55a637280486765fd1d2c4580cbbc735e1ea96b8f303d"
+    },
+    "09-claim_end-reply.bin": {
+      "bytes": 48,
+      "sha256": "d1ed25b87a26e80c81f65896c71b6face9f26f57411193b214b48d3ab7d3ade4"
+    },
+    "09-claim_end-request.bin": {
+      "bytes": 48,
+      "sha256": "d1ed25b87a26e80c81f65896c71b6face9f26f57411193b214b48d3ab7d3ade4"
+    },
+    "dmesg-after.txt": {
+      "bytes": 60821,
+      "sha256": "f70c4e36882807c4383fa122c583a27fcfe1fd61d467e462a7d3dbd4e4676ebc"
+    },
+    "dmesg-before.txt": {
+      "bytes": 60821,
+      "sha256": "f70c4e36882807c4383fa122c583a27fcfe1fd61d467e462a7d3dbd4e4676ebc"
+    },
+    "fixture-after-destroy.txt": {
+      "bytes": 411,
+      "sha256": "57201e90b88b557adef165b09f11a804034941bf011f4161f762858daa075d9d"
+    },
+    "fixture-before-destroy.txt": {
+      "bytes": 411,
+      "sha256": "4e4bb85fe9e4fff56563b8cc909d517b9e1efaa398760a84094cff84219c5bf4"
+    },
+    "fixture-before.txt": {
+      "bytes": 411,
+      "sha256": "4e4bb85fe9e4fff56563b8cc909d517b9e1efaa398760a84094cff84219c5bf4"
+    },
+    "modules-after.txt": {
+      "bytes": 2799,
+      "sha256": "f34e8ac0d43e570524dab6a1fd5f4cf3cf3586b2b0da7c78d8d7c25e9e89567e"
+    },
+    "rmmod-stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rmmod-stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "shutdown-archive.json": {
+      "bytes": 6499,
+      "sha256": "0e9ad9999a75678e90ada110943be3d1157143a3ad9f791268a66481e7f09795"
+    }
+  },
+  "history_limit": "Only actual immutable source and the saved empty claim are restored. No candidate/compiler/producer receipt is synthesized.",
+  "phase": "NORMAL_UNLOAD_VERIFIED",
+  "release": "7.0.0-38-kdrebuild2",
+  "rmmod_returncode": 0,
+  "settlement_identity": 18379471558651709176,
+  "source": "/mnt/kdlock-builds/kdlock-main-work/live2-2cc70fce-01a1bc4f/input",
+  "status": "APPROVED_EXACT_RECOVERY_COMPLETE",
+  "taint_after": "12288",
+  "taint_before": "12288",
+  "utc": "2026-11-10T17:44:55.829331+00:00"
+}

@@ -1,0 +1,119 @@
+{
+  "boot_id": "dea66234-7f70-4e5b-acb6-40a6f2884919",
+  "build_request": [
+    18379471558651707392,
+    4097,
+    18379471558810037824,
+    18379471558794443016,
+    0
+  ],
+  "build_response": [
+    18379471558775858176,
+    18379471558794443016,
+    18379471558775858488,
+    18379471558775858560,
+    18379471558775858176,
+    18379471558651707664,
+    18379471558651707392,
+    0,
+    18379471558775858608,
+    18379471558810037824,
+    18446744072650489856,
+    131072
+  ],
+  "cache": {
+    "operation": 2,
+    "request_length": 72,
+    "response_length": 227,
+    "sequence": 3,
+    "status": 0
+  },
+  "claim": [
+    18379471558651707392,
+    4097,
+    18379471558810037824
+  ],
+  "claim_row_count": 0,
+  "files": {
+    "cached-request.bin": {
+      "bytes": 72,
+      "sha256": "b6812b904317e3f3091ada82711b1ebbfc44562930ded8b9006d36bafb2e336e"
+    },
+    "cached-response.bin": {
+      "bytes": 227,
+      "sha256": "c7e830b478763f64fd30cf47c7e39aa29468a2232f6b2d0107aa451ac4ac04dd"
+    },
+    "fixture-status.txt": {
+      "bytes": 411,
+      "sha256": "260c29693f9f502fea072b654f42f0b95a49663b34774aeaedb6f9a82fa0ea73"
+    },
+    "query-envelope.bin": {
+      "bytes": 72,
+      "sha256": "bfb8a5a8f81fcc811a3d8b026896c3c768691eeedeb4d9e9e3023d1f649eea11"
+    },
+    "query-raw.bin": {
+      "bytes": 347,
+      "sha256": "6c41393e864e53b98c39571c50e36e95c0d737ca4db8eb2d092ae6b5d2a328ea"
+    },
+    "saved-claim.bin": {
+      "bytes": 266,
+      "sha256": "0ce867d767414a45bc1ce5916a64d1f09acdb2afe2ec91afa8637359739587aa"
+    },
+    "saved-source-export.bin": {
+      "bytes": 1311,
+      "sha256": "12b9ca09fc9395846c8313fbf58bb128693c667303b313be76009b7dbd5cdef6"
+    }
+  },
+  "fixture_status": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=8 completed=0 calls=0 a=8 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=4839 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+  "original": "/mnt/kdlock-builds/kdlock-main-work/live2-runtime-2cc70fce-20261111-01",
+  "policy": "Public QUERY and fixture read only; no adoption or normal exchange.",
+  "proposed_first_cleanup_only": {
+    "abort": {
+      "fixed": [
+        18379471558775858176,
+        18379471558651707392,
+        4097
+      ],
+      "operation": 7,
+      "sequence": 4
+    },
+    "end": {
+      "fixed": [
+        18379471558651707392,
+        4097
+      ],
+      "operation": 6,
+      "sequence": 5
+    }
+  },
+  "release": "7.0.0-38-kdrebuild2",
+  "source": "/mnt/kdlock-builds/kdlock-main-work/live2-2cc70fce-01a1bc4f/input",
+  "source_derived_phase": {
+    "claim_live": true,
+    "committed": false,
+    "ending": false,
+    "evidence_limit": "Inferred from actual cached BUILD_START success plus retained runner/control source order, not a kernel-memory flag read.",
+    "loaded": false,
+    "reserved": true,
+    "update_started": false
+  },
+  "source_fixed": [
+    18379471558810037824,
+    18446744072647987392,
+    18446744072647987408,
+    18446744071633432600,
+    2,
+    18379471558794443016,
+    0
+  ],
+  "status": "READ_ONLY_RECONCILED",
+  "symbols": [
+    "kd_fixture_image",
+    "kd_fixture_epoch",
+    "kd_fixture_producer",
+    "kd_fixture_entry"
+  ],
+  "taint": "12288",
+  "utc": "2026-11-10T17:38:36.734877+00:00",
+  "version": "fixture-378bf139407bf57de1b4d708db3c6548a5d25537219b8ce83c2232c89010267e-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+}

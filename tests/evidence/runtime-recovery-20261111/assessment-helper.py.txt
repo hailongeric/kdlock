@@ -1,0 +1,89 @@
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import sys
+
+source = Path('/mnt/kdlock-builds/kdlock-main-work/live2-2cc70fce-01a1bc4f/input')
+original = Path('/mnt/kdlock-builds/kdlock-main-work/live2-runtime-2cc70fce-20261111-01')
+receipts = original / 'recovery-assessment-01'
+receipts.mkdir(mode=0o700)
+sys.path.insert(0, str(source))
+from disassem.session import FdTransport
+from disassem.wire import Operation, WireLimits, SourceExportLimits, decode, decode_source
+
+limits = WireLimits(2 * 1024 * 1024, 4096, 256, 256, 512 * 1024)
+record = {'utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+          'policy': 'Public QUERY and fixture read only; no adoption or normal exchange.',
+          'source': str(source), 'original': str(original)}
+transport = None
+try:
+    record['boot_id'] = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    record['release'] = os.uname().release
+    record['taint'] = Path('/proc/sys/kernel/tainted').read_text().strip()
+    control = os.open('/dev/kd_runtime_fixture_ctl', os.O_RDONLY | os.O_CLOEXEC)
+    try:
+        status = os.read(control, 16384)
+    finally:
+        os.close(control)
+    (receipts / 'fixture-status.txt').write_bytes(status)
+    record['fixture_status'] = status.decode('ascii')
+    source_bytes = (original / 'source-export.bin').read_bytes()
+    claim_bytes = (original / 'cycle-1/claim.bin').read_bytes()
+    (receipts / 'saved-source-export.bin').write_bytes(source_bytes)
+    (receipts / 'saved-claim.bin').write_bytes(claim_bytes)
+    source_frame = decode_source(source_bytes, SourceExportLimits(2, 64, 128 * 1024), limits)
+    claim_frame = decode(claim_bytes, Operation.CLAIM, 3, 12, (limits.version_bytes,), limits)
+    transport = FdTransport.open('/dev/kd_runtime_fixture', limits, 4 * 1024 * 1024 + 48)
+    actual_ioctl = transport._ioctl
+    def capture(flight):
+        result = actual_ioctl(flight)
+        (receipts / 'query-envelope.bin').write_bytes(bytes(flight.header))
+        (receipts / 'query-raw.bin').write_bytes(result.payload)
+        return result
+    transport._ioctl = capture
+    cached = transport.query()
+    (receipts / 'cached-request.bin').write_bytes(cached.request)
+    (receipts / 'cached-response.bin').write_bytes(cached.response)
+    record['cache'] = {'operation': cached.operation, 'sequence': cached.sequence,
+                       'status': cached.status, 'request_length': len(cached.request),
+                       'response_length': len(cached.response)}
+    assert cached.operation == int(Operation.BUILD_START) and cached.status == 0
+    request = decode(cached.request, Operation.BUILD_START, 5, 0, (), limits)
+    response = decode(cached.response, Operation.BUILD_START, 12, 0, (limits.symbol_bytes,) * 4, limits)
+    claim, holder, epoch = claim_frame.fixed
+    assert holder == 0x1001 and not claim_frame.rows
+    assert request.fixed == (claim, holder, epoch, source_frame.fixed[5], source_frame.fixed[6])
+    assert source_frame.fixed[0] == epoch == response.fixed[9]
+    assert source_frame.version == claim_frame.blobs[0]
+    assert response.fixed[1] == source_frame.fixed[5]
+    assert response.fixed[7] == source_frame.fixed[6] == 0
+    record['claim'] = list(claim_frame.fixed)
+    record['claim_row_count'] = len(claim_frame.rows)
+    record['source_fixed'] = list(source_frame.fixed)
+    record['version'] = source_frame.version.decode('utf-8')
+    record['build_request'] = list(request.fixed)
+    record['build_response'] = list(response.fixed)
+    record['symbols'] = [value.decode('ascii') for value in response.blobs]
+    record['source_derived_phase'] = {'claim_live': True, 'reserved': True,
+        'loaded': False, 'update_started': False, 'committed': False, 'ending': False,
+        'evidence_limit': 'Inferred from actual cached BUILD_START success plus retained runner/control source order, not a kernel-memory flag read.'}
+    record['proposed_first_cleanup_only'] = {
+        'abort': {'operation': 7, 'sequence': cached.sequence + 1, 'fixed': [response.fixed[0], claim, holder]},
+        'end': {'operation': 6, 'sequence': cached.sequence + 2, 'fixed': [claim, holder]}}
+    record['status'] = 'READ_ONLY_RECONCILED'
+except BaseException as error:
+    record['status'] = 'ASSESSMENT_FAILED'
+    record['error'] = repr(error)
+    raise
+finally:
+    if transport is not None:
+        # This inspection intentionally retains a nonfresh channel. Raw close
+        # is not a call to the session-cleanup helper or a drain assertion.
+        os.close(transport.fd)
+    record['files'] = {path.name: {'bytes': path.stat().st_size,
+        'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+        for path in receipts.iterdir() if path.is_file() and path.name != 'result.json'}
+    (receipts / 'result.json').write_text(json.dumps(record, indent=2, sort_keys=True) + '\n')
+    print(json.dumps(record, indent=2, sort_keys=True))
