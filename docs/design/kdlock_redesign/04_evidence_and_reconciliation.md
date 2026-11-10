@@ -53,8 +53,8 @@ This is static source-flow planning, not a runtime-return or semantic
 nonreturning-function proof. Indirect calls and changed return targets are
 outside this helper's input contract; it cannot detect misclassified inputs.
 It does not recognize APIs, emit/execute instructions, perform runtime CALL/RET
-effects, materialize S_W or hand back execution. Source/dependency identity,
-coherence and lifetime remain future integration obligations.
+effects, materialize S_W or hand back execution. Runtime source/dependency
+identity and lifetime remain future integration obligations.
 
 The private [supplied-byte decoder](../../../disassem/source_decode.py) uses the
 original Miasm x86_64 decoder interface and relative-target arithmetic preserved
@@ -67,6 +67,31 @@ failures and unmodeled transfers remain separately attributable; absence from
 its modeled graph alone is not an ordinary coverage miss. The decoder pins in
 [disassem/requirements.txt](../../../disassem/requirements.txt) retain the
 archived decoder dependency set; they have not been installed or imported.
+The decoder also retains its actual Miasm instruction, including prefix and
+method metadata consumed by the original backend. Archived `disassem/assist.py`
+uses prefix-group/default-prefix metadata for LOCK/REP spelling; name/operands
+alone are insufficient. These nested decoder objects are read-only by contract;
+a mutating lowerer must take an independent instruction/expression copy.
+
+The [integrated front end](../../../disassem/compiler.py) now connects a finite
+immutable source snapshot/version to discovery, decoding and fragment planning.
+It checks overlapping bytes and retains the complete supplied snapshot in its
+result, without provider reads or runtime leases. Boundary sites end discovery;
+minimum direct-CALL depth permits shallower rediscovery, while the final planner
+retains caller continuation only with a modeled returning callee. No global
+function/root refusal follows from a stopped path.
+
+The only default is the selected five direct-CALL discovery edges. Decode-site,
+submitted decoder-window-byte and CFG-work limits must be supplied by the caller.
+Resource receipts retain kind, source edge/site, limit, consumption and required
+quantity. Window bytes include overlaps and failed attempts; CFG work counts
+popped edges, including redundant visits. These are not runtime nesting bounds,
+unique source-cache bytes or per-invocation exit observations. Zero source bytes,
+decode failure, unmodeled flow and resource boundaries remain distinct. Partial
+or unsupported decoding is a decode failure with available bytes retained, not
+proof of invalid source or a permanent capability frontier. The integrated
+front end has source/static review only; no import, build, behavioral execution,
+emitted-coverage acknowledgement or runtime handback is claimed.
 
 The private [C mutex-release protocol](../../../kernel/mutex_release.c) and
 [header](../../../kernel/mutex_release.h) retain physical-owner context and a
@@ -123,9 +148,9 @@ JIT/kernel execution or selected kernel configuration/API lane. They establish
 only the exercised graph behavior, not exact handback or callee-return handling.
 These checks preceded the user's clarification to finish overall functionality
 before further behavioral testing. They have not been rerun on the CALL/RET
-extension and do not validate it or the supplied-byte decoder. The compiler extensions and C protocol
-have source/static review only. No decoder dependency/import check or behavioral
-execution has run. Further behavioral tests and suites are deferred until
+extension and do not validate it, the supplied-byte decoder or integrated front
+end. The compiler extensions and C protocol have source/static review only. No
+decoder dependency/import check or behavioral execution has run. Further behavioral tests and suites are deferred until
 overall functionality is complete.
 
 T01-T56 remain unrun acceptance specifications. Source, build, live execution,
@@ -317,9 +342,9 @@ In that reference, the deferred value `7` keeps exclusion held; outer handling r
 ## 6 Baseline verification
 
 The active tree contains the five design documents, project instructions,
-private source-flow/decoder code and the private retained-owner C release
-protocol. No legacy implementation, receipt documents or datasets need be
-restored. The complete original design snapshot remains in preservation history;
+integrated source-discovery/decoder/planner code and the private retained-owner
+C release protocol. No legacy implementation, receipt documents or datasets
+need be restored. The complete original design snapshot remains in preservation history;
 historical source links do not select another kernel target.
 
 C12 source rebuild, the ordinary-mutex C01 lane and C03 retained-owner outer

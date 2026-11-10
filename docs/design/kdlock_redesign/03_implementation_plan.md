@@ -2,7 +2,7 @@
 
 **Status:** active plan for the independent rebuild
 
-**Current implementation:** private P2 source-flow planner/decoder and owner-retained C mutex-release protocol; static review only for the extensions. No physical mutex backend, queue/arbitration, JIT adapter, source-cursor advancement, build, JIT execution, benchmark, install or reboot is claimed
+**Current implementation:** integrated private P2 source discovery/decoding/planning and owner-retained C mutex-release protocol; static review only. No physical mutex backend, queue/arbitration, JIT adapter, source-cursor advancement, build, JIT execution, benchmark, install or reboot is claimed
 
 Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins). This plan implements the target semantic model; historical mechanisms are optional reuse evidence. Operational repository rules still govern any later authorized work.
 
@@ -116,6 +116,19 @@ The user selected stable lock-object storage through actual physical release for
 
 See [the protocol's selected phase contract and pinned public mutex source](01_lock_protocol.md#5-unlock-and-non-lifo-release). Source integration must enforce the selected stable-object contract and separate control/notifier/code retention. C11 arbitration, C04 mapping and other affected integration decisions remain open; the lifetime selection does not choose them.
 
+### 2.3 Concrete next integration choices (unselected)
+
+| Choice | Recommended first implementation | Alternative and remaining duty |
+| --- | --- | --- |
+| C11 mutex arbitration | One short per-mutex metadata guard with one FIFO pending-request queue; serialize local/proxy claims, origin-combiner election and physical-owner changes; execute source/sleep outside it | Adapt the pinned TCLock MCS-style queue with explicit optional local/proxy selection. Either design must retain the selected deferred outer owner and prove queue/request last use; choosing it does not select capacities, parking or broad batching |
+| C04 register mapping | Pinned KD packet-base mapping: physical R11 holds the same canonical packet; R12/R13 cache logical BP/SP and logical R11-R15 are mapped through the bounded scratch pool | Deliberate original-UB-style resident source R11 with transient wrapper working spills; requires a consistent mapper/wrapper and canonical materialization. Both keep original UB translation/KD GS lowering, one S_W and the local temporary-GPR PUSHFQ/POPFQ contract |
+
+These are pending user choices, not implemented selections or performance
+claims. C11 is needed for actual mutex acquisition/combining arbitration; C04 is
+needed for concrete GPR/GS/virtual-stack lowering and boundary export/reentry.
+Private source discovery/decoding/planning can proceed independently. C12's
+source-rebuilt approval promises no old lock-object or adapter binary layout.
+
 ## 3 Work packages
 
 ### P0 Establish an independent baseline and contracts
@@ -162,8 +175,20 @@ caller-supplied stable bytes and exact boundary metadata through the original
 Miasm x86_64 decoder. It retains decoded bytes/site/length and represents direct
 control flow without successor discovery. Decode failures and unmodeled
 transfers remain separate maps: a missing planner edge to one of those sites
-must not be attributed to ordinary coverage. Source identity/coherence/lifetime
-and API recognition remain caller or future integration obligations.
+must not be attributed to ordinary coverage. It now retains complete Miasm
+instruction/prefix metadata; mutating lowerers must copy those records first.
+
+The [integrated compiler front end](../../../disassem/compiler.py) binds a finite
+immutable source snapshot/version, exact site metadata, source discovery,
+decoding and fragment planning. It validates overlapping source bytes, cuts
+boundary paths, re-expands sites reached at shallower direct-CALL depth and
+retains all source/decode/unmodeled/resource outcomes. Only the selected five
+CALL-edge discovery bound has a default; decode sites, submitted decoder-window
+bytes and CFG work limits are explicit caller inputs. The byte counter includes
+overlapping windows and failed attempts, not unique source-cache bytes. Missing
+source means zero available bytes; a partial/unsupported decode remains a decode
+failure, not proof of invalid source or permanent capability. Runtime source
+identity/lifetime, API recognition and source-provider integration remain work.
 
 There is no emitter, machine-state mapping, runtime CALL/RET effect handling or
 handback. The private records select none of the remaining C02-C11 mechanisms.

@@ -16,7 +16,7 @@ transfer metadata. No source read, successor discovery or discovery budget is
 performed by this adapter.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Mapping
 
@@ -57,10 +57,27 @@ class SourceBytes:
 
 @dataclass(frozen=True)
 class DecodedInstruction:
+    """Authoritative source identity plus its complete Miasm instruction.
+
+    backend_instruction retains the actual decoded object, including b/l/offset,
+    additional_info and instruction methods. Original prefix spelling consumes
+    additional_info.g1 and prefixed/default metadata; name and operands alone
+    cannot preserve those decisions.
+
+    The backend object and operand expressions are read-only by contract; a
+    frozen record does not make Miasm's nested objects immutable. Before invoking
+    a lowerer that rewrites an instruction, operands or prefix metadata, the
+    consumer must take an independent instruction/expression copy and mutate
+    only that lowering-owned copy. The immutable site/raw/length remain the
+    source description, not a lowering result. No copying, normalization or
+    instruction reconstruction is performed by this record.
+    """
+
     site: int
     raw: bytes
     name: str
     operands: tuple[object, ...]
+    backend_instruction: object = field(repr=False, compare=False)
 
     @property
     def length(self) -> int:
@@ -193,7 +210,8 @@ def decode_source(sites: Mapping[int, SourceBytes]) -> DecodedSource:
             )
             continue
         instructions[site] = DecodedInstruction(
-            site, raw[:line.l], line.name, tuple(line.args)
+            site, raw[:line.l], line.name, tuple(line.args),
+            backend_instruction=line,
         )
 
         if source.boundary is not None:

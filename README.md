@@ -5,21 +5,22 @@ non-PREEMPT_RT**.
 
 ## Current state
 
-The first implementation slice is a private
-[source-flow fragment planner](disassem/fragment.py), contributing only the
-structural source-flow analysis to P2. Given a finite, caller-classified graph,
-it stops before lock/unlock/mode/special sites, retains safe alternatives and
-shared joins, and reports missing targets and unresolved transfers separately.
-Explicit direct CALL/RET records keep each call's target and continuation
-separate; a continuation is retained only when its callee has a modeled
-boundary-free route to a RET. Its records are provisional compiler data, not a
-public ABI or a runtime-return proof.
+The private [compiler front end](disassem/compiler.py) connects a finite,
+immutable source snapshot to instruction discovery, the original Miasm decoder
+and [fragment planning](disassem/fragment.py). It checks overlapping source bytes,
+retains the snapshot/version and complete decoded instructions, cuts at exact
+source-operation metadata, and preserves modeled branches, joins and direct
+CALL/RET alternatives. Shallower CALL paths can expand previously reached sites.
 
-A private [decoder adapter](disassem/source_decode.py) now converts only supplied
-stable source bytes and exact boundary metadata through the original Miasm
-x86_64 decoder into planner records. It retains source bytes/length and separates
-decode failures and unmodeled transfers from missing ordinary coverage. It does
-not read source, discover successors or select a register/packet mapping.
+Only the selected five-edge direct-CALL discovery limit has a default. Decode
+sites, submitted decoder-window bytes and CFG work require explicit caller
+limits. Missing source, decode failures, unmodeled transfers and resource stops
+have separate results. This is compiler input/output, not emitted coverage or a
+runtime handback recipe. It reads no provider and selects no register/packet ABI.
+
+The [decoder](disassem/source_decode.py) retains the actual Miasm instruction,
+including LOCK/REP prefix metadata and methods. Lowerers that mutate instructions
+must work on independent copies; authoritative source bytes remain unchanged.
 
 The private [mutex release protocol](kernel/mutex_release.c) and its
 [header](kernel/mutex_release.h) retain physical-owner context and exact
@@ -41,9 +42,9 @@ advancement implementation.
 There is no API recognition, instruction emission, runtime CALL/RET effect
 handling, complete lock implementation, build system or benchmark payload yet.
 Ten focused private cases passed on the earlier intraprocedural planner in
-`13f2630f` with Python 3.10.12. The CALL/RET, decoder and C protocol extensions
-have static review only; decoder dependencies have not been installed or
-imported. Further behavioral tests are deferred until overall functionality is
+`13f2630f` with Python 3.10.12. The integrated front end, CALL/RET planning,
+decoder and C protocol have static review only; decoder dependencies have not
+been installed or imported. Further behavioral tests are deferred until overall functionality is
 complete. See the [evidence limits](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#21-rebuild-status).
 No build, JIT execution, kernel integration or performance result is claimed.
 Acceptance specifications T01-T56 remain unrun.
