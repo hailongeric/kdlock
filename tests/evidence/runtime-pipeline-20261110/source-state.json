@@ -1,0 +1,8 @@
+{
+  "archive_sha256": "5be656f42ea85526e44d292b6929dcd6ee826e395e36dd5b91a50e25750b3a52",
+  "files": 99,
+  "git_head": "c6becf81987ae29a97000a641d76a0ff2e300860",
+  "snapshot_kind": "git_archive",
+  "source_worktree_status": " M README.md\n M docs/design/kdlock_redesign/00_overview.md\n M docs/design/kdlock_redesign/01_lock_protocol.md\n M docs/design/kdlock_redesign/02_jit_contract.md\n M docs/design/kdlock_redesign/03_implementation_plan.md\n M docs/design/kdlock_redesign/04_evidence_and_reconciliation.md\n?? tests/kernel/\n",
+  "transfer_bytes": 1107544
+}

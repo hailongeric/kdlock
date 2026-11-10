@@ -1,0 +1,17 @@
+{
+  "archive_sha256": "5be656f42ea85526e44d292b6929dcd6ee826e395e36dd5b91a50e25750b3a52",
+  "boot_id": "3d32656f-6162-4a0a-9304-bf383d34298d",
+  "changed_values": "only old run prefix to fresh run prefix",
+  "config_sha256": "7d9a87957e0ec4e9b06b63fcd5dafb331dfe0324149905392d65a130ffe8d72a",
+  "config_source": "/mnt/kdlock-builds/kdlock-main-work/run-97130fe4-01a1bc4f/receipts/pipeline-config.json",
+  "files_verified": 99,
+  "git_head": "c6becf81987ae29a97000a641d76a0ff2e300860",
+  "input": "/mnt/kdlock-builds/kdlock-main-work/run-c6becf81-01a1bc4f/input",
+  "uname": [
+    "Linux",
+    "ubuntu",
+    "7.0.0-38-kdlock1",
+    "#2 SMP PREEMPT_DYNAMIC Tue Oct 27 05:36:25 UTC 2026",
+    "x86_64"
+  ]
+}

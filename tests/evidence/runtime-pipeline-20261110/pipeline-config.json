@@ -1,0 +1,63 @@
+{
+  "archive_bytes": 2097152,
+  "archive_mode": 384,
+  "build": {
+    "diagnostic_bytes": 65536,
+    "elf_bytes": 4194304,
+    "intermediate_bytes": 4194304,
+    "machine_bytes": 1048576,
+    "metadata_bytes": 2097152,
+    "total_seconds": 30
+  },
+  "build_target": {
+    "code_base": 268435456,
+    "code_capacity": 65536
+  },
+  "codegen": {
+    "lowered_sites": 256,
+    "lowered_text_bytes": 131072,
+    "runtime_block_visits": 4096
+  },
+  "discovery": {
+    "cfg_work_steps": 1024,
+    "decode_sites": 256,
+    "decode_window_bytes": 4096
+  },
+  "gs_offset": 256,
+  "learning": {
+    "acknowledgments": 32,
+    "candidates": 32,
+    "claims": 32,
+    "publications": 32,
+    "records": 128
+  },
+  "scratch_parent": "/mnt/kdlock-builds/kdlock-main-work/run-c6becf81-01a1bc4f/scratch",
+  "source_export": {
+    "boundaries": 64,
+    "regions": 16,
+    "source_bytes": 65536
+  },
+  "toolchain": {
+    "assembler": "/usr/bin/as",
+    "cpp": "/usr/bin/cpp",
+    "environment": {
+      "LANG": "C",
+      "LC_ALL": "C",
+      "PATH": "/usr/bin:/bin",
+      "TMPDIR": "/mnt/kdlock-builds/kdlock-main-work/run-c6becf81-01a1bc4f/scratch"
+    },
+    "include_directories": [
+      "/mnt/kdlock-builds/kdlock-main-work/run-c6becf81-01a1bc4f/input/include"
+    ],
+    "linker": "/usr/bin/ld",
+    "objcopy": "/usr/bin/objcopy",
+    "page_size": 4096
+  },
+  "wire": {
+    "artifact_bytes": 2097152,
+    "frame_bytes": 4194304,
+    "rows": 128,
+    "symbol_bytes": 256,
+    "version_bytes": 4096
+  }
+}
