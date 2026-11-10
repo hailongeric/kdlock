@@ -1,0 +1,22 @@
+{
+  "full-build.log": {
+    "compressed_bytes": 285019,
+    "compressed_file": "full-build.log.gz",
+    "compressed_sha256": "d71b644ffdb78a8d910fe63c6d8faf76419fb9fe7260cb92ee174776dc21ea9e",
+    "compression": "gzip level9 mtime0 on source host after read-only transfer; decompressed bytes equal original log",
+    "matches_final_readback_hash": true,
+    "original_vm_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/full-build.log",
+    "uncompressed_bytes": 6075232,
+    "uncompressed_sha256": "144c8e07d3e0f72eefec19c57a11c9a6eebfd018d9eb649a25f72ac4926fb532"
+  },
+  "overlay-950ee6fc/build.log": {
+    "compressed_bytes": 67166,
+    "compressed_file": "overlay-950ee6fc/build.log.gz",
+    "compressed_sha256": "2c06775f63e2c88a6a67fc3c62196d13a29499899a255e456e62274497b9db17",
+    "compression": "gzip level9 mtime0 on source host after read-only transfer; decompressed bytes equal original log",
+    "matches_final_readback_hash": true,
+    "original_vm_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-950ee6fc/build.log",
+    "uncompressed_bytes": 608236,
+    "uncompressed_sha256": "d7e23afa02b4bcfaeffb2a8446a3e7d0f91f5aec954f77c487cdedee380d79b4"
+  }
+}

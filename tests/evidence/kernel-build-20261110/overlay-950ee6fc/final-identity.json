@@ -1,0 +1,81 @@
+{
+  "boot_id": "3d32656f-6162-4a0a-9304-bf383d34298d",
+  "build_input_count": 64,
+  "build_input_mismatches": [],
+  "diagnostics": "See diagnostics.json and complete compressed logs; repetitive warning arrays omitted from this derived readback.",
+  "elf_notes": "\nDisplaying notes found in: .notes\n  Owner                Data size \tDescription\n  Linux                0x00000004\tfunc\n   description data: 00 00 00 00 \n  Linux                0x00000001\tOPEN\n   description data: 00 \n  Xen                  0x0000000c\tUnknown note type: (0x00000013)\n   description data: 00 00 20 00 00 00 00 01 ff ff ff 3f \n  Xen                  0x00000008\tUnknown note type: (0x00000012)\n   description data: d0 75 f2 03 00 00 00 00 \n  Xen                  0x00000006\tUnknown note type: (0x00000006)\n   description data: 6c 69 6e 75 78 00 \n  Xen                  0x00000004\tUnknown note type: (0x00000007)\n   description data: 32 2e 36 00 \n  Xen                  0x00000008\tUnknown note type: (0x00000005)\n   description data: 78 65 6e 2d 33 2e 30 00 \n  Xen                  0x00000008\tUnknown note type: (0x00000003)\n   description data: 00 00 00 80 ff ff ff ff \n  Xen                  0x00000008\tUnknown note type: (0x0000000f)\n   description data: 00 00 00 00 80 00 00 00 \n  Xen                  0x00000008\tNT_VERSION (version)\n   description data: 30 87 f2 83 ff ff ff ff \n  Xen                  0x00000015\tUnknown note type: (0x0000000a)\n   description data: 21 77 72 69 74 61 62 6c 65 5f 70 61 67 65 5f 74 61 62 6c 65 73 \n  Xen                  0x00000004\tUnknown note type: (0x00000009)\n   description data: 79 65 73 00 \n  Xen                  0x00000010\tUnknown note type: (0x0000000d)\n   description data: 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 \n  Xen                  0x00000004\tUnknown note type: (0x00000010)\n   description data: 01 00 00 00 \n  Xen                  0x00000008\tGO BUILDID\n   description data: 00 00 00 00 00 00 00 00 \n  Xen                  0x00000004\tUnknown note type: (0x00000011)\n   description data: 01 88 00 00 \n  Xen                  0x00000008\tUnknown note type: (0x00000008)\n   description data: 67 65 6e 65 72 69 63 00 \n  Xen                  0x00000004\tUnknown note type: (0x0000000e)\n   description data: 01 00 00 00 \n  GNU                  0x00000014\tNT_GNU_BUILD_ID (unique build ID bitstring)\n    Build ID: f34c6d56a0f0545790efd04c566dc390cae8d2ae\n",
+  "files": {
+    ".config": {
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "size": 308548,
+      "stable_during_hash": true
+    },
+    "Module.symvers": {
+      "sha256": "2533c2a4becc4f99f8dacc38e9480608c9032e4c0f3d06a9b4a2fe51fda6752b",
+      "size": 2384816,
+      "stable_during_hash": true
+    },
+    "System.map": {
+      "sha256": "47cc1e87e95f2e118f9a20ff01ec8e31dee1f9d0f650ef9649392a25db98395f",
+      "size": 10564272,
+      "stable_during_hash": true
+    },
+    "arch/x86/boot/bzImage": {
+      "sha256": "b3e3ecb331bd163c7a4b97ca6c82f365b07519488b7e499f90dee875d945ddbd",
+      "size": 17183232,
+      "stable_during_hash": true
+    },
+    "include/config/kernel.release": {
+      "sha256": "77fd8f5ea8e64800eefecdbeb11e43b32057b7bffd5eef8ff5cbc7bed18e8701",
+      "size": 20,
+      "stable_during_hash": true
+    },
+    "include/generated/utsrelease.h": {
+      "sha256": "9e6a005f815facbef6856967b4e46bb0f6d7e2272a0727843f5962f05eec5971",
+      "size": 42,
+      "stable_during_hash": true
+    },
+    "vmlinux": {
+      "sha256": "466907d2a9e392eaa976035595ca99da8e5a8a25653efead677de82cab006db9",
+      "size": 508210904,
+      "stable_during_hash": true
+    }
+  },
+  "format": "kdlock.full-kernel-final-readback.v1",
+  "gs_symbols": [
+    "ffffffff843f7000 D __per_cpu_start",
+    "ffffffff8440f018 D const_current_task",
+    "ffffffff8440f018 D current_task"
+  ],
+  "kernel_release": "7.0.0-38-kdrebuild1",
+  "logs": {
+    "full-build.log": {
+      "sha256": "144c8e07d3e0f72eefec19c57a11c9a6eebfd018d9eb649a25f72ac4926fb532",
+      "size": 6075232,
+      "stable_during_hash": true
+    },
+    "overlay-950ee6fc/build.log": {
+      "sha256": "d7e23afa02b4bcfaeffb2a8446a3e7d0f91f5aec954f77c487cdedee380d79b4",
+      "size": 608236,
+      "stable_during_hash": true
+    }
+  },
+  "module_count": 6901,
+  "module_vermagic_example": "7.0.0-38-kdrebuild1 SMP preempt mod_unload modversions",
+  "module_vermagic_example_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/arch/x86/crypto/aegis128-aesni.ko",
+  "module_vermagic_example_sha256": "ed04a291b550d8494aab4bae8ca7b3883d75e3e88fa477d9835ad0bdd120c1ec",
+  "overlay_result_returncode": 0,
+  "running_uname": [
+    "Linux",
+    "ubuntu",
+    "7.0.0-38-kdlock1",
+    "#2 SMP PREEMPT_DYNAMIC Tue Oct 27 05:36:25 UTC 2026",
+    "x86_64"
+  ],
+  "runtime_source_sha256": "e9ff1fdd21542e3dd87a9b6fe97bd8b7efb0540382d551c983f10192a67cca1c",
+  "scope": "Read-only final file/ELF/module/input inspection after recorded overlay return0; no build, install, boot or test by this collector.",
+  "source_base": "c6becf81987ae29a97000a641d76a0ff2e300860",
+  "source_commit": "950ee6fc494af2db129911b57f567ac4c5e5d3b6",
+  "tainted": "0",
+  "utc": "2026-11-10T15:10:55.224304+00:00"
+}

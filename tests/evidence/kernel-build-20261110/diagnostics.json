@@ -1,0 +1,248 @@
+{
+  "full-build.log": {
+    "classifier": "One exclusive category per line containing case-insensitive warning; exact complete logs retained.",
+    "line_count": 177772,
+    "matched_error_lines": [],
+    "non_locale_warning_lines": [
+      {
+        "kind": "native_frame_size",
+        "line": 649,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/maple_tree.c:3740:1: warning: the frame size of 1088 bytes is larger than 1024 bytes [-Wframe-larger-than=]"
+      },
+      {
+        "kind": "native_unused_variable",
+        "line": 2131,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/security/apparmor/af_inet.c:1200:20: warning: unused variable \u2018tmp\u2019 [-Wunused-variable]"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5443,
+        "text": "warning: unsafe memchr() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memchr.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5458,
+        "text": "warning: unsafe memchr_inv() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memchr_inv.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5469,
+        "text": "warning: unsafe memcmp() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memcmp.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5483,
+        "text": "warning: unsafe memscan() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memscan.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5485,
+        "text": "warning: unsafe memcmp() usage lacked '__read_overflow2' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2-memcmp.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5496,
+        "text": "warning: unsafe memcpy() usage lacked '__read_overflow2' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2-memcpy.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5511,
+        "text": "warning: unsafe memmove() usage lacked '__read_overflow2' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2-memmove.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5524,
+        "text": "warning: unsafe memcpy() usage lacked '__read_overflow2_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2_field-memcpy.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5526,
+        "text": "warning: unsafe memmove() usage lacked '__read_overflow2_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2_field-memmove.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5540,
+        "text": "warning: unsafe memcpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-memcpy.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5550,
+        "text": "warning: unsafe memmove() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-memmove.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5564,
+        "text": "warning: unsafe memset() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-memset.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5566,
+        "text": "warning: unsafe strcpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strcpy-lit.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5579,
+        "text": "warning: unsafe strcpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strcpy.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5593,
+        "text": "warning: unsafe strncpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strncpy-src.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5602,
+        "text": "warning: unsafe strncpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strncpy.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5606,
+        "text": "warning: unsafe strscpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strscpy.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5615,
+        "text": "warning: unsafe memcpy() usage lacked '__write_overflow_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow_field-memcpy.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5627,
+        "text": "warning: unsafe memmove() usage lacked '__write_overflow_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow_field-memmove.c"
+      },
+      {
+        "kind": "native_fortify_compiler_check",
+        "line": 5637,
+        "text": "warning: unsafe memset() usage lacked '__write_overflow_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow_field-memset.c"
+      },
+      {
+        "kind": "native_frame_size",
+        "line": 152915,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_fs.c:1306:1: warning: the frame size of 1096 bytes is larger than 1024 bytes [-Wframe-larger-than=]"
+      },
+      {
+        "kind": "native_frame_size",
+        "line": 152924,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_fs.c:1316:1: warning: the frame size of 1088 bytes is larger than 1024 bytes [-Wframe-larger-than=]"
+      },
+      {
+        "kind": "native_frame_size",
+        "line": 153854,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/lag/port_sel.c:547:1: warning: the frame size of 1120 bytes is larger than 1024 bytes [-Wframe-larger-than=]"
+      },
+      {
+        "kind": "native_frame_size",
+        "line": 153858,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/lag/port_sel.c:531:1: warning: the frame size of 1112 bytes is larger than 1024 bytes [-Wframe-larger-than=]"
+      },
+      {
+        "kind": "native_frame_size",
+        "line": 153939,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_rep.c:991:1: warning: the frame size of 1096 bytes is larger than 1024 bytes [-Wframe-larger-than=]"
+      },
+      {
+        "kind": "native_frame_size",
+        "line": 154150,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_tc.c:891:1: warning: the frame size of 1280 bytes is larger than 1024 bytes [-Wframe-larger-than=]"
+      },
+      {
+        "kind": "native_frame_size",
+        "line": 155109,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/wireguard/allowedips.c:67:1: warning: the frame size of 1056 bytes is larger than 1024 bytes [-Wframe-larger-than=]"
+      },
+      {
+        "kind": "native_frame_size",
+        "line": 155117,
+        "text": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/wireguard/allowedips.c:80:1: warning: the frame size of 1064 bytes is larger than 1024 bytes [-Wframe-larger-than=]"
+      },
+      {
+        "kind": "kd_handwritten_entry_mitigation",
+        "line": 156974,
+        "text": "vmlinux.o: warning: objtool: kd_mutex_lock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "kind": "kd_handwritten_entry_mitigation",
+        "line": 156975,
+        "text": "vmlinux.o: warning: objtool: kd_mutex_unlock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "kind": "kd_handwritten_entry_mitigation",
+        "line": 156976,
+        "text": "vmlinux.o: warning: objtool: kd_mutex_entry_asm+0x24: indirect call found in MITIGATION_RETPOLINE build"
+      },
+      {
+        "kind": "kd_handwritten_entry_mitigation",
+        "line": 156977,
+        "text": "vmlinux.o: warning: objtool: kd_native_resume+0x49: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "kind": "kd_jit_fallthrough",
+        "line": 156978,
+        "text": "vmlinux.o: warning: objtool: kd_jit_resume_origin() falls through to next function kd_jit_mutex_grant_call()"
+      },
+      {
+        "kind": "native_module_description",
+        "line": 156981,
+        "text": "WARNING: modpost: missing MODULE_DESCRIPTION() in ubuntu/ubuntu-host/ubuntu-host.o"
+      }
+    ],
+    "perl_warning_text_counts": {
+      "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").": 7067,
+      "perl: warning: Please check that your locale settings:": 7067,
+      "perl: warning: Setting locale failed.": 7067
+    },
+    "warning_classes": {
+      "kd_handwritten_entry_mitigation": 4,
+      "kd_jit_fallthrough": 1,
+      "native_fortify_compiler_check": 20,
+      "native_frame_size": 9,
+      "native_module_description": 1,
+      "native_unused_variable": 1,
+      "perl_locale": 21201
+    },
+    "warning_line_count": 21237
+  },
+  "overlay-950ee6fc/build.log": {
+    "classifier": "One exclusive category per line containing case-insensitive warning; exact complete logs retained.",
+    "line_count": 13864,
+    "matched_error_lines": [],
+    "non_locale_warning_lines": [
+      {
+        "kind": "kd_handwritten_entry_mitigation",
+        "line": 15,
+        "text": "vmlinux.o: warning: objtool: kd_mutex_lock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "kind": "kd_handwritten_entry_mitigation",
+        "line": 16,
+        "text": "vmlinux.o: warning: objtool: kd_mutex_unlock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "kind": "kd_handwritten_entry_mitigation",
+        "line": 17,
+        "text": "vmlinux.o: warning: objtool: kd_mutex_entry_asm+0x24: indirect call found in MITIGATION_RETPOLINE build"
+      },
+      {
+        "kind": "kd_handwritten_entry_mitigation",
+        "line": 18,
+        "text": "vmlinux.o: warning: objtool: kd_native_resume+0x49: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "kind": "kd_jit_fallthrough",
+        "line": 19,
+        "text": "vmlinux.o: warning: objtool: kd_jit_resume_origin() falls through to next function kd_jit_mutex_grant_call()"
+      },
+      {
+        "kind": "native_module_description",
+        "line": 22,
+        "text": "WARNING: modpost: missing MODULE_DESCRIPTION() in ubuntu/ubuntu-host/ubuntu-host.o"
+      }
+    ],
+    "perl_warning_text_counts": {},
+    "warning_classes": {
+      "kd_handwritten_entry_mitigation": 4,
+      "kd_jit_fallthrough": 1,
+      "native_module_description": 1
+    },
+    "warning_line_count": 6
+  }
+}

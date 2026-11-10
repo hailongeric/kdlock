@@ -1,0 +1,26 @@
+{
+  "phase": "BUILT",
+  "argv": [
+    "make",
+    "-C",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+    "O=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+    "KERNELRELEASE=7.0.0-38-kdrebuild1",
+    "-j32",
+    "bzImage",
+    "modules"
+  ],
+  "start_utc": "2026-11-10T14:41:46.134958+00:00",
+  "source_commit": "c6becf81987ae29a97000a641d76a0ff2e300860",
+  "config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "timeout_seconds": 3600,
+  "minimum_guest_free_bytes": 4000000000,
+  "boot_id": "3d32656f-6162-4a0a-9304-bf383d34298d",
+  "kernel_release_before": "7.0.0-38-kdlock1",
+  "pid": 17106,
+  "guest_available_bytes": 13815136256,
+  "elapsed_seconds": 920.4363654379995,
+  "last_check_utc": "2026-11-10T14:57:01.571260+00:00",
+  "returncode": 0,
+  "end_utc": "2026-11-10T14:57:06.572587+00:00"
+}

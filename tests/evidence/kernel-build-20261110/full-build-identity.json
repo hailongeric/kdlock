@@ -1,0 +1,85 @@
+{
+  "utc": "2026-11-10T15:00:32.746761+00:00",
+  "source_commit": "c6becf81987ae29a97000a641d76a0ff2e300860",
+  "files": {
+    ".config": {
+      "size": 308548,
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+    },
+    "vmlinux": {
+      "size": 508209704,
+      "sha256": "ee019971f99d6b53974b19e7becd559ee9e146bd60ed17fd7ffb535a28c1a838"
+    },
+    "System.map": {
+      "size": 10564272,
+      "sha256": "51acdecdc9d282d014882e07f22cc9e21342d28fbc75533c4ae95dfa1e141056"
+    },
+    "Module.symvers": {
+      "size": 2384816,
+      "sha256": "2533c2a4becc4f99f8dacc38e9480608c9032e4c0f3d06a9b4a2fe51fda6752b"
+    },
+    "arch/x86/boot/bzImage": {
+      "size": 17183232,
+      "sha256": "01945023f39400fb7626accc69c3fd94bdb6a1dd94a32c5b7a0987041685ab22"
+    },
+    "include/config/kernel.release": {
+      "size": 20,
+      "sha256": "77fd8f5ea8e64800eefecdbeb11e43b32057b7bffd5eef8ff5cbc7bed18e8701"
+    },
+    "include/generated/utsrelease.h": {
+      "size": 42,
+      "sha256": "9e6a005f815facbef6856967b4e46bb0f6d7e2272a0727843f5962f05eec5971"
+    }
+  },
+  "kernel_release": "7.0.0-38-kdrebuild1",
+  "elf_notes": "\nDisplaying notes found in: .notes\n  Owner                Data size \tDescription\n  Linux                0x00000004\tfunc\n   description data: 00 00 00 00 \n  Linux                0x00000001\tOPEN\n   description data: 00 \n  Xen                  0x0000000c\tUnknown note type: (0x00000013)\n   description data: 00 00 20 00 00 00 00 01 ff ff ff 3f \n  Xen                  0x00000008\tUnknown note type: (0x00000012)\n   description data: d0 75 f2 03 00 00 00 00 \n  Xen                  0x00000006\tUnknown note type: (0x00000006)\n   description data: 6c 69 6e 75 78 00 \n  Xen                  0x00000004\tUnknown note type: (0x00000007)\n   description data: 32 2e 36 00 \n  Xen                  0x00000008\tUnknown note type: (0x00000005)\n   description data: 78 65 6e 2d 33 2e 30 00 \n  Xen                  0x00000008\tUnknown note type: (0x00000003)\n   description data: 00 00 00 80 ff ff ff ff \n  Xen                  0x00000008\tUnknown note type: (0x0000000f)\n   description data: 00 00 00 00 80 00 00 00 \n  Xen                  0x00000008\tNT_VERSION (version)\n   description data: 30 87 f2 83 ff ff ff ff \n  Xen                  0x00000015\tUnknown note type: (0x0000000a)\n   description data: 21 77 72 69 74 61 62 6c 65 5f 70 61 67 65 5f 74 61 62 6c 65 73 \n  Xen                  0x00000004\tUnknown note type: (0x00000009)\n   description data: 79 65 73 00 \n  Xen                  0x00000010\tUnknown note type: (0x0000000d)\n   description data: 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 \n  Xen                  0x00000004\tUnknown note type: (0x00000010)\n   description data: 01 00 00 00 \n  Xen                  0x00000008\tGO BUILDID\n   description data: 00 00 00 00 00 00 00 00 \n  Xen                  0x00000004\tUnknown note type: (0x00000011)\n   description data: 01 88 00 00 \n  Xen                  0x00000008\tUnknown note type: (0x00000008)\n   description data: 67 65 6e 65 72 69 63 00 \n  Xen                  0x00000004\tUnknown note type: (0x0000000e)\n   description data: 01 00 00 00 \n  GNU                  0x00000014\tNT_GNU_BUILD_ID (unique build ID bitstring)\n    Build ID: c47a4ca310ddc48498096a4e231df72149c7d44e\n",
+  "gs_symbols": [
+    "ffffffff843f7000 D __per_cpu_start",
+    "ffffffff8440f018 D const_current_task",
+    "ffffffff8440f018 D current_task"
+  ],
+  "module_count": 6901,
+  "module_vermagic_example_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/arch/x86/crypto/aegis128-aesni.ko",
+  "module_vermagic_example": "7.0.0-38-kdrebuild1 SMP preempt mod_unload modversions",
+  "objtool_warnings": [
+    "vmlinux.o: warning: objtool: kd_mutex_lock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build",
+    "vmlinux.o: warning: objtool: kd_mutex_unlock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build",
+    "vmlinux.o: warning: objtool: kd_mutex_entry_asm+0x24: indirect call found in MITIGATION_RETPOLINE build",
+    "vmlinux.o: warning: objtool: kd_native_resume+0x49: 'naked' return found in MITIGATION_RETHUNK build",
+    "vmlinux.o: warning: objtool: kd_jit_resume_origin() falls through to next function kd_jit_mutex_grant_call()"
+  ],
+  "other_compiler_warnings": [
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/maple_tree.c:3740:1: warning: the frame size of 1088 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/security/apparmor/af_inet.c:1200:20: warning: unused variable \u2018tmp\u2019 [-Wunused-variable]",
+    "warning: unsafe memchr() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memchr.c",
+    "warning: unsafe memchr_inv() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memchr_inv.c",
+    "warning: unsafe memcmp() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memcmp.c",
+    "warning: unsafe memscan() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memscan.c",
+    "warning: unsafe memcmp() usage lacked '__read_overflow2' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2-memcmp.c",
+    "warning: unsafe memcpy() usage lacked '__read_overflow2' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2-memcpy.c",
+    "warning: unsafe memmove() usage lacked '__read_overflow2' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2-memmove.c",
+    "warning: unsafe memcpy() usage lacked '__read_overflow2_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2_field-memcpy.c",
+    "warning: unsafe memmove() usage lacked '__read_overflow2_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2_field-memmove.c",
+    "warning: unsafe memcpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-memcpy.c",
+    "warning: unsafe memmove() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-memmove.c",
+    "warning: unsafe memset() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-memset.c",
+    "warning: unsafe strcpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strcpy-lit.c",
+    "warning: unsafe strcpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strcpy.c",
+    "warning: unsafe strncpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strncpy-src.c",
+    "warning: unsafe strncpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strncpy.c",
+    "warning: unsafe strscpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strscpy.c",
+    "warning: unsafe memcpy() usage lacked '__write_overflow_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow_field-memcpy.c",
+    "warning: unsafe memmove() usage lacked '__write_overflow_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow_field-memmove.c",
+    "warning: unsafe memset() usage lacked '__write_overflow_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow_field-memset.c",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_fs.c:1306:1: warning: the frame size of 1096 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_fs.c:1316:1: warning: the frame size of 1088 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/lag/port_sel.c:547:1: warning: the frame size of 1120 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/lag/port_sel.c:531:1: warning: the frame size of 1112 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_rep.c:991:1: warning: the frame size of 1096 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_tc.c:891:1: warning: the frame size of 1280 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/wireguard/allowedips.c:67:1: warning: the frame size of 1056 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/wireguard/allowedips.c:80:1: warning: the frame size of 1064 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+    "WARNING: modpost: missing MODULE_DESCRIPTION() in ubuntu/ubuntu-host/ubuntu-host.o"
+  ],
+  "earlier_readback_error": "A prior read-only metadata attempt assumed ext4.ko; ext4 is built in, so modinfo failed before any identity receipt was written. This readback chooses an actual built module. No build failure or mutation occurred."
+}

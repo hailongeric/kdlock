@@ -1,0 +1,91 @@
+LOG full-build.log
+649: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/maple_tree.c:3740:1: warning: the frame size of 1088 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+2131: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/security/apparmor/af_inet.c:1200:20: warning: unused variable ‘tmp’ [-Wunused-variable]
+5443: warning: unsafe memchr() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memchr.c
+5458: warning: unsafe memchr_inv() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memchr_inv.c
+5469: warning: unsafe memcmp() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memcmp.c
+5483: warning: unsafe memscan() usage lacked '__read_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow-memscan.c
+5485: warning: unsafe memcmp() usage lacked '__read_overflow2' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2-memcmp.c
+5496: warning: unsafe memcpy() usage lacked '__read_overflow2' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2-memcpy.c
+5511: warning: unsafe memmove() usage lacked '__read_overflow2' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2-memmove.c
+5524: warning: unsafe memcpy() usage lacked '__read_overflow2_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2_field-memcpy.c
+5526: warning: unsafe memmove() usage lacked '__read_overflow2_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/read_overflow2_field-memmove.c
+5540: warning: unsafe memcpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-memcpy.c
+5550: warning: unsafe memmove() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-memmove.c
+5564: warning: unsafe memset() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-memset.c
+5566: warning: unsafe strcpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strcpy-lit.c
+5579: warning: unsafe strcpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strcpy.c
+5593: warning: unsafe strncpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strncpy-src.c
+5602: warning: unsafe strncpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strncpy.c
+5606: warning: unsafe strscpy() usage lacked '__write_overflow' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow-strscpy.c
+5615: warning: unsafe memcpy() usage lacked '__write_overflow_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow_field-memcpy.c
+5627: warning: unsafe memmove() usage lacked '__write_overflow_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow_field-memmove.c
+5637: warning: unsafe memset() usage lacked '__write_overflow_field' warning in /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/lib/test_fortify/write_overflow_field-memset.c
+152915: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_fs.c:1306:1: warning: the frame size of 1096 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+152924: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_fs.c:1316:1: warning: the frame size of 1088 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+153854: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/lag/port_sel.c:547:1: warning: the frame size of 1120 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+153858: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/lag/port_sel.c:531:1: warning: the frame size of 1112 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+153939: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_rep.c:991:1: warning: the frame size of 1096 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+154150: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/ethernet/mellanox/mlx5/core/en_tc.c:891:1: warning: the frame size of 1280 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+155109: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/wireguard/allowedips.c:67:1: warning: the frame size of 1056 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+155117: /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/drivers/net/wireguard/allowedips.c:80:1: warning: the frame size of 1064 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+156974: vmlinux.o: warning: objtool: kd_mutex_lock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build
+156975: vmlinux.o: warning: objtool: kd_mutex_unlock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build
+156976: vmlinux.o: warning: objtool: kd_mutex_entry_asm+0x24: indirect call found in MITIGATION_RETPOLINE build
+156977: vmlinux.o: warning: objtool: kd_native_resume+0x49: 'naked' return found in MITIGATION_RETHUNK build
+156978: vmlinux.o: warning: objtool: kd_jit_resume_origin() falls through to next function kd_jit_mutex_grant_call()
+156981: WARNING: modpost: missing MODULE_DESCRIPTION() in ubuntu/ubuntu-host/ubuntu-host.o
+FIRST PERL LOCALE CONTEXT
+2016: perl: warning: Setting locale failed.
+2017: perl: warning: Please check that your locale settings:
+2018: 	LANGUAGE = (unset),
+2019: 	LC_ALL = (unset),
+2020: 	LC_CTYPE = "C.UTF-8",
+2021: 	LC_NUMERIC = "C",
+2022: 	LC_COLLATE = "C",
+2023: 	LC_TIME = "zh_CN.UTF-8",
+2024: 	LC_MESSAGES = (unset),
+2025: 	LC_MONETARY = "zh_CN.UTF-8",
+2026: 	LC_ADDRESS = "zh_CN.UTF-8",
+2027: 	LC_IDENTIFICATION = "zh_CN.UTF-8",
+2028: 	LC_MEASUREMENT = "zh_CN.UTF-8",
+2029: 	LC_PAPER = "zh_CN.UTF-8",
+2030: 	LC_TELEPHONE = "zh_CN.UTF-8",
+2031: 	LC_NAME = "zh_CN.UTF-8",
+2032: 	LANG = "C.UTF-8"
+2033:     are supported and installed on your system.
+2034: perl: warning: Falling back to a fallback locale ("C.UTF-8").
+FINAL 12 LINES
+177761:   BTF [M] net/qrtr/qrtr-tun.ko
+177762:   BTF [M] net/qrtr/qrtr.ko
+177763:   BTF [M] net/qrtr/qrtr-mhi.ko
+177764:   BTF [M] virt/lib/irqbypass.ko
+177765:   LD [M]  ubuntu/ubuntu-host/ubuntu-host.ko
+177766:   LD [M]  ubuntu/igh-ecat/devices/ec_generic.ko
+177767:   LD [M]  ubuntu/igh-ecat/master/ec_master.ko
+177768:   BTF [M] ubuntu/ubuntu-host/ubuntu-host.ko
+177769:   BTF [M] ubuntu/igh-ecat/devices/ec_generic.ko
+177770:   BTF [M] ubuntu/igh-ecat/master/ec_master.ko
+177771: make[1]: Leaving directory '/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build'
+177772: make: Leaving directory '/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source'
+
+LOG overlay-950ee6fc/build.log
+15: vmlinux.o: warning: objtool: kd_mutex_lock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build
+16: vmlinux.o: warning: objtool: kd_mutex_unlock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build
+17: vmlinux.o: warning: objtool: kd_mutex_entry_asm+0x24: indirect call found in MITIGATION_RETPOLINE build
+18: vmlinux.o: warning: objtool: kd_native_resume+0x49: 'naked' return found in MITIGATION_RETHUNK build
+19: vmlinux.o: warning: objtool: kd_jit_resume_origin() falls through to next function kd_jit_mutex_grant_call()
+22: WARNING: modpost: missing MODULE_DESCRIPTION() in ubuntu/ubuntu-host/ubuntu-host.o
+FINAL 12 LINES
+13853:   BTF [M] net/qrtr/qrtr-tun.ko
+13854:   LD [M]  virt/lib/irqbypass.ko
+13855:   BTF [M] net/qrtr/qrtr-mhi.ko
+13856:   LD [M]  ubuntu/ubuntu-host/ubuntu-host.ko
+13857:   BTF [M] virt/lib/irqbypass.ko
+13858:   LD [M]  ubuntu/igh-ecat/devices/ec_generic.ko
+13859:   BTF [M] ubuntu/ubuntu-host/ubuntu-host.ko
+13860:   LD [M]  ubuntu/igh-ecat/master/ec_master.ko
+13861:   BTF [M] ubuntu/igh-ecat/devices/ec_generic.ko
+13862:   BTF [M] ubuntu/igh-ecat/master/ec_master.ko
+13863: make[1]: Leaving directory '/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build'
+13864: make: Leaving directory '/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source'
