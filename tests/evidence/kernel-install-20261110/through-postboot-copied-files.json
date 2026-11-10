@@ -1,0 +1,298 @@
+[
+  {
+    "guest_bytes": 141,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-complete.json",
+    "guest_sha256": "bebbb864a9d1070ca202783dbe16e3237f91fe571815104348b33bb81ac23a8a",
+    "local_path": "attempt-v2/arm-complete.json",
+    "retained_bytes": 141,
+    "retained_sha256": "bebbb864a9d1070ca202783dbe16e3237f91fe571815104348b33bb81ac23a8a"
+  },
+  {
+    "guest_bytes": 420,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-disk-usage-result.json",
+    "guest_sha256": "0787cb6634113d923c70a071dcc727614280fa6a0155222036389e92be5c937e",
+    "local_path": "attempt-v2/arm-disk-usage-result.json",
+    "retained_bytes": 420,
+    "retained_sha256": "0787cb6634113d923c70a071dcc727614280fa6a0155222036389e92be5c937e"
+  },
+  {
+    "guest_bytes": 267,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-disk-usage.log",
+    "guest_sha256": "23e923b691822360e852ebc93e8676c46d913401de089800fc966ead89dc8ed0",
+    "local_path": "attempt-v2/arm-disk-usage.log",
+    "retained_bytes": 267,
+    "retained_sha256": "23e923b691822360e852ebc93e8676c46d913401de089800fc966ead89dc8ed0"
+  },
+  {
+    "guest_bytes": 615,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-after-arm-result.json",
+    "guest_sha256": "88ceda77f3faa957d7df81413b8566bc9d0388ea768cf6f9ed12e12b61555fd3",
+    "local_path": "attempt-v2/arm-grub-after-arm-result.json",
+    "retained_bytes": 615,
+    "retained_sha256": "88ceda77f3faa957d7df81413b8566bc9d0388ea768cf6f9ed12e12b61555fd3"
+  },
+  {
+    "guest_bytes": 570,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-after-arm.json",
+    "guest_sha256": "b9185025d8afb31490063510303e504ee61f134171ad442a0f762f1621fecd9f",
+    "local_path": "attempt-v2/arm-grub-after-arm.json",
+    "retained_bytes": 570,
+    "retained_sha256": "b9185025d8afb31490063510303e504ee61f134171ad442a0f762f1621fecd9f"
+  },
+  {
+    "guest_bytes": 0,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-after-arm.log",
+    "guest_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local_path": "attempt-v2/arm-grub-after-arm.log",
+    "retained_bytes": 0,
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "guest_bytes": 602,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-before-arm-result.json",
+    "guest_sha256": "806ba713c33eb5e97820b87ef118f47c6ac0b78375678c13a3fbf0d5ed93bf33",
+    "local_path": "attempt-v2/arm-grub-before-arm-result.json",
+    "retained_bytes": 602,
+    "retained_sha256": "806ba713c33eb5e97820b87ef118f47c6ac0b78375678c13a3fbf0d5ed93bf33"
+  },
+  {
+    "guest_bytes": 441,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-before-arm.json",
+    "guest_sha256": "f6c68ec4cc3d7ac4bc9f13c2ced25d44fe2b782b729f84ea4ade2690f3370d2a",
+    "local_path": "attempt-v2/arm-grub-before-arm.json",
+    "retained_bytes": 441,
+    "retained_sha256": "f6c68ec4cc3d7ac4bc9f13c2ced25d44fe2b782b729f84ea4ade2690f3370d2a"
+  },
+  {
+    "guest_bytes": 0,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-before-arm.log",
+    "guest_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local_path": "attempt-v2/arm-grub-before-arm.log",
+    "retained_bytes": 0,
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "guest_bytes": 580,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-idle-result.json",
+    "guest_sha256": "739b23e69b5479ad3b7d96eeeecf5c08d3e0068d2f2d909c20cba8e40e27204f",
+    "local_path": "attempt-v2/arm-idle-result.json",
+    "retained_bytes": 580,
+    "retained_sha256": "739b23e69b5479ad3b7d96eeeecf5c08d3e0068d2f2d909c20cba8e40e27204f"
+  },
+  {
+    "guest_bytes": 3016,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-idle.json",
+    "guest_sha256": "1beddbec5f25858cdf13f91c6ec484fc8661a91b5f770cc7b0a75a595dbd46a9",
+    "local_path": "attempt-v2/arm-idle.json",
+    "retained_bytes": 3016,
+    "retained_sha256": "1beddbec5f25858cdf13f91c6ec484fc8661a91b5f770cc7b0a75a595dbd46a9"
+  },
+  {
+    "guest_bytes": 0,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-idle.log",
+    "guest_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local_path": "attempt-v2/arm-idle.log",
+    "retained_bytes": 0,
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "guest_bytes": 6787,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-journal.jsonl",
+    "guest_sha256": "74d68fe547d98200b7510cf35f3d090174e5a1af34ae77c6a8aecce971f2a4a6",
+    "local_path": "attempt-v2/arm-journal.jsonl",
+    "retained_bytes": 6787,
+    "retained_sha256": "74d68fe547d98200b7510cf35f3d090174e5a1af34ae77c6a8aecce971f2a4a6"
+  },
+  {
+    "guest_bytes": 467,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-one-shot-result.json",
+    "guest_sha256": "90e00b0dfdd03ec0d3901240fb6d7689ecbb7a405ff78355aa88dfcd4d6e8ff2",
+    "local_path": "attempt-v2/arm-one-shot-result.json",
+    "retained_bytes": 467,
+    "retained_sha256": "90e00b0dfdd03ec0d3901240fb6d7689ecbb7a405ff78355aa88dfcd4d6e8ff2"
+  },
+  {
+    "guest_bytes": 0,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-one-shot.log",
+    "guest_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local_path": "attempt-v2/arm-one-shot.log",
+    "retained_bytes": 0,
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "guest_bytes": 772,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-protected-before-arm-result.json",
+    "guest_sha256": "957b44738e6e0f133f65c3755654164c35a1d8e255fe1790ca6e49e175505c39",
+    "local_path": "attempt-v2/arm-protected-before-arm-result.json",
+    "retained_bytes": 772,
+    "retained_sha256": "957b44738e6e0f133f65c3755654164c35a1d8e255fe1790ca6e49e175505c39"
+  },
+  {
+    "guest_bytes": 47,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-protected-before-arm.json",
+    "guest_sha256": "6358f7dc5545f1c0d4af8df9f90454f982b2a4a23367a854b4c862f59bbcc178",
+    "local_path": "attempt-v2/arm-protected-before-arm.json",
+    "retained_bytes": 47,
+    "retained_sha256": "6358f7dc5545f1c0d4af8df9f90454f982b2a4a23367a854b4c862f59bbcc178"
+  },
+  {
+    "guest_bytes": 0,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-protected-before-arm.log",
+    "guest_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local_path": "attempt-v2/arm-protected-before-arm.log",
+    "retained_bytes": 0,
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "guest_bytes": 320,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-sync-result.json",
+    "guest_sha256": "83050fe898c5ef02418d5d40ff7d6be41099946b98535711fb0217a495907971",
+    "local_path": "attempt-v2/arm-sync-result.json",
+    "retained_bytes": 320,
+    "retained_sha256": "83050fe898c5ef02418d5d40ff7d6be41099946b98535711fb0217a495907971"
+  },
+  {
+    "guest_bytes": 0,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-sync.log",
+    "guest_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local_path": "attempt-v2/arm-sync.log",
+    "retained_bytes": 0,
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "guest_bytes": 63447,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/boot-kernel-journal.txt",
+    "guest_sha256": "25e8f4d6ab25b5d7e90d6fdabd40f76d77f4ca52b731ef8cae1c8190bd019770",
+    "local_path": "postboot-91f48b75/boot-kernel-journal.txt",
+    "retained_bytes": 63447,
+    "retained_sha256": "25e8f4d6ab25b5d7e90d6fdabd40f76d77f4ca52b731ef8cae1c8190bd019770"
+  },
+  {
+    "guest_bytes": 139,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/cmdline.txt",
+    "guest_sha256": "af5360b15e39b86491396772f4acf325202149a2aea0035686ba4b237932465b",
+    "local_path": "postboot-91f48b75/cmdline.txt",
+    "retained_bytes": 139,
+    "retained_sha256": "af5360b15e39b86491396772f4acf325202149a2aea0035686ba4b237932465b"
+  },
+  {
+    "guest_bytes": 111374,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/cpuinfo.txt",
+    "guest_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921",
+    "local_path": "postboot-91f48b75/cpuinfo.txt",
+    "retained_bytes": 111374,
+    "retained_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921"
+  },
+  {
+    "guest_bytes": 53632,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/dmesg.txt",
+    "guest_sha256": "c829c50202bcebc1b473f1d28dc7208b2dbafbd37ad644fe5801024d5f83cf90",
+    "local_path": "postboot-91f48b75/dmesg.txt",
+    "retained_bytes": 53632,
+    "retained_sha256": "c829c50202bcebc1b473f1d28dc7208b2dbafbd37ad644fe5801024d5f83cf90"
+  },
+  {
+    "guest_bytes": 12,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/grub-environment.txt",
+    "guest_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0",
+    "local_path": "postboot-91f48b75/grub-environment.txt",
+    "retained_bytes": 12,
+    "retained_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+  },
+  {
+    "guest_bytes": 26608,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/grub.cfg",
+    "guest_sha256": "1275383e31ad29a10cb782e6116cf0fdcd7bb635d51561113e8597b5648b9a7e",
+    "local_path": "postboot-91f48b75/grub.cfg",
+    "retained_bytes": 26608,
+    "retained_sha256": "1275383e31ad29a10cb782e6116cf0fdcd7bb635d51561113e8597b5648b9a7e"
+  },
+  {
+    "guest_bytes": 709,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/gs-proof.json",
+    "guest_sha256": "7fc9a500eed3e97e4382d4f0102bcbbb3dcfe3b6624cc6e30293d5ba5af6ad89",
+    "local_path": "postboot-91f48b75/gs-proof.json",
+    "retained_bytes": 709,
+    "retained_sha256": "7fc9a500eed3e97e4382d4f0102bcbbb3dcfe3b6624cc6e30293d5ba5af6ad89"
+  },
+  {
+    "guest_bytes": 2799,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/modules.txt",
+    "guest_sha256": "f1abe78389940daf61ef1e26b35fefc16a125dd51439a9d83b64a8d7433cb127",
+    "local_path": "postboot-91f48b75/modules.txt",
+    "retained_bytes": 2799,
+    "retained_sha256": "f1abe78389940daf61ef1e26b35fefc16a125dd51439a9d83b64a8d7433cb127"
+  },
+  {
+    "guest_bytes": 141,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/prior-arm-complete.json",
+    "guest_sha256": "bebbb864a9d1070ca202783dbe16e3237f91fe571815104348b33bb81ac23a8a",
+    "local_path": "postboot-91f48b75/prior-arm-complete.json",
+    "retained_bytes": 141,
+    "retained_sha256": "bebbb864a9d1070ca202783dbe16e3237f91fe571815104348b33bb81ac23a8a"
+  },
+  {
+    "guest_bytes": 570,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/prior-armed-grub.json",
+    "guest_sha256": "b9185025d8afb31490063510303e504ee61f134171ad442a0f762f1621fecd9f",
+    "local_path": "postboot-91f48b75/prior-armed-grub.json",
+    "retained_bytes": 570,
+    "retained_sha256": "b9185025d8afb31490063510303e504ee61f134171ad442a0f762f1621fecd9f"
+  },
+  {
+    "guest_bytes": 161518,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/result.json",
+    "guest_sha256": "def0d57ef7dd093eec1307c576c731f85b010a4ec4af729f9da304b90453b4af",
+    "local_path": "postboot-91f48b75/result.json",
+    "retained_bytes": 161518,
+    "retained_sha256": "def0d57ef7dd093eec1307c576c731f85b010a4ec4af729f9da304b90453b4af"
+  },
+  {
+    "guest_bytes": 476,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/running-kernel-notes.bin",
+    "guest_sha256": "8fdf321391e709d96738a93a32e5663177b03ecf3ed2c6d2637294439210fd7c",
+    "local_path": "postboot-91f48b75/running-kernel-notes.bin",
+    "retained_bytes": 476,
+    "retained_sha256": "8fdf321391e709d96738a93a32e5663177b03ecf3ed2c6d2637294439210fd7c"
+  },
+  {
+    "guest_bytes": 120,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/uname.json",
+    "guest_sha256": "51be1a76a4d3856eb1ed7753f7ad28c184d13842da81dbe0f0fa42b4ff8a5082",
+    "local_path": "postboot-91f48b75/uname.json",
+    "retained_bytes": 120,
+    "retained_sha256": "51be1a76a4d3856eb1ed7753f7ad28c184d13842da81dbe0f0fa42b4ff8a5082"
+  },
+  {
+    "guest_bytes": 2120,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/vmlinux-notes.txt",
+    "guest_sha256": "e0a648c8403980333ed38b28731349abc8d7037f88836d02bce864cc3314e22d",
+    "local_path": "postboot-91f48b75/vmlinux-notes.txt",
+    "retained_bytes": 2120,
+    "retained_sha256": "e0a648c8403980333ed38b28731349abc8d7037f88836d02bce864cc3314e22d"
+  },
+  {
+    "guest_bytes": 5644,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/vmlinux-sections.txt",
+    "guest_sha256": "0038d1022b3869dc19f5ec6dce719121c0776ddfa882c43657aad030e6121a90",
+    "local_path": "postboot-91f48b75/vmlinux-sections.txt",
+    "retained_bytes": 5644,
+    "retained_sha256": "0038d1022b3869dc19f5ec6dce719121c0776ddfa882c43657aad030e6121a90"
+  },
+  {
+    "guest_bytes": 13017905,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/vmlinux-symbols.txt",
+    "guest_sha256": "e26b7db630c8884f75ed733f3ff3c2d567ce1a7fda43bb02e7b494e6e3bbbc3f",
+    "local_path": "postboot-91f48b75/vmlinux-symbols.txt.gz",
+    "retained_bytes": 2136154,
+    "retained_sha256": "4d113d4176aa682bcc77628a1c5ebde863df048a664d6fc679baae679358ced7"
+  },
+  {
+    "guest_bytes": 15325,
+    "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-helper-230a.py",
+    "guest_sha256": "230a28f4f5f56b760c17cd71ae50951a24825729538dce96c2d35b765857e27a",
+    "local_path": "postboot-91f48b75/postboot-helper-230a.py.txt",
+    "retained_bytes": 15325,
+    "retained_sha256": "230a28f4f5f56b760c17cd71ae50951a24825729538dce96c2d35b765857e27a"
+  }
+]

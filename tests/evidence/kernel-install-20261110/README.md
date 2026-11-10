@@ -1,10 +1,10 @@
 # Candidate kernel installation evidence, 2026-11-10
 
-Status through the retained install checkpoint: **v1 preparation failed;
-corrected v2 stage, check and fresh candidate installation completed.** Boot
-selection and boot are not established by this record. No module was loaded and
-no source/JIT body executed by this collection. Arm, boot identity and later live
-fixture results require separate receipts.
+Status through the retained boot checkpoint: **v1 preparation failed; corrected
+v2 stage/check/install/one-shot arm completed, and the candidate boot identity was
+verified.** The original kdlock1 default remains pinned. No module was loaded or
+source/JIT body executed by this collector. Live fixture/JIT execution, whole-lane
+correctness, acceptance and performance require separate records.
 
 The candidate is `7.0.0-38-kdrebuild1`, based on source `c6becf81` with the reviewed
 `950ee6fc` active-CALL_DEPTH refusal overlay. The completed kernel-build receipts
@@ -12,8 +12,9 @@ and preserved combined-objtool warnings are in
 [the build record](../kernel-build-20261110/README.md). Installation does not erase
 those warnings or establish mitigation coverage. The actual source/output base is
 `/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f`.
-The VM remains on `7.0.0-38-kdlock1`, boot
-`3d32656f-6162-4a0a-9304-bf383d34298d` in the retained preflight/stage records.
+The retained preflight/stage records are on `7.0.0-38-kdlock1`, boot
+`3d32656f-6162-4a0a-9304-bf383d34298d`. The later actual candidate boot is
+`91f48b75-2d02-4de1-81cf-f99902f6e3c7`; the stages remain distinct below.
 
 ## V1: actual parser failure, no module staging
 
@@ -139,6 +140,86 @@ menu. [Final disk usage](attempt-v2/install-disk-usage.log) reports root availab
 1 GiB root reserve and 256 MiB initrd budget were met; these install budgets are
 not runtime pool/stack capacity proofs.
 
+## Actual one-shot arm and candidate boot
+
+[Arm completion](attempt-v2/arm-complete.json) is recorded at 2026-11-10
+15:50:14.855870 UTC. The actual one-shot command, sync and metadata checks returned
+0. [Pre-arm protection](attempt-v2/arm-protected-before-arm.json) again reports all
+81,918 old-file records unchanged. Candidate boot-file/module bytes were checked
+before arming; the normal and recovery namespaces remain preserved. Before/after
+GRUB receipts confirm only `next_entry` changed to the exact candidate advanced
+entry. Other environment fields and the generated GRUB configuration hash stayed
+unchanged. Arming itself performed no reboot or module load.
+
+The fresh [preboot HMP proof](beforeboot-hmp.json), captured 15:49:08 UTC, again
+lists `kdlock-builddisk-clean-20261031` on all three disks and labels the other
+snapshots partial/non-loadable. Its SHA256 is
+`8ed8e909cff19c9011fdc0ae691bc16f8d9ed0feca37250ab7a9735cf0f7cac4`.
+It records the console start offset 141,145,949 and host available bytes
+12,448,370,688; it is not a fresh restore experiment.
+
+The controller reports `systemctl reboot` returned 0. The exact saved
+[reconnect trace](reconnect.json) preserves a first SSH banner-exchange timeout
+(return 255), followed at 15:52:36 UTC by return 0 observing
+`7.0.0-38-kdrebuild1`, new boot ID `91f48b75-2d02-4de1-81cf-f99902f6e3c7`
+and taint 0. The timeout is retained, not treated as drain or reboot failure.
+The [bounded serial interval](serial-boot-interval.log) contains the candidate
+Linux-version line and ends at the first subsequent login prompt. Its exact
+[range/hash receipt](serial-boot-interval.json) records bytes
+[141145949, 141234657), 88,708 bytes, SHA256
+`60afab1be0e6e8b5c17adf04e31592e92764349fb960e2de95231977656b6655`.
+The full preexisting 141 MB console file stays on the QEMU host.
+
+## Postboot identity and its operational failure boundary
+
+The first postboot launch returned 2 because the temporary `/tmp` helper was
+absent after reboot; no proof directory was written. That operational failure's
+exact raw command/output was retained only in the controller transcript, not a
+saved VM artifact. [The labelled run context](postboot-run-context.json) preserves
+that boundary; it does not manufacture a raw log or rerun the failed command.
+The same reviewed helper bytes were then copied to persistent receipt storage,
+SHA256 `230a28f4f5f56b760c17cd71ae50951a24825729538dce96c2d35b765857e27a`.
+The controller reports an actual VM hash/AST check and outer helper return 0;
+those outer command observations are explicitly transcript-reported. The exact
+[persistent helper](postboot-91f48b75/postboot-helper-230a.py.txt),
+[saved result](postboot-91f48b75/result.json) and all its actual read-only command
+outputs are retained independently. Success requires both that return 0 and
+`POSTBOOT_IDENTITY_VERIFIED`, not a proof file's mere existence.
+
+The saved result identifies the actual running ELF GNU BuildID
+`f34c6d56a0f0545790efd04c566dc390cae8d2ae`, parsed from the retained binary
+`/sys/kernel/notes` and matched to actual vmlinux readelf output. It also matches
+vmlinux SHA256
+`466907d2a9e392eaa976035595ca99da8e5a8a25653efead677de82cab006db9`,
+the exact config/bzImage/System.map pins and installed image/config bytes. The
+command line contains the candidate boot image, `nokaslr` and `nopvspin` without
+changing the original mitigation options. The postboot checks observed taint 0
+and no KD/fixture module, and verified boot, taint and module list stability
+through the proof. These are that immutable pre-fixture observation, not a new
+snapshot after later module activity.
+
+[The scoped GS proof](postboot-91f48b75/gs-proof.json) records actual linked
+`current_task == const_current_task == 0xffffffff8440f018` and per-CPU section/
+start `0xffffffff843f7000`. Full symbol and section outputs are retained; the
+13,017,905-byte symbol table is compressed losslessly, with raw/compressed hashes
+in [the copy index](through-postboot-copied-files.json). This proves the exact
+linked/running-kernel symbol input under the declared layout. It does not prove
+fixture relocation normalization or emitted GS instruction behavior.
+
+All exported CPU flag rows showed no `call_depth`; retained public statuses
+report retbleed not affected, aligned ITS branch/return thunks and Enhanced/
+Automatic IBRS. These are public observations; the built runtime's actual
+`cpu_feature_enabled(X86_FEATURE_CALL_DEPTH)` refusal remains authoritative for
+source admission. No mitigation was disabled and no return/indirect-branch
+coverage claim follows. Full boot journal/dmesg and the earlier build's objtool
+warnings remain separate evidence.
+
+Postboot GRUB readback matches the exact prior armed configuration SHA256
+`1275383e31ad29a10cb782e6116cf0fdcd7bb635d51561113e8597b5648b9a7e`,
+confirms `next_entry` was consumed and preserves the pinned ordinary kdlock1
+default. Successful one-shot boot does not select the candidate as the permanent
+default or authorize deletion of previous kernels.
+
 ## Recovery and evidence limits
 
 [The actual HMP recovery proof](recovery-hmp.json), captured 2026-11-10
@@ -151,9 +232,16 @@ point. This readback is not a new restore experiment. The same proof hash is
 bound by both actual attempt configurations.
 
 [The prepared recipe](install-recipe.md) is instructions, not execution evidence.
-The actual `check` and fresh-root install receipts are retained above; one-shot
-arm and later boot require their own actual receipts. The collector performed only guest reads/SCP and source-host
+Actual stage/check/install/arm and later boot-identity receipts are retained
+above, with failures preserved and their evidence scopes separate. The collector performed only guest reads/SCP and source-host
 copy/hash/compression. No guest install, build, module load, boot selection,
-reboot or trim was dispatched by the collector. Completed installation is distinct from
-kernel boot, actual mutex/JIT execution, returned-body completion, acceptance
-T01-T56 and performance; none of those is established here.
+reboot or trim was dispatched by the collector. Candidate boot/identity is established above. It is distinct from actual
+mutex/JIT execution, returned-body completion, acceptance T01-T56 and performance;
+none of those is established here. Later fixture work has its own source/config/
+boot/exit attribution and must not be pooled into this boot record.
+
+Raw kernel journal, cpuinfo, readelf and serial output retain their original
+trailing spaces, terminal carriage returns and final blank lines so their hashes
+remain exact. The full staged whitespace check reports those raw-output format
+lines; the separate prose/JSON whitespace check is clear. No evidence bytes were
+trimmed to hide that distinction.

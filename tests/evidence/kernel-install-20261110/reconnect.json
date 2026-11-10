@@ -1,0 +1,23 @@
+{
+  "started_utc": "2026-11-10T15:52:25.420615+00:00",
+  "attempts": [
+    {
+      "utc": "2026-11-10T15:52:30.433776+00:00",
+      "returncode": 255,
+      "stdout": "",
+      "stderr": "Connection timed out during banner exchange\nConnection to 10.176.26.71 port 2222 timed out\n"
+    },
+    {
+      "utc": "2026-11-10T15:52:36.045457+00:00",
+      "returncode": 0,
+      "stdout": "{\"release\": \"7.0.0-38-kdrebuild1\", \"boot_id\": \"91f48b75-2d02-4de1-81cf-f99902f6e3c7\", \"taint\": \"0\"}\n",
+      "stderr": ""
+    }
+  ],
+  "status": "CHANGED_BOOT_OBSERVED",
+  "result": {
+    "release": "7.0.0-38-kdrebuild1",
+    "boot_id": "91f48b75-2d02-4de1-81cf-f99902f6e3c7",
+    "taint": "0"
+  }
+}

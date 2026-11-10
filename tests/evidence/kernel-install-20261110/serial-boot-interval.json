@@ -1,0 +1,11 @@
+{
+  "candidate_kernel_line_found": true,
+  "captured_source_size": 141234657,
+  "collected_unix": 1794326336.8938303,
+  "end_exclusive": 141234657,
+  "ends_at_first_login_after_candidate_kernel": true,
+  "max_read_bytes": 2097152,
+  "path": "/tmp/qemu-serial.log",
+  "sha256": "60afab1be0e6e8b5c17adf04e31592e92764349fb960e2de95231977656b6655",
+  "start": 141145949
+}

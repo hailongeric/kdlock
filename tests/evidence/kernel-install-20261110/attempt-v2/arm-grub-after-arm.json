@@ -1,0 +1,8 @@
+{
+  "candidate_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+  "environment": {
+    "next_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+  },
+  "grub_cfg_sha256": "1275383e31ad29a10cb782e6116cf0fdcd7bb635d51561113e8597b5648b9a7e",
+  "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+}

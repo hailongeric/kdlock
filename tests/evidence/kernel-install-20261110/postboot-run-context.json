@@ -1,0 +1,35 @@
+{
+  "evidence_kind": "controller transcript report for outer commands; saved helper result/outputs retained independently",
+  "limitations": [
+    "No raw artifact is invented for the first missing-file failure or the transcript-only outer command/AST reports.",
+    "Collector did not rerun a parser/helper or dispatch any reboot, build, module load or probe.",
+    "The immutable postboot proof is a pre-fixture identity/admission observation, not a fresh snapshot after later module activity."
+  ],
+  "postboot_attempts": [
+    {
+      "attempt": 1,
+      "proof_directory_written": false,
+      "raw_command_output_saved": false,
+      "reported_reason": "temporary /tmp helper was absent after reboot",
+      "reported_returncode": 2,
+      "source_of_observation": "root controller task message"
+    },
+    {
+      "actual_result_file": "postboot-91f48b75/result.json",
+      "actual_result_phase": "POSTBOOT_IDENTITY_VERIFIED",
+      "attempt": 2,
+      "helper_sha256": "230a28f4f5f56b760c17cd71ae50951a24825729538dce96c2d35b765857e27a",
+      "persistent_helper_guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-helper-230a.py",
+      "raw_outer_command_output_saved": false,
+      "reported_guest_ast_parse": true,
+      "reported_guest_hash_check": true,
+      "reported_outer_returncode": 0
+    }
+  ],
+  "reboot": {
+    "observed_reconnect_receipt": "reconnect.json",
+    "raw_command_result_saved": false,
+    "reported_command": "systemctl reboot",
+    "reported_returncode": 0
+  }
+}

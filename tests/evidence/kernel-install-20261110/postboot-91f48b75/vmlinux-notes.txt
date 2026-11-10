@@ -1,0 +1,41 @@
+
+Displaying notes found in: .notes
+  Owner                Data size 	Description
+  Linux                0x00000004	func
+   description data: 00 00 00 00 
+  Linux                0x00000001	OPEN
+   description data: 00 
+  Xen                  0x0000000c	Unknown note type: (0x00000013)
+   description data: 00 00 20 00 00 00 00 01 ff ff ff 3f 
+  Xen                  0x00000008	Unknown note type: (0x00000012)
+   description data: d0 75 f2 03 00 00 00 00 
+  Xen                  0x00000006	Unknown note type: (0x00000006)
+   description data: 6c 69 6e 75 78 00 
+  Xen                  0x00000004	Unknown note type: (0x00000007)
+   description data: 32 2e 36 00 
+  Xen                  0x00000008	Unknown note type: (0x00000005)
+   description data: 78 65 6e 2d 33 2e 30 00 
+  Xen                  0x00000008	Unknown note type: (0x00000003)
+   description data: 00 00 00 80 ff ff ff ff 
+  Xen                  0x00000008	Unknown note type: (0x0000000f)
+   description data: 00 00 00 00 80 00 00 00 
+  Xen                  0x00000008	NT_VERSION (version)
+   description data: 30 87 f2 83 ff ff ff ff 
+  Xen                  0x00000015	Unknown note type: (0x0000000a)
+   description data: 21 77 72 69 74 61 62 6c 65 5f 70 61 67 65 5f 74 61 62 6c 65 73 
+  Xen                  0x00000004	Unknown note type: (0x00000009)
+   description data: 79 65 73 00 
+  Xen                  0x00000010	Unknown note type: (0x0000000d)
+   description data: 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 
+  Xen                  0x00000004	Unknown note type: (0x00000010)
+   description data: 01 00 00 00 
+  Xen                  0x00000008	GO BUILDID
+   description data: 00 00 00 00 00 00 00 00 
+  Xen                  0x00000004	Unknown note type: (0x00000011)
+   description data: 01 88 00 00 
+  Xen                  0x00000008	Unknown note type: (0x00000008)
+   description data: 67 65 6e 65 72 69 63 00 
+  Xen                  0x00000004	Unknown note type: (0x0000000e)
+   description data: 01 00 00 00 
+  GNU                  0x00000014	NT_GNU_BUILD_ID (unique build ID bitstring)
+    Build ID: f34c6d56a0f0545790efd04c566dc390cae8d2ae

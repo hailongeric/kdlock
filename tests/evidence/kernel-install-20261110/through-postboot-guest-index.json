@@ -1,0 +1,265 @@
+{
+  "collected_unix": 1794326326.74064,
+  "files": [
+    {
+      "bytes": 141,
+      "group": "attempt-v2",
+      "name": "arm-complete.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-complete.json",
+      "sha256": "bebbb864a9d1070ca202783dbe16e3237f91fe571815104348b33bb81ac23a8a"
+    },
+    {
+      "bytes": 420,
+      "group": "attempt-v2",
+      "name": "arm-disk-usage-result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-disk-usage-result.json",
+      "sha256": "0787cb6634113d923c70a071dcc727614280fa6a0155222036389e92be5c937e"
+    },
+    {
+      "bytes": 267,
+      "group": "attempt-v2",
+      "name": "arm-disk-usage.log",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-disk-usage.log",
+      "sha256": "23e923b691822360e852ebc93e8676c46d913401de089800fc966ead89dc8ed0"
+    },
+    {
+      "bytes": 615,
+      "group": "attempt-v2",
+      "name": "arm-grub-after-arm-result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-after-arm-result.json",
+      "sha256": "88ceda77f3faa957d7df81413b8566bc9d0388ea768cf6f9ed12e12b61555fd3"
+    },
+    {
+      "bytes": 570,
+      "group": "attempt-v2",
+      "name": "arm-grub-after-arm.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-after-arm.json",
+      "sha256": "b9185025d8afb31490063510303e504ee61f134171ad442a0f762f1621fecd9f"
+    },
+    {
+      "bytes": 0,
+      "group": "attempt-v2",
+      "name": "arm-grub-after-arm.log",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-after-arm.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 602,
+      "group": "attempt-v2",
+      "name": "arm-grub-before-arm-result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-before-arm-result.json",
+      "sha256": "806ba713c33eb5e97820b87ef118f47c6ac0b78375678c13a3fbf0d5ed93bf33"
+    },
+    {
+      "bytes": 441,
+      "group": "attempt-v2",
+      "name": "arm-grub-before-arm.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-before-arm.json",
+      "sha256": "f6c68ec4cc3d7ac4bc9f13c2ced25d44fe2b782b729f84ea4ade2690f3370d2a"
+    },
+    {
+      "bytes": 0,
+      "group": "attempt-v2",
+      "name": "arm-grub-before-arm.log",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-grub-before-arm.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 580,
+      "group": "attempt-v2",
+      "name": "arm-idle-result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-idle-result.json",
+      "sha256": "739b23e69b5479ad3b7d96eeeecf5c08d3e0068d2f2d909c20cba8e40e27204f"
+    },
+    {
+      "bytes": 3016,
+      "group": "attempt-v2",
+      "name": "arm-idle.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-idle.json",
+      "sha256": "1beddbec5f25858cdf13f91c6ec484fc8661a91b5f770cc7b0a75a595dbd46a9"
+    },
+    {
+      "bytes": 0,
+      "group": "attempt-v2",
+      "name": "arm-idle.log",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-idle.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 6787,
+      "group": "attempt-v2",
+      "name": "arm-journal.jsonl",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-journal.jsonl",
+      "sha256": "74d68fe547d98200b7510cf35f3d090174e5a1af34ae77c6a8aecce971f2a4a6"
+    },
+    {
+      "bytes": 467,
+      "group": "attempt-v2",
+      "name": "arm-one-shot-result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-one-shot-result.json",
+      "sha256": "90e00b0dfdd03ec0d3901240fb6d7689ecbb7a405ff78355aa88dfcd4d6e8ff2"
+    },
+    {
+      "bytes": 0,
+      "group": "attempt-v2",
+      "name": "arm-one-shot.log",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-one-shot.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 772,
+      "group": "attempt-v2",
+      "name": "arm-protected-before-arm-result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-protected-before-arm-result.json",
+      "sha256": "957b44738e6e0f133f65c3755654164c35a1d8e255fe1790ca6e49e175505c39"
+    },
+    {
+      "bytes": 47,
+      "group": "attempt-v2",
+      "name": "arm-protected-before-arm.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-protected-before-arm.json",
+      "sha256": "6358f7dc5545f1c0d4af8df9f90454f982b2a4a23367a854b4c862f59bbcc178"
+    },
+    {
+      "bytes": 0,
+      "group": "attempt-v2",
+      "name": "arm-protected-before-arm.log",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-protected-before-arm.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 320,
+      "group": "attempt-v2",
+      "name": "arm-sync-result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-sync-result.json",
+      "sha256": "83050fe898c5ef02418d5d40ff7d6be41099946b98535711fb0217a495907971"
+    },
+    {
+      "bytes": 0,
+      "group": "attempt-v2",
+      "name": "arm-sync.log",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/arm-sync.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 63447,
+      "group": "postboot-91f48b75",
+      "name": "boot-kernel-journal.txt",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/boot-kernel-journal.txt",
+      "sha256": "25e8f4d6ab25b5d7e90d6fdabd40f76d77f4ca52b731ef8cae1c8190bd019770"
+    },
+    {
+      "bytes": 139,
+      "group": "postboot-91f48b75",
+      "name": "cmdline.txt",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/cmdline.txt",
+      "sha256": "af5360b15e39b86491396772f4acf325202149a2aea0035686ba4b237932465b"
+    },
+    {
+      "bytes": 111374,
+      "group": "postboot-91f48b75",
+      "name": "cpuinfo.txt",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/cpuinfo.txt",
+      "sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921"
+    },
+    {
+      "bytes": 53632,
+      "group": "postboot-91f48b75",
+      "name": "dmesg.txt",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/dmesg.txt",
+      "sha256": "c829c50202bcebc1b473f1d28dc7208b2dbafbd37ad644fe5801024d5f83cf90"
+    },
+    {
+      "bytes": 12,
+      "group": "postboot-91f48b75",
+      "name": "grub-environment.txt",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/grub-environment.txt",
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "bytes": 26608,
+      "group": "postboot-91f48b75",
+      "name": "grub.cfg",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/grub.cfg",
+      "sha256": "1275383e31ad29a10cb782e6116cf0fdcd7bb635d51561113e8597b5648b9a7e"
+    },
+    {
+      "bytes": 709,
+      "group": "postboot-91f48b75",
+      "name": "gs-proof.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/gs-proof.json",
+      "sha256": "7fc9a500eed3e97e4382d4f0102bcbbb3dcfe3b6624cc6e30293d5ba5af6ad89"
+    },
+    {
+      "bytes": 2799,
+      "group": "postboot-91f48b75",
+      "name": "modules.txt",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/modules.txt",
+      "sha256": "f1abe78389940daf61ef1e26b35fefc16a125dd51439a9d83b64a8d7433cb127"
+    },
+    {
+      "bytes": 141,
+      "group": "postboot-91f48b75",
+      "name": "prior-arm-complete.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/prior-arm-complete.json",
+      "sha256": "bebbb864a9d1070ca202783dbe16e3237f91fe571815104348b33bb81ac23a8a"
+    },
+    {
+      "bytes": 570,
+      "group": "postboot-91f48b75",
+      "name": "prior-armed-grub.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/prior-armed-grub.json",
+      "sha256": "b9185025d8afb31490063510303e504ee61f134171ad442a0f762f1621fecd9f"
+    },
+    {
+      "bytes": 161518,
+      "group": "postboot-91f48b75",
+      "name": "result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/result.json",
+      "sha256": "def0d57ef7dd093eec1307c576c731f85b010a4ec4af729f9da304b90453b4af"
+    },
+    {
+      "bytes": 476,
+      "group": "postboot-91f48b75",
+      "name": "running-kernel-notes.bin",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/running-kernel-notes.bin",
+      "sha256": "8fdf321391e709d96738a93a32e5663177b03ecf3ed2c6d2637294439210fd7c"
+    },
+    {
+      "bytes": 120,
+      "group": "postboot-91f48b75",
+      "name": "uname.json",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/uname.json",
+      "sha256": "51be1a76a4d3856eb1ed7753f7ad28c184d13842da81dbe0f0fa42b4ff8a5082"
+    },
+    {
+      "bytes": 2120,
+      "group": "postboot-91f48b75",
+      "name": "vmlinux-notes.txt",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/vmlinux-notes.txt",
+      "sha256": "e0a648c8403980333ed38b28731349abc8d7037f88836d02bce864cc3314e22d"
+    },
+    {
+      "bytes": 5644,
+      "group": "postboot-91f48b75",
+      "name": "vmlinux-sections.txt",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/vmlinux-sections.txt",
+      "sha256": "0038d1022b3869dc19f5ec6dce719121c0776ddfa882c43657aad030e6121a90"
+    },
+    {
+      "bytes": 13017905,
+      "group": "postboot-91f48b75",
+      "name": "vmlinux-symbols.txt",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-20261110-91f48b75/vmlinux-symbols.txt",
+      "sha256": "e26b7db630c8884f75ed733f3ff3c2d567ce1a7fda43bb02e7b494e6e3bbbc3f"
+    },
+    {
+      "bytes": 15325,
+      "group": "postboot-91f48b75",
+      "name": "postboot-helper-230a.py",
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-helper-230a.py",
+      "sha256": "230a28f4f5f56b760c17cd71ae50951a24825729538dce96c2d35b765857e27a"
+    }
+  ],
+  "scope": "immutable completed arm/postboot receipts only; no fresh taint/admission snapshot"
+}
