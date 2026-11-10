@@ -1,5 +1,9 @@
 # kdlock original JIT contract
 
+Current build/boot, native checks, the earlier construction failure/recovery and
+later returned generated prefix are scoped in the [current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
+Design requirements below do not establish complete generated-body or support evidence.
+
 **Status:** proposed integration contract using the original UB-derived backend  
 **Terminology:** lock helpers are functions inside kdlock's lock implementation, not an independent runtime component
 
@@ -71,7 +75,14 @@ Unknown ordinary targets remain coverage/learning misses, and finite source/comp
 
 Separate nested entries/images remain part of the design. They use the same original backend. Do not revert to a mandatory parent-entry lookup for every child.
 
-A per-lock/source entry can describe several fragment entry and continuation cursors:
+A per-lock/source entry can describe several fragment entry and continuation cursors.
+Source `18c8f2e4` discovers the caller's explicit roots under one shared finite
+budget and plans each root independently before combining retained sites/edges.
+A post-operation cursor supplied as another root does not cross the operation
+cut, prove an unknown callee returns or create a CALL_RETURN edge. The lowerer
+still rejects entry metadata outside those canonical labels. This correction is
+source functionality; it does not turn the earlier failed live construction
+into generated execution evidence.
 
 ```text
 entry_A
@@ -154,7 +165,7 @@ finalizer/caller backing survive their separate final return.
 
 Original UB means `glarer/UserspaceBypass` at `1a5b98a06b058a7adce9805c8c6d061e2212f56a`. Its translation/feedback pattern is retained; its old userspace wrapper is not copied byte for byte into kdlock.
 
-**Pinned evidence (E):** the register roles, packet fields/offsets, 168-byte size, two-word args and entry offsets below describe `20fde062729703208ac54445f51fc0f21f24e0e8`, with later checks in [the evidence file](04_evidence_and_reconciliation.md). C04 now retains the KD mapping in which physical R11 holds the same canonical packet base and logical R11 is virtualized. This does not freeze the old packet size/offsets or private entry ABI. Private entry, exit, capture, materialization and reentry sources now connect the ordinary/recursive path at `ce423858`; managed provider/task composition is source-connected through `c6becf81`, with exact target integration and runtime proof unrun under C12. Reusing the old adapter makes its actual constraints conditional obligations of that lane. A new adapter must keep the original backend/GS lowering and prove equivalent source effects without inventing absent input bits.
+**Pinned evidence (E):** the register roles, packet fields/offsets, 168-byte size, two-word args and entry offsets below describe `20fde062729703208ac54445f51fc0f21f24e0e8`, with later checks in [the evidence file](04_evidence_and_reconciliation.md). C04 now retains the KD mapping in which physical R11 holds the same canonical packet base and logical R11 is virtualized. This does not freeze the old packet size/offsets or private entry ABI. Private entry, exit, capture, materialization and reentry sources now connect the ordinary/recursive path at `ce423858`; managed provider/task composition is source-connected through `c6becf81`, with later exact target build/boot and bounded native evidence recorded separately; complete generated execution and full runtime proof remain unvalidated under C12. Reusing the old adapter makes its actual constraints conditional obligations of that lane. A new adapter must keep the original backend/GS lowering and prove equivalent source effects without inventing absent input bits.
 
 ### 3.1 Physical and logical registers
 
@@ -358,7 +369,7 @@ For X reported before a snapshot and Y during the build, publishing coverage of 
 
 A later inspected candidate already has a 32-row non-evicting cumulative learning ledger on a particular immutable mutex retained-miss path, base-generation/receipt acknowledgement and observable overflow. The v0.6 historical "single latest miss" description is therefore not a universal current-state claim.
 
-That path is E: it is not proof of lossless old-generation learning, every lock family or the full redesign. Its 32 rows, no-eviction policy and receipt encoding are not target requirements. C08 now selects a preallocated feedback-fact pool with finite explicit caller capacity sufficient for the supported workload, while preserving cumulative knowledge and exact acknowledgement. The kernel fact pool and exact commit/ACK receipt bridge now have source implementations; the kernel shutdown settlement API has source at `40ae39ce`. Fd transport, executable loading/publication, managed runtime and actual fsynced archival receipt wiring have source at `236c287a` and `80095bfb`, followed by exact slot/base export at `c6becf81`. Recovery after a crash/restart beyond the implemented session/archive workflow is not supplied; actual target execution remains unrun. No numeric size is inherited.
+That path is E: it is not proof of lossless old-generation learning, every lock family or the full redesign. Its 32 rows, no-eviction policy and receipt encoding are not target requirements. C08 now selects a preallocated feedback-fact pool with finite explicit caller capacity sufficient for the supported workload, while preserving cumulative knowledge and exact acknowledgement. The kernel fact pool and exact commit/ACK receipt bridge now have source implementations; the kernel shutdown settlement API has source at `40ae39ce`. Fd transport, executable loading/publication, managed runtime and actual fsynced archival receipt wiring have source at `236c287a` and `80095bfb`, followed by exact slot/base export at `c6becf81`. Recovery after a crash/restart beyond the implemented session/archive workflow is not supplied. Actual reservation/cancellation/shutdown recovery is recorded separately; image publication/generated prefix and coverage-ACK observations have their own scoped receipts in the current checkpoint; complete generated-body proof remains unestablished. No numeric size is inherited.
 
 The availability guarantee is a documented support assumption, not a measured bound or unbounded-storage claim. No overflow/drop/recovery policy is implied outside that guarantee. Pending facts and translation alone cannot pause new JIT/delegation or force later operations local. Other actual context/source/image checks remain in force. Preserve every uncovered/later fact until its exact settled disposition or publication-bound ACK; do not describe a lost report as lossless learning.
 

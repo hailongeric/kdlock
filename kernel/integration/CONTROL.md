@@ -1,9 +1,21 @@
 # Compiler channel and managed provider workflow
 
+The [current evidence checkpoint](../../docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint)
+records exact build/boot and scoped execution results, retained failures and
+current validation limits. This guide states integration duties; its source
+instructions do not establish support or performance evidence.
+
 This guide describes connected source through `c6becf81`, preserving the original
 UB JIT, KD GS lowering, one canonical S_W and direct MCS node->state lookup.
 Compiler control does not execute source bodies. Source functionality, target
 application/build, actual publication and returned execution are separate evidence.
+Live2 failed host construction after reservation; exact
+QUERY/ABORT/END/SHUTDOWN and zero-fact settlement/unload subsequently succeeded.
+The separately retained live3 attempt published one image and returned eight
+generated prefixes at a CALL_STAGED unsupplied-target frontier before inner B,
+then archived/SETTLED all eight pending facts without coverage ACK. Later learning
+and ACK observations are separate in the current checkpoint; native suffix
+completion is not recursive JIT proof.
 
 ## Cold source and task admission
 

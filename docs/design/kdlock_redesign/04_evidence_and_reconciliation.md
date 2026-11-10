@@ -70,13 +70,48 @@ forced-local/defer option is superseded.
 
 ### 2.1 Rebuild status
 
-The declared ordinary source path is connected through `c6becf81` and has
-independent source/static review. A subsequent focused VM check passed 12/12
-on that exact source, including real GNU image construction. The
+#### Current evidenced checkpoint
+
+The selected ordinary source path has exact-target build/boot, scoped generated
+prefix execution and cumulative ordinary-JMP learning through actual publication
+and ACK. Earlier failures, the first prefix and later learning remain separate
+attempts. These stages have separate inputs and receipts:
+
+| Stage | Actual result and evidence boundary |
+| --- | --- |
+| Target application and core compilation | The [core receipt](../../../tests/evidence/kernel-core-20261110/README.md) records exact five-file target application, verification, 26 C plus three assembly units and fork/exit object compilation. Its recorded argv alias error is retained; the application journal/logs establish the actual change. |
+| Full kernel builds and boot | The [first full build](../../../tests/evidence/kernel-build-20261110/README.md) and [first boot](../../../tests/evidence/kernel-install-20261110/README.md) precede the [kernel2 build](../../../tests/evidence/kernel-build2-20261111/README.md) and [kernel2 install/boot](../../../tests/evidence/kernel-install2-20261111/README.md). Kernel2 is `7.0.0-38-kdrebuild2`, source `81feb2d7`, Build ID `fd2262c047e130787ef669419111eba6eb9ebb2c`; all warnings and protected normal/recovery identities remain recorded. |
+| Initial runtime failure and correction | The [first live attempt](../../../tests/evidence/runtime-initialization-20261111/README.md) failed at module initialization with an oversized contiguous allocation and page-allocation warning, before workers or images. `81feb2d7` changes the five cold capacity-sized arrays to `kvcalloc` with matching `kvfree`; capacities and per-lock preallocation remain unchanged. |
+| Native and managed lifecycle checks | The [second live attempt](../../../tests/evidence/runtime-compilation-20261111/README.md) initialized successfully, completed the actual managed fork/child-exit case and one native-local worker's eight lock/body/unlock iterations. The overall attempt failed while constructing its first forced image: the global six-entry table exceeded a single-root fragment's canonical labels. No generated image was staged or published. |
+| Retained-session recovery | [Exact recovery](../../../tests/evidence/runtime-recovery-20261111/README.md) reconciled the cached reservation, aborted it, ended the claim, shut down, archived/settled an empty claim and ordinarily destroyed/unloaded the fixture. Boot, taint and dmesg were unchanged across recovery. This is control/lifetime evidence, not generated execution or coverage ACK. |
+| Host correction | `18c8f2e4` adds explicit multi-entry discovery under one shared budget and independent per-entry planning. The unchanged lowerer guard, operation cuts and proven-return requirements remain. The actual-byte regression covers all six entries, a single-root refusal, a shared-budget cut and an independently rooted RET that cannot prove an unknown callee's return. The [focused follow-up receipt](../../../tests/evidence/multi-entry-pipeline-20261111/README.md) records 4/4 multi-entry and 12/12 pipeline passes, an initial GS setup refusal with zero tests, then a separate kernel2-pinned 5/5 GS pass. The initial aggregate remains failed; reconciliation ran no tests. |
+| Earlier generated prefix (live3) | The [live3 receipt](../../../tests/evidence/runtime-jit-prefix-20261111/README.md) records return 0 with `partial_jit_mechanism_pass`: one image publication and eight typed CALL_STAGED exits at `0xffffffffc09ea14b` to unsupplied `0xffffffffc09e8020`. All exits precede inner B; native suffixes complete the fixture counters. No fact receives coverage ACK; all eight are durably archived and SETTLED before ordinary teardown/unload. The [repeat-boot proof](../../../tests/evidence/kernel-repeatboot-20261111/README.md) binds this attempt to its fresh kernel2 boot. |
+| Fixture dependency coverage | [Module3](../../../tests/evidence/module3-build-20261111/README.md), source `9f327952`, retains the original body/helper regions plus the actual module-owned executable dependency page under the same module/immutable-text contract. Live4 exports three regions: 4096-byte page, 116-byte helper and 865-byte body, totaling 5077 bytes. The common compiler remains `18c8f2e4` and kernel core `81feb2d7`; normal compiler flags and actual decoded CALL/JMP forms are retained. |
+| Ordinary-JMP learning (live4) | The [live4 receipt](../../../tests/evidence/runtime-learning-20261111/README.md) records actual return 0 with `partial_jit_mechanism_pass` on kernel2 boot `0f3f9c09-8837-4763-8320-388278bd83d7`. Eight exact fact keys at JMP sites `0xffffffffc09e8020`, `0xffffffffc09e8023` and `0xffffffffc09e8026` target `0xffffffffc09ea010`; all are observed, merged, emitted, published and ACKed. Four exact image transactions have ACK counts 0/2/4/2, with matching old/new/returned-old identities. All five fixture cases pass expected effects; pending and SETTLED counts are both zero before ordinary destroy/unload, with module/devices absent and taint 12288. |
+| Operational return | The [normal-return receipt](../../../tests/evidence/return-normal-20261111/README.md) records ordinary return to `7.0.0-38-kdlock1`, boot `ca0b717b-c19d-4027-b598-6a1cf58b93d2`, taint 0, no fixture/devices and unchanged normal GRUB configuration/default. This operational result does not move the earlier build/JIT observations onto the normal boot. |
+
+Live4's saved source CALL/JMP correlation places reached generated checkpoints
+before B, under B, and after A's logical unlock while B remains open. Those are
+path-specific source checkpoints, not a physical role/chain trace or proof of
+the complete recursive protocol. The final image adds the third JMP dispatch, but no
+later generated record proves that dispatch executed. ACK establishes exact
+published emitted coverage, not execution of every updated path. No whole
+protected JIT-body return is established. T01-T56 remain unrun; no performance
+result follows. The
+[auxiliary-context audit](../../../tests/evidence/auxiliary-context-20261110/README.md)
+retains the unrecognized auxiliary-stack unwinder/stack-end limits and missing
+full context/high-water proof. General retirement, progress and mitigation
+coverage remain unvalidated. Runtime creation refuses active CALL_DEPTH because
+its return thunk changes flags; the ordinary mitigation configuration remains
+enabled.
+
+#### Earlier focused host checkpoint
+
+The declared ordinary source path was connected through `c6becf81` with
+independent source/static review. Its focused VM check passed 12/12, including
+real GNU image construction, as recorded in the
 [retained focused receipt](../../../tests/evidence/runtime-pipeline-20261110/README.md)
-is committed at `c6fbf7bb`. This is neither
-exact-target kernel integration nor mutex/JIT runtime correctness or performance
-evidence; kernel execution and the T01-T56 acceptance matrix remain unrun.
+at `c6fbf7bb`. That run executed no kernel path and completed no T01-T56 item.
 
 The focused run used Python 3.14.4 in the translation virtual environment on
 `7.0.0-38-kdlock1`, boot `3d32656f-6162-4a0a-9304-bf383d34298d`, taint 0,
@@ -155,7 +190,10 @@ publish a result before owner waiting so a retained actor can reach unlock.
 Result/binding access, core grant membership, queue producer access, return and
 notifier users all finish before retirement; owner reaping must progress
 independently. Source review found no confirmed queue-link/retirement defect
-under those contracts. No MCS callback has executed.
+under those contracts. The later native-local fixture completed eight ordinary
+lock/body/unlock iterations. Later generated prefix execution proves limited
+proxy entry; live4 reaches the correlated later source checkpoints above.
+Complete recursive/deferred correctness remains unvalidated.
 
 The [canonical state](../../../kernel/state.c) contains one W packet, one
 current source operation, exact referring grants and execution bindings.
@@ -172,12 +210,13 @@ before native handback; reentry cannot discard it.
 The [native restore](../../../include/native_resume.S) restores source GPRs and
 exact IP/SP on original W using one admitted writable SP-8 bridge word. That
 bridge push/RET leaves final source SP unchanged and is not another logical
-CALL/RET. General flags/SIMD use AS01. Return mitigation coverage and kernel
-assembly wiring remain unvalidated. Generated execution uses a distinct physical
+CALL/RET. General flags/SIMD use AS01. Return mitigation coverage remains
+unvalidated; kernel assembly wiring now has compilation/link evidence in the
+receipts above. Generated execution uses a distinct physical
 task/stack and requires executor/source/origin-wait control stacks to be
 nonoverlapping; current==W JIT is refused. A budget is not stack-separation
 proof. The private ordinary/auxiliary route is connected in source at `ce423858`,
-but no live auxiliary-stack route has been validated.
+but the native fixture is not full auxiliary-stack context or unwinder proof.
 
 Every active/nested request uses its direct node->state pointer. The
 [task root](../../../kernel/task_state.c) contains the one own core and the
@@ -187,7 +226,8 @@ contains the one field and managed fork/failure/exit hooks as an unapplied
 context template. Child construction clears copied aliases before publication
 and creates independent core/pool/auxiliary backing; current-native exit drains
 exact users before detach/free. `apply_target.py` (`97130fe4`) applies only exact
-pinned target contexts via new-inode replacement; it remains unexecuted.
+pinned target contexts via new-inode replacement; its actual application and
+verification are retained in the core receipt above.
 
 The [ordinary source pair](../../../include/kd_mutex_api.h),
 [native bootstrap](../../../kernel/mutex_api.c),
@@ -199,7 +239,8 @@ separate private preparation, entered control and completed native restore.
 Range/alignment, mandatory return-word capacity, ordinary task context and exact
 reservation checks are source implementations. Full callback/recursive capacity,
 opaque control placement and scheduler/IRQ/unwind compatibility remain explicit
-admission duties, without runtime evidence. Capture refreshes active kernel GS
+admission duties. The native/fork results above are limited mechanism evidence,
+not full auxiliary-context proof. Capture refreshes active kernel GS
 under a short non-sleeping interval, not an episode-wide pinning guarantee.
 
 The [image component](../../../kernel/image.c) implements the selected quiesced
@@ -245,9 +286,9 @@ reuse/detach checks to the original core, and the
 [owner-progress controller](../../../kernel/owner_progress.c) to the actual
 physical task. Exact retained batches progress through owner handling, physical
 release and later reaping independently of source/result completion. JIT and MCS
-wait callbacks connect progress/readiness after source export; no callback has
-executed. Caller-provisioned capacity and actual task lifecycle integration still
-need their complete proof.
+wait callbacks connect progress/readiness after source export. Their initial
+review was static; the later native/fork results above do not prove deferred
+owner progress or complete task lifecycle/capacity correctness.
 
 Reviewed source commit `ce423858` connects the ordinary source CALL pair/native
 bootstrap to the [serial episode driver](../../../kernel/episode.c). It uses actual
@@ -328,8 +369,9 @@ precedes freeing and the final native-provider callback. No packet is cleared.
 `lifecycle.[ch]` (`80095bfb`) adds managed initial entry, independent unpublished
 child construction/failure cleanup and current-native exit drain. It never
 fabricates unlocks or copies parent source state; unmanaged tasks remain outside
-the declared lane. Exact target hook application and full auxiliary-context
-proof remain outstanding.
+the declared lane. Exact target hooks have application/build evidence and the
+managed fork/child-exit fixture passed; full auxiliary-context proof remains
+outstanding.
 
 The same checkpoint implements kernel archival settlement. Actual host archival
 must fsync exact copied facts/provenance and produce a 32-byte content receipt.
@@ -346,26 +388,31 @@ sequence/cache identities preserve retry without repeating an operation. Runtime
 keeps source/native/controller holds and finite control identities through exact
 last users. `c6becf81` exports exact source-slot/current-image identities,
 including a NULL baseline; BUILD_START validates and retains that base. These
-source implementations have independent review, without build or deployment
-evidence.
+source implementations had independent review at that checkpoint. The current
+target build, native checks and reserved-session recovery are recorded above.
+The later live receipts separately record generated prefixes and exact
+publication/learning/ACK stages. Complete generated-body proof remains
+unestablished.
 
 The [image integration guide](../../../kernel/integration/IMAGES.md) records the
 conditional initial/NULL publication sequence, candidate/baseline bridges,
 SOURCE self-drain avoidance and independent native-text/finalizer lifetimes.
-Kernel ownership additions have source/static review only. The focused VM host
-checks above import compiler components and construct a real GNU image; they do
-not execute provider/image ownership or kernel mutex/JIT paths.
+Kernel ownership additions had source/static review at the initial checkpoint.
+The earlier focused host checks import compiler components and construct a real
+GNU image; they execute no kernel ownership or mutex/JIT path. Later native and
+reservation/recovery observations have their own receipts above.
 
 Reviewed source commit `a65016e3` adds the opt-in Kconfig/Kbuild group and fixed
 Linux 7.0/x86_64/non-RT C target gate. Its original list has 15 runtime C units
 and three concrete assembly entries; `5989fbbb` adds the fact pool and
-publication bridge for 17 C units at that revision. Current `c6becf81` lists
+publication bridge for 17 C units at that revision. At `c6becf81`, Kbuild lists
 26 C units and the same three concrete assembly entries. The unexpanded
 per-image wrapper is excluded.
 [The build guide](../../../kernel/integration/BUILDING.md) separates package
 structure from actual target-tree insertion, task-field integration, provisioning
-and provider duties. No Kconfig/Kbuild parser, preprocessing, compilation,
-assembly, linking, enablement or kernel execution has run.
+and provider duties. At the packaging checkpoint those build/execution stages
+were unrun; actual target application, compilation, full linking, installation
+and bounded native execution now have the separate receipts above.
 
 Remaining deployment work supplies exact source/dependency/configuration/load/GS
 inputs, explicit finite pool/image/cycle capacities, complete control-stack bounds
@@ -373,10 +420,10 @@ and actual auxiliary-context proof. Managed allocation/fork/failure/exit, provid
 channel/compiler/executable/runtime composition and archival receipt wiring are
 source-present through `c6becf81`. Crash/restart reconstruction beyond the
 implemented session/archive workflow is not supplied. `97130fe4` adds focused
-pipeline-check source and an exact-target installer. The 12 focused checks above
-have now passed, including host assembly/linking; exact target application/core
-build, kernel runtime, lifetime/progress and acceptance validation need separate
-receipts. Selected stable object
+pipeline-check source and an exact-target installer. The earlier 12 focused
+checks passed, including host assembly/linking. Current target build/boot and
+native/recovery receipts are separate from generated JIT, full lifetime/progress
+and acceptance validation. Selected stable object
 storage extends through physical release and final object access; independent control/code users can last longer.
 
 Ten private cases ran only on the earlier intraprocedural planner `13f2630f`
@@ -494,7 +541,7 @@ own affected checks.
 
 The old decision topics remain covered: D01 through D09 and D12 map to C01/C05/C07/C10 and the family/context plan; D02/D10/D11/D21 map to C02/C03; D13/D14/D19/D22 map to C09/C10; D15/D18 map to C08; D16/D17/D20 map to C04/C06 and the mailbox/continuation contract.
 
-R23-R29 retain fixed core cardinality/direct references, generic continuation and exact attribution/lifetime duties. R27 now preserves reader semantics while making placement C10, correcting the earlier roadmap-derived mandate. R15 similarly distinguishes preferred local ownership from an absolute shared-index ban. C12 source rebuild, C03 retained-owner deferral/stable objects, C11 MCS queue and C04 retained KD physical-R11 mapping are selected. Private queue/claim, adapter/bridge and managed source orchestration are connected through c6becf81; exact target integration and lifetime/progress proof remain outstanding. None of these selections reopens the fixed one-core/original-JIT model. The mutex timing policy is the explicit limited exception to earlier immediate-release requirements.
+R23-R29 retain fixed core cardinality/direct references, generic continuation and exact attribution/lifetime duties. R27 now preserves reader semantics while making placement C10, correcting the earlier roadmap-derived mandate. R15 similarly distinguishes preferred local ownership from an absolute shared-index ban. C12 source rebuild, C03 retained-owner deferral/stable objects, C11 MCS queue and C04 retained KD physical-R11 mapping are selected. Private queue/claim, adapter/bridge and managed source orchestration are connected through c6becf81; full generated integration and lifetime/progress proof remain outstanding. None of these selections reopens the fixed one-core/original-JIT model. The mutex timing policy is the explicit limited exception to earlier immediate-release requirements.
 
 The acceptance register is T01 through T56. T01-T51 retain their audit identities and chosen-target scope. T52 adds special-path/bypass/shared-join behavior, T53 safe callee returns/caller fallthrough, T54 local temporary-GPR PUSHFQ/POPFQ effects under AS01, and T55 target downgrade versus the candidate-only exception. T56 preserves a deferred, unrun future original-backend mapping comparison without a speed/AS01 claim; it is not an active R11 optimization question or current-baseline implementation gate. These remain unrun acceptance specifications; private graph-helper checks and source/static review of compiler/C protocol code do not satisfy them. T15-T19, T25/T26, T41/T45/T48-T51 now attribute the selected deferred-release phases and lifetime limits rather than requiring early physical availability.
 
@@ -613,13 +660,16 @@ deployment source/configuration/GS identities, finite resource counts and full
 stack/context provisioning are listed in section 2.1 and the plan. Managed task
 lifecycle, provider/channel/executable/compiler orchestration and archival
 settlement have source. Crash/restart reconstruction beyond that workflow is not
-implemented. Exact target application/build and all runtime/context/lifetime/
-progress acceptance evidence remain unrun.
+implemented. Exact target application/build and bounded native/control results
+are recorded in the current checkpoint, followed by a limited generated prefix.
+Complete generated bodies and full context/lifetime/progress acceptance remain
+unvalidated.
 
 Source/static inspection covers the new kernel components. The 12 focused VM
 checks on `c6becf81` additionally exercise compiler/learning/wire/archive and real
-GNU image construction, as recorded in section 2.1. They establish no executed
-kernel mutex/JIT/lifecycle, retirement or performance result. T01-T56 stay unrun;
+GNU image construction, as recorded in section 2.1. Those host checks establish
+no executed kernel mutex/JIT/lifecycle, retirement or performance result; the
+later native/fork/recovery observations are attributed separately. T01-T56 stay unrun;
 the older ten helper checks remain tied only to `13f2630f`.
 
 An earlier staged whitespace check excluded only the original patch template's

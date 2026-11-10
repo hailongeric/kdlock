@@ -1,5 +1,10 @@
 # kdlock
 
+The [current evidence checkpoint](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint)
+records exact build/boot, focused checks and live attempts, preserving failures,
+partial execution and the limits of each result. Source, publication, returned
+execution and performance remain separate evidence classes.
+
 An incremental, independent rebuild for **Linux kernel 7.0, x86_64,
 non-PREEMPT_RT**.
 
@@ -9,7 +14,9 @@ The private [compiler front end](disassem/compiler.py) connects a finite,
 immutable source snapshot to the original Miasm decoder and
 [fragment planner](disassem/fragment.py). It retains complete decoded records,
 source-operation boundaries, safe alternatives/joins, matched CALL/RET paths and
-versioned observed indirect targets. Unknown targets invent no callee return.
+versioned observed indirect targets. Explicit entry roots share discovery budgets
+and retain independent per-entry planning; another root supplies no CALL/RET
+proof. Unknown targets invent no callee return.
 Only direct CALL edges consume the selected five-edge discovery default; other
 source/decode/CFG bounds are explicit caller inputs. Observations are compiler
 inputs, not emitted-coverage acknowledgments or live feedback storage.
@@ -20,8 +27,10 @@ source assembly under the selected physical-R11 packet-base mapping. They retain
 actual source CALL/RET words, original GS/current-task lowering and local
 PUSHFQ/POPFQ temporary-GPR handling. Typed operations, special frontiers,
 construction gaps and resource exits remain path specific. The coordinated
-private ABI is version 1: a 168-byte packet and 56-byte control IO. The later focused VM check assembles/links one generated image with GNU tools;
-no generated code has been loaded into or executed by the kernel.
+private ABI is version 1: a 168-byte packet and 56-byte control IO. Focused host
+checks assemble/link generated images with GNU tools. Separate live receipts
+record generated prefixes, publication and learning stages with their exact
+frontiers and native continuations in the current checkpoint.
 
 The [artifact exporter](disassem/artifact.py) returns the same assembly with
 coordinated C image/site metadata, exact source-version bytes, retained decoded
@@ -57,15 +66,18 @@ copied history from record reuse. A durable producer and source-epoch users reta
 The [publication bridge](kernel/feedback_publish.c) binds only the validated
 candidate input subset to its actual image transaction and returned old image;
 a separate atomic ACK covers only that subset's emitted ordinary observations.
-These components have source review only. Nonobservations and uncovered misses
-remain pending during normal execution. The selected shutdown route actually
+The current checkpoint separates actual publication and exact fact ACK from
+construction. Nonobservations and uncovered misses remain pending during normal
+execution. The selected shutdown route actually
 archives exact facts/provenance with fsync and a content receipt, then marks
 exact reservations SETTLED after images and native/JIT users drain. Settlement
 is separate from coverage ACK; kernel receipts do not themselves perform archival
 I/O. The kernel settlement API is source-implemented at `40ae39ce`. The actual host
 archive and channel/runtime shutdown workflow are connected at `80095bfb`; they
-have source review; the later focused host checks exercise archive/codec
-components without actual kernel shutdown.
+have source review. Focused host checks exercise archive/codec components;
+the earlier recovery receipt separately records zero-fact shutdown/settlement,
+and the historical live3 prefix receipt records all eight pending facts
+archived/SETTLED before ordinary unload.
 
 The [host learning coordinator](disassem/learning.py) (`af997cb6`) retains finite
 caller-bounded fact/claim/candidate/publication histories and merges valid
@@ -81,8 +93,10 @@ local/proxy selection and retained physical batches on top of the
 [exact release protocol](kernel/mutex_release.c). Queue removal, source return,
 physical release and record retirement have separate conditions. Source,
 result/binding, child-return and notifier users retain their exact controls;
-only the responsible physical owner releases/reaps its batch. No callback has
-executed, and no performance or complete public mutex lane is claimed.
+only the responsible physical owner releases/reaps its batch. The native-local
+fixture completed eight ordinary lock/body/unlock iterations; the later attempt
+observed limited proxy-generated prefix execution. Complete recursive/deferred correctness,
+performance and a complete public mutex lane remain unvalidated.
 
 C05 uses task-owned preallocated persistent request records for the unified
 ordinary local/proxy path. Simultaneously live requests use distinct records,
@@ -130,8 +144,9 @@ stack for bounded single-word accesses. A native-provider lease spans the whole
 declared source activity and releases last. The [managed lifecycle](kernel/lifecycle.c)
 (`80095bfb`) prepares private unpublished children with independent core/pool/
 auxiliary backing, unwinds failed clones and drains exact current-task users
-before exit. Unmanaged tasks stay outside this lane. Actual target-tree hook
-application and auxiliary scheduler/IRQ/unwinder compatibility remain unproved.
+before exit. Unmanaged tasks stay outside this lane. Exact target hooks were
+applied and built; the managed fork/child-exit fixture passed. Full auxiliary
+scheduler/IRQ/unwinder compatibility remains unproved.
 
 The [source provider](kernel/source_provider.c), also at `40ae39ce`, pins the
 complete supplied module set and copies actual source bytes under the selected
@@ -148,8 +163,10 @@ The [host session](disassem/session.py) and [wire codec](disassem/wire.py) drive
 actual claim, stage, commit and separate ACK commands with retry identities.
 `c6becf81` exposes the exact source slot and nullable current image baseline for
 that workflow. Focused VM checks exercise host compiler/codec/archive and real
-GNU construction;
-no kernel loader, actual ioctl publication or generated kernel code has executed.
+GNU construction. Live2 failed before STAGE_LOAD; the separately retained live3
+attempt published one image and returned eight generated prefixes at the same
+unsupplied compiler-produced target before inner B. This establishes neither a
+complete protected JIT body nor recursive JIT execution.
 
 Reviewed source commit `ce423858` connects the
 [ordinary source pair](include/kd_mutex_api.h),
@@ -169,7 +186,8 @@ the final auxiliary actor closes only after all entry/binding reads, before
 restoring the current canonical native continuation. The
 [native task progress helper](kernel/task_progress.c) connects owner progress,
 episode/grant actor collection and pool collection. These paths have independent
-source review, with no execution or complete stack/lifecycle proof. See the
+source review and limited native/fork/generated-prefix observations, without
+complete stack/lifecycle proof. See the
 [integration guide](kernel/integration/README.md).
 
 The [image slot](kernel/image.c) uses RCU lookup plus exact linked users for
@@ -183,31 +201,39 @@ packaging for the original 15 C units and three concrete assembly entries, with
 the fixed Linux 7.0/x86_64/non-RT C target gate. It excludes the unexpanded image
 wrapper and supplies no automatic API conversion or provider/lifecycle policy.
 Kbuild at `5989fbbb` added the fact pool and publication bridge for 17 C units
-at that revision. Current `c6becf81` lists 26 C units and the same three concrete
+at that revision. At `c6becf81`, Kbuild lists 26 C units and the same three concrete
 assembly entries. The [build guide](kernel/integration/BUILDING.md) records
-exact-tree prerequisites; package build results need separate receipts.
+exact-tree prerequisites; actual core/full-build results have separate receipts
+in the current evidence checkpoint.
 
 The declared source path is connected through `c6becf81`: managed task storage/
 lifecycle, immutable-contract source/native holds, fd control, executable image
 construction/publication, cumulative learning and exact fsynced shutdown archives
 with separate SETTLED. This is source functionality, not a running learning
-service or integrated kernel support. Exact target application/build, concrete
-provider/configuration/GS inputs, deployment capacities and complete auxiliary/
-control-stack context proof remain outstanding. Recovery of a session after a
-crash/restart is not implemented by retaining an archive alone. No deployment
+service or complete integrated kernel support. Exact target application/build
+and fixture-specific provider/configuration/GS inputs now have receipts. General
+deployment capacities and complete auxiliary/control-stack context proof remain
+outstanding. Recovery of a session after a
+crash/restart is not implemented by retaining an archive alone. No general deployment
 request/fact count or complete control-stack budget is configured.
 Generated execution requires a distinct physical task
 and admitted nonoverlapping executor/source/wait-control stacks. W's own body
 uses a native route; a runtime instruction budget does not establish stack
-separation. Source packaging is not a parsed/compiled receipt or runtime support claim.
+separation. Actual compilation, native checks and a returned generated prefix
+do not establish complete generated execution or a complete runtime support claim.
 
 The VM focused pipeline checks passed **12/12** on `c6becf81`, including the real
 GNU cpp/as/ld/objcopy image-construction case. The frozen 99-file input remained
 unchanged; Python was 3.14.4 on `7.0.0-38-kdlock1`, with unchanged boot and taint 0.
 These are host-pipeline mechanism checks, not kernel mutex/JIT/lifecycle execution.
-The older ten planner cases remain tied only to `13f2630f` and Python 3.10.12.
-The exact-target installer was added at `97130fe4`; target application/build,
-installation and reboot require separate receipts. The retained
+The [later multi-entry receipt](tests/evidence/multi-entry-pipeline-20261111/README.md)
+records separate 4/4, 12/12 and corrected-config 5/5 passes on `18c8f2e4`, while
+retaining the initial zero-test GS refusal and failed aggregate. It executes no
+generated code. The older ten planner cases remain tied only to `13f2630f` and
+Python 3.10.12.
+The exact-target installer was added at `97130fe4`; subsequent target
+application/build, installation and boot have separate receipts linked from the
+current checkpoint. The retained
 [focused receipt](tests/evidence/runtime-pipeline-20261110/README.md)
 (`c6fbf7bb`) records the exact limits. T01-T56 remain unrun. See the
 [evidence limits](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#21-rebuild-status).
@@ -232,8 +258,9 @@ or progress-parity claim. The earlier transferable-grant proposal is superseded.
 C11 now selects an MCS queue for the initial mutex lane. C04 retains the KD
 physical-R11 canonical-packet-base mapping; R11 optimization discussion and T56
 are deferred future work. Private local/proxy arbitration and adapter bridges now have source
-implementations connected to the managed provider/compiler workflow; their
-correctness/progress and exact-target integration remain unvalidated. Selecting MCS does not select TCLock's borrowed-stack
+implementations connected to the managed provider/compiler workflow. Exact
+target build/boot and limited native checks are recorded; complete recursive
+correctness/progress remain unvalidated. Selecting MCS does not select TCLock's borrowed-stack
 execution or complete the integration.
 
 The initial mutex lane now requires stable lock-object storage through actual

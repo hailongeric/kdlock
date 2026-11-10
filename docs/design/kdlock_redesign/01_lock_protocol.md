@@ -1,5 +1,9 @@
 # kdlock lock protocol and state
 
+Current build/boot, native checks, the earlier construction failure/recovery and
+later returned generated prefix are scoped in the [current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
+Design requirements below do not establish complete generated-body or support evidence.
+
 **Status:** proposed complete design contract  
 **Applies to:** the independent redesign described in [the overview](00_overview.md)  
 **Implementation boundary:** every function described here belongs to kdlock's lock, unlock, wait or combining implementation
@@ -17,8 +21,9 @@ MCS queue; C04 retains the KD physical-R11 canonical-packet-base mapping. Privat
 local/proxy claims, persistent request/state bridges, ordinary native bootstrap
 and recursive episodes are connected in source at `ce423858`. Managed task
 lifecycle, source provider, fd control, executable loading and host/archive
-composition have source through `c6becf81`. Exact target application/build,
-concrete deployment bounds and runtime lifetime/progress proof remain unrun. This selection
+composition have source through `c6becf81`. Exact target build/boot and limited
+native/fork checks now have separate receipts. Complete deployment bounds and
+runtime lifetime/progress proof remain outstanding. This selection
 accepts extra waiting without generic native release-timing or progress parity.
 
 ## 1 Roles are temporary parts of the lock
@@ -315,8 +320,9 @@ selected auxiliary wait stack. The [task root](../../../kernel/task_state.c)
 contains exactly one core, the initial native endpoint, task hold and auxiliary
 bounds/cursor/reservation. A single task pointer locates that stable root header;
 it is not a borrowed-source index. The [integration artifact](../../../kernel/integration/README.md)
-is an unapplied task-field/child-reset context template, because exact Linux 7.0
-source is absent from main. The [setup composition](../../../kernel/task_setup.c)
+contains an unapplied task-field/child-reset context template. The exact-target
+installer's separate application/build receipts are linked in the current
+checkpoint; the template itself is not that proof. The [setup composition](../../../kernel/task_setup.c)
 at `57599619` validates caller-supplied known storage extents and composes
 attach/resources/bind, with exact unused-root rollback and one-pass teardown.
 It does not allocate backing or install automatic fork/exit/stack hooks.
@@ -356,8 +362,11 @@ read and closes before the native jump. [Task progress](../../../kernel/task_pro
 connects owner handling, episode/grant actors and pool collection. See the
 [integration guide](../../../kernel/integration/README.md) for the caller setup and
 drain contract. These private paths and the later managed allocation/fork/exit/
-provider workflow through `c6becf81` have independent source review only; exact
-kernel application/build and execution remain unrun.
+provider workflow through `c6becf81` have independent source review. Later exact
+kernel build/boot, native-local and managed fork/exit results are scoped in the
+current checkpoint. Live3's recorded prefix precedes inner B; later learning
+results are scoped separately there. Complete recursive JIT and full
+lifetime/progress proof remain unestablished.
 
 Public unlock resolves its exact logical grant from current S_W, never only the
 object address or physical task. Every source advance validates its retained
@@ -530,11 +539,11 @@ OWNER_HANDLED -> PHYSICALLY_RELEASED -> RETIRED
 - REQUESTED atomically publishes the exact source operation and typed OWNER or DEFERRED_OUTER route. The caller resolves the active execution relationship; task equality alone cannot classify a same-task outer unlock. It is not physical unlock.
 - DEFERRED retains the marker and responsible physical-owner context only for DEFERRED_OUTER; deferral rejects the OWNER route.
 - UNWIND_READY identifies the declared notification/return to that context. It does not itself switch stacks, advance a source cursor or restore an old S_W snapshot.
-- OWNER_HANDLED requires the responsible current task and either OWNER+REQUESTED for normal handling or DEFERRED_OUTER+UNWIND_READY after marker/unwind publication. An outer REQUESTED cannot be consumed as normal owner handling. The normal batch can continue; handling is not physical release and this helper advances no source cursor. The selected contract permits a correctly materialized post-unlock continuation without a wait solely for physical release/object lifetime; its private bridge and managed source path are connected through `c6becf81`; exact target/runtime proof remains outstanding.
+- OWNER_HANDLED requires the responsible current task and either OWNER+REQUESTED for normal handling or DEFERRED_OUTER+UNWIND_READY after marker/unwind publication. An outer REQUESTED cannot be consumed as normal owner handling. The normal batch can continue; handling is not physical release and this helper advances no source cursor. The selected contract permits a correctly materialized post-unlock continuation without a wait solely for physical release/object lifetime; its private bridge and managed source path are connected through `c6becf81`; complete runtime proof remains outstanding.
 - At owner initialization, the caller has already acquired physical exclusion and binds its exact ordinary unlock callback/object. The owner-only finish validates all obligations as OWNER_HANDLED, closes the batch/binding and takes/clears the saved callback/object under its internal guard. It invokes that bound synchronous complete ordinary unlock exactly once outside the guard, then records PHYSICALLY_RELEASED on the obligations. A marker, an acceptance callback or an unlock callback chosen only at release time cannot stand for physical release.
 - Exact source-request, return and notifier users, plus the physical release duty, gate RETIRED. Source return, a marker, owner handling and even physical release do not individually prove every last user has finished.
 
-The helper retains one physical-owner context/list of exact per-acquisition controls and checks owner operations against the current task. Correct initial callback binding, synchronous complete ordinary-unlock behavior and callback code/object lifetime through return remain caller obligations; the protocol performs no late object dereference. Its internal guard protects owner/control transitions and is not the selected C11 MCS acquisition/claim protocol. The separate MCS, canonical-state/JIT, task-anchor, ordinary-bootstrap and recursive-episode sources connect those private components through `ce423858`. Managed provider/task wiring has source through `c6becf81`; exact kernel application/build and runtime proof require separate receipts. The helper has static review only; no build, callback invocation or behavioral execution is claimed.
+The helper retains one physical-owner context/list of exact per-acquisition controls and checks owner operations against the current task. Correct initial callback binding, synchronous complete ordinary-unlock behavior and callback code/object lifetime through return remain caller obligations; the protocol performs no late object dereference. Its internal guard protects owner/control transitions and is not the selected C11 MCS acquisition/claim protocol. The separate MCS, canonical-state/JIT, task-anchor, ordinary-bootstrap and recursive-episode sources connect those private components through `ce423858`. Managed provider/task wiring has source through `c6becf81`; exact kernel application/build and runtime proof require separate receipts. At that source checkpoint the helper had static review only. Later build and eight native-local lock/body/unlock iterations are recorded separately; they establish no deferred/proxy release proof.
 
 A source unlock ending a logical scope is not a frame pop or physical batch release. The initial mutex lane requires stable lock-object storage through actual physical release and final backend object access. The caller establishes that validity; a retained context alone does not pin its lock container. If owner/control records share the containing allocation, keep that allocation through their later exact source-request/return/notifier last users, not merely physical release. Callback code remains retained through callback return. Record request/return, marker, unwind, outer handling, actual release and reclamation separately; acceptance is not physical completion or retirement. The selected stable-object contract permits a correctly materialized post-unlock continuation without waiting solely for physical release/object lifetime. The helper does not advance source. The private C04 bridge and its remaining integration must preserve the exact operation/CALL-return/cursor phase, exclusive executor, remaining logical grants and pending physical duties, once only; a marker alone authorizes no arbitrary execution.
 

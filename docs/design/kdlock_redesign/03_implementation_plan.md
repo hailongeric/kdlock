@@ -1,5 +1,9 @@
 # kdlock implementation plan and decisions
 
+Current build/boot, native checks, the earlier construction failure/recovery and
+later returned generated prefix are scoped in the [current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
+Design requirements below do not establish complete generated-body or support evidence.
+
 **Status:** active plan for the independent rebuild
 
 **Current implementation:** private source discovery/decoding/planning with
@@ -22,14 +26,19 @@ settlement. `236c287a` and `80095bfb` connect fd control, execmem loading, the
 GNU host image/session pipeline, managed fork/failure/exit lifecycle and actual
 fsynced archive-to-SETTLED shutdown. `c6becf81` exports the exact source slot and
 nullable baseline. The exact-target installer and focused-check source exist at
-`97130fe4`; actual target application/build/execution, deployment sizes and full
-auxiliary context/resource proof remain unrun or unconfigured. Crash/restart
-reconstruction beyond the session/archive workflow is not implemented. Opt-in core Kbuild/Kconfig packaging is present at `a65016e3`,
-with no parser/build or target-tree application evidence.
-Kernel paths have source/static review only. The VM focused pipeline checks
-passed 12/12 on `c6becf81`, including real GNU image construction; see the exact
-[evidence receipt](04_evidence_and_reconciliation.md#21-rebuild-status). Kernel
-JIT/mutex/lifecycle execution, target build and T01-T56 need separate receipts.
+`97130fe4`; later exact target application, core/full builds, kernel2 boot,
+limited native-local and managed fork/exit checks now have separate receipts.
+The first live image construction failed before loading/publication and its
+reserved session was recovered and ordinarily unloaded. `18c8f2e4` corrects that
+single-root/global-entry mismatch with explicit shared-budget multi-entry
+planning. Opt-in core packaging began at `a65016e3`; its initial source-only
+status is historical. See the [current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
+Full auxiliary context/resource and recursive lifetime/progress proof remain
+outstanding. Deployment values beyond the fixture and crash/restart
+reconstruction beyond the session/archive workflow are not supplied. Generated
+protected-body/recursive JIT completion remains unestablished; T01-T56 remain
+unrun. Live3's early prefix and later exact learning/ACK stages have separate
+receipts in the current checkpoint.
 
 Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins). This plan implements the target semantic model; historical mechanisms are optional reuse evidence. Operational repository rules still govern any later authorized work.
 
@@ -97,7 +106,7 @@ ordinary source path is connected through `c6becf81`.
 2. **Selected C04 with C06 — target adapter and reentry.** Retain KD physical R11 as canonical-packet base and implement complete current-state entry/exit/materialization/reentry, including the temporary-GPR PUSHFQ/POPFQ exception. Exact adapter inputs and code/return binding still need implementation/proof; C06/C09 quiesced RCU replacement and exact active-user retention are selected; their managed source integration is present, while exact target integration and execution require separate receipts. R11 optimization/T56 are deferred, not an active confirmation question.
 3. **C10 — reader and API/context lanes.** Origin-local readers are the conservative first lane; another placement may broaden execution choices but needs full concurrency/context proof. Confirm initial lanes and extension scope; current exclusions are not permanent rewrite bans or new support.
 4. **Selected C08 with C09 — retained facts and publication.** Integrate the source-present preallocated finite caller-capacity feedback-fact pool and exact publication/ACK bridge under the supported-workload availability guarantee. Keep new JIT/delegation eligible while facts are pending or translation runs, subject to existing context/source/image checks. Merge valid same-version observations before building; preserve uncovered/later facts and publication-bound ACK. Actual fd transport/compiler/staging/runtime composition has source through `c6becf81`; crash/restart reconstruction beyond the session/archive workflow is not implemented. Nonobservations/uncovered misses remain pending normally; selected shutdown requires exact fsynced host archival and separate SETTLED after image/native/JIT drain. Kernel API is source-present at `40ae39ce`; actual host archive transport is source-connected at `80095bfb`, and capacity covers retained records. Five-edge discovery is the approved current default.
-5. **C02/C05 with remaining C07 — request lookup, auxiliary control and progress.** Use direct MCS state pointers, task-owned auxiliary entry and preallocated persistent requests for normal local/proxy selection. The supported workload guarantees record availability within a finite explicit caller capacity covering every concurrently live/retained user. No deployment value is configured; exhaustion is documentation-only, not another implementation route. Ordinary native routing/recursive progress have source code at `ce423858`; cold task storage and native/stack holds now have source at `40ae39ce`; managed fork/failure/exit and task-exit drain have source at `80095bfb`, with exact target application and full capacity/lifecycle proof unrun.
+5. **C02/C05 with remaining C07 — request lookup, auxiliary control and progress.** Use direct MCS state pointers, task-owned auxiliary entry and preallocated persistent requests for normal local/proxy selection. The supported workload guarantees record availability within a finite explicit caller capacity covering every concurrently live/retained user. No deployment value is configured; exhaustion is documentation-only, not another implementation route. Ordinary native routing/recursive progress have source code at `ce423858`; cold task storage and native/stack holds now have source at `40ae39ce`; managed fork/failure/exit and task-exit drain have source at `80095bfb`, with target application/build and a bounded managed fork/exit case now recorded; full capacity/lifecycle proof remains outstanding.
 
 ### 2.1 Per-family selection design
 
@@ -136,7 +145,7 @@ The source request atomically publishes OWNER versus DEFERRED_OUTER with REQUEST
 
 Source-request, source-return and notifier users are tracked exactly and gate retirement. At owner initialization, the caller has already acquired physical exclusion and binds its exact ordinary backend unlock callback/object. The owner-only finish validates all obligations as OWNER_HANDLED, closes the batch/binding and takes/clears that saved callback/object under its internal guard, invokes the bound synchronous complete ordinary unlock once outside the guard, then records PHYSICALLY_RELEASED on the obligations. Owner operations check the current task. Correct binding and callback code/object lifetime through its return remain caller obligations; the protocol performs no later object dereference. Deferred acceptance, unwind readiness and owner handling are not actual release; physical release alone is not proof that every remaining control/notification user has finished.
 
-This helper is a limited C protocol implementation with static review only; no callback has executed. Its internal owner guard is not the separately selected C11 MCS claim/acquisition protocol. It implements no concrete physical exclusion backend, acquisition/queue, JIT adapter, task-core anchor or source-cursor advancement. It contains no register mapper or C02 task-core anchor; C04 KD packet-base mapping is selected separately. The helper claims no complete ordinary-mutex lane, build or behavioral execution.
+At the initial release-helper checkpoint, this limited C protocol had static review only. Later build and native-local lock/unlock execution are recorded separately; the scoped live source checkpoints are recorded centrally, while complete deferred/proxy correctness remains unvalidated. Its internal owner guard is not the separately selected C11 MCS claim/acquisition protocol. It implements no concrete physical exclusion backend, acquisition/queue, JIT adapter, task-core anchor or source-cursor advancement. It contains no register mapper or C02 task-core anchor; C04 KD packet-base mapping is selected separately. The helper alone establishes no complete ordinary-mutex lane or full behavioral proof.
 
 Extra waiting is explicitly accepted for this route. It supersedes immediate outer-release obligations only for the selected mutex policy; it establishes no generic native release-timing or progress parity and creates no spin/rwlock/rwsem/downgrade exception. Source handshakes depending on outer-lock availability retain their stated progress limits, without introducing a new source-admission whitelist.
 
@@ -153,9 +162,9 @@ See [the protocol's selected phase contract and pinned public mutex source](01_l
 | C11: MCS queue for the initial ordinary-mutex lane | Preserve optional local/proxy/origin-combiner exclusivity, actual grant ordering, selected deferred outer owner and exact queue/request/control last users. MCS membership is not source acquisition or permission to execute. The choice does not select old TCLock borrowed-stack execution, node pools, capacities, parking or broad batching |
 | C04: retain KD physical R11 as canonical-packet base | Keep logical R11 virtualized and all users on the one S_W/packet; implement a consistent original-backend mapper/wrapper, current-state export and exact CALL/RET/virtual-stack bridges with KD GS lowering. Preserve AS01 and temporary-GPR PUSHFQ/POPFQ. Old packet offsets/private ABI are not implied; R11 optimization discussion and T56 are deferred |
 
-These are selected user decisions, not validation results. Private MCS acquisition/selection, mapper/wrapper, canonical-state and operation bridges have source implementations. Reviewed commit `2c3f7cbc` connects exact request-pool users/reuse, task-root pool binding/detach, physical-task owner progress and JIT/wait callbacks. Reviewed commit `ce423858` additionally connects ordinary source macros/native bootstrap, serial recursive episodes, exact existing-grant native unlock, final auxiliary-actor cleanup and native task progress. Those private components are present and independently reviewed, followed by setup composition `57599619`, source epochs `a660342c`, copied feedback facts `c9b468ee`, artifact input/NULL-retirement support `0c3ccb10` and image-owner retention `a23b82c1`. Reviewed kernel source `5989fbbb` further implements coverage-miss recording, exact claims/incarnations and code-independent producer/source retention, plus the actual commit/ACK bridge; host coordinator `af997cb6` composes cumulative merge before compilation and reconciles exact publication/ACK receipts. Source checkpoint `40ae39ce` implements cold task storage, retained-stack callbacks, immutable-contract source snapshots/native holds and kernel archived-fact settlement. Managed fork/failure/exit, actual channel/compiler/executable-provider/runtime composition and archival receipt wiring have source at `236c287a` and `80095bfb`; `c6becf81` supplies exact exported slot/base identities. Full auxiliary context proof, deployment inputs, crash/restart reconstruction and exact target application/build/execution remain outstanding. Core source packaging is present at `a65016e3` with no parsed/compiled receipt; the later 12 focused host-pipeline checks passed on `c6becf81`; kernel build/runtime and correctness/progress acceptance evidence remains separate and unrun. C12 source rebuilding promises no old lock-object or adapter binary layout; current source progress is detailed in the README and evidence file.
+These are selected user decisions, not validation results. Private MCS acquisition/selection, mapper/wrapper, canonical-state and operation bridges have source implementations. Reviewed commit `2c3f7cbc` connects exact request-pool users/reuse, task-root pool binding/detach, physical-task owner progress and JIT/wait callbacks. Reviewed commit `ce423858` additionally connects ordinary source macros/native bootstrap, serial recursive episodes, exact existing-grant native unlock, final auxiliary-actor cleanup and native task progress. Those private components are present and independently reviewed, followed by setup composition `57599619`, source epochs `a660342c`, copied feedback facts `c9b468ee`, artifact input/NULL-retirement support `0c3ccb10` and image-owner retention `a23b82c1`. Reviewed kernel source `5989fbbb` further implements coverage-miss recording, exact claims/incarnations and code-independent producer/source retention, plus the actual commit/ACK bridge; host coordinator `af997cb6` composes cumulative merge before compilation and reconciles exact publication/ACK receipts. Source checkpoint `40ae39ce` implements cold task storage, retained-stack callbacks, immutable-contract source snapshots/native holds and kernel archived-fact settlement. Managed fork/failure/exit, actual channel/compiler/executable-provider/runtime composition and archival receipt wiring have source at `236c287a` and `80095bfb`; `c6becf81` supplies exact exported slot/base identities. Full auxiliary context proof, general deployment inputs and crash/restart reconstruction remain outstanding. Packaging at `a65016e3` was initially source-only; exact target application/build/boot and bounded native/control results now have separate receipts. The earlier 12 focused host-pipeline checks remain tied to `c6becf81`; complete generated bodies and correctness/progress acceptance remain unvalidated. C12 source rebuilding promises no old lock-object or adapter binary layout; current source progress is detailed in the README and evidence file.
 
-The remaining deployment choices supply exact immutable source/dependency, configuration/load/GS inputs, finite request/fact/cycle/image capacities and complete control-stack/context bounds. The cold allocator, managed fork/failure/exit hooks, provider/control/runtime bindings, GNU build/session transport and fsynced archive/settlement path are now source-connected through `c6becf81`; they are not absent mechanisms. The selected all-dependency immutable-text contract and distinct shutdown SETTLED are settled choices, not pending alternatives. Input/owner checks do not create a generic text-mutation freeze: the provider must actually satisfy that contract. No deployment values or new policies are selected here. Crash/restart reconstruction beyond the session/archive workflow is not implemented. The 12 focused VM checks passed, including host GNU assembly/linking. Exact target application/core build, execution of the ordinary/recursive kernel path, retirement/progress checks and T01-T56 need separate receipts. Additional API/context lanes remain separately scoped under C01/C10.
+The remaining deployment choices supply exact immutable source/dependency, configuration/load/GS inputs, finite request/fact/cycle/image capacities and complete control-stack/context bounds. The cold allocator, managed fork/failure/exit hooks, provider/control/runtime bindings, GNU build/session transport and fsynced archive/settlement path are now source-connected through `c6becf81`; they are not absent mechanisms. The selected all-dependency immutable-text contract and distinct shutdown SETTLED are settled choices, not pending alternatives. Input/owner checks do not create a generic text-mutation freeze: the provider must actually satisfy that contract. No deployment values or new policies are selected here. Crash/restart reconstruction beyond the session/archive workflow is not implemented. The 12 focused VM checks passed, including host GNU assembly/linking. Exact target application/core/full build and bounded ordinary native/fork execution now have receipts. Recursive generated execution, full retirement/progress checks and T01-T56 still need their own evidence. Additional API/context lanes remain separately scoped under C01/C10.
 
 ### 2.4 Direct MCS state, task-owned auxiliary entry and RCU replacement
 
@@ -192,8 +201,10 @@ supported workload guarantees availability for every need; no numeric deployment
 value or unbounded claim follows. Exhaustion remains documentation-only, with no
 handler, recovery/local fallback or new special assertion. Concrete task-time
 allocation, managed fork/exit and provider wiring have source; actual deployment
-counts, target application and execution remain outstanding. The private ordinary entry/recursive path is connected in source;
-its full stack/context/last-user proof and runtime evidence remain unrun.
+counts beyond the fixture and full execution proof remain outstanding. Target
+application/build/boot and bounded native/fork checks are recorded separately.
+The private ordinary entry/recursive path is connected in source; its full
+stack/context/last-user proof and complete generated-execution evidence remain unvalidated.
 
 ## 3 Work packages
 
@@ -328,14 +339,15 @@ The explicitly selected ordinary-mutex outer-unlock deferral is the limited acce
 
 ### P8 Qualify the complete lock
 
-The user selected overall functionality before behavioral testing. During this
-implementation stage, continue source/static review and defer further behavioral
-tests and suites until that functionality is complete. The ten private planner
-checks recorded in the evidence file preceded this clarification; they do not
-change the order or count as acceptance. Missing mechanism choices must be
-resolved rather than filled in merely to reach testing.
+The user selected overall functionality before behavioral testing during the
+source implementation stage. That historical order preserved the earlier ten
+private planner checks without counting them as acceptance. The connected
+ordinary source path subsequently entered authorized focused VM verification;
+current results and failures are recorded separately in the evidence checkpoint.
+Missing mechanism choices must still be resolved rather than filled in merely
+to reach testing. Full suites require an explicit request.
 
-Once overall functionality is complete, run repository-required static/unit checks, generated-code structural tests, memory-order/lifetime tests and real API workloads on the authorized test environment. Kernel/module execution follows the eventual checkout's AGENTS instructions; do not run builds or benchmarks on a host reserved for source work.
+Run the basic and directly affected static/unit checks, generated-code structural tests, memory-order/lifetime tests and real API workloads on the authorized test environment. Kernel/module execution follows the eventual checkout's AGENTS instructions; do not run builds or benchmarks on a host reserved for source work.
 
 Only then compare cold learning, warmed/frozen execution and changed-target adaptation. Separate application completion, native/local body work, origin-as-combiner, per-fragment completion, exact handbacks and whole-root JIT returns. Retain actual exit reason/cursor and owner/operation phase before attributing a limit. Compare Linux Native and TCLock only with explicit release-policy/configuration and actual-path attribution. Selected mutex deferral must remain visible; it is not matched native release-timing/progress evidence. Real-world API tests use actual userspace system calls, native bodies and minimal lock routing/lifetime glue under the existing workload contract; fixtures remain mechanism evidence.
 
@@ -352,7 +364,7 @@ AS01 is a user-selected design assumption/scope, not a verified behavior row: ge
 | Plain spinlock | Native atomicity/context and exact release | Simple task-context lane first | Execution/guard/progress proof; pinning or pools only if selected |
 | rwlock/rwsem writers | Write exclusion, API result and interaction with readers | Choose initial family in C01 | C03 authority/composite contract; no inherited writer-first order |
 | rwlock/rwsem readers | Concurrent reader/mode/API/context semantics | Origin-local on W | C10 placement; C_A-local is still remote relative to W; no remote lane authorized yet |
-| Mutex | Sleepable ordinary API lane with exact owner/release/lifetime phases; selected outer-unlock deferral accepts extra waiting | Owner-retained deferred outer unlock and MCS queue selected; ordinary source/native bootstrap, recursive episodes and progress connected in source at ce423858; managed task/provider/compiler source connected through c6becf81; exact kernel application/build/runtime proof unrun | Distinct marker/unwind/handling/physical release, retained owner and exact users. Stable object storage through actual physical release selected; separate later control/notifier/code retention remains required; no native timing/progress parity |
+| Mutex | Sleepable ordinary API lane with exact owner/release/lifetime phases; selected outer-unlock deferral accepts extra waiting | Owner-retained deferred outer unlock and MCS queue selected; ordinary source/native bootstrap, recursive episodes and progress connected in source at ce423858; managed task/provider/compiler source connected through c6becf81; target build/boot and bounded native checks recorded, generated/recursive runtime proof pending | Distinct marker/unwind/handling/physical release, retained owner and exact users. Stable object storage through actual physical release selected; separate later control/notifier/code retention remains required; no native timing/progress parity |
 | Trylock | Exact success/failure; no grant on failure | Local route until another is selected | One result winner and cleanup under the chosen protocol |
 | Killable/interruptible | W's intended signal/API result | Origin handling initially | Explicit cancellation/context contract, not C's substitute signals |
 | Downgrade | Continuous write-to-read protection | Origin-local read suffix initially | C10 mode/placement with exact custody; no unlock/relock substitute |

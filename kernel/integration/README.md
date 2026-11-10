@@ -1,5 +1,10 @@
 # Task-owned root, request storage and auxiliary entry
 
+The [current evidence checkpoint](../../docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint)
+records exact build/boot and scoped execution results, retained failures and
+current validation limits. This guide states integration duties; its source
+instructions do not establish support or performance evidence.
+
 Every active borrowed or nested request uses its explicit MCS call/node's
 `node->state` pointer to original W's one canonical S_W. A nested request keeps
 that same pointer. The dispatcher passes its current call and parent role;
@@ -199,9 +204,10 @@ or freeing. The managed lifecycle wrapper supplies per-task admission closure an
 drain. Installing the exact hooks and proving full observer/context lifetimes
 remain separate target integration duties.
 
-These components have source/static review at `c6becf81`. The focused host
-pipeline checks later passed 12/12 in the VM, including GNU image construction;
-they execute no kernel lifecycle or mutex path. Exact target build/runtime
-receipts and T01-T56 remain separate evidence.
+These components had source/static review at `c6becf81`; its 12 focused host
+pipeline checks, including GNU construction, executed no kernel path. Later
+exact target build/boot, native-local and managed fork/exit observations have
+their own receipts in the current checkpoint. They do not establish full
+lifecycle/context proof or complete any T01-T56 acceptance item.
 The older external registry, two-task-pointer variant and removed temporary
 local fallback remain historical Git evidence, not the active integration.

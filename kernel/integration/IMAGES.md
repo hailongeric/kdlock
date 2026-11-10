@@ -1,10 +1,22 @@
 # Source epochs and executable-image ownership
 
+The [current evidence checkpoint](../../docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint)
+records exact build/boot and scoped execution results, retained failures and
+current validation limits. This guide states integration duties; its source
+instructions do not establish support or performance evidence.
+
 The compiler constructs assembly and exact metadata; the GNU host builder links
 machine bytes at the real reserved code address. Neither creates a source lease
 or publication authority. Concrete kernel provider/loader/control sources supply
 those duties through `c6becf81`. Source, focused host construction, target build,
-publication and kernel execution remain separate evidence.
+publication and kernel execution remain separate evidence. Live2 reserved code
+but failed before STAGE_LOAD, then cancelled/shut down exactly. The separately
+retained live3 attempt loaded/published one image with zero feedback input facts
+and returned eight generated prefixes at the same early unsupplied-target
+frontier. That attempt established no complete protected/recursive generated
+body or coverage ACK; all eight pending facts were archived/SETTLED before
+normal teardown. Later learning/ACK observations have their own scoped receipt
+in the current checkpoint.
 
 ## Source retention
 

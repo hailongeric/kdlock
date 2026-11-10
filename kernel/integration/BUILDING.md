@@ -1,5 +1,10 @@
 # Building the private core in the selected kernel tree
 
+The [current evidence checkpoint](../../docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint)
+records exact build/boot and scoped execution results, retained failures and
+current validation limits. This guide states integration duties; its source
+instructions do not establish support or performance evidence.
+
 [The package Kconfig](../../Kconfig) exposes the opt-in bool
 `CONFIG_KDLOCK_REBUILD` for x86_64 without PREEMPT_RT. It has no explicit default
 or resource settings. [Kbuild](../../Kbuild) declares one built-in composite group
@@ -13,11 +18,12 @@ This flag packages source; it performs no automatic mutex aliasing or deployment
 configuration. Managed task allocation/fork/exit, source provider, executable
 loading/publication and compiler transport now have source in the package. The
 flag alone does not create or configure those components. The exact kernel tree
-and configured build output are absent from this repository. No Kconfig/Kbuild
-parser, preprocessing, compilation, assembly, linking or runtime check has run
-for the package at source checkpoint `c6becf81`. Later focused/target receipts
-name their own exact inputs; VM focused pipeline checks subsequently passed 12/12
-including GNU construction. All authorized builds, modules, tests and timing run
+and configured build output are absent from this repository. At source checkpoint
+`c6becf81`, package target parsing/build/runtime checks were still unrun. Later
+receipts now record exact target application, 26 C plus three assembly core
+units, full kernel builds, kernel2 install/boot and limited native/fork execution;
+the current checkpoint links them without attributing those stages to the
+earlier 12 host-pipeline checks. All authorized builds, modules, tests and timing run
 only in the development VM. Source edits and
 static inspection remain on the source host.
 
@@ -80,7 +86,7 @@ source tree, retaining its internal relative paths:
    protected bodies and surrounding semantics unchanged. The packaging flag
    enables no callable, signalable, trylock, I/O, reader, mode or IRQ lane.
 
-Current `c6becf81` lists 26 C units: `episode`, image slots/owners, source
+At `c6becf81`, Kbuild lists 26 C units: `episode`, image slots/owners, source
 epoch/provider/stack, feedback producer/pool/publication, channel/control/compiled
 images/runtime/exports, canonical state/JIT, MCS/release, task roots, request
 pools, owner progress, task setup/storage/lifecycle/progress and native entry/API.
@@ -129,5 +135,7 @@ The Kbuild form was inspected against the Linux 7.0
 [build rules](https://github.com/torvalds/linux/blob/v7.0/scripts/Makefile.build)
 and [flag rules](https://github.com/torvalds/linux/blob/v7.0/scripts/Makefile.lib).
 That primary-source read supports the declared build structure and flags; it is
-not a parsed or compiled receipt for the selected vendor tree. Managed provisioning/lifecycle/provider hooks are source-present. Exact target
-application/build and full auxiliary/context execution need their own receipts.
+not itself a parsed or compiled receipt for the selected vendor tree. Actual
+target application/build results are retained separately in the current
+checkpoint. Managed provisioning/lifecycle/provider hooks are source-present;
+limited native/fork execution does not complete auxiliary/context proof.
