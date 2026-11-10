@@ -87,7 +87,7 @@ entry_B
 
 This is a conceptual example, not a prescribed global naming scheme. Fragment identity must include enough source/ABI information to distinguish the actual cursor, operation phase, required input state and live-grant/context contract. Generic structures/dispatch combine lock family/API/mode, original S_W identity, operation phase, source cursor/dependency epoch and ABI compatibility. Reusable code-cache keys may omit W's identity only with proven input compatibility; each execution binding still names its exact S_W. A lock object's address or mmap/munmap root name is not a sufficient key or a protocol selector.
 
-An entry associates source/dependency identity, publication state and fragment descriptors. An image is a versioned unit of code and metadata; coherent immutable descriptors are replaced through the selected quiesced RCU rule. One image may contain several fragments. A cursor can have no available fragment, in which case the operation still completes through its admitted local/native route. C06/C09 select quiesced RCU replacement and exact active-user retention. Source-epoch/input validation and code-owner retention now have private implementations; actual live provider lease acquisition and executable allocation/publication orchestration remain work.
+An entry associates source/dependency identity, publication state and fragment descriptors. An image is a versioned unit of code and metadata; coherent immutable descriptors are replaced through the selected quiesced RCU rule. One image may contain several fragments. A cursor can have no available fragment, in which case the operation still completes through its admitted local/native route. C06/C09 select quiesced RCU replacement and exact active-user retention. Source-epoch/input validation and code-owner retention now have private implementations; source snapshots/native holds under the selected all-dependency immutable-text contract now have source at `40ae39ce`. The actual provider/channel/executable/runtime composition now has source through `c6becf81`; exact target application/build and execution require separate receipts.
 
 ### 2.1 Bridge from A to B
 
@@ -140,13 +140,21 @@ actual slot retirement. NULL publication can remove the final image through
 exact drain/grace. These checks do not acquire live provider/module/text holds,
 allocate executable memory or automate publication. Epoch/owner closure is
 retention-only; independent native suffix/return text and execution-admission
-closure remain provider duties.
+closure remain provider duties. Source checkpoint `40ae39ce` adds a concrete
+provider which pins every supplied module dependency and copies actual bytes
+under the selected immutable-text contract. All dependencies remain unchanged
+from before capture through final native/JIT/feedback use; module_get alone
+supplies no text freeze. Configuration/load/version and the exact current-task
+GS offset remain explicit provider inputs. Independent NATIVE epoch memberships
+retain the complete native suffix/return activity through task-storage teardown.
+The final native-provider callback releases that hold; its code and active
+finalizer/caller backing survive their separate final return.
 
 ## 3 Original backend and kdlock ABI
 
 Original UB means `glarer/UserspaceBypass` at `1a5b98a06b058a7adce9805c8c6d061e2212f56a`. Its translation/feedback pattern is retained; its old userspace wrapper is not copied byte for byte into kdlock.
 
-**Pinned evidence (E):** the register roles, packet fields/offsets, 168-byte size, two-word args and entry offsets below describe `20fde062729703208ac54445f51fc0f21f24e0e8`, with later checks in [the evidence file](04_evidence_and_reconciliation.md). C04 now retains the KD mapping in which physical R11 holds the same canonical packet base and logical R11 is virtualized. This does not freeze the old packet size/offsets or private entry ABI. Private entry, exit, capture, materialization and reentry sources now connect the ordinary/recursive path at `ce423858`; actual provider/task/kernel integration and runtime proof remain under C12. Reusing the old adapter makes its actual constraints conditional obligations of that lane. A new adapter must keep the original backend/GS lowering and prove equivalent source effects without inventing absent input bits.
+**Pinned evidence (E):** the register roles, packet fields/offsets, 168-byte size, two-word args and entry offsets below describe `20fde062729703208ac54445f51fc0f21f24e0e8`, with later checks in [the evidence file](04_evidence_and_reconciliation.md). C04 now retains the KD mapping in which physical R11 holds the same canonical packet base and logical R11 is virtualized. This does not freeze the old packet size/offsets or private entry ABI. Private entry, exit, capture, materialization and reentry sources now connect the ordinary/recursive path at `ce423858`; managed provider/task composition is source-connected through `c6becf81`, with exact target integration and runtime proof unrun under C12. Reusing the old adapter makes its actual constraints conditional obligations of that lane. A new adapter must keep the original backend/GS lowering and prove equivalent source effects without inventing absent input bits.
 
 ### 3.1 Physical and logical registers
 
@@ -288,7 +296,7 @@ At a supported handback, preserve:
 - live grant identities, deferred outer-unlock phases, retained responsible owner contexts and actionable physical release routes;
 - supported context guards and unique execution sequence.
 
-A pending call executes once. A source acquisition/unlock resumes after its CALL only when that source operation's exact return/phase effects have been handled once. For the selected deferred mutex unlock, a correctly materialized post-unlock continuation need not wait solely for physical release/object lifetime. Deferred acceptance or OWNER_HANDLED is not PHYSICALLY_RELEASED and alone advances no source. The private CALL/return/cursor bridge and ordinary/recursive driver are connected in source at `ce423858` under the selected KD physical-R11 mapping; remaining logical grants and physical duties stay exact. Actual provider/task/kernel integration and runtime proof remain outstanding. Owner/control/notifier storage survives through its separate last users afterward. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
+A pending call executes once. A source acquisition/unlock resumes after its CALL only when that source operation's exact return/phase effects have been handled once. For the selected deferred mutex unlock, a correctly materialized post-unlock continuation need not wait solely for physical release/object lifetime. Deferred acceptance or OWNER_HANDLED is not PHYSICALLY_RELEASED and alone advances no source. The private CALL/return/cursor bridge and ordinary/recursive driver are connected in source at `ce423858` under the selected KD physical-R11 mapping; remaining logical grants and physical duties stay exact. Managed provider/task composition has source through `c6becf81`; exact target integration and runtime proof require separate receipts. Owner/control/notifier storage survives through its separate last users afterward. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
 
 Before delegated effects, unsupported admission can choose W's ordinary local path. After effects, only a pre-established forward continuation is legal. An absent bridge cannot be repaired by saying the invocation should have run locally from the start.
 
@@ -350,7 +358,7 @@ For X reported before a snapshot and Y during the build, publishing coverage of 
 
 A later inspected candidate already has a 32-row non-evicting cumulative learning ledger on a particular immutable mutex retained-miss path, base-generation/receipt acknowledgement and observable overflow. The v0.6 historical "single latest miss" description is therefore not a universal current-state claim.
 
-That path is E: it is not proof of lossless old-generation learning, every lock family or the full redesign. Its 32 rows, no-eviction policy and receipt encoding are not target requirements. C08 now selects a preallocated feedback-fact pool with finite explicit caller capacity sufficient for the supported workload, while preserving cumulative knowledge and exact acknowledgement. The kernel fact pool and exact commit/ACK receipt bridge now have source implementations; transport, persistent compiler organization, restart/reset/settlement and live publication orchestration remain implementation work. No numeric size is inherited.
+That path is E: it is not proof of lossless old-generation learning, every lock family or the full redesign. Its 32 rows, no-eviction policy and receipt encoding are not target requirements. C08 now selects a preallocated feedback-fact pool with finite explicit caller capacity sufficient for the supported workload, while preserving cumulative knowledge and exact acknowledgement. The kernel fact pool and exact commit/ACK receipt bridge now have source implementations; the kernel shutdown settlement API has source at `40ae39ce`. Fd transport, executable loading/publication, managed runtime and actual fsynced archival receipt wiring have source at `236c287a` and `80095bfb`, followed by exact slot/base export at `c6becf81`. Recovery after a crash/restart beyond the implemented session/archive workflow is not supplied; actual target execution remains unrun. No numeric size is inherited.
 
 The availability guarantee is a documented support assumption, not a measured bound or unbounded-storage claim. No overflow/drop/recovery policy is implied outside that guarantee. Pending facts and translation alone cannot pause new JIT/delegation or force later operations local. Other actual context/source/image checks remain in force. Preserve every uncovered/later fact until its exact settled disposition or publication-bound ACK; do not describe a lost report as lossless learning.
 
@@ -364,7 +372,7 @@ Accepting a source-valid observation from an old retained generation can improve
 
 Lockless lookup, writer exclusion, source admission and execution retention have separate proofs. RCU can protect a lookup/reclamation interval; it does not serialize compilation/upload or retain an image after a sleeping continuation escapes that interval.
 
-Use supported x86_64 executable-memory publication rules in addition to pointer ordering. Source-module residency does not freeze livepatch/ftrace/kprobe/static-call/jump-label changes. Choose a supported mutation interlock or enforceable immutable-source restriction; a hash check alone does not prevent later changes.
+Use supported x86_64 executable-memory publication rules in addition to pointer ordering. Source-module residency does not freeze livepatch/ftrace/kprobe/static-call/jump-label changes. The initial provider now selects an explicit all-dependency immutable-text contract: the caller excludes every mutator from before capture through final native/JIT/feedback use. A hash check or module_get alone does not establish it; the snapshot provider (`40ae39ce`) relies on that declared contract rather than holding text-patching locks across sleeping execution.
 
 Closing source admission cannot strand admitted descendants/suffixes or free text they can still reach, and completion must not need a resource held by the closer. Lease counters/subleases are current mechanisms, not prescribed storage. C08/C09 choose compiler/daemon organization, if any, and restart/reset: preserve or reconstruct valid source-versioned coverage, or explicitly coordinate a drain/reset. Never silently discard knowledge while live code/bindings still depend on it. Compilation support is not an independent source-body execution architecture.
 
@@ -393,11 +401,21 @@ subset, exact candidate code hold and coordinated emission receipt. It validates
 the actual commit transaction and returned old image, then separately ACKs only
 its emitted ordinary subset. Receipt construction alone, or another fact with
 the same source/target, cannot acknowledge an excluded nonobservation. Later and
-uncovered facts remain pending. There is no archive/reset/settlement policy for
-those records; their retained users can delay final source/provider drain, and
-capacity must cover them. Compiler transport, persistent organization and live
-provider/executable orchestration remain work. This source/static review adds
-no behavioral or publication evidence.
+uncovered facts remain pending during normal execution, and capacity covers
+them. The selected shutdown route actually archives exact facts/provenance with
+fsync and a 32-byte content receipt, then settles exact claim reservations after
+image/native/JIT drain. Source checkpoint `40ae39ce` checks CLOSED epoch with no
+BUILD/IMAGE/NATIVE users and closed producers without IMAGE users before atomic
+SETTLED. This never means translated coverage or ACK; claim end later releases
+those holds after archive/transport observers end. Kernel receipts do no host
+I/O. `session.py`, `wire.py` and `archive.py` (`80095bfb`) drive actual fd
+commands, bounded GNU image construction and durable archive receipts into that
+settlement API. Kernel control/runtime and the execmem provider compose the
+matching live identities. `c6becf81` exports the exact slot and nullable base to
+the compiler client; BUILD_START still validates and retains that base. The kernel provider/control/loader has not executed. The later 12 focused VM
+host checks include compiler/learning/wire/archive and real GNU construction,
+without kernel loading/publication. Archive retention alone is not restart
+recovery; those checks supply no kernel publication or returned-execution proof.
 
 The reviewed host coordinator `learning.py` (`af997cb6`) composes that copied-fact
 adapter with immutable cumulative merge, discovery, lowering and artifact export.

@@ -9,14 +9,16 @@ rejects another architecture, PREEMPT_RT or a kernel outside the Linux 7.0 serie
 It does not validate a specific source/configuration incarnation or select any
 additional API, debug or context policy.
 
-This is source packaging. It performs no mutex aliasing, task allocation,
-fork/exit integration, source capture/provider construction, generated-code
-allocation/publication or compiler/feedback transport. The exact kernel tree
+This flag packages source; it performs no automatic mutex aliasing or deployment
+configuration. Managed task allocation/fork/exit, source provider, executable
+loading/publication and compiler transport now have source in the package. The
+flag alone does not create or configure those components. The exact kernel tree
 and configured build output are absent from this repository. No Kconfig/Kbuild
 parser, preprocessing, compilation, assembly, linking or runtime check has run
-for these files. Builds and tests remain deferred until the overall ordinary
-lane and its integration duties are complete; when authorized, all builds,
-modules, tests and timing run only in the development VM. Source edits and
+for the package at source checkpoint `c6becf81`. Later focused/target receipts
+name their own exact inputs; VM focused pipeline checks subsequently passed 12/12
+including GNU construction. All authorized builds, modules, tests and timing run
+only in the development VM. Source edits and
 static inspection remain on the source host.
 
 Use the following layout when integrating the package into the selected kernel
@@ -35,10 +37,12 @@ source tree, retaining its internal relative paths:
    Record the kdlock source commit and any dirty changes together with the
    copied source/header/template hashes. Keep source and output trees separate
    in the future VM build. A 7.0 version check does not establish those identities.
-2. Rebase and inspect [the task field template](task_struct.patch) against that
-   exact tree. `task_struct.kd_root_context` is a build prerequisite. The copied
-   child's alias must be cleared before child publication or cleanup can use it;
-   the template supplies no task-time allocation/attach or exit/drain hook.
+2. Inspect [the task/lifecycle template](task_struct.patch) and
+   [exact-context installer](apply_target.py) against that tree. The one root
+   field and managed fork/failure/exit hooks are integration prerequisites.
+   The template has synthetic hunk positions and is not an applied-tree receipt.
+   The installer verifies pinned whole files and unique literal contexts; it
+   refuses ambiguity, unknown partial changes and protected normal inputs.
 3. Source this package from the target kernel's Kconfig hierarchy, for example
    inside its General setup menu, and add the matching descent to its
    `kernel/Makefile`:
@@ -59,8 +63,10 @@ source tree, retaining its internal relative paths:
    custom host invocation or generated-source rule is added here. Linux 7.0 may
    expand built-in composite members directly into `built-in.a`, so the logical
    `kdlock_rebuild.o` goal does not promise a separate intermediate file.
-5. Wire [current-task setup and teardown](README.md) and the actual task lifecycle
-   before any converted ordinary source pair can run. Storage, count, auxiliary
+5. Install the managed lifecycle hooks and configure
+   [current-task setup and teardown](README.md) before converted ordinary source
+   pairs can run. Initial parent entry is explicit; managed children receive
+   independent backing, while unmanaged tasks stay outside the lane. Storage, count, auxiliary
    bounds/cursor and full control-stack requirement are explicit caller inputs.
    This flag supplies none of them. Original tasks, child tasks, callback/module
    code and all escaped users need their actual final-use proof before teardown
@@ -74,10 +80,12 @@ source tree, retaining its internal relative paths:
    protected bodies and surrounding semantics unchanged. The packaging flag
    enables no callable, signalable, trylock, I/O, reader, mode or IRQ lane.
 
-The explicit core list contains 17 C units: `episode`, image slots/owners, source
-epochs, feedback producers/fact pools/publication receipts, canonical state/JIT
-bridges, MCS arbitration/release, task roots, request pools, owner progress, task
-setup/progress and native entry/API units.
+Current `c6becf81` lists 26 C units: `episode`, image slots/owners, source
+epoch/provider/stack, feedback producer/pool/publication, channel/control/compiled
+images/runtime/exports, canonical state/JIT, MCS/release, task roots, request
+pools, owner progress, task setup/storage/lifecycle/progress and native entry/API.
+Historical `a65016e3` had 15 C units and `5989fbbb` had 17; those counts describe
+those revisions.
 `include/mutex_api.S`, `include/mutex_entry.S` and `include/native_resume.S` are
 concrete entries. `include/wrapper.S` contains the per-image entry/body template:
 compile only a separately constructed image with those placeholders resolved,
@@ -95,11 +103,31 @@ execution and performance evidence distinct. Record the complete mitigation,
 instrumentation and unwinder configuration rather than inferring compatibility
 from the version/architecture gates.
 
+## Exact target installer
+
+Use an isolated candidate source and separate output tree; preserve normal,
+recovery, unrelated and frozen inputs. Copy the pinned package to
+`<source>/kernel/kdlock` first. The stdlib installer exposes inspect, plan, apply
+and verify modes. Every mode requires --tree, --build, --package,
+--source-identity and --package-identity. Establish external --source-fingerprint,
+--config-sha256 and --package-fingerprint pins before plan/apply/verify; inspect
+output alone is not external provenance. The source fingerprint covers the top
+Makefile and all five integration files, not the whole vendor tree.
+
+Apply also requires a fresh --receipt-dir, every relevant --protected-tree and
+--idle-confirmed. That flag records an actual prior controller idle/recovery
+check, not a VM check performed by the installer. Before changing the five files,
+it fsyncs before/after backups, exact patch, manifest and journal. New-inode
+replacement preserves hardlinked normal inputs without chmod, chown or source
+cleanup. Unknown partial application is refused, not automatically resumed.
+Verify reconstructs pins and the exact recipe, then checks actual applied bytes.
+No mode builds, enables configuration, installs or reboots. Retain exact apply/
+verify receipts separately from source-only review of the synthetic template.
+
 The Kbuild form was inspected against the Linux 7.0
 [makefile documentation](https://docs.kernel.org/7.0/kbuild/makefiles.html),
 [build rules](https://github.com/torvalds/linux/blob/v7.0/scripts/Makefile.build)
 and [flag rules](https://github.com/torvalds/linux/blob/v7.0/scripts/Makefile.lib).
 That primary-source read supports the declared build structure and flags; it is
-not a parsed or compiled receipt for the selected vendor tree. The target field
-patch, actual provisioning/lifecycle/provider hooks and full auxiliary/context
-integration still need their own source and execution evidence.
+not a parsed or compiled receipt for the selected vendor tree. Managed provisioning/lifecycle/provider hooks are source-present. Exact target
+application/build and full auxiliary/context execution need their own receipts.

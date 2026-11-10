@@ -15,8 +15,10 @@ mutex unlock deferral with the responsible physical outer-combiner context
 retained. The earlier transferable-grant proposal is superseded. C11 selects an
 MCS queue; C04 retains the KD physical-R11 canonical-packet-base mapping. Private
 local/proxy claims, persistent request/state bridges, ordinary native bootstrap
-and recursive episodes are connected in source at `ce423858`. Actual task/provider/
-kernel wiring, concrete resource bounds and runtime lifetime/progress proof remain incomplete. This selection
+and recursive episodes are connected in source at `ce423858`. Managed task
+lifecycle, source provider, fd control, executable loading and host/archive
+composition have source through `c6becf81`. Exact target application/build,
+concrete deployment bounds and runtime lifetime/progress proof remain unrun. This selection
 accepts extra waiting without generic native release-timing or progress parity.
 
 ## 1 Roles are temporary parts of the lock
@@ -162,7 +164,7 @@ Materialization before source transfer, one active executor, optional selection 
 
 A persistent record becomes reusable only after its request and all relevant users finish. Queue scheduling membership, source completion, physical release and retained release/return duties are separate: detachment or a returned result alone does not permit reuse. Count every non-free record, including concurrently live nested requests and late physical-owner/release, grant, notification, return, image/binding and current-native-endpoint users after the logical scope ends. Nesting depth alone is insufficient.
 
-The user guarantees an available record for every need of the supported workload. Capacity is finite and explicitly supplied by task attachment/resources; no deployment count or one-node sufficiency is configured here. Exhaustion is a documentation-only limitation of that support contract. It adds no exhaustion handler, recovery/local fallback or new special assertion, and does not imply a mathematically unbounded pool. The public ordinary lock API remains void; the capacity contract grants no public error result, fabricated success or source replay. Actual provisioning and full lifecycle/capacity proof remain integration work.
+The user guarantees an available record for every need of the supported workload. Capacity is finite and explicitly supplied by task attachment/resources; no deployment count or one-node sufficiency is configured here. Exhaustion is a documentation-only limitation of that support contract. It adds no exhaustion handler, recovery/local fallback or new special assertion, and does not imply a mathematically unbounded pool. The public ordinary lock API remains void; the capacity contract grants no public error result, fabricated success or source replay. Cold provisioning and managed lifecycle now have source through `c6becf81`; the actual deployment count and lifecycle/capacity proof remain outstanding.
 
 **Selected C08 feedback storage is separate:** JIT misses use a preallocated fact
 pool with explicit finite caller capacity sufficient for the supported workload,
@@ -180,8 +182,13 @@ bind record identity and incarnation; ending a claim can release earlier items
 before a retry finishes and forbids further checks/ACK. The source-present
 publication bridge binds only validated candidate inputs to actual commit, then
 ACKs its exact emitted subset separately. Nonobservations/uncovered misses stay
-pending without a selected settlement/reset/archive policy and can delay final
-source/provider drain. Capacity covers those records too. The source-reviewed
+pending normally. Selected shutdown archives exact facts/provenance with fsync
+and a content receipt before kernel SETTLED, separately from coverage ACK, after
+image/native/JIT drain. Kernel checks exact claim keys/incarnations and CLOSED
+source/producer lifetimes; claim end later releases settled holds. This API has
+source at `40ae39ce`; actual archival/transport/runtime composition has source
+at `80095bfb`, without execution evidence.
+Capacity covers those retained records too. The source-reviewed
 host coordinator (`af997cb6`) accumulates valid observations before compilation
 and keeps candidate input, emission, actual publication and ACK histories
 separate; it supplies no transport or persistence. This does not change
@@ -313,8 +320,14 @@ source is absent from main. The [setup composition](../../../kernel/task_setup.c
 at `57599619` validates caller-supplied known storage extents and composes
 attach/resources/bind, with exact unused-root rollback and one-pass teardown.
 It does not allocate backing or install automatic fork/exit/stack hooks.
-Task-time provisioning, explicit capacity and actual lifecycle wiring remain
-explicit duties.
+The cold `task_storage.[ch]` wrapper (`40ae39ce`) now allocates explicit-sized
+backing, composes setup/teardown and retains failed attached setup. Its native
+lease spans the whole declared source activity; the independent source-stack
+hold ends only after final actors. `lifecycle.[ch]` (`80095bfb`) supplies the
+managed initial parent, independent unpublished-child construction/failure
+cleanup and exact current-native exit drain. The task template includes those
+hooks; the exact-target installer (`97130fe4`) has not applied them. Explicit
+deployment capacity and full auxiliary-context compatibility remain duties.
 
 Task copy clears its inherited header alias before publication without changing
 the parent's core. Attach publishes initialized own backing. Before detach or
@@ -342,8 +355,9 @@ The final auxiliary actor survives root completion through the last entry/bindin
 read and closes before the native jump. [Task progress](../../../kernel/task_progress.c)
 connects owner handling, episode/grant actors and pool collection. See the
 [integration guide](../../../kernel/integration/README.md) for the caller setup and
-drain contract. These private paths have independent source review only; actual
-allocation/fork/exit/provider and kernel/build wiring remain work.
+drain contract. These private paths and the later managed allocation/fork/exit/
+provider workflow through `c6becf81` have independent source review only; exact
+kernel application/build and execution remain unrun.
 
 Public unlock resolves its exact logical grant from current S_W, never only the
 object address or physical task. Every source advance validates its retained
@@ -355,9 +369,11 @@ The [source epoch](../../../kernel/source_epoch.c) (`a660342c`) and
 [image owner](../../../kernel/image_owner.c) (`a23b82c1`) implement exact source
 and code-provider retention records. They validate supplied source/configuration/
 load/byte inputs and bind actual slot retirement transactions; they do not
-establish live source coherence, executable allocation or native-text lifetime.
-Caller-established leases and independent native suffix/return holds remain
-required, and retention closure alone does not close execution admission.
+by themselves establish source immutability, executable allocation or native-text
+lifetime. The concrete source provider, compiled-image loader and managed
+runtime now compose those holds. The caller still establishes the all-dependency
+immutable-text contract, and retention closure alone does not close execution
+admission.
 
 ### 3.2 Grant identity and native object lifetime
 
@@ -514,11 +530,11 @@ OWNER_HANDLED -> PHYSICALLY_RELEASED -> RETIRED
 - REQUESTED atomically publishes the exact source operation and typed OWNER or DEFERRED_OUTER route. The caller resolves the active execution relationship; task equality alone cannot classify a same-task outer unlock. It is not physical unlock.
 - DEFERRED retains the marker and responsible physical-owner context only for DEFERRED_OUTER; deferral rejects the OWNER route.
 - UNWIND_READY identifies the declared notification/return to that context. It does not itself switch stacks, advance a source cursor or restore an old S_W snapshot.
-- OWNER_HANDLED requires the responsible current task and either OWNER+REQUESTED for normal handling or DEFERRED_OUTER+UNWIND_READY after marker/unwind publication. An outer REQUESTED cannot be consumed as normal owner handling. The normal batch can continue; handling is not physical release and this helper advances no source cursor. The selected contract permits a correctly materialized post-unlock continuation without a wait solely for physical release/object lifetime; its private bridge now has source code; whole-lane integration remains incomplete.
+- OWNER_HANDLED requires the responsible current task and either OWNER+REQUESTED for normal handling or DEFERRED_OUTER+UNWIND_READY after marker/unwind publication. An outer REQUESTED cannot be consumed as normal owner handling. The normal batch can continue; handling is not physical release and this helper advances no source cursor. The selected contract permits a correctly materialized post-unlock continuation without a wait solely for physical release/object lifetime; its private bridge and managed source path are connected through `c6becf81`; exact target/runtime proof remains outstanding.
 - At owner initialization, the caller has already acquired physical exclusion and binds its exact ordinary unlock callback/object. The owner-only finish validates all obligations as OWNER_HANDLED, closes the batch/binding and takes/clears the saved callback/object under its internal guard. It invokes that bound synchronous complete ordinary unlock exactly once outside the guard, then records PHYSICALLY_RELEASED on the obligations. A marker, an acceptance callback or an unlock callback chosen only at release time cannot stand for physical release.
 - Exact source-request, return and notifier users, plus the physical release duty, gate RETIRED. Source return, a marker, owner handling and even physical release do not individually prove every last user has finished.
 
-The helper retains one physical-owner context/list of exact per-acquisition controls and checks owner operations against the current task. Correct initial callback binding, synchronous complete ordinary-unlock behavior and callback code/object lifetime through return remain caller obligations; the protocol performs no late object dereference. Its internal guard protects owner/control transitions and is not the selected C11 MCS acquisition/claim protocol. The separate MCS, canonical-state/JIT, task-anchor, ordinary-bootstrap and recursive-episode sources connect those private components through `ce423858`. Actual provider/task/kernel wiring remains incomplete. The helper has static review only; no build, callback invocation or behavioral execution is claimed.
+The helper retains one physical-owner context/list of exact per-acquisition controls and checks owner operations against the current task. Correct initial callback binding, synchronous complete ordinary-unlock behavior and callback code/object lifetime through return remain caller obligations; the protocol performs no late object dereference. Its internal guard protects owner/control transitions and is not the selected C11 MCS acquisition/claim protocol. The separate MCS, canonical-state/JIT, task-anchor, ordinary-bootstrap and recursive-episode sources connect those private components through `ce423858`. Managed provider/task wiring has source through `c6becf81`; exact kernel application/build and runtime proof require separate receipts. The helper has static review only; no build, callback invocation or behavioral execution is claimed.
 
 A source unlock ending a logical scope is not a frame pop or physical batch release. The initial mutex lane requires stable lock-object storage through actual physical release and final backend object access. The caller establishes that validity; a retained context alone does not pin its lock container. If owner/control records share the containing allocation, keep that allocation through their later exact source-request/return/notifier last users, not merely physical release. Callback code remains retained through callback return. Record request/return, marker, unwind, outer handling, actual release and reclamation separately; acceptance is not physical completion or retirement. The selected stable-object contract permits a correctly materialized post-unlock continuation without waiting solely for physical release/object lifetime. The helper does not advance source. The private C04 bridge and its remaining integration must preserve the exact operation/CALL-return/cursor phase, exclusive executor, remaining logical grants and pending physical duties, once only; a marker alone authorizes no arbitrary execution.
 

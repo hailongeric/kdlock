@@ -22,8 +22,9 @@ and C04 retains the KD physical-R11 canonical-packet-base mapping. Optional
 local/proxy/origin-combiner transactions, MCS/request lifetimes and exact
 adapter/bridge details still need implementation/proof; C08 now selects
 preallocated miss-fact retention with continued admission as recorded below.
-C10 and concrete provisioning/lifecycle/provider integration remain separately
-scoped. C05 selects task-owned preallocated persistent requests for normal
+C10 extensions remain separately scoped. Managed provisioning/lifecycle/provider
+composition is now source-connected through `c6becf81`; deployment and exact
+target validation remain separate. C05 selects task-owned preallocated persistent requests for normal
 local/proxy selection. The supported workload guarantees availability
 within an explicit finite caller capacity covering all live/retained users;
 exhaustion is documentation-only, with no handler/recovery/local fallback or new
@@ -44,9 +45,15 @@ facts stay pending. No numeric deployment value, unbounded claim or runtime
 validation follows. Reviewed kernel source `5989fbbb` implements the pool,
 code-independent producer/source retention and exact commit/ACK bridge;
 host coordinator `af997cb6` composes cumulative merge and receipt reconciliation.
-Transport/provider/persistence/restart/settlement integration remains work.
-Nonobservations and uncovered misses remain pending and can delay final source/
-provider drain; their records count toward capacity. The prior pending-fact
+Source checkpoint `40ae39ce` adds immutable-contract source snapshots/native
+holds, cold task storage/retained-stack words and kernel shutdown settlement.
+Selected shutdown requires exact fsynced host archives/content receipts before
+SETTLED after image/native/JIT drain; this is separate from coverage ACK.
+Nonobservations and uncovered misses stay pending normally and count toward
+capacity. Actual channel/compiler/executable-provider/runtime composition and
+fsynced archive/receipt wiring have source at `236c287a` and `80095bfb`; exact
+exported slot/base identities follow at `c6becf81`. Crash/restart reconstruction
+beyond the session/archive workflow is not implemented. The prior pending-fact
 forced-local/defer option is superseded.
 
 ### 1.1 Assumption and target policy versus evidence
@@ -63,10 +70,23 @@ forced-local/defer option is superseded.
 
 ### 2.1 Rebuild status
 
-All current implementation evidence is source/static inspection. No new module
-has been imported, generated assembly assembled, C compiled, code loaded or
-behavioral check executed. The public ordinary-mutex lane remains incomplete;
-private component source is not integrated Linux support or performance evidence.
+The declared ordinary source path is connected through `c6becf81` and has
+independent source/static review. A subsequent focused VM check passed 12/12
+on that exact source, including real GNU image construction. The
+[retained focused receipt](../../../tests/evidence/runtime-pipeline-20261110/README.md)
+is committed at `c6fbf7bb`. This is neither
+exact-target kernel integration nor mutex/JIT runtime correctness or performance
+evidence; kernel execution and the T01-T56 acceptance matrix remain unrun.
+
+The focused run used Python 3.14.4 in the translation virtual environment on
+`7.0.0-38-kdlock1`, boot `3d32656f-6162-4a0a-9304-bf383d34298d`, taint 0,
+2026-11-10 14:34:16-17 UTC. Return code was 0; all 99 frozen input files were
+reverified unchanged with no extras. The log SHA256 is
+`2b207a2867c94ca9d61867bd7b46057e8c32cd08570e00a0dbd6b30573155752`.
+Guest receipts are under
+`/mnt/kdlock-builds/kdlock-main-work/run-c6becf81-01a1bc4f/receipts`. The GNU
+case invokes actual cpp/as/ld/objcopy; its bytes/metadata are not loaded into the
+kernel. These focused checks do not complete any T01-T56 acceptance item.
 
 The [fragment planner](../../../disassem/fragment.py) retains typed source
 boundaries, safe alternatives/joins, finite cycles, missing edges and unknown
@@ -83,9 +103,9 @@ original Miasm x86_64 interface and relative-target arithmetic from
 `disassem/reached_path.py`. It retains exact site/bytes/length, operands and the
 actual Miasm instruction, including prefix/method metadata. Mutating lowerers
 copy instructions/expressions independently. The dependency set in
-[requirements.txt](../../../disassem/requirements.txt) has not been installed or
-imported. Decoding is not source residence, semantic equivalence or lowering
-support.
+[requirements.txt](../../../disassem/requirements.txt) dependency lane was used
+by the focused VM checks above. Decoding is not source residence, semantic
+equivalence or general lowering support.
 
 The [integrated compiler](../../../disassem/compiler.py) consumes a finite,
 immutable source/version snapshot and exact source-operation metadata. It
@@ -163,8 +183,11 @@ Every active/nested request uses its direct node->state pointer. The
 [task root](../../../kernel/task_state.c) contains the one own core and the
 selected task-owned auxiliary header for initial native entry. It supplies no
 active-S_W registry. Its [task field artifact](../../../kernel/integration/README.md)
-is an unapplied context template; constructor aliases clear before publication
-and exit requires complete last-user/auxiliary drain.
+contains the one field and managed fork/failure/exit hooks as an unapplied
+context template. Child construction clears copied aliases before publication
+and creates independent core/pool/auxiliary backing; current-native exit drains
+exact users before detach/free. `apply_target.py` (`97130fe4`) applies only exact
+pinned target contexts via new-inode replacement; it remains unexecuted.
 
 The [ordinary source pair](../../../include/kd_mutex_api.h),
 [native bootstrap](../../../kernel/mutex_api.c),
@@ -280,7 +303,8 @@ claim. The publication bridge takes only validated MERGED inputs and the exact
 candidate code hold/receipt, binds the actual transaction and returned old image,
 then separately ACKs the emitted subset. It does not itself transport facts,
 build/load code or settle nonobservations/uncovered misses. Those remain pending
-without an archive/reset/settlement policy and can delay final provider drain.
+during normal execution. The later selected shutdown settlement route is
+recorded below; it does not turn these dispositions into coverage ACK.
 The reviewed [host coordinator](../../../disassem/learning.py) at `af997cb6`
 retains finite explicit fact/claim/candidate/publication/ACK histories, merges
 valid same-version observations before compile/lower/export and preserves late/
@@ -289,31 +313,70 @@ reconciles exact actual publication and ACK independently; it supplies no
 transport, persistence or executable publication. No runtime or behavioral
 evidence follows from these source reviews.
 
+Source checkpoint `40ae39ce` adds the concrete
+[source provider](../../../kernel/source_provider.c), which pins the complete
+supplied module set and copies actual-address bytes under the explicitly selected
+all-dependency immutable-text contract. The caller excludes every mutator through
+final native/JIT/feedback use; module_get alone is not a freeze. Version/config/
+load identities and the exact GS offset stay caller inputs. Independent NATIVE
+epoch holds cover complete native activity. Cold
+[task storage](../../../kernel/task_storage.c) allocates explicit heap/request/
+frame/auxiliary backing and retains unsafe setup unwind, while
+[stack words](../../../kernel/source_stack.c) retain the original task stack and
+perform bounded single-word accesses. Exact detach/full caller last-use proof
+precedes freeing and the final native-provider callback. No packet is cleared.
+`lifecycle.[ch]` (`80095bfb`) adds managed initial entry, independent unpublished
+child construction/failure cleanup and current-native exit drain. It never
+fabricates unlocks or copies parent source state; unmanaged tasks remain outside
+the declared lane. Exact target hook application and full auxiliary-context
+proof remain outstanding.
+
+The same checkpoint implements kernel archival settlement. Actual host archival
+must fsync exact copied facts/provenance and produce a 32-byte content receipt.
+The kernel validates exact claim keys/incarnations, CLOSED epoch with only
+FEEDBACK users and closed producers without IMAGE users after image/native/JIT
+drain, then marks SETTLED atomically. This is separate from coverage ACK; claim
+end later releases settled holds. Kernel scalar receipts perform no host I/O.
+`236c287a` and `80095bfb` connect actual fd channel/control, execmem loading,
+the GNU host image builder/session and fsynced archive/shutdown workflow. The
+loader reserves the actual executable address before host assembly/linking,
+validates machine bytes plus flat typed metadata and binds the real image owner.
+Control distinguishes actual publication, separate ACK and shutdown SETTLED;
+sequence/cache identities preserve retry without repeating an operation. Runtime
+keeps source/native/controller holds and finite control identities through exact
+last users. `c6becf81` exports exact source-slot/current-image identities,
+including a NULL baseline; BUILD_START validates and retains that base. These
+source implementations have independent review, without build or deployment
+evidence.
+
 The [image integration guide](../../../kernel/integration/IMAGES.md) records the
 conditional initial/NULL publication sequence, candidate/baseline bridges,
 SOURCE self-drain avoidance and independent native-text/finalizer lifetimes.
-All these additions remain source/static review only; no import, assembly,
-build, behavioral check or VM execution has run.
+Kernel ownership additions have source/static review only. The focused VM host
+checks above import compiler components and construct a real GNU image; they do
+not execute provider/image ownership or kernel mutex/JIT paths.
 
 Reviewed source commit `a65016e3` adds the opt-in Kconfig/Kbuild group and fixed
 Linux 7.0/x86_64/non-RT C target gate. Its original list has 15 runtime C units
-and three concrete assembly entries; the current source adds the fact pool and
-publication bridge at `5989fbbb` for 17 C units. The unexpanded per-image wrapper
-is excluded.
+and three concrete assembly entries; `5989fbbb` adds the fact pool and
+publication bridge for 17 C units at that revision. Current `c6becf81` lists
+26 C units and the same three concrete assembly entries. The unexpanded
+per-image wrapper is excluded.
 [The build guide](../../../kernel/integration/BUILDING.md) separates package
 structure from actual target-tree insertion, task-field integration, provisioning
 and provider duties. No Kconfig/Kbuild parser, preprocessing, compilation,
 assembly, linking, enablement or kernel execution has run.
 
-Remaining whole-lane implementation work includes actual task allocation/fork/
-exit and provider glue, concrete pool/control-stack provisioning, actual coherent
-live-source lease acquisition/mutation admission, executable allocation/publication
-orchestration, compiler transport/persistent cumulative feedback/restart/
-settlement integration around the source-present C08 pool and commit/ACK bridge,
-and actual target-kernel/source/build integration. The source interfaces do not choose deployment
-capacities, lifecycle hook placement or
-publication/feedback organization. Assembly/build/runtime, lifetime/progress and
-acceptance validation are separate unrun evidence gaps. Selected stable object
+Remaining deployment work supplies exact source/dependency/configuration/load/GS
+inputs, explicit finite pool/image/cycle capacities, complete control-stack bounds
+and actual auxiliary-context proof. Managed allocation/fork/failure/exit, provider/
+channel/compiler/executable/runtime composition and archival receipt wiring are
+source-present through `c6becf81`. Crash/restart reconstruction beyond the
+implemented session/archive workflow is not supplied. `97130fe4` adds focused
+pipeline-check source and an exact-target installer. The 12 focused checks above
+have now passed, including host assembly/linking; exact target application/core
+build, kernel runtime, lifetime/progress and acceptance validation need separate
+receipts. Selected stable object
 storage extends through physical release and final object access; independent control/code users can last longer.
 
 Ten private cases ran only on the earlier intraprocedural planner `13f2630f`
@@ -325,8 +388,9 @@ only those old graph cases. They preceded the user's instruction to finish
 overall functionality before further behavioral testing. They have not been
 rerun on, and do not validate, any later component.
 
-Further behavioral tests and suites remain deferred until overall functionality
-is complete. T01-T56 remain unrun acceptance specifications. Source, build,
+The 12 focused pipeline checks passed as recorded above. Exact-target installer
+and kernel build/execution evidence remain separate. T01-T56 remain unrun
+acceptance specifications. Source, build,
 execution, integration, retirement and performance evidence stay separate for
 exact source/configuration identities; no complete mutex lane is claimed.
 
@@ -337,7 +401,7 @@ GS/current-task lowering remain fixed directions. C04 now retains the KD physica
 R11 virtualized; its optimization discussion is deferred. Exact private
 adapter/layout inputs, source/return bindings, current-state bridges and local
 temporary-GPR PUSHFQ/POPFQ sequence now have private source implementations.
-Whole-lane integration and runtime proof under C04/C06/C12 remain work.
+The managed source path under C04/C06/C12 is connected through `c6becf81`; exact target integration and runtime proof require separate receipts.
 Original source locations below are implementation references, not support
 claims for an inherited runtime.
 
@@ -430,7 +494,7 @@ own affected checks.
 
 The old decision topics remain covered: D01 through D09 and D12 map to C01/C05/C07/C10 and the family/context plan; D02/D10/D11/D21 map to C02/C03; D13/D14/D19/D22 map to C09/C10; D15/D18 map to C08; D16/D17/D20 map to C04/C06 and the mailbox/continuation contract.
 
-R23-R29 retain fixed core cardinality/direct references, generic continuation and exact attribution/lifetime duties. R27 now preserves reader semantics while making placement C10, correcting the earlier roadmap-derived mandate. R15 similarly distinguishes preferred local ownership from an absolute shared-index ban. C12 source rebuild, C03 retained-owner deferral/stable objects, C11 MCS queue and C04 retained KD physical-R11 mapping are selected. Private queue/claim and adapter/bridge sources now exist; full integration and lifetime/progress proof remain outstanding. None of these selections reopens the fixed one-core/original-JIT model. The mutex timing policy is the explicit limited exception to earlier immediate-release requirements.
+R23-R29 retain fixed core cardinality/direct references, generic continuation and exact attribution/lifetime duties. R27 now preserves reader semantics while making placement C10, correcting the earlier roadmap-derived mandate. R15 similarly distinguishes preferred local ownership from an absolute shared-index ban. C12 source rebuild, C03 retained-owner deferral/stable objects, C11 MCS queue and C04 retained KD physical-R11 mapping are selected. Private queue/claim, adapter/bridge and managed source orchestration are connected through c6becf81; exact target integration and lifetime/progress proof remain outstanding. None of these selections reopens the fixed one-core/original-JIT model. The mutex timing policy is the explicit limited exception to earlier immediate-release requirements.
 
 The acceptance register is T01 through T56. T01-T51 retain their audit identities and chosen-target scope. T52 adds special-path/bypass/shared-join behavior, T53 safe callee returns/caller fallthrough, T54 local temporary-GPR PUSHFQ/POPFQ effects under AS01, and T55 target downgrade versus the candidate-only exception. T56 preserves a deferred, unrun future original-backend mapping comparison without a speed/AS01 claim; it is not an active R11 optimization question or current-baseline implementation gate. These remain unrun acceptance specifications; private graph-helper checks and source/static review of compiler/C protocol code do not satisfy them. T15-T19, T25/T26, T41/T45/T48-T51 now attribute the selected deferred-release phases and lifetime limits rather than requiring early physical availability.
 
@@ -532,29 +596,35 @@ existing-grant native unlock, final auxiliary cleanup and task progress at
 image-owner retention and stateless copied-exit facts at the commits listed in
 section 2.1. Reviewed `5989fbbb` additionally implements the kernel miss-fact
 pool/producer claims and exact publication/ACK bridge; `af997cb6` implements the
-host cumulative coordinator described there.
+host cumulative coordinator described there. Checkpoint `40ae39ce` adds concrete
+immutable-contract source snapshots/native holds, cold task storage/retained-stack
+words and the separate kernel shutdown SETTLED API. `236c287a` and `80095bfb`
+connect fd control, executable loading, the GNU host pipeline, managed fork/exit
+and fsynced archival settlement. `c6becf81` supplies exact source-slot/base
+export; `97130fe4` adds the exact-target installer and focused-check source.
+The later 12 focused VM checks passed on `c6becf81`; they execute no kernel path.
 Legacy implementation, receipts and datasets remain in preservation history;
 none must be restored to claim source progress or select another kernel target.
 
 C12 source rebuild, ordinary-mutex C01, C03 retained-owner deferral and stable
 lock-object storage, C11 MCS, C04 physical-R11 mapping, C02 direct MCS pointers,
 C05 task-owned auxiliary entry/persistent requests with supported-workload availability and C06/C09 quiesced RCU replacement are selected. R11 optimization/T56 stay deferred. Remaining
-actual task allocation/fork/exit/provider and kernel/build wiring, coherent live
-source-lease acquisition/mutation admission, executable allocation/publication
-orchestration, selected C08 compiler transport/feedback provisioning/persistence/
-restart/settlement integration and concrete
-resource/stack provisioning are listed in section 2.1 and the plan. These missing
-implementation pieces are separate from all-unrun runtime/context/lifetime/
-progress acceptance evidence.
+deployment source/configuration/GS identities, finite resource counts and full
+stack/context provisioning are listed in section 2.1 and the plan. Managed task
+lifecycle, provider/channel/executable/compiler orchestration and archival
+settlement have source. Crash/restart reconstruction beyond that workflow is not
+implemented. Exact target application/build and all runtime/context/lifetime/
+progress acceptance evidence remain unrun.
 
-Only source/static inspection and whitespace checks cover these new components.
-No new imports, assembly, compilation, runtime correctness, kernel integration,
-retirement or performance checks ran. T01-T56 stay unrun; the older ten helper
-checks remain tied only to `13f2630f`. Overall functionality is incomplete, so
-further behavioral testing remains deferred as requested.
+Source/static inspection covers the new kernel components. The 12 focused VM
+checks on `c6becf81` additionally exercise compiler/learning/wire/archive and real
+GNU image construction, as recorded in section 2.1. They establish no executed
+kernel mutex/JIT/lifecycle, retirement or performance result. T01-T56 stay unrun;
+the older ten helper checks remain tied only to `13f2630f`.
 
-A staged whitespace check excludes only the patch template's required unified
-context markers before tab-indented source; the full check reports those format
-lines. `git apply --numstat` parses that template as five additions in sched.h
-and four in fork.c. This is syntax inspection, not application to the exact
-kernel source, compilation or behavioral validation.
+An earlier staged whitespace check excluded only the original patch template's
+required unified context markers before tab-indented source; the full check
+reported those format lines. Its recorded `git apply --numstat` result was five
+additions in sched.h and four in fork.c. Preserve that earlier parse-only
+observation: it is not application evidence for the later managed lifecycle
+template or exact-target installer, compilation or behavioral validation.

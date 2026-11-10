@@ -20,8 +20,10 @@ selected Linux 7.0 source is absent here, so it supplies no exact-tree applicati
 build or runtime evidence. It clears the copied child's pointer after successful
 `dup_task_struct`, before publication or cleanup can use it. That copied alias
 owns no parent-context reference. It must never clear a live task's header. A
-static initial task's omitted pointer is zero initialized. Actual task allocation,
-constructor/exit hooks and source-built kernel integration remain work.
+static initial task's omitted pointer is zero initialized. The template now
+contains managed fork/failure/exit hooks implemented by
+[lifecycle.c](../lifecycle.c). Exact target application has its own receipt under
+[the build guide](BUILDING.md); the template itself remains unapplied evidence.
 
 ## Private setup before ordinary source admission
 
@@ -52,7 +54,9 @@ backing retained for explicit resolution. Backing stays caller-owned.
 Opaque context/code extents and actual auxiliary context compatibility remain
 caller proofs. `kd_task_teardown_current` composes one native progress pass with
 exact detach, including when the current endpoint keeps pending true. Neither
-helper allocates or supplies a global fork/exit policy.
+helper allocates or supplies a global fork/exit policy by itself. Concrete
+[task storage](../task_storage.c) and [managed lifecycle](../lifecycle.c) wrappers
+compose those duties as described below.
 
 The supported workload guarantees that a persistent record is available whenever
 it needs one. The pool is finite: `pool->capacity` and `resources->capacity` are
@@ -81,6 +85,40 @@ outlive every fact/claim observer independently of task teardown. The callback
 must distinguish ordinary source, source APIs and unclassified targets; a mutex
 operation resolver returning NONE is insufficient. See [image and feedback
 ownership](IMAGES.md) for finite capacity and exact publication/ACK ordering.
+
+## Managed allocation, fork and exit
+
+[task_storage.h](../task_storage.h) allocates cold header/pool/resources,
+explicit slot/frame arrays and page-multiple vmalloc auxiliary backing before
+source admission, without clearing the source packet. Error with non-NULL
+storage retains attached state and the native-provider lease for explicit cleanup;
+clean NULL failure leaves that lease with the caller. [source_stack.h](../source_stack.h)
+retains the actual original task stack for bounded synchronous single-word
+accesses through the last borrower; a task reference alone retains no stack.
+
+[lifecycle.h](../lifecycle.h) defines an immutable typed managed-task context with
+episode configuration, explicit capacities/control requirement and native
+begin/release callbacks. The initial parent enters before its first declared
+source call. After successful dup_task_struct, private child preparation clears
+the copied root alias and creates a fresh single core/pool/auxiliary stack plus
+independent task/stack/native holds. It copies no parent grant or continuation.
+Only a managed parent supplies this context; unmanaged tasks stay outside the
+lane. Child GS begins explicitly uncaptured and is refreshed before first source
+publication. Clone may fail before publication; failure cleanup discharges the
+child holds before the kernel drops its stack.
+
+The current-native exit hook closes per-task admission, rejects borrowed/auxiliary
+execution, pending operations and logical-open grants, then pumps exact owner/
+grant/pool metadata with conditional rescheduling until atomic detach succeeds.
+It neither executes source nor fabricates unlocks, and never waits solely for
+pending==false. Invariant refusal cannot authorize freeing live state. Managed
+callers permit no untracked raw root/storage/config observer across exit;
+callback/module/caller-return backing survives its own final return. Actual
+auxiliary scheduler/IRQ/unwinder compatibility remains unproved.
+
+The [control workflow](CONTROL.md) connects runtime-native retention, compiler
+transport and shutdown; [IMAGES.md](IMAGES.md) owns source/code/feedback lifetimes.
+These source implementations select no deployment count or control-stack budget.
 
 ## Native entry and borrowed execution
 
@@ -157,10 +195,13 @@ validates otherwise-finished storage and revokes the exact native binding under
 its metadata guard. Only infallible slot cleanup follows that revocation. The
 helper clears task lookup, completes its final header access and drops the task
 reference without later header/core use. A failed detach does not authorize exit
-or freeing. Full admission closure, drain scheduling and actual lifecycle hooks
-remain separate integration duties.
+or freeing. The managed lifecycle wrapper supplies per-task admission closure and metadata
+drain. Installing the exact hooks and proving full observer/context lifetimes
+remain separate target integration duties.
 
-All components here have source/static review only. No new compilation,
-assembly, behavioral check, kernel execution or whole-lane support is established.
+These components have source/static review at `c6becf81`. The focused host
+pipeline checks later passed 12/12 in the VM, including GNU image construction;
+they execute no kernel lifecycle or mutex path. Exact target build/runtime
+receipts and T01-T56 remain separate evidence.
 The older external registry, two-task-pointer variant and removed temporary
 local fallback remain historical Git evidence, not the active integration.

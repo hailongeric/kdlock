@@ -20,8 +20,8 @@ source assembly under the selected physical-R11 packet-base mapping. They retain
 actual source CALL/RET words, original GS/current-task lowering and local
 PUSHFQ/POPFQ temporary-GPR handling. Typed operations, special frontiers,
 construction gaps and resource exits remain path specific. The coordinated
-private ABI is version 1: a 168-byte packet and 56-byte control IO. No assembly
-has been assembled, loaded or executed.
+private ABI is version 1: a 168-byte packet and 56-byte control IO. The later focused VM check assembles/links one generated image with GNU tools;
+no generated code has been loaded into or executed by the kernel.
 
 The [artifact exporter](disassem/artifact.py) returns the same assembly with
 coordinated C image/site metadata, exact source-version bytes, retained decoded
@@ -32,9 +32,10 @@ The [source epoch](kernel/source_epoch.c) (`a660342c`) validates supplied
 coherent version/region/configuration/load inputs and retains a lease already
 established by the caller. The [image owner](kernel/image_owner.c) (`a23b82c1`)
 binds exact construction inputs to that epoch and an existing code-provider hold,
-then retains published slots through actual drain/grace retirement. These are
-retention/validation components, without a live-text lease acquirer, executable
-allocator or publication orchestrator.
+then retains published slots through actual drain/grace retirement. These
+components validate and retain supplied ownership. The concrete source
+provider, executable loader and publication orchestrator described below supply
+their live inputs; retention alone establishes no text-mutation exclusion.
 
 The [copied-exit adapter](disassem/feedback.py) (`c9b468ee`) preserves exit
 facts and derives only matched ordinary indirect CALL/JMP compiler inputs.
@@ -51,15 +52,20 @@ ACK stay distinct, and uncovered/later facts remain pending.
 
 Reviewed source commit `5989fbbb` adds the [kernel fact pool](kernel/feedback.c),
 which records each reached coverage miss before exit consumption, using an
-explicit pure target classifier. Exact record incarnations and claims separate copied history from record reuse. A
-durable producer and source-epoch users retain facts independently of old code.
+explicit pure target classifier. Exact record incarnations and claims separate
+copied history from record reuse. A durable producer and source-epoch users retain facts independently of old code.
 The [publication bridge](kernel/feedback_publish.c) binds only the validated
 candidate input subset to its actual image transaction and returned old image;
 a separate atomic ACK covers only that subset's emitted ordinary observations.
 These components have source review only. Nonobservations and uncovered misses
-remain pending; no archive, reset or settlement policy is selected, so those
-holds can delay final source/provider drain. Transport, live provider wiring and
-executable publication orchestration remain incomplete.
+remain pending during normal execution. The selected shutdown route actually
+archives exact facts/provenance with fsync and a content receipt, then marks
+exact reservations SETTLED after images and native/JIT users drain. Settlement
+is separate from coverage ACK; kernel receipts do not themselves perform archival
+I/O. The kernel settlement API is source-implemented at `40ae39ce`. The actual host
+archive and channel/runtime shutdown workflow are connected at `80095bfb`; they
+have source review; the later focused host checks exercise archive/codec
+components without actual kernel shutdown.
 
 The [host learning coordinator](disassem/learning.py) (`af997cb6`) retains finite
 caller-bounded fact/claim/candidate/publication histories and merges valid
@@ -67,7 +73,8 @@ same-version observations before discovery, lowering and export. It preserves
 nonobservations/foreign/late facts, freezes each claim's MERGED candidate inputs
 and reconciles actual publication and exact ACK receipts separately. It performs
 no kernel transport, persistence or publication. Its actual-object identity and
-retention mapping remain caller duties; it has source review only.
+retention mapping remain caller duties. Focused host checks exercise this
+coordinator, without actual kernel publication or ACK.
 
 The [MCS mutex](kernel/mutex.c) supplies sleepable physical exclusion, optional
 local/proxy selection and retained physical batches on top of the
@@ -104,12 +111,45 @@ under its declared retained-stack contract. Every active/nested MCS node points
 directly to that same S_W. The [task root](kernel/task_state.c) contains one own
 core and the task-owned auxiliary-stack header for initial entry, with no
 registry or active-S_W task field. Its [Linux task patch](kernel/integration/README.md)
-is an unapplied context template; the exact kernel tree is absent from main.
+contains the task field and managed fork/failure/exit hooks as an unapplied
+context template. The [exact-target installer](kernel/integration/apply_target.py)
+(`97130fe4`) checks pinned whole-file contexts and stages new-inode replacements
+for a separate target tree. Applied-tree evidence is separate from this
+source/template description.
 
 The [current-task setup helper](kernel/task_setup.c) (`57599619`) composes
 caller-owned range checks, root attachment, episode-resource setup/binding and
 exact unused-root rollback. Its teardown composes one progress pass and detach;
 it supplies no allocator or automatic fork/exit/stack integration.
+
+Source checkpoint `40ae39ce` adds [task storage](kernel/task_storage.c): cold
+heap/request/frame/auxiliary allocations with explicit caller sizes and no
+packet clear, setup-error retention and exact teardown before freeing. Its
+[stack adapter](kernel/source_stack.c) independently holds the original kernel
+stack for bounded single-word accesses. A native-provider lease spans the whole
+declared source activity and releases last. The [managed lifecycle](kernel/lifecycle.c)
+(`80095bfb`) prepares private unpublished children with independent core/pool/
+auxiliary backing, unwinds failed clones and drains exact current-task users
+before exit. Unmanaged tasks stay outside this lane. Actual target-tree hook
+application and auxiliary scheduler/IRQ/unwinder compatibility remain unproved.
+
+The [source provider](kernel/source_provider.c), also at `40ae39ce`, pins the
+complete supplied module set and copies actual source bytes under the selected
+all-dependency immutable-text contract. The caller excludes every text mutator
+through the final native/JIT/feedback user; module residency alone does not
+freeze text. Version/configuration/load identities and the exact GS offset stay
+explicit inputs. [Control](kernel/control.c), the [fd channel](kernel/channel.c),
+[execmem image loader](kernel/compiled_image.c) and [runtime composition](kernel/runtime.c)
+have source at `236c287a` and `80095bfb`. The loader reserves the real code address
+before the host [GNU image builder](disassem/image_builder.py) assembles and links
+there. The loader validates typed metadata; control publishes through the exact
+image-owner transaction.
+The [host session](disassem/session.py) and [wire codec](disassem/wire.py) drive
+actual claim, stage, commit and separate ACK commands with retry identities.
+`c6becf81` exposes the exact source slot and nullable current image baseline for
+that workflow. Focused VM checks exercise host compiler/codec/archive and real
+GNU construction;
+no kernel loader, actual ioctl publication or generated kernel code has executed.
 
 Reviewed source commit `ce423858` connects the
 [ordinary source pair](include/kd_mutex_api.h),
@@ -142,29 +182,34 @@ Source commit `a65016e3` adds opt-in [Kbuild](Kbuild)/[Kconfig](Kconfig)
 packaging for the original 15 C units and three concrete assembly entries, with
 the fixed Linux 7.0/x86_64/non-RT C target gate. It excludes the unexpanded image
 wrapper and supplies no automatic API conversion or provider/lifecycle policy.
-The current Kbuild at `5989fbbb` also lists the fact pool and publication bridge,
-for 17 C units. The [build guide](kernel/integration/BUILDING.md) records exact-tree prerequisites;
-no build-system parser or build has run.
+Kbuild at `5989fbbb` added the fact pool and publication bridge for 17 C units
+at that revision. Current `c6becf81` lists 26 C units and the same three concrete
+assembly entries. The [build guide](kernel/integration/BUILDING.md) records
+exact-tree prerequisites; package build results need separate receipts.
 
-Overall integration remains incomplete. Actual task allocation/fork/exit and
-provider glue, actual coherent live-source lease acquisition/mutation admission,
-executable allocation/publication orchestration, compiler transport and persistent
-feedback/restart/settlement integration, and actual target-kernel/source/build
-integration remain work. The fact pool and exact publication/ACK bridge are
-source implementations, not a running learning service. No deployment request
-or fact-pool count or complete auxiliary/control-stack budget is configured.
+The declared source path is connected through `c6becf81`: managed task storage/
+lifecycle, immutable-contract source/native holds, fd control, executable image
+construction/publication, cumulative learning and exact fsynced shutdown archives
+with separate SETTLED. This is source functionality, not a running learning
+service or integrated kernel support. Exact target application/build, concrete
+provider/configuration/GS inputs, deployment capacities and complete auxiliary/
+control-stack context proof remain outstanding. Recovery of a session after a
+crash/restart is not implemented by retaining an archive alone. No deployment
+request/fact count or complete control-stack budget is configured.
 Generated execution requires a distinct physical task
 and admitted nonoverlapping executor/source/wait-control stacks. W's own body
 uses a native route; a runtime instruction budget does not establish stack
-separation. The build packaging is unparsed and uncompiled; no runtime support
-is claimed.
+separation. Source packaging is not a parsed/compiled receipt or runtime support claim.
 
-All new components have source/static review only. Ten focused private planner
-cases passed earlier on `13f2630f` with Python 3.10.12; they validate only that
-older helper. No new decoder import, assembly, compilation, behavioral check,
-VM work, installation or reboot has run. Further behavioral tests remain
-deferred until overall functionality is complete. Acceptance specifications
-T01-T56 remain unrun. See the
+The VM focused pipeline checks passed **12/12** on `c6becf81`, including the real
+GNU cpp/as/ld/objcopy image-construction case. The frozen 99-file input remained
+unchanged; Python was 3.14.4 on `7.0.0-38-kdlock1`, with unchanged boot and taint 0.
+These are host-pipeline mechanism checks, not kernel mutex/JIT/lifecycle execution.
+The older ten planner cases remain tied only to `13f2630f` and Python 3.10.12.
+The exact-target installer was added at `97130fe4`; target application/build,
+installation and reboot require separate receipts. The retained
+[focused receipt](tests/evidence/runtime-pipeline-20261110/README.md)
+(`c6fbf7bb`) records the exact limits. T01-T56 remain unrun. See the
 [evidence limits](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#21-rebuild-status).
 
 Read the design in order:
@@ -187,8 +232,8 @@ or progress-parity claim. The earlier transferable-grant proposal is superseded.
 C11 now selects an MCS queue for the initial mutex lane. C04 retains the KD
 physical-R11 canonical-packet-base mapping; R11 optimization discussion and T56
 are deferred future work. Private local/proxy arbitration and adapter bridges now have source
-implementations; their full integration and correctness/progress proofs remain
-work. Selecting MCS does not select TCLock's borrowed-stack
+implementations connected to the managed provider/compiler workflow; their
+correctness/progress and exact-target integration remain unvalidated. Selecting MCS does not select TCLock's borrowed-stack
 execution or complete the integration.
 
 The initial mutex lane now requires stable lock-object storage through actual

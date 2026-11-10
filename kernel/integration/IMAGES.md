@@ -1,9 +1,10 @@
 # Source epochs and executable-image ownership
 
-The compiler constructs assembly, C descriptors and construction metadata; it
-does not acquire a live source lease, executable storage or publication rights.
-The kernel components below keep those responsibilities explicit. They are
-source-reviewed interfaces, with no new assembly, build or execution evidence.
+The compiler constructs assembly and exact metadata; the GNU host builder links
+machine bytes at the real reserved code address. Neither creates a source lease
+or publication authority. Concrete kernel provider/loader/control sources supply
+those duties through `c6becf81`. Source, focused host construction, target build,
+publication and kernel execution remain separate evidence.
 
 ## Source retention
 
@@ -15,7 +16,7 @@ offset and a complete provider release callback. Success transfers that lease;
 failure leaves its release with the caller. Numeric ranges and overlapping-byte
 checks validate supplied input consistency, not live text or a mutation freeze.
 
-Caller-preallocated BUILD, IMAGE and FEEDBACK memberships retain the epoch
+Exact BUILD, IMAGE, FEEDBACK and NATIVE memberships retain the epoch
 independently of image-slot execution users. Build and feedback work can therefore
 retain source/version information without preventing old image-slot drain.
 Acquire each dependency before dropping its parent. An admitted same-epoch child
@@ -55,7 +56,13 @@ checks do not prove generated-code equivalence or executable permissions. On
 success, the owner derives one epoch IMAGE membership, retains an exact producer
 IMAGE user and takes code-release ownership. Initialize that producer first
 from the same descriptor and live BUILD, with a fresh per-construction identity.
-Its control/identity backing is independent of the executable payload. The actual allocator/module/transport remains the provider's choice.
+Its control/identity backing is independent of executable payload. The initial
+[compiled-image provider](../compiled_image.h) reserves real execmem RW/NX
+storage and typed tables before host construction. It installs exact bytes once,
+validates flat metadata/source inputs and completes RO/X before publication. Its
+code-release callback follows actual owner drain; late facts retain producer
+controls rather than code. The [control guide](CONTROL.md) describes the concrete
+provider/transport workflow, not a generated-code equivalence result.
 
 The owner has exact EXTERNAL, BASELINE and PUBLISHED_SLOT memberships, distinct
 from a slot's execution users. Puts never invoke code release. A private candidate
@@ -141,7 +148,9 @@ reservation advances that incarnation without wrap in the supported workload;
 the sequence supplies identity only, never ownership or an activity estimate.
 Transport maps that pair, the exact epoch and per-construction producer to the
 matching retained compiler objects. Raw addresses or equal version bytes alone
-are insufficient. No wire encoding, transport or persistence service is selected.
+are insufficient. The fd channel, little-endian wire codec and host session now
+implement the retained identity mapping. Archive durability is not general
+crash/restart reconstruction.
 
 A caller-preallocated claim freezes a bounded FIFO selection of currently
 unclaimed facts from one exact epoch. The claim, immutable item array, holders and
@@ -189,10 +198,22 @@ pool guard. It can make individual records reusable before returning. If an end
 operation fails, only retrying end is legal: earlier items may already have been
 unclaimed or reused. No old record access follows its final publication as free.
 
-Nonobservation and uncovered misses deliberately have no discard or reset path.
-Their final settlement/archive and source-epoch shutdown remain explicit provider
-integration work; close alone cannot drain those retained holds. Supported finite
-pool sizing must include them. Actual coherent lease acquisition, source-mutation
-admission, executable storage, transport, persistence, task/provider lifecycle and
-publisher orchestration also remain integration duties. These sources have only
-static review: no import, build, assembly, execution or retirement test has run.
+Nonobservations and uncovered misses have no normal discard/reset path and
+remain included in finite capacity. The implemented shutdown closes admission,
+retires images to NULL through exact drain/grace and ends native/JIT/BUILD users.
+The host then writes a fresh bounded archive with exclusive creation, file fsync
+and parent-directory fsync before returning its actual 32-byte content digest.
+Kernel SETTLED requires that receipt, exact claim keys/incarnations, CLOSED epoch
+with only FEEDBACK users and closed producers without IMAGE users. It is separate
+from coverage ACK; END later releases settled records after observers finish.
+
+Runtime retains an independent controller FEEDBACK user until final channel/source
+access, protecting exported descriptions after BUILD drop and final FACT release.
+Code can retire before late facts, while durable producer/control identities stay
+retained. Provider destruction follows exact final users, not timeout or fd close.
+The caller still satisfies the all-dependency immutable-text contract: complete
+module residency and nofault byte copies do not freeze tracing, probes, alternatives,
+static-call/branch changes or live replacement. Every mutator is excluded from
+before capture through final native/JIT/feedback use. Configuration/load/version
+and actual GS offset remain explicit. Target/context execution needs separate
+receipts; focused host checks establish no kernel retirement proof.
