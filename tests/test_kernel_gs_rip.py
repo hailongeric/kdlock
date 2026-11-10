@@ -79,6 +79,9 @@ class KernelGSRIPTests(unittest.TestCase):
             paths[name] = Path(cls.config[name])
             if not paths[name].is_absolute() or file_sha(paths[name]) != cls.config[name + "_sha256"]:
                 raise ValueError("actual retained target input differs: " + name)
+        wrapper = (Path(__file__).resolve().parents[1] / "include/asm_head.h").read_text().splitlines()
+        if "#define Stack_RCT Stack_TASK" not in wrapper:
+            raise ValueError("original mapper task operand no longer names the canonical task slot")
         cls.site = word(cls.config["site"])
         cls.current_task = word(cls.config["current_task"])
         cls.raw = bytes.fromhex(cls.config["instruction_hex"])
@@ -117,7 +120,7 @@ class KernelGSRIPTests(unittest.TestCase):
         instruction = self.decode(self.raw)
         lowerer, code = self.lower(instruction)
         self.assertTrue(lowerer.is_current_task_operand(instruction.operands[1], instruction.next_site))
-        self.assertIn("Stack_TASK", code)
+        self.assertIn("Stack_RCT", code)
         self.assertNotIn("Stack_RGS", code)
         self.assertNotIn(hex(instruction.next_site), code)
 
@@ -127,14 +130,14 @@ class KernelGSRIPTests(unittest.TestCase):
         self.assertFalse(lowerer.is_current_task_operand(instruction.operands[1], instruction.next_site))
         self.assertIn("Stack_RGS", code)
         self.assertIn(hex(instruction.next_site), code)
-        self.assertNotIn("Stack_TASK", code)
+        self.assertNotIn("Stack_RCT", code)
 
     def test_lea_ignores_the_same_gs_override(self):
         instruction = self.decode(self.raw[:2] + b"\x8d" + self.raw[3:])
         self.assertEqual(instruction.name, "LEA")
         _lowerer, code = self.lower(instruction)
         self.assertIn(hex(self.current_task), code.lower())
-        self.assertNotIn("Stack_TASK", code)
+        self.assertNotIn("Stack_RCT", code)
         self.assertNotIn("Stack_RGS", code)
 
     def test_address32_low_bits_are_not_the_full64_kernel_alias(self):
@@ -143,7 +146,7 @@ class KernelGSRIPTests(unittest.TestCase):
         instruction = self.decode(direct)
         lowerer, code = self.lower(instruction)
         self.assertFalse(lowerer.is_current_task_operand(instruction.operands[1], instruction.next_site))
-        self.assertNotIn("Stack_TASK", code)
+        self.assertNotIn("Stack_RCT", code)
         self.assertIn("Stack_RGS", code)
 
     def test_original_direct_gs_form_still_uses_logical_task(self):
@@ -152,7 +155,7 @@ class KernelGSRIPTests(unittest.TestCase):
         instruction = self.decode(direct)
         lowerer, code = self.lower(instruction)
         self.assertTrue(lowerer.is_current_task_operand(instruction.operands[1], instruction.next_site))
-        self.assertIn("Stack_TASK", code)
+        self.assertIn("Stack_RCT", code)
         self.assertNotIn("Stack_RGS", code)
 
 
