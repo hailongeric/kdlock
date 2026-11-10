@@ -10,20 +10,45 @@ struct kd_mutex_node;
 struct kd_mutex_batch;
 struct task_struct;
 
-/* Private source-rebuilt object layout; no old binary/layout compatibility. */
-struct kd_mutex {
-	struct kd_mutex_node *tail;
-	struct kd_mutex_batch *owner;
-};
-
-#define KD_MUTEX_INITIALIZER { .tail = NULL, .owner = NULL }
-
 enum kd_mutex_selection {
 	KD_MUTEX_PRIVATE,
 	KD_MUTEX_OFFERED,
 	KD_MUTEX_SELECTED_LOCAL,
 	KD_MUTEX_SELECTED_PROXY,
 };
+
+/*
+ * Common MCS acquisition link. A persistent source request embeds one; a native
+ * local-only waiter uses temporary storage and then relocates its owned head to
+ * the mutex's stable local_head. request == NULL is always local-only and may
+ * never be selected for proxy service. task is captured before final turn
+ * publication; no producer accesses a previous link after its next release
+ * store, and no turn publisher accesses the waiter after its turn store.
+ */
+struct kd_mutex_link {
+	struct kd_mutex_link *next;
+	atomic_t selection;
+	int turn;
+	struct task_struct *task;
+	struct kd_mutex_node *request;
+};
+
+/* Private source-rebuilt object layout; no old binary/layout compatibility.
+ * owner and local_owner identify mutually exclusive physical-owner forms.
+ * local_head/local_link contain queue/index metadata only, never retained
+ * source grants or release controls. They are reusable after the prior local
+ * owner's FINAL object access, independently of older persistent control users.
+ */
+struct kd_mutex {
+	struct kd_mutex_link *tail;
+	struct kd_mutex_batch *owner;
+	struct kd_mutex_link local_head;
+	struct task_struct *local_owner;
+	struct list_head local_link;
+};
+
+/* Local head/index fields are privately initialized at the actual local win. */
+#define KD_MUTEX_INITIALIZER { .tail = NULL, .owner = NULL, .local_owner = NULL }
 
 /*
  * LOCAL_GRANTED leaves source CALL/RET completion to the requester bridge.
@@ -94,9 +119,7 @@ struct kd_mutex_ops {
  * thread core pointer and caller-owned node/context must still exist.
  */
 struct kd_mutex_node {
-	struct kd_mutex_node *next;
-	atomic_t selection;
-	int turn;
+	struct kd_mutex_link queue;
 	int queue_done;
 	int result_ready;
 	int retirable;
@@ -132,6 +155,8 @@ struct kd_mutex_batch {
 	struct kd_mutex_release_owner release_owner;
 	struct kd_mutex *lock;
 	struct kd_mutex_node *head;
+	/* Queue cursor is independent of the retained logical head/control. */
+	struct kd_mutex_link *queue_head;
 	struct kd_mutex_node *serving;
 	unsigned int proxy_limit;
 	unsigned int proxy_served;
@@ -140,6 +165,25 @@ struct kd_mutex_batch {
 };
 
 void kd_mutex_init(struct kd_mutex *lock);
+/* Common queue mechanics, called only after the lane validates its control.
+ * link_init is private. enqueue publishes one initialized link. replace_head
+ * requires the caller's acquired local turn and a freshly initialized stable
+ * link; it closes every predecessor/producer reference to the old temporary
+ * link before return. release requires cleared object owner/index metadata and
+ * the actual physical-owner task. retained_head is a separate persistent node
+ * whose queue_done may be published after final object access, or NULL for the
+ * object-owned local head. Never pass an object-owned control as retained_head.
+ * These helpers execute no source, allocation or alternate exclusion protocol.
+ */
+void kd_mutex_link_init(struct kd_mutex_link *link,
+			struct kd_mutex_node *request,
+			enum kd_mutex_selection selection);
+void kd_mutex_link_enqueue(struct kd_mutex *lock, struct kd_mutex_link *link);
+void kd_mutex_link_replace_head(struct kd_mutex *lock,
+				struct kd_mutex_link *temporary,
+				struct kd_mutex_link *stable);
+void kd_mutex_link_release(struct kd_mutex *lock, struct kd_mutex_link *head,
+			   struct kd_mutex_node *retained_head);
 /* Private fresh storage only; this cannot reset an unreaped owner context. */
 void kd_mutex_batch_init(struct kd_mutex_batch *batch);
 int kd_mutex_node_init(struct kd_mutex_node *node,

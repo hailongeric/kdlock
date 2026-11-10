@@ -202,14 +202,19 @@ Every live return address/token, including source-to-JIT hybrid chains, needs a 
 ### 3.4 GS and physical kernel context
 
 C02 uses the active MCS request's direct node->state pointer. All nested
-requests name the same original core. C05 supplies task-owned preallocated
-request contexts, without allocation at each lock or a temporary local-node
-fallback. Simultaneously live requests use distinct contexts; capacity includes
-late release/control, return and current-native-endpoint users, not just depth.
-Queue detachment or a result does not end those exact users. A private capacity
-failure cannot be returned as a public void mutex_lock result; provisioning and
-admission must reserve the required context before that boundary. No pool size
-or one-node sufficiency is implied. The [task root](../../../kernel/task_state.h)
+requests name the same original core. C05 keeps task-owned preallocated
+persistent delegation records; their exact users include late release/control,
+return and current-native-endpoint users, so capacity is not just depth. The
+selected local MCS fallback has a temporary waiter released before lock returns
+and a stable object-owned queue head. The initial implementation strategy (P)
+uses the task root's exact `held_local` index to keep later native acquisitions
+on local MCS while any unimported local owner remains. Source executes natively during that interval; after the index empties,
+a later acquisition can again seek optional delegation admission. No local
+grant import, physical authority transfer or JIT coverage for that interval is
+claimed. Queue-link and persistent control lifetimes still need their separate
+proof. A private capacity refusal is not a public void-lock result or permission to replay; local/native
+admission must preserve the current source phase and existing duties. No pool
+size or one-node sufficiency is implied. The [task root](../../../kernel/task_state.h)
 supplies initial own backing and the selected auxiliary wait stack before a
 first node exists; it is not a borrowed-source registry or active-S_W task field.
 JIT entry/return still requires exact current binding and packet materialization.

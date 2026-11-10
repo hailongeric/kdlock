@@ -36,15 +36,29 @@ result/binding, child-return and notifier users retain their exact controls;
 only the responsible physical owner releases/reaps its batch. No callback has
 executed, and no performance or complete public mutex lane is claimed.
 
-C05 selects task-owned preallocated request-node contexts, provisioned before
-lock calls and reused only after each request and all its exact users finish.
-There is no allocation at each mutex_lock and no temporary local-node fallback.
-Simultaneously live requests use distinct contexts. Capacity covers every
-retained request, including physical-owner, return and current-native-endpoint
-users after queue removal or logical completion; nesting depth alone is not a
-capacity bound. No pool size or proof that one node suffices is selected. Private
-capacity failure is not a result from the public void mutex_lock API; provisioning
-and admission must supply the required context before that boundary.
+C05 keeps task-owned preallocated persistent records for delegation. Distinct
+simultaneously retained delegation/control records use distinct slots, reused
+only after all exact users finish; capacity includes late physical-owner,
+return and current-native-endpoint users, not just nesting depth. No pool size
+or one-node sufficiency is selected.
+
+The selected local MCS fallback uses a temporary waiter released before lock
+returns and a stable object-owned queue head. The initial implementation
+strategy (P) uses an exact task-root `held_local` index for local ownership:
+while any unimported local owner remains, later native acquisitions also use local MCS and source continues natively. Optional
+delegation admission can resume after the index empties. This supports mixed
+locking source patterns without importing local grants or transferring their
+physical authority; no JIT coverage is claimed during that native interval.
+The small queue link remains separate from persistent delegation release/grant/
+return controls. Their exact lifetimes and full integration still need proof.
+A private capacity refusal is not a public void mutex_lock result or permission
+to replay source.
+
+At reviewed source commit `2c3f7cbc`, the [request pool](kernel/request_pool.c)
+implements exact persistent-slot users/reuse and atomic final detach, and
+[owner progress](kernel/owner_progress.c) retains actual physical-task batches
+through deferred handling, physical release and later reaping. Task-root and
+JIT/wait callbacks connect those components; source review is not execution.
 
 The [canonical state](kernel/state.c) owns W's register packet exactly once.
 The [JIT bridge](kernel/jit.c) connects exact execution bindings, image-bound
@@ -71,10 +85,9 @@ closes before replacement; publication requires all active users to drain and
 old readers pass a grace period before reclamation. JIT entry reserves a
 separate claimed pending-exit use, which ordinary put cannot drop early.
 
-Overall integration remains incomplete. Public native wrappers and reserved
-local MCS routing,
-task-time context provisioning and exit drain, recursive episode driving,
-source validation/executable publication and persistent cumulative feedback
+Overall integration remains incomplete. Public native wrappers, local MCS fallback
+and held-local routing, task-time provisioning/full lifecycle wiring, recursive
+episode driving, source validation/executable publication and persistent cumulative feedback
 still need integration. Generated execution requires a distinct physical task
 and admitted nonoverlapping executor/source/wait-control stacks. W's own body
 uses a native route; a runtime instruction budget does not establish stack
