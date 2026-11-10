@@ -13,8 +13,8 @@ five-edge direct-CALL discovery default. Decode sites count distinct attempts,
 including failed or unmodeled decoding. Submitted decoder-window bytes count
 windows presented to the decoder, including overlapping bytes and failed
 attempts; they are not unique source-cache bytes. CFG work counts popped
-worklist edges, including the entry and redundant visits. These are discovery
-limits, not runtime lock/call nesting limits or invocation exit attribution.
+worklist edges, including every requested entry and redundant visits. These
+are discovery limits, not runtime lock/call nesting or invocation exit attribution.
 Only direct CALL edges consume the selected depth bound. Observed indirect CALL
 targets keep the current direct-call depth and are bounded by the caller's
 decode/window/CFG limits; no indirect depth default is introduced.
@@ -330,10 +330,16 @@ class CompilationPlan:
     observation_outcomes distinguishes attachment to the decoded graph from
     observations not usable in this candidate; even ATTACHED may lie outside
     fragment.body_sites or point to a missing/resource-limited target.
+    entry_fragments retains each independently planned root. fragment is their
+    static union for one image's source labels; it adds no edge between roots.
+    entry_sites includes the primary entry followed by the additional explicit
+    roots. Discovery and later code-generation budgets remain shared.
     """
 
     snapshot: SourceSnapshot
     entry: int
+    entry_sites: tuple[int, ...]
+    entry_fragments: Mapping[int, FragmentPlan]
     limits: DiscoveryLimits
     decoded: DecodedSource
     fragment: FragmentPlan
@@ -345,6 +351,33 @@ class CompilationPlan:
     consumption: DiscoveryConsumption
 
 
+def _merge_entry_fragments(plans: Mapping[int, FragmentPlan]) -> FragmentPlan:
+    """Combine proven alternatives, retaining every cut and missing-root edge."""
+    fragments = tuple(plans.values())
+    if len(fragments) == 1:
+        return fragments[0]
+    boundaries = {}
+    call_returns = {}
+    for fragment in fragments:
+        for boundary in fragment.boundaries:
+            previous = boundaries.setdefault(boundary.site, boundary)
+            if previous != boundary:
+                raise RuntimeError("entry plans disagree on a source boundary")
+        for site, targets in fragment.call_returns.items():
+            previous = call_returns.setdefault(site, targets)
+            if previous != targets:
+                raise RuntimeError("entry plans disagree on a callee-return proof")
+    return FragmentPlan(
+        body_sites=frozenset().union(*(item.body_sites for item in fragments)),
+        edges=frozenset().union(*(item.edges for item in fragments)),
+        boundaries=tuple(boundaries[site] for site in sorted(boundaries)),
+        missing_edges=frozenset().union(*(item.missing_edges for item in fragments)),
+        unresolved_transfers=frozenset().union(*(item.unresolved_transfers for item in fragments)),
+        return_sites=frozenset().union(*(item.return_sites for item in fragments)),
+        call_returns=MappingProxyType(call_returns),
+    )
+
+
 @dataclass(frozen=True)
 class _Pending:
     edge: SourceEdge
@@ -352,9 +385,10 @@ class _Pending:
 
 
 def compile_fragment_plan(
-    snapshot: SourceSnapshot, entry: int, limits: DiscoveryLimits
+    snapshot: SourceSnapshot, entry: int, limits: DiscoveryLimits, *,
+    entry_sites: tuple[int, ...] | None = None,
 ) -> CompilationPlan:
-    """Discover within the supplied snapshot, decode and plan one source entry.
+    """Discover and independently plan explicit entries with one shared budget.
 
     Each available site is decoded at most once. A modeled site reached with
     fewer direct CALL edges is expanded again, so an earlier deeper visit
@@ -364,6 +398,14 @@ def compile_fragment_plan(
     decode/window/CFG resources. The selected direct-CALL bound limits discovery,
     not reuse of code already discovered through another route and not runtime
     nesting.
+
+    entry_sites additionally names the image's explicit canonical reentries.
+    The primary entry is processed first; each root starts at direct-CALL depth
+    zero. Decode/window/CFG limits are shared across all roots, including their
+    redundant visits. Each entry is planned independently over the same decoded
+    graph, then static alternatives are combined without adding control edges.
+    A separately requested continuation does not prove that its preceding CALL
+    returns or permit traversal through a source-operation boundary.
 
     Source boundaries have no outgoing discovery edges. Missing bytes, decode
     failures, unmodeled transfers and each actual resource refusal remain
@@ -377,6 +419,15 @@ def compile_fragment_plan(
     ):
         raise TypeError("compiler needs a SourceSnapshot and explicit DiscoveryLimits")
     _address(entry)
+    if entry_sites is None:
+        roots = (entry,)
+    else:
+        if (not isinstance(entry_sites, tuple) or not entry_sites
+                or len(set(entry_sites)) != len(entry_sites)):
+            raise ValueError("discovery entries must be a nonempty unique tuple")
+        for site in entry_sites:
+            _address(site)
+        roots = (entry,) + tuple(site for site in entry_sites if site != entry)
     metadata = {item.site: item for item in snapshot.sites}
     observations: dict[int, list[ObservedTarget]] = {}
     for observed in snapshot.observed_targets:
@@ -389,7 +440,7 @@ def compile_fragment_plan(
     missing_source: set[int] = set()
     minimum_depth: dict[int, int] = {}
     stops: list[ResourceStop] = []
-    pending = deque([_Pending(SourceEdge(None, entry), 0)])
+    pending = deque(_Pending(SourceEdge(None, site), 0) for site in roots)
     decode_sites = 0
     decode_window_bytes = 0
     cfg_work_steps = 0
@@ -500,7 +551,8 @@ def compile_fragment_plan(
         decode_failures=MappingProxyType(failures),
         unmodeled_transfers=MappingProxyType(unmodeled),
     )
-    fragment = plan_fragment(decoded.graph, entry)
+    entry_fragments = {site: plan_fragment(decoded.graph, site) for site in roots}
+    fragment = _merge_entry_fragments(entry_fragments)
     resource_targets = {record.edge.target for record in stops}
     missing_outcomes: dict[SourceEdge, MissingKind] = {}
     for edge in fragment.missing_edges:
@@ -541,6 +593,8 @@ def compile_fragment_plan(
     return CompilationPlan(
         snapshot=snapshot,
         entry=entry,
+        entry_sites=roots,
+        entry_fragments=MappingProxyType(entry_fragments),
         limits=limits,
         decoded=decoded,
         fragment=fragment,

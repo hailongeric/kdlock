@@ -553,6 +553,9 @@ class LearningCoordinator:
 
         Budgets are caller inputs; DiscoveryLimits retains its selected default
         of five direct CALL discovery edges. No indirect-depth cap is added.
+        Every explicit image entry is discovered and independently planned under
+        the same discovery limits; operation cuts and unknown CALL alternatives
+        stay closed even when their continuations are separate requested roots.
         Construction errors leave claims/facts/input intact and issue no ACK.
         Caller mapping of binding to the eventual loaded descriptor/inputs and
         generated receipt is required before an actual publication receipt.
@@ -576,7 +579,8 @@ class LearningCoordinator:
         if entry_metadata.current_task_gs_offset != self._epoch.current_task_gs_offset:
             raise ValueError("candidate GS input differs from its exact epoch")
         snapshot = self._snapshot
-        plan = compile_fragment_plan(snapshot, entry, discovery_limits)
+        plan = compile_fragment_plan(snapshot, entry, discovery_limits,
+                                     entry_sites=entry_metadata.entry_sites)
         lowered = lower_compilation(plan, entry_metadata, codegen_limits)
         artifact = export_image(lowered, descriptor_symbol=descriptor_symbol,
                                 source_identity_symbol=source_identity_symbol,
