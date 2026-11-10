@@ -11,6 +11,8 @@
 #include <linux/overflow.h>
 #include <linux/mutex.h>
 #include <linux/preempt.h>
+#include <linux/poll.h>
+#include <linux/limits.h>
 #include <linux/sched.h>
 #include <linux/sched/task.h>
 #include <linux/slab.h>
@@ -20,6 +22,7 @@
 
 #include "kernel/mutex.h"
 #include "kernel/runtime.h"
+#include "kernel/observation.h"
 #include "kernel/task_state.h"
 #include "include/kd_mutex_api.h"
 
@@ -74,6 +77,9 @@ struct fixture_worker {
 	unsigned int mode;
 	unsigned int iterations;
 	unsigned int index;
+	unsigned int role;
+	bool scene;
+	bool scene_ready;
 	int error;
 	bool finished;
 };
@@ -116,6 +122,11 @@ static struct {
 	unsigned int dependency_pages;
 	size_t source_bytes;
 } configuration_identity;
+
+static int notrace worker_main(void *argument);
+static int notrace stop_workers(void);
+static bool notrace fixture_locks_clear(void);
+#include "runtime_fixture_observe.inc"
 
 void fixture_source_body(struct fixture_worker *worker);
 void fixture_source_step(struct fixture_worker *worker);
@@ -206,15 +217,22 @@ static int notrace worker_main(void *argument)
 	worker->core_address = (unsigned long)&root->core;
 	worker->regs_address = (unsigned long)&root->core.regs;
 	ready_reported = true;
+	smp_store_release(&worker->scene_ready, true);
 	worker_ready();
 	wait_for_completion(&start_gate);
+	if (worker->scene)
+		wait_for_completion(&scene_go[worker->role]);
 	for (iteration = 0; !READ_ONCE(abort_start) && iteration < worker->iterations && !kthread_should_stop(); ++iteration) {
 		worker->index = iteration;
-		READ_ONCE(body_entry)(worker);
+		if (worker->scene && worker->role != SCENE_CA && worker->role != SCENE_W)
+			scene_single(worker);
+		else
+			READ_ONCE(body_entry)(worker);
 		worker->completed++;
-		if (worker->seen_before != worker->expected_task ||
-		    worker->seen_inside != worker->expected_task ||
-		    worker->seen_pointer != &pointer_value[iteration]) {
+		if ((!worker->scene || worker->role == SCENE_CA || worker->role == SCENE_W) &&
+		    (worker->seen_before != worker->expected_task ||
+		     worker->seen_inside != worker->expected_task ||
+		     worker->seen_pointer != &pointer_value[iteration])) {
 			worker->origin_errors++;
 			worker->error = -EUCLEAN;
 		}
@@ -270,6 +288,7 @@ static int notrace stop_workers(void)
 		workers[index].task = NULL;
 	}
 	worker_count = 0;
+	WRITE_ONCE(scene_active, false);
 	return result;
 }
 
@@ -392,6 +411,7 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 {
 	char buffer[2048];
 	unsigned int index, finished = 0;
+	unsigned long trace_flags, queued, held, child, events, overflow, ready = 0;
 	unsigned long completed = 0, calls = 0, errors = 0, core_errors = 0, origin_errors = 0;
 	unsigned long total_a = 0, total_b = 0;
 	struct kd_task_root_context *self;
@@ -414,6 +434,8 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 	}
 	for (index = 0; index < worker_count; ++index) {
 		finished += smp_load_acquire(&workers[index].finished);
+		if (smp_load_acquire(&workers[index].scene_ready))
+			ready |= 1UL << index;
 		completed += READ_ONCE(workers[index].completed);
 		calls += READ_ONCE(workers[index].call_effects);
 		core_errors += READ_ONCE(workers[index].core_errors);
@@ -424,15 +446,23 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 		total_a += READ_ONCE(protected_a[index]);
 		total_b += READ_ONCE(protected_b[index]);
 	}
+	raw_spin_lock_irqsave(&event_guard, trace_flags);
+	queued = scene_queued; held = scene_held; child = scene_child;
+	events = event_count; overflow = event_overflow;
+	raw_spin_unlock_irqrestore(&event_guard, trace_flags);
 	length = scnprintf(buffer, sizeof(buffer),
-		"evidence=kernel-mechanism mode=%u workers=%u finished=%u iterations=%u completed=%lu calls=%lu a=%lu b=%lu errors=%lu core_errors=%lu origin_errors=%lu source_start=%px source_size=%u step_start=%px step_size=%u locks_clear=%u runtime=%u self_pid=%d self_root=%016lx self_core=%016lx self_regs=%016lx self_binding=%016lx self_own=%u self_native=%u self_managed=%u\n",
+		"evidence=kernel-mechanism mode=%u workers=%u finished=%u iterations=%u completed=%lu calls=%lu a=%lu b=%lu errors=%lu core_errors=%lu origin_errors=%lu source_start=%px source_size=%u step_start=%px step_size=%u locks_clear=%u runtime=%u self_pid=%d self_root=%016lx self_core=%016lx self_regs=%016lx self_binding=%016lx self_own=%u self_native=%u self_managed=%u scene=%u ready=%lx queued=%lx held=%lx child=%lx events=%lu overflow=%lu role0=%lx role1=%lx role2=%lx role3=%lx role4=%lx w_core=%lx w_regs=%lx object_a=%lx object_b=%lx\n",
 		requested_mode, worker_count, finished, requested_iterations, completed, calls,
 		total_a, total_b, errors, core_errors, origin_errors,
 		fixture_source_body, source_size, fixture_source_step, step_size,
 		fixture_locks_clear(), runtime != NULL, task_pid_nr(current), (unsigned long)self,
 		self ? (unsigned long)&self->core : 0UL,
 		self ? (unsigned long)&self->core.regs : 0UL, (unsigned long)binding,
-		own, native, managed);
+		own, native, managed, scene_active, ready, queued, held, child, events, overflow,
+		(unsigned long)workers[0].task, (unsigned long)workers[1].task,
+		(unsigned long)workers[2].task, (unsigned long)workers[3].task,
+		(unsigned long)workers[4].task, workers[4].core_address, workers[4].regs_address,
+		(unsigned long)&lock_a[0], (unsigned long)&lock_b[0]);
 	mutex_unlock(&control_mutex);
 	return simple_read_from_buffer(output, size, position, buffer, length);
 }
@@ -454,12 +484,20 @@ static ssize_t notrace control_write(struct file *file, const char __user *input
 	if (sscanf(buffer, "start %u %u %u %n", &mode, &count, &iterations, &used) == 3 &&
 	    used > 0 && !buffer[used])
 		result = start_workers(mode, count, iterations);
-	else if (sysfs_streq(buffer, "enter"))
+	else if (sscanf(buffer, "scene %u %n", &mode, &used) == 1 && used > 0 && !buffer[used])
+		result = start_scene(mode);
+	else if (sscanf(buffer, "go %u %n", &mode, &used) == 1 && used > 0 && !buffer[used] &&
+		 scene_active && mode < SCENE_ROLES) {
+		complete_all(&scene_go[mode]); result = 0;
+	} else if (sscanf(buffer, "release %u %n", &mode, &used) == 1 && used > 0 && !buffer[used] &&
+		 scene_active && (mode == SCENE_HA || mode == SCENE_HB)) {
+		complete_all(&scene_release[mode]); result = 0;
+	} else if (sysfs_streq(buffer, "enter"))
 		result = control_enter(control);
 	else if (sysfs_streq(buffer, "leave"))
 		result = control_leave(control);
 	else if (sysfs_streq(buffer, "stop"))
-		result = stop_workers();
+		result = scene_active && !scene_finished() ? -EBUSY : stop_workers();
 	else if (sysfs_streq(buffer, "destroy")) {
 		if (worker_count || !fixture_locks_clear()) {
 			result = -EBUSY;
@@ -468,8 +506,10 @@ static ssize_t notrace control_write(struct file *file, const char __user *input
 			if (!result) {
 				runtime = NULL;
 				result = provider ? kd_jit_source_provider_destroy(provider) : 0;
-				if (!result)
+				if (!result) {
 					provider = NULL;
+					fixture_events_stop();
+				}
 			}
 		}
 	}
@@ -582,10 +622,14 @@ static int __init notrace fixture_init(void)
 		.configuration_identity = &configuration_identity, .load_identity = &load_identity,
 		.current_task_gs_offset = gs_offset, .modules = modules, .module_count = ARRAY_SIZE(modules),
 	};
+	result = fixture_events_start();
+	if (result) {
+		kfree(regions); return result;
+	}
 	result = kd_jit_source_provider_create(&source, &provider);
 	kfree(regions);
 	if (result)
-		return result;
+		goto event_cleanup;
 	config = (struct kd_jit_runtime_config) {
 		.source = provider, .feedback_capacity = 4096, .cycle_capacity = 32, .image_capacity = 16,
 		.claim_capacity = 4096,
@@ -617,8 +661,12 @@ static int __init notrace fixture_init(void)
 		goto source_cleanup;
 	}
 	result = misc_register(&control_device);
-	if (!result)
-		return 0;
+	if (!result) {
+		result = misc_register(&event_device);
+		if (!result)
+			return 0;
+		misc_deregister(&control_device);
+	}
 	/* No task, code image or host observer has entered this private setup. */
 	BUG_ON(kd_jit_runtime_destroy(runtime));
 	runtime = NULL;
@@ -630,6 +678,9 @@ source_cleanup:
 	}
 	BUG_ON(kd_jit_source_provider_destroy(provider));
 	provider = NULL;
+event_cleanup:
+	fixture_events_stop();
+	kvfree(event_rows); event_rows = NULL;
 	return result;
 }
 
@@ -639,7 +690,10 @@ static void __exit notrace fixture_exit(void)
 	 * and destroy. Provider/module and open-control refs keep earlier code live.
 	 */
 	BUG_ON(worker_count || runtime || provider);
+	fixture_events_stop();
+	misc_deregister(&event_device);
 	misc_deregister(&control_device);
+	kvfree(event_rows);
 }
 
 module_init(fixture_init);

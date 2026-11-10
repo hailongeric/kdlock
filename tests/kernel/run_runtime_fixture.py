@@ -2,7 +2,8 @@
 """VM-only ordinary-mutex mechanism checks; writing this file runs no checks.
 
 This is synthetic kernel mechanism evidence, not a real-world syscall workload,
-MM-body substitute, timing experiment or proof of whole-body JIT completion.
+MM-body substitute or timing experiment. Completion requires exact protected-episode
+trace evidence; the unprotected C-function epilogue remains native.
 Failures preserve the loaded fixture, channel controls and output artifacts.
 """
 
@@ -16,6 +17,7 @@ from pathlib import Path
 import re
 import select
 import shutil
+import struct
 import subprocess
 import sys
 import time
@@ -120,6 +122,7 @@ def main():
     parser.add_argument("--dependency-page-limit", type=int, required=True)
     parser.add_argument("--total-source-byte-limit", type=int, required=True)
     parser.add_argument("--wire-log-byte-limit", type=int, required=True)
+    parser.add_argument("--event-capacity", type=int, required=True)
     parser.add_argument("--immutable-text-contract", action="store_true", required=True)
     parser.add_argument("--auxiliary-stack-contract", action="store_true", required=True)
     parser.add_argument("--workers", type=int, default=4)
@@ -136,6 +139,7 @@ def main():
             or not 1 <= args.dependency_page_limit <= 4096 - 2
             or not 1 <= args.total_source_byte_limit < 1 << 64
             or not 1 <= args.wire_log_byte_limit < 1 << 64
+            or not 1 <= args.event_capacity <= ((1 << 63) - 1 - 40) // 160
             or args.total_source_byte_limit + (2 + args.dependency_page_limit) * 16
                 + 32 + 7 * 8 + 64 * 16 + 8 + 256 > 2 * 1024 * 1024):
         raise ValueError("fixture worker/iteration/source/deadline extent is invalid")
@@ -178,6 +182,7 @@ def main():
                "gs_proof": proof, "module_sizes": {"body": body_size, "callee": step_size},
                "source_limits": {"dependency_pages": args.dependency_page_limit,
                                  "total_source_bytes": args.total_source_byte_limit},
+               "event_capacity": args.event_capacity,
                "wire_log": {"byte_limit": args.wire_log_byte_limit,
                             "reserved_bytes": 0, "reservations": 0},
                "workers": args.workers, "iterations": args.iterations, "cases": [],
@@ -188,7 +193,61 @@ def main():
     results["compiler_thunk_symbols"] = sorted(set(re.findall(
         r"__(?:x86_indirect|x86_return)_thunk[A-Za-z0-9_]*", module_listing.decode(errors="replace"))))
     control = -1
+    event_fd = -1
+    event_rows = []
+    event_raw = bytearray()
+    event_header = b""
     transport = None
+    event_fields = ("kind", "task", "state", "origin", "node", "acquisition", "parent",
+                    "owner", "owner_task", "object", "image", "ip", "cursor", "related",
+                    "phase", "result", "flags", "source_user", "return_user", "notifier")
+    event_names = ("SLOT_RESERVE", "SLOT_FREE", "ENQUEUE", "SELECT_LOCAL", "SELECT_PROXY", "GRANT",
+                   "PROXY_RETURN", "QUEUE_DONE", "NODE_RETIRE_READY", "RELEASE_BIND", "RELEASE_REQUEST",
+                   "RELEASE_DEFER", "RELEASE_UNWIND", "RELEASE_NOTIFY_DONE", "RELEASE_HANDLED",
+                   "RELEASE_SOURCE_DROP", "RELEASE_RETURN_DROP", "PHYSICAL_BEGIN", "PHYSICAL_END",
+                   "RELEASE_RETIRE", "OWNER_RETIRE", "FRAME_PREPARE", "JIT_ENTER", "JIT_EXIT",
+                   "JIT_OPERATION", "CHILD_RETURN", "EPISODE_DONE", "FORWARD", "NATIVE_UNLOCK", "OWNER_STOP")
+    kinds = {name: index + 1 for index, name in enumerate(event_names)}
+
+    def read_exact(fd, length):
+        copied = bytearray()
+        while len(copied) < length:
+            block = os.read(fd, min(length - len(copied), 160))
+            if not block:
+                raise RuntimeError("observation prefix ended before its declared extent")
+            copied.extend(block)
+        return bytes(copied)
+
+    def observations():
+        nonlocal event_header
+        if event_fd < 0:
+            return event_rows
+        os.lseek(event_fd, 0, os.SEEK_SET)
+        header = read_exact(event_fd, 40)
+        abi, words, capacity, count, overflow = struct.unpack("<5Q", header)
+        if (abi != 1 or words != 20 or capacity != args.event_capacity
+                or not len(event_rows) <= count <= capacity):
+            raise ValueError("actual observation ABI/capacity/immutable prefix differs")
+        os.lseek(event_fd, 40 + len(event_rows) * 160, os.SEEK_SET)
+        copied = read_exact(event_fd, (count - len(event_rows)) * 160)
+        event_raw.extend(copied)
+        for values in struct.iter_unpack("<20Q", copied):
+            row = dict(zip(event_fields, values))
+            row["index"] = len(event_rows)
+            event_rows.append(row)
+        event_header = header
+        results["observation_records"] = count
+        results["observation_overflow"] = overflow
+        if overflow:
+            raise AssertionError("diagnostic observation capacity overflowed; protocol is retained")
+        return event_rows
+
+    def save_observations(name):
+        observations()
+        (args.output / f"{name}.bin").write_bytes(event_header + bytes(event_raw))
+        (args.output / f"{name}.json").write_text(json.dumps(
+            {"fields": event_fields, "kinds": kinds, "records": event_rows},
+            indent=2, sort_keys=True) + "\n")
     wire_directory = args.output / "wire"
     wire_directory.mkdir()
 
@@ -379,6 +438,224 @@ def main():
                                  "native_body_completion": True})
         control_command("stop")
 
+    def wait_scene(predicate, label):
+        deadline = time.monotonic() + args.deadline
+        while True:
+            raw, values = status()
+            observations()
+            if int(values["overflow"]):
+                raise AssertionError("diagnostic observation overflow; source controls remain retained")
+            if predicate(values):
+                return raw, values
+            if time.monotonic() >= deadline:
+                (args.output / f"{label}-timeout.txt").write_text(raw)
+                raise TimeoutError("scene ordering/completion deadline; no drain or selection inferred")
+            time.sleep(0.01)
+
+    def has(row, name):
+        return row["kind"] == kinds[name]
+
+    def typed_unlock(row, target, image):
+        record = next((call for call in calls if call["site"] == row["ip"]
+                       and call.get("operation") == "unlock"), None)
+        return (has(row, "JIT_OPERATION") and row["result"] == 2 and row["related"] == target
+                and row["image"] == image and record is not None
+                and row["cursor"] == record["site"] + record["length"])
+
+    def protected_completion(rows, node, image, task=None, expected=3):
+        done = next((row for row in rows if has(row, "EPISODE_DONE") and row["node"] == node
+                     and row["result"] == expected and row["flags"] & 512 and row["flags"] & 1024
+                     and (task is None or row["task"] == task)), None)
+        if done is None:
+            raise AssertionError("no exact positive protected-episode completion before outward conversion")
+        start = next((row for row in rows if has(row, "FRAME_PREPARE") and row["node"] == node
+                      and row["acquisition"] == done["acquisition"]), None)
+        if start is None:
+            raise AssertionError("positive episode has no retained exact frame lifetime")
+        interval = [row for row in rows if start["index"] <= row["index"] <= done["index"]
+                    and row["state"] == done["state"] and row["origin"] == done["origin"]]
+        if any(has(row, "FORWARD") for row in interval):
+            raise AssertionError("a native suffix cannot count as a complete protected JIT episode")
+        exits = [row for row in interval if has(row, "JIT_EXIT")]
+        if not exits or any(row["result"] != 1 or row["image"] != image for row in exits):
+            raise AssertionError("protected episode reached a miss/refusal/resource/special exit")
+        if not any(has(row, "JIT_ENTER") and row["image"] == image
+                   and row["task"] != row["origin"] for row in interval):
+            raise AssertionError("native-only completion supplies no generated execution proof")
+        if not any(typed_unlock(row, node, image) for row in interval):
+            raise AssertionError("episode completion lacks its exact JIT-handled source unlock")
+        return done
+
+    def validate_warm_plain(rows, image):
+        selected = [row for row in rows if has(row, "SELECT_PROXY")]
+        if not selected:
+            raise AssertionError("warm plain case had no actual proxy selection")
+        for selection in selected:
+            # SLOT lifetimes delimit reuse: choose this selection's most recent
+            # prepare and stop at its next SLOT_FREE rather than pooling addresses.
+            prepare = next((row for row in reversed(rows) if row["index"] < selection["index"]
+                            and has(row, "FRAME_PREPARE") and row["node"] == selection["node"]), None)
+            if prepare is None:
+                raise AssertionError("proxy selection has no exact prepared frame")
+            stop = next((row["index"] for row in rows if row["index"] > selection["index"]
+                         and has(row, "SLOT_FREE") and row["node"] == selection["node"]), rows[-1]["index"])
+            protected_completion([row for row in rows if prepare["index"] <= row["index"] <= stop],
+                                 selection["node"], image)
+
+    def validate_retirement(rows, root, child, mode):
+        for request in (root, child):
+            grant = next((row for row in rows if has(row, "GRANT")
+                          and row["node"] == request["node"] and row["acquisition"] == request["acquisition"]), None)
+            if grant is None or not grant["related"] or not grant["owner"]:
+                raise AssertionError("selected request lacks its exact release/physical-owner binding")
+            release, owner, owner_task = grant["related"], grant["owner"], grant["owner_task"]
+            release_rows = [row for row in rows if row["related"] == release and row["owner"] == owner
+                            and row["state"] == request["state"]
+                            and row["acquisition"] == request["acquisition"]]
+            bound = next((row for row in release_rows if has(row, "RELEASE_BIND")
+                          and row["source_user"]), None)
+            handled = next((row for row in release_rows if has(row, "RELEASE_HANDLED")
+                            and row["phase"] == 4 and row["task"] == owner_task), None)
+            stopped = next((row for row in rows if has(row, "OWNER_STOP") and row["owner"] == owner
+                            and row["task"] == owner_task and row["flags"] & 128), None)
+            begin = next((row for row in rows if has(row, "PHYSICAL_BEGIN") and row["owner"] == owner
+                          and row["task"] == owner_task and row["object"] == grant["object"]
+                          and row["phase"] == 1 and row["related"]), None)
+            physical = next((row for row in rows if has(row, "PHYSICAL_END") and row["owner"] == owner
+                             and row["task"] == owner_task and row["object"] == grant["object"]
+                             and row["phase"] == 2 and row["result"] == 0
+                             and begin and row["related"] == begin["related"]), None)
+            source_drop = next((row for row in release_rows if has(row, "RELEASE_SOURCE_DROP")
+                                and row["phase"] == 5 and bound
+                                and row["source_user"] == bound["source_user"]), None)
+            retired = next((row for row in release_rows if has(row, "RELEASE_RETIRE")
+                            and row["phase"] == 6 and not row["source_user"]
+                            and not row["return_user"] and not row["notifier"]), None)
+            free = next((row for row in rows if has(row, "SLOT_FREE") and row["node"] == request["node"]
+                         and row["acquisition"] == request["acquisition"] and row["phase"] == 3
+                         and row["flags"] & (2048 | 32 | 64) == (2048 | 32 | 64)), None)
+            ready = next((row for row in rows if has(row, "NODE_RETIRE_READY")
+                          and row["node"] == request["node"] and row["acquisition"] == request["acquisition"]
+                          and row["phase"] == 6 and row["flags"] & (1 | 4 | 8) == (1 | 4 | 8)
+                          and not row["flags"] & 16 and not row["source_user"]
+                          and not row["return_user"] and not row["notifier"]), None)
+            owner_retired = next((row for row in rows if has(row, "OWNER_RETIRE") and row["owner"] == owner
+                                  and row["task"] == owner_task and row["phase"] == 3), None)
+            if (not all((bound, handled, stopped, begin, physical, source_drop, retired, free, ready, owner_retired))
+                    or not bound["index"] < handled["index"] < begin["index"] < physical["index"]
+                    or not stopped["index"] < begin["index"]
+                    or not physical["index"] < source_drop["index"] < retired["index"]
+                    or not retired["index"] <= ready["index"] < free["index"]
+                    or not physical["index"] < owner_retired["index"]):
+                raise AssertionError("physical callback/control/last-user retirement proof is incomplete")
+            if request is root and mode == 2:
+                requested = next((row for row in release_rows if has(row, "RELEASE_REQUEST")
+                                  and row["result"] == 2 and row["phase"] == 1 and row["return_user"]), None)
+                deferred = next((row for row in release_rows if has(row, "RELEASE_DEFER")
+                                 and row["phase"] == 2 and row["notifier"]), None)
+                unwind = next((row for row in release_rows if has(row, "RELEASE_UNWIND") and row["phase"] == 3
+                               and deferred and row["notifier"] == deferred["notifier"]), None)
+                notified = next((row for row in release_rows if has(row, "RELEASE_NOTIFY_DONE")
+                                 and deferred and row["notifier"] == deferred["notifier"]), None)
+                returned = next((row for row in release_rows if has(row, "RELEASE_RETURN_DROP")
+                                and requested and row["return_user"] == requested["return_user"]), None)
+                if (not all((requested, deferred, unwind, notified, returned))
+                        or not requested["index"] < deferred["index"] < unwind["index"] < handled["index"]
+                        or not notified["index"] < retired["index"]
+                        or not returned["index"] < retired["index"]):
+                    raise AssertionError("deferred outer request/unwind/exact notifier-return tokens differ")
+
+    def scene_case(mode, image):
+        begin = len(observations())
+        control_command(f"scene {mode}")
+        _, first = wait_scene(lambda value: int(value["ready"], 16) == 31, f"scene{mode}-ready")
+        tasks = [int(first[f"role{index}"], 16) for index in range(5)]
+        control_command("go 0"); control_command("go 1")
+        wait_scene(lambda value: int(value["held"], 16) & 3 == 3, f"scene{mode}-holders")
+        control_command("go 2")
+        wait_scene(lambda value: int(value["queued"], 16) & 4, f"scene{mode}-CA")
+        control_command("go 4")
+        wait_scene(lambda value: int(value["queued"], 16) & 16, f"scene{mode}-W")
+        control_command("go 3")
+        wait_scene(lambda value: int(value["queued"], 16) & 8, f"scene{mode}-CB")
+        control_command("release 0")
+        wait_scene(lambda value: int(value["child"], 16) != 0, f"scene{mode}-child")
+        control_command("release 1")
+        raw, final = wait_scene(lambda value: int(value["finished"]) == 5, f"scene{mode}-done")
+        if (int(final["completed"]) != 5 or int(final["calls"]) != mode + 2
+                or int(final["a"]) != 2 or int(final["b"]) != (2 if mode == 2 else 1)
+                or any(int(final[key]) for key in ("errors", "core_errors", "origin_errors"))
+                or int(final["locks_clear"]) != 1):
+            raise AssertionError("five ordinary role effects or physical cleanup differ")
+        rows = observations()[begin:]
+        root = next(row for row in rows if has(row, "ENQUEUE") and row["task"] == tasks[4]
+                    and row["origin"] == tasks[4])
+        child = next(row for row in rows if has(row, "ENQUEUE") and row["task"] == tasks[2]
+                     and row["origin"] == tasks[4] and row["node"] != root["node"])
+        ca = next(row for row in rows if has(row, "ENQUEUE") and row["task"] == tasks[2]
+                  and row["origin"] == tasks[2])
+        cb = next(row for row in rows if has(row, "ENQUEUE") and row["task"] == tasks[3]
+                  and row["origin"] == tasks[3])
+        if (root["related"] != ca["node"] or child["related"] != cb["node"]
+                or root["state"] != child["state"] or root["state"] != int(final["w_core"], 16)
+                or not int(final["w_regs"], 16) or root["acquisition"] == child["acquisition"]):
+            raise AssertionError("actual common-MCS queue or one-state/distinct-acquisition relation differs")
+        for request, executor, head in ((root, tasks[2], ca), (child, tasks[3], cb)):
+            if not any(has(row, "SELECT_LOCAL") and row["node"] == head["node"]
+                       and row["task"] == executor and row["owner_task"] == executor for row in rows):
+                raise AssertionError("candidate did not become the ordinary physical MCS head")
+            if not any(has(row, "SELECT_PROXY") and row["node"] == request["node"]
+                       and row["task"] == executor and row["owner_task"] == executor
+                       and row["related"] == head["node"] for row in rows):
+                raise AssertionError("ordinary optional arbitration did not select the required physical executor")
+        prepare = next(row for row in rows if has(row, "FRAME_PREPARE") and row["node"] == child["node"])
+        if prepare["parent"] != root["node"] or prepare["state"] != root["state"]:
+            raise AssertionError("child is not the exact same-state recursive request")
+        lock_b = next((row for row in rows if has(row, "JIT_OPERATION") and row["result"] == 1
+                       and row["node"] == root["node"] and row["related"] == child["node"]
+                       and row["task"] == tasks[2] and row["image"] == image
+                       and row["object"] == int(final["object_b"], 16)), None)
+        enter_a = next((row for row in rows if has(row, "JIT_ENTER") and row["node"] == root["node"]
+                        and row["task"] == tasks[2] and row["image"] == image), None)
+        enter_b = next((row for row in rows if has(row, "JIT_ENTER") and row["node"] == child["node"]
+                        and row["task"] == tasks[3] and row["image"] == image), None)
+        if not all((lock_b, enter_a, enter_b)) or not enter_a["index"] < lock_b["index"] < child["index"] < enter_b["index"]:
+            raise AssertionError("no actual CA source-to-child operation and CB generated entry chain")
+        child_done = protected_completion(rows, child["node"], image, tasks[3], 5 if mode == 2 else 3)
+        returned = next((row for row in rows if has(row, "CHILD_RETURN") and row["node"] == root["node"]
+                         and row["related"] == child["node"] and row["task"] == tasks[2]
+                         and row["result"] == child_done["result"] and row["flags"] & 1024
+                         and row["return_user"] and row["source_user"]
+                         and row["return_user"] != row["source_user"]), None)
+        root_done = protected_completion(rows, root["node"], image, tasks[2])
+        if (returned is None or not child_done["index"] < returned["index"] < root_done["index"]
+                or returned["source_user"] != enter_a["related"]
+                or returned["cursor"] != child_done["cursor"]):
+            raise AssertionError("no exact current-binding CB-to-CA child return followed by root completion")
+        if mode == 1:
+            resumed = next((row for row in rows if has(row, "JIT_ENTER") and row["node"] == root["node"]
+                            and row["task"] == tasks[2] and row["image"] == image
+                            and returned["index"] < row["index"] < root_done["index"]
+                            and row["related"] == returned["return_user"]
+                            and row["cursor"] == returned["cursor"]), None)
+            if resumed is None:
+                raise AssertionError("parent resumed neither the exact returned binding nor its current cursor")
+        elif root_done["related"] != returned["return_user"] or root_done["cursor"] != returned["cursor"]:
+            raise AssertionError("out-of-order root completion revived an old binding or cursor")
+        if mode == 2:
+            if not any(typed_unlock(row, root["node"], image) and row["task"] == tasks[3]
+                       and row["node"] == child["node"] and row["phase"] == 2 for row in rows):
+                raise AssertionError("outer logical unlock was not deferred from the actual inner executor")
+        validate_retirement(rows, root, child, mode)
+        proof = {"name": f"warm-recursive-{mode}", "mode": mode, "start": begin,
+                 "end": len(event_rows), "roles": tasks, "state": root["state"],
+                 "root": root["node"], "child": child["node"], "raw_status": raw,
+                 "root_completion": root_done, "child_completion": child_done,
+                 "child_return": returned, "fixed_image": image}
+        results["cases"].append(proof)
+        control_command("stop")
+        return proof
+
     def drive(workflow):
         deadline = time.monotonic() + args.deadline
         while workflow.phase.name != "COMPLETE":
@@ -397,8 +674,9 @@ def main():
                  "immutable_text=1", "auxiliary_contract=1", f"source_size={body_size}",
                  f"step_size={step_size}", f"dependency_page_limit={args.dependency_page_limit}",
                  f"total_source_byte_limit={args.total_source_byte_limit}",
-                 f"source_version={version}"], args.deadline)
+                 f"event_capacity={args.event_capacity}", f"source_version={version}"], args.deadline)
         control = os.open("/dev/kd_runtime_fixture_ctl", os.O_RDWR | os.O_CLOEXEC)
+        event_fd = os.open("/dev/kd_runtime_fixture_events", os.O_RDONLY | os.O_CLOEXEC)
         managed_fork_case()
         body_case("native-local", 0, 1, args.iterations)
         limits = WireLimits(2 * 1024 * 1024, 4096, 256, 256, 512 * 1024)
@@ -429,7 +707,7 @@ def main():
         old = exported.expected_old_image_identity
         cycle_number = 0
 
-        def compiler_cycle(force=False, run_pending_probe=False):
+        def compiler_cycle(force=False, run_pending_probe=False, claim_only=False):
             nonlocal old, cycle_number
             cycle_number += 1
             cycle = args.output / f"cycle-{cycle_number}"
@@ -457,7 +735,7 @@ def main():
             merged = any(state.recorded.fact.key in claimed_keys
                          and state.recorded.merge is MergeDisposition.MERGED
                          for state in coordinator.facts())
-            if not force and not merged:
+            if claim_only or (not force and not merged):
                 session.finish_pending()
             result = drive(session)
             if result.candidate is not None:
@@ -478,6 +756,24 @@ def main():
         for number, mode in enumerate((0, 1, 2)):
             body_case(("contended-local", "nested", "out-of-order")[number], mode, args.workers, args.iterations)
             compiler_cycle(run_pending_probe=number == 0)
+        # The final candidate is now fixed. No image replacement or pending
+        # probe is permitted in these completion checks.
+        fixed_image = old
+        results["warm_image_identity"] = fixed_image
+        warm_start = len(observations())
+        body_case("warm-plain", 0, args.workers, args.iterations)
+        warm_plain_end = len(observations())
+        warm_proofs = [{"name": "warm-plain", "start": warm_start, "end": warm_plain_end}]
+        for mode in (1, 2):
+            warm_proofs.append(scene_case(mode, fixed_image))
+        save_observations("observations-before-shutdown")
+        results["warm_completion"] = warm_proofs
+        # A final consumer claim must be empty after the fixed-image passes.
+        empty_cycle = compiler_cycle(claim_only=True)
+        if empty_cycle.claim.records or empty_cycle.publication is not None or old != fixed_image:
+            raise AssertionError("warm completion generated misses or replaced its fixed image")
+        results["warm_claim_empty"] = True
+        validate_warm_plain(event_rows[warm_start:warm_plain_end], fixed_image)
         states = coordinator.facts()
         successful_exits = tuple(state for state in states if state.recorded.fact.entry_result == 0
                                  and state.recorded.fact.exit.kind == int(ExitKind.COVERAGE_MISS))
@@ -541,15 +837,22 @@ def main():
         transport.close()
         transport = None
         control_command("destroy")
+        save_observations("observations-final")
+        os.close(event_fd)
+        event_fd = -1
         os.close(control)
         control = -1
         command([tools["rmmod"], "kd_runtime_fixture"], args.deadline)
-        results["status"] = "partial_jit_mechanism_pass" if successful_exits else "inconclusive_generated_execution_not_observed"
+        results["returned_full_jit_body"] = "protected_episode_completed"
+        results["full_c_function_jit_return"] = "outside_protected_episode_scope"
+        results["status"] = "protected_jit_recursive_mechanism_pass"
         (args.output / "result.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
-        return 0 if successful_exits else 2
+        return 0
     except BaseException as error:
         results["status"] = "failed_or_incomplete"
         results["error"] = repr(error)
+        if event_header:
+            (args.output / "observations-failure.bin").write_bytes(event_header + bytes(event_raw))
         if transport is not None and transport.inflight:
             results["retained_channel_sequence"] = transport.pending_sequence
         (args.output / "result.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
