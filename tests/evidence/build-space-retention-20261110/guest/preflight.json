@@ -1,0 +1,168 @@
+{
+  "argv": [
+    "/tmp/kdlock-retain-scope1-temp-260402d4.py"
+  ],
+  "destination_parent": {
+    "dev": 2080,
+    "ino": 2
+  },
+  "free_bytes": {
+    "data2": 11452837888,
+    "root": 1983664128
+  },
+  "helper": {
+    "allocated": 16384,
+    "ctime_ns": 1794339645865000000,
+    "dev": 35,
+    "gid": 0,
+    "ino": 31,
+    "mode": 420,
+    "mtime_ns": 1794339645865000000,
+    "nlink": 1,
+    "path": "/tmp/kdlock-retain-scope1-temp-260402d4.py",
+    "sha256": "260402d4a82446ae145509a42e01fcd5d9df6316c0d33007c377cf648177c781",
+    "size": 12556,
+    "uid": 0
+  },
+  "idle": {
+    "boot": "ca0b717b-c19d-4027-b598-6a1cf58b93d2",
+    "busy": [],
+    "devices": [],
+    "references": [],
+    "release": "7.0.0-38-kdlock1",
+    "self_source_fd_explicitly_retained": true,
+    "taint": 0
+  },
+  "protected": {
+    "/boot/System.map-7.0.0-38-kdscope1": {
+      "allocated": 10551296,
+      "ctime_ns": 1793346779990731197,
+      "dev": 2049,
+      "gid": 0,
+      "ino": 5236,
+      "mode": 420,
+      "mtime_ns": 1793346779735735044,
+      "nlink": 1,
+      "path": "/boot/System.map-7.0.0-38-kdscope1",
+      "sha256": "63701d6024fd1cda7b6e4ede27b24cc1a6be4e0528acd64f3e3df6b18fe53334",
+      "size": 10543429,
+      "uid": 0
+    },
+    "/boot/vmlinuz-7.0.0-38-kdscope1": {
+      "allocated": 17129472,
+      "ctime_ns": 1793346779708735451,
+      "dev": 2049,
+      "gid": 0,
+      "ino": 634,
+      "mode": 420,
+      "mtime_ns": 1793346779248742391,
+      "nlink": 1,
+      "path": "/boot/vmlinuz-7.0.0-38-kdscope1",
+      "sha256": "66121427893c9805b211d79415e25cd17bb58fb39927c61096c3ffe642ad4a6b",
+      "size": 17121792,
+      "uid": 0
+    },
+    "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/.config": {
+      "allocated": 311296,
+      "ctime_ns": 1793301777062765570,
+      "dev": 2049,
+      "gid": 0,
+      "ino": 331093,
+      "mode": 420,
+      "mtime_ns": 1793301777061765587,
+      "nlink": 1,
+      "path": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/.config",
+      "sha256": "7131e48d4bb556e54f9fc287c04e6fab33a3de80eb923a215872a01a07609f4b",
+      "size": 308552,
+      "uid": 0
+    },
+    "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/Module.symvers": {
+      "allocated": 2387968,
+      "ctime_ns": 1793303206708156755,
+      "dev": 2049,
+      "gid": 0,
+      "ino": 357743,
+      "mode": 420,
+      "mtime_ns": 1793303206708156755,
+      "nlink": 1,
+      "path": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/Module.symvers",
+      "sha256": "e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b",
+      "size": 2387526,
+      "uid": 0
+    },
+    "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/System.map": {
+      "allocated": 10551296,
+      "ctime_ns": 1793303250321394809,
+      "dev": 2049,
+      "gid": 0,
+      "ino": 357763,
+      "mode": 420,
+      "mtime_ns": 1793303250321394809,
+      "nlink": 1,
+      "path": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/System.map",
+      "sha256": "63701d6024fd1cda7b6e4ede27b24cc1a6be4e0528acd64f3e3df6b18fe53334",
+      "size": 10543429,
+      "uid": 0
+    },
+    "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/arch/x86/boot/bzImage": {
+      "allocated": 17129472,
+      "ctime_ns": 1793303300557454042,
+      "dev": 2049,
+      "gid": 0,
+      "ino": 646500,
+      "mode": 420,
+      "mtime_ns": 1793303300557454042,
+      "nlink": 1,
+      "path": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/arch/x86/boot/bzImage",
+      "sha256": "66121427893c9805b211d79415e25cd17bb58fb39927c61096c3ffe642ad4a6b",
+      "size": 17121792,
+      "uid": 0
+    },
+    "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/vmlinux": {
+      "allocated": 508174336,
+      "ctime_ns": 1793303256633284659,
+      "dev": 2049,
+      "gid": 0,
+      "ino": 357765,
+      "mode": 493,
+      "mtime_ns": 1793303256633284659,
+      "nlink": 1,
+      "path": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/vmlinux",
+      "sha256": "ea8b44b8f9cc9256c93228adfcb30f5535a1c841a67496b96946f24080240a42",
+      "size": 508144064,
+      "uid": 0
+    },
+    "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/manifest.json": {
+      "allocated": 405504,
+      "ctime_ns": 1793356337009486837,
+      "dev": 2049,
+      "gid": 0,
+      "ino": 2664357,
+      "mode": 420,
+      "mtime_ns": 1793356337009486837,
+      "nlink": 1,
+      "path": "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/manifest.json",
+      "sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+      "size": 402571,
+      "uid": 0
+    }
+  },
+  "source": {
+    "allocated": 118382592,
+    "ctime_ns": 1793303232078618728,
+    "dev": 2049,
+    "gid": 0,
+    "ino": 357757,
+    "mode": 493,
+    "mtime_ns": 1793303232077713354,
+    "nlink": 1,
+    "path": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/.tmp_vmlinux2",
+    "sha256": "66a22524252fb3c33d202879b022be9a5f616fc4b55eca7aba82996375b1da29",
+    "size": 131727800,
+    "uid": 0
+  },
+  "source_parent": {
+    "dev": 2049,
+    "ino": 331042
+  }
+}

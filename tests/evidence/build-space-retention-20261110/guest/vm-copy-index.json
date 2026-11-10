@@ -1,0 +1,22 @@
+{
+  "journal.jsonl": {
+    "bytes": 2196,
+    "sha256": "24584b7c0fc1d6ab0e9406aa33a1cf48ae2e979db085b553f5fcdd71680f7e7c"
+  },
+  "preflight.json": {
+    "bytes": 5019,
+    "sha256": "f1a17cdd6a724fe6fe1fd9ee7de573cde69bb461b46bf84ff617ce2596be22c7"
+  },
+  "protected-after.json": {
+    "bytes": 3523,
+    "sha256": "f90a096508c8c2aac89453f7821adfe757d23cb2bbd2b75a302228dd134959bc"
+  },
+  "result.json": {
+    "bytes": 1091,
+    "sha256": "0077e0c582eed6bf9f59943bb5185bd893a4d1739e7a5878bc0461ee05c72c43"
+  },
+  "retained-verified.json": {
+    "bytes": 829,
+    "sha256": "162bb3ddfbf859ca4719f893d8f0171217f6aaf84a9fda5e8bbcbae7e74025c8"
+  }
+}

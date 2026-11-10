@@ -1,0 +1,30 @@
+{
+  "destination": {
+    "allocated": 131735552,
+    "ctime_ns": 1794339685535000000,
+    "dev": 2080,
+    "gid": 0,
+    "ino": 1179656,
+    "mode": 493,
+    "mtime_ns": 1793303232077713354,
+    "nlink": 1,
+    "path": "/mnt/kdlock-builds2/root-tmp-retention-kdscope1-20261111-01/tmp_vmlinux2.retained",
+    "sha256": "66a22524252fb3c33d202879b022be9a5f616fc4b55eca7aba82996375b1da29",
+    "size": 131727800,
+    "uid": 0
+  },
+  "source": {
+    "allocated": 118382592,
+    "ctime_ns": 1793303232078618728,
+    "dev": 2049,
+    "gid": 0,
+    "ino": 357757,
+    "mode": 493,
+    "mtime_ns": 1793303232077713354,
+    "nlink": 1,
+    "path": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1/.tmp_vmlinux2",
+    "sha256": "66a22524252fb3c33d202879b022be9a5f616fc4b55eca7aba82996375b1da29",
+    "size": 131727800,
+    "uid": 0
+  }
+}

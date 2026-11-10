@@ -1,0 +1,270 @@
+#!/usr/bin/env python3
+"""One approved old kallsyms intermediate; retain, verify, then unlink once."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import signal
+import stat
+import sys
+import time
+
+SOURCE_PARENT = Path('/root/kdlock-build-output/linux-7.0.0-38-kdscope1')
+SOURCE_NAME = '.tmp_vmlinux2'
+SOURCE = SOURCE_PARENT / SOURCE_NAME
+DESTINATION = Path('/mnt/kdlock-builds2/root-tmp-retention-kdscope1-20261111-01')
+PAYLOAD = DESTINATION / 'tmp_vmlinux2.retained'
+BOOT = 'ca0b717b-c19d-4027-b598-6a1cf58b93d2'
+RELEASE = '7.0.0-38-kdlock1'
+EXPECTED = dict(dev=2049, ino=357757, size=131727800, allocated=118382592,
+                nlink=1, mode=0o755, uid=0, gid=0,
+                mtime_ns=1793303232077713354, ctime_ns=1793303232078618728)
+SOURCE_SHA = '66a22524252fb3c33d202879b022be9a5f616fc4b55eca7aba82996375b1da29'
+PROTECTED = {
+    str(SOURCE_PARENT / 'vmlinux'): 'ea8b44b8f9cc9256c93228adfcb30f5535a1c841a67496b96946f24080240a42',
+    str(SOURCE_PARENT / 'arch/x86/boot/bzImage'): '66121427893c9805b211d79415e25cd17bb58fb39927c61096c3ffe642ad4a6b',
+    str(SOURCE_PARENT / 'System.map'): '63701d6024fd1cda7b6e4ede27b24cc1a6be4e0528acd64f3e3df6b18fe53334',
+    str(SOURCE_PARENT / '.config'): '7131e48d4bb556e54f9fc287c04e6fab33a3de80eb923a215872a01a07609f4b',
+    str(SOURCE_PARENT / 'Module.symvers'): 'e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b',
+    '/boot/vmlinuz-7.0.0-38-kdscope1': '66121427893c9805b211d79415e25cd17bb58fb39927c61096c3ffe642ad4a6b',
+    '/boot/System.map-7.0.0-38-kdscope1': '63701d6024fd1cda7b6e4ede27b24cc1a6be4e0528acd64f3e3df6b18fe53334',
+    '/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/manifest.json': None,
+}
+BUSY_COMM = {'make', 'gmake', 'ninja', 'gcc', 'g++', 'cc1', 'cc1plus', 'clang',
+             'clang++', 'ld', 'ld.bfd', 'ld.lld', 'as', 'ar', 'objcopy', 'strip',
+             'depmod', 'modprobe', 'insmod', 'rmmod'}
+KEYS = tuple(EXPECTED)
+journal_fd = None
+unlinked = False
+
+
+def require(condition, message):
+    if not condition:
+        raise RuntimeError(message)
+
+
+def identity(value):
+    require(stat.S_ISREG(value.st_mode), 'non-regular file')
+    return dict(dev=value.st_dev, ino=value.st_ino, size=value.st_size,
+                allocated=value.st_blocks * 512, nlink=value.st_nlink,
+                mode=stat.S_IMODE(value.st_mode), uid=value.st_uid, gid=value.st_gid,
+                mtime_ns=value.st_mtime_ns, ctime_ns=value.st_ctime_ns)
+
+
+def directory_id(path):
+    require(path.resolve(strict=True) == path, 'noncanonical directory: ' + str(path))
+    value = path.lstat()
+    require(stat.S_ISDIR(value.st_mode), 'non-directory parent')
+    return dict(dev=value.st_dev, ino=value.st_ino)
+
+
+def directory_fd_id(fd):
+    value = os.fstat(fd)
+    require(stat.S_ISDIR(value.st_mode), 'non-directory fd')
+    return dict(dev=value.st_dev, ino=value.st_ino)
+
+
+def free_bytes(path):
+    value = os.statvfs(path)
+    return value.f_bavail * value.f_frsize
+
+
+def hash_fd(fd):
+    os.lseek(fd, 0, os.SEEK_SET)
+    digest = hashlib.sha256()
+    while True:
+        data = os.read(fd, 4 * 1024 * 1024)
+        if not data:
+            break
+        digest.update(data)
+    return digest.hexdigest()
+
+
+def inspect_file(path):
+    require(path.resolve(strict=True) == path, 'noncanonical file: ' + str(path))
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        before = identity(os.fstat(fd))
+        digest = hash_fd(fd)
+        after = identity(os.fstat(fd))
+        require(before == after == identity(path.lstat()), 'file changed: ' + str(path))
+        return dict(path=str(path), sha256=digest, **after)
+    finally:
+        os.close(fd)
+
+
+def protected_snapshot():
+    rows = {}
+    for path, expected in PROTECTED.items():
+        row = inspect_file(Path(path))
+        require(expected is None or row['sha256'] == expected, 'protected hash mismatch: ' + path)
+        rows[path] = row
+    return rows
+
+
+def idle_and_refs():
+    release = Path('/proc/sys/kernel/osrelease').read_text().strip()
+    boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    taint = Path('/proc/sys/kernel/tainted').read_text().strip()
+    require((release, boot, taint) == (RELEASE, BOOT, '0'), 'running identity changed')
+    require(not Path('/sys/module/kd_runtime_fixture').exists(), 'fixture module present')
+    devices = sorted(str(path) for path in Path('/dev').glob('kd*'))
+    require(not devices, 'KD device present')
+    busy, references = [], []
+    for proc in Path('/proc').iterdir():
+        if not proc.name.isdigit() or int(proc.name) == os.getpid():
+            continue
+        try:
+            comm = (proc / 'comm').read_text().strip()
+            command = (proc / 'cmdline').read_bytes().replace(b'\0', b' ').decode(errors='replace')
+            if comm in BUSY_COMM or comm.startswith(('kd-fixture', 'kd-scene/', 'kd-runtime')):
+                busy.append(dict(pid=int(proc.name), comm=comm, command=command))
+            if str(SOURCE_PARENT) in command:
+                references.append(dict(pid=int(proc.name), kind='command', value=command))
+            for entry in (proc / 'fd').iterdir():
+                try:
+                    value = entry.stat()
+                except FileNotFoundError:
+                    continue
+                if (value.st_dev, value.st_ino) == (EXPECTED['dev'], EXPECTED['ino']):
+                    references.append(dict(pid=int(proc.name), kind='fd', value=str(entry)))
+            for line in (proc / 'maps').read_text().splitlines():
+                fields = line.split(None, 5)
+                if len(fields) >= 5 and fields[4] == str(EXPECTED['ino']):
+                    device = fields[3].split(':')
+                    if len(device) == 2 and os.makedev(int(device[0], 16), int(device[1], 16)) == EXPECTED['dev']:
+                        references.append(dict(pid=int(proc.name), kind='maps', value=line))
+        except FileNotFoundError:
+            continue
+    require(not busy, 'active build/fixture: ' + repr(busy))
+    require(not references, 'source references: ' + repr(references))
+    return dict(release=release, boot=boot, taint=int(taint), devices=devices,
+                busy=busy, references=references, self_source_fd_explicitly_retained=True)
+
+
+def write_all(fd, data):
+    while data:
+        count = os.write(fd, data)
+        require(count > 0, 'short write')
+        data = data[count:]
+
+
+def emit(phase, **fields):
+    row = dict(phase=phase, unix=time.time(), **fields)
+    data = (json.dumps(row, sort_keys=True) + '\n').encode()
+    if journal_fd is not None:
+        write_all(journal_fd, data)
+        os.fsync(journal_fd)
+    print(data.decode(), end='', flush=True)
+    return row
+
+
+def save(name, value, destination_fd):
+    fd = os.open(DESTINATION / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        write_all(fd, (json.dumps(value, indent=2, sort_keys=True) + '\n').encode())
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    os.fsync(destination_fd)
+
+
+def main():
+    global journal_fd, unlinked
+    require(os.geteuid() == 0, 'root required')
+    signal.signal(signal.SIGALRM, lambda number, frame: (_ for _ in ()).throw(TimeoutError('180-second bound')))
+    signal.alarm(180)
+    source_parent = directory_id(SOURCE_PARENT)
+    destination_parent = directory_id(DESTINATION.parent)
+    require(not os.path.lexists(DESTINATION), 'fresh destination already exists; no automatic retry')
+    idle = idle_and_refs()
+    source = inspect_file(SOURCE)
+    require(all(source[key] == EXPECTED[key] for key in KEYS) and source['sha256'] == SOURCE_SHA,
+            'pinned source mismatch')
+    before = protected_snapshot()
+    before_free = dict(root=free_bytes('/'), data2=free_bytes(DESTINATION.parent))
+    require(before_free['data2'] > EXPECTED['size'] + 16 * 1024 * 1024, 'destination free space')
+    os.mkdir(DESTINATION, 0o700)
+    destination_fd = os.open(DESTINATION, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    parent_fd = os.open(SOURCE_PARENT, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    data2_fd = os.open(DESTINATION.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    source_fd = None
+    try:
+        os.fsync(destination_fd)
+        os.fsync(data2_fd)
+        journal_fd = os.open(DESTINATION / 'journal.jsonl', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        save('preflight.json', dict(idle=idle, source=source, protected=before,
+             free_bytes=before_free, source_parent=source_parent, destination_parent=destination_parent,
+             helper=inspect_file(Path(__file__).resolve()), argv=sys.argv), destination_fd)
+        emit('PREFLIGHT_VERIFIED')
+        source_fd = os.open(SOURCE_NAME, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent_fd)
+        require(identity(os.fstat(source_fd)) == EXPECTED, 'source changed before copy')
+        atime_ns = os.fstat(source_fd).st_atime_ns
+        output_fd = os.open(PAYLOAD, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        try:
+            while True:
+                data = os.read(source_fd, 4 * 1024 * 1024)
+                if not data:
+                    break
+                write_all(output_fd, data)
+            os.fchown(output_fd, EXPECTED['uid'], EXPECTED['gid'])
+            os.fchmod(output_fd, EXPECTED['mode'])
+            os.utime(output_fd, ns=(atime_ns, EXPECTED['mtime_ns']))
+            os.fsync(output_fd)
+        finally:
+            os.close(output_fd)
+        os.fsync(destination_fd)
+        retained = inspect_file(PAYLOAD)
+        require(retained['sha256'] == SOURCE_SHA and retained['size'] == EXPECTED['size'], 'copy hash/size mismatch')
+        require(all(retained[key] == EXPECTED[key] for key in ('nlink', 'mode', 'uid', 'gid', 'mtime_ns')),
+                'copy metadata mismatch')
+        require((retained['dev'], retained['ino']) != (source['dev'], source['ino']), 'copy is same inode')
+        save('retained-verified.json', dict(source=source, destination=retained), destination_fd)
+        emit('RETAINED_COPY_VERIFIED', source_sha256=SOURCE_SHA, destination=retained)
+        final_idle = idle_and_refs()
+        require(directory_id(SOURCE_PARENT) == source_parent and
+                directory_id(DESTINATION.parent) == destination_parent, 'parent identity changed')
+        require(directory_fd_id(parent_fd) == source_parent and
+                directory_fd_id(data2_fd) == destination_parent, 'opened parent identity changed')
+        require(protected_snapshot() == before, 'protected artifact changed before unlink')
+        require(identity(os.fstat(source_fd)) == EXPECTED and
+                identity(os.stat(SOURCE_NAME, dir_fd=parent_fd, follow_symlinks=False)) == EXPECTED,
+                'source changed before unlink')
+        require(hash_fd(source_fd) == SOURCE_SHA and identity(os.fstat(source_fd)) == EXPECTED,
+                'source bytes changed before unlink')
+        require(identity(os.stat(SOURCE_NAME, dir_fd=parent_fd, follow_symlinks=False)) == EXPECTED,
+                'source entry changed immediately before unlink')
+        emit('UNLINK_PRECONDITIONS_VERIFIED', idle=final_idle, source=source)
+        os.unlink(SOURCE_NAME, dir_fd=parent_fd)
+        unlinked = True
+        os.fsync(parent_fd)
+        os.close(source_fd)
+        source_fd = None
+        emit('EXACT_SOURCE_UNLINKED')
+        require(not os.path.lexists(SOURCE), 'source entry still present')
+        require(inspect_file(PAYLOAD) == retained, 'retained file changed after unlink')
+        after = protected_snapshot()
+        require(after == before, 'protected artifact changed after unlink')
+        result = emit('COMPLETE', source=source, retained=retained,
+                      protected_count=len(after), protected_unchanged=True,
+                      free_bytes_before=before_free,
+                      free_bytes_after=dict(root=free_bytes('/'), data2=free_bytes(DESTINATION.parent)))
+        save('protected-after.json', after, destination_fd)
+        save('result.json', result, destination_fd)
+        signal.alarm(0)
+    except BaseException as error:
+        emit('FAILED_RETAIN_PARTIAL', error_type=type(error).__name__, error=str(error), unlinked=unlinked)
+        raise
+    finally:
+        if source_fd is not None:
+            os.close(source_fd)
+        if journal_fd is not None:
+            os.close(journal_fd)
+            journal_fd = None
+        os.close(parent_fd)
+        os.close(data2_fd)
+        os.close(destination_fd)
+
+
+if __name__ == '__main__':
+    main()

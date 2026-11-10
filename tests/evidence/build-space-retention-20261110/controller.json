@@ -1,0 +1,18 @@
+{
+  "command": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 195 python3 -u -c 'import ast,hashlib,os,pathlib,sys; p=pathlib.Path(\"/tmp/kdlock-retain-scope1-temp-260402d4.py\"); d=p.read_bytes(); assert hashlib.sha256(d).hexdigest()==\"260402d4a82446ae145509a42e01fcd5d9df6316c0d33007c377cf648177c781\"; ast.parse(d,filename=str(p)); print(\"VM helper SHA and AST verified\",flush=True); os.execv(sys.executable,[sys.executable,\"-u\",str(p)])'"
+  ],
+  "started_unix": 1794339685.386119,
+  "stdout_path": "/tmp/kdlock-retain-scope1-temp-20261111.stdout.log",
+  "returncode": 0,
+  "finished_unix": 1794339689.0632355,
+  "elapsed_seconds": 3.677116632461548
+}
