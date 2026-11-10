@@ -1,0 +1,15 @@
+{
+  "all_guest_copies_match": true,
+  "bytes": 10385931,
+  "files": 232,
+  "gnu_objects": [
+    "runtime/cycle-3/build/image.o",
+    "runtime/cycle-1/build/image.o",
+    "runtime/cycle-4/build/image.o",
+    "runtime/cycle-2/build/image.o"
+  ],
+  "guest_index_sha256": "bba7dd2a9216d3f1291cb1cc956c2f45cc32ca91d6240b4a03bfe3486cc15a9b",
+  "scope": "Source-host read-only byte reconciliation; no test/oracle execution or project import",
+  "wire_attempts": 32,
+  "wire_metadata_files": 64
+}

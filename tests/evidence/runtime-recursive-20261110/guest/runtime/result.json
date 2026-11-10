@@ -1,0 +1,1599 @@
+{
+  "actual_call_records": [
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e82e8d3ec1",
+      "site": 18446744072646201437,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "lock",
+      "raw_hex": "e8ce95b2c0",
+      "site": 18446744072646201581,
+      "target": 18446744071584163520
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8d02e0000",
+      "site": 18446744072646201675,
+      "target": 18446744072646213664
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "lock",
+      "raw_hex": "e83795b2c0",
+      "site": 18446744072646201732,
+      "target": 18446744071584163520
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8562e0000",
+      "site": 18446744072646201800,
+      "target": 18446744072646213667
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e80c95b2c0",
+      "site": 18446744072646201839,
+      "target": 18446744071584163584
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e8eb94b2c0",
+      "site": 18446744072646201872,
+      "target": 18446744071584163584
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e8a194b2c0",
+      "site": 18446744072646201946,
+      "target": 18446744071584163584
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8862d0000",
+      "site": 18446744072646202011,
+      "target": 18446744072646213670
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e84094b2c0",
+      "site": 18446744072646202043,
+      "target": 18446744071584163584
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e88c8a3ec1",
+      "site": 18446744072646202111,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8778a3ec1",
+      "site": 18446744072646202132,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8628a3ec1",
+      "site": 18446744072646202153,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e84d8a3ec1",
+      "site": 18446744072646202174,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8388a3ec1",
+      "site": 18446744072646202195,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8248a3ec1",
+      "site": 18446744072646202215,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e80f8a3ec1",
+      "site": 18446744072646202236,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8fa893ec1",
+      "site": 18446744072646202257,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8e5893ec1",
+      "site": 18446744072646202278,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8d1893ec1",
+      "site": 18446744072646202298,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8bd893ec1",
+      "site": 18446744072646202318,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8a8893ec1",
+      "site": 18446744072646202339,
+      "target": 18446744071593336208
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e894893ec1",
+      "site": 18446744072646202359,
+      "target": 18446744071593336208
+    }
+  ],
+  "actual_dependency_page_count": 1,
+  "actual_source_bytes": 5077,
+  "actual_source_region_count": 3,
+  "actual_source_regions": [
+    {
+      "length": 116,
+      "start": 18446744072646201360
+    },
+    {
+      "length": 865,
+      "start": 18446744072646201504
+    },
+    {
+      "length": 4096,
+      "start": 18446744072646213632
+    }
+  ],
+  "archive_sha256": "4b65ba08199ff76d46a7be866b5c99fb3e1c26b077d38920c88e814f544f638f",
+  "cases": [
+    {
+      "actual_call_effects": 8,
+      "expected_call_effects": 8,
+      "iterations": 8,
+      "mode": 0,
+      "name": "native-local",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=1 finished=1 iterations=8 completed=8 calls=8 a=8 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=1 queued=0 held=0 child=0 events=152 overflow=0 role0=ff1100011f900000 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "values": {
+        "a": "8",
+        "b": "0",
+        "calls": "8",
+        "child": "0",
+        "completed": "8",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "152",
+        "evidence": "kernel-mechanism",
+        "finished": "1",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "object_a": "ffffffffc0b9c160",
+        "object_b": "ffffffffc0b9bd60",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "1",
+        "role0": "ff1100011f900000",
+        "role1": "0",
+        "role2": "0",
+        "role3": "0",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2638",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09e90a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09e9010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "1"
+      },
+      "workers": 1
+    },
+    {
+      "actual_call_effects": 32,
+      "expected_call_effects": 32,
+      "iterations": 8,
+      "mode": 0,
+      "name": "contended-local",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=4 finished=4 iterations=8 completed=32 calls=32 a=32 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=764 overflow=0 role0=ff11000113e2b180 role1=ff1100011d54b180 role2=ff1100010e9d8000 role3=ff1100011f0f3180 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "values": {
+        "a": "32",
+        "b": "0",
+        "calls": "32",
+        "child": "0",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "764",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "object_a": "ffffffffc0b9c160",
+        "object_b": "ffffffffc0b9bd60",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff11000113e2b180",
+        "role1": "ff1100011d54b180",
+        "role2": "ff1100010e9d8000",
+        "role3": "ff1100011f0f3180",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2638",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09e90a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09e9010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 32,
+      "expected_call_effects": 32,
+      "iterations": 4,
+      "mode": 1,
+      "name": "jit-while-pending",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=4 finished=4 iterations=4 completed=16 calls=32 a=16 b=16 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=1376 overflow=0 role0=ff1100011f0f0000 role1=ff11000119a88000 role2=ff11000111903180 role3=ff110001228c3180 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "values": {
+        "a": "16",
+        "b": "16",
+        "calls": "32",
+        "child": "0",
+        "completed": "16",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "1376",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "4",
+        "locks_clear": "1",
+        "mode": "1",
+        "object_a": "ffffffffc0b9c160",
+        "object_b": "ffffffffc0b9bd60",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff1100011f0f0000",
+        "role1": "ff11000119a88000",
+        "role2": "ff11000111903180",
+        "role3": "ff110001228c3180",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2638",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09e90a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09e9010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 64,
+      "expected_call_effects": 64,
+      "iterations": 8,
+      "mode": 1,
+      "name": "nested",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=4 finished=4 iterations=8 completed=32 calls=64 a=32 b=32 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=2610 overflow=0 role0=ff1100011f3c8000 role1=ff1100011061b180 role2=ff11000111883180 role3=ff1100010ac9b180 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "values": {
+        "a": "32",
+        "b": "32",
+        "calls": "64",
+        "child": "0",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "2610",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "1",
+        "object_a": "ffffffffc0b9c160",
+        "object_b": "ffffffffc0b9bd60",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff1100011f3c8000",
+        "role1": "ff1100011061b180",
+        "role2": "ff11000111883180",
+        "role3": "ff1100010ac9b180",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2638",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09e90a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09e9010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 96,
+      "expected_call_effects": 96,
+      "iterations": 8,
+      "mode": 2,
+      "name": "out-of-order",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=2 workers=4 finished=4 iterations=8 completed=32 calls=96 a=32 b=64 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=3848 overflow=0 role0=ff1100010f780000 role1=ff1100010bb48000 role2=ff11000110fe8000 role3=ff11000119a83180 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "values": {
+        "a": "32",
+        "b": "64",
+        "calls": "96",
+        "child": "0",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "3848",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "2",
+        "object_a": "ffffffffc0b9c160",
+        "object_b": "ffffffffc0b9bd60",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff1100010f780000",
+        "role1": "ff1100010bb48000",
+        "role2": "ff11000110fe8000",
+        "role3": "ff11000119a83180",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2638",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09e90a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09e9010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 32,
+      "expected_call_effects": 32,
+      "iterations": 8,
+      "mode": 0,
+      "name": "warm-plain",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=4 finished=4 iterations=8 completed=32 calls=32 a=32 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=4454 overflow=0 role0=ff1100011f8c3180 role1=ff11000119aab180 role2=ff1100011061b180 role3=ff1100011d54b180 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "values": {
+        "a": "32",
+        "b": "0",
+        "calls": "32",
+        "child": "0",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "4454",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "object_a": "ffffffffc0b9c160",
+        "object_b": "ffffffffc0b9bd60",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff1100011f8c3180",
+        "role1": "ff11000119aab180",
+        "role2": "ff1100011061b180",
+        "role3": "ff1100011d54b180",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2638",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09e90a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09e9010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "child": 18379471558981190824,
+      "child_completion": {
+        "acquisition": 18379471558981191305,
+        "cursor": 18446744072646201844,
+        "flags": 1536,
+        "image": 0,
+        "index": 4522,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471558981190824,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471559040860160,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 18379471558981189736,
+        "phase": 0,
+        "related": 18379471558981191232,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471559143489536,
+        "task": 18379471558815875072
+      },
+      "child_return": {
+        "acquisition": 18379471558981190217,
+        "cursor": 18446744072646201844,
+        "flags": 1024,
+        "image": 0,
+        "index": 4536,
+        "ip": 0,
+        "kind": 26,
+        "node": 18379471558981189736,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471559040860160,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471558981190824,
+        "result": 3,
+        "return_user": 18379471558981191264,
+        "source_user": 18379471558981190144,
+        "state": 18379471559143489536,
+        "task": 18379471558751662464
+      },
+      "end": 4571,
+      "fixed_image": 18379471558761787704,
+      "mode": 1,
+      "name": "warm-recursive-1",
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=5 finished=5 iterations=1 completed=5 calls=3 a=2 b=1 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=1 ready=1f queued=1f held=3 child=ff110001187804a8 events=4571 overflow=0 role0=ff1100010f78b180 role1=ff1100011df2b180 role2=ff1100010ac9b180 role3=ff1100010e9d8000 role4=ff1100011c068000 w_core=ff11000122248000 w_regs=ff11000122248000 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "roles": [
+        18379471558830240128,
+        18379471559073116544,
+        18379471558751662464,
+        18379471558815875072,
+        18379471559040860160
+      ],
+      "root": 18379471558981189736,
+      "root_completion": {
+        "acquisition": 18379471558981190217,
+        "cursor": 18446744072646201877,
+        "flags": 1536,
+        "image": 0,
+        "index": 4544,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471558981189736,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471559040860160,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471558981191264,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471559143489536,
+        "task": 18379471558751662464
+      },
+      "start": 4454,
+      "state": 18379471559143489536
+    },
+    {
+      "child": 18379471569336927400,
+      "child_completion": {
+        "acquisition": 18379471569336927881,
+        "cursor": 18446744072646202048,
+        "flags": 1536,
+        "image": 0,
+        "index": 4644,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471569336927400,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471558830207360,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 18379471569336926312,
+        "phase": 0,
+        "related": 18379471569336927808,
+        "result": 5,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568589664256,
+        "task": 18379471558831112192
+      },
+      "child_return": {
+        "acquisition": 18379471569336926793,
+        "cursor": 18446744072646202048,
+        "flags": 1024,
+        "image": 0,
+        "index": 4661,
+        "ip": 0,
+        "kind": 26,
+        "node": 18379471569336926312,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471558830207360,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471569336927400,
+        "result": 5,
+        "return_user": 18379471569336927840,
+        "source_user": 18379471569336926720,
+        "state": 18379471568589664256,
+        "task": 18379471559100182912
+      },
+      "end": 4691,
+      "fixed_image": 18379471558761787704,
+      "mode": 2,
+      "name": "warm-recursive-2",
+      "raw_status": "evidence=kernel-mechanism mode=2 workers=5 finished=5 iterations=1 completed=5 calls=4 a=2 b=2 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=1 ready=1f queued=1f held=3 child=ff11000381b804a8 events=4691 overflow=0 role0=ff1100011d3cb180 role1=ff1100011f900000 role2=ff1100011f8fb180 role3=ff1100010f860000 role4=ff1100010f783180 w_core=ff110003552db000 w_regs=ff110003552db000 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "roles": [
+        18379471559061188992,
+        18379471559100203008,
+        18379471559100182912,
+        18379471558831112192,
+        18379471558830207360
+      ],
+      "root": 18379471569336926312,
+      "root_completion": {
+        "acquisition": 18379471569336926793,
+        "cursor": 18446744072646202048,
+        "flags": 1536,
+        "image": 0,
+        "index": 4664,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471569336926312,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471558830207360,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471569336927840,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568589664256,
+        "task": 18379471559100182912
+      },
+      "start": 4571,
+      "state": 18379471568589664256
+    }
+  ],
+  "compiler_cycles": [
+    {
+      "acknowledged_keys": 0,
+      "claim_rows": 0,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 2,
+      "claim_rows": 2,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 4,
+      "claim_rows": 4,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 2,
+      "claim_rows": 2,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 0,
+      "claim_rows": 0,
+      "published": false
+    }
+  ],
+  "compiler_thunk_symbols": [
+    "__x86_indirect_thunk_rax",
+    "__x86_return_thunk"
+  ],
+  "event_capacity": 65536,
+  "evidence": "kernel-mechanism",
+  "full_c_function_jit_return": "outside_protected_episode_scope",
+  "generated_exit_records": [
+    {
+      "acknowledged": [
+        "d0058e1a010011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0074640b010011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646201360,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646213664,
+        "target": 18446744072646201360
+      },
+      "image": "3821640b010011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0074640b010011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646213664,
+        "source_version": "fixture-2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3-c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646201360
+      },
+      "producer": "0020640b010011ff",
+      "published": [
+        "68058e1a010011ff"
+      ],
+      "record": "e400701d010011ff",
+      "source_region": {
+        "index": 2,
+        "offset": 32,
+        "start": 18446744072646213632
+      }
+    },
+    {
+      "acknowledged": [
+        "d0058e1a010011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0074640b010011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646201360,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646213664,
+        "target": 18446744072646201360
+      },
+      "image": "3821640b010011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0074640b010011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646213664,
+        "source_version": "fixture-2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3-c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646201360
+      },
+      "producer": "0020640b010011ff",
+      "published": [
+        "68058e1a010011ff"
+      ],
+      "record": "d401701d010011ff",
+      "source_region": {
+        "index": 2,
+        "offset": 32,
+        "start": 18446744072646213632
+      }
+    },
+    {
+      "acknowledged": [
+        "68098e1a010011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "003c640b010011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646201360,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646213664,
+        "target": 18446744072646201360
+      },
+      "image": "3821640b010011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "003c640b010011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646213664,
+        "source_version": "fixture-2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3-c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646201360
+      },
+      "producer": "0020640b010011ff",
+      "published": [
+        "00098e1a010011ff"
+      ],
+      "record": "c402701d010011ff",
+      "source_region": {
+        "index": 2,
+        "offset": 32,
+        "start": 18446744072646213632
+      }
+    },
+    {
+      "acknowledged": [
+        "68098e1a010011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "003c640b010011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646201360,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646213664,
+        "target": 18446744072646201360
+      },
+      "image": "3821640b010011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "003c640b010011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646213664,
+        "source_version": "fixture-2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3-c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646201360
+      },
+      "producer": "0020640b010011ff",
+      "published": [
+        "00098e1a010011ff"
+      ],
+      "record": "b403701d010011ff",
+      "source_region": {
+        "index": 2,
+        "offset": 32,
+        "start": 18446744072646213632
+      }
+    },
+    {
+      "acknowledged": [
+        "68098e1a010011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "003c640b010011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646201360,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646213667,
+        "target": 18446744072646201360
+      },
+      "image": "3875640b010011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "003c640b010011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646213667,
+        "source_version": "fixture-2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3-c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646201360
+      },
+      "producer": "0074640b010011ff",
+      "published": [
+        "00098e1a010011ff"
+      ],
+      "record": "a404701d010011ff",
+      "source_region": {
+        "index": 2,
+        "offset": 35,
+        "start": 18446744072646213632
+      }
+    },
+    {
+      "acknowledged": [
+        "68098e1a010011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "003c640b010011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646201360,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646213667,
+        "target": 18446744072646201360
+      },
+      "image": "3875640b010011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "003c640b010011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646213667,
+        "source_version": "fixture-2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3-c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646201360
+      },
+      "producer": "0074640b010011ff",
+      "published": [
+        "00098e1a010011ff"
+      ],
+      "record": "9405701d010011ff",
+      "source_region": {
+        "index": 2,
+        "offset": 35,
+        "start": 18446744072646213632
+      }
+    },
+    {
+      "acknowledged": [
+        "000d8e1a010011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0030640b010011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646201360,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646213670,
+        "target": 18446744072646201360
+      },
+      "image": "383d640b010011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0030640b010011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646213670,
+        "source_version": "fixture-2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3-c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646201360
+      },
+      "producer": "003c640b010011ff",
+      "published": [
+        "980c8e1a010011ff"
+      ],
+      "record": "8406701d010011ff",
+      "source_region": {
+        "index": 2,
+        "offset": 38,
+        "start": 18446744072646213632
+      }
+    },
+    {
+      "acknowledged": [
+        "000d8e1a010011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0030640b010011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646201360,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646213670,
+        "target": 18446744072646201360
+      },
+      "image": "383d640b010011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0030640b010011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646213670,
+        "source_version": "fixture-2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3-c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646201360
+      },
+      "producer": "003c640b010011ff",
+      "published": [
+        "980c8e1a010011ff"
+      ],
+      "record": "7407701d010011ff",
+      "source_region": {
+        "index": 2,
+        "offset": 38,
+        "start": 18446744072646213632
+      }
+    }
+  ],
+  "generated_exit_seen": true,
+  "gs_proof": {
+    "boot_id": "bceee25d-a189-4f51-89fa-0e31322b70e6",
+    "build_id": "264a4ef8e55952e5d9ceccf93f65f25f05a50c1f",
+    "const_current_task": "0xffffffff8440f018",
+    "current_task_gs_offset": "0xffffffff8440f018",
+    "gs_symbol": "current_task",
+    "kaslr_disabled": true,
+    "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "kernel_elf_sha256": "c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d",
+    "kernel_release": "7.0.0-38-kdrebuild3",
+    "percpu_section_va": "0xffffffff843f7000",
+    "scope": "Exact linked/running kernel identity and full GS symbol input; fixture GS relocation and execution remain separate.",
+    "verified_for_running_kernel": true
+  },
+  "iterations": 8,
+  "kernel_release": "7.0.0-38-kdrebuild3",
+  "managed_fork_exit": {
+    "child_pid": 2643,
+    "child_record": {
+      "pid": 2643,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2643 self_root=ff110001197aac00 self_core=ff110001197aac00 self_regs=ff110001197aac00 self_binding=ff110001197aad58 self_own=1 self_native=1 self_managed=1 scene=0 ready=0 queued=0 held=0 child=0 events=0 overflow=0 role0=0 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "values": {
+        "a": "0",
+        "b": "0",
+        "calls": "0",
+        "child": "0",
+        "completed": "0",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "0",
+        "held": "0",
+        "iterations": "0",
+        "locks_clear": "1",
+        "mode": "0",
+        "object_a": "ffffffffc0b9c160",
+        "object_b": "ffffffffc0b9bd60",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "0",
+        "role0": "0",
+        "role1": "0",
+        "role2": "0",
+        "role3": "0",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "ff110001197aad58",
+        "self_core": "ff110001197aac00",
+        "self_managed": "1",
+        "self_native": "1",
+        "self_own": "1",
+        "self_pid": "2643",
+        "self_regs": "ff110001197aac00",
+        "self_root": "ff110001197aac00",
+        "source_size": "865",
+        "source_start": "ffffffffc09e90a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09e9010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "0"
+      }
+    },
+    "packet_contents_copied": false,
+    "parent_after": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=ff1100010dabdc00 self_core=ff1100010dabdc00 self_regs=ff1100010dabdc00 self_binding=ff1100010dabdd58 self_own=1 self_native=1 self_managed=1 scene=0 ready=0 queued=0 held=0 child=0 events=0 overflow=0 role0=0 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+    "parent_before": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=ff1100010dabdc00 self_core=ff1100010dabdc00 self_regs=ff1100010dabdc00 self_binding=ff1100010dabdd58 self_own=1 self_native=1 self_managed=1 scene=0 ready=0 queued=0 held=0 child=0 events=0 overflow=0 role0=0 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+    "parent_detached": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=0 queued=0 held=0 child=0 events=0 overflow=0 role0=0 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+    "shutdown_native_holds_drained": true,
+    "status": "child_exited_parent_detached",
+    "wait_status": 0
+  },
+  "module_sha256": "2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3",
+  "module_sizes": {
+    "body": 865,
+    "callee": 116
+  },
+  "near_indirect_call_sites": [],
+  "observation_overflow": 0,
+  "observation_records": 4691,
+  "ordinary_indirect_kernel_learning": "acknowledged",
+  "ordinary_indirect_learning": {
+    "acknowledged": [
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "e400701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "d401701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "c402701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "b403701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "a404701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "9405701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "8406701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "7407701d010011ff"
+      }
+    ],
+    "candidate_inputs": [
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "e400701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "d401701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "c402701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "b403701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "a404701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "9405701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "8406701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "7407701d010011ff"
+      }
+    ],
+    "emitted": [
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "e400701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "d401701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "c402701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "b403701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "a404701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "9405701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "8406701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "7407701d010011ff"
+      }
+    ],
+    "merged": [
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "e400701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "d401701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "c402701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "b403701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "a404701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "9405701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "8406701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "7407701d010011ff"
+      }
+    ],
+    "observed": [
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "e400701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "d401701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "c402701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "b403701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "a404701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "9405701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "8406701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "7407701d010011ff"
+      }
+    ],
+    "published_inputs": [
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "e400701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "d401701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "c402701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "b403701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "a404701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "9405701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "8406701d010011ff"
+      },
+      {
+        "epoch": "401a1d05010011ff",
+        "incarnation": 1,
+        "record": "7407701d010011ff"
+      }
+    ]
+  },
+  "pending_before_shutdown": 0,
+  "returned_full_jit_body": "protected_episode_completed",
+  "root_entry": 18446744072646201586,
+  "settled_keys": 0,
+  "source_limits": {
+    "dependency_pages": 4,
+    "total_source_bytes": 262144
+  },
+  "source_version": "fixture-2be5cd04f9b7e5aa570c56dd1e940619e03696b33ef8d14bbc4262d2ac11a2a3-c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "status": "protected_jit_recursive_mechanism_pass",
+  "typed_generated_exit_records": 8,
+  "warm_claim_empty": true,
+  "warm_completion": [
+    {
+      "end": 4454,
+      "name": "warm-plain",
+      "start": 3848
+    },
+    {
+      "child": 18379471558981190824,
+      "child_completion": {
+        "acquisition": 18379471558981191305,
+        "cursor": 18446744072646201844,
+        "flags": 1536,
+        "image": 0,
+        "index": 4522,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471558981190824,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471559040860160,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 18379471558981189736,
+        "phase": 0,
+        "related": 18379471558981191232,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471559143489536,
+        "task": 18379471558815875072
+      },
+      "child_return": {
+        "acquisition": 18379471558981190217,
+        "cursor": 18446744072646201844,
+        "flags": 1024,
+        "image": 0,
+        "index": 4536,
+        "ip": 0,
+        "kind": 26,
+        "node": 18379471558981189736,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471559040860160,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471558981190824,
+        "result": 3,
+        "return_user": 18379471558981191264,
+        "source_user": 18379471558981190144,
+        "state": 18379471559143489536,
+        "task": 18379471558751662464
+      },
+      "end": 4571,
+      "fixed_image": 18379471558761787704,
+      "mode": 1,
+      "name": "warm-recursive-1",
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=5 finished=5 iterations=1 completed=5 calls=3 a=2 b=1 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=1 ready=1f queued=1f held=3 child=ff110001187804a8 events=4571 overflow=0 role0=ff1100010f78b180 role1=ff1100011df2b180 role2=ff1100010ac9b180 role3=ff1100010e9d8000 role4=ff1100011c068000 w_core=ff11000122248000 w_regs=ff11000122248000 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "roles": [
+        18379471558830240128,
+        18379471559073116544,
+        18379471558751662464,
+        18379471558815875072,
+        18379471559040860160
+      ],
+      "root": 18379471558981189736,
+      "root_completion": {
+        "acquisition": 18379471558981190217,
+        "cursor": 18446744072646201877,
+        "flags": 1536,
+        "image": 0,
+        "index": 4544,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471558981189736,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471559040860160,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471558981191264,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471559143489536,
+        "task": 18379471558751662464
+      },
+      "start": 4454,
+      "state": 18379471559143489536
+    },
+    {
+      "child": 18379471569336927400,
+      "child_completion": {
+        "acquisition": 18379471569336927881,
+        "cursor": 18446744072646202048,
+        "flags": 1536,
+        "image": 0,
+        "index": 4644,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471569336927400,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471558830207360,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 18379471569336926312,
+        "phase": 0,
+        "related": 18379471569336927808,
+        "result": 5,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568589664256,
+        "task": 18379471558831112192
+      },
+      "child_return": {
+        "acquisition": 18379471569336926793,
+        "cursor": 18446744072646202048,
+        "flags": 1024,
+        "image": 0,
+        "index": 4661,
+        "ip": 0,
+        "kind": 26,
+        "node": 18379471569336926312,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471558830207360,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471569336927400,
+        "result": 5,
+        "return_user": 18379471569336927840,
+        "source_user": 18379471569336926720,
+        "state": 18379471568589664256,
+        "task": 18379471559100182912
+      },
+      "end": 4691,
+      "fixed_image": 18379471558761787704,
+      "mode": 2,
+      "name": "warm-recursive-2",
+      "raw_status": "evidence=kernel-mechanism mode=2 workers=5 finished=5 iterations=1 completed=5 calls=4 a=2 b=2 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09e90a0 source_size=865 step_start=ffffffffc09e9010 step_size=116 locks_clear=1 runtime=1 self_pid=2638 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=1 ready=1f queued=1f held=3 child=ff11000381b804a8 events=4691 overflow=0 role0=ff1100011d3cb180 role1=ff1100011f900000 role2=ff1100011f8fb180 role3=ff1100010f860000 role4=ff1100010f783180 w_core=ff110003552db000 w_regs=ff110003552db000 object_a=ffffffffc0b9c160 object_b=ffffffffc0b9bd60\n",
+      "roles": [
+        18379471559061188992,
+        18379471559100203008,
+        18379471559100182912,
+        18379471558831112192,
+        18379471558830207360
+      ],
+      "root": 18379471569336926312,
+      "root_completion": {
+        "acquisition": 18379471569336926793,
+        "cursor": 18446744072646202048,
+        "flags": 1536,
+        "image": 0,
+        "index": 4664,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471569336926312,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471558830207360,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471569336927840,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568589664256,
+        "task": 18379471559100182912
+      },
+      "start": 4571,
+      "state": 18379471568589664256
+    }
+  ],
+  "warm_image_identity": 18379471558761787704,
+  "wire_log": {
+    "byte_limit": 134217728,
+    "reservations": 32,
+    "reserved_bytes": 70330157
+  },
+  "workers": 4
+}

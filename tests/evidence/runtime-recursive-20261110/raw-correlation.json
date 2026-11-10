@@ -1,0 +1,416 @@
+{
+  "binary_and_json_match_exactly": true,
+  "controller_returncode": 0,
+  "fixed_image": "0xff1100010b643138",
+  "header": [
+    1,
+    20,
+    65536,
+    4691,
+    0
+  ],
+  "input_sha256": {
+    "observations-final.bin": "8ca3d9284f3d2a8702ffcfc001c06ca4ad128371d23ec51e8a9822b84394081c",
+    "observations-final.json": "a4def151a29ab0d8fd1bcf22d99d69ffc184787c1b6d428fb152648b08ac9336",
+    "result.json": "1d0e1cbc2d214b0109ea01fa1e7a8e93e17f35c3010c158867fb2de99a099cf3"
+  },
+  "runner_status": "protected_jit_recursive_mechanism_pass",
+  "scope": "Source-host read-only byte/metadata correlation, not additional source execution or a rerun of the fixture oracle",
+  "total_event_counts": {
+    "CHILD_RETURN": 6,
+    "ENQUEUE": 244,
+    "EPISODE_DONE": 6,
+    "FORWARD": 234,
+    "FRAME_PREPARE": 244,
+    "GRANT": 244,
+    "JIT_ENTER": 22,
+    "JIT_EXIT": 22,
+    "JIT_OPERATION": 14,
+    "NATIVE_UNLOCK": 236,
+    "NODE_RETIRE_READY": 244,
+    "OWNER_RETIRE": 230,
+    "OWNER_STOP": 230,
+    "PHYSICAL_BEGIN": 230,
+    "PHYSICAL_END": 230,
+    "PROXY_RETURN": 14,
+    "QUEUE_DONE": 244,
+    "RELEASE_BIND": 244,
+    "RELEASE_DEFER": 13,
+    "RELEASE_HANDLED": 244,
+    "RELEASE_NOTIFY_DONE": 13,
+    "RELEASE_REQUEST": 244,
+    "RELEASE_RETIRE": 244,
+    "RELEASE_RETURN_DROP": 6,
+    "RELEASE_SOURCE_DROP": 244,
+    "RELEASE_UNWIND": 13,
+    "SELECT_LOCAL": 230,
+    "SELECT_PROXY": 14,
+    "SLOT_FREE": 244,
+    "SLOT_RESERVE": 244
+  },
+  "warm_ranges": [
+    {
+      "end": 4454,
+      "event_counts": {
+        "ENQUEUE": 32,
+        "EPISODE_DONE": 2,
+        "FORWARD": 30,
+        "FRAME_PREPARE": 32,
+        "GRANT": 32,
+        "JIT_ENTER": 2,
+        "JIT_EXIT": 2,
+        "JIT_OPERATION": 2,
+        "NATIVE_UNLOCK": 30,
+        "NODE_RETIRE_READY": 32,
+        "OWNER_RETIRE": 30,
+        "OWNER_STOP": 30,
+        "PHYSICAL_BEGIN": 30,
+        "PHYSICAL_END": 30,
+        "PROXY_RETURN": 2,
+        "QUEUE_DONE": 32,
+        "RELEASE_BIND": 32,
+        "RELEASE_HANDLED": 32,
+        "RELEASE_REQUEST": 32,
+        "RELEASE_RETIRE": 32,
+        "RELEASE_SOURCE_DROP": 32,
+        "SELECT_LOCAL": 30,
+        "SELECT_PROXY": 2,
+        "SLOT_FREE": 32,
+        "SLOT_RESERVE": 32
+      },
+      "name": "warm-plain",
+      "start": 3848
+    },
+    {
+      "child": "0xff110001187804a8",
+      "child_completion_index": 4522,
+      "child_outcome": 3,
+      "child_return_index": 4536,
+      "end": 4571,
+      "event_counts": {
+        "CHILD_RETURN": 1,
+        "ENQUEUE": 6,
+        "EPISODE_DONE": 2,
+        "FORWARD": 4,
+        "FRAME_PREPARE": 6,
+        "GRANT": 6,
+        "JIT_ENTER": 3,
+        "JIT_EXIT": 3,
+        "JIT_OPERATION": 3,
+        "NATIVE_UNLOCK": 4,
+        "NODE_RETIRE_READY": 6,
+        "OWNER_RETIRE": 4,
+        "OWNER_STOP": 4,
+        "PHYSICAL_BEGIN": 4,
+        "PHYSICAL_END": 4,
+        "PROXY_RETURN": 2,
+        "QUEUE_DONE": 6,
+        "RELEASE_BIND": 6,
+        "RELEASE_HANDLED": 6,
+        "RELEASE_REQUEST": 6,
+        "RELEASE_RETIRE": 6,
+        "RELEASE_RETURN_DROP": 1,
+        "RELEASE_SOURCE_DROP": 6,
+        "SELECT_LOCAL": 4,
+        "SELECT_PROXY": 2,
+        "SLOT_FREE": 6,
+        "SLOT_RESERVE": 6
+      },
+      "mode": 1,
+      "name": "warm-recursive-1",
+      "parent_completion_index": 4544,
+      "parent_outcome": 3,
+      "returned_endpoint": "0xff11000118780660",
+      "roles": [
+        "0xff1100010f78b180",
+        "0xff1100011df2b180",
+        "0xff1100010ac9b180",
+        "0xff1100010e9d8000",
+        "0xff1100011c068000"
+      ],
+      "root": "0xff11000118780068",
+      "start": 4454,
+      "state": "0xff11000122248000"
+    },
+    {
+      "child": "0xff11000381b804a8",
+      "child_completion_index": 4644,
+      "child_outcome": 5,
+      "child_return_index": 4661,
+      "end": 4691,
+      "event_counts": {
+        "CHILD_RETURN": 1,
+        "ENQUEUE": 6,
+        "EPISODE_DONE": 2,
+        "FORWARD": 4,
+        "FRAME_PREPARE": 6,
+        "GRANT": 6,
+        "JIT_ENTER": 3,
+        "JIT_EXIT": 3,
+        "JIT_OPERATION": 3,
+        "NATIVE_UNLOCK": 4,
+        "NODE_RETIRE_READY": 6,
+        "OWNER_RETIRE": 4,
+        "OWNER_STOP": 4,
+        "PHYSICAL_BEGIN": 4,
+        "PHYSICAL_END": 4,
+        "PROXY_RETURN": 2,
+        "QUEUE_DONE": 6,
+        "RELEASE_BIND": 6,
+        "RELEASE_DEFER": 1,
+        "RELEASE_HANDLED": 6,
+        "RELEASE_NOTIFY_DONE": 1,
+        "RELEASE_REQUEST": 6,
+        "RELEASE_RETIRE": 6,
+        "RELEASE_RETURN_DROP": 1,
+        "RELEASE_SOURCE_DROP": 6,
+        "RELEASE_UNWIND": 1,
+        "SELECT_LOCAL": 4,
+        "SELECT_PROXY": 2,
+        "SLOT_FREE": 6,
+        "SLOT_RESERVE": 6
+      },
+      "mode": 2,
+      "name": "warm-recursive-2",
+      "parent_completion_index": 4664,
+      "parent_outcome": 3,
+      "returned_endpoint": "0xff11000381b80660",
+      "roles": [
+        "0xff1100011d3cb180",
+        "0xff1100011f900000",
+        "0xff1100011f8fb180",
+        "0xff1100010f860000",
+        "0xff1100010f783180"
+      ],
+      "root": "0xff11000381b80068",
+      "start": 4571,
+      "state": "0xff110003552db000"
+    }
+  ],
+  "wire": [
+    {
+      "completed_response": true,
+      "directory": "attempt-00000001",
+      "operation": 0,
+      "sequence": 0,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000002",
+      "operation": 8,
+      "sequence": 1,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000003",
+      "operation": 1,
+      "sequence": 2,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000004",
+      "operation": 2,
+      "sequence": 3,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000005",
+      "operation": 3,
+      "sequence": 4,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000006",
+      "operation": 4,
+      "sequence": 5,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000007",
+      "operation": 5,
+      "sequence": 6,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000008",
+      "operation": 6,
+      "sequence": 7,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000009",
+      "operation": 1,
+      "sequence": 8,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000010",
+      "operation": 2,
+      "sequence": 9,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000011",
+      "operation": 3,
+      "sequence": 10,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000012",
+      "operation": 4,
+      "sequence": 11,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000013",
+      "operation": 5,
+      "sequence": 12,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000014",
+      "operation": 6,
+      "sequence": 13,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000015",
+      "operation": 1,
+      "sequence": 14,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000016",
+      "operation": 2,
+      "sequence": 15,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000017",
+      "operation": 3,
+      "sequence": 16,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000018",
+      "operation": 4,
+      "sequence": 17,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000019",
+      "operation": 5,
+      "sequence": 18,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000020",
+      "operation": 6,
+      "sequence": 19,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000021",
+      "operation": 1,
+      "sequence": 20,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000022",
+      "operation": 2,
+      "sequence": 21,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000023",
+      "operation": 3,
+      "sequence": 22,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000024",
+      "operation": 4,
+      "sequence": 23,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000025",
+      "operation": 5,
+      "sequence": 24,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000026",
+      "operation": 6,
+      "sequence": 25,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000027",
+      "operation": 1,
+      "sequence": 26,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000028",
+      "operation": 6,
+      "sequence": 27,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000029",
+      "operation": 9,
+      "sequence": 28,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000030",
+      "operation": 10,
+      "sequence": 29,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000031",
+      "operation": 11,
+      "sequence": 30,
+      "status": 0
+    },
+    {
+      "completed_response": true,
+      "directory": "attempt-00000032",
+      "operation": 6,
+      "sequence": 31,
+      "status": 0
+    }
+  ]
+}

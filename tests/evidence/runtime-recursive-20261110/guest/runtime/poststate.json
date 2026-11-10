@@ -1,0 +1,18 @@
+{
+  "release": "7.0.0-38-kdrebuild3",
+  "boot": "bceee25d-a189-4f51-89fa-0e31322b70e6",
+  "taint": "12288",
+  "module_present": false,
+  "devices": [],
+  "active_rows": [],
+  "observations_header": [
+    1,
+    20,
+    65536,
+    4691,
+    0
+  ],
+  "observations_bytes": 750600,
+  "observations_sha256": "8ca3d9284f3d2a8702ffcfc001c06ca4ad128371d23ec51e8a9822b84394081c",
+  "result_sha256": "1d0e1cbc2d214b0109ea01fa1e7a8e93e17f35c3010c158867fb2de99a099cf3"
+}
