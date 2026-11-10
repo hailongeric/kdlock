@@ -1,0 +1,125 @@
+{
+  "ack": {
+    "acknowledged_keys": 0,
+    "claim": 18379471559030734848,
+    "epoch": 18379471559079836608,
+    "holder": 4097,
+    "identity": 18379471559030735416,
+    "publication": 18379471559030735312
+  },
+  "actual_exit": {
+    "cursor": 18446744072646197280,
+    "detail": 1,
+    "kind": 3,
+    "phase": 2,
+    "source_ip": 18446744072646205771,
+    "target": 18446744072646197280
+  },
+  "archive": {
+    "content_sha256": "baa3f0b36ccca44274329e91f60fbc91f75c6d4877c57b5f0ffc1fb0c751f56b",
+    "exact_unique_keys": 8,
+    "fact_count": 8,
+    "raw_archival_claim_count": 8,
+    "settled_keys_reported_by_completed_runner": 8
+  },
+  "claim_snapshots": [
+    {
+      "claim": 18379471559030734848,
+      "count": 0,
+      "cycle": 1,
+      "holder": 4097,
+      "sha256": "d1118313649f53073fa4a3eb37c97f9798926347b56ffde095119782615c1732"
+    },
+    {
+      "claim": 18379471559030735768,
+      "count": 2,
+      "cycle": 2,
+      "holder": 4098,
+      "sha256": "75ecabc72a3b4338fc21a0b16960ec2992c2649ccb40f9e03d3ed85ac3d498f7"
+    },
+    {
+      "claim": 18379471559030736688,
+      "count": 6,
+      "cycle": 3,
+      "holder": 4099,
+      "sha256": "456385def45e72ba4d8e43ed728ad62ab3cb86a198ac72d7a215da4c3aed2345"
+    },
+    {
+      "claim": 18379471559030737608,
+      "count": 8,
+      "cycle": 4,
+      "holder": 4100,
+      "sha256": "1612c67a865c97a2c202c36cc2e4f8d001d74de989fc939e8b71e4bc8256a59e"
+    }
+  ],
+  "compiled_image": {
+    "actual_commit_image_identity": 18379471558684702008,
+    "actual_commit_producer_identity": 18379471558684701696,
+    "archive_construction_assembly_equals_saved_image": true,
+    "elf_entry_address": "0xffffffffc0e00000",
+    "elf_text_address": "0xffffffffc0e00000",
+    "elf_text_equals_machine": true,
+    "emitted_sites": 128,
+    "entries": 6,
+    "machine_bytes": 14504,
+    "machine_sha256": "71b97c4aa181028c5a3d77e31e9943e1dc6c78b24d8c92cdd3246ab468c4e21e",
+    "retained_source_sites": 165
+  },
+  "first_inner_lock_site": "0xffffffffc09ea184",
+  "limits": [
+    "All recorded JIT exits precede inner B acquisition. Nested/out-of-order completion is not recursive JIT evidence.",
+    "No complete protected JIT body, ordinary indirect observation/emission learning, physical chain length or performance established.",
+    "Raw SETTLE/END/SHUTDOWN replies are not separately saved by this runner; exact successful protocol checks are established by its retained source and completed result."
+  ],
+  "matching_emitted_exit": {
+    "detail": "KD_JIT_DETAIL_SOURCE_UNAVAILABLE",
+    "edge": {
+      "fields": {
+        "kind": {
+          "enum": "disassem.fragment.EdgeKind",
+          "name": "CALL_TARGET"
+        },
+        "source": 18446744072646205771,
+        "target": 18446744072646197280
+      },
+      "type": "disassem.fragment.SourceEdge"
+    },
+    "kind": "KD_JIT_EXIT_COVERAGE_MISS",
+    "label": ".Lkd_exit_20",
+    "phase": "KD_JIT_PHASE_CALL_STAGED",
+    "reason": "ordinary source site is absent",
+    "resource_stops": [],
+    "resume_ip": 18446744072646197280,
+    "source_ip": 18446744072646205771,
+    "target": 18446744072646197280
+  },
+  "outside_supplied_regions": true,
+  "publication": {
+    "candidate": 18379471558684701696,
+    "claim": 18379471559030734848,
+    "emission": 18379471558684702128,
+    "epoch": 18379471559079836608,
+    "expected_old": 0,
+    "holder": 4097,
+    "identity": 18379471559030735312,
+    "image": 18379471558684702008,
+    "included_keys": 0,
+    "inputs": 18379471558684702080,
+    "owner": 18379471559030734848,
+    "producer": 18379471558684701696,
+    "returned_old": 0,
+    "slot": 18379471559123966216,
+    "update": 18379471559030735120
+  },
+  "scope": "Static decoding/correlation of already saved live3 evidence; adds no runtime observations. No project compiler or machine code executed by collection.",
+  "source_call": {
+    "indirect": false,
+    "length": 5,
+    "raw_hex": "e8d0deffff",
+    "site": 18446744072646205771,
+    "target": 18446744072646197280
+  },
+  "source_call_return_site": "0xffffffffc09ea150",
+  "source_commit": "18c8f2e499d5fb74972e92bad5748489b921035d",
+  "typed_generated_exits": 8
+}

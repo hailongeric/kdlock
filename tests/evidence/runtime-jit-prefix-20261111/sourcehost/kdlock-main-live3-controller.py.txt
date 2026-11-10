@@ -1,0 +1,81 @@
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import time
+
+base = Path('/mnt/kdlock-builds/kdlock-main-work')
+source_leaf = base / 'live2-2cc70fce-01a1bc4f'
+repo = base / 'focused3-18c8f2e4-01a1bc4f/input'
+module = source_leaf / 'module-build/kd_runtime_fixture.ko'
+kernel_root = Path('/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f')
+proof_root = kernel_root / 'receipts/postboot3-20261111-01'
+output = base / 'live3-runtime-18c8f2e4-20261111-01'
+receipts = base / 'live3-controller-18c8f2e4-20261111-01'
+if output.exists() or receipts.exists():
+    raise SystemExit('fresh live output and controller receipt required')
+proof = json.loads((proof_root / 'result.json').read_text())
+if proof['phase'] != 'POSTBOOT_IDENTITY_VERIFIED':
+    raise SystemExit('successful actual postboot proof required')
+if os.uname().release != '7.0.0-38-kdrebuild2':
+    raise SystemExit('wrong running release')
+if Path('/proc/sys/kernel/random/boot_id').read_text().strip() != proof['boot_id']:
+    raise SystemExit('running boot differs from proof')
+if Path('/proc/sys/kernel/tainted').read_text().strip() != '0':
+    raise SystemExit('expected the fresh untainted boot')
+if hashlib.sha256(module.read_bytes()).hexdigest() != '378bf139407bf57de1b4d708db3c6548a5d25537219b8ce83c2232c89010267e':
+    raise SystemExit('module differs from its retained actual build')
+manifest = json.loads((repo.parent / 'source-manifest.json').read_text())
+actual = {path.relative_to(repo).as_posix(): {'bytes': path.stat().st_size, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()} for path in repo.rglob('*') if path.is_file()}
+if actual != manifest:
+    raise SystemExit('frozen source differs from the reviewed exact manifest')
+tracer_path = Path('/sys/kernel/tracing/current_tracer')
+tracer = tracer_path.read_text().strip() if tracer_path.exists() else None
+if tracer is not None and tracer != 'nop':
+    raise SystemExit('source immutability context differs from the admitted run')
+gs = json.loads((proof_root / 'gs-proof.json').read_text())
+args = [
+    '/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3',
+    str(repo / 'tests/kernel/run_runtime_fixture.py'),
+    '--repo', str(repo), '--module', str(module), '--output', str(output),
+    '--expected-release', '7.0.0-38-kdrebuild2',
+    '--kernel-elf', str(kernel_root / 'build/vmlinux'),
+    '--kernel-config', str(kernel_root / 'build/.config'),
+    '--gs-proof-json', str(proof_root / 'gs-proof.json'),
+    '--gs-offset', gs['current_task_gs_offset'],
+    '--immutable-text-contract', '--auxiliary-stack-contract',
+    '--workers', '4', '--iterations', '8', '--deadline', '120',
+]
+env = dict(os.environ)
+overrides = dict(PYTHONDONTWRITEBYTECODE='1', PYTHONUNBUFFERED='1',
+                 LC_ALL='C', LANG='C', KDLOCK_RECOVERY_CONFIRMED='1',
+                 KDLOCK_SNAPSHOT_TAG='kdlock-builddisk-clean-20261031')
+env.update(overrides)
+receipts.mkdir(mode=0o700)
+record = dict(argv=list(args), environment_overrides=overrides,
+              start_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              tracer=tracer, kernel_code_commit='81feb2d749ebbca468c0ab2eb895dcdd82fe519e',
+              host_compiler_commit='18c8f2e499d5fb74972e92bad5748489b921035d',
+              source_snapshot=str(repo), module_sha256=hashlib.sha256(module.read_bytes()).hexdigest(),
+              boot_id=proof['boot_id'], observer_seconds=600,
+              deadline_policy='Observer deadline retains the child and makes no drain claim.')
+(receipts / 'command.json').write_text(json.dumps(record, indent=2) + '\n')
+start = time.monotonic()
+with (receipts / 'stdout.log').open('x') as log:
+    child = subprocess.Popen(args, stdout=log, stderr=subprocess.STDOUT,
+                             env=env, start_new_session=True)
+    record['pid'] = child.pid
+    (receipts / 'command.json').write_text(json.dumps(record, indent=2) + '\n')
+    while child.poll() is None and time.monotonic() - start < record['observer_seconds']:
+        time.sleep(1)
+    code = child.poll()
+record.update(returncode=code, elapsed_seconds=time.monotonic()-start,
+              end_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              taint_after=Path('/proc/sys/kernel/tainted').read_text().strip(),
+              status='RETURNED' if code is not None else 'RUNNING_AFTER_OBSERVER_DEADLINE')
+(receipts / 'result.json').write_text(json.dumps(record, indent=2) + '\n')
+print(json.dumps(record, indent=2))
+print((receipts / 'stdout.log').read_text()[-12000:])
+raise SystemExit(code if code is not None else 124)

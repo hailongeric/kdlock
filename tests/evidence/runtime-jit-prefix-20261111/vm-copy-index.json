@@ -1,0 +1,118 @@
+{
+  "live3-controller-18c8f2e4-20261111-01/command.json": {
+    "bytes": 1889,
+    "sha256": "c59b47b5b920e7d0d161444ca97badd6f7849d006af551573968c298b21e2d3d"
+  },
+  "live3-controller-18c8f2e4-20261111-01/result.json": {
+    "bytes": 2047,
+    "sha256": "55483f95981806612dec54f2cb01a8bda56eea6dd87b5d34bc436273a151e91d"
+  },
+  "live3-controller-18c8f2e4-20261111-01/stdout.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/ack.bin": {
+    "bytes": 72,
+    "sha256": "5005b5e61105eb8cc47c69f643de311f192608014a9168eec094aebec88d69d9"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/build/image.S": {
+    "bytes": 81077,
+    "sha256": "172d5f4740961c666d6ce6f598f859573aaa5c20c9f6c723d2ea0de68283bc13"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/build/image.bin": {
+    "bytes": 14504,
+    "sha256": "71b97c4aa181028c5a3d77e31e9943e1dc6c78b24d8c92cdd3246ab468c4e21e"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/build/image.elf": {
+    "bytes": 19024,
+    "sha256": "8fbba997359b6dd1078d9d91948c897da7f7f4556eb1940fe466625fb88a07de"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/build/image.ld": {
+    "bytes": 112,
+    "sha256": "39501bd7010dd5801b42fe5f46add56def6538d7ffae85f15d83bc74056df568"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/build/image.o": {
+    "bytes": 15208,
+    "sha256": "d03c8605d4d1b81da333195c03c8a42b58b7635827474d7d75a6bf604423f7fe"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/build/image.s": {
+    "bytes": 77090,
+    "sha256": "a8366c01e1b15d86b7858325d084cc690cfa3251d07cf11b922918669a1ecb43"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/claim.bin": {
+    "bytes": 266,
+    "sha256": "d1118313649f53073fa4a3eb37c97f9798926347b56ffde095119782615c1732"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/commit.bin": {
+    "bytes": 144,
+    "sha256": "ebbcc6a82b1fd27394b4dccb66c346ac5f9823b49dce1fb691381cbecd177dd7"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/image.S": {
+    "bytes": 81077,
+    "sha256": "172d5f4740961c666d6ce6f598f859573aaa5c20c9f6c723d2ea0de68283bc13"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/manifest.json": {
+    "bytes": 41598,
+    "sha256": "eba5e108957461cf9cdc15652bd4f2167a97af12869b4456c9c0836d24786e46"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-1/metadata.c": {
+    "bytes": 65613,
+    "sha256": "b8071371a89411b49483ac10eca848bb69f1fb1805feec82ea11681cee2e7b18"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-2/claim.bin": {
+    "bytes": 458,
+    "sha256": "75ecabc72a3b4338fc21a0b16960ec2992c2649ccb40f9e03d3ed85ac3d498f7"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-3/claim.bin": {
+    "bytes": 842,
+    "sha256": "456385def45e72ba4d8e43ed728ad62ab3cb86a198ac72d7a215da4c3aed2345"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/cycle-4/claim.bin": {
+    "bytes": 1034,
+    "sha256": "1612c67a865c97a2c202c36cc2e4f8d001d74de989fc939e8b71e4bc8256a59e"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/identity.json": {
+    "bytes": 1326,
+    "sha256": "e1c5caedc720857c0e7ba8e35e2e9112089c2884df74378b2dbc11f434db310d"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/managed-child-record.bin": {
+    "bytes": 1023,
+    "sha256": "b2fc16a267b39791354653dc7d50c5953b1ff53bc635bec45182b36f8b7fbf16"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/module.disassembly.txt": {
+    "bytes": 117694,
+    "sha256": "21eb7d15cede6ca916cd396b4d9b93ef10931b8bccbc164d58962d1c1585b91a"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/result.json": {
+    "bytes": 20125,
+    "sha256": "694dac6dd24e7fb66af19dfa149f1e960ac7cfac3b0357c0a3f44dc18524fce5"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/shutdown-archive.json": {
+    "bytes": 321275,
+    "sha256": "baa3f0b36ccca44274329e91f60fbc91f75c6d4877c57b5f0ffc1fb0c751f56b"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/source-0.bin": {
+    "bytes": 116,
+    "sha256": "cd1252d271d9e394c936d2158261a21fe4a153eb5170633bdccccb694dbcbb7d"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/source-0.disassembly.txt": {
+    "bytes": 3474,
+    "sha256": "677c27c37016a40041f1cca2da8bd33b035956749ac990b1994bd19c26efa928"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/source-1.bin": {
+    "bytes": 833,
+    "sha256": "e5926757af61c2c055887b36638b384a8d916d380f33ae7b4574c5d65b17db55"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/source-1.disassembly.txt": {
+    "bytes": 17835,
+    "sha256": "0ea746554d1e537285c9df0e83c173e87ae9abf2482345ed7930460ba49e097e"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/source-export.bin": {
+    "bytes": 1311,
+    "sha256": "008e22b0b8e1801dfe1ebedea12520c2faf9f42f18150979988ace737c2e1c67"
+  },
+  "live3-runtime-18c8f2e4-20261111-01/source-metadata.json": {
+    "bytes": 1044,
+    "sha256": "15a5f7c3f8d717b75f36c264bf3f305b1d66532c79fc64733312e0484e44c250"
+  }
+}
