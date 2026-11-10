@@ -11,6 +11,8 @@ struct kd_mutex_entry;
 struct kd_request_pool;
 struct kd_request_slot;
 struct kd_episode_resources;
+struct kd_task_storage;
+struct kd_task_lifecycle_context;
 
 /*
  * One stable task-owned root/auxiliary header, never another borrowed packet.
@@ -34,6 +36,10 @@ struct kd_task_root_context {
 	/* Exact prepared native control entry occupying the auxiliary cursor. */
 	struct kd_mutex_entry *aux_entry;
 	bool attached;
+	/* Own cold lifecycle/configuration, never active borrowed source state. */
+	const struct kd_task_lifecycle_context *lifecycle;
+	struct kd_task_storage *storage;
+	bool source_closing;
 };
 
 /* Constructor only, before publication or any retained user. No regs clear. */
@@ -70,6 +76,23 @@ int kd_task_root_attach(struct kd_task_root_context *context,
 		       unsigned long aux_high, unsigned long aux_current,
 		       struct kd_request_pool *pool,
 		       struct kd_request_slot *slots, unsigned int capacity);
+
+/* Parent-owned fresh unpublished child only, after dup_task_struct initialized
+ * task/stack references. No actor or lookup observer may escape. The initial
+ * endpoint belongs to child, not current. origin_gs is an uncaptured seed only;
+ * first native capture must refresh actual kernel GS before any source offer.
+ */
+int kd_task_root_attach_unpublished(struct kd_task_root_context *context,
+		struct task_struct *child, unsigned long origin_gs,
+		unsigned long aux_low, unsigned long aux_high, unsigned long aux_current,
+		struct kd_request_pool *pool, struct kd_request_slot *slots,
+		unsigned int capacity);
+/* Fresh-child failure cleanup only: exact untouched initial endpoint, empty
+ * pool/no grant/owner/exit/operation/auxiliary actors. This never relaxes current
+ * owner requirements of normal detach or authorizes foreign-task live cleanup.
+ */
+int kd_task_root_detach_unpublished(struct kd_task_root_context *context,
+				    struct task_struct *child);
 
 /*
  * Constructor hook before a copied child is published or cleanup consumes the

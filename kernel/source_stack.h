@@ -30,6 +30,13 @@ struct kd_source_stack {
  */
 int kd_source_stack_acquire_current(struct kd_source_stack *stack);
 
+/* Parent-owned fresh child after dup_task_struct and before ANY publication,
+ * execution or escaped observer. This acquires the CHILD stack/task, never
+ * current's stack. Caller exclusively owns construction/failure cleanup.
+ */
+int kd_source_stack_acquire_unpublished(struct kd_source_stack *stack,
+				       struct task_struct *child);
+
 /* Serialized final use of a successfully acquired record, after every callback
  * and borrowed/native stack observer ended. Invalidate callbacks/metadata before
  * put_task_stack()/put_task_struct(); no record or stack access follows those

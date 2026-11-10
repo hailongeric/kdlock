@@ -738,7 +738,9 @@ static int end_command(struct kd_jit_control_session *session, struct reader *in
 
 	if (rows || !take(input, &claim) || !take(input, &holder) || input->left ||
 	    !storage || claim != (unsigned long)&storage->claim ||
-	    holder != (unsigned long)storage->claim_holder || (!storage->aborted && !storage->acknowledged))
+	    holder != (unsigned long)storage->claim_holder ||
+	    (!storage->aborted && !storage->acknowledged &&
+	     (storage->reserved || storage->update_started)))
 		return -EINVAL;
 	if (!room(capacity, 2, 0, 0, 0))
 		return -EMSGSIZE;
@@ -757,6 +759,12 @@ static int end_command(struct kd_jit_control_session *session, struct reader *in
 		if (result)
 			return result;
 		storage->candidate_live = false;
+	}
+	if (storage->baseline_live) {
+		result = kd_jit_image_owner_use_put(&storage->baseline, storage);
+		if (result)
+			return result;
+		storage->baseline_live = false;
 	}
 	if (storage->build_live) {
 		result = kd_jit_source_use_put(&storage->build, storage);

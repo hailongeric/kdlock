@@ -28,13 +28,12 @@ static void write_word(void *context, unsigned long address, unsigned long value
 	WRITE_ONCE(*stack_word(context, address), value);
 }
 
-int kd_source_stack_acquire_current(struct kd_source_stack *stack)
+static int acquire_stack(struct kd_source_stack *stack, struct task_struct *task)
 {
-	struct task_struct *task = current;
 	unsigned long low, high;
 	void *base;
 
-	if (!stack)
+	if (!stack || !task)
 		return -EINVAL;
 	/* Linux v7.0 sched/task_stack.h names this try_get_task_stack(). */
 	base = try_get_task_stack(task);
@@ -55,6 +54,19 @@ int kd_source_stack_acquire_current(struct kd_source_stack *stack)
 	stack->ops.write_word = write_word;
 	stack->ops.context = stack;
 	return 0;
+}
+
+int kd_source_stack_acquire_current(struct kd_source_stack *stack)
+{
+	return acquire_stack(stack, current);
+}
+
+int kd_source_stack_acquire_unpublished(struct kd_source_stack *stack,
+				       struct task_struct *child)
+{
+	if (!child || child == current)
+		return -EINVAL;
+	return acquire_stack(stack, child);
 }
 
 void kd_source_stack_release(struct kd_source_stack *stack)

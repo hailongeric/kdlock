@@ -8,6 +8,7 @@ struct kd_episode_config;
 struct kd_execution_binding;
 struct kd_task_root_context;
 struct kd_task_storage;
+struct task_struct;
 
 typedef void (*kd_task_native_release_fn)(void *lease);
 
@@ -52,6 +53,22 @@ struct kd_task_storage_args {
  */
 int kd_task_storage_start_current(const struct kd_task_storage_args *args,
 				 struct kd_task_storage **out);
+
+/* Managed-parent cold construction for a fresh unpublished child only.
+ * Child kernel stack/task refs already exist, copied root alias was cleared,
+ * and no actor/lookup has escaped. Args carry the parent's SAME immutable
+ * admitted provider configuration and a newly acquired child native lease.
+ * New child receives its own core, request pool and auxiliary storage. Initial
+ * GS is an explicit uncaptured seed; no source offer precedes first real capture.
+ * Output/native-lease failure ownership is identical to start_current.
+ */
+int kd_task_storage_prepare_unpublished(const struct kd_task_storage_args *args,
+		struct task_struct *child, struct kd_task_storage **out);
+/* Clone failure cleanup before any child publication/execution, never a live
+ * foreign-task teardown. End child holds before kernel drops its stack/task.
+ */
+int kd_task_storage_abort_unpublished(struct kd_task_storage *storage,
+				      struct task_struct *child);
 
 /* Pointer lookup only under the caller's existing retained storage ownership.
  * It neither reads an active borrowed packet nor acquires a reference/right.

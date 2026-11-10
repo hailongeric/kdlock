@@ -2,11 +2,16 @@
 config KDLOCK_REBUILD
 	bool "kdlock private mutex core for source rebuild"
 	depends on X86_64 && !PREEMPT_RT
+	select EXECMEM
 	help
-	  Package the private ordinary-mutex core into the kernel. The selected
-	  Linux 7.0 task_struct field must already be integrated. This option
-	  supplies no mutex aliases, task provisioning or lifecycle hooks, source
-	  provider, executable-image transport or additional API/context lane.
+	  Package the source-rebuilt ordinary mutex core, task-owned storage,
+	  immutable-text provider, executable image loader and bounded compiler
+	  control channel. The exact Linux 7.0 task fields and lifecycle hooks
+	  must already be integrated. Resource counts and complete auxiliary
+	  control-stack bounds are explicit provider inputs, without defaults.
 
-	  Enabling this option establishes no build, execution or performance
-	  evidence. See kernel/integration/BUILDING.md in the kdlock package.
+	  All admitted source dependencies must remain immutable through their
+	  actual native, generated and feedback users. This option supplies no
+	  automatic Linux mutex aliases or additional API/context lane, and
+	  enabling it establishes no build, execution or performance evidence.
+	  See kernel/integration/BUILDING.md in the kdlock package.

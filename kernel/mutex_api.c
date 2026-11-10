@@ -84,7 +84,8 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 	 * A waiting origin's live aux_entry rejects reentry before own-core reads.
 	 */
 	BUG_ON(!root || !root->attached || root->task != current || !lock ||
-	       root->aux_entry || !root->mutex_resources);
+	       root->aux_entry || !root->mutex_resources ||
+	       (operation == KD_OPERATION_MUTEX_LOCK && root->source_closing));
 	native = kd_state_current_binding(&root->core);
 	BUG_ON(!kd_state_is_current(&root->core, native) ||
 	       native->kind != KD_EXECUTION_NATIVE);

@@ -1,13 +1,20 @@
 From: kdlock source-rebuilt integration
-Subject: [TEMPLATE] task-owned root/auxiliary context and private child reset
+Subject: [TEMPLATE] managed root construction, clone cleanup and native exit
 
-Context-anchored template only: exact Linux 7.0 source is not present in main.
-Rebase/inspect against that source/configuration before application. No patch
-application, build or execution is claimed. The one pointer finds stable native
-root/core and auxiliary-control storage before the first MCS request; active
-borrowed state always comes directly from that request's node->state. No packet,
-borrowed-state field or registry is added to task_struct. See README.md for
-caller-provided storage, fork reset and mandatory task-exit/last-user drain.
+Context-anchored template only: exact selected vendor Linux 7.0 source is not
+present in main. Rebase/inspect against that source/configuration before apply;
+no application/build/execution evidence. Upstream v7.0 copy_process calls
+successful dup_task_struct after task/stack reference initialization, and
+bad_fork_free drops the stack. Place child construction/cleanup at those exact
+sites. Keep do_exit cleanup before kthread_do_exit and all teardown. Every hook
+failure must refuse freeing live state; it does not fabricate unlocks.
+
+One task pointer finds its own core/auxiliary root. Active borrowed state remains
+node->state. Only an explicitly managed parent's immutable lifecycle context is
+inherited; no parent continuation, grants or packet are copied. Initial parent
+setup uses kd_task_lifecycle_start_current before its first declared source call.
+All CONFIG-off and unmanaged tasks remain outside this lane. This template adds
+no global task registry, capacity defaults or public mutex failure route.
 
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
@@ -18,15 +25,48 @@ caller-provided storage, fork reset and mandatory task-exit/last-user drain.
 @@ -2,1 +4,4 @@
  	randomized_struct_fields_start
 +
-+	/* kdlock native-root/core and task-owned auxiliary-control backing. */
++	/* Own native-root/core and task-owned auxiliary-control backing. */
 +	struct kd_task_root_context	*kd_root_context;
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
-@@ -1,3 +1,7 @@
+@@ -1,1 +1,4 @@
++#ifdef CONFIG_KDLOCK_REBUILD
++#include "kdlock/kernel/lifecycle.h"
++#endif
+ #include <linux/sched/task_stack.h>
+@@ -1,3 +1,8 @@
  	p = dup_task_struct(current, node);
  	if (!p)
  		goto fork_out;
++#ifdef CONFIG_KDLOCK_REBUILD
++	retval = kd_task_lifecycle_prepare_unpublished(p);
++	if (retval)
++		goto bad_fork_free;
++#endif
+@@ -1,2 +1,8 @@
+ bad_fork_free:
++#ifdef CONFIG_KDLOCK_REBUILD
++	/* Child never published: discharge its exact holds before put_task_stack.
++	 * Invariant failure refuses freeing state, never a guessed foreign detach.
++	 */
++	BUG_ON(kd_task_lifecycle_abort_unpublished(p));
++#endif
+ 	WRITE_ONCE(p->__state, TASK_DEAD);
+--- a/kernel/exit.c
++++ b/kernel/exit.c
+@@ -1,1 +1,4 @@
++#ifdef CONFIG_KDLOCK_REBUILD
++#include "kdlock/kernel/lifecycle.h"
++#endif
+ #include <linux/sched/task_stack.h>
+@@ -1,3 +1,10 @@
+ 	WARN_ON(irqs_disabled());
+ 	WARN_ON(tsk->plug);
 +
-+	/* Private copied alias acquired no parent-context reference. */
-+	WRITE_ONCE(p->kd_root_context, NULL);
-+	/* Clear before child publication or cleanup consumes this field. */
++#ifdef CONFIG_KDLOCK_REBUILD
++	/* Metadata progress/detach only; refuse native-illegal open grants or
++	 * borrowed/auxiliary exit instead of freeing an active source task.
++	 */
++	BUG_ON(kd_task_lifecycle_exit_current());
++#endif
+ 	kthread = tsk_is_kthread(tsk);

@@ -21,6 +21,9 @@ void kd_task_root_context_init(struct kd_task_root_context *context)
 	context->aux_current = 0;
 	context->aux_entry = NULL;
 	context->attached = false;
+	context->lifecycle = NULL;
+	context->storage = NULL;
+	context->source_closing = false;
 }
 
 struct kd_task_root_context *kd_task_root_context_current(void)
@@ -36,7 +39,8 @@ struct kd_thread_state *kd_task_state_own(void)
 	return context ? &context->core : NULL;
 }
 
-int kd_task_root_attach(struct kd_task_root_context *context,
+static int attach_task(struct kd_task_root_context *context,
+		       struct task_struct *task,
 		       unsigned long origin_gs, unsigned long aux_low,
 		       unsigned long aux_high, unsigned long aux_current,
 		       struct kd_request_pool *pool,
@@ -46,21 +50,21 @@ int kd_task_root_attach(struct kd_task_root_context *context,
 	unsigned long header_high = header_low + sizeof(*context);
 	int result;
 
-	if (!context || !pool || !slots || !capacity || aux_low >= aux_high ||
+	if (!context || !task || !pool || !slots || !capacity || aux_low >= aux_high ||
 	    aux_current < aux_low ||
 	    aux_current > aux_high || header_high < header_low ||
 	    (aux_low < header_high && aux_high > header_low))
 		return -EINVAL;
-	if (kd_task_root_context_current())
+	if (smp_load_acquire(&task->kd_root_context))
 		return -EEXIST;
 	/* Private initialized storage cannot be shared/reused by another task. */
 	if (context->attached || context->task || context->aux_entry)
 		return -EBUSY;
 	result = kd_execution_binding_init(&context->initial_native, &context->core,
-					   current, context, KD_EXECUTION_NATIVE);
+					   task, context, KD_EXECUTION_NATIVE);
 	if (result)
 		return result;
-	result = kd_state_init(&context->core, current, origin_gs,
+	result = kd_state_init(&context->core, task, origin_gs,
 			       &context->initial_native);
 	if (result)
 		return result;
@@ -68,15 +72,75 @@ int kd_task_root_attach(struct kd_task_root_context *context,
 	if (result)
 		return result;
 	context->core.requests = pool;
-	kd_owner_progress_init(&context->owners, current);
-	get_task_struct(current);
-	context->task = current;
+	kd_owner_progress_init(&context->owners, task);
+	get_task_struct(task);
+	context->task = task;
 	context->aux_low = aux_low;
 	context->aux_high = aux_high;
 	context->aux_current = aux_current;
 	context->attached = true;
 	/* Publish initialized header/core before native entry can find it. */
-	smp_store_release(&current->kd_root_context, context);
+	smp_store_release(&task->kd_root_context, context);
+	return 0;
+}
+
+int kd_task_root_attach(struct kd_task_root_context *context,
+		       unsigned long origin_gs, unsigned long aux_low,
+		       unsigned long aux_high, unsigned long aux_current,
+		       struct kd_request_pool *pool,
+		       struct kd_request_slot *slots, unsigned int capacity)
+{
+	return attach_task(context, current, origin_gs, aux_low, aux_high,
+			   aux_current, pool, slots, capacity);
+}
+
+int kd_task_root_attach_unpublished(struct kd_task_root_context *context,
+		struct task_struct *child, unsigned long origin_gs,
+		unsigned long aux_low, unsigned long aux_high, unsigned long aux_current,
+		struct kd_request_pool *pool, struct kd_request_slot *slots,
+		unsigned int capacity)
+{
+	if (!child || child == current)
+		return -EINVAL;
+	return attach_task(context, child, origin_gs, aux_low, aux_high,
+			   aux_current, pool, slots, capacity);
+}
+
+int kd_task_root_detach_unpublished(struct kd_task_root_context *context,
+				    struct task_struct *child)
+{
+	struct kd_thread_state *state;
+
+	if (!context || !child || child == current ||
+	    smp_load_acquire(&child->kd_root_context) != context ||
+	    !context->attached || context->task != child)
+		return -EINVAL;
+	state = &context->core;
+	if (context->aux_entry || !list_empty(&context->owners.batches) ||
+	    state->origin != child || !state->requests ||
+	    !kd_request_pool_empty(state->requests) || !list_empty(&state->grants) ||
+	    state->exit_image || state->exit_use || state->exit_holder ||
+	    state->operation.phase != KD_OPERATION_IDLE ||
+	    context->initial_native.state != state ||
+	    context->initial_native.task != child ||
+	    context->initial_native.control != context ||
+	    context->initial_native.kind != KD_EXECUTION_NATIVE)
+		return -EBUSY;
+	/* Unpublished exclusivity, not a foreign current-owner bypass. No slot or
+	 * source actor ever existed; normal pool detach still requires current.
+	 */
+	if (cmpxchg_release(&state->binding, &context->initial_native, NULL) !=
+	    &context->initial_native)
+		return -ESTALE;
+	smp_store_release(&child->kd_root_context, NULL);
+	context->task = NULL;
+	context->attached = false;
+	context->mutex_resources = NULL;
+	context->mutex_control_bytes = 0;
+	context->lifecycle = NULL;
+	context->storage = NULL;
+	state->requests = NULL;
+	put_task_struct(child);
 	return 0;
 }
 
@@ -139,6 +203,8 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 	context->attached = false;
 	context->mutex_resources = NULL;
 	context->mutex_control_bytes = 0;
+	context->lifecycle = NULL;
+	context->storage = NULL;
 	state->requests = NULL;
 	/* No context/core access follows the final retained task-key release. */
 	put_task_struct(task);

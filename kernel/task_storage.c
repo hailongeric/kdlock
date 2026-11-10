@@ -47,8 +47,9 @@ static void free_private(struct kd_task_storage *storage)
 	kfree(storage);
 }
 
-int kd_task_storage_start_current(const struct kd_task_storage_args *args,
-				 struct kd_task_storage **out)
+static int start_task(const struct kd_task_storage_args *args,
+		     struct task_struct *task, bool unpublished,
+		     struct kd_task_storage **out)
 {
 	struct kd_task_storage_args input;
 	struct kd_episode_config config;
@@ -61,12 +62,12 @@ int kd_task_storage_start_current(const struct kd_task_storage_args *args,
 	if (!out)
 		return -EINVAL;
 	*out = NULL;
-	if (!args)
+	if (!args || !task || (unpublished && task == current))
 		return -EINVAL;
 	input = *args;
 	if (!native_context())
 		return -EWOULDBLOCK;
-	if (kd_task_root_context_current())
+	if (smp_load_acquire(&task->kd_root_context))
 		return -EEXIST;
 	if (!input.capacity || !input.auxiliary_bytes ||
 	    (input.auxiliary_bytes & (PAGE_SIZE - 1)) ||
@@ -107,7 +108,8 @@ int kd_task_storage_start_current(const struct kd_task_storage_args *args,
 		result = -EOVERFLOW;
 		goto fail;
 	}
-	result = kd_source_stack_acquire_current(&storage->source);
+	result = unpublished ? kd_source_stack_acquire_unpublished(&storage->source, task) :
+		kd_source_stack_acquire_current(&storage->source);
 	if (result)
 		goto fail;
 	storage->stack_held = true;
@@ -124,23 +126,79 @@ int kd_task_storage_start_current(const struct kd_task_storage_args *args,
 	setup.aux_current = auxiliary_high;
 	setup.required_control_bytes = input.required_control_bytes;
 	setup.config = &config;
-	result = kd_task_setup_current(&setup);
+	if (!unpublished) {
+		result = kd_task_setup_current(&setup);
+	} else {
+		/* All backing is freshly allocated, parent-owned and outside both
+		 * stacks. The inherited immutable provider configuration was already
+		 * admitted by the managed parent and remains independently retained.
+		 */
+		result = kd_task_root_attach_unpublished(&storage->root, task,
+			input.origin_gs, auxiliary_low, auxiliary_high, auxiliary_high,
+			&storage->pool, storage->slots, input.capacity);
+		if (!result) {
+			result = kd_episode_resources_init(&storage->resources, &storage->pool,
+				storage->frames, input.capacity, &config);
+			if (!result) {
+				storage->root.mutex_resources = &storage->resources;
+				storage->root.mutex_control_bytes = input.required_control_bytes;
+			} else {
+				int unwind = kd_task_root_detach_unpublished(&storage->root, task);
+
+				if (unwind)
+					result = unwind;
+			}
+		}
+	}
 	if (result) {
 		/* Setup reports a failed post-attach unwind by leaving the exact
 		 * root attached. Do not free it or release its native provider hold.
 		 */
 		if (storage->root.attached ||
-		    kd_task_root_context_current() == &storage->root) {
+		    smp_load_acquire(&task->kd_root_context) == &storage->root) {
+			storage->root.storage = storage;
 			*out = storage;
 			return result;
 		}
 		goto fail;
 	}
+	storage->root.storage = storage;
 	*out = storage;
 	return 0;
 fail:
 	free_private(storage);
 	return result;
+}
+
+int kd_task_storage_start_current(const struct kd_task_storage_args *args,
+				 struct kd_task_storage **out)
+{
+	return start_task(args, current, false, out);
+}
+
+int kd_task_storage_prepare_unpublished(const struct kd_task_storage_args *args,
+		struct task_struct *child, struct kd_task_storage **out)
+{
+	return start_task(args, child, true, out);
+}
+
+int kd_task_storage_abort_unpublished(struct kd_task_storage *storage,
+				      struct task_struct *child)
+{
+	kd_task_native_release_fn release;
+	void *lease;
+	int result;
+
+	if (!storage || !child || child == current || !native_context())
+		return -EINVAL;
+	release = storage->native_release;
+	lease = storage->native_lease;
+	result = kd_task_root_detach_unpublished(&storage->root, child);
+	if (result)
+		return result;
+	free_private(storage);
+	release(lease);
+	return 0;
 }
 
 struct kd_task_root_context *kd_task_storage_root(struct kd_task_storage *storage)

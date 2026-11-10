@@ -15,8 +15,14 @@ kdlock_rebuild-y := \
 	kernel/request_pool.o \
 	kernel/owner_progress.o \
 	kernel/source_epoch.o \
+	kernel/source_provider.o \
 	kernel/feedback.o \
 	kernel/feedback_publish.o \
+	kernel/control.o \
+	kernel/channel.o \
+	kernel/compiled_image.o \
+	kernel/runtime.o \
+	kernel/exports.o \
 	kernel/image.o \
 	kernel/image_owner.o \
 	kernel/jit.o \
@@ -25,6 +31,9 @@ kdlock_rebuild-y := \
 	kernel/mutex_api.o \
 	kernel/task_progress.o \
 	kernel/task_setup.o \
+	kernel/task_storage.o \
+	kernel/lifecycle.o \
+	kernel/source_stack.o \
 	include/mutex_api.o \
 	include/mutex_entry.o \
 	include/native_resume.o
