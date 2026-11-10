@@ -74,9 +74,10 @@ source tree, retaining its internal relative paths:
    protected bodies and surrounding semantics unchanged. The packaging flag
    enables no callable, signalable, trylock, I/O, reader, mode or IRQ lane.
 
-The explicit core list includes `episode`, image slots/owners, source epochs,
-canonical state/JIT bridges, MCS arbitration/release, task roots, request pools,
-owner progress, task setup/progress and native entry/API C units.
+The explicit core list contains 17 C units: `episode`, image slots/owners, source
+epochs, feedback producers/fact pools/publication receipts, canonical state/JIT
+bridges, MCS arbitration/release, task roots, request pools, owner progress, task
+setup/progress and native entry/API units.
 `include/mutex_api.S`, `include/mutex_entry.S` and `include/native_resume.S` are
 concrete entries. `include/wrapper.S` contains the per-image entry/body template:
 compile only a separately constructed image with those placeholders resolved,

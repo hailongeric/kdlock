@@ -20,9 +20,11 @@ deferral with responsible physical-owner context retained. The earlier
 transferable-grant recommendation is superseded. C11 now selects an MCS queue
 and C04 retains the KD physical-R11 canonical-packet-base mapping. Optional
 local/proxy/origin-combiner transactions, MCS/request lifetimes and exact
-adapter/bridge details still need implementation/proof; remaining C08/C10 and provisioning/admission/lifecycle integration
-choices stay open. C05 selects task-owned preallocated persistent requests for
-normal local/proxy selection. The supported workload guarantees availability
+adapter/bridge details still need implementation/proof; C08 now selects
+preallocated miss-fact retention with continued admission as recorded below.
+C10 and concrete provisioning/lifecycle/provider integration remain separately
+scoped. C05 selects task-owned preallocated persistent requests for normal
+local/proxy selection. The supported workload guarantees availability
 within an explicit finite caller capacity covering all live/retained users;
 exhaustion is documentation-only, with no handler/recovery/local fallback or new
 special assertion. Full provisioning/control/lifetime proof remains work. R11 optimization discussion/T56 are deferred future work. These selections establish no validated
@@ -30,6 +32,22 @@ support lane or generic native release-timing/progress parity.
 Keep one canonical S_W, optional unique selection, every source lock/unlock as
 a pre-operation fragment boundary, serial recursive delegation, exact no-replay
 handback and cumulative source-versioned learning with the original backend.
+
+**Selected C08:** use a preallocated JIT-miss fact pool with finite explicit caller
+capacity sufficient for the supported workload. Pending facts or translation do
+not by themselves disable new JIT/delegation; existing source/context/image
+checks still apply. Each fact retains exact source site/resolved target,
+transfer/exit phase and producer/source-version identity. Valid same-version
+observations accumulate in compiler input before building; fact recording,
+emitted coverage, actual publication and ACK remain distinct. Uncovered/later
+facts stay pending. No numeric deployment value, unbounded claim or runtime
+validation follows. Reviewed kernel source `5989fbbb` implements the pool,
+code-independent producer/source retention and exact commit/ACK bridge;
+host coordinator `af997cb6` composes cumulative merge and receipt reconciliation.
+Transport/provider/persistence/restart/settlement integration remains work.
+Nonobservations and uncovered misses remain pending and can delay final source/
+provider drain; their records count toward capacity. The prior pending-fact
+forced-local/defer option is superseded.
 
 ### 1.1 Assumption and target policy versus evidence
 
@@ -250,6 +268,27 @@ Subsequent independently reviewed source milestones are:
   backing. This is retention ownership, not executable allocation or publisher
   orchestration.
 
+Reviewed source commit `5989fbbb` additionally includes
+[kernel miss facts](../../../kernel/feedback.c) and the
+[publication/ACK bridge](../../../kernel/feedback_publish.c). The episode
+records COVERAGE_MISS once before any staging/consumption, with a required pure
+explicit target classifier; normal operation/resource/special exits are not
+pooled automatically. Durable producer and epoch users retain copied facts
+after old code/descriptor release. Exact record incarnations, claims and a
+partial-end barrier prevent stale copied history or ACK from reusing an ended
+claim. The publication bridge takes only validated MERGED inputs and the exact
+candidate code hold/receipt, binds the actual transaction and returned old image,
+then separately ACKs the emitted subset. It does not itself transport facts,
+build/load code or settle nonobservations/uncovered misses. Those remain pending
+without an archive/reset/settlement policy and can delay final provider drain.
+The reviewed [host coordinator](../../../disassem/learning.py) at `af997cb6`
+retains finite explicit fact/claim/candidate/publication/ACK histories, merges
+valid same-version observations before compile/lower/export and preserves late/
+foreign/nonobservation facts. It freezes per-claim MERGED input keys and
+reconciles exact actual publication and ACK independently; it supplies no
+transport, persistence or executable publication. No runtime or behavioral
+evidence follows from these source reviews.
+
 The [image integration guide](../../../kernel/integration/IMAGES.md) records the
 conditional initial/NULL publication sequence, candidate/baseline bridges,
 SOURCE self-drain avoidance and independent native-text/finalizer lifetimes.
@@ -257,8 +296,10 @@ All these additions remain source/static review only; no import, assembly,
 build, behavioral check or VM execution has run.
 
 Reviewed source commit `a65016e3` adds the opt-in Kconfig/Kbuild group and fixed
-Linux 7.0/x86_64/non-RT C target gate. It lists all 15 runtime C units and the
-three concrete assembly entries, excluding the unexpanded per-image wrapper.
+Linux 7.0/x86_64/non-RT C target gate. Its original list has 15 runtime C units
+and three concrete assembly entries; the current source adds the fact pool and
+publication bridge at `5989fbbb` for 17 C units. The unexpanded per-image wrapper
+is excluded.
 [The build guide](../../../kernel/integration/BUILDING.md) separates package
 structure from actual target-tree insertion, task-field integration, provisioning
 and provider duties. No Kconfig/Kbuild parser, preprocessing, compilation,
@@ -267,7 +308,8 @@ assembly, linking, enablement or kernel execution has run.
 Remaining whole-lane implementation work includes actual task allocation/fork/
 exit and provider glue, concrete pool/control-stack provisioning, actual coherent
 live-source lease acquisition/mutation admission, executable allocation/publication
-orchestration, C08 compiler transport/persistent cumulative feedback/ACK policy,
+orchestration, compiler transport/persistent cumulative feedback/restart/
+settlement integration around the source-present C08 pool and commit/ACK bridge,
 and actual target-kernel/source/build integration. The source interfaces do not choose deployment
 capacities, lifecycle hook placement or
 publication/feedback organization. Assembly/build/runtime, lifetime/progress and
@@ -488,7 +530,9 @@ exact RCU image users and connected in source ordinary/recursive mutex episodes,
 existing-grant native unlock, final auxiliary cleanup and task progress at
 `ce423858`, plus reviewed setup composition, source epochs, artifact input maps,
 image-owner retention and stateless copied-exit facts at the commits listed in
-section 2.1.
+section 2.1. Reviewed `5989fbbb` additionally implements the kernel miss-fact
+pool/producer claims and exact publication/ACK bridge; `af997cb6` implements the
+host cumulative coordinator described there.
 Legacy implementation, receipts and datasets remain in preservation history;
 none must be restored to claim source progress or select another kernel target.
 
@@ -497,7 +541,8 @@ lock-object storage, C11 MCS, C04 physical-R11 mapping, C02 direct MCS pointers,
 C05 task-owned auxiliary entry/persistent requests with supported-workload availability and C06/C09 quiesced RCU replacement are selected. R11 optimization/T56 stay deferred. Remaining
 actual task allocation/fork/exit/provider and kernel/build wiring, coherent live
 source-lease acquisition/mutation admission, executable allocation/publication
-orchestration, C08 transport/feedback capacity/persistence/ACK and concrete
+orchestration, selected C08 compiler transport/feedback provisioning/persistence/
+restart/settlement integration and concrete
 resource/stack provisioning are listed in section 2.1 and the plan. These missing
 implementation pieces are separate from all-unrun runtime/context/lifetime/
 progress acceptance evidence.

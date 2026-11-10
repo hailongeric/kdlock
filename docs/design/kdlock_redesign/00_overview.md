@@ -28,9 +28,28 @@ Private source milestones now also include current-task setup composition
 copied-exit fact classification (`c9b468ee`), exact artifact input records and
 final-slot NULL retirement (`0c3ccb10`), and the code/source image-owner envelope
 (`a23b82c1`). They have independent source review. They acquire no live provider
-lease or executable allocation, automate no task lifecycle and select no C08
-storage/transport/ACK policy. The [evidence file](04_evidence_and_reconciliation.md#21-rebuild-status)
+lease or executable allocation and automate no task lifecycle. Source commit
+`5989fbbb` implements the C08 fact pool, independent producer/source retention
+and exact publication/ACK bridge. The host coordinator (`af997cb6`) cumulatively
+merges inputs before compilation and reconciles actual publication/ACK receipts.
+Live compiler transport, persistence and provider orchestration remain work. The [evidence file](04_evidence_and_reconciliation.md#21-rebuild-status)
 separates these sources from actual provider/orchestration work and unrun checks.
+
+**Selected C08 feedback retention:** use a preallocated pool of JIT-miss facts
+with explicit finite caller capacity sufficient for the supported workload.
+No numeric deployment value or mathematically unbounded storage is implied.
+Keep source site, resolved target, transfer/exit phase and exact producer/source-
+version identity. Pending facts or translation do not by themselves disable new
+JIT/delegation; the existing context/source/image checks still apply. Valid
+same-version observations are cumulative compiler input before building an image.
+Recording a fact, emitting coverage, actually publishing and acknowledging it
+remain different events; uncovered/later facts stay pending. The reviewed kernel
+source records coverage misses once before consumption, retains them without
+pinning old code and binds ACK only to validated inputs of an actual publication.
+Nonobservations and uncovered misses have no selected archive/reset/settlement
+policy; their holds can delay final source/provider drain. Explicit capacity
+covers all retained miss records. Source implementation is separate from
+transport/provider orchestration and unrun runtime evidence.
 
 The goal covers native-legal source patterns across the declared Linux target, subject to the explicitly selected ordinary-mutex outer-unlock deferral below. That policy establishes no generic native timing or progress parity. Structures, keys and dispatch use lock/API, original-state, operation, source and ABI identities. Application names do not select a different protocol. Observations from mmap/munmap expose generic constraints; they do not select application-specific adaptations. Ordinary local/native execution remains a valid lock route where delegation is unavailable. Reader concurrency/mode/API semantics are required; execution placement is an open target policy. Origin-local readers are the conservative initial proposal, not a permanent restriction or authorization of remote readers.
 
@@ -132,6 +151,6 @@ The exact source operation determines which acquisition receives an unlock reque
 
 ## Review boundary
 
-Fixed F directions and S obligations are not mechanism questions. The plan records selected C12 integration, the C01 initial lane, C02 direct MCS state pointers and task-owned initial backing, C03 owner-retained mutex deferral/stable object lifetime, C11 MCS queue and C04 retained KD physical-R11 canonical-packet-base mapping. C05 task-owned auxiliary entry/persistent requests with supported-workload availability and C06/C09 quiesced RCU replacement with exact users are also selected. Remaining implementation work covers actual task allocation/fork/exit and provider glue, concrete pool/control-stack provisioning, live-source lease acquisition/mutation admission, executable allocation/publication orchestration, C08 compiler transport/feedback storage policy and exact kernel/build wiring. The ordinary native/recursive path is connected in source at `ce423858`; all runtime/lifetime/progress acceptance evidence remains unrun. Further API/context lanes retain their separate choices. No choice can replace the original JIT, duplicate W state, extend the selected mutex deferral exception to other semantics or substitute an application-specific design. Choosing an extension requires its own scope and proof; leaving it open neither prohibits it permanently nor authorizes it now. See the plan's prioritized confirmation list.
+Fixed F directions and S obligations are not mechanism questions. The plan records selected C12 integration, the C01 initial lane, C02 direct MCS state pointers and task-owned initial backing, C03 owner-retained mutex deferral/stable object lifetime, C11 MCS queue and C04 retained KD physical-R11 canonical-packet-base mapping. C05 task-owned auxiliary entry/persistent requests with supported-workload availability and C06/C09 quiesced RCU replacement with exact users are also selected. Remaining implementation work covers actual task allocation/fork/exit and provider glue, concrete pool/control-stack provisioning, live-source lease acquisition/mutation admission, executable allocation/publication orchestration, compiler transport/persistent feedback/restart/settlement integration around the source-present C08 fact pool and publication/ACK bridge and exact kernel/build wiring. The ordinary native/recursive path is connected in source at `ce423858`; all runtime/lifetime/progress acceptance evidence remains unrun. Further API/context lanes retain their separate choices. No choice can replace the original JIT, duplicate W state, extend the selected mutex deferral exception to other semantics or substitute an application-specific design. Choosing an extension requires its own scope and proof; leaving it open neither prohibits it permanently nor authorizes it now. See the plan's prioritized confirmation list.
 
 This Linux 7.0-only baseline keeps the five individual Markdown documents for incremental audit. The complete unsanitized design snapshot remains recoverable through the archive reference named in the repository README.

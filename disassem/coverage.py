@@ -8,8 +8,10 @@ only by an exit stub, source-operation boundary or failed lowering is not covere
 This is finite compiler output, not executable publication or a feedback ACK.
 The publisher must bind this receipt to the actual coherent code/metadata it
 commits before acknowledging precisely these observations. Later observations
-and every uncovered input stay pending under the separately chosen C08 policy.
-No ledger capacity, saturation, persistence or reclamation strategy is selected.
+and every uncovered input stay pending in the selected finite feedback storage.
+The learning coordinator and kernel publication bridge bind exact included facts
+to actual publication and separate ACK receipts. This stateless pass chooses no
+storage capacity, transport, persistence or reclamation behavior.
 """
 
 from dataclasses import dataclass

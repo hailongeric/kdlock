@@ -8,9 +8,10 @@ Only immutable scalars are accepted here; no live packet, operand, stack word,
 file, provider or decoder is accessed. This adapter performs no source effects.
 
 An ObservedTarget is input for SourceSnapshot.with_observed_targets, never an
-emission/publication receipt or coverage ACK. Transport, retained storage,
-capacity, saturation, late reports, dropping, reset and ACK policy remain C08
-choices outside this stateless pass. The copied exit survives every disposition,
+emission/publication receipt or coverage ACK. The selected finite kernel fact
+pool and learning.py coordinator retain records and merge cumulative inputs
+outside this stateless pass. Transport, persistence and final settlement remain
+provider integration duties. The copied exit survives every disposition,
 including a consumed RET, which authorizes no second pop or CALL observation.
 """
 

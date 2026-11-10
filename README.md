@@ -40,6 +40,35 @@ The [copied-exit adapter](disassem/feedback.py) (`c9b468ee`) preserves exit
 facts and derives only matched ordinary indirect CALL/JMP compiler inputs.
 It implements no C08 storage, transport, capacity, persistence or coverage ACK.
 
+C08 now selects a preallocated feedback-fact pool for JIT misses, with finite
+explicit caller capacity sufficient for the supported workload. No numeric
+capacity or unbounded claim is supplied. Pending facts or translation alone do
+not disable new JIT/delegation; existing context/source/image checks still apply.
+Facts keep source site, resolved target, exit/transfer phase and exact producer/
+source-version identity. Valid same-version observations accumulate in compiler
+input before building; fact capture, emitted coverage, actual publication and
+ACK stay distinct, and uncovered/later facts remain pending.
+
+Reviewed source commit `5989fbbb` adds the [kernel fact pool](kernel/feedback.c),
+which records each reached coverage miss before exit consumption, using an
+explicit pure target classifier. Exact record incarnations and claims separate copied history from record reuse. A
+durable producer and source-epoch users retain facts independently of old code.
+The [publication bridge](kernel/feedback_publish.c) binds only the validated
+candidate input subset to its actual image transaction and returned old image;
+a separate atomic ACK covers only that subset's emitted ordinary observations.
+These components have source review only. Nonobservations and uncovered misses
+remain pending; no archive, reset or settlement policy is selected, so those
+holds can delay final source/provider drain. Transport, live provider wiring and
+executable publication orchestration remain incomplete.
+
+The [host learning coordinator](disassem/learning.py) (`af997cb6`) retains finite
+caller-bounded fact/claim/candidate/publication histories and merges valid
+same-version observations before discovery, lowering and export. It preserves
+nonobservations/foreign/late facts, freezes each claim's MERGED candidate inputs
+and reconciles actual publication and exact ACK receipts separately. It performs
+no kernel transport, persistence or publication. Its actual-object identity and
+retention mapping remain caller duties; it has source review only.
+
 The [MCS mutex](kernel/mutex.c) supplies sleepable physical exclusion, optional
 local/proxy selection and retained physical batches on top of the
 [exact release protocol](kernel/mutex_release.c). Queue removal, source return,
@@ -110,16 +139,20 @@ old readers pass a grace period before reclamation. JIT entry reserves a
 separate claimed pending-exit use, which ordinary put cannot drop early.
 
 Source commit `a65016e3` adds opt-in [Kbuild](Kbuild)/[Kconfig](Kconfig)
-packaging for the 15 C units and three concrete assembly entries, with the fixed
-Linux 7.0/x86_64/non-RT C target gate. It excludes the unexpanded image wrapper
-and supplies no automatic API conversion or provider/lifecycle policy. The
-[build guide](kernel/integration/BUILDING.md) records exact-tree prerequisites;
+packaging for the original 15 C units and three concrete assembly entries, with
+the fixed Linux 7.0/x86_64/non-RT C target gate. It excludes the unexpanded image
+wrapper and supplies no automatic API conversion or provider/lifecycle policy.
+The current Kbuild at `5989fbbb` also lists the fact pool and publication bridge,
+for 17 C units. The [build guide](kernel/integration/BUILDING.md) records exact-tree prerequisites;
 no build-system parser or build has run.
 
 Overall integration remains incomplete. Actual task allocation/fork/exit and
 provider glue, actual coherent live-source lease acquisition/mutation admission,
-executable allocation/publication orchestration, C08 compiler transport/cumulative
-feedback policy and actual target-kernel/source/build integration remain work. No deployment pool count or complete auxiliary/control-stack budget is configured.
+executable allocation/publication orchestration, compiler transport and persistent
+feedback/restart/settlement integration, and actual target-kernel/source/build
+integration remain work. The fact pool and exact publication/ACK bridge are
+source implementations, not a running learning service. No deployment request
+or fact-pool count or complete auxiliary/control-stack budget is configured.
 Generated execution requires a distinct physical task
 and admitted nonoverlapping executor/source/wait-control stacks. W's own body
 uses a native route; a runtime instruction budget does not establish stack

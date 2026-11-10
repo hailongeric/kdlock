@@ -73,6 +73,15 @@ removal, a result, an idle auxiliary cursor or a raw claim identity alone does
 not permit reuse. A current native endpoint can legitimately keep an otherwise
 finished slot occupied until the next exact transfer or final detach.
 
+The immutable episode configuration also supplies an initialized feedback pool
+and an explicit pure target-classification callback. The pool and its actual
+record-array extent are checked outside both task stacks and disjoint from known
+setup/control records. Its backing can be shared across admitted tasks and must
+outlive every fact/claim observer independently of task teardown. The callback
+must distinguish ordinary source, source APIs and unclassified targets; a mutex
+operation resolver returning NONE is insufficient. See [image and feedback
+ownership](IMAGES.md) for finite capacity and exact publication/ACK ordering.
+
 ## Native entry and borrowed execution
 
 [The ordinary source macros](../../include/kd_mutex_api.h) emit distinct lock and

@@ -310,7 +310,9 @@ Miss handling cannot depend on a new image appearing, daemon success or future o
 
 Original UB compares indirect targets with translated targets, exports miss information, records additional call/edge knowledge and recompiles. kdlock supplies kernel lock authority, exact continuation and lifetime rules beyond that pattern.
 
-**F/S:** knowledge is cumulative and source-versioned, and current execution does not depend on learning. The following is a proposed logical inventory, not a required ledger size, process organization or storage layout:
+**F/S:** knowledge is cumulative and source-versioned, and current execution does not depend on learning. **Selected C08:** retain JIT-miss facts in a preallocated pool with explicit finite caller capacity sufficient for the supported workload. No numeric deployment count or mathematically unbounded storage is implied. A fact includes exact source site, already-resolved target, transfer/exit phase and producing image/source-version identity, with required source/metadata lifetimes. Pending facts or ongoing translation alone do not disable new JIT/delegation; the existing context, source, image and execution checks still apply. There is no pending-fact forced-local interval.
+
+The following remains a logical inventory, not a required process organization or byte layout:
 
 ```text
 source_epoch
@@ -320,7 +322,7 @@ source_epoch
   bounded pending set and feedback revision
   isolated candidate construction and coherent commit
   published code/metadata version
-  explicit saturation/backoff/reset state
+  exact fact completion/reuse and separately integrated restart/reset state
 ```
 
 The three identities are different:
@@ -335,11 +337,11 @@ The three identities are different:
 
 1. Retain a safe source snapshot/lease before asynchronous reading of a reported target. A raw address is not a lifetime lease.
 2. Deduplicate observations using source identity, entry/fragment context, operation/control site, target and kind as required by the actual decoder.
-3. In this proposed workflow, snapshot pending inputs and previously validated coverage under one build owner; another isolated build scheme may be selected by C09.
-4. Build a complete private candidate using the original backend. Union relevant learned dispatch edges with retained knowledge. Preserve lock/unlock boundaries.
+3. In this proposed workflow, snapshot pending facts and previously validated same-version observations under one build owner; another isolated build scheme may be selected by C09. Cumulatively merge every valid same-version ordinary observation into the immutable compiler snapshot BEFORE building the candidate; never replace older learned targets with only the latest miss.
+4. Build a complete private candidate from that merged input using the original backend. Preserve lock/unlock boundaries. Input inclusion and even graph attachment are not proof of emitted coverage.
 5. Validate discovered source dependencies, chosen target ABI/capabilities, the candidate's valid base/current-code relation and source admission state. A numeric base-generation receipt is one encoding, not a required interface.
 6. Close new-root admission, drain exact active users, publish the entire executable descriptor under exact serialized commit ownership, then pass old readers through an RCU grace period before reclaiming.
-7. Acknowledge only observations the candidate actually translated. A snapshot input is not automatically covered.
+7. Distinguish fact recording, compiler input, emitted coverage and actual coherent publication. Acknowledge only observations whose emitted construction coverage is bound to that actual publication; a snapshot input or emission receipt alone is not an ACK.
 8. Track settled lock boundaries/capability dispositions separately. Preserve later observations and any uncovered/unsettled snapshot input under the declared bounded policy.
 
 For X reported before a snapshot and Y during the build, publishing coverage of X must not clear Y. A candidate omitting X cannot acknowledge it merely because its receipt revision included X.
@@ -348,9 +350,9 @@ For X reported before a snapshot and Y during the build, publishing coverage of 
 
 A later inspected candidate already has a 32-row non-evicting cumulative learning ledger on a particular immutable mutex retained-miss path, base-generation/receipt acknowledgement and observable overflow. The v0.6 historical "single latest miss" description is therefore not a universal current-state claim.
 
-That path is E: it is not proof of lossless old-generation learning, every lock family or the full redesign. Its 32 rows, no-eviction policy and receipt encoding are not target requirements. C08 selects capacities, saturation/reset, late observations, coverage acknowledgement and any reuse of the existing implementation. Cumulative knowledge and exact acknowledgement remain F/S.
+That path is E: it is not proof of lossless old-generation learning, every lock family or the full redesign. Its 32 rows, no-eviction policy and receipt encoding are not target requirements. C08 now selects a preallocated feedback-fact pool with finite explicit caller capacity sufficient for the supported workload, while preserving cumulative knowledge and exact acknowledgement. The kernel fact pool and exact commit/ACK receipt bridge now have source implementations; transport, persistent compiler organization, restart/reset/settlement and live publication orchestration remain implementation work. No numeric size is inherited.
 
-When full, do not block protected execution or describe dropped reports as lossless. Choose explicit overflow/rediscovery, pause learning until controlled reset, or bounded growth with resource proof. Retry permanent ENOSPC only after a capacity-changing trigger.
+The availability guarantee is a documented support assumption, not a measured bound or unbounded-storage claim. No overflow/drop/recovery policy is implied outside that guarantee. Pending facts and translation alone cannot pause new JIT/delegation or force later operations local. Other actual context/source/image checks remain in force. Preserve every uncovered/later fact until its exact settled disposition or publication-bound ACK; do not describe a lost report as lossless learning.
 
 Accepting a source-valid observation from an old retained generation can improve knowledge without making that old generation current. It needs exact source compatibility and deduplication; rejecting stale commits is a different requirement.
 
@@ -374,7 +376,40 @@ CALL/JMP facts become ObservedTarget inputs for cumulative snapshot merge.
 Consumed RET, typed operations, frontiers, resources and mismatches remain
 distinct; no operand is reevaluated and no source word is staged or popped.
 This is not live feedback storage, transport, saturation/late-report/reset policy
-or coverage ACK; the pending C08 selection still governs those mechanisms.
+or coverage ACK by itself.
+
+Kernel source commit `5989fbbb` implements the separately selected fact pool in
+`feedback.[ch]`: automatic episode recording covers COVERAGE_MISS only, before
+any exit staging
+or consumption. A required pure target classifier supplies ORDINARY/API/
+UNCLASSIFIED; an operation resolver's NONE result is not ordinary-source proof.
+Durable producer and epoch users retain facts independently of code/descriptor
+lifetime. Exact record identity plus a nonwrapping incarnation binds copied
+history to each reservation; ending a claim prevents new checks/ACK and permits
+only completion retry after a partial end.
+
+`feedback_publish.[ch]` takes only the host adapter's validated MERGED input
+subset, exact candidate code hold and coordinated emission receipt. It validates
+the actual commit transaction and returned old image, then separately ACKs only
+its emitted ordinary subset. Receipt construction alone, or another fact with
+the same source/target, cannot acknowledge an excluded nonobservation. Later and
+uncovered facts remain pending. There is no archive/reset/settlement policy for
+those records; their retained users can delay final source/provider drain, and
+capacity must cover them. Compiler transport, persistent organization and live
+provider/executable orchestration remain work. This source/static review adds
+no behavioral or publication evidence.
+
+The reviewed host coordinator `learning.py` (`af997cb6`) composes that copied-fact
+adapter with immutable cumulative merge, discovery, lowering and artifact export.
+Explicit limits bound every retained fact/claim/candidate/publication/ACK history;
+capacity errors leave prior pending facts and input intact. Each actual claim
+has an exact epoch even when empty. Candidate input keys include only MERGED
+records, while all copied facts retain separate dispositions. Actual publication
+must name that exact artifact receipt, claim selection and committed update;
+actual ACK is a later exact emitted-subset receipt. Late, foreign and uncovered
+facts remain pending, and ACK does not erase learned targets. Opaque host
+identities require the actual retained kernel mapping; this module neither
+transports facts nor performs publication, persistence or kernel ACK.
 
 ## 6 Required boundary examples
 

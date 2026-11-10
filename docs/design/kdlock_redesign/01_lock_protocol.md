@@ -164,6 +164,29 @@ A persistent record becomes reusable only after its request and all relevant use
 
 The user guarantees an available record for every need of the supported workload. Capacity is finite and explicitly supplied by task attachment/resources; no deployment count or one-node sufficiency is configured here. Exhaustion is a documentation-only limitation of that support contract. It adds no exhaustion handler, recovery/local fallback or new special assertion, and does not imply a mathematically unbounded pool. The public ordinary lock API remains void; the capacity contract grants no public error result, fabricated success or source replay. Actual provisioning and full lifecycle/capacity proof remain integration work.
 
+**Selected C08 feedback storage is separate:** JIT misses use a preallocated fact
+pool with explicit finite caller capacity sufficient for the supported workload,
+without a numeric default or an unbounded-storage claim. Each fact preserves its
+source site/resolved target, transfer/exit phase and exact producer/source-version
+identity; retain every required epoch/metadata user through its final access.
+Pending facts or an ongoing translation add no admission restriction to new
+JIT/delegation: existing source/context/image checks still apply. Merge valid
+same-version observations cumulatively before building. Fact recording, emitted
+coverage, actual publication and ACK remain distinct; uncovered/later facts stay
+pending. The reviewed kernel pool (`5989fbbb`) records COVERAGE_MISS only before consumption;
+normal operation/resource/special exits are not automatically pooled. Exact
+producer/source users retain copied facts after old code is released. Claims
+bind record identity and incarnation; ending a claim can release earlier items
+before a retry finishes and forbids further checks/ACK. The source-present
+publication bridge binds only validated candidate inputs to actual commit, then
+ACKs its exact emitted subset separately. Nonobservations/uncovered misses stay
+pending without a selected settlement/reset/archive policy and can delay final
+source/provider drain. Capacity covers those records too. The source-reviewed
+host coordinator (`af997cb6`) accumulates valid observations before compilation
+and keeps candidate input, emission, actual publication and ACK histories
+separate; it supplies no transport or persistence. This does not change
+request/grant authority or duplicate S_W.
+
 | Persistent request information | Placement duty | Lifetime/layout condition |
 | --- | --- | --- |
 | Selected queue/claim status and polling fields | Candidate compact hot part of the node | Account for each logical membership's duties and last observer; choose links/topology rather than requiring current queues |

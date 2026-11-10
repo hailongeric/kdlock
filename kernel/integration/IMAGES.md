@@ -41,6 +41,8 @@ emits a C `kd_jit_image_inputs` beside its actual descriptor. The sidecar record
 that descriptor pointer, exact UTF-8 version bytes without a synthetic NUL, the
 baked GS offset and raw bytes for every retained decoded instruction. The source
 site table keeps each IP, next IP and source kind. Empty tables remain explicit.
+The descriptor also names an external durable feedback-producer object, and a
+C emission receipt binds exact observation outcomes to those actual inputs.
 All generated symbols participate in identifier/collision checks and appear in
 the construction manifest. These records are neither source holds nor ACKs.
 
@@ -50,8 +52,10 @@ epoch identity, version, configuration/load incarnation, GS input, ABI sizes,
 source maps and retained bytes. Source addresses are baked numeric inputs;
 ordinary module relocation cannot repair a different source incarnation. These
 checks do not prove generated-code equivalence or executable permissions. On
-success, the owner derives one epoch IMAGE membership and takes code-release
-ownership. The actual allocator/module/transport remains the provider's choice.
+success, the owner derives one epoch IMAGE membership, retains an exact producer
+IMAGE user and takes code-release ownership. Initialize that producer first
+from the same descriptor and live BUILD, with a fresh per-construction identity.
+Its control/identity backing is independent of the executable payload. The actual allocator/module/transport remains the provider's choice.
 
 The owner has exact EXTERNAL, BASELINE and PUBLISHED_SLOT memberships, distinct
 from a slot's execution users. Puts never invoke code release. A private candidate
@@ -101,18 +105,94 @@ drain. Epoch BUILD/FEEDBACK users and owner BASELINE users are outside that list
 
 After all published-slot and external/baseline memberships end, a closed owner's
 serialized finalizer releases the cached code-provider hold outside its guard,
-then puts its exact epoch IMAGE membership. It reads no descriptor/code payload
+then drops its producer IMAGE user and exact epoch IMAGE membership. It reads no descriptor/code payload
 after code release, and no owner after the final source put. Active owner/header,
 source-use and callback backing are independently retained through return.
 
-The new feedback adapter classifies copied exit scalars against the exact
-producing construction and retained epoch version. Only a matching ordinary
-indirect CALL/JMP yields compiler input. Source boundaries, consumed returns,
-frontiers and mismatches retain their distinct dispositions. This supplies no
-transport, ledger, capacity/saturation, late-report, persistence/reset or runtime
-ACK policy. Successful publication still needs an exact binding to the emitted
-construction receipt before any observations can be acknowledged.
+## Feedback records and compiler inputs
 
-Actual coherent lease acquisition, source-mutation admission, executable storage,
-transport, publisher orchestration and feedback policy remain integration work.
-No control record or version comparison substitutes for those provider duties.
+[feedback.h](../feedback.h) supplies a caller-sized preallocated fact pool. Its
+nonzero `pool->capacity` is the actual supplied array count; there is no default
+or configured deployment count in this tree. The supported workload guarantees
+available storage for every reached coverage miss, including nonobservations,
+uncovered facts, concurrent claims and late facts. Pending records are never
+overwritten, and pending feedback or compilation does not close JIT/delegation
+admission. Existing source, context and image-slot checks still apply. This is a
+finite workload assumption, not a claim of unlimited storage or measured sizing.
+
+The episode records each coverage miss once before nested operation handling,
+forward CALL staging or exit consumption. It copies kind, detail, source site,
+resolved target, current cursor, phase and entry result, plus exact source epoch,
+version and producer/image identities. Known mutex entry targets are SOURCE_API;
+an explicit pure target-classification callback identifies ordinary source or
+leaves it unclassified. A resolver's NONE result alone proves no ordinary target.
+Normal source-operation, special and resource exits are not miss-pool records.
+The synchronous diagnostic report remains separate and confers no retention.
+
+Every fact retains exact source FEEDBACK and durable producer FACT memberships.
+The producer has a separate epoch hold, and refuses close while any image-owner
+IMAGE user remains. After actual code retirement, FACT users can retain producer
+metadata and source without keeping old executable code or slot users alive.
+Producer close does not settle pending facts. Release requires all producer users
+to end, then drops its source hold; control backing remains retained through return.
+
+A fact key consists of its storage identity and exact 64-bit incarnation. Each
+reservation advances that incarnation without wrap in the supported workload;
+the sequence supplies identity only, never ownership or an activity estimate.
+Transport maps that pair, the exact epoch and per-construction producer to the
+matching retained compiler objects. Raw addresses or equal version bytes alone
+are insufficient. No wire encoding, transport or persistence service is selected.
+
+A caller-preallocated claim freezes a bounded FIFO selection of currently
+unclaimed facts from one exact epoch. The claim, immutable item array, holders and
+source/producer backing remain retained through compiler, publication and all
+transport observers. Later facts stay pending. The host
+[learning coordinator](../../disassem/learning.py) validates the exact producing
+construction with [the copied-exit adapter](../../disassem/feedback.py), retains
+every disposition and merges valid same-version ordinary indirect observations
+into cumulative `SourceSnapshot` input before compile/lower/export. Input merge,
+planner attachment and actual emitted coverage remain separate results. Host
+record/claim/candidate/publication/ACK limits are explicit finite caller inputs.
+A completed candidate freezes its included claim members and construction receipt;
+facts arriving while construction runs do not become part of that candidate.
+
+## Publication-bound acknowledgement
+
+[feedback_publish.h](../feedback_publish.h) binds exact included claim members,
+a live candidate owner user and the generated C emission receipt to the actual
+CLOSING image transaction. Its included selection contains only host-adapter
+validated facts merged into that candidate input; other claimed dispositions
+remain pending even if an unrelated input has the same source/target pair.
+Complete source discovery, cumulative merging,
+construction, loading and input validation while the old slot is still OPEN;
+only then begin the selected drain/swap/grace replacement protocol above.
+The receipt and its backing must belong to that actual candidate's retained code
+provider; pointer comparisons alone cannot establish this relationship.
+
+After successful `kd_jit_image_update_try_commit`, pass its actual returned old
+pointer to `kd_jit_feedback_publication_commit`. The bridge checks the same slot,
+update, owner, expected old, candidate and completed transaction after grace.
+This produces an immutable publication receipt and performs no ACK. A distinct
+`kd_jit_feedback_publication_ack` marks only the exact included ordinary CALL/JMP
+facts present as EMITTED in the candidate receipt, then returns its exact subset
+in a separate ACK receipt. Empty-old publication is valid; removal to NULL has
+no emitted-coverage ACK. Abort requires that exact ABORTED transaction and ACKs
+nothing. Host publication recording and confirmation of the actual kernel ACK
+remain separate operations; construction or publication alone cannot clear facts.
+
+The caller serializes the ticket with claim end, candidate put, slot-owner
+binding/retirement and all later slot updates. ACK scratch is explicit caller
+storage, disjoint from immutable inputs. Later, uncovered and nonobservation
+facts remain pending. After all compiler, ticket and transport observers end,
+`claim_end` unclaims pending facts and releases acknowledged records outside the
+pool guard. It can make individual records reusable before returning. If an end
+operation fails, only retrying end is legal: earlier items may already have been
+unclaimed or reused. No old record access follows its final publication as free.
+
+Nonobservation and uncovered misses deliberately have no discard or reset path.
+Their final settlement/archive and source-epoch shutdown remain explicit provider
+integration work; close alone cannot drain those retained holds. Supported finite
+pool sizing must include them. Actual coherent lease acquisition, source-mutation
+admission, executable storage, transport, persistence, task/provider lifecycle and
+publisher orchestration also remain integration duties. These sources have only
+static review: no import, build, assembly, execution or retirement test has run.
