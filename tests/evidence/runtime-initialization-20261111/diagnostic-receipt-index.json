@@ -1,0 +1,47 @@
+{
+  "files": [
+    {
+      "bytes": 333,
+      "name": "allocation-site.txt",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/initialization-diagnostics/allocation-site.txt",
+      "sha256": "7010b0a31d29e0e43a50658d0e530a425df4b77f55dd706f56d9b0b56da127db"
+    },
+    {
+      "bytes": 400,
+      "name": "buddyinfo.txt",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/initialization-diagnostics/buddyinfo.txt",
+      "sha256": "a3551c8a78509309aa14e8f4cb1130b20769ff97fcfe7d9822e14623255f4456"
+    },
+    {
+      "bytes": 64659,
+      "name": "dmesg.txt",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/initialization-diagnostics/dmesg.txt",
+      "sha256": "5ab5139d1f724ddd76f5e4443cddc7fd58facb37ce1d8d954704298797c3525b"
+    },
+    {
+      "bytes": 320,
+      "name": "item-layout.txt",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/initialization-diagnostics/item-layout.txt",
+      "sha256": "890383f666f6bd2268458b982b94e1b73c82abcd64957e6b2efdce91cccbd2cb"
+    },
+    {
+      "bytes": 1674,
+      "name": "memory.txt",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/initialization-diagnostics/memory.txt",
+      "sha256": "1bf200d2f3a5c3e8525230cc188c635e5f61f7d741405ca925614bc05d043816"
+    },
+    {
+      "bytes": 2799,
+      "name": "modules.txt",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/initialization-diagnostics/modules.txt",
+      "sha256": "f1abe78389940daf61ef1e26b35fefc16a125dd51439a9d83b64a8d7433cb127"
+    },
+    {
+      "bytes": 1271,
+      "name": "summary.json",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/initialization-diagnostics/summary.json",
+      "sha256": "361677ce11dbd12aac7cf9833a37484296ab88d4c50fd759132056a36080fa1b"
+    }
+  ],
+  "scope": "saved diagnostics only; no commands re-executed"
+}

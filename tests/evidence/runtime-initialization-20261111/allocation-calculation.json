@@ -1,0 +1,30 @@
+{
+  "actual_pahole_item_bytes": 24,
+  "allocation_site": "runtime->items = kcalloc(total, sizeof(*runtime->items), GFP_KERNEL)",
+  "arch_force_max_order_override_defined": false,
+  "base_page_bytes": 4096,
+  "claim_capacity": 4096,
+  "config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "cycle_capacity": 32,
+  "fixture_source_commit": "15a257c00f976fa1e598cd7df53ab7bc2d74ee2d",
+  "inputs": [
+    "source/runtime_fixture-15a257c0.c.txt",
+    "source/runtime-950ee6fc.c.txt",
+    "diagnostics/item-layout.txt",
+    "diagnostics/allocation-site.txt",
+    "allocation-limit-source.json",
+    "diagnostics/dmesg.txt"
+  ],
+  "item_banks": 3,
+  "kernel_code_commit": "950ee6fc494af2db129911b57f567ac4c5e5d3b6",
+  "limitation": "Memory availability dump is later than the failed attempt; no claim that its sample was simultaneous. No body execution or successful drain is inferred.",
+  "max_page_order": 10,
+  "payload_pages": 2304,
+  "requested_payload_bytes": 9437184,
+  "required_buddy_order": 12,
+  "retained_config": "../kernel-core-20261110/config-after",
+  "rounded_buddy_bytes": 16777216,
+  "scope": "source/layout arithmetic explaining the captured allocation warning, not a new allocator probe",
+  "source_line": 375,
+  "total_items": 393216
+}

@@ -1,0 +1,9 @@
+struct kd_jit_feedback_claim_item {
+	struct kd_jit_feedback_record * record;          /*     0     8 */
+	const void  *              identity;             /*     8     8 */
+	long unsigned int          incarnation;          /*    16     8 */
+
+	/* size: 24, cachelines: 1, members: 3 */
+	/* last cacheline: 24 bytes */
+};
+

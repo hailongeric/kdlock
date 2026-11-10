@@ -1,0 +1,51 @@
+{
+  "files": [
+    {
+      "bytes": 1600,
+      "group": "controller",
+      "name": "command.json",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/command.json",
+      "sha256": "3bfb8b7ddaf27428f0422d4e6891d431785affa36b528e7b380f5ef40d6b81f9"
+    },
+    {
+      "bytes": 1735,
+      "group": "controller",
+      "name": "result.json",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/result.json",
+      "sha256": "c25bca3731a5b545242e7414e1caa7d69a3c8ba187d73eb74861007f3919e17d"
+    },
+    {
+      "bytes": 1765,
+      "group": "controller",
+      "name": "stdout.log",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-controller-9d06c451-91f48b75-01/stdout.log",
+      "sha256": "bf5b25e5d40960c74ba68a4f3eda2b2b9f42ad14e36db7ceb5318fe19b206302"
+    },
+    {
+      "bytes": 1326,
+      "group": "runner-output",
+      "name": "identity.json",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-9d06c451-91f48b75-01/identity.json",
+      "sha256": "8a5241407cd80b28f4dc67aa274b945924280a0e2a6898fd99340bc39bc2885d"
+    },
+    {
+      "bytes": 117693,
+      "group": "runner-output",
+      "name": "module.disassembly.txt",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/live-9d06c451-91f48b75-01/module.disassembly.txt",
+      "sha256": "30c933a8e73661c5c18ea1ccecd29766b39c074ae1e33b04cbbd6e0d3784b25d"
+    },
+    {
+      "bytes": 25099,
+      "group": "source",
+      "name": "run_runtime_fixture.py",
+      "path": "/mnt/kdlock-builds/kdlock-main-work/gs-9d06c451-01a1bc4f/input/tests/kernel/run_runtime_fixture.py",
+      "sha256": "81f323e50905204c164f8480d708a3b49f394513ec14c597d34b7f6fc3986223"
+    }
+  ],
+  "runner_output_entries": [
+    "identity.json",
+    "module.disassembly.txt"
+  ],
+  "scope": "existing failed-attempt files only; no new runtime probe"
+}

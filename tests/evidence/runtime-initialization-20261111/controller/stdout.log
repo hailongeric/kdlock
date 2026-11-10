@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/mnt/kdlock-builds/kdlock-main-work/gs-9d06c451-01a1bc4f/input/tests/kernel/run_runtime_fixture.py", line 443, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/mnt/kdlock-builds/kdlock-main-work/gs-9d06c451-01a1bc4f/input/tests/kernel/run_runtime_fixture.py", line 178, in main
+    command([tools["insmod"], str(args.module), f"gs_offset={args.gs_offset}", "gs_verified=1",
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+             "immutable_text=1", "auxiliary_contract=1", f"source_size={body_size}",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+             f"step_size={step_size}", f"source_version={version}"], args.deadline)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/gs-9d06c451-01a1bc4f/input/tests/kernel/run_runtime_fixture.py", line 37, in command
+    raise RuntimeError(f"command failed {arguments!r}: {result.stdout.decode(errors='replace')}")
+RuntimeError: command failed ['/usr/sbin/insmod', '/mnt/kdlock-builds/kdlock-main-work/live-15a257c0-01a1bc4f/module-build/kd_runtime_fixture.ko', 'gs_offset=18446744071633432600', 'gs_verified=1', 'immutable_text=1', 'auxiliary_contract=1', 'source_size=833', 'step_size=116', 'source_version=fixture-7b5baba594c6bb781dca30ea7b52bb685abc59e34f8a6d8bc419c0d2dab2511b-466907d2a9e392eaa976035595ca99da8e5a8a25653efead677de82cab006db9-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483']: insmod: ERROR: could not insert module /mnt/kdlock-builds/kdlock-main-work/live-15a257c0-01a1bc4f/module-build/kd_runtime_fixture.ko: Cannot allocate memory
+

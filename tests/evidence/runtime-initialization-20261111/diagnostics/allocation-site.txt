@@ -1,0 +1,6 @@
+kmalloc_noprof
+/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/slab.h:954
+kmalloc_array_noprof
+/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/slab.h:1097
+kd_jit_runtime_create
+/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/runtime.c:375

@@ -1,0 +1,17 @@
+{
+  "started_utc": "2026-11-10T16:20:59.738180+00:00",
+  "attempts": [
+    {
+      "utc": "2026-11-10T16:21:00.830859+00:00",
+      "returncode": 0,
+      "stdout": "{\"release\": \"7.0.0-38-kdlock1\", \"boot_id\": \"5dde9006-ad3c-44eb-81ed-213cd003f31c\", \"taint\": \"0\"}\n",
+      "stderr": ""
+    }
+  ],
+  "result": {
+    "release": "7.0.0-38-kdlock1",
+    "boot_id": "5dde9006-ad3c-44eb-81ed-213cd003f31c",
+    "taint": "0"
+  },
+  "status": "NORMAL_BOOT_OBSERVED"
+}

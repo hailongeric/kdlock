@@ -1,0 +1,340 @@
+{
+  "files": [
+    {
+      "lines": [
+        {
+          "line": 5226,
+          "text": "\tunsigned int alloc_flags = ALLOC_WMARK_LOW;"
+        },
+        {
+          "line": 5227,
+          "text": "\tgfp_t alloc_gfp; /* The gfp_t that was actually used for allocation */"
+        },
+        {
+          "line": 5228,
+          "text": "\tstruct alloc_context ac = { };"
+        },
+        {
+          "line": 5229,
+          "text": ""
+        },
+        {
+          "line": 5230,
+          "text": "\t/*"
+        },
+        {
+          "line": 5231,
+          "text": "\t * There are several places where we assume that the order value is sane"
+        },
+        {
+          "line": 5232,
+          "text": "\t * so bail out early if the request is out of bound."
+        },
+        {
+          "line": 5233,
+          "text": "\t */"
+        },
+        {
+          "line": 5234,
+          "text": "\tif (WARN_ON_ONCE_GFP(order > MAX_PAGE_ORDER, gfp))"
+        },
+        {
+          "line": 5235,
+          "text": "\t\treturn NULL;"
+        },
+        {
+          "line": 5236,
+          "text": ""
+        },
+        {
+          "line": 5237,
+          "text": "\tgfp &= gfp_allowed_mask;"
+        },
+        {
+          "line": 5238,
+          "text": "\t/*"
+        },
+        {
+          "line": 5239,
+          "text": "\t * Apply scoped allocation constraints. This is mainly about GFP_NOFS"
+        },
+        {
+          "line": 5240,
+          "text": "\t * resp. GFP_NOIO which has to be inherited for all allocation requests"
+        },
+        {
+          "line": 5241,
+          "text": "\t * from a particular context which has been marked by"
+        },
+        {
+          "line": 5242,
+          "text": "\t * memalloc_no{fs,io}_{save,restore}. And PF_MEMALLOC_PIN which ensures"
+        }
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/mm/page_alloc.c",
+      "sha256": "829ff79c37c72f7e0fd334e3c68d0503cf8b4d3729790bbdd98e43b445958384"
+    },
+    {
+      "lines": [
+        {
+          "line": 25,
+          "text": "#include <linux/zswap.h>"
+        },
+        {
+          "line": 26,
+          "text": "#include <asm/page.h>"
+        },
+        {
+          "line": 27,
+          "text": ""
+        },
+        {
+          "line": 28,
+          "text": "/* Free memory management - zoned buddy allocator.  */"
+        },
+        {
+          "line": 29,
+          "text": "#ifndef CONFIG_ARCH_FORCE_MAX_ORDER"
+        },
+        {
+          "line": 30,
+          "text": "#define MAX_PAGE_ORDER 10"
+        },
+        {
+          "line": 31,
+          "text": "#else"
+        },
+        {
+          "line": 32,
+          "text": "#define MAX_PAGE_ORDER CONFIG_ARCH_FORCE_MAX_ORDER"
+        },
+        {
+          "line": 33,
+          "text": "#endif"
+        },
+        {
+          "line": 34,
+          "text": "#define MAX_ORDER_NR_PAGES (1 << MAX_PAGE_ORDER)"
+        },
+        {
+          "line": 35,
+          "text": ""
+        },
+        {
+          "line": 36,
+          "text": "#define IS_MAX_ORDER_ALIGNED(pfn) IS_ALIGNED(pfn, MAX_ORDER_NR_PAGES)"
+        },
+        {
+          "line": 37,
+          "text": ""
+        },
+        {
+          "line": 38,
+          "text": "#define NR_PAGE_ORDERS (MAX_PAGE_ORDER + 1)"
+        },
+        {
+          "line": 39,
+          "text": ""
+        },
+        {
+          "line": 40,
+          "text": "/* Defines the order for the number of pages that have a migrate type. */"
+        },
+        {
+          "line": 41,
+          "text": "#ifndef CONFIG_PAGE_BLOCK_MAX_ORDER"
+        },
+        {
+          "line": 42,
+          "text": "#define PAGE_BLOCK_MAX_ORDER MAX_PAGE_ORDER"
+        },
+        {
+          "line": 43,
+          "text": "#else"
+        },
+        {
+          "line": 44,
+          "text": "#define PAGE_BLOCK_MAX_ORDER CONFIG_PAGE_BLOCK_MAX_ORDER"
+        },
+        {
+          "line": 45,
+          "text": "#endif /* CONFIG_PAGE_BLOCK_MAX_ORDER */"
+        },
+        {
+          "line": 46,
+          "text": ""
+        },
+        {
+          "line": 47,
+          "text": "/*"
+        },
+        {
+          "line": 48,
+          "text": " * The MAX_PAGE_ORDER, which defines the max order of pages to be allocated"
+        },
+        {
+          "line": 49,
+          "text": " * by the buddy allocator, has to be larger or equal to the PAGE_BLOCK_MAX_ORDER,"
+        },
+        {
+          "line": 50,
+          "text": " * which defines the order for the number of pages that can have a migrate type"
+        },
+        {
+          "line": 51,
+          "text": " */"
+        },
+        {
+          "line": 52,
+          "text": "#if (PAGE_BLOCK_MAX_ORDER > MAX_PAGE_ORDER)"
+        },
+        {
+          "line": 53,
+          "text": "#error MAX_PAGE_ORDER must be >= PAGE_BLOCK_MAX_ORDER"
+        },
+        {
+          "line": 54,
+          "text": "#endif"
+        },
+        {
+          "line": 55,
+          "text": ""
+        },
+        {
+          "line": 56,
+          "text": "/*"
+        },
+        {
+          "line": 57,
+          "text": " * PAGE_ALLOC_COSTLY_ORDER is the order at which allocations are deemed"
+        },
+        {
+          "line": 58,
+          "text": " * costly to service.  That is between allocation orders which should"
+        },
+        {
+          "line": 999,
+          "text": ""
+        },
+        {
+          "line": 1000,
+          "text": "\t/* free areas of different sizes */"
+        },
+        {
+          "line": 1001,
+          "text": "\tstruct free_area\tfree_area[NR_PAGE_ORDERS];"
+        },
+        {
+          "line": 1002,
+          "text": ""
+        },
+        {
+          "line": 1003,
+          "text": "#ifdef CONFIG_UNACCEPTED_MEMORY"
+        },
+        {
+          "line": 1004,
+          "text": "\t/* Pages to be accepted. All pages on the list are MAX_PAGE_ORDER */"
+        },
+        {
+          "line": 1005,
+          "text": "\tstruct list_head\tunaccepted_pages;"
+        },
+        {
+          "line": 1006,
+          "text": ""
+        },
+        {
+          "line": 1007,
+          "text": "\t/* To be called once the last page in the zone is accepted */"
+        },
+        {
+          "line": 1008,
+          "text": "\tstruct work_struct\tunaccepted_cleanup;"
+        },
+        {
+          "line": 1009,
+          "text": "#endif"
+        },
+        {
+          "line": 1869,
+          "text": "#define PAGE_SECTION_MASK\t(~(PAGES_PER_SECTION-1))"
+        },
+        {
+          "line": 1870,
+          "text": ""
+        },
+        {
+          "line": 1871,
+          "text": "#define SECTION_BLOCKFLAGS_BITS \\"
+        },
+        {
+          "line": 1872,
+          "text": "\t((1UL << (PFN_SECTION_SHIFT - pageblock_order)) * NR_PAGEBLOCK_BITS)"
+        },
+        {
+          "line": 1873,
+          "text": ""
+        },
+        {
+          "line": 1874,
+          "text": "#if (MAX_PAGE_ORDER + PAGE_SHIFT) > SECTION_SIZE_BITS"
+        },
+        {
+          "line": 1875,
+          "text": "#error Allocator MAX_PAGE_ORDER exceeds SECTION_SIZE"
+        },
+        {
+          "line": 1876,
+          "text": "#endif"
+        },
+        {
+          "line": 1877,
+          "text": ""
+        },
+        {
+          "line": 1878,
+          "text": "static inline unsigned long pfn_to_section_nr(unsigned long pfn)"
+        },
+        {
+          "line": 1879,
+          "text": "{"
+        },
+        {
+          "line": 1880,
+          "text": "\treturn pfn >> PFN_SECTION_SHIFT;"
+        }
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mmzone.h",
+      "sha256": "ff83b02062970e6bf398c1bea9429f8f71ccaa4ec671faab3fd75d6910f11f5a"
+    }
+  ],
+  "receipt_directory_names": [
+    "apply.log",
+    "config-after",
+    "config-before",
+    "configure-core-result.json",
+    "core-and-hooks.log",
+    "full-build-identity.json",
+    "full-build-result.json",
+    "full-build.log",
+    "inspect.stderr",
+    "inspect.stdout",
+    "install-kdrebuild1-01a1bc4f",
+    "install-kdrebuild1-01a1bc4f-v2",
+    "integration-application",
+    "integration-plan.patch",
+    "olddefconfig.log",
+    "overlay-950ee6fc",
+    "pins.json",
+    "plan.stderr",
+    "postboot-20261110-91f48b75",
+    "postboot-helper-230a.py",
+    "preparation.json",
+    "reboot-request-20261110.json",
+    "retained-kdrebuild1-950ee6fc",
+    "select-core.log",
+    "verify.log"
+  ],
+  "scope": "target source text, no allocator probe or execution"
+}

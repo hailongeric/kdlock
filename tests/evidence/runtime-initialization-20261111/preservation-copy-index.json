@@ -1,0 +1,14 @@
+[
+  {
+    "bytes": 8510,
+    "local_path": "retained-v1-artifacts.json",
+    "sha256": "224cfc528ea77f2cd09d36293ba9db7045c9c8b9d39114bb954497c85545e700",
+    "source_path": "root@10.176.26.71:2222:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/retained-kdrebuild1-950ee6fc/manifest.json"
+  },
+  {
+    "bytes": 472,
+    "local_path": "return-normal-reconnect.json",
+    "sha256": "78f0082aeba59a26a90b80b56ff3e914c269f70f05959750425ecc7703b2a663",
+    "source_path": "/tmp/kdlock-main-return-normal-reconnect-20261111.json"
+  }
+]

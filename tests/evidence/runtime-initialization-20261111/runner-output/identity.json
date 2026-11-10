@@ -1,0 +1,29 @@
+{
+  "cases": [],
+  "evidence": "kernel-mechanism",
+  "gs_proof": {
+    "boot_id": "91f48b75-2d02-4de1-81cf-f99902f6e3c7",
+    "build_id": "f34c6d56a0f0545790efd04c566dc390cae8d2ae",
+    "const_current_task": "0xffffffff8440f018",
+    "current_task_gs_offset": "0xffffffff8440f018",
+    "gs_symbol": "current_task",
+    "kaslr_disabled": true,
+    "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "kernel_elf_sha256": "466907d2a9e392eaa976035595ca99da8e5a8a25653efead677de82cab006db9",
+    "kernel_release": "7.0.0-38-kdrebuild1",
+    "percpu_section_va": "0xffffffff843f7000",
+    "scope": "Exact linked/running kernel identity and full GS symbol input; fixture GS relocation and execution remain separate.",
+    "verified_for_running_kernel": true
+  },
+  "iterations": 8,
+  "kernel_release": "7.0.0-38-kdrebuild1",
+  "module_sha256": "7b5baba594c6bb781dca30ea7b52bb685abc59e34f8a6d8bc419c0d2dab2511b",
+  "module_sizes": {
+    "body": 833,
+    "callee": 116
+  },
+  "returned_full_jit_body": "not_established",
+  "source_version": "fixture-7b5baba594c6bb781dca30ea7b52bb685abc59e34f8a6d8bc419c0d2dab2511b-466907d2a9e392eaa976035595ca99da8e5a8a25653efead677de82cab006db9-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "status": "incomplete",
+  "workers": 4
+}

@@ -1,0 +1,39 @@
+{
+  "utc": "2026-11-10T16:13:45.486648+00:00",
+  "kernel_release": "7.0.0-38-kdrebuild1",
+  "boot_id": "91f48b75-2d02-4de1-81cf-f99902f6e3c7",
+  "taint": "12800",
+  "module_absent": true,
+  "devices_absent": {
+    "kd_runtime_fixture": true,
+    "kd_runtime_fixture_ctl": true
+  },
+  "allocation-site": {
+    "argv": [
+      "addr2line",
+      "-f",
+      "-i",
+      "-e",
+      "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux",
+      "0xffffffff815074b8"
+    ],
+    "returncode": 0
+  },
+  "item-layout": {
+    "argv": [
+      "pahole",
+      "-C",
+      "kd_jit_feedback_claim_item",
+      "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux"
+    ],
+    "returncode": 0
+  },
+  "sha256": {
+    "modules.txt": "f1abe78389940daf61ef1e26b35fefc16a125dd51439a9d83b64a8d7433cb127",
+    "memory.txt": "1bf200d2f3a5c3e8525230cc188c635e5f61f7d741405ca925614bc05d043816",
+    "buddyinfo.txt": "a3551c8a78509309aa14e8f4cb1130b20769ff97fcfe7d9822e14623255f4456",
+    "dmesg.txt": "5ab5139d1f724ddd76f5e4443cddc7fd58facb37ce1d8d954704298797c3525b",
+    "allocation-site.txt": "7010b0a31d29e0e43a50658d0e530a425df4b77f55dd706f56d9b0b56da127db",
+    "item-layout.txt": "890383f666f6bd2268458b982b94e1b73c82abcd64957e6b2efdce91cccbd2cb"
+  }
+}
