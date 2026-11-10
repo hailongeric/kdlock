@@ -1,0 +1,8 @@
+# Mechanism fixture only; source/build identity and target context are recorded.
+obj-m += kd_runtime_fixture.o
+kd_runtime_fixture-y := runtime_fixture.o
+ccflags-y += -I$(src)/../../..
+KASAN_SANITIZE_runtime_fixture.o := n
+KCSAN_SANITIZE_runtime_fixture.o := n
+KCOV_INSTRUMENT_runtime_fixture.o := n
+GCOV_PROFILE_runtime_fixture.o := n
