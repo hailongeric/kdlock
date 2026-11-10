@@ -74,7 +74,9 @@ forced-local/defer option is superseded.
 
 The selected ordinary source path has exact-target build/boot, scoped generated
 prefix execution and cumulative ordinary-JMP learning through actual publication
-and ACK. Earlier failures, the first prefix and later learning remain separate
+and ACK. The later kernel3 fixed-image fixture records protected JIT completion
+and actual two-combiner recursion, with physical release and final retirement
+observed separately. Earlier failures, prefixes and learning remain separate
 attempts. These stages have separate inputs and receipts:
 
 | Stage | Actual result and evidence boundary |
@@ -88,20 +90,25 @@ attempts. These stages have separate inputs and receipts:
 | Earlier generated prefix (live3) | The [live3 receipt](../../../tests/evidence/runtime-jit-prefix-20261111/README.md) records return 0 with `partial_jit_mechanism_pass`: one image publication and eight typed CALL_STAGED exits at `0xffffffffc09ea14b` to unsupplied `0xffffffffc09e8020`. All exits precede inner B; native suffixes complete the fixture counters. No fact receives coverage ACK; all eight are durably archived and SETTLED before ordinary teardown/unload. The [repeat-boot proof](../../../tests/evidence/kernel-repeatboot-20261111/README.md) binds this attempt to its fresh kernel2 boot. |
 | Fixture dependency coverage | [Module3](../../../tests/evidence/module3-build-20261111/README.md), source `9f327952`, retains the original body/helper regions plus the actual module-owned executable dependency page under the same module/immutable-text contract. Live4 exports three regions: 4096-byte page, 116-byte helper and 865-byte body, totaling 5077 bytes. The common compiler remains `18c8f2e4` and kernel core `81feb2d7`; normal compiler flags and actual decoded CALL/JMP forms are retained. |
 | Ordinary-JMP learning (live4) | The [live4 receipt](../../../tests/evidence/runtime-learning-20261111/README.md) records actual return 0 with `partial_jit_mechanism_pass` on kernel2 boot `0f3f9c09-8837-4763-8320-388278bd83d7`. Eight exact fact keys at JMP sites `0xffffffffc09e8020`, `0xffffffffc09e8023` and `0xffffffffc09e8026` target `0xffffffffc09ea010`; all are observed, merged, emitted, published and ACKed. Four exact image transactions have ACK counts 0/2/4/2, with matching old/new/returned-old identities. All five fixture cases pass expected effects; pending and SETTLED counts are both zero before ordinary destroy/unload, with module/devices absent and taint 12288. |
-| Operational return | The [normal-return receipt](../../../tests/evidence/return-normal-20261111/README.md) records ordinary return to `7.0.0-38-kdlock1`, boot `ca0b717b-c19d-4027-b598-6a1cf58b93d2`, taint 0, no fixture/devices and unchanged normal GRUB configuration/default. This operational result does not move the earlier build/JIT observations onto the normal boot. |
+| Operational return after live4 | The [normal-return receipt](../../../tests/evidence/return-normal-20261111/README.md) records ordinary return to `7.0.0-38-kdlock1`, boot `ca0b717b-c19d-4027-b598-6a1cf58b93d2`, taint 0, no fixture/devices and unchanged normal GRUB configuration/default. This operational result does not move the earlier build/JIT observations onto the normal boot. |
+| Kernel3 build and boot | The [kernel3 build](../../../tests/evidence/kernel-build3-20261110/README.md), [module4 build](../../../tests/evidence/module4-build-20261110/README.md) and [install/boot](../../../tests/evidence/kernel-install3-20261110/README.md) retain ordinary flags, 66 exact package inputs, 27 C plus three assembly targets, Build ID `264a4ef8e55952e5d9ceccf93f65f25f05a50c1f` and fresh boot `bceee25d-a189-4f51-89fa-0e31322b70e6`. Kernel2's independent witness is retained before its inactive build directory is reused. |
+| Fixed-image protected recursion (live5) | The [live5 receipt](../../../tests/evidence/runtime-recursive-20261110/README.md) records controller return 0 with `protected_jit_recursive_mechanism_pass`, 4,691 scalar records and zero overflow. The final image remains fixed for warm plain and two five-task scenes. Actual CA → CB → CA execution shares one S_W and distinct A/B acquisitions, with current binding/cursor return, positive child/root completion, original-owner deferred release, real physical callback completion and final request retirement. A final claim is empty; all eight earlier ordinary facts are ACKed, pending and SETTLED counts are zero, and ordinary destroy/unload completes. The unprotected C epilogue remains native. |
+| Operational return after live5 | The [separate normal-return receipt](../../../tests/evidence/return-normal5-20261110/README.md) records one ordinary return to `7.0.0-38-kdlock1`, fresh boot `884c4a65-4f4c-4a6b-89a3-cefd65221615`, expected normal Build ID and taint 0. The fixture/devices/workers are absent, eight normal/recovery boot files are unchanged, and the normal GRUB default/configuration is retained. This later boot does not replace live5's kernel3 execution identity. |
 
 Live4's saved source CALL/JMP correlation places reached generated checkpoints
 before B, under B, and after A's logical unlock while B remains open. Those are
 path-specific source checkpoints, not a physical role/chain trace or proof of
 the complete recursive protocol. The final image adds the third JMP dispatch, but no
-later generated record proves that dispatch executed. ACK establishes exact
+later generated record from live4 proves that dispatch executed. ACK establishes exact
 published emitted coverage, not execution of every updated path. No whole
-protected JIT-body return is established. T01-T56 remain unrun; no performance
-result follows. The
+protected JIT-body return was established by live4. Live5 separately records its
+complete protected episodes and exact release/retirement paths. T01-T56 remain
+unrun; no performance result follows. The
 [auxiliary-context audit](../../../tests/evidence/auxiliary-context-20261110/README.md)
 retains the unrecognized auxiliary-stack unwinder/stack-end limits and missing
-full context/high-water proof. General retirement, progress and mitigation
-coverage remain unvalidated. Runtime creation refuses active CALL_DEPTH because
+full context/high-water proof. The fixture's exact retirement paths do not
+establish general retirement, progress or mitigation coverage. Those remain
+unvalidated. Runtime creation refuses active CALL_DEPTH because
 its return thunk changes flags; the ordinary mitigation configuration remains
 enabled.
 
@@ -193,7 +200,8 @@ independently. Source review found no confirmed queue-link/retirement defect
 under those contracts. The later native-local fixture completed eight ordinary
 lock/body/unlock iterations. Later generated prefix execution proves limited
 proxy entry; live4 reaches the correlated later source checkpoints above.
-Complete recursive/deferred correctness remains unvalidated.
+General recursive/deferred correctness beyond the fixed image fixture remains
+unvalidated.
 
 The [canonical state](../../../kernel/state.c) contains one W packet, one
 current source operation, exact referring grants and execution bindings.
@@ -661,9 +669,10 @@ stack/context provisioning are listed in section 2.1 and the plan. Managed task
 lifecycle, provider/channel/executable/compiler orchestration and archival
 settlement have source. Crash/restart reconstruction beyond that workflow is not
 implemented. Exact target application/build and bounded native/control results
-are recorded in the current checkpoint, followed by a limited generated prefix.
-Complete generated bodies and full context/lifetime/progress acceptance remain
-unvalidated.
+are recorded in the current checkpoint, followed by prefixes and later fixed
+image protected JIT completion across two physical combiners. Its exact physical
+release and final retirement observations remain separate from full
+context/lifetime/progress acceptance, which remains unvalidated.
 
 Source/static inspection covers the new kernel components. The 12 focused VM
 checks on `c6becf81` additionally exercise compiler/learning/wire/archive and real

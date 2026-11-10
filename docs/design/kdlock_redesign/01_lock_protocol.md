@@ -4,6 +4,12 @@ Current build/boot, native checks, the earlier construction failure/recovery and
 later returned generated prefix are scoped in the [current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
 Design requirements below do not establish complete generated-body or support evidence.
 
+The [fixed-image fixture](../../../tests/evidence/runtime-recursive-20261110/README.md)
+now records protected JIT completion across two distinct physical combiners,
+with exact current-state return and separate physical-release/final-retirement
+records. Its native C epilogue, general progress, full auxiliary context bounds
+and broader API/workload support remain outside that evidence.
+
 **Status:** proposed complete design contract  
 **Applies to:** the independent redesign described in [the overview](00_overview.md)  
 **Implementation boundary:** every function described here belongs to kdlock's lock, unlock, wait or combining implementation

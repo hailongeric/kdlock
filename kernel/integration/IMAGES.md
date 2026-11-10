@@ -16,7 +16,27 @@ and returned eight generated prefixes at the same early unsupplied-target
 frontier. That attempt established no complete protected/recursive generated
 body or coverage ACK; all eight pending facts were archived/SETTLED before
 normal teardown. Later learning/ACK observations have their own scoped receipt
-in the current checkpoint.
+in the current checkpoint. The later fixed-image fixture separately records
+protected JIT completion, two-combiner return and exact release/retirement paths;
+it establishes no whole-C-function or general image/runtime support proof.
+
+## Scalar observation listeners
+
+[observation.h](../observation.h) supplies optional call-only scalar events.
+They acquire no source, image, task or request reference. A listener copies the
+record synchronously without waiting or changing protocol state; pointer values
+identify retained objects at that event and cannot be dereferenced later.
+`SLOT_RESERVE` and `SLOT_FREE` delimit request lifetimes across address reuse.
+
+Register before immutable source admission. After runtime/provider users drain,
+unregister and synchronize pending callbacks before releasing listener storage.
+Registration can patch trace call sites, so it must follow the same
+all-dependency immutable-text ordering.
+A test collector's explicit finite capacity and zero-overflow check provide
+observation evidence, not production admission or ownership authority. Positive
+protected completion is recorded before outward native-epilogue normalization;
+physical callback completion and final release/request retirement remain
+separate events. See the fixed-image receipt for their actual correlations.
 
 ## Source retention
 

@@ -9,7 +9,10 @@ Every active borrowed or nested request uses its explicit MCS call/node's
 `node->state` pointer to original W's one canonical S_W. A nested request keeps
 that same pointer. The dispatcher passes its current call and parent role;
 changing physical executor never substitutes that task's own core. No external
-registry or active-borrowed-state task field participates.
+registry or active-borrowed-state task field participates. The fixed-image
+fixture now observes this same-state relationship across actual CA → CB → CA
+execution and positive protected returns; its exact release/retirement evidence
+remains narrower than a complete auxiliary/lifecycle or public API proof.
 
 Before the first node exists, native entry needs stable own-core and control
 backing. [task_state.h](../task_state.h) defines one caller-owned

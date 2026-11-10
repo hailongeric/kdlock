@@ -15,7 +15,10 @@ The separately retained live3 attempt published one image and returned eight
 generated prefixes at a CALL_STAGED unsupplied-target frontier before inner B,
 then archived/SETTLED all eight pending facts without coverage ACK. Later learning
 and ACK observations are separate in the current checkpoint; native suffix
-completion is not recursive JIT proof.
+completion is not recursive JIT proof. The later fixed-image fixture records
+protected JIT completion and actual two-combiner recursion, with exact release
+and retirement observations. Its separate receipt does not promote the earlier
+prefixes or establish general runtime support.
 
 ## Cold source and task admission
 

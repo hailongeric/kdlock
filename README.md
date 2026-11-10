@@ -10,6 +10,15 @@ non-PREEMPT_RT**.
 
 ## Current state
 
+The [fixed-image recursive fixture](tests/evidence/runtime-recursive-20261110/README.md)
+returned `protected_jit_recursive_mechanism_pass` on kernel3. It records complete
+protected JIT episodes, actual CA → CB → CA execution on one canonical S_W,
+and separate original-owner physical release and final request-retirement
+observations. The unprotected C-function epilogue remains native. This is bounded
+ordinary-mutex mechanism evidence; it establishes no general progress,
+performance, whole-kernel or real-world syscall/API result. Earlier partial
+attempts below retain their original evidence boundaries.
+
 The private [compiler front end](disassem/compiler.py) connects a finite,
 immutable source snapshot to the original Miasm decoder and
 [fragment planner](disassem/fragment.py). It retains complete decoded records,
@@ -94,8 +103,10 @@ local/proxy selection and retained physical batches on top of the
 physical release and record retirement have separate conditions. Source,
 result/binding, child-return and notifier users retain their exact controls;
 only the responsible physical owner releases/reaps its batch. The native-local
-fixture completed eight ordinary lock/body/unlock iterations; the later attempt
-observed limited proxy-generated prefix execution. Complete recursive/deferred correctness,
+fixture completed eight ordinary lock/body/unlock iterations; earlier attempts
+observed limited proxy-generated prefixes. The fixed-image fixture now records
+nested protected JIT completion, deferred outer release and final retirement on
+its exact task/request paths. General recursive/deferred correctness, progress,
 performance and a complete public mutex lane remain unvalidated.
 
 C05 uses task-owned preallocated persistent request records for the unified
@@ -186,7 +197,7 @@ the final auxiliary actor closes only after all entry/binding reads, before
 restoring the current canonical native continuation. The
 [native task progress helper](kernel/task_progress.c) connects owner progress,
 episode/grant actor collection and pool collection. These paths have independent
-source review and limited native/fork/generated-prefix observations, without
+source review and bounded native/fork/protected-JIT observations, without
 complete stack/lifecycle proof. See the
 [integration guide](kernel/integration/README.md).
 
@@ -202,7 +213,9 @@ the fixed Linux 7.0/x86_64/non-RT C target gate. It excludes the unexpanded imag
 wrapper and supplies no automatic API conversion or provider/lifecycle policy.
 Kbuild at `5989fbbb` added the fact pool and publication bridge for 17 C units
 at that revision. At `c6becf81`, Kbuild lists 26 C units and the same three concrete
-assembly entries. The [build guide](kernel/integration/BUILDING.md) records
+assembly entries. `1b50e373` adds scalar observations for 27 C units and the
+same three entries; the kernel3 build has its own exact receipt. The
+[build guide](kernel/integration/BUILDING.md) records
 exact-tree prerequisites; actual core/full-build results have separate receipts
 in the current evidence checkpoint.
 
@@ -219,8 +232,9 @@ request/fact count or complete control-stack budget is configured.
 Generated execution requires a distinct physical task
 and admitted nonoverlapping executor/source/wait-control stacks. W's own body
 uses a native route; a runtime instruction budget does not establish stack
-separation. Actual compilation, native checks and a returned generated prefix
-do not establish complete generated execution or a complete runtime support claim.
+separation. The fixed-image fixture establishes its protected JIT episodes;
+compilation, earlier native/prefix checks and that bounded result do not establish
+a complete runtime support claim.
 
 The VM focused pipeline checks passed **12/12** on `c6becf81`, including the real
 GNU cpp/as/ld/objcopy image-construction case. The frozen 99-file input remained

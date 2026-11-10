@@ -21,8 +21,10 @@ flag alone does not create or configure those components. The exact kernel tree
 and configured build output are absent from this repository. At source checkpoint
 `c6becf81`, package target parsing/build/runtime checks were still unrun. Later
 receipts now record exact target application, 26 C plus three assembly core
-units, full kernel builds, kernel2 install/boot and limited native/fork execution;
-the current checkpoint links them without attributing those stages to the
+units, full kernel builds, kernel2 install/boot and limited native/fork execution.
+Kernel3 adds one observation C unit, with separate build/boot and scoped
+protected JIT fixture receipts. The current checkpoint links them without
+attributing those stages to the
 earlier 12 host-pipeline checks. All authorized builds, modules, tests and timing run
 only in the development VM. Source edits and
 static inspection remain on the source host.
@@ -91,7 +93,8 @@ epoch/provider/stack, feedback producer/pool/publication, channel/control/compil
 images/runtime/exports, canonical state/JIT, MCS/release, task roots, request
 pools, owner progress, task setup/storage/lifecycle/progress and native entry/API.
 Historical `a65016e3` had 15 C units and `5989fbbb` had 17; those counts describe
-those revisions.
+those revisions. `1b50e373` adds `observation.c`, making 27 C units; kernel3's
+receipt records 30 object targets and the complete normal kernel build.
 `include/mutex_api.S`, `include/mutex_entry.S` and `include/native_resume.S` are
 concrete entries. `include/wrapper.S` contains the per-image entry/body template:
 compile only a separately constructed image with those placeholders resolved,
