@@ -7,6 +7,8 @@
 #include <linux/kthread.h>
 #include <linux/miscdevice.h>
 #include <linux/module.h>
+#include <linux/mm.h>
+#include <linux/overflow.h>
 #include <linux/mutex.h>
 #include <linux/preempt.h>
 #include <linux/sched.h>
@@ -34,6 +36,8 @@ static bool immutable_text;
 static bool auxiliary_contract;
 static unsigned int source_size;
 static unsigned int step_size;
+static unsigned int dependency_page_limit;
+static unsigned long total_source_byte_limit;
 static char *source_version;
 module_param(gs_offset, ulong, 0444);
 module_param(gs_verified, bool, 0444);
@@ -41,6 +45,8 @@ module_param(immutable_text, bool, 0444);
 module_param(auxiliary_contract, bool, 0444);
 module_param(source_size, uint, 0444);
 module_param(step_size, uint, 0444);
+module_param(dependency_page_limit, uint, 0444);
+module_param(total_source_byte_limit, ulong, 0444);
 module_param(source_version, charp, 0444);
 MODULE_PARM_DESC(gs_offset, "Actual running-target current_task GS offset, verified from its kernel ELF/source");
 MODULE_PARM_DESC(gs_verified, "Operator supplied the exact running-target GS/configuration receipt");
@@ -48,6 +54,8 @@ MODULE_PARM_DESC(immutable_text, "Module/source dependencies remain unpatched th
 MODULE_PARM_DESC(auxiliary_contract, "Operator admits this target's task-owned auxiliary stack/context contract");
 MODULE_PARM_DESC(source_size, "Exact fixture_source_body ELF symbol size from this module binary");
 MODULE_PARM_DESC(step_size, "Exact fixture_source_step ELF symbol size from this module binary");
+MODULE_PARM_DESC(dependency_page_limit, "Explicit maximum retained module-owned executable dependency pages");
+MODULE_PARM_DESC(total_source_byte_limit, "Explicit maximum total copied body, callee and dependency bytes");
 MODULE_PARM_DESC(source_version, "Explicit module/kernel/configuration identity for this mechanism run");
 
 struct fixture_worker {
@@ -103,6 +111,10 @@ static struct {
 	unsigned long gs_offset;
 	unsigned int source_size;
 	unsigned int step_size;
+	unsigned int dependency_page_limit;
+	unsigned long total_source_byte_limit;
+	unsigned int dependency_pages;
+	size_t source_bytes;
 } configuration_identity;
 
 void fixture_source_body(struct fixture_worker *worker);
@@ -141,9 +153,11 @@ noinline notrace __visible void fixture_source_body(struct fixture_worker *worke
 	}
 	kd_mutex_lock(&lock_b[index]);
 	WRITE_ONCE(protected_b[index], READ_ONCE(protected_b[index]) + 1);
+	READ_ONCE(step_entry)(worker);
 	if (worker->mode == 2) {
 		kd_mutex_unlock(&lock_a[index]);
 		WRITE_ONCE(protected_b[index], READ_ONCE(protected_b[index]) + 1);
+		READ_ONCE(step_entry)(worker);
 		kd_mutex_unlock(&lock_b[index]);
 	} else {
 		kd_mutex_unlock(&lock_b[index]);
@@ -474,13 +488,79 @@ static struct miscdevice control_device = {
 
 #define SYMBOL_BYTES(text) { .data = (text), .length = sizeof(text) - 1 }
 
+/* The target finalizes module-owned executable dependency pages before init.
+ * Copy those exact ordinary bytes under the same immutable-text/module hold as
+ * the two ELF-sized source regions. No dependency instruction is modeled here.
+ */
+static int __init notrace fixture_regions(struct kd_jit_source_load_region **out,
+		unsigned int *out_count)
+{
+	struct kd_jit_source_load_region *regions;
+	unsigned int pages = 0, count, index, prior;
+	size_t dependency_bytes, total;
+
+	if (!dependency_page_limit || !total_source_byte_limit)
+		return -EINVAL;
+#ifdef CONFIG_MITIGATION_ITS
+	if (THIS_MODULE->arch.its_pages.num < 0 ||
+	    (THIS_MODULE->arch.its_pages.num && !THIS_MODULE->arch.its_pages.pages))
+		return -EINVAL;
+	pages = THIS_MODULE->arch.its_pages.num;
+#endif
+	if (pages > dependency_page_limit || check_add_overflow(2U, pages, &count) ||
+	    check_mul_overflow((size_t)pages, (size_t)PAGE_SIZE, &dependency_bytes) ||
+	    check_add_overflow((size_t)source_size, (size_t)step_size, &total) ||
+	    check_add_overflow(total, dependency_bytes, &total) || total > total_source_byte_limit)
+		return -E2BIG;
+	regions = kcalloc(count, sizeof(*regions), GFP_KERNEL);
+	if (!regions)
+		return -ENOMEM;
+	regions[0] = (struct kd_jit_source_load_region) { (unsigned long)fixture_source_body, source_size };
+	regions[1] = (struct kd_jit_source_load_region) { (unsigned long)fixture_source_step, step_size };
+#ifdef CONFIG_MITIGATION_ITS
+	for (index = 0; index < pages; ++index) {
+		unsigned long start = (unsigned long)THIS_MODULE->arch.its_pages.pages[index];
+
+		if (!start || !PAGE_ALIGNED(start))
+			goto invalid;
+		regions[index + 2] = (struct kd_jit_source_load_region) { start, PAGE_SIZE };
+	}
+#endif
+	for (index = 0; index < count; ++index) {
+		unsigned long start = regions[index].start, last;
+		size_t length = regions[index].length;
+
+		if (!length || length - 1 > ~0UL - start)
+			goto invalid;
+		last = start + length - 1;
+		if (index < 2 && (!within_module_mem_type(start, THIS_MODULE, MOD_TEXT) ||
+				  !within_module_mem_type(last, THIS_MODULE, MOD_TEXT)))
+			goto invalid;
+		for (prior = 0; prior < index; ++prior) {
+			unsigned long other = regions[prior].start;
+			unsigned long other_last = other + regions[prior].length - 1;
+
+			if (start <= other_last && other <= last)
+				goto invalid;
+		}
+	}
+	configuration_identity.dependency_pages = pages;
+	configuration_identity.source_bytes = total;
+	*out = regions;
+	*out_count = count;
+	return 0;
+invalid:
+	kfree(regions);
+	return -EINVAL;
+}
+
 static int __init notrace fixture_init(void)
 {
-	struct kd_jit_source_load_region regions[2];
+	struct kd_jit_source_load_region *regions;
 	struct module *modules[] = { THIS_MODULE };
 	struct kd_jit_source_provider_args source;
 	struct kd_jit_runtime_config config;
-	unsigned int index;
+	unsigned int index, region_count;
 	int result;
 
 	if (!gs_verified || !immutable_text || !auxiliary_contract || !source_version ||
@@ -490,16 +570,20 @@ static int __init notrace fixture_init(void)
 	configuration_identity.gs_offset = gs_offset;
 	configuration_identity.source_size = source_size;
 	configuration_identity.step_size = step_size;
-	regions[0] = (struct kd_jit_source_load_region) { (unsigned long)fixture_source_body, source_size };
-	regions[1] = (struct kd_jit_source_load_region) { (unsigned long)fixture_source_step, step_size };
+	configuration_identity.dependency_page_limit = dependency_page_limit;
+	configuration_identity.total_source_byte_limit = total_source_byte_limit;
+	result = fixture_regions(&regions, &region_count);
+	if (result)
+		return result;
 	source = (struct kd_jit_source_provider_args) {
 		.contract = KD_JIT_SOURCE_IMMUTABLE_DEPENDENCIES,
 		.version = (const unsigned char *)source_version, .version_length = strlen(source_version),
-		.regions = regions, .region_count = ARRAY_SIZE(regions),
+		.regions = regions, .region_count = region_count,
 		.configuration_identity = &configuration_identity, .load_identity = &load_identity,
 		.current_task_gs_offset = gs_offset, .modules = modules, .module_count = ARRAY_SIZE(modules),
 	};
 	result = kd_jit_source_provider_create(&source, &provider);
+	kfree(regions);
 	if (result)
 		return result;
 	config = (struct kd_jit_runtime_config) {

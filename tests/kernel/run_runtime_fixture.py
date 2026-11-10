@@ -117,6 +117,9 @@ def main():
     parser.add_argument("--kernel-config", type=Path, required=True)
     parser.add_argument("--gs-proof-json", type=Path, required=True)
     parser.add_argument("--gs-offset", type=lambda value: int(value, 0), required=True)
+    parser.add_argument("--dependency-page-limit", type=int, required=True)
+    parser.add_argument("--total-source-byte-limit", type=int, required=True)
+    parser.add_argument("--wire-log-byte-limit", type=int, required=True)
     parser.add_argument("--immutable-text-contract", action="store_true", required=True)
     parser.add_argument("--auxiliary-stack-contract", action="store_true", required=True)
     parser.add_argument("--workers", type=int, default=4)
@@ -129,8 +132,13 @@ def main():
         raise ValueError("actual kernel release differs from the explicit Linux 7 target")
     if (not 2 <= args.workers <= 8 or not 1 <= args.iterations <= 64
             or not math.isfinite(args.deadline) or args.deadline <= 0
-            or not 0 <= args.gs_offset < 1 << 64):
-        raise ValueError("fixture worker/iteration/deadline extent is invalid")
+            or not 0 <= args.gs_offset < 1 << 64
+            or not 1 <= args.dependency_page_limit <= 4096 - 2
+            or not 1 <= args.total_source_byte_limit < 1 << 64
+            or not 1 <= args.wire_log_byte_limit < 1 << 64
+            or args.total_source_byte_limit + (2 + args.dependency_page_limit) * 16
+                + 32 + 7 * 8 + 64 * 16 + 8 + 256 > 2 * 1024 * 1024):
+        raise ValueError("fixture worker/iteration/source/deadline extent is invalid")
     proof = json.loads(args.gs_proof_json.read_text())
     if (proof.get("verified_for_running_kernel") is not True
             or proof.get("kernel_release") != os.uname().release
@@ -168,6 +176,10 @@ def main():
     results = {"evidence": "kernel-mechanism", "kernel_release": os.uname().release,
                "module_sha256": digest(args.module), "source_version": version,
                "gs_proof": proof, "module_sizes": {"body": body_size, "callee": step_size},
+               "source_limits": {"dependency_pages": args.dependency_page_limit,
+                                 "total_source_bytes": args.total_source_byte_limit},
+               "wire_log": {"byte_limit": args.wire_log_byte_limit,
+                            "reserved_bytes": 0, "reservations": 0},
                "workers": args.workers, "iterations": args.iterations, "cases": [],
                "status": "incomplete", "returned_full_jit_body": "not_established"}
     (args.output / "identity.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
@@ -177,6 +189,63 @@ def main():
         r"__(?:x86_indirect|x86_return)_thunk[A-Za-z0-9_]*", module_listing.decode(errors="replace"))))
     control = -1
     transport = None
+    wire_directory = args.output / "wire"
+    wire_directory.mkdir()
+
+    class RecordedTransport(FdTransport):
+        """Observe actual transport calls; never dispatch, replay or settle twice.
+
+        An output-write failure propagates before exchange clears its flight, so
+        actual kernel controls remain for explicit reconciliation. A saved file
+        alone is no protocol/ownership proof; retain its returned status too.
+        """
+
+        def _ioctl(self, flight):
+            # Reserve complete observed output even on delivery failure, plus
+            # both bounded JSON records, before any ioctl can change controls.
+            metadata_limit = 4096
+            required = len(flight.request) + len(flight.output_buffer) + len(flight.header) + metadata_limit
+            retained = results["wire_log"]["reserved_bytes"]
+            if required > args.wire_log_byte_limit - retained:
+                results["wire_log"]["refused"] = {
+                    "operation": int(flight.operation), "sequence": flight.sequence,
+                    "required_bytes": required,
+                }
+                raise ValueError("explicit wire-log byte limit cannot retain the next exchange")
+            results["wire_log"]["reserved_bytes"] = retained + required
+            results["wire_log"]["reservations"] += 1
+            metadata_bytes = 0
+            attempt = getattr(self, "_recorded_attempts", 0) + 1
+            self._recorded_attempts = attempt
+            directory = wire_directory / f"attempt-{attempt:08d}"
+            directory.mkdir()
+
+            def metadata(name, value):
+                nonlocal metadata_bytes
+                copied = (json.dumps(value, indent=2, sort_keys=True) + "\n").encode("utf-8")
+                if len(copied) > metadata_limit - metadata_bytes:
+                    raise ValueError("wire observer metadata exceeds its reserved byte extent")
+                metadata_bytes += len(copied)
+                (directory / name).write_bytes(copied)
+
+            (directory / "request.bin").write_bytes(flight.request)
+            identity = {"operation": int(flight.operation), "sequence": flight.sequence,
+                        "request_bytes": len(flight.request),
+                        "output_capacity": len(flight.output_buffer)}
+            metadata("request.json", identity)
+            try:
+                result = super()._ioctl(flight)
+            except BaseException as error:
+                # These are observed buffers, not a claimed completed response.
+                (directory / "observed-envelope.bin").write_bytes(bytes(flight.header))
+                (directory / "observed-output-capacity.bin").write_bytes(bytes(flight.output_buffer))
+                metadata("error.json", {**identity, "error": repr(error), "completed_response": False})
+                raise
+            (directory / "returned-envelope.bin").write_bytes(bytes(flight.header))
+            (directory / "reply.bin").write_bytes(result.payload)
+            metadata("result.json", {**identity, "returned_sequence": result.sequence,
+                "status": result.status, "reply_bytes": len(result.payload), "completed_response": True})
+            return result
 
     def status():
         os.lseek(control, 0, os.SEEK_SET)
@@ -296,13 +365,17 @@ def main():
             time.sleep(0.02)
         expected = workers * iterations
         expected_b = 0 if mode == 0 else expected * (2 if mode == 2 else 1)
-        if (int(values["completed"]) != expected or int(values["calls"]) != expected
+        expected_calls = expected * (mode + 1)
+        if (int(values["completed"]) != expected or int(values["calls"]) != expected_calls
                 or int(values["a"]) != expected or int(values["b"]) != expected_b
                 or int(values["errors"]) or int(values["origin_errors"]) or int(values["core_errors"])
                 or int(values["locks_clear"]) != 1):
             (args.output / f"{name}-failure.txt").write_text(raw)
             raise AssertionError("ordinary source effects/current/core/physical cleanup differ")
-        results["cases"].append({"name": name, "raw_status": raw, "values": values,
+        results["cases"].append({"name": name, "mode": mode, "workers": workers,
+                                 "iterations": iterations, "raw_status": raw, "values": values,
+                                 "expected_call_effects": expected_calls,
+                                 "actual_call_effects": int(values["calls"]),
                                  "native_body_completion": True})
         control_command("stop")
 
@@ -322,21 +395,32 @@ def main():
     try:
         command([tools["insmod"], str(args.module), f"gs_offset={args.gs_offset}", "gs_verified=1",
                  "immutable_text=1", "auxiliary_contract=1", f"source_size={body_size}",
-                 f"step_size={step_size}", f"source_version={version}"], args.deadline)
+                 f"step_size={step_size}", f"dependency_page_limit={args.dependency_page_limit}",
+                 f"total_source_byte_limit={args.total_source_byte_limit}",
+                 f"source_version={version}"], args.deadline)
         control = os.open("/dev/kd_runtime_fixture_ctl", os.O_RDWR | os.O_CLOEXEC)
         managed_fork_case()
         body_case("native-local", 0, 1, args.iterations)
         limits = WireLimits(2 * 1024 * 1024, 4096, 256, 256, 512 * 1024)
-        transport = FdTransport.open("/dev/kd_runtime_fixture", limits, 4 * 1024 * 1024 + 48)
-        exported = drive(SourceExportSession(transport, SourceExportLimits(2, 64, 128 * 1024)))
+        transport = RecordedTransport.open("/dev/kd_runtime_fixture", limits, 4 * 1024 * 1024 + 48)
+        exported = drive(SourceExportSession(transport, SourceExportLimits(
+            2 + args.dependency_page_limit, 64, args.total_source_byte_limit)))
         snapshot, roots, calls, indirect = scan_operation_calls(exported, tools["objdump"], args.output, args.deadline)
+        results["actual_source_regions"] = [{"start": region.start, "length": len(region.data)}
+                                            for region in snapshot.regions]
+        results["actual_source_region_count"] = len(snapshot.regions)
+        results["actual_dependency_page_count"] = len(snapshot.regions) - 2
+        results["actual_source_bytes"] = sum(len(region.data) for region in snapshot.regions)
         results["actual_call_records"] = calls
         results["near_indirect_call_sites"] = indirect
         results["root_entry"] = roots[0]
-        results["ordinary_indirect_kernel_learning"] = "unverified" if not indirect else "actual_near_call_present"
+        results["ordinary_indirect_kernel_learning"] = "unverified"
         (args.output / "source-export.bin").write_bytes(exported.raw_reply)
         (args.output / "source-metadata.json").write_text(json.dumps({
-            "version": snapshot.version, "regions": [{"start": r.start, "length": len(r.data)} for r in snapshot.regions],
+            "version": snapshot.version, "regions": results["actual_source_regions"],
+            "region_count": results["actual_source_region_count"],
+            "dependency_page_count": results["actual_dependency_page_count"],
+            "source_bytes": results["actual_source_bytes"], "limits": results["source_limits"],
             "sites": [{"site": s.site, "boundary": s.boundary.value if s.boundary else None} for s in snapshot.sites],
             "slot": exported.slot_identity, "old": exported.expected_old_image_identity,
         }, indent=2, sort_keys=True) + "\n")
@@ -397,6 +481,26 @@ def main():
         states = coordinator.facts()
         successful_exits = tuple(state for state in states if state.recorded.fact.entry_result == 0
                                  and state.recorded.fact.exit.kind == int(ExitKind.COVERAGE_MISS))
+        ordinary = tuple(state for state in states if state.recorded.feedback.observation is not None)
+
+        def exact_key(state):
+            fact = state.recorded.fact
+            return {"epoch": fact.epoch.identity.hex(), "record": fact.record_identity.hex(),
+                    "incarnation": fact.incarnation}
+
+        results["ordinary_indirect_learning"] = {
+            "observed": [exact_key(state) for state in ordinary],
+            "merged": [exact_key(state) for state in ordinary
+                       if state.recorded.merge is MergeDisposition.MERGED],
+            "candidate_inputs": [exact_key(state) for state in ordinary if state.input_candidate_identities],
+            "emitted": [exact_key(state) for state in ordinary if state.emitted_candidate_identities],
+            "published_inputs": [exact_key(state) for state in ordinary if state.publication_identities],
+            "acknowledged": [exact_key(state) for state in ordinary if state.acknowledgment_identities],
+        }
+        for stage in ("acknowledged", "published_inputs", "emitted", "candidate_inputs", "merged", "observed"):
+            if results["ordinary_indirect_learning"][stage]:
+                results["ordinary_indirect_kernel_learning"] = stage
+                break
         results["typed_generated_exit_records"] = len(successful_exits)
         results["generated_exit_seen"] = bool(successful_exits)
         results["generated_exit_records"] = [{
@@ -406,9 +510,22 @@ def main():
             "image": state.recorded.fact.image_identity.hex(),
             "entry_result": state.recorded.fact.entry_result,
             "exit": vars(state.recorded.fact.exit),
+            "matching_source_call": next((record for record in calls
+                if record["site"] == state.recorded.fact.exit.source_ip), None),
+            "source_region": next(({"index": index, "start": region.start,
+                "offset": state.recorded.fact.exit.source_ip - region.start}
+                for index, region in enumerate(snapshot.regions)
+                if region.start <= state.recorded.fact.exit.source_ip < region.end), None),
             "classification": state.recorded.fact.classification.value,
             "disposition": state.recorded.feedback.kind.value,
             "merge": state.recorded.merge.value,
+            "ordinary_observation": (None if state.recorded.feedback.observation is None else {
+                "source_version": state.recorded.feedback.observation.source_version,
+                "source_ip": state.recorded.feedback.observation.site,
+                "target": state.recorded.feedback.observation.target,
+                "kind": state.recorded.feedback.observation.kind.value,
+            }),
+            "input_candidates": [value.hex() for value in state.input_candidate_identities],
             "emitted_candidates": [value.hex() for value in state.emitted_candidate_identities],
             "published": [value.hex() for value in state.publication_identities],
             "acknowledged": [value.hex() for value in state.acknowledgment_identities],
