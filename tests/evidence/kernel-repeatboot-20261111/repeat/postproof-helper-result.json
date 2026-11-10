@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/kdlock-kdrebuild2-postboot.py",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot3-20261111-01",
+    "--timeout",
+    "30",
+    "--max-command-bytes",
+    "33554432",
+    "--max-notes-bytes",
+    "1048576"
+  ],
+  "elapsed_seconds": 2.473691357,
+  "returncode": 0,
+  "sha256": "dc7c55d676dcc5cff669f7ff9832618f40a819d4dbca939a866c2e965c76b78e",
+  "timed_out": false
+}

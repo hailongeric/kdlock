@@ -1,0 +1,10 @@
+{
+  "actual_reboot_command_receipt": "repeat/reboot-result.json",
+  "collector_actions": "Read-only saved receipt copying only",
+  "repeat_helper_sha256": "2ff4389be4a487d613fc5d8a14e54f3f0328e30b8cf46c230bd3d89ccf8baf87",
+  "reported_actual_vm_hash_and_ast_check": true,
+  "reported_arm_returncode": 0,
+  "reported_postproof_returncode": 0,
+  "reported_preflight_returncode": 0,
+  "scope": "Root controller transcript report; not a separately saved raw outer parser/dispatch receipt"
+}

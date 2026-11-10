@@ -1,0 +1,696 @@
+[    4.253802] ubuntu kernel: Linux version 7.0.0-38-kdrebuild2 (root@ubuntu) (gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, GNU ld (GNU Binutils for Ubuntu) 2.46) #3 SMP PREEMPT_DYNAMIC Tue Nov 10 16:27:59 UTC 2026 (KDLock Ubuntu 7.0.0-38.38 kdlock1 7.0.14)
+[    4.253834] ubuntu kernel: Command line: BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdrebuild2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0
+[    4.253847] ubuntu kernel: KERNEL supported cpus:
+[    4.253856] ubuntu kernel:   Intel GenuineIntel
+[    4.253864] ubuntu kernel:   AMD AuthenticAMD
+[    4.253886] ubuntu kernel:   Hygon HygonGenuine
+[    4.253897] ubuntu kernel:   Centaur CentaurHauls
+[    4.253906] ubuntu kernel:   zhaoxin   Shanghai  
+[    4.253916] ubuntu kernel: x86/split lock detection: #DB: warning on user-space bus_locks
+[    4.253925] ubuntu kernel: BIOS-provided physical RAM map:
+[    4.253934] ubuntu kernel: BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff]  System RAM
+[    4.253942] ubuntu kernel: BIOS-e820: [mem 0x000000000009fc00-0x000000000009ffff]  device reserved
+[    4.253950] ubuntu kernel: BIOS-e820: [gap 0x00000000000a0000-0x00000000000effff]
+[    4.253959] ubuntu kernel: BIOS-e820: [mem 0x00000000000f0000-0x00000000000fffff]  device reserved
+[    4.253969] ubuntu kernel: BIOS-e820: [mem 0x0000000000100000-0x00000000bffdcfff]  System RAM
+[    4.253977] ubuntu kernel: BIOS-e820: [mem 0x00000000bffdd000-0x00000000bfffffff]  device reserved
+[    4.253985] ubuntu kernel: BIOS-e820: [gap 0x00000000c0000000-0x00000000feffbfff]
+[    4.253993] ubuntu kernel: BIOS-e820: [mem 0x00000000feffc000-0x00000000feffffff]  device reserved
+[    4.254014] ubuntu kernel: BIOS-e820: [gap 0x00000000ff000000-0x00000000fffbffff]
+[    4.254023] ubuntu kernel: BIOS-e820: [mem 0x00000000fffc0000-0x00000000ffffffff]  device reserved
+[    4.254031] ubuntu kernel: BIOS-e820: [mem 0x0000000100000000-0x000000063fffffff]  System RAM
+[    4.254039] ubuntu kernel: NX (Execute Disable) protection: active
+[    4.254047] ubuntu kernel: APIC: Static calls initialized
+[    4.254055] ubuntu kernel: SMBIOS 3.0.0 present.
+[    4.254064] ubuntu kernel: DMI: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[    4.254072] ubuntu kernel: DMI: Memory slots populated: 2/2
+[    4.254080] ubuntu kernel: Hypervisor detected: KVM
+[    4.254088] ubuntu kernel: last_pfn = 0xbffdd max_arch_pfn = 0x10000000000
+[    4.254096] ubuntu kernel: kvm-clock: Using msrs 4b564d01 and 4b564d00
+[    4.254105] ubuntu kernel: kvm-clock: using sched offset of 2290574050301413 cycles
+[    4.254115] ubuntu kernel: clocksource: kvm-clock: mask: 0xffffffffffffffff max_cycles: 0x1cd42e4dffb, max_idle_ns: 881590591483 ns
+[    4.254124] ubuntu kernel: tsc: Detected 2000.000 MHz processor
+[    4.254135] ubuntu kernel: e820: update [mem 0x00000000-0x00000fff] System RAM ==> device reserved
+[    4.254145] ubuntu kernel: e820: remove [mem 0x000a0000-0x000fffff] System RAM
+[    4.254154] ubuntu kernel: last_pfn = 0x640000 max_arch_pfn = 0x10000000000
+[    4.254163] ubuntu kernel: MTRR map: 4 entries (3 fixed + 1 variable; max 19), built from 8 variable MTRRs
+[    4.254177] ubuntu kernel: x86/PAT: Configuration [0-7]: WB  WC  UC- UC  WB  WP  UC- WT  
+[    4.254186] ubuntu kernel: last_pfn = 0xbffdd max_arch_pfn = 0x10000000000
+[    4.254195] ubuntu kernel: found SMP MP-table at [mem 0x000f5460-0x000f546f]
+[    4.254205] ubuntu kernel: Using GB pages for direct mapping
+[    4.254218] ubuntu kernel: RAMDISK: [mem 0x2bb1f000-0x31d86fff]
+[    4.254227] ubuntu kernel: ACPI: Early table checksum verification disabled
+[    4.254236] ubuntu kernel: ACPI: RSDP 0x00000000000F51C0 000014 (v00 BOCHS )
+[    4.254245] ubuntu kernel: ACPI: RSDT 0x00000000BFFE39CA 000038 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+[    4.254257] ubuntu kernel: ACPI: FACP 0x00000000BFFE31B6 000074 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+[    4.254266] ubuntu kernel: ACPI: DSDT 0x00000000BFFE0040 003176 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+[    4.254274] ubuntu kernel: ACPI: FACS 0x00000000BFFE0000 000040
+[    4.254283] ubuntu kernel: ACPI: APIC 0x00000000BFFE322A 000270 (v03 BOCHS  BXPC     00000001 BXPC 00000001)
+[    4.254293] ubuntu kernel: ACPI: HPET 0x00000000BFFE349A 000038 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+[    4.254301] ubuntu kernel: ACPI: SRAT 0x00000000BFFE34D2 0004D0 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+[    4.254310] ubuntu kernel: ACPI: WAET 0x00000000BFFE39A2 000028 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+[    4.254319] ubuntu kernel: ACPI: Reserving FACP table memory at [mem 0xbffe31b6-0xbffe3229]
+[    4.254330] ubuntu kernel: ACPI: Reserving DSDT table memory at [mem 0xbffe0040-0xbffe31b5]
+[    4.254339] ubuntu kernel: ACPI: Reserving FACS table memory at [mem 0xbffe0000-0xbffe003f]
+[    4.254348] ubuntu kernel: ACPI: Reserving APIC table memory at [mem 0xbffe322a-0xbffe3499]
+[    4.254356] ubuntu kernel: ACPI: Reserving HPET table memory at [mem 0xbffe349a-0xbffe34d1]
+[    4.254365] ubuntu kernel: ACPI: Reserving SRAT table memory at [mem 0xbffe34d2-0xbffe39a1]
+[    4.254374] ubuntu kernel: ACPI: Reserving WAET table memory at [mem 0xbffe39a2-0xbffe39c9]
+[    4.254383] ubuntu kernel: ACPI: SRAT: Node 0 PXM 0 [mem 0x00000000-0x0009ffff]
+[    4.254392] ubuntu kernel: ACPI: SRAT: Node 0 PXM 0 [mem 0x00100000-0xbfffffff]
+[    4.254401] ubuntu kernel: ACPI: SRAT: Node 0 PXM 0 [mem 0x100000000-0x33fffffff]
+[    4.254418] ubuntu kernel: ACPI: SRAT: Node 1 PXM 1 [mem 0x340000000-0x63fffffff]
+[    4.254428] ubuntu kernel: NUMA: Node 0 [mem 0x00001000-0x0009ffff] + [mem 0x00100000-0xbfffffff] -> [mem 0x00001000-0xbfffffff]
+[    4.254437] ubuntu kernel: NUMA: Node 0 [mem 0x00001000-0xbfffffff] + [mem 0x100000000-0x33fffffff] -> [mem 0x00001000-0x33fffffff]
+[    4.254450] ubuntu kernel: NODE_DATA(0) allocated [mem 0x33ffd5280-0x33fffffff]
+[    4.254467] ubuntu kernel: NODE_DATA(1) allocated [mem 0x63ffd3280-0x63fffdfff]
+[    4.254476] ubuntu kernel: ACPI: PM-Timer IO Port: 0x608
+[    4.254485] ubuntu kernel: ACPI: LAPIC_NMI (acpi_id[0xff] dfl dfl lint[0x1])
+[    4.254494] ubuntu kernel: IOAPIC[0]: apic_id 0, version 17, address 0xfec00000, GSI 0-23
+[    4.254505] ubuntu kernel: ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+[    4.254514] ubuntu kernel: ACPI: INT_SRC_OVR (bus 0 bus_irq 5 global_irq 5 high level)
+[    4.254523] ubuntu kernel: ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
+[    4.254531] ubuntu kernel: ACPI: INT_SRC_OVR (bus 0 bus_irq 10 global_irq 10 high level)
+[    4.254544] ubuntu kernel: ACPI: INT_SRC_OVR (bus 0 bus_irq 11 global_irq 11 high level)
+[    4.254554] ubuntu kernel: ACPI: Using ACPI (MADT) for SMP configuration information
+[    4.254563] ubuntu kernel: ACPI: HPET id: 0x8086a201 base: 0xfed00000
+[    4.254572] ubuntu kernel: TSC deadline timer available
+[    4.254581] ubuntu kernel: CPU topo: Max. logical packages:   2
+[    4.254592] ubuntu kernel: CPU topo: Max. logical nodes:      2
+[    4.254600] ubuntu kernel: CPU topo: Num. nodes per package:  1
+[    4.254609] ubuntu kernel: CPU topo: Max. logical dies:       2
+[    4.254618] ubuntu kernel: CPU topo: Max. dies per package:   1
+[    4.254627] ubuntu kernel: CPU topo: Max. threads per core:   1
+[    4.254636] ubuntu kernel: CPU topo: Num. cores per package:    32
+[    4.254644] ubuntu kernel: CPU topo: Num. threads per package:  32
+[    4.254653] ubuntu kernel: CPU topo: Allowing 64 present CPUs plus 0 hotplug CPUs
+[    4.254662] ubuntu kernel: kvm-guest: APIC: eoi() replaced with kvm_guest_apic_eoi_write()
+[    4.254673] ubuntu kernel: kvm-guest: KVM setup pv remote TLB flush
+[    4.254681] ubuntu kernel: kvm-guest: setup PV sched yield
+[    4.254690] ubuntu kernel: PM: hibernation: Registered nosave memory: [mem 0x00000000-0x00000fff]
+[    4.254699] ubuntu kernel: PM: hibernation: Registered nosave memory: [mem 0x0009f000-0x000fffff]
+[    4.254708] ubuntu kernel: PM: hibernation: Registered nosave memory: [mem 0xbffdd000-0xffffffff]
+[    4.254717] ubuntu kernel: [gap 0xc0000000-0xfeffbfff] available for PCI devices
+[    4.254726] ubuntu kernel: Booting paravirtualized kernel on KVM
+[    4.254736] ubuntu kernel: clocksource: refined-jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1910969940391419 ns
+[    4.254745] ubuntu kernel: Zone ranges:
+[    4.254756] ubuntu kernel:   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+[    4.254765] ubuntu kernel:   DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
+[    4.254774] ubuntu kernel:   Normal   [mem 0x0000000100000000-0x000000063fffffff]
+[    4.254783] ubuntu kernel:   Device   empty
+[    4.254792] ubuntu kernel: Movable zone start for each node
+[    4.254800] ubuntu kernel: Early memory node ranges
+[    4.254809] ubuntu kernel:   node   0: [mem 0x0000000000001000-0x000000000009efff]
+[    4.254818] ubuntu kernel:   node   0: [mem 0x0000000000100000-0x00000000bffdcfff]
+[    4.254827] ubuntu kernel:   node   0: [mem 0x0000000100000000-0x000000033fffffff]
+[    4.254835] ubuntu kernel:   node   1: [mem 0x0000000340000000-0x000000063fffffff]
+[    4.254846] ubuntu kernel: Initmem setup node 0 [mem 0x0000000000001000-0x000000033fffffff]
+[    4.254855] ubuntu kernel: Initmem setup node 1 [mem 0x0000000340000000-0x000000063fffffff]
+[    4.254864] ubuntu kernel: On node 0, zone DMA: 1 pages in unavailable ranges
+[    4.254877] ubuntu kernel: On node 0, zone DMA: 97 pages in unavailable ranges
+[    4.254886] ubuntu kernel: On node 0, zone Normal: 35 pages in unavailable ranges
+[    4.254895] ubuntu kernel: setup_percpu: NR_CPUS:8192 nr_cpumask_bits:64 nr_cpu_ids:64 nr_node_ids:2
+[    4.254905] ubuntu kernel: percpu: Embedded 85 pages/cpu s225280 r8192 d114688 u524288
+[    4.254913] ubuntu kernel: pcpu-alloc: s225280 r8192 d114688 u524288 alloc=1*2097152
+[    4.254924] ubuntu kernel: pcpu-alloc: [0] 00 01 02 03 [0] 04 05 06 07 
+[    4.254933] ubuntu kernel: pcpu-alloc: [0] 08 09 10 11 [0] 12 13 14 15 
+[    4.254942] ubuntu kernel: pcpu-alloc: [0] 16 17 18 19 [0] 20 21 22 23 
+[    4.254951] ubuntu kernel: pcpu-alloc: [0] 24 25 26 27 [0] 28 29 30 31 
+[    4.254965] ubuntu kernel: pcpu-alloc: [1] 32 33 34 35 [1] 36 37 38 39 
+[    4.254974] ubuntu kernel: pcpu-alloc: [1] 40 41 42 43 [1] 44 45 46 47 
+[    4.254983] ubuntu kernel: pcpu-alloc: [1] 48 49 50 51 [1] 52 53 54 55 
+[    4.254991] ubuntu kernel: pcpu-alloc: [1] 56 57 58 59 [1] 60 61 62 63 
+[    4.255010] ubuntu kernel: kvm-guest: PV spinlocks disabled, forced by "nopvspin" parameter
+[    4.255020] ubuntu kernel: Kernel command line: BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdrebuild2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0
+[    4.255032] ubuntu kernel: Unknown kernel command line parameters "nokaslr", will be passed to user space.
+[    4.255049] ubuntu kernel: random: crng init done
+[    4.255058] ubuntu kernel: printk: log_buf_len individual max cpu contribution: 4096 bytes
+[    4.255067] ubuntu kernel: printk: log_buf_len total cpu_extra contributions: 258048 bytes
+[    4.255075] ubuntu kernel: printk: log_buf_len min size: 262144 bytes
+[    4.255085] ubuntu kernel: printk: log buffer data + meta data: 524288 + 2228224 = 2752512 bytes
+[    4.255098] ubuntu kernel: printk: early log buf free: 253528(96%)
+[    4.255107] ubuntu kernel: software IO TLB: area num 64.
+[    4.255118] ubuntu kernel: Fallback order for Node 0: 0 1 
+[    4.255127] ubuntu kernel: Fallback order for Node 1: 1 0 
+[    4.255136] ubuntu kernel: Built 2 zonelists, mobility grouping on.  Total pages: 6291323
+[    4.255145] ubuntu kernel: Policy zone: Normal
+[    4.255154] ubuntu kernel: mem auto-init: stack:all(zero), heap alloc:on, heap free:off
+[    4.255163] ubuntu kernel: SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=64, Nodes=2
+[    4.255172] ubuntu kernel: ftrace: allocating 60759 entries in 240 pages
+[    4.255183] ubuntu kernel: ftrace: allocated 240 pages with 4 groups
+[    4.255192] ubuntu kernel: Dynamic Preempt: lazy
+[    4.255200] ubuntu kernel: rcu: Preemptible hierarchical RCU implementation.
+[    4.255210] ubuntu kernel: rcu:         RCU restricting CPUs from NR_CPUS=8192 to nr_cpu_ids=64.
+[    4.255219] ubuntu kernel:         Trampoline variant of Tasks RCU enabled.
+[    4.255228] ubuntu kernel:         Rude variant of Tasks RCU enabled.
+[    4.255237] ubuntu kernel:         Tracing variant of Tasks RCU enabled.
+[    4.255250] ubuntu kernel: rcu: RCU calculated value of scheduler-enlistment delay is 100 jiffies.
+[    4.255260] ubuntu kernel: rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=64
+[    4.255271] ubuntu kernel: RCU Tasks: Setting shift to 6 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=64.
+[    4.255281] ubuntu kernel: RCU Tasks Rude: Setting shift to 6 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=64.
+[    4.255290] ubuntu kernel: NR_IRQS: 524544, nr_irqs: 936, preallocated irqs: 16
+[    4.255299] ubuntu kernel: rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    4.255308] ubuntu kernel: clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275000 ns
+[    4.255317] ubuntu kernel: Console: colour VGA+ 80x25
+[    4.255325] ubuntu kernel: printk: legacy console [tty1] enabled
+[    4.255334] ubuntu kernel: printk: console [ttyS0] enabled
+[    4.255343] ubuntu kernel: mempolicy: Enabling automatic NUMA balancing. Configure with numa_balancing= or the kernel.numa_balancing sysctl
+[    4.255355] ubuntu kernel: ACPI: Core revision 20251212
+[    4.255364] ubuntu kernel: clocksource: hpet: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604467 ns
+[    4.255372] ubuntu kernel: APIC: Switch to symmetric I/O mode setup
+[    4.255381] ubuntu kernel: x2apic enabled
+[    4.255390] ubuntu kernel: APIC: Switched APIC routing to: physical x2apic
+[    4.255399] ubuntu kernel: kvm-guest: APIC: send_IPI_mask() replaced with kvm_send_ipi_mask()
+[    4.255408] ubuntu kernel: kvm-guest: APIC: send_IPI_mask_allbutself() replaced with kvm_send_ipi_mask_allbutself()
+[    4.255423] ubuntu kernel: kvm-guest: setup PV IPIs
+[    4.255432] ubuntu kernel: ..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
+[    4.255443] ubuntu kernel: clocksource: tsc-early: mask: 0xffffffffffffffff max_cycles: 0x39a85c9bff6, max_idle_ns: 881590591483 ns
+[    4.255452] ubuntu kernel: Calibrating delay loop (skipped) preset value.. 4000.00 BogoMIPS (lpj=2000000)
+[    4.255461] ubuntu kernel: x86/cpu: User Mode Instruction Prevention (UMIP) activated
+[    4.255469] ubuntu kernel: Last level iTLB entries: 4KB 0, 2MB 0, 4MB 0
+[    4.255478] ubuntu kernel: Last level dTLB entries: 4KB 0, 2MB 0, 4MB 0, 1GB 0
+[    4.255487] ubuntu kernel: mitigations: Enabled attack vectors: user_kernel, user_user, guest_host, guest_guest, SMT mitigations: auto
+[    4.255496] ubuntu kernel: Speculative Store Bypass: Mitigation: Speculative Store Bypass disabled via prctl
+[    4.255505] ubuntu kernel: Spectre V2 : Mitigation: Enhanced / Automatic IBRS
+[    4.255516] ubuntu kernel: ITS: Mitigation: Aligned branch/return thunks
+[    4.255524] ubuntu kernel: Spectre V1 : Mitigation: usercopy/swapgs barriers and __user pointer sanitization
+[    4.255533] ubuntu kernel: Spectre V2 : Spectre v2 / PBRSB-eIBRS: Retire a single CALL on VMEXIT
+[    4.255542] ubuntu kernel: Spectre V2 : Enabling IBPB for BPF
+[    4.255551] ubuntu kernel: Spectre V2 : mitigation: Enabling conditional Indirect Branch Prediction Barrier
+[    4.255559] ubuntu kernel: active return thunk: its_return_thunk
+[    4.255568] ubuntu kernel: Spectre V2 : Spectre BHI mitigation: SW BHB clearing on syscall and VM exit
+[    4.255577] ubuntu kernel: x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'
+[    4.255592] ubuntu kernel: x86/fpu: Supporting XSAVE feature 0x002: 'SSE registers'
+[    4.255601] ubuntu kernel: x86/fpu: Supporting XSAVE feature 0x004: 'AVX registers'
+[    4.255610] ubuntu kernel: x86/fpu: Supporting XSAVE feature 0x020: 'AVX-512 opmask'
+[    4.255627] ubuntu kernel: x86/fpu: Supporting XSAVE feature 0x040: 'AVX-512 Hi256'
+[    4.255636] ubuntu kernel: x86/fpu: Supporting XSAVE feature 0x080: 'AVX-512 ZMM_Hi256'
+[    4.255649] ubuntu kernel: x86/fpu: Supporting XSAVE feature 0x200: 'Protection Keys User registers'
+[    4.255659] ubuntu kernel: x86/fpu: Supporting XSAVE feature 0x20000: 'AMX Tile config'
+[    4.255667] ubuntu kernel: x86/fpu: Supporting XSAVE feature 0x40000: 'AMX Tile data'
+[    4.255676] ubuntu kernel: x86/fpu: xstate_offset[2]:  576, xstate_sizes[2]:  256
+[    4.255687] ubuntu kernel: x86/fpu: xstate_offset[5]:  832, xstate_sizes[5]:   64
+[    4.255696] ubuntu kernel: x86/fpu: xstate_offset[6]:  896, xstate_sizes[6]:  512
+[    4.255705] ubuntu kernel: x86/fpu: xstate_offset[7]: 1408, xstate_sizes[7]: 1024
+[    4.255713] ubuntu kernel: x86/fpu: xstate_offset[9]: 2432, xstate_sizes[9]:    8
+[    4.255722] ubuntu kernel: x86/fpu: xstate_offset[17]: 2496, xstate_sizes[17]:   64
+[    4.255731] ubuntu kernel: x86/fpu: xstate_offset[18]: 2560, xstate_sizes[18]: 8192
+[    4.255740] ubuntu kernel: x86/fpu: Enabled xstate features 0x602e7, context size is 10752 bytes, using 'compacted' format.
+[    4.255749] ubuntu kernel: Freeing SMP alternatives memory: 56K
+[    4.255758] ubuntu kernel: pid_max: default: 65536 minimum: 512
+[    4.255769] ubuntu kernel: landlock: Up and running.
+[    4.255777] ubuntu kernel: Yama: becoming mindful.
+[    4.255786] ubuntu kernel: AppArmor: AppArmor initialized
+[    4.255795] ubuntu kernel: AppArmor: AppArmor secmark mediation reserved: ready to be enabled
+[    4.255804] ubuntu kernel: Dentry cache hash table entries: 4194304 (order: 13, 33554432 bytes, vmalloc hugepage)
+[    4.255813] ubuntu kernel: Inode-cache hash table entries: 2097152 (order: 12, 16777216 bytes, vmalloc hugepage)
+[    4.255822] ubuntu kernel: Mount-cache hash table entries: 65536 (order: 7, 524288 bytes, vmalloc)
+[    4.255830] ubuntu kernel: Mountpoint-cache hash table entries: 65536 (order: 7, 524288 bytes, vmalloc)
+[    4.255842] ubuntu kernel: VFS: Finished mounting rootfs on nullfs
+[    4.255850] ubuntu kernel: smpboot: CPU0: Intel(R) Xeon(R) Gold 6438N (family: 0x6, model: 0x8f, stepping: 0x7)
+[    4.255859] ubuntu kernel: Performance Events: PEBS fmt0-, Sapphire Rapids events, 
+[    4.255868] ubuntu kernel: core: The event 0x400 is not supported as a normal event.
+[    4.255876] ubuntu kernel: core: The event 0x8000 is not supported as a normal event.
+[    4.255885] ubuntu kernel: core: The event 0x8100 is not supported as a normal event.
+[    4.255894] ubuntu kernel: core: The event 0x8200 is not supported as a normal event.
+[    4.255903] ubuntu kernel: core: The event 0x8300 is not supported as a normal event.
+[    4.255911] ubuntu kernel: core: The event 0x8400 is not supported as a normal event.
+[    4.255922] ubuntu kernel: core: The event 0x8500 is not supported as a normal event.
+[    4.255931] ubuntu kernel: core: The event 0x8600 is not supported as a normal event.
+[    4.255944] ubuntu kernel: core: The event 0x8700 is not supported as a normal event.
+[    4.255953] ubuntu kernel: full-width counters, Intel PMU driver.
+[    4.255963] ubuntu kernel: ... version:                   2
+[    4.255972] ubuntu kernel: ... bit width:                 48
+[    4.255980] ubuntu kernel: ... generic counters:          8
+[    4.255989] ubuntu kernel: ... generic bitmap:            00000000000000ff
+[    4.256012] ubuntu kernel: ... fixed-purpose counters:    3
+[    4.256022] ubuntu kernel: ... fixed-purpose bitmap:      0000000000000007
+[    4.256031] ubuntu kernel: ... value mask:                0000ffffffffffff
+[    4.256040] ubuntu kernel: ... max period:                00007fffffffffff
+[    4.256048] ubuntu kernel: ... global_ctrl mask:          00000007000000ff
+[    4.256057] ubuntu kernel: signal: max sigframe size: 11952
+[    4.256065] ubuntu kernel: rcu: Hierarchical SRCU implementation.
+[    4.256074] ubuntu kernel: rcu:         Max phase no-delay instances is 400.
+[    4.256083] ubuntu kernel: Timer migration: 3 hierarchy levels; 8 children per group; 2 crossnode level
+[    4.256094] ubuntu kernel: smp: Bringing up secondary CPUs ...
+[    4.256103] ubuntu kernel: smpboot: x86: Booting SMP configuration:
+[    4.256112] ubuntu kernel: .... node  #0, CPUs:        #1  #2  #3  #4  #5  #6  #7  #8  #9 #10 #11 #12 #13 #14 #15 #16 #17 #18 #19 #20 #21 #22 #23 #24 #25 #26 #27 #28 #29 #30 #31
+[    4.256121] ubuntu kernel: .... node  #1, CPUs:   #32 #33 #34 #35 #36 #37 #38 #39 #40 #41 #42 #43 #44 #45 #46 #47 #48 #49 #50 #51 #52 #53 #54 #55 #56 #57 #58 #59 #60 #61 #62 #63
+[    4.256130] ubuntu kernel: smp: Brought up 2 nodes, 64 CPUs
+[    4.256139] ubuntu kernel: smpboot: Total of 64 processors activated (256000.00 BogoMIPS)
+[    4.256148] ubuntu kernel: Memory: 21979544K/25165292K available (23684K kernel code, 4968K rwdata, 16460K rodata, 5236K init, 5896K bss, 3093596K reserved, 0K cma-reserved)
+[    4.256157] ubuntu kernel: devtmpfs: initialized
+[    4.256167] ubuntu kernel: x86/mm: Memory block size: 128MB
+[    4.256176] ubuntu kernel: posixtimers hash table entries: 32768 (order: 7, 524288 bytes, vmalloc)
+[    4.256190] ubuntu kernel: futex hash table entries: 8192 (524288 bytes on 2 NUMA nodes, total 1024 KiB, linear).
+[    4.256205] ubuntu kernel: PM: RTC time: 18:01:50, date: 2026-11-10
+[    4.256214] ubuntu kernel: NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    4.256223] ubuntu kernel: DMA: preallocated 4096 KiB GFP_KERNEL pool for atomic allocations
+[    4.256232] ubuntu kernel: DMA: preallocated 4096 KiB GFP_KERNEL|GFP_DMA pool for atomic allocations
+[    4.256241] ubuntu kernel: DMA: preallocated 4096 KiB GFP_KERNEL|GFP_DMA32 pool for atomic allocations
+[    4.256249] ubuntu kernel: audit: initializing netlink subsys (disabled)
+[    4.256260] ubuntu kernel: audit: type=2000 audit(1794333709.730:1): state=initialized audit_enabled=0 res=1
+[    4.256269] ubuntu kernel: thermal_sys: Registered thermal governor 'fair_share'
+[    4.256278] ubuntu kernel: thermal_sys: Registered thermal governor 'bang_bang'
+[    4.256286] ubuntu kernel: thermal_sys: Registered thermal governor 'step_wise'
+[    4.256295] ubuntu kernel: thermal_sys: Registered thermal governor 'user_space'
+[    4.256309] ubuntu kernel: thermal_sys: Registered thermal governor 'power_allocator'
+[    4.256319] ubuntu kernel: cpuidle: using governor ladder
+[    4.256328] ubuntu kernel: cpuidle: using governor menu
+[    4.256337] ubuntu kernel: acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
+[    4.256348] ubuntu kernel: PCI: Using configuration type 1 for base access
+[    4.256357] ubuntu kernel: kprobes: kprobe jump-optimization is enabled. All kprobes are optimized if possible.
+[    4.256365] ubuntu kernel: HugeTLB: registered 1.00 GiB page size, pre-allocated 0 pages
+[    4.256374] ubuntu kernel: HugeTLB: 16380 KiB vmemmap can be freed for a 1.00 GiB page
+[    4.256383] ubuntu kernel: HugeTLB: registered 2.00 MiB page size, pre-allocated 0 pages
+[    4.256392] ubuntu kernel: HugeTLB: 28 KiB vmemmap can be freed for a 2.00 MiB page
+[    4.256400] ubuntu kernel: ACPI: Added _OSI(Module Device)
+[    4.256409] ubuntu kernel: ACPI: Added _OSI(Processor Device)
+[    4.256429] ubuntu kernel: ACPI: Added _OSI(Processor Aggregator Device)
+[    4.256439] ubuntu kernel: ACPI: 1 ACPI AML tables successfully acquired and loaded
+[    4.256448] ubuntu kernel: ACPI: \_SB_: platform _OSC: OS support mask [006e7eff]
+[    4.256457] ubuntu kernel: ACPI: Interpreter enabled
+[    4.256466] ubuntu kernel: ACPI: PM: (supports S0 S3 S4 S5)
+[    4.256474] ubuntu kernel: ACPI: Using IOAPIC for interrupt routing
+[    4.256483] ubuntu kernel: PCI: Using host bridge windows from ACPI; if necessary, use "pci=nocrs" and report a bug
+[    4.256492] ubuntu kernel: PCI: Using E820 reservations for host bridge windows
+[    4.256501] ubuntu kernel: ACPI: Enabled 2 GPEs in block 00 to 0F
+[    4.256513] ubuntu kernel: ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+[    4.256741] ubuntu kernel: acpi PNP0A03:00: _OSC: OS supports [ASPM ClockPM Segments MSI EDR HPX-Type3]
+[    4.256886] ubuntu kernel: acpi PNP0A03:00: _OSC: not requesting OS control; OS requires [ExtendedConfig ASPM ClockPM MSI]
+[    4.257034] ubuntu kernel: acpi PNP0A03:00: _OSC: platform retains control of PCIe features (AE_ERROR)
+[    4.257165] ubuntu kernel: acpi PNP0A03:00: fail to add MMCONFIG information, can't access extended configuration space under this bridge
+[    4.257176] ubuntu kernel: acpiphp: Slot [3] registered
+[    4.257185] ubuntu kernel: acpiphp: Slot [4] registered
+[    4.257196] ubuntu kernel: acpiphp: Slot [5] registered
+[    4.257205] ubuntu kernel: acpiphp: Slot [6] registered
+[    4.257214] ubuntu kernel: acpiphp: Slot [7] registered
+[    4.257222] ubuntu kernel: acpiphp: Slot [8] registered
+[    4.257231] ubuntu kernel: acpiphp: Slot [9] registered
+[    4.257239] ubuntu kernel: acpiphp: Slot [10] registered
+[    4.257249] ubuntu kernel: acpiphp: Slot [11] registered
+[    4.257258] ubuntu kernel: acpiphp: Slot [12] registered
+[    4.257267] ubuntu kernel: acpiphp: Slot [13] registered
+[    4.257277] ubuntu kernel: acpiphp: Slot [14] registered
+[    4.257286] ubuntu kernel: acpiphp: Slot [15] registered
+[    4.257295] ubuntu kernel: acpiphp: Slot [16] registered
+[    4.257303] ubuntu kernel: acpiphp: Slot [17] registered
+[    4.257312] ubuntu kernel: acpiphp: Slot [18] registered
+[    4.257321] ubuntu kernel: acpiphp: Slot [19] registered
+[    4.257329] ubuntu kernel: acpiphp: Slot [20] registered
+[    4.257338] ubuntu kernel: acpiphp: Slot [21] registered
+[    4.257347] ubuntu kernel: acpiphp: Slot [22] registered
+[    4.257364] ubuntu kernel: acpiphp: Slot [23] registered
+[    4.257373] ubuntu kernel: acpiphp: Slot [24] registered
+[    4.257382] ubuntu kernel: acpiphp: Slot [25] registered
+[    4.257391] ubuntu kernel: acpiphp: Slot [26] registered
+[    4.257399] ubuntu kernel: acpiphp: Slot [27] registered
+[    4.257408] ubuntu kernel: acpiphp: Slot [28] registered
+[    4.257425] ubuntu kernel: acpiphp: Slot [29] registered
+[    4.257434] ubuntu kernel: acpiphp: Slot [30] registered
+[    4.257442] ubuntu kernel: acpiphp: Slot [31] registered
+[    4.257451] ubuntu kernel: PCI host bridge to bus 0000:00
+[    4.257579] ubuntu kernel: pci_bus 0000:00: Unknown NUMA node; performance will be reduced
+[    4.257696] ubuntu kernel: pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7 window]
+[    4.257808] ubuntu kernel: pci_bus 0000:00: root bus resource [io  0x0d00-0xffff window]
+[    4.257920] ubuntu kernel: pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+[    4.258044] ubuntu kernel: pci_bus 0000:00: root bus resource [mem 0xc0000000-0xfebfffff window]
+[    4.258157] ubuntu kernel: pci_bus 0000:00: root bus resource [mem 0x380000000000-0x38007fffffff window]
+[    4.258269] ubuntu kernel: pci_bus 0000:00: root bus resource [bus 00-ff]
+[    4.258456] ubuntu kernel: pci 0000:00:00.0: [8086:1237] type 00 class 0x060000 conventional PCI endpoint
+[    4.258617] ubuntu kernel: pci 0000:00:01.0: [8086:7000] type 00 class 0x060100 conventional PCI endpoint
+[    4.258776] ubuntu kernel: pci 0000:00:01.1: [8086:7010] type 00 class 0x010180 conventional PCI endpoint
+[    4.258936] ubuntu kernel: pci 0000:00:01.1: BAR 4 [io  0xc060-0xc06f]
+[    4.259098] ubuntu kernel: pci 0000:00:01.1: BAR 0 [io  0x01f0-0x01f7]: legacy IDE quirk
+[    4.259246] ubuntu kernel: pci 0000:00:01.1: BAR 1 [io  0x03f6]: legacy IDE quirk
+[    4.259396] ubuntu kernel: pci 0000:00:01.1: BAR 2 [io  0x0170-0x0177]: legacy IDE quirk
+[    4.259559] ubuntu kernel: pci 0000:00:01.1: BAR 3 [io  0x0376]: legacy IDE quirk
+[    4.259708] ubuntu kernel: pci 0000:00:01.3: [8086:7113] type 00 class 0x068000 conventional PCI endpoint
+[    4.259858] ubuntu kernel: pci 0000:00:01.3: quirk: [io  0x0600-0x063f] claimed by PIIX4 ACPI
+[    4.260011] ubuntu kernel: pci 0000:00:01.3: quirk: [io  0x0700-0x070f] claimed by PIIX4 SMB
+[    4.260172] ubuntu kernel: pci 0000:00:02.0: [1234:1111] type 00 class 0x030000 conventional PCI endpoint
+[    4.260321] ubuntu kernel: pci 0000:00:02.0: BAR 0 [mem 0xfd000000-0xfdffffff pref]
+[    4.260490] ubuntu kernel: pci 0000:00:02.0: BAR 2 [mem 0xfeb90000-0xfeb90fff]
+[    4.260644] ubuntu kernel: pci 0000:00:02.0: ROM [mem 0xfeb80000-0xfeb8ffff pref]
+[    4.260789] ubuntu kernel: pci 0000:00:02.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
+[    4.260942] ubuntu kernel: pci 0000:00:03.0: [1af4:1004] type 00 class 0x010000 conventional PCI endpoint
+[    4.261111] ubuntu kernel: pci 0000:00:03.0: BAR 0 [io  0xc000-0xc03f]
+[    4.261259] ubuntu kernel: pci 0000:00:03.0: BAR 1 [mem 0xfeb91000-0xfeb91fff]
+[    4.261408] ubuntu kernel: pci 0000:00:03.0: BAR 4 [mem 0x380000000000-0x380000003fff 64bit pref]
+[    4.261575] ubuntu kernel: pci 0000:00:04.0: [1af4:1000] type 00 class 0x020000 conventional PCI endpoint
+[    4.261737] ubuntu kernel: pci 0000:00:04.0: BAR 0 [io  0xc040-0xc05f]
+[    4.261886] ubuntu kernel: pci 0000:00:04.0: BAR 1 [mem 0xfeb92000-0xfeb92fff]
+[    4.262044] ubuntu kernel: pci 0000:00:04.0: BAR 4 [mem 0x380000004000-0x380000007fff 64bit pref]
+[    4.262192] ubuntu kernel: pci 0000:00:04.0: ROM [mem 0xfeb00000-0xfeb7ffff pref]
+[    4.262203] ubuntu kernel: ACPI: PCI: Interrupt link LNKA configured for IRQ 10
+[    4.262212] ubuntu kernel: ACPI: PCI: Interrupt link LNKB configured for IRQ 10
+[    4.262221] ubuntu kernel: ACPI: PCI: Interrupt link LNKC configured for IRQ 11
+[    4.262230] ubuntu kernel: ACPI: PCI: Interrupt link LNKD configured for IRQ 11
+[    4.262241] ubuntu kernel: ACPI: PCI: Interrupt link LNKS configured for IRQ 9
+[    4.262250] ubuntu kernel: iommu: Default domain type: Translated
+[    4.262264] ubuntu kernel: iommu: DMA domain TLB invalidation policy: lazy mode
+[    4.262273] ubuntu kernel: SCSI subsystem initialized
+[    4.262293] ubuntu kernel: libata version 3.00 loaded.
+[    4.262305] ubuntu kernel: ACPI: bus type USB registered
+[    4.262314] ubuntu kernel: usbcore: registered new interface driver usbfs
+[    4.262323] ubuntu kernel: usbcore: registered new interface driver hub
+[    4.262332] ubuntu kernel: usbcore: registered new device driver usb
+[    4.262341] ubuntu kernel: pps_core: LinuxPPS API ver. 1 registered
+[    4.262350] ubuntu kernel: pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    4.262359] ubuntu kernel: PTP clock support registered
+[    4.262368] ubuntu kernel: EDAC MC: Ver: 3.0.0
+[    4.262379] ubuntu kernel: NetLabel: Initializing
+[    4.262388] ubuntu kernel: NetLabel:  domain hash size = 128
+[    4.262397] ubuntu kernel: NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+[    4.262405] ubuntu kernel: NetLabel:  unlabeled traffic allowed by default
+[    4.262421] ubuntu kernel: mctp: management component transport protocol core
+[    4.262430] ubuntu kernel: NET: Registered PF_MCTP protocol family
+[    4.262439] ubuntu kernel: PCI: Using ACPI for IRQ routing
+[    4.262448] ubuntu kernel: PCI: pci_cache_line_size set to 64 bytes
+[    4.262457] ubuntu kernel: e820: register RAM buffer resource [mem 0x0009fc00-0x0009ffff]
+[    4.262468] ubuntu kernel: e820: register RAM buffer resource [mem 0xbffdd000-0xbfffffff]
+[    4.262611] ubuntu kernel: pci 0000:00:02.0: vgaarb: setting as boot VGA device
+[    4.262751] ubuntu kernel: pci 0000:00:02.0: vgaarb: bridge control possible
+[    4.262900] ubuntu kernel: pci 0000:00:02.0: vgaarb: VGA device added: decodes=io+mem,owns=io+mem,locks=none
+[    4.262912] ubuntu kernel: vgaarb: loaded
+[    4.262924] ubuntu kernel: hpet0: at MMIO 0xfed00000, IRQs 2, 8, 0
+[    4.262933] ubuntu kernel: hpet0: 3 comparators, 64-bit 100.000000 MHz counter
+[    4.262942] ubuntu kernel: clocksource: Switched to clocksource kvm-clock
+[    4.262950] ubuntu kernel: VFS: Disk quotas dquot_6.6.0
+[    4.262959] ubuntu kernel: VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    4.262968] ubuntu kernel: AppArmor: AppArmor Filesystem Enabled
+[    4.262979] ubuntu kernel: pnp: PnP ACPI init
+[    4.263115] ubuntu kernel: pnp 00:02: [dma 2]
+[    4.263128] ubuntu kernel: pnp: PnP ACPI: found 6 devices
+[    4.263138] ubuntu kernel: clocksource: acpi_pm: mask: 0xffffff max_cycles: 0xffffff, max_idle_ns: 2085701024 ns
+[    4.263146] ubuntu kernel: NET: Registered PF_INET protocol family
+[    4.263156] ubuntu kernel: IP idents hash table entries: 262144 (order: 9, 2097152 bytes, vmalloc hugepage)
+[    4.263165] ubuntu kernel: tcp_listen_portaddr_hash hash table entries: 16384 (order: 6, 262144 bytes, vmalloc)
+[    4.263174] ubuntu kernel: Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, vmalloc)
+[    4.263185] ubuntu kernel: TCP established hash table entries: 262144 (order: 9, 2097152 bytes, vmalloc hugepage)
+[    4.263195] ubuntu kernel: TCP bind hash table entries: 65536 (order: 9, 2097152 bytes, vmalloc hugepage)
+[    4.263204] ubuntu kernel: TCP: Hash tables configured (established 262144 bind 65536)
+[    4.263212] ubuntu kernel: MPTCP token hash table entries: 32768 (order: 8, 786432 bytes, vmalloc)
+[    4.263221] ubuntu kernel: UDP hash table entries: 16384 (order: 8, 1048576 bytes, vmalloc)
+[    4.263230] ubuntu kernel: UDP-Lite hash table entries: 16384 (order: 8, 1048576 bytes, vmalloc)
+[    4.263239] ubuntu kernel: NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    4.263248] ubuntu kernel: NET: Registered PF_XDP protocol family
+[    4.263370] ubuntu kernel: pci_bus 0000:00: resource 4 [io  0x0000-0x0cf7 window]
+[    4.263495] ubuntu kernel: pci_bus 0000:00: resource 5 [io  0x0d00-0xffff window]
+[    4.263609] ubuntu kernel: pci_bus 0000:00: resource 6 [mem 0x000a0000-0x000bffff window]
+[    4.263723] ubuntu kernel: pci_bus 0000:00: resource 7 [mem 0xc0000000-0xfebfffff window]
+[    4.263832] ubuntu kernel: pci_bus 0000:00: resource 8 [mem 0x380000000000-0x38007fffffff window]
+[    4.263985] ubuntu kernel: pci 0000:00:01.0: PIIX3: Enabling Passive Release
+[    4.264141] ubuntu kernel: pci 0000:00:00.0: Limiting direct PCI/PCI transfers
+[    4.264152] ubuntu kernel: PCI: CLS 0 bytes, default 64
+[    4.264161] ubuntu kernel: PCI-DMA: Using software bounce buffering for IO (SWIOTLB)
+[    4.264173] ubuntu kernel: Trying to unpack rootfs image as initramfs...
+[    4.264182] ubuntu kernel: software IO TLB: mapped [mem 0x00000000bbfdd000-0x00000000bffdd000] (64MB)
+[    4.264192] ubuntu kernel: clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x39a85c9bff6, max_idle_ns: 881590591483 ns
+[    4.264201] ubuntu kernel: Initialise system trusted keyrings
+[    4.264210] ubuntu kernel: Key type blacklist registered
+[    4.264218] ubuntu kernel: workingset: timestamp_bits=36 max_order=23 bucket_order=0
+[    4.264227] ubuntu kernel: squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    4.264236] ubuntu kernel: fuse: init (API version 7.45)
+[    4.264247] ubuntu kernel: integrity: Platform Keyring initialized
+[    4.264256] ubuntu kernel: integrity: Machine keyring initialized
+[    4.264265] ubuntu kernel: Key type asymmetric registered
+[    4.264274] ubuntu kernel: Asymmetric key parser 'x509' registered
+[    4.264283] ubuntu kernel: Block layer SCSI generic (bsg) driver version 0.4 loaded (major 242)
+[    4.264291] ubuntu kernel: io scheduler mq-deadline registered
+[    4.264301] ubuntu kernel: ledtrig-cpu: registered to indicate activity on CPUs
+[    4.264310] ubuntu kernel: input: Power Button as /devices/platform/LNXPWRBN:00/input/input0
+[    4.264319] ubuntu kernel: ACPI: button: Power Button [PWRF]
+[    4.264330] ubuntu kernel: ACPI: \_SB_.LNKC: Enabled at IRQ 11
+[    4.264339] ubuntu kernel: ACPI: \_SB_.LNKD: Enabled at IRQ 10
+[    4.264348] ubuntu kernel: Serial: 8250/16550 driver, 32 ports, IRQ sharing enabled
+[    4.264357] ubuntu kernel: 00:04: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+[    4.264366] ubuntu kernel: Linux agpgart interface v0.103
+[    4.264375] ubuntu kernel: loop: module loaded
+[    4.264512] ubuntu kernel: virtio_scsi virtio0: 64/0/0 default/read/poll queues
+[    4.264655] ubuntu kernel: scsi host0: Virtio SCSI HBA
+[    4.264806] ubuntu kernel: scsi 0:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    4.264937] ubuntu kernel: scsi host1: ata_piix
+[    4.265079] ubuntu kernel: scsi host2: ata_piix
+[    4.265091] ubuntu kernel: ata1: PATA max MWDMA2 cmd 0x1f0 ctl 0x3f6 bmdma 0xc060 irq 14 lpm-pol 0
+[    4.265253] ubuntu kernel: scsi 0:0:1:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    4.265265] ubuntu kernel: ata2: PATA max MWDMA2 cmd 0x170 ctl 0x376 bmdma 0xc068 irq 15 lpm-pol 0
+[    4.265277] ubuntu kernel: ACPI: bus type drm_connector registered
+[    4.265425] ubuntu kernel: scsi 0:0:2:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    4.265437] ubuntu kernel: tun: Universal TUN/TAP device driver, 1.6
+[    4.265446] ubuntu kernel: PPP generic driver version 2.4.2
+[    4.265455] ubuntu kernel: i8042: PNP: PS/2 Controller [PNP0303:KBD,PNP0f13:MOU] at 0x60,0x64 irq 1,12
+[    4.265464] ubuntu kernel: serio: i8042 KBD port at 0x60,0x64 irq 1
+[    4.265473] ubuntu kernel: serio: i8042 AUX port at 0x60,0x64 irq 12
+[    4.265482] ubuntu kernel: mousedev: PS/2 mouse device common for all mice
+[    4.265606] ubuntu kernel: rtc_cmos 00:05: RTC can wake from S4
+[    4.265722] ubuntu kernel: rtc_cmos 00:05: registered as rtc0
+[    4.265836] ubuntu kernel: rtc_cmos 00:05: setting system clock to 2026-11-10T18:01:50 UTC (1794333710)
+[    4.265960] ubuntu kernel: rtc_cmos 00:05: alarms up to one day, y3k, 242 bytes nvram, hpet irqs
+[    4.265970] ubuntu kernel: i2c_dev: i2c /dev entries driver
+[    4.265980] ubuntu kernel: input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input1
+[    4.265989] ubuntu kernel: device-mapper: core: CONFIG_IMA_DISABLE_HTABLE is disabled. Duplicate IMA measurements will not be recorded in the IMA log.
+[    4.266008] ubuntu kernel: device-mapper: uevent: version 1.0.3
+[    4.266020] ubuntu kernel: device-mapper: ioctl: 4.50.0-ioctl (2025-04-28) initialised: dm-devel@lists.linux.dev
+[    4.266030] ubuntu kernel: intel_pstate: CPU model not supported
+[    4.266039] ubuntu kernel: drop_monitor: Initializing network drop monitor service
+[    4.266048] ubuntu kernel: NET: Registered PF_INET6 protocol family
+[    4.266057] ubuntu kernel: Segment Routing with IPv6
+[    4.266066] ubuntu kernel: In-situ OAM (IOAM) with IPv6
+[    4.266074] ubuntu kernel: NET: Registered PF_PACKET protocol family
+[    4.266083] ubuntu kernel: Key type dns_resolver registered
+[    4.266092] ubuntu kernel: IPI shorthand broadcast: enabled
+[    4.266104] ubuntu kernel: sched_clock: Marking stable (1186002762, 241937759)->(1579708410, -151767889)
+[    4.266113] ubuntu kernel: registered taskstats version 1
+[    4.266254] ubuntu kernel: sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    4.266397] ubuntu kernel: sd 0:0:0:0: Power-on or device reset occurred
+[    4.266554] ubuntu kernel: sd 0:0:1:0: Attached scsi generic sg1 type 0
+[    4.266714] ubuntu kernel: sd 0:0:1:0: Power-on or device reset occurred
+[    4.266727] ubuntu kernel: Loading compiled-in X.509 certificates
+[    4.266881] ubuntu kernel: sd 0:0:0:0: [sda] 214327296 512-byte logical blocks: (110 GB/102 GiB)
+[    4.267059] ubuntu kernel: sd 0:0:1:0: [sdb] 276824064 512-byte logical blocks: (142 GB/132 GiB)
+[    4.267200] ubuntu kernel: sd 0:0:1:0: [sdb] Write Protect is off
+[    4.267339] ubuntu kernel: sd 0:0:1:0: [sdb] Mode Sense: 63 00 00 08
+[    4.267488] ubuntu kernel: sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    4.267499] ubuntu kernel: Loaded X.509 cert 'Build time autogenerated kernel key: b60f7d7596b4bc82831891de38d29ac42f165586'
+[    4.267636] ubuntu kernel: scsi 0:0:2:0: Attached scsi generic sg2 type 0
+[    4.267775] ubuntu kernel: sd 0:0:0:0: [sda] Write Protect is off
+[    4.267913] ubuntu kernel: sd 0:0:2:0: Power-on or device reset occurred
+[    4.268063] ubuntu kernel: sd 0:0:2:0: [sdc] 352321536 512-byte logical blocks: (180 GB/168 GiB)
+[    4.268202] ubuntu kernel: sd 0:0:2:0: [sdc] Write Protect is off
+[    4.268339] ubuntu kernel: sd 0:0:2:0: [sdc] Mode Sense: 63 00 00 08
+[    4.268485] ubuntu kernel: sd 0:0:2:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    4.268496] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Live Patch Signing 2025 Kmod: d541cef61dc7e793b7eb7e899970a2eef0b5dc8c'
+[    4.268633] ubuntu kernel: sd 0:0:0:0: [sda] Mode Sense: 63 00 00 08
+[    4.268644] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Live Patch Signing: 14df34d1a87cf37625abec039ef2bf521249b969'
+[    4.268781] ubuntu kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    4.268794] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Kernel Module Signing 2025 Kmod: 4627603d2357a2a3f81006370894c221175893e9'
+[    4.268804] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Kernel Module Signing: 88f752e560a1e0737e31163a466ad7b70a850c19'
+[    4.268813] ubuntu kernel: blacklist: Loading compiled-in revocation X.509 certificates
+[    4.268822] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing: 61482aa2830d0ab2ad5af10b7250da9033ddcef0'
+[    4.268831] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2017): 242ade75ac4a15e50d50c84b0d45ff3eae707a03'
+[    4.268840] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (ESM 2018): 365188c1d374d6b07c3c8f240f8ef722433d6a8b'
+[    4.268850] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2019): c0746fd6c5da3ae827864651ad66ae47fe24b3e8'
+[    4.268859] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v1): a8d54bbb3825cfb94fa13c9f8a594a195c107b8d'
+[    4.268870] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v2): 4cf046892d6fd3c9a5b03f98d845f90851dc6a8c'
+[    4.268879] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v3): 100437bb6de6e469b581e61cd66bce3ef4ed53af'
+[    4.268888] ubuntu kernel: Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (Ubuntu Core 2019): c1d57b8f6b743f23ee41f4f7ee292f06eecadfb9'
+[    4.268897] ubuntu kernel: Demotion targets for Node 0: null
+[    4.268906] ubuntu kernel: Demotion targets for Node 1: null
+[    4.268916] ubuntu kernel: Key type .fscrypt registered
+[    4.268924] ubuntu kernel: Key type fscrypt-provisioning registered
+[    4.268935] ubuntu kernel: Key type big_key registered
+[    4.268944] ubuntu kernel:  sda: sda1 sda14 sda15
+[    4.269090] ubuntu kernel: sd 0:0:2:0: [sdc] Attached SCSI disk
+[    4.269230] ubuntu kernel: sd 0:0:0:0: [sda] Attached SCSI disk
+[    4.269367] ubuntu kernel: sd 0:0:1:0: [sdb] Attached SCSI disk
+[    4.269377] ubuntu kernel: Freeing initrd memory: 100768K
+[    4.269386] ubuntu kernel: Key type encrypted registered
+[    4.269403] ubuntu kernel: AppArmor: AppArmor sha256 policy hashing enabled
+[    4.269419] ubuntu kernel: ima: No TPM chip found, activating TPM-bypass!
+[    4.269431] ubuntu kernel: Loading compiled-in module X.509 certificates
+[    4.269440] ubuntu kernel: Loaded X.509 cert 'Build time autogenerated kernel key: b60f7d7596b4bc82831891de38d29ac42f165586'
+[    4.269449] ubuntu kernel: ima: Allocated hash algorithm: sha256
+[    4.269458] ubuntu kernel: ima: No architecture policies found
+[    4.269467] ubuntu kernel: evm: Initialising EVM extended attributes:
+[    4.269476] ubuntu kernel: evm: security.selinux
+[    4.269485] ubuntu kernel: evm: security.SMACK64
+[    4.269494] ubuntu kernel: evm: security.SMACK64EXEC
+[    4.269503] ubuntu kernel: evm: security.SMACK64TRANSMUTE
+[    4.269512] ubuntu kernel: evm: security.SMACK64MMAP
+[    4.269523] ubuntu kernel: evm: security.apparmor
+[    4.269532] ubuntu kernel: evm: security.ima
+[    4.269546] ubuntu kernel: evm: security.capability
+[    4.269556] ubuntu kernel: evm: HMAC attrs: 0x1
+[    4.269565] ubuntu kernel: PM:   Magic number: 2:653:38
+[    4.269692] ubuntu kernel: bdi 7:3: hash matches
+[    4.269829] ubuntu kernel: memory memory74: hash matches
+[    4.269841] ubuntu kernel: RAS: Correctable Errors collector initialized.
+[    4.269852] ubuntu kernel: clk: Disabling unused clocks
+[    4.269861] ubuntu kernel: PM: genpd: Disabling unused power domains
+[    4.269870] ubuntu kernel: Freeing unused decrypted memory: 2028K
+[    4.269879] ubuntu kernel: Freeing unused kernel image (initmem) memory: 5236K
+[    4.269889] ubuntu kernel: Write protecting the kernel read-only data: 43008k
+[    4.269898] ubuntu kernel: Freeing unused kernel image (text/rodata gap) memory: 888K
+[    4.269910] ubuntu kernel: Freeing unused kernel image (rodata/data gap) memory: 1972K
+[    4.269919] ubuntu kernel: x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    4.269930] ubuntu kernel: Run /init as init process
+[    4.269939] ubuntu kernel:   with arguments:
+[    4.269948] ubuntu kernel:     /init
+[    4.269977] ubuntu kernel:     nokaslr
+[    4.269987] ubuntu kernel:   with environment:
+[    4.269996] ubuntu kernel:     HOME=/
+[    4.270021] ubuntu kernel:     TERM=linux
+[    4.270178] ubuntu kernel: bochs-drm 0000:00:02.0: vgaarb: deactivate vga console
+[    4.270189] ubuntu kernel: Floppy drive(s): fd0 is 2.88M AMI BIOS
+[    4.270316] ubuntu kernel: virtio_net virtio1 ens4: renamed from eth0
+[    4.270331] ubuntu kernel: Console: switching to colour dummy device 80x25
+[    4.270340] ubuntu kernel: [drm] Found bochs VGA, ID 0xb0c5.
+[    4.270349] ubuntu kernel: [drm] Framebuffer size 16384 kB @ 0xfd000000, mmio @ 0xfeb90000.
+[    4.270500] ubuntu kernel: bochs-drm 0000:00:02.0: [drm] Registered 1 planes with drm panic
+[    4.270511] ubuntu kernel: FDC 0 is a S82078B
+[    4.270520] ubuntu kernel: input: VirtualPS/2 VMware VMMouse as /devices/platform/i8042/serio1/input/input4
+[    4.270529] ubuntu kernel: input: VirtualPS/2 VMware VMMouse as /devices/platform/i8042/serio1/input/input3
+[    4.270538] ubuntu kernel: [drm] Initialized bochs-drm 1.0.0 for 0000:00:02.0 on minor 0
+[    4.270549] ubuntu kernel: Console: switching to colour frame buffer device 160x50
+[    4.270689] ubuntu kernel: bochs-drm 0000:00:02.0: [drm] fb0: bochs-drmdrmfb frame buffer device
+[    4.270700] ubuntu kernel: raid6: avx512x4 gen() 24290 MB/s
+[    4.270709] ubuntu kernel: raid6: avx512x2 gen() 26714 MB/s
+[    4.270718] ubuntu kernel: raid6: avx512x1 gen() 14355 MB/s
+[    4.270727] ubuntu kernel: raid6: avx2x4   gen() 20015 MB/s
+[    4.270736] ubuntu kernel: raid6: avx2x2   gen() 20622 MB/s
+[    4.270750] ubuntu kernel: raid6: avx2x1   gen() 19289 MB/s
+[    4.270758] ubuntu kernel: raid6: using algorithm avx512x2 gen() 26714 MB/s
+[    4.270770] ubuntu kernel: raid6: .... xor() 14979 MB/s, rmw enabled
+[    4.270779] ubuntu kernel: raid6: using avx512x2 recovery algorithm
+[    4.270788] ubuntu kernel: xor: automatically using best checksumming function   avx       
+[    4.270797] ubuntu kernel: async_tx: api initialized (async)
+[    4.270806] ubuntu kernel: Btrfs loaded, zoned=yes, fsverity=yes
+[    4.270815] ubuntu kernel: I/O error, dev fd0, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 2
+[    4.270825] ubuntu kernel: floppy: error 10 while reading block 0
+[    4.270834] ubuntu kernel: EXT4-fs (sda1): mounted filesystem aa0bde06-47f6-4049-aaaf-13d052e53961 ro with ordered data mode. Quota mode: none.
+[    4.270847] ubuntu systemd[1]: Inserted module 'autofs4'
+[    4.270859] ubuntu kernel: NET: Registered PF_VSOCK protocol family
+[    4.270870] ubuntu systemd[1]: systemd 259.9-0ubuntu0.1 running in system mode (+PAM +AUDIT +SELINUX +APPARMOR +IMA +IPE +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +KMOD +LIBCRYPTSETUP +LIBCRYPTSETUP_PLUGINS +LIBFDISK +PCRE2 +PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD +BPF_FRAMEWORK +BTF -XKBCOMMON -UTMP +SYSVINIT +LIBARCHIVE)
+[    4.270881] ubuntu systemd[1]: Detected virtualization kvm.
+[    4.270891] ubuntu systemd[1]: Detected architecture x86-64.
+[    4.270901] ubuntu systemd[1]: Hostname set to <ubuntu>.
+[    4.270911] ubuntu systemd[1]: bpf-restrict-fs: BPF LSM hook not enabled in the kernel, BPF LSM not supported.
+[    4.270924] ubuntu systemd-sysv-generator[932]: SysV service '/etc/init.d/grub-common' lacks a native systemd unit file, automatically generating a unit file for compatibility.
+[    4.270936] ubuntu systemd-sysv-generator[932]: Please update package to include a native systemd unit file.
+[    4.270948] ubuntu systemd-sysv-generator[932]: ⚠️ This compatibility logic is deprecated, expect removal soon. ⚠️
+[    4.270958] ubuntu kernel: I/O error, dev fd0, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 2
+[    4.270967] ubuntu kernel: floppy: error 10 while reading block 0
+[    4.270977] ubuntu systemd[1]: /usr/lib/systemd/system/system-xfs_scrub.slice:15: Support for option CPUAccounting= has been removed and it is ignored
+[    4.270987] ubuntu systemd[1]: Queued start job for default target graphical.target.
+[    4.270996] ubuntu systemd[1]: Created slice system-modprobe.slice - Slice /system/modprobe.
+[    4.271019] ubuntu systemd[1]: Created slice system-serial\x2dgetty.slice - Slice /system/serial-getty.
+[    4.271029] ubuntu systemd[1]: Created slice system-systemd\x2dfsck.slice - Slice /system/systemd-fsck.
+[    4.271039] ubuntu systemd[1]: Created slice system-xfs_scrub.slice - xfs_scrub background service slice.
+[    4.271050] ubuntu systemd[1]: Created slice user.slice - User and Session Slice.
+[    4.271059] ubuntu systemd[1]: Started systemd-ask-password-wall.path - Forward Password Requests to Wall Directory Watch.
+[    4.271070] ubuntu systemd[1]: Set up automount proc-sys-fs-binfmt_misc.automount - Arbitrary Executable File Formats File System Automount Point.
+[    4.271080] ubuntu systemd[1]: Expecting device dev-disk-by\x2dlabel-UEFI.device - /dev/disk/by-label/UEFI...
+[    4.271092] ubuntu systemd[1]: Expecting device dev-disk-by\x2duuid-7cfd7ee5\x2dfdee\x2d4a4b\x2d8db3\x2da22fc5806da0.device - /dev/disk/by-uuid/7cfd7ee5-fdee-4a4b-8db3-a22fc5806da0...
+[    4.271103] ubuntu systemd[1]: Expecting device dev-disk-by\x2duuid-c7501672\x2d7642\x2d4d35\x2daae9\x2d6b258b1f2733.device - /dev/disk/by-uuid/c7501672-7642-4d35-aae9-6b258b1f2733...
+[    4.271113] ubuntu systemd[1]: Expecting device dev-ttyS0.device - /dev/ttyS0...
+[    4.271122] ubuntu systemd[1]: Reached target imports.target - Image Downloads.
+[    4.271132] ubuntu systemd[1]: Reached target integritysetup.target - Local Integrity Protected Volumes.
+[    4.271142] ubuntu systemd[1]: Reached target slices.target - Slice Units.
+[    4.271151] ubuntu systemd[1]: Reached target snapd.mounts-pre.target - Mounting snaps.
+[    4.271161] ubuntu systemd[1]: Reached target swap.target - Swaps.
+[    4.271171] ubuntu systemd[1]: Reached target veritysetup.target - Local Verity Protected Volumes.
+[    4.271182] ubuntu systemd[1]: Listening on dm-event.socket - Device-mapper event daemon FIFOs.
+[    4.271192] ubuntu systemd[1]: Listening on lvm2-lvmpolld.socket - LVM2 poll daemon socket.
+[    4.271202] ubuntu systemd[1]: Listening on multipathd.socket - multipathd control socket.
+[    4.271212] ubuntu systemd[1]: Listening on syslog.socket - Syslog Socket.
+[    4.271221] ubuntu systemd[1]: Listening on systemd-ask-password.socket - Query the User Interactively for a Password.
+[    4.271231] ubuntu systemd[1]: Listening on systemd-creds.socket - Credential Encryption/Decryption.
+[    4.271241] ubuntu systemd[1]: Listening on systemd-factory-reset.socket - Factory Reset Management.
+[    4.271250] ubuntu systemd[1]: Listening on systemd-journald-dev-log.socket - Journal Socket (/dev/log).
+[    4.271262] ubuntu systemd[1]: Listening on systemd-journald.socket - Journal Sockets.
+[    4.271272] ubuntu systemd[1]: Listening on systemd-mute-console.socket - Console Output Muting Service Socket.
+[    4.271281] ubuntu systemd[1]: Listening on systemd-networkd-varlink.socket - Network Management Varlink Socket.
+[    4.271291] ubuntu systemd[1]: Listening on systemd-networkd.socket - Network Management Netlink Socket.
+[    4.271301] ubuntu systemd[1]: systemd-pcrextend.socket - TPM PCR Measurements skipped, unmet condition check ConditionSecurity=measured-uki
+[    4.271311] ubuntu systemd[1]: systemd-pcrlock.socket - Make TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki
+[    4.271320] ubuntu systemd[1]: Listening on systemd-resolved-monitor.socket - Resolve Monitor Varlink Socket.
+[    4.271332] ubuntu systemd[1]: Listening on systemd-resolved-varlink.socket - Resolve Service Varlink Socket.
+[    4.271342] ubuntu systemd[1]: Listening on systemd-udevd-control.socket - udev Control Socket.
+[    4.271351] ubuntu systemd[1]: Listening on systemd-udevd-kernel.socket - udev Kernel Socket.
+[    4.271361] ubuntu systemd[1]: Listening on systemd-udevd-varlink.socket - udev Varlink Socket.
+[    4.271376] ubuntu systemd[1]: Mounting dev-hugepages.mount - Huge Pages File System...
+[    4.271386] ubuntu systemd[1]: Mounting dev-mqueue.mount - POSIX Message Queue File System...
+[    4.271396] ubuntu systemd[1]: Mounting sys-kernel-debug.mount - Kernel Debug File System...
+[    4.271405] ubuntu systemd[1]: Mounting sys-kernel-tracing.mount - Kernel Trace File System...
+[    4.271423] ubuntu systemd[1]: tmp.mount: Directory /tmp to mount over is not empty, mounting anyway.
+[    4.271434] ubuntu systemd[1]: Mounting tmp.mount - Temporary Directory /tmp...
+[    4.271443] ubuntu systemd[1]: Starting systemd-journald.service - Journal Service...
+[    4.271453] ubuntu systemd[1]: Starting keyboard-setup.service - Set the console keyboard layout...
+[    4.271463] ubuntu systemd[1]: Starting kmod-static-nodes.service - Create List of Static Device Nodes...
+[    4.271472] ubuntu systemd[1]: Starting lvm2-monitor.service - Monitoring of LVM2 mirrors, snapshots etc. using dmeventd or progress polling...
+[    4.271482] ubuntu systemd[1]: modprobe@configfs.service - Load Kernel Module configfs skipped, unmet condition check ConditionKernelModuleLoaded=!configfs
+[    4.271492] ubuntu systemd[1]: Mounting sys-kernel-config.mount - Kernel Configuration File System...
+[    4.271527] ubuntu systemd-journald[952]: Collecting audit messages is disabled.
+[    4.271552] ubuntu systemd[1]: Starting modprobe@dm_multipath.service - Load Kernel Module dm_multipath...
+[    4.271563] ubuntu systemd[1]: modprobe@drm.service - Load Kernel Module drm skipped, unmet condition check ConditionKernelModuleLoaded=!drm
+[    4.271572] ubuntu systemd[1]: Starting modprobe@efi_pstore.service - Load Kernel Module efi_pstore...
+[    4.271585] ubuntu systemd[1]: modprobe@fuse.service - Load Kernel Module fuse skipped, unmet condition check ConditionKernelModuleLoaded=!fuse
+[    4.271595] ubuntu systemd[1]: Mounting sys-fs-fuse-connections.mount - FUSE Control File System...
+[    4.271605] ubuntu systemd[1]: netplan-ovs-cleanup.service - OpenVSwitch configuration for cleanup skipped, unmet condition check ConditionFileIsExecutable=/usr/bin/ovs-vsctl
+[    4.271615] ubuntu systemd[1]: systemd-fsck-root.service - File System Check on Root Device skipped, unmet condition check ConditionPathExists=!/run/initramfs/fsck-root
+[    4.271626] ubuntu systemd[1]: systemd-hibernate-clear.service - Clear Stale Hibernate Storage Info skipped, unmet condition check ConditionPathExists=/sys/firmware/efi/efivars/HibernateLocation-8cf2644b-4b0b-428f-9387-6d876050dc67
+[    4.271636] ubuntu systemd[1]: Starting systemd-modules-load.service - Load Kernel Modules...
+[    4.280018] ubuntu systemd[1]: systemd-pcrmachine.service - TPM PCR Machine ID Measurement skipped, unmet condition check ConditionSecurity=measured-uki
+[    4.283457] ubuntu systemd[1]: Starting systemd-remount-fs.service - Remount Root and Kernel File Systems...
+[    4.287186] ubuntu systemd[1]: systemd-tpm2-setup-early.service - Early TPM SRK Setup skipped, unmet condition check ConditionSecurity=measured-uki
+[    4.287211] ubuntu systemd[1]: systemd-pcrnvdone.service - TPM PCR NvPCR Initialization Separator skipped, unmet condition check ConditionPathExists=/etc/initrd-release
+[    4.287225] ubuntu systemd[1]: systemd-pcrproduct.service - TPM NvPCR Product ID Measurement skipped, unmet condition check ConditionSecurity=measured-uki
+[    4.290764] ubuntu systemd[1]: Starting systemd-udev-load-credentials.service - Load udev Rules from Credentials...
+[    4.300320] ubuntu systemd[1]: Starting systemd-udev-trigger.service - Coldplug All udev Devices...
+[    4.306392] ubuntu systemd[1]: Started systemd-journald.service - Journal Service.
+[    4.309022] ubuntu kernel: EXT4-fs (sda1): re-mounted aa0bde06-47f6-4049-aaaf-13d052e53961 r/w.
+[    4.458497] ubuntu systemd-journald[952]: Received client request to flush runtime journal.
+[    4.785086] ubuntu kernel: piix4_smbus 0000:00:01.3: SMBus Host Controller at 0x700, revision 0
+[    4.790507] ubuntu kernel: i2c i2c-0: Memory type 0x07 not supported yet, not instantiating SPD
+[    4.792209] ubuntu kernel: parport_pc 00:03: reported by Plug and Play ACPI
+[    4.796447] ubuntu kernel: parport0: PC-style at 0x378, irq 7 [PCSPP,TRISTATE]
+[    4.827487] ubuntu kernel: RAPL PMU: API unit is 2^-32 Joules, 1 fixed counters, 10737418240 ms ovfl timer
+[    4.827521] ubuntu kernel: RAPL PMU: hw unit of domain psys 2^-0 Joules
+[    4.965029] ubuntu kernel: ppdev: user-space parallel port driver
+[    5.337021] ubuntu kernel: EXT4-fs (sdb): mounted filesystem 7cfd7ee5-fdee-4a4b-8db3-a22fc5806da0 r/w with ordered data mode. Quota mode: none.
+[    5.342021] ubuntu kernel: loop0: detected capacity change from 0 to 130632
+[    5.349022] ubuntu kernel: loop1: detected capacity change from 0 to 151512
+[    5.357020] ubuntu kernel: loop2: detected capacity change from 0 to 151600
+[    5.368020] ubuntu kernel: loop3: detected capacity change from 0 to 235904
+[    5.368089] ubuntu kernel: loop4: detected capacity change from 0 to 91568
+[    5.411020] ubuntu kernel: EXT4-fs (sdc): mounted filesystem c7501672-7642-4d35-aae9-6b258b1f2733 r/w with ordered data mode. Quota mode: none.
+[    5.491357] ubuntu kernel: audit: type=1400 audit(1794333714.851:2): apparmor="STATUS" operation="profile_load" profile="unconfined" name="1password" pid=1400 comm="apparmor_parser"
+[    5.491399] ubuntu kernel: audit: type=1400 audit(1794333714.851:3): apparmor="STATUS" operation="profile_load" profile="unconfined" name="vscode" pid=1418 comm="apparmor_parser"
+[    5.491420] ubuntu kernel: audit: type=1400 audit(1794333714.851:4): apparmor="STATUS" operation="profile_load" profile="unconfined" name=4D6F6E676F444220436F6D70617373 pid=1402 comm="apparmor_parser"
+[    5.491447] ubuntu kernel: audit: type=1400 audit(1794333714.851:5): apparmor="STATUS" operation="profile_load" profile="unconfined" name="chrome" pid=1416 comm="apparmor_parser"
+[    5.491467] ubuntu kernel: audit: type=1400 audit(1794333714.851:6): apparmor="STATUS" operation="profile_load" profile="unconfined" name="cam" pid=1413 comm="apparmor_parser"
+[    5.491490] ubuntu kernel: audit: type=1400 audit(1794333714.851:7): apparmor="STATUS" operation="profile_load" profile="unconfined" name="devhelp" pid=1421 comm="apparmor_parser"
+[    5.492019] ubuntu kernel: audit: type=1400 audit(1794333714.851:8): apparmor="STATUS" operation="profile_load" profile="unconfined" name="chromium" pid=1417 comm="apparmor_parser"
+[    5.492057] ubuntu kernel: audit: type=1400 audit(1794333714.851:9): apparmor="STATUS" operation="profile_load" profile="unconfined" name="ch-run" pid=1415 comm="apparmor_parser"
+[    5.492078] ubuntu kernel: audit: type=1400 audit(1794333714.851:10): apparmor="STATUS" operation="profile_load" profile="unconfined" name="bwrap" pid=1412 comm="apparmor_parser"
+[    6.347931] ubuntu kernel: kauditd_printk_skb: 171 callbacks suppressed
+[    6.347972] ubuntu kernel: audit: type=1400 audit(1794333715.707:182): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap-update-ns.lxd" pid=1592 comm="apparmor_parser"
+[    6.349599] ubuntu kernel: audit: type=1400 audit(1794333715.709:183): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/snap/snapd/28254/usr/lib/snapd/snap-confine" pid=1591 comm="apparmor_parser"
+[    6.349613] ubuntu kernel: audit: type=1400 audit(1794333715.709:184): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.activate" pid=1593 comm="apparmor_parser"
+[    6.349822] ubuntu kernel: audit: type=1400 audit(1794333715.709:185): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.buginfo" pid=1595 comm="apparmor_parser"
+[    6.349899] ubuntu kernel: audit: type=1400 audit(1794333715.709:186): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.check-kernel" pid=1596 comm="apparmor_parser"
+[    6.349983] ubuntu kernel: audit: type=1400 audit(1794333715.709:187): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.benchmark" pid=1594 comm="apparmor_parser"
+[    6.350464] ubuntu kernel: audit: type=1400 audit(1794333715.710:188): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.hook.install" pid=1599 comm="apparmor_parser"
+[    6.350483] ubuntu kernel: audit: type=1400 audit(1794333715.710:189): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.hook.remove" pid=1600 comm="apparmor_parser"
+[    6.350624] ubuntu kernel: audit: type=1400 audit(1794333715.710:190): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.hook.configure" pid=1598 comm="apparmor_parser"
+[    6.350751] ubuntu kernel: audit: type=1400 audit(1794333715.710:191): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.daemon" pid=1597 comm="apparmor_parser"
+[    6.516035] ubuntu kernel: cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    6.516091] ubuntu kernel: Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    6.517021] ubuntu kernel: Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    6.724019] ubuntu kernel: loop5: detected capacity change from 0 to 8
+[   15.307202] ubuntu kernel: kauditd_printk_skb: 7 callbacks suppressed
+[   15.307297] ubuntu kernel: audit: type=1400 audit(1794333724.666:199): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=1965 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+[   15.307322] ubuntu kernel: audit: type=1400 audit(1794333724.666:200): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=1965 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+[   15.307340] ubuntu kernel: audit: type=1400 audit(1794333724.667:201): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=1965 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+[   15.307360] ubuntu kernel: audit: type=1400 audit(1794333724.667:202): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=1965 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0

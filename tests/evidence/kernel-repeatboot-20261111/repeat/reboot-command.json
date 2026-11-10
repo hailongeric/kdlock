@@ -1,0 +1,25 @@
+{
+  "argv": [
+    "systemctl",
+    "reboot"
+  ],
+  "utc": "2026-11-10T18:01:41.473646+00:00",
+  "boot_before": "dea66234-7f70-4e5b-acb6-40a6f2884919",
+  "arm": {
+    "module_load_performed": false,
+    "phase": "arm",
+    "reboot_performed": false,
+    "review_sha256": "bf9dc029f4a6baecf4b90906583706186d248def9a812906374733be025b5315",
+    "status": "COMPLETE",
+    "unix_time": 1794333661.6503248
+  },
+  "grub": {
+    "candidate_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild2-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "environment": {
+      "next_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild2-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+    },
+    "grub_cfg_sha256": "8d4c66b404bdf56ea6a94569882a495bd9d5ed23a4d38e98d11950c0d0c54089",
+    "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+  },
+  "timeout_seconds": 30
+}

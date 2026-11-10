@@ -1,0 +1,12 @@
+{
+  "python_result": "/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipt-reconciliation.json",
+  "python_result_sha256": "03a1b0897de0709c537808e6c2f4917f52a5c427a3162b53e09f0529bdc51910",
+  "hmp_result": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/kdlock-main-before-live3-20261111.json",
+  "hmp_result_sha256": "87d763642058333ade9716708be68b1ceef4b74917c1089c1d61ec9648de744f",
+  "headroom_review": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/live3-headroom-review.json",
+  "headroom_review_sha256": "4b911269ceae94a97faea9995279a483b6f09fb4c19867651641040d4e90689c",
+  "minimum_root_free_bytes": 1073741824,
+  "minimum_build_free_bytes": 2147483648,
+  "max_proof_age_seconds": 1800,
+  "max_command_bytes": 33554432
+}

@@ -1,0 +1,14 @@
+{
+  "utc": "2026-11-10T17:59:45.592145+00:00",
+  "guest_free_bytes": {
+    "/": 1984942080,
+    "/mnt/kdlock-builds": 14343827456,
+    "/mnt/kdlock-builds2": 11480756224
+  },
+  "host_free_bytes": 11785879552,
+  "review": "Root reviewed sufficient room for existing-kernel repeatboot and bounded4x8 fixture only; no full kernel build. Output,128KiB images,2MiB compiler intermediates and64MiB archive bounds fit within512MiB live output allowance; reserve1GiB root and2GiB host/data filesystems.",
+  "live_output_allowance_bytes": 536870912,
+  "root_reserve_bytes": 1073741824,
+  "hmp_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/kdlock-main-before-live3-20261111.json",
+  "hmp_sha256": "87d763642058333ade9716708be68b1ceef4b74917c1089c1d61ec9648de744f"
+}

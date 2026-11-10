@@ -1,0 +1,22 @@
+{
+  "new_boot_id": "fb0601dd-db5c-4396-aaa5-e59b91b16924",
+  "old_boot_id": "dea66234-7f70-4e5b-acb6-40a6f2884919",
+  "postboot_helper_sha256": "91d0358d4017e834f489f01a2eb9a14d3ca66e7c6d45ecfb20537b64a0713a3a",
+  "postboot_result": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot3-20261111-01/result.json",
+  "repeat_arm": {
+    "module_load_performed": false,
+    "phase": "arm",
+    "reboot_performed": false,
+    "review_sha256": "bf9dc029f4a6baecf4b90906583706186d248def9a812906374733be025b5315",
+    "status": "COMPLETE",
+    "unix_time": 1794333661.6503248
+  },
+  "repeat_armed_grub": {
+    "candidate_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild2-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "environment": {
+      "next_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild2-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+    },
+    "grub_cfg_sha256": "8d4c66b404bdf56ea6a94569882a495bd9d5ed23a4d38e98d11950c0d0c54089",
+    "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+  }
+}

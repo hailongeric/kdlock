@@ -1,0 +1,14 @@
+{
+  "boot_id": "fb0601dd-db5c-4396-aaa5-e59b91b16924",
+  "build_id": "fd2262c047e130787ef669419111eba6eb9ebb2c",
+  "const_current_task": "0xffffffff8440f018",
+  "current_task_gs_offset": "0xffffffff8440f018",
+  "gs_symbol": "current_task",
+  "kaslr_disabled": true,
+  "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "kernel_elf_sha256": "7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809",
+  "kernel_release": "7.0.0-38-kdrebuild2",
+  "percpu_section_va": "0xffffffff843f7000",
+  "scope": "Exact linked/running kernel identity and full GS symbol input; fixture GS relocation and execution remain separate.",
+  "verified_for_running_kernel": true
+}
