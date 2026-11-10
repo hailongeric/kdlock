@@ -1,0 +1,14 @@
+{
+  "utc": "2026-11-10T18:33:48.541985+00:00",
+  "guest_free_bytes": {
+    "/": 1984401408,
+    "/mnt/kdlock-builds": 14338166784,
+    "/mnt/kdlock-builds2": 11466887168
+  },
+  "host_free_bytes": 11778322432,
+  "review": "Root reviewed existing-kernel repeatboot and4x8 fixture only;512MiB total live output allowance includes128MiB conservative wire reservations,64MiB archive bound and boundedGNU intermediates/images. Reserve1GiB root and2GiB host/data filesystems. No full kernel build.",
+  "live_output_allowance_bytes": 536870912,
+  "wire_log_byte_limit": 134217728,
+  "root_reserve_bytes": 1073741824,
+  "common_source_unchanged": 104
+}

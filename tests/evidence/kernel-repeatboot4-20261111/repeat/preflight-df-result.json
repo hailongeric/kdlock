@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "df",
+    "-B1",
+    "/",
+    "/boot",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f"
+  ],
+  "elapsed_seconds": 0.0059473690000686474,
+  "returncode": 0,
+  "sha256": "1e793b63fb567e2d07717ad54e7f7dde0495db91ef89eab6ed11451fc31b36e4",
+  "timed_out": false
+}

@@ -1,0 +1,390 @@
+{
+  "collected_unix": 1794335868.007313,
+  "files": [
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-after-environment-result.json",
+      "member": "repeat/arm-after-environment-result.json",
+      "raw_bytes": 241,
+      "raw_sha256": "64287896df5abce8e3205521a79c756d58f0e6c4e8ee80f795f2055672727fb7"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-after-environment.log",
+      "member": "repeat/arm-after-environment.log",
+      "raw_bytes": 141,
+      "raw_sha256": "6208a673c0c9b392e47391241d60c5a4109f191d67b8fdf046c81d3ba6fceb92"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-after-syntax-result.json",
+      "member": "repeat/arm-after-syntax-result.json",
+      "raw_bytes": 235,
+      "raw_sha256": "964ed1b56d50e884f8d1f23dc04256102f4c8f84296cd041d432398aede46999"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-after-syntax.log",
+      "member": "repeat/arm-after-syntax.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-after.json",
+      "member": "repeat/arm-after.json",
+      "raw_bytes": 570,
+      "raw_sha256": "559f3bbe28549b9dab35015b0f05a3f169fb3f24d34600826924d11642f4a515"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-before-environment-result.json",
+      "member": "repeat/arm-before-environment-result.json",
+      "raw_bytes": 241,
+      "raw_sha256": "cfb2b03e1eaad6992db55305ab0ac448620ef386d4e88e4f00494371b0f9e92a"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-before-environment.log",
+      "member": "repeat/arm-before-environment.log",
+      "raw_bytes": 12,
+      "raw_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-before-syntax-result.json",
+      "member": "repeat/arm-before-syntax-result.json",
+      "raw_bytes": 235,
+      "raw_sha256": "2327862b8aa36978c4bbdb769f4bc5696507e53bc79f47e68fb5a4fd6d52646f"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-before-syntax.log",
+      "member": "repeat/arm-before-syntax.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-before.json",
+      "member": "repeat/arm-before.json",
+      "raw_bytes": 441,
+      "raw_sha256": "47a046df7853ff51e807c02985c59a5a1a5b2bf203b2804cdc0b2f638ff48bc7"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-complete.json",
+      "member": "repeat/arm-complete.json",
+      "raw_bytes": 230,
+      "raw_sha256": "a701fa5d22144d3b1f4e2004202342e1ec6e4fc20a7fa960fc97fd57a4dfd928"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-idle.json",
+      "member": "repeat/arm-idle.json",
+      "raw_bytes": 59226,
+      "raw_sha256": "cb1df172e63bf6542872878c686a2728869a6fc40d8a575679f5f96203f39f16"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-one-shot-result.json",
+      "member": "repeat/arm-one-shot-result.json",
+      "raw_bytes": 338,
+      "raw_sha256": "43963ec938739de48b6ce2ff1b5b5dfda6af0a39511db0725e52cd44209d31d3"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-one-shot.log",
+      "member": "repeat/arm-one-shot.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-started.json",
+      "member": "repeat/arm-started.json",
+      "raw_bytes": 252,
+      "raw_sha256": "04bf00e9b098f1d90781d8462c6c689580f827735023cf05fc055536634c3a3f"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-sync-result.json",
+      "member": "repeat/arm-sync-result.json",
+      "raw_bytes": 195,
+      "raw_sha256": "505207028b177f8eb1c60c4c61546ba0851d457e07dc5a259f87f09200d7a727"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/arm-sync.log",
+      "member": "repeat/arm-sync.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/elf-build-id-result.json",
+      "member": "repeat/elf-build-id-result.json",
+      "raw_bytes": 285,
+      "raw_sha256": "8b7e903a72cf585e6fb8fbc68f8b5548cea7f09b5709336f61c476d895dbd0a9"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/elf-build-id.log",
+      "member": "repeat/elf-build-id.log",
+      "raw_bytes": 2120,
+      "raw_sha256": "79ecde65f3a98dd2e1b26b9d9b8d06a0455b43fa3021f6889d0aff99e822b2d0"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/kernel-source64.json",
+      "member": "repeat/kernel-source64.json",
+      "raw_bytes": 5925,
+      "raw_sha256": "5fbd44e872ddd9461eab5bed21983a0fa529bb1d3a000324761d831b18be16cc"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/module_build-input.json",
+      "member": "repeat/module_build-input.json",
+      "raw_bytes": 3205,
+      "raw_sha256": "93cde66867106c3fff3c3a637222b20827aaf244d2361bc3dc754d743b9925fc"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/postproof-complete.json",
+      "member": "repeat/postproof-complete.json",
+      "raw_bytes": 233,
+      "raw_sha256": "e58b86ec2f09081b6095561d671bf4a41deb7c15cdb3fbe6393a2a4e153eb62e"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/postproof-helper-result.json",
+      "member": "repeat/postproof-helper-result.json",
+      "raw_bytes": 544,
+      "raw_sha256": "be5da9c1997bc6eaad73bfc6c9db644044f21f8a86616686139106560c62eea2"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/postproof-helper.log",
+      "member": "repeat/postproof-helper.log",
+      "raw_bytes": 191,
+      "raw_sha256": "7394231c80edce73cfed2bc41a7a32f83f98099e2a14e4052037a6fa36613388"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/postproof-idle.json",
+      "member": "repeat/postproof-idle.json",
+      "raw_bytes": 60582,
+      "raw_sha256": "d8eca6304aae46eaee1338b00712b25ee3d8f3134b572b32d609a5a8e21509f1"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/postproof-started.json",
+      "member": "repeat/postproof-started.json",
+      "raw_bytes": 252,
+      "raw_sha256": "f097f2c018181b0f8feb63ff5d3e44333d6a53e5b79c3384c6aaa467da070a52"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-complete.json",
+      "member": "repeat/preflight-complete.json",
+      "raw_bytes": 235,
+      "raw_sha256": "e94d61b4375e275b055f2d9f0f592e6174ed22b1f04973cfb540df717f5b26f1"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-df-result.json",
+      "member": "repeat/preflight-df-result.json",
+      "raw_bytes": 290,
+      "raw_sha256": "cd346e681c38dd6b9a8406826470ca850ac62234ba2e083c1f8899da97428fb0"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-df.log",
+      "member": "repeat/preflight-df.log",
+      "raw_bytes": 267,
+      "raw_sha256": "1e793b63fb567e2d07717ad54e7f7dde0495db91ef89eab6ed11451fc31b36e4"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-grub-environment-result.json",
+      "member": "repeat/preflight-grub-environment-result.json",
+      "raw_bytes": 240,
+      "raw_sha256": "6e8bce2b442cfc0228a5021ad3448e9b2ee15c6cbda79af5e90d92fc91cff7c2"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-grub-environment.log",
+      "member": "repeat/preflight-grub-environment.log",
+      "raw_bytes": 12,
+      "raw_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-grub-syntax-result.json",
+      "member": "repeat/preflight-grub-syntax-result.json",
+      "raw_bytes": 235,
+      "raw_sha256": "72b429f9f8d1b24099b8cd14c788f86150b42d8f60cb6ba342e6f6e323e79b7f"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-grub-syntax.log",
+      "member": "repeat/preflight-grub-syntax.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-grub.json",
+      "member": "repeat/preflight-grub.json",
+      "raw_bytes": 441,
+      "raw_sha256": "47a046df7853ff51e807c02985c59a5a1a5b2bf203b2804cdc0b2f638ff48bc7"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-idle.json",
+      "member": "repeat/preflight-idle.json",
+      "raw_bytes": 59940,
+      "raw_sha256": "41606d1825e68bde85160d77932fae996d1b82cf243e07964c0ce4f42d624b62"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/preflight-started.json",
+      "member": "repeat/preflight-started.json",
+      "raw_bytes": 252,
+      "raw_sha256": "4ce3af37b31756676841ebf01ba2896aa496f6e7d8015e01bea96cce3dcae15d"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/prior-live-controller.json",
+      "member": "repeat/prior-live-controller.json",
+      "raw_bytes": 2047,
+      "raw_sha256": "55483f95981806612dec54f2cb01a8bda56eea6dd87b5d34bc436273a151e91d"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/prior-live-result.json",
+      "member": "repeat/prior-live-result.json",
+      "raw_bytes": 20125,
+      "raw_sha256": "694dac6dd24e7fb66af19dfa149f1e960ac7cfac3b0357c0a3f44dc18524fce5"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/reboot-command.json",
+      "member": "repeat/reboot-command.json",
+      "raw_bytes": 1026,
+      "raw_sha256": "bddc61897fdd93639995b8661313aeaaf4f496cce420d533f8882bc22f06e44c"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/reboot-result.json",
+      "member": "repeat/reboot-result.json",
+      "raw_bytes": 1120,
+      "raw_sha256": "534443e81c333b34800d16cbeb89923670cbfa5104306c7a92c65990db02efd8"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/repeat-postboot-binding.json",
+      "member": "repeat/repeat-postboot-binding.json",
+      "raw_bytes": 1205,
+      "raw_sha256": "195391db0d8ba9b5c550e590e8189716b3b63aa5ed00e36b5295eea579529385"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild2-live4-20261111-01/runner_ast-input.json",
+      "member": "repeat/runner_ast-input.json",
+      "raw_bytes": 3205,
+      "raw_sha256": "93cde66867106c3fff3c3a637222b20827aaf244d2361bc3dc754d743b9925fc"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/boot-kernel-journal.txt",
+      "member": "postboot/boot-kernel-journal.txt",
+      "raw_bytes": 62474,
+      "raw_sha256": "153da96f4d70f3321d030849188745476b2d3589c82014c9282553cb0f00cc54"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/cmdline.txt",
+      "member": "postboot/cmdline.txt",
+      "raw_bytes": 139,
+      "raw_sha256": "8fb7fd57613bcfd8b4466e07e5334e04d66e7a5b355775b0c3d41116891d0964"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/cpuinfo.txt",
+      "member": "postboot/cpuinfo.txt",
+      "raw_bytes": 111374,
+      "raw_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/dmesg.txt",
+      "member": "postboot/dmesg.txt",
+      "raw_bytes": 52764,
+      "raw_sha256": "ba0d970d8af4fadb1d7dc528d8d1e6bc2c7e1d3cb40494559a25528d3e6aab96"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/grub-environment.txt",
+      "member": "postboot/grub-environment.txt",
+      "raw_bytes": 12,
+      "raw_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/grub.cfg",
+      "member": "postboot/grub.cfg",
+      "raw_bytes": 28533,
+      "raw_sha256": "8d4c66b404bdf56ea6a94569882a495bd9d5ed23a4d38e98d11950c0d0c54089"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/gs-proof.json",
+      "member": "postboot/gs-proof.json",
+      "raw_bytes": 709,
+      "raw_sha256": "3ca2249641dc150f9ae7368bd60ace7300adf6f3357d555241d97b8c21b70851"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/modules.txt",
+      "member": "postboot/modules.txt",
+      "raw_bytes": 2799,
+      "raw_sha256": "c03d4c780542951b9edfaa2cfb7628bca1ea723fd0e6d9c23582523d3d95c3a3"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/prior-arm-complete.json",
+      "member": "postboot/prior-arm-complete.json",
+      "raw_bytes": 143,
+      "raw_sha256": "edaae529c6c1fb348a7c28a53dd4088b15fa7f3d22f56cf048741a15bd83d478"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/prior-armed-grub.json",
+      "member": "postboot/prior-armed-grub.json",
+      "raw_bytes": 570,
+      "raw_sha256": "559f3bbe28549b9dab35015b0f05a3f169fb3f24d34600826924d11642f4a515"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/result.json",
+      "member": "postboot/result.json",
+      "raw_bytes": 161518,
+      "raw_sha256": "ac6f7af9f3e797e21f81f1d6fba0cd6e053f201d4cd5fe26c1a873aaaa83ef14"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/running-kernel-notes.bin",
+      "member": "postboot/running-kernel-notes.bin",
+      "raw_bytes": 476,
+      "raw_sha256": "71c6a75f58eb91cdba0af8ca34b581118735e63f4b29779325c930490dd5e393"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/uname.json",
+      "member": "postboot/uname.json",
+      "raw_bytes": 120,
+      "raw_sha256": "73f6530e5e7357c915f2ea9119bb0f2f96975dba8f60942d1098001ee8d320eb"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/vmlinux-notes.txt",
+      "member": "postboot/vmlinux-notes.txt",
+      "raw_bytes": 2120,
+      "raw_sha256": "79ecde65f3a98dd2e1b26b9d9b8d06a0455b43fa3021f6889d0aff99e822b2d0"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/vmlinux-sections.txt",
+      "member": "postboot/vmlinux-sections.txt",
+      "raw_bytes": 5644,
+      "raw_sha256": "d55f3a1294b5825f661ac098ad99c42ae6ed7ae7cb17d8953f4b271b62208fd6"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot4-20261111-01/vmlinux-symbols.txt",
+      "member": "postboot/vmlinux-symbols.txt",
+      "raw_bytes": 13017905,
+      "raw_sha256": "e26b7db630c8884f75ed733f3ff3c2d567ce1a7fda43bb02e7b494e6e3bbbc3f"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/repeat-live4-review.json",
+      "member": "review/input.json",
+      "raw_bytes": 1421,
+      "raw_sha256": "a9700a5c1dd1745fa1d5de2c3d5226ff99767ffa9f279210ce0425cbf5e38673"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipt-reconciliation.json",
+      "member": "review/python-check-result.json",
+      "raw_bytes": 862,
+      "raw_sha256": "03a1b0897de0709c537808e6c2f4917f52a5c427a3162b53e09f0529bdc51910"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/kdlock-main-before-live4-20261111.json",
+      "member": "review/hmp.json",
+      "raw_bytes": 4591,
+      "raw_sha256": "765c81c05440a00be06c4ff27fe467719a3a28f85d4b9019837e10d2b3ec50b2"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/live4-headroom-review.json",
+      "member": "review/headroom.json",
+      "raw_bytes": 644,
+      "raw_sha256": "fc5d69e3ec8612167769e7cb2ed80c94229a3bf885dffe53673460d311b67f4c"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/module3-9f327952-01a1bc4f/build-receipts/result.json",
+      "member": "review/runner-ast.json",
+      "raw_bytes": 3205,
+      "raw_sha256": "93cde66867106c3fff3c3a637222b20827aaf244d2361bc3dc754d743b9925fc"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/module3-9f327952-01a1bc4f/build-receipts/result.json",
+      "member": "review/module-build.json",
+      "raw_bytes": 3205,
+      "raw_sha256": "93cde66867106c3fff3c3a637222b20827aaf244d2361bc3dc754d743b9925fc"
+    }
+  ],
+  "scope": "Read-only saved completed repeatboot and postproof receipts; collection is not a new idle/taint observation"
+}

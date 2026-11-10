@@ -1,0 +1,16 @@
+{
+  "returncode": 0,
+  "status": "EXACT_RECEIPT_RECONCILIATION_COMPLETE",
+  "scope": "This command verified existing successful4+12 and separate5-case receipts and unchanged106sourcefiles; it ran no tests. The first overall controller remains failed due stale GS ELF pin,0cases.",
+  "source_commit": "18c8f2e499d5fb74972e92bad5748489b921035d",
+  "successful_case_counts": [
+    4,
+    12,
+    5
+  ],
+  "initial_result": "/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipts/result.json",
+  "initial_result_sha256": "d8cc5fa8ade818417a77b12d6935fc7a8786165e0ad074e993613047cfe618d1",
+  "gs_followup_result": "/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/gs-kernel2-followup/result.json",
+  "gs_followup_sha256": "7f940c2831b651946769098e7b9312108c85f9cfb2b72e60c0cbe47f7aedc43d",
+  "utc": "2026-11-10T17:59:45.591760+00:00"
+}

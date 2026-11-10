@@ -1,0 +1,596 @@
+{
+  "actual_call_records": [
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8ae5f3ec1",
+      "site": 18446744072646205533,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "lock",
+      "raw_hex": "e84e68b2c0",
+      "site": 18446744072646205677,
+      "target": 18446744071584155968
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8d0deffff",
+      "site": 18446744072646205771,
+      "target": 18446744072646197280
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "lock",
+      "raw_hex": "e8b767b2c0",
+      "site": 18446744072646205828,
+      "target": 18446744071584155968
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e89b67b2c0",
+      "site": 18446744072646205920,
+      "target": 18446744071584156032
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e87a67b2c0",
+      "site": 18446744072646205953,
+      "target": 18446744071584156032
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e83067b2c0",
+      "site": 18446744072646206027,
+      "target": 18446744071584156032
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e8df66b2c0",
+      "site": 18446744072646206108,
+      "target": 18446744071584156032
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e82b5d3ec1",
+      "site": 18446744072646206176,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8165d3ec1",
+      "site": 18446744072646206197,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8015d3ec1",
+      "site": 18446744072646206218,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8ec5c3ec1",
+      "site": 18446744072646206239,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8d75c3ec1",
+      "site": 18446744072646206260,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8c35c3ec1",
+      "site": 18446744072646206280,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8af5c3ec1",
+      "site": 18446744072646206300,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e89a5c3ec1",
+      "site": 18446744072646206321,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8855c3ec1",
+      "site": 18446744072646206342,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8715c3ec1",
+      "site": 18446744072646206362,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e85d5c3ec1",
+      "site": 18446744072646206382,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8485c3ec1",
+      "site": 18446744072646206403,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8345c3ec1",
+      "site": 18446744072646206423,
+      "target": 18446744071593328656
+    }
+  ],
+  "archive_sha256": "baa3f0b36ccca44274329e91f60fbc91f75c6d4877c57b5f0ffc1fb0c751f56b",
+  "cases": [
+    {
+      "name": "native-local",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=1 finished=1 iterations=8 completed=8 calls=8 a=8 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=3273 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "8",
+        "b": "0",
+        "calls": "8",
+        "completed": "8",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "1",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3273",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "833",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "1"
+      }
+    },
+    {
+      "name": "contended-local",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=4 finished=4 iterations=8 completed=32 calls=32 a=32 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=3273 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "32",
+        "b": "0",
+        "calls": "32",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3273",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "833",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "4"
+      }
+    },
+    {
+      "name": "jit-while-pending",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=4 finished=4 iterations=4 completed=16 calls=16 a=16 b=16 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=3273 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "16",
+        "b": "16",
+        "calls": "16",
+        "completed": "16",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "iterations": "4",
+        "locks_clear": "1",
+        "mode": "1",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3273",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "833",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "4"
+      }
+    },
+    {
+      "name": "nested",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=4 finished=4 iterations=8 completed=32 calls=32 a=32 b=32 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=3273 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "32",
+        "b": "32",
+        "calls": "32",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "1",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3273",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "833",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "4"
+      }
+    },
+    {
+      "name": "out-of-order",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=2 workers=4 finished=4 iterations=8 completed=32 calls=32 a=32 b=64 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=3273 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "32",
+        "b": "64",
+        "calls": "32",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "2",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3273",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "833",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "4"
+      }
+    }
+  ],
+  "compiler_cycles": [
+    {
+      "acknowledged_keys": 0,
+      "claim_rows": 0,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 0,
+      "claim_rows": 2,
+      "published": false
+    },
+    {
+      "acknowledged_keys": 0,
+      "claim_rows": 6,
+      "published": false
+    },
+    {
+      "acknowledged_keys": 0,
+      "claim_rows": 8,
+      "published": false
+    }
+  ],
+  "compiler_thunk_symbols": [
+    "__x86_indirect_thunk_rax",
+    "__x86_return_thunk"
+  ],
+  "evidence": "kernel-mechanism",
+  "generated_exit_records": [
+    {
+      "acknowledged": [],
+      "classification": "unclassified",
+      "disposition": "direct_call_has_no_indirect_observation",
+      "emitted_candidates": [],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646197280,
+        "detail": 1,
+        "kind": 3,
+        "phase": 2,
+        "source_ip": 18446744072646205771,
+        "target": 18446744072646197280
+      },
+      "image": "38f5cb06010011ff",
+      "incarnation": 1,
+      "merge": "feedback_has_no_compiler_observation",
+      "producer": "00f4cb06010011ff",
+      "published": [],
+      "record": "e400f01f010011ff"
+    },
+    {
+      "acknowledged": [],
+      "classification": "unclassified",
+      "disposition": "direct_call_has_no_indirect_observation",
+      "emitted_candidates": [],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646197280,
+        "detail": 1,
+        "kind": 3,
+        "phase": 2,
+        "source_ip": 18446744072646205771,
+        "target": 18446744072646197280
+      },
+      "image": "38f5cb06010011ff",
+      "incarnation": 1,
+      "merge": "feedback_has_no_compiler_observation",
+      "producer": "00f4cb06010011ff",
+      "published": [],
+      "record": "d401f01f010011ff"
+    },
+    {
+      "acknowledged": [],
+      "classification": "unclassified",
+      "disposition": "direct_call_has_no_indirect_observation",
+      "emitted_candidates": [],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646197280,
+        "detail": 1,
+        "kind": 3,
+        "phase": 2,
+        "source_ip": 18446744072646205771,
+        "target": 18446744072646197280
+      },
+      "image": "38f5cb06010011ff",
+      "incarnation": 1,
+      "merge": "feedback_has_no_compiler_observation",
+      "producer": "00f4cb06010011ff",
+      "published": [],
+      "record": "c402f01f010011ff"
+    },
+    {
+      "acknowledged": [],
+      "classification": "unclassified",
+      "disposition": "direct_call_has_no_indirect_observation",
+      "emitted_candidates": [],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646197280,
+        "detail": 1,
+        "kind": 3,
+        "phase": 2,
+        "source_ip": 18446744072646205771,
+        "target": 18446744072646197280
+      },
+      "image": "38f5cb06010011ff",
+      "incarnation": 1,
+      "merge": "feedback_has_no_compiler_observation",
+      "producer": "00f4cb06010011ff",
+      "published": [],
+      "record": "b403f01f010011ff"
+    },
+    {
+      "acknowledged": [],
+      "classification": "unclassified",
+      "disposition": "direct_call_has_no_indirect_observation",
+      "emitted_candidates": [],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646197280,
+        "detail": 1,
+        "kind": 3,
+        "phase": 2,
+        "source_ip": 18446744072646205771,
+        "target": 18446744072646197280
+      },
+      "image": "38f5cb06010011ff",
+      "incarnation": 1,
+      "merge": "feedback_has_no_compiler_observation",
+      "producer": "00f4cb06010011ff",
+      "published": [],
+      "record": "a404f01f010011ff"
+    },
+    {
+      "acknowledged": [],
+      "classification": "unclassified",
+      "disposition": "direct_call_has_no_indirect_observation",
+      "emitted_candidates": [],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646197280,
+        "detail": 1,
+        "kind": 3,
+        "phase": 2,
+        "source_ip": 18446744072646205771,
+        "target": 18446744072646197280
+      },
+      "image": "38f5cb06010011ff",
+      "incarnation": 1,
+      "merge": "feedback_has_no_compiler_observation",
+      "producer": "00f4cb06010011ff",
+      "published": [],
+      "record": "9405f01f010011ff"
+    },
+    {
+      "acknowledged": [],
+      "classification": "unclassified",
+      "disposition": "direct_call_has_no_indirect_observation",
+      "emitted_candidates": [],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646197280,
+        "detail": 1,
+        "kind": 3,
+        "phase": 2,
+        "source_ip": 18446744072646205771,
+        "target": 18446744072646197280
+      },
+      "image": "38f5cb06010011ff",
+      "incarnation": 1,
+      "merge": "feedback_has_no_compiler_observation",
+      "producer": "00f4cb06010011ff",
+      "published": [],
+      "record": "8406f01f010011ff"
+    },
+    {
+      "acknowledged": [],
+      "classification": "unclassified",
+      "disposition": "direct_call_has_no_indirect_observation",
+      "emitted_candidates": [],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646197280,
+        "detail": 1,
+        "kind": 3,
+        "phase": 2,
+        "source_ip": 18446744072646205771,
+        "target": 18446744072646197280
+      },
+      "image": "38f5cb06010011ff",
+      "incarnation": 1,
+      "merge": "feedback_has_no_compiler_observation",
+      "producer": "00f4cb06010011ff",
+      "published": [],
+      "record": "7407f01f010011ff"
+    }
+  ],
+  "generated_exit_seen": true,
+  "gs_proof": {
+    "boot_id": "fb0601dd-db5c-4396-aaa5-e59b91b16924",
+    "build_id": "fd2262c047e130787ef669419111eba6eb9ebb2c",
+    "const_current_task": "0xffffffff8440f018",
+    "current_task_gs_offset": "0xffffffff8440f018",
+    "gs_symbol": "current_task",
+    "kaslr_disabled": true,
+    "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "kernel_elf_sha256": "7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809",
+    "kernel_release": "7.0.0-38-kdrebuild2",
+    "percpu_section_va": "0xffffffff843f7000",
+    "scope": "Exact linked/running kernel identity and full GS symbol input; fixture GS relocation and execution remain separate.",
+    "verified_for_running_kernel": true
+  },
+  "iterations": 8,
+  "kernel_release": "7.0.0-38-kdrebuild2",
+  "managed_fork_exit": {
+    "child_pid": 3278,
+    "child_record": {
+      "pid": 3278,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=3278 self_root=ff11000114be0800 self_core=ff11000114be0800 self_regs=ff11000114be0800 self_binding=ff11000114be0958 self_own=1 self_native=1 self_managed=1\n",
+      "values": {
+        "a": "0",
+        "b": "0",
+        "calls": "0",
+        "completed": "0",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "0",
+        "iterations": "0",
+        "locks_clear": "1",
+        "mode": "0",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "ff11000114be0958",
+        "self_core": "ff11000114be0800",
+        "self_managed": "1",
+        "self_native": "1",
+        "self_own": "1",
+        "self_pid": "3278",
+        "self_regs": "ff11000114be0800",
+        "self_root": "ff11000114be0800",
+        "source_size": "833",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "0"
+      }
+    },
+    "packet_contents_copied": false,
+    "parent_after": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=3273 self_root=ff1100010e871800 self_core=ff1100010e871800 self_regs=ff1100010e871800 self_binding=ff1100010e871958 self_own=1 self_native=1 self_managed=1\n",
+    "parent_before": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=3273 self_root=ff1100010e871800 self_core=ff1100010e871800 self_regs=ff1100010e871800 self_binding=ff1100010e871958 self_own=1 self_native=1 self_managed=1\n",
+    "parent_detached": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=833 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=3273 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+    "shutdown_native_holds_drained": true,
+    "status": "child_exited_parent_detached",
+    "wait_status": 0
+  },
+  "module_sha256": "378bf139407bf57de1b4d708db3c6548a5d25537219b8ce83c2232c89010267e",
+  "module_sizes": {
+    "body": 833,
+    "callee": 116
+  },
+  "near_indirect_call_sites": [],
+  "ordinary_indirect_kernel_learning": "unverified",
+  "pending_before_shutdown": 8,
+  "returned_full_jit_body": "not_established",
+  "root_entry": 18446744072646205682,
+  "settled_keys": 8,
+  "source_version": "fixture-378bf139407bf57de1b4d708db3c6548a5d25537219b8ce83c2232c89010267e-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "status": "partial_jit_mechanism_pass",
+  "typed_generated_exit_records": 8,
+  "workers": 4
+}

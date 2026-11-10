@@ -1,0 +1,17 @@
+{
+  "python_result": "/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipt-reconciliation.json",
+  "python_result_sha256": "03a1b0897de0709c537808e6c2f4917f52a5c427a3162b53e09f0529bdc51910",
+  "runner_ast_result": "/mnt/kdlock-builds/kdlock-main-work/module3-9f327952-01a1bc4f/build-receipts/result.json",
+  "runner_ast_result_sha256": "93cde66867106c3fff3c3a637222b20827aaf244d2361bc3dc754d743b9925fc",
+  "module_build_result": "/mnt/kdlock-builds/kdlock-main-work/module3-9f327952-01a1bc4f/build-receipts/result.json",
+  "module_build_result_sha256": "93cde66867106c3fff3c3a637222b20827aaf244d2361bc3dc754d743b9925fc",
+  "hmp_result": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/kdlock-main-before-live4-20261111.json",
+  "hmp_result_sha256": "765c81c05440a00be06c4ff27fe467719a3a28f85d4b9019837e10d2b3ec50b2",
+  "headroom_review": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/live4-headroom-review.json",
+  "headroom_review_sha256": "fc5d69e3ec8612167769e7cb2ed80c94229a3bf885dffe53673460d311b67f4c",
+  "minimum_root_free_bytes": 1073741824,
+  "minimum_build_free_bytes": 2147483648,
+  "max_proof_age_seconds": 1800,
+  "max_command_bytes": 33554432,
+  "check_scope": "Common104files retain actual4/12/separate5 results; changedrunnerAST andmodulecompile are both evidenced by one actualbuildcommand, not two executions."
+}

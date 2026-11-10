@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+"""One-off kernel2 boot4 preflight/arm/postproof. Never reboots or loads.
+
+Preparation only until the root controller reviews this source and actual Python
+check/completed-live receipts. Caller exclusively holds the idle VM window. Review
+inputs bind the actual corrected Python checks and separately reviewed host/live
+headroom; this helper does not infer a host disk budget from guest free space.
+No phase retries or cleans up a prior partial receipt directory.
+"""
+import argparse
+import datetime
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import re
+import resource
+import signal
+import stat
+import subprocess
+import sys
+import time
+
+BASE = Path('/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f')
+OLD = BASE / 'receipts/install-kdrebuild2-81feb2d7-v1'
+NEW = BASE / 'receipts/repeat-kdrebuild2-live4-20261111-01'
+POSTOUT = BASE / 'receipts/postboot4-20261111-01'
+POST = BASE / 'receipts/overlay-81feb2d7/kdlock-kdrebuild2-postboot.py'
+INPUTS = BASE / 'receipts/overlay-81feb2d7/kdlock-main-81feb2d7-build-inputs.json'
+LIVE = Path('/mnt/kdlock-builds/kdlock-main-work/live3-runtime-18c8f2e4-20261111-01')
+CONTROLLER = Path('/mnt/kdlock-builds/kdlock-main-work/live3-controller-18c8f2e4-20261111-01/result.json')
+MODULE = Path('/mnt/kdlock-builds/kdlock-main-work/module3-9f327952-01a1bc4f/module-build/kd_runtime_fixture.ko')
+BOOT = 'fb0601dd-db5c-4396-aaa5-e59b91b16924'
+RELEASE = '7.0.0-38-kdrebuild2'
+BID = 'fd2262c047e130787ef669419111eba6eb9ebb2c'
+UUID = 'aa0bde06-47f6-4049-aaaf-13d052e53961'
+ENTRY = 'gnulinux-advanced-' + UUID + '>gnulinux-' + RELEASE + '-advanced-' + UUID
+DEFAULT = 'gnulinux-advanced-' + UUID + '>gnulinux-7.0.0-38-kdlock1-advanced-' + UUID
+CFG = '8d4c66b404bdf56ea6a94569882a495bd9d5ed23a4d38e98d11950c0d0c54089'
+PINS = {'vmlinux':'7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809',
+        '.config':'31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483',
+        'arch/x86/boot/bzImage':'a5fc091793ac0b4dbe9ccb59a390743967d89aa61192eb29e497ac066f356439',
+        'System.map':'47cc1e87e95f2e118f9a20ff01ec8e31dee1f9d0f650ef9649392a25db98395f'}
+POSTSHA = '91d0358d4017e834f489f01a2eb9a14d3ca66e7c6d45ecfb20537b64a0713a3a'
+MODSHA = 'bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048'
+MANIFESTSHA = 'fc93427521aaa3bab2af9eccb9dc10f300f040bd07ffc4ac4b365bb16200a369'
+
+
+def require(value, message):
+    if not value:
+        raise RuntimeError(message)
+
+
+def digest(path):
+    path = Path(path)
+    before = path.lstat()
+    require(stat.S_ISREG(before.st_mode), 'not regular: ' + str(path))
+    with path.open('rb') as f:
+        h = hashlib.sha256()
+        for b in iter(lambda: f.read(1024 * 1024), b''):
+            h.update(b)
+    after = path.lstat()
+    require((before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns,before.st_ctime_ns) ==
+            (after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns,after.st_ctime_ns), 'changed hash input')
+    return h.hexdigest()
+
+
+def save(name, value):
+    data = value if isinstance(value, bytes) else (json.dumps(value,indent=2,sort_keys=True)+'\n').encode()
+    with (NEW/name).open('xb') as f:
+        f.write(data); f.flush(); os.fsync(f.fileno())
+    fd = os.open(NEW,os.O_RDONLY|os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def load_pinned(path, expected):
+    require(digest(path)==expected, 'reviewed receipt hash differs: '+str(path))
+    require(Path(path).stat().st_size<=4*1024*1024,'review receipt too large')
+    return json.loads(Path(path).read_text())
+
+
+def run(label, argv, timeout, byte_limit):
+    path=NEW/(label+'.log'); started=time.monotonic()
+    def limit():
+        resource.setrlimit(resource.RLIMIT_FSIZE,(byte_limit,byte_limit))
+    with path.open('xb') as f:
+        p=subprocess.Popen(list(map(str,argv)),stdout=f,stderr=subprocess.STDOUT,
+             start_new_session=True,preexec_fn=limit,env={'PATH':'/usr/sbin:/usr/bin:/sbin:/bin','LC_ALL':'C'})
+        timed=False
+        try:
+            rc=p.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            timed=True
+            try:
+                os.killpg(p.pid,signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            try:
+                rc=p.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                save(label+'-result.json',dict(argv=list(map(str,argv)),pid=p.pid,timed_out=True,drain_established=False,outstanding=True))
+                raise RuntimeError('unreaped command; retain output and process')
+        f.flush(); os.fsync(f.fileno())
+    save(label+'-result.json',dict(argv=list(map(str,argv)),returncode=rc,timed_out=timed,
+         elapsed_seconds=time.monotonic()-started,sha256=digest(path)))
+    require(not timed and rc==0,'command failed: '+label)
+    return path.read_text()
+
+
+def idle(label, post=False):
+    boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    taint=Path('/proc/sys/kernel/tainted').read_text().strip()
+    require(os.uname().release==RELEASE,'wrong running kernel')
+    require((boot!=BOOT and taint=='0') if post else (boot==BOOT and taint=='12288'),'unexpected boot/taint')
+    modules=Path('/proc/modules').read_text()
+    require(not any(any(x in l.split()[0].lower() for x in ('kdlock','kd_','komb','tclock')) for l in modules.splitlines()),'KD module still present')
+    require(not any(Path('/dev/'+n).exists() for n in ('kd_runtime_fixture','kd_runtime_fixture_ctl')),'fixture device remains')
+    bad=[]; rows=[]
+    names={'make','gmake','ninja','gcc','clang','cc1','cc1plus','ld','ld.bfd','ld.lld','as','objcopy','insmod','rmmod','modprobe','fio','perf'}
+    for p in Path('/proc').iterdir():
+        if not p.name.isdigit() or int(p.name)==os.getpid():
+            continue
+        try:
+            comm=(p/'comm').read_text().strip(); cmd=(p/'cmdline').read_bytes().replace(b'\0',b' ').decode(errors='replace')
+        except (OSError,ProcessLookupError):
+            continue
+        rows.append(dict(pid=int(p.name),comm=comm,command=cmd))
+        if comm in names or any(x in comm for x in ('gcc','clang','cc1','kd-fixture','kd_fixture')) or any(x in cmd for x in ('pytest','unittest','run_runtime_fixture.py','will-it-scale','kdlock-live2-recover')):
+            bad.append(rows[-1])
+    save(label+'.json',dict(boot_id=boot,taint=taint,release=RELEASE,modules=modules,processes=rows,unexpected=bad,unix_time=time.time()))
+    require(not bad,'build/test/fixture/recovery activity')
+    return boot
+
+
+def grub(label, armed, byte_limit):
+    require(digest('/boot/grub/grub.cfg')==CFG,'GRUB cfg changed')
+    text=Path('/boot/grub/grub.cfg').read_text()
+    require('set default="'+DEFAULT+'"' in text,'normal default changed')
+    run(label+'-syntax',['grub-script-check','/boot/grub/grub.cfg'],30,byte_limit)
+    raw=run(label+'-environment',['grub-editenv','/boot/grub/grubenv','list'],30,byte_limit)
+    env=dict(x.split('=',1) for x in raw.splitlines() if '=' in x)
+    require(env.get('next_entry','')==(ENTRY if armed else '') and not env.get('prev_saved_entry'),'unexpected one-shot state')
+    d=dict(grub_cfg_sha256=CFG,normal_default=DEFAULT,environment=env,candidate_entry=ENTRY)
+    save(label+'.json',d); return d
+
+
+def installed():
+    rows=[('vmlinuz-',17183232,PINS['arch/x86/boot/bzImage']),
+          ('System.map-',10564272,PINS['System.map']),
+          ('config-',308548,PINS['.config']),
+          ('initrd.img-',103185042,'fc61d1e8578632686049e56f773801cbc2b741549002a34466d2880d6eb19e17')]
+    for prefix,size,sha in rows:
+        path=Path('/boot')/(prefix+RELEASE)
+        require(path.stat().st_size==size and digest(path)==sha,'installed boot bytes differ')
+    require(digest(MODULE)==MODSHA,'fixture module changed')
+
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('phase',choices=('preflight','arm','postproof'))
+    p.add_argument('--review-inputs',type=Path,required=True)
+    p.add_argument('--review-sha256',required=True)
+    a=p.parse_args(); require(os.geteuid()==0,'VM root controller required')
+    review=load_pinned(a.review_inputs,a.review_sha256)
+    for k in ('minimum_root_free_bytes','minimum_build_free_bytes','max_command_bytes'):
+        require(type(review[k]) is int and review[k]>0,'invalid explicit bound: '+k)
+    age=review['max_proof_age_seconds']; require(type(age) in (int,float) and math.isfinite(age) and age>0,'invalid age bound')
+    if a.phase=='preflight':
+        NEW.mkdir(mode=0o700,exist_ok=False)
+    else:
+        require(NEW.is_dir(),'missing preflight directory')
+    save(a.phase+'-started.json',dict(unix_time=time.time(),review_path=str(a.review_inputs),review_sha256=a.review_sha256))
+    try:
+        if a.phase=='preflight':
+            completed=json.loads((LIVE/'result.json').read_text())
+            controller=json.loads(CONTROLLER.read_text())
+            require(controller['returncode']==0 and controller['status']=='RETURNED' and controller['boot_id']==BOOT,'prior live controller did not complete on this boot')
+            require(completed['status']=='partial_jit_mechanism_pass' and completed['managed_fork_exit']['shutdown_native_holds_drained'] is True,'prior live shutdown incomplete')
+            require(completed['settled_keys']==completed['pending_before_shutdown']==8 and
+                    digest(LIVE/'shutdown-archive.json')==completed['archive_sha256'],'prior exact archive/settlement differs')
+            # The retained runner writes successful result only after channel
+            # close, ordinary destroy and rmmod return. Fresh idle below also
+            # requires the module and both device paths absent; no ABORT path
+            # is substituted for this actually completed run.
+            save('prior-live-result.json',(LIVE/'result.json').read_bytes())
+            save('prior-live-controller.json',CONTROLLER.read_bytes())
+            tests=load_pinned(review['python_result'],review['python_result_sha256'])
+            require(type(tests.get('returncode')) is int and tests['returncode']==0,'Python checks not actual rc0')
+            # Common unchanged-source check receipts remain distinct from the
+            # changed runner AST and actual module3 build receipts.
+            for label in ('runner_ast','module_build'):
+                checked=load_pinned(review[label+'_result'],review[label+'_result_sha256'])
+                require(type(checked.get('returncode')) is int and checked['returncode']==0,'changed input check not actual rc0: '+label)
+                save(label+'-input.json',Path(review[label+'_result']).read_bytes())
+            hmp=load_pinned(review['hmp_result'],review['hmp_result_sha256'])
+            stamp=datetime.datetime.fromisoformat(hmp['utc']).timestamp()
+            require(0<=time.time()-stamp<=age and stamp>=datetime.datetime.fromisoformat(controller['end_utc']).timestamp(),'post-live HMP not fresh')
+            all_disks=hmp['snapshots'].split('List of partial')[0]
+            require('List of snapshots present on all disks' in all_disks and 'kdlock-builddisk-clean-20261031' in all_disks,'missing real recovery snapshot')
+            require(all(n in hmp['block'] for n in ('drive_system','drive_data1','drive_kdlock_builds2')),'incomplete disk identity')
+            load_pinned(review['headroom_review'],review['headroom_review_sha256'])
+            idle('preflight-idle')
+            installed()
+            require({n:digest(BASE/'build'/n) for n in PINS}==PINS,'ELF/config/bzImage/System.map changed')
+            manifest=load_pinned(INPUTS,MANIFESTSHA)
+            require(manifest['build_input_count']==64 and len(manifest['files'])==64,'kernel input count changed')
+            actual={n:digest(BASE/'source/kernel/kdlock'/n) for n in manifest['files']}
+            require(actual==manifest['files'],'kernel source64 changed')
+            save('kernel-source64.json',actual)
+            notes=run('elf-build-id',['readelf','-n',BASE/'build/vmlinux'],30,review['max_command_bytes'])
+            require(re.findall(r'Build ID: ([0-9a-f]+)',notes)==[BID],'ELF BuildID differs')
+            for path,k in [('/', 'minimum_root_free_bytes'),(BASE,'minimum_build_free_bytes')]:
+                s=os.statvfs(path); require(s.f_bavail*s.f_frsize>=review[k],'reviewed guest headroom consumed')
+            run('preflight-df',['df','-B1','/','/boot',BASE],30,review['max_command_bytes'])
+            grub('preflight-grub',False,review['max_command_bytes'])
+        elif a.phase=='arm':
+            prior=json.loads((NEW/'preflight-complete.json').read_text())
+            require(prior['review_sha256']==a.review_sha256 and 0<=time.time()-prior['unix_time']<=age,'preflight stale/different review')
+            idle('arm-idle'); installed()
+            before=grub('arm-before',False,review['max_command_bytes'])
+            run('arm-one-shot',['grub-reboot',ENTRY],30,review['max_command_bytes'])
+            after=grub('arm-after',True,review['max_command_bytes'])
+            require({k:v for k,v in before['environment'].items() if k!='next_entry'}=={k:v for k,v in after['environment'].items() if k!='next_entry'},'other GRUB state changed')
+            run('arm-sync',['sync'],30,review['max_command_bytes'])
+        else:
+            arm=json.loads((NEW/'arm-complete.json').read_text())
+            require(arm['review_sha256']==a.review_sha256,'different arm review')
+            boot=idle('postproof-idle',True)
+            require(digest(POST)==POSTSHA,'postboot helper changed')
+            run('postproof-helper',[sys.executable,POST,'--output',POSTOUT,'--timeout','30','--max-command-bytes',str(review['max_command_bytes']),'--max-notes-bytes','1048576'],180,review['max_command_bytes'])
+            result=json.loads((POSTOUT/'result.json').read_text())
+            require(result['phase']=='POSTBOOT_IDENTITY_VERIFIED' and result['boot_id']==boot and boot!=BOOT,'new boot proof incomplete')
+            old=json.loads((NEW/'arm-after.json').read_text()); now=result['grub']
+            require(now['configuration_sha256']==old['grub_cfg_sha256'] and now['normal_default']==old['normal_default'] and not now['environment'].get('next_entry'),'repeat one-shot not consumed')
+            require({k:v for k,v in old['environment'].items() if k!='next_entry'}=={k:v for k,v in now['environment'].items() if k!='next_entry'},'other GRUB state changed across boot')
+            save('repeat-postboot-binding.json',dict(old_boot_id=BOOT,new_boot_id=boot,repeat_arm=arm,repeat_armed_grub=old,postboot_result=str(POSTOUT/'result.json'),postboot_helper_sha256=POSTSHA))
+        save(a.phase+'-complete.json',dict(status='COMPLETE',phase=a.phase,unix_time=time.time(),review_sha256=a.review_sha256,reboot_performed=False,module_load_performed=False))
+    except BaseException as e:
+        save(a.phase+'-failure.json',dict(status='FAILED_NO_AUTOMATIC_RETRY',error=repr(e),one_shot_may_be_set=a.phase=='arm'))
+        raise
+
+
+if __name__=='__main__':
+    main()
