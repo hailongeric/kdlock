@@ -5,6 +5,7 @@
 #include <linux/overflow.h>
 #include <linux/slab.h>
 #include <linux/string.h>
+#include <asm/cpufeature.h>
 
 #include "runtime.h"
 #include "mutex_api.h"
@@ -346,6 +347,9 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 	    (config->boundary_count && !config->boundaries))
 		return -EINVAL;
 	*out = NULL;
+	/* The active call-depth return thunk changes native-escape flags. */
+	if (cpu_feature_enabled(X86_FEATURE_CALL_DEPTH))
+		return -EOPNOTSUPP;
 	if (check_mul_overflow((size_t)config->cycle_capacity, (size_t)config->claim_capacity, &cells) ||
 	    check_mul_overflow(cells, (size_t)3, &total))
 		return -EOVERFLOW;
