@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 20s python3 - <<'INNER'\nimport json,pathlib,subprocess,time\nr=subprocess.run(['dmesg','--color=never'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=10)\nprint(json.dumps({'observed_unix_time':time.time(),'scope':'Later read-only diagnostic, not an error-time sample or a drain result','release':pathlib.Path('/proc/sys/kernel/osrelease').read_text().strip(),'boot_id':pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'taint':pathlib.Path('/proc/sys/kernel/tainted').read_text().strip(),'modules':pathlib.Path('/proc/modules').read_text(),'dmesg_returncode':r.returncode,'dmesg_stdout':r.stdout.decode(errors='replace'),'dmesg_stderr':r.stderr.decode(errors='replace')},sort_keys=True))\nINNER"
+  ],
+  "returncode": 0,
+  "recorded_utc": "2026-11-10T17:35:23.966212+00:00",
+  "stdout_sha256": "fcaf42e99e90d58bdbfb1d97f3f45cbf11b855f7534d7149b3c0b4f3c276a84c"
+}

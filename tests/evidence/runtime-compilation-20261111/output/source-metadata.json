@@ -1,0 +1,49 @@
+{
+  "old": 0,
+  "regions": [
+    {
+      "length": 116,
+      "start": 18446744072646205456
+    },
+    {
+      "length": 833,
+      "start": 18446744072646205600
+    }
+  ],
+  "sites": [
+    {
+      "boundary": "lock",
+      "site": 18446744071584155968
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744071584156032
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072646205677
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072646205828
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072646205920
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072646205953
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072646206027
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072646206108
+    }
+  ],
+  "slot": 18379471558794443016,
+  "version": "fixture-378bf139407bf57de1b4d708db3c6548a5d25537219b8ce83c2232c89010267e-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+}

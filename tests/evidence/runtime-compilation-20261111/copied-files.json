@@ -1,0 +1,164 @@
+[
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "controller/command.json",
+    "member": "controller/command.json",
+    "raw_bytes": 1810,
+    "raw_sha256": "8c7ef703fc4e012700afc93b0e937daad36a725ebef9aaaaa8ba945e8c2c64c9",
+    "retained_bytes": 1810,
+    "retained_sha256": "8c7ef703fc4e012700afc93b0e937daad36a725ebef9aaaaa8ba945e8c2c64c9"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "controller/result.json",
+    "member": "controller/result.json",
+    "raw_bytes": 1969,
+    "raw_sha256": "a5e46c656c90e24fba4eaf2e530822b898ab1572b2157f5cac046997e7382a4a",
+    "retained_bytes": 1969,
+    "retained_sha256": "a5e46c656c90e24fba4eaf2e530822b898ab1572b2157f5cac046997e7382a4a"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "controller/stdout.log",
+    "member": "controller/stdout.log",
+    "raw_bytes": 1954,
+    "raw_sha256": "25b06abaa5ac11f0afc86113d1b8e53a1398d9a64ec070e9308b5cb85d6ca3eb",
+    "retained_bytes": 1954,
+    "retained_sha256": "25b06abaa5ac11f0afc86113d1b8e53a1398d9a64ec070e9308b5cb85d6ca3eb"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/cycle-1/claim.bin",
+    "member": "output/cycle-1/claim.bin",
+    "raw_bytes": 266,
+    "raw_sha256": "0ce867d767414a45bc1ce5916a64d1f09acdb2afe2ec91afa8637359739587aa",
+    "retained_bytes": 266,
+    "retained_sha256": "0ce867d767414a45bc1ce5916a64d1f09acdb2afe2ec91afa8637359739587aa"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/identity.json",
+    "member": "output/identity.json",
+    "raw_bytes": 1326,
+    "raw_sha256": "70f4fd81c742e1171c72bbb3fc1044738e0a8cfe14adbfda20b69d3d6fee210d",
+    "retained_bytes": 1326,
+    "retained_sha256": "70f4fd81c742e1171c72bbb3fc1044738e0a8cfe14adbfda20b69d3d6fee210d"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/managed-child-record.bin",
+    "member": "output/managed-child-record.bin",
+    "raw_bytes": 1023,
+    "raw_sha256": "db5ee9afbe10b4f1fbd1f687c6ca6fc45b3963bba5aa7d19570f224bce6097a8",
+    "retained_bytes": 1023,
+    "retained_sha256": "db5ee9afbe10b4f1fbd1f687c6ca6fc45b3963bba5aa7d19570f224bce6097a8"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/module.disassembly.txt",
+    "member": "output/module.disassembly.txt",
+    "raw_bytes": 117694,
+    "raw_sha256": "21eb7d15cede6ca916cd396b4d9b93ef10931b8bccbc164d58962d1c1585b91a",
+    "retained_bytes": 117694,
+    "retained_sha256": "21eb7d15cede6ca916cd396b4d9b93ef10931b8bccbc164d58962d1c1585b91a"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/result.json",
+    "member": "output/result.json",
+    "raw_bytes": 9294,
+    "raw_sha256": "3362eb3c6255f3f248e50bffb3946fd78afcd3f253702d82fae3456e582bd6dc",
+    "retained_bytes": 9294,
+    "retained_sha256": "3362eb3c6255f3f248e50bffb3946fd78afcd3f253702d82fae3456e582bd6dc"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/source-0.bin",
+    "member": "output/source-0.bin",
+    "raw_bytes": 116,
+    "raw_sha256": "2aa55fec09a636d834f93257b6e5737b5fd85ca7cea267e98c96cce4303b417b",
+    "retained_bytes": 116,
+    "retained_sha256": "2aa55fec09a636d834f93257b6e5737b5fd85ca7cea267e98c96cce4303b417b"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/source-0.disassembly.txt",
+    "member": "output/source-0.disassembly.txt",
+    "raw_bytes": 3474,
+    "raw_sha256": "ea0cc15dbbacf0df0baf4811fbb52c5b99a7eee8703574050ce9cbcf230b1391",
+    "retained_bytes": 3474,
+    "retained_sha256": "ea0cc15dbbacf0df0baf4811fbb52c5b99a7eee8703574050ce9cbcf230b1391"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/source-1.bin",
+    "member": "output/source-1.bin",
+    "raw_bytes": 833,
+    "raw_sha256": "d1774f91ea9abeb03c18f7adeee2f146c5c52a9d7bdb42d0488864b0acd68382",
+    "retained_bytes": 833,
+    "retained_sha256": "d1774f91ea9abeb03c18f7adeee2f146c5c52a9d7bdb42d0488864b0acd68382"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/source-1.disassembly.txt",
+    "member": "output/source-1.disassembly.txt",
+    "raw_bytes": 17835,
+    "raw_sha256": "97422074ab6c5cf78be9f76830c15296d0ad106ae6d90b22573372bf5ec49ad2",
+    "retained_bytes": 17835,
+    "retained_sha256": "97422074ab6c5cf78be9f76830c15296d0ad106ae6d90b22573372bf5ec49ad2"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/source-export.bin",
+    "member": "output/source-export.bin",
+    "raw_bytes": 1311,
+    "raw_sha256": "12b9ca09fc9395846c8313fbf58bb128693c667303b313be76009b7dbd5cdef6",
+    "retained_bytes": 1311,
+    "retained_sha256": "12b9ca09fc9395846c8313fbf58bb128693c667303b313be76009b7dbd5cdef6"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "output/source-metadata.json",
+    "member": "output/source-metadata.json",
+    "raw_bytes": 1044,
+    "raw_sha256": "84465f7d0ea1f1b7a68aaf537a9cc5a8d26314b991512025cf72c28af69f9ce0",
+    "retained_bytes": 1044,
+    "retained_sha256": "84465f7d0ea1f1b7a68aaf537a9cc5a8d26314b991512025cf72c28af69f9ce0"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "source/disassem/lowering.py.txt",
+    "member": "source/disassem/lowering.py",
+    "raw_bytes": 28755,
+    "raw_sha256": "abd1ca8be29212916925f87c3205c84b6d68e32c702316632d6f743cbbad7328",
+    "retained_bytes": 28755,
+    "retained_sha256": "abd1ca8be29212916925f87c3205c84b6d68e32c702316632d6f743cbbad7328"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "source/tests/kernel/run_runtime_fixture.py.txt",
+    "member": "source/tests/kernel/run_runtime_fixture.py",
+    "raw_bytes": 25132,
+    "raw_sha256": "a4f1af50287671bc36ef229397bf6062a1e66a968435b7a4bc781fdcb5356222",
+    "retained_bytes": 25132,
+    "retained_sha256": "a4f1af50287671bc36ef229397bf6062a1e66a968435b7a4bc781fdcb5356222"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "source/tests/kernel/payload/runtime_fixture.c.txt",
+    "member": "source/tests/kernel/payload/runtime_fixture.c",
+    "raw_bytes": 20222,
+    "raw_sha256": "51a4b5666d720ffa68670a8775550d9a61d01c204c3de6a8b7b16b01591fcee8",
+    "retained_bytes": 20222,
+    "retained_sha256": "51a4b5666d720ffa68670a8775550d9a61d01c204c3de6a8b7b16b01591fcee8"
+  },
+  {
+    "evidence_dir": "runtime-compilation-20261111",
+    "local_path": "guest-copy-index.json",
+    "member": "index.json",
+    "raw_bytes": 9738,
+    "raw_sha256": "3b917e65714e9dfb84c76cc5dc0c3ad948cd431d63cd99de27f18bad7a63277b",
+    "retained_bytes": 9738,
+    "retained_sha256": "3b917e65714e9dfb84c76cc5dc0c3ad948cd431d63cd99de27f18bad7a63277b"
+  }
+]
