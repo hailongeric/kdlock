@@ -88,7 +88,7 @@ A source request may be selected but still waiting for a physical grant. Keep th
 
 Lock-specific selection cooperates with S_W transfer. A participant advances W only with a valid live request/state, pending operation, selected endpoint, actual grant and exclusive execution. Stale nodes cannot regain authority. The selected ordinary-mutex MCS protocol still needs exact local/proxy/election serialization and checks for its actual reuse/cancellation races; historical arbitration is only a candidate proof.
 
-Owner/sequence names express exclusive execution and required ordering, not a per-S_W lock/token framework or counter on every hop. The starting P is lock-local selection plus sender-stop, receiver-start and structured return ordering; select its primitive rather than inheriting the current wait lock/queue. Explicit incarnation/sequence checks are needed only for actual reuse, cancellation or escaping-reference races. Scoped grant identity must distinguish A1/A2 and obsolete release without prescribing a ledger.
+Owner/sequence names express exclusive execution and required ordering, not a per-S_W lock/token framework or counter on every hop. The starting P is lock-local selection plus sender-stop, receiver-start and structured return ordering; select its primitive rather than inheriting the current wait lock/queue. Explicit incarnation/sequence checks are needed only for actual reuse, cancellation or escaping-reference races. Scoped grant identity must distinguish each acquisition and obsolete release without prescribing a ledger.
 
 ### 2.3 Publication sequence
 
@@ -118,9 +118,9 @@ An ACK for an older retained grant may still finish that grant's matching custod
 
 ## 3 Proposed records and their owners
 
-**Fixed cardinality and physical target:** one thread-owned core S_W containing W's canonical regs packet once. The former invocation/continuation split is consolidated below. Nested entries, lock nodes and outer-control users point directly to that original core; none owns a duplicate source continuation or reserves another full W packet. C02 keeps active/nested lookup on each MCS node's direct S_W pointer; task-owned root backing supplies initial entry. Core/control backing allocation and exact reuse remain caller/integration duties, not another packet or state level.
+**Fixed cardinality and physical target:** one thread-owned core S_W containing W's canonical regs packet once. The former invocation/continuation split is consolidated below. Nested entries, lock nodes and outer-control users point directly to that original core; none owns a duplicate source continuation or reserves another full W packet. C02 keeps active/nested lookup on each MCS node's direct S_W pointer; task-owned root backing supplies initial entry. Task-time provisioning of the selected preallocated request contexts and exact reuse remain caller/integration duties, not another packet or state level.
 
-Small synchronous control can use the C stack only while its call remains alive through every remote access and final ACK. The target core survives all admitted queue, grant, executor, return and native-suffix users. Nested relationships use the same S_W, not another execution state; the complete target core is not claimed to exist already.
+Small synchronous role control can use the C stack only while its call remains alive through every remote access and final ACK; the selected ordinary-mutex request contexts themselves use task-owned preallocated storage. The target core survives all admitted queue, grant, executor, return and native-suffix users. Nested relationships use the same S_W, not another execution state; the complete target core is not claimed to exist already.
 
 ### Two storage/reference levels
 
@@ -149,35 +149,39 @@ Keep only necessary selection/queue, family/mode/grant/operation identity, outer
 | --- | --- | --- |
 | W execution and handback | One S_W/packet; users reference it; returning ownership changes its current binding/result | An actual reference escapes storage lifetime, requiring stable backing for the same S_W; no second packet or continuation/handback object merely for transfer |
 | Nested outer control | Bounded recursive calls keep outer control call-local through child/release/result work | Return/nonlocal transfer invalidates referenced control or stack bounds fail: choose suitable stable target storage or a bounded explicit stack |
-| Grants and identity | Exact authority, A1/A2 identity and results in chosen core/user fields or valid call-local control | A concrete non-LIFO/object/custody last user outlives that storage: retain necessary information independently of the invalidated storage |
+| Grants and identity | Exact authority, per-acquisition identity and results in chosen core/user fields or valid call-local control | A concrete non-LIFO/object/custody last user outlives that storage: retain necessary information independently of the invalidated storage |
 | Results and ACKs | Chosen core/user fields, ordinary return and declared ordering; the retained parent handles deferred outer-unlock notification/unwind and its release duty | A callback/notification can access payload after its owner returns or permits reuse: extend its lifetime, finish notification before reuse, or use stable notification storage |
 | Lifetime accounting | Structured call, queue ownership and return/ACK ordering prove last use without an added refcount | Independent asynchronous holders escape those proofs: select exact retention accounting, possibly a refcount; justify each extra holder/record rather than adding one per hop |
 
 Materialization before source transfer, one active executor, optional selection and physical context legality remain mandatory. The selected ordinary-mutex non-LIFO route retains the responsible outer combiner and defers physical release to its normal batch/release protocol; it does not promise early availability. Other families receive no deferral exception. Sleeping alone does not invalidate a still-live task stack; migration does require a valid ownership/reservation rule for CPU-local storage. No sleep is permitted under a live atomic obligation. Bound recursive depth and kernel-stack use before enabling the route; an unproved bound needs a supported forward/local route or a separately justified bounded mechanism, not unbounded recursion.
 
-### Proposed node-owned control (open)
+### Selected task-owned request contexts
 
-**P, recommendation for audit:** consider embedding a request's necessary control in a target node reserved through every actual user. The ordinary-mutex MCS queue is selected separately; this control-placement proposal selects no existing layout and does not make an acquisition-only MCS node sufficient for the full request lifetime. W's core/regs and direct referring users remain fixed. Queued/delegated requests or a retained-control need can justify a node; an uncontended local path need not create one or capture full execution state.
+**Selected C05 storage:** the initial ordinary-mutex lane uses task-owned preallocated request-node contexts. Provision them before lock calls; do not allocate at each mutex_lock or substitute a temporary local node. Each simultaneously live request has a distinct context pointing directly to its original S_W. W's core/regs stays singular and is never copied into a context.
 
-| Information | Candidate placement | Lifetime/layout condition |
+A context becomes reusable only after its request and all relevant users finish. Queue scheduling membership, source completion, physical release and retained release/return duties are separate: detachment or a returned result alone does not permit reuse. Include every non-free context in the capacity bound, including late physical-owner/control, grant, notification, return, image/binding and current-native-endpoint users after the logical scope ends. Maximum nesting depth alone is insufficient, and no default pool size or one-node sufficiency is implied.
+
+Provisioning and admission must ensure a usable reserved context before the public ordinary void lock call commits. A private capacity failure is not a public mutex_lock result, permission to replay source, or authorization for an unselected temporary-node fallback. Exact capacity/progress and task lifecycle integration remain proof duties; the storage choice is settled.
+
+| Information | Placement duty | Lifetime/layout condition |
 | --- | --- | --- |
 | Selected queue/claim status and polling fields | Candidate compact hot part of the node | Account for each logical membership's duties and last observer; choose links/topology rather than requiring current queues |
-| Exact family/mode/acquisition identity and physical release endpoint/token | Necessary request-node fields | A1/A2 stay distinct; authority remains actionable through successful grant/release duties and matching ACKs |
+| Exact family/mode/acquisition identity and physical release endpoint/token | Necessary request-node fields | Acquisition identities stay distinct; authority remains actionable through successful grant/release duties and matching ACKs |
 | Parent/child return route and request-specific control | Node fields only where the request needs them | Child/ancestor and native-handback users finish before reuse; ordinary saved outer combining control stays bounded call-local where its enclosing call proves lifetime |
 | Result, cancellation, ACK and notification state | Chosen node fields where sufficient | Selection/cancel races serialize and final notification access ends before reuse; no automatic extra frame or refcount |
 | W's regs and current source continuation | Only the one S_W core; node holds a direct pointer | No full W packet, duplicate source cursor/continuation or packet-sized owned/borrowed union in the node |
 
-For the selected ordinary-mutex MCS queue, distinguish an acquisition scheduling slot from a **request-lifetime node**. Any other future queue needs the same distinction. Unlink, acquisition, source unlock, physical unlock and retirement differ. N_A can be unlinked while A1 has a deferred source-unlock request and B still needs its control. A marker does not physically release A1. A1 control remains retained through its actual users even when later logical grants exist in the held physical batch; A2 must have distinct referenced identity and cannot overwrite A1 before queue/cancel/ACK/notification/native users finish. No physical gate transition between every logical grant is implied. Structured ownership is the proposed default proof. If the selected slot is reused earlier, retain the composite request or put escaping small control in valid target core/user storage. Renaming a slot does not extend lifetime; other topologies need equivalent proofs.
+For the selected ordinary-mutex MCS queue, distinguish an acquisition scheduling slot from a **request-lifetime node**. Any other future queue needs the same distinction. Unlink, acquisition, source unlock, physical unlock and retirement differ. A request can be unlinked while its source-unlock request is deferred and an inner operation still needs its control. A marker is not physical release. That control remains retained through its actual users even when other logical grants exist in the held physical batch; a later request has distinct identity and cannot overwrite it before queue/cancel/ACK/notification/native users finish. No physical gate transition between every logical grant is implied. The selected request context stays non-free until all those duties and observers finish, even after scheduling membership ends. Other topologies need equivalent last-user proofs.
 
 **Conditional spin example (E/P):** an acquisition-only MCS/qspinlock slot can become reusable before body unlock under its backend contract. It is not automatically a long-lived control owner. If per-CPU reservations/pools are selected, prove their chosen capacity and nested progress; never wait for a slot held by an ancestor waiting for that child. The rewrite need not use those nodes or pools.
 
-**Sleepable locks (S/P):** chosen control storage stays valid across allowed scheduling/migration. Pinning, parking/waiting and pool policy are C01/C02/C11 target choices, not fixed by current published-waiter code; its policy is unchanged by this document. If a backend uses both abortable OSQ and delegation memberships, discharge their separate selection/cancel/progress/retirement duties. Separate links are one solution. A merged protocol needs proof of all equivalent duties; neither OSQ nor two queues is required for every rewrite.
+**Sleepable locks (S/P):** chosen control storage stays valid across allowed scheduling/migration. The initial mutex uses selected task-owned preallocation; numeric capacity and lifecycle proof remain explicit. Pinning and parking/waiting remain separate C01/C11 choices, not fixed by historical published-waiter code. If a backend uses both abortable OSQ and delegation memberships, discharge their separate selection/cancel/progress/retirement duties. Separate links are one solution. A merged protocol needs proof of all equivalent duties; neither OSQ nor two queues is required for every rewrite.
 
-The target local route keeps exact acquisition/release provenance without forcing a node/full capture on every fast path. A later delegation importing an ancestor establishes actionable authority before effects or remains local; it cannot invent a past grant/node. Existing local routing is a candidate, not the only target route.
+The initial ordinary-mutex local MCS route uses its reserved preallocated request context and keeps exact acquisition/release provenance. Full source capture is required only by its declared entry contract, not merely by possessing a node. A later delegation importing an ancestor establishes actionable authority before effects; it cannot invent a past grant. Other-family storage and capture policies remain separately scoped.
 
 **Cache layout remains open and measured.** Keep contended queue/poll fields compact. Where access patterns require separation, isolate producer next-link writes from waiter polling and combiner control/result writes; W's regs stays in its separate core. Audit member offsets, alignment, pool stride and hot/cold writers/readers. An enriched node may span several cache lines and still be the simplest correct design; there is no 64-byte, performance-gain or measured-saving claim. C02/C05 and T49 gate retention/placement on concrete lifetime, progress, capacity and layout evidence.
 
-The following field groups are a semantic inventory to embed or map into the minimal starting mechanism or this still-open node proposal. Reserving completion/release resources means ensuring that the required storage and progress route exist before effects; it need not allocate anything.
+The following field groups are a semantic inventory to map into the selected preallocated request contexts and singular core. Reserving completion/release resources means ensuring that the required storage and progress route exist before effects; it need not allocate anything.
 
 ```text
 canonical_thread_state S_W                 // exactly one for original W
@@ -281,7 +285,7 @@ contains exactly one core, the initial native endpoint, task hold and auxiliary
 bounds/cursor/reservation. A single task pointer locates that stable root header;
 it is not a borrowed-source index. The [integration artifact](../../../kernel/integration/README.md)
 is an unapplied task-field/child-reset context template, because exact Linux 7.0
-source is absent from main. Caller allocation/capacity and lifecycle wiring
+source is absent from main. Task-time provisioning, explicit capacity and lifecycle wiring
 remain explicit duties.
 
 Task copy clears its inherited header alias before publication without changing
@@ -308,18 +312,9 @@ borrowed source remains the request's direct node->state.
 
 ### 3.2 Grant identity and native object lifetime
 
-An address is not an acquisition identity. For:
+An object address is not an acquisition identity. Every logical source acquisition has a distinct referenced control and exact completion identity. A physical batch can retain exclusion while carrying multiple logical-grant controls; no physical gate transition between every logical grant is implied. A delayed completion must not mutate a later acquisition or overwrite control before its actual last user.
 
-```text
-lock(A)  -> A1
-lock(B)  -> B1
-unlock(A1)
-lock(A)  -> A2
-```
-
-A1 and A2 are distinct logical source acquisitions, not necessarily separate physical acquisitions. A physical batch can retain exclusion while carrying multiple exact logical-grant controls; do not require the gate to become free between all logical grants. Referenced A1 identity/control cannot be confused with A2 or overwritten before its actual last user, and a stale A1 completion cannot mutate A2. Same-object reacquisition after deferred logical unlock while the earlier physical batch remains OPEN with deferred history is currently unsupported, excluded from the current workload and deferred. Distinct objects use the common recursive request path; MCS selection alone supplies no proof for the excluded case.
-
-Identity must distinguish object destruction/reinitialization where the supported API contract permits it. Choose a concrete incarnation source or a protocol eliminating delayed object dereferences. A retained combiner/control record does not pin the caller's lock container. For the initial selected mutex lane, the caller must keep lock-object storage valid through actual physical release and the complete backend unlock's final object access. A deferred marker or owner-handled notification does not authorize destruction/reinitialization. After actual physical release and the relevant final object access, delayed bookkeeping uses retained identity/endpoint data and cannot touch freed/reused A. Early destruction/reinitialization before that release/access boundary violates the selected object-lifetime contract. Deferred same-object reacquisition is excluded from this iteration; other availability-dependent handshakes retain their stated progress limits. This creates no instruction/source admission whitelist. Owner/control storage and its containing allocation must remain valid through their own exact last users after physical release; callback code remains retained through its return.
+Identity must distinguish object destruction/reinitialization where the supported API contract permits it. Choose a concrete incarnation source or a protocol eliminating delayed object dereferences. A retained combiner/control record does not pin the caller's lock container. For the initial selected mutex lane, the caller must keep lock-object storage valid through actual physical release and the complete backend unlock's final object access. A deferred marker or owner-handled notification does not authorize destruction/reinitialization. After actual physical release and the relevant final object access, delayed bookkeeping uses retained identity/endpoint data and cannot touch a freed/reused lock object. Early destruction/reinitialization before that release/access boundary violates the selected object-lifetime contract. Availability-dependent handshakes retain their stated progress limits. This creates no instruction/source admission whitelist. Owner/control storage and its containing allocation must remain valid through their own exact last users after physical release; callback code remains retained through its return.
 
 For imported ancestors acquired before delegated entry, capture exact provenance or enforce an actionable pre-entry exclusion. A logical task flag is not an inventory of all native locks.
 
@@ -454,6 +449,8 @@ Every unlock ends the current fragment, regardless of which scope it releases. T
 
 **Selected ordinary-mutex policy (C03):** for `lock(A); lock(B); unlock(A); ...; unlock(B)`, an out-of-order outer unlock records a deferred request for the responsible physical outer combiner. Keep that combiner context and its exact per-acquisition controls retained, notify/unwind to it, let it handle the marker and continue its normal batch/release protocol. Extra waiting is accepted. This supersedes the earlier immediate outer-release requirement and transferable-grant recommendation only for this mutex route. C11 now selects MCS; optional local/proxy/origin-combiner claims and queue/request last-use ordering remain implementation/proof duties.
 
+The current scope excludes reacquiring A while B is held after A's unlock was deferred and A's old physical batch remains held.
+
 The source reference is TCLocks' pinned public kernel [out-of-order unlock path](https://github.com/rs3lab/TCLocks/blob/bbfb9f00a12af51dff6ca291cb9829a82960c2ef/src/kernel/linux-5.14.16/kernel/locking/mutex.c#L809-L855), [inner completion reporting a deferred parent](https://github.com/rs3lab/TCLocks/blob/bbfb9f00a12af51dff6ca291cb9829a82960c2ef/src/kernel/linux-5.14.16/kernel/locking/mutex.c#L475-L491) and [outer handling with continued batching](https://github.com/rs3lab/TCLocks/blob/bbfb9f00a12af51dff6ca291cb9829a82960c2ef/src/kernel/linux-5.14.16/kernel/locking/mutex.c#L295-L333). These historical source references select neither its borrowed-stack execution nor another kernel target.
 
 The private [C protocol](../../../kernel/mutex_release.c) and [header](../../../kernel/mutex_release.h) record these distinct phases:
@@ -476,7 +473,7 @@ The helper retains one physical-owner context/list of exact per-acquisition cont
 
 A source unlock ending a logical scope is not a frame pop or physical batch release. The initial mutex lane requires stable lock-object storage through actual physical release and final backend object access. The caller establishes that validity; a retained context alone does not pin its lock container. If owner/control records share the containing allocation, keep that allocation through their later exact source-request/return/notifier last users, not merely physical release. Callback code remains retained through callback return. Record request/return, marker, unwind, outer handling, actual release and reclamation separately; acceptance is not physical completion or retirement. The selected stable-object contract permits a correctly materialized post-unlock continuation without waiting solely for physical release/object lifetime. The helper does not advance source. The private C04 bridge and its remaining integration must preserve the exact operation/CALL-return/cursor phase, exclusive executor, remaining logical grants and pending physical duties, once only; a marker alone authorizes no arbitrary execution.
 
-The source pattern where B's suffix waits for another task to acquire A illustrates an unresolved availability/progress scope issue under this selected deferral. Extra waiting is accepted, but neither generic native timing/progress parity nor safe early destruction/reacquisition follows. Describe that limitation explicitly without introducing a new source-admission whitelist. Other families and downgrade keep their declared release/concurrency semantics.
+Extra waiting is accepted without generic native timing/progress parity. Other families and downgrade keep their declared release/concurrency semantics.
 
 A backend route that separately promises actual release before source advancement must still fulfill that promise, with a matching physical-release result and full ordering. That conditional route is not the selected outer-mutex deferral policy.
 
@@ -502,7 +499,7 @@ Parents waiting for a child must handle the selected ancestor notification/unwin
 
 **Proposed first nested scheduling rule:** do not run unrelated B source bodies while W's outer continuation is suspended waiting for its B episode to finish. Release/cancel servicing remains allowed; pre-existing owner/queue obligations are not bypassed. Otherwise an unrelated B body may wait for a flag W publishes immediately after B release, while the combiner delays W until that unrelated body returns. The selected responsible outer-mutex combiner may continue its normal batch after handling the deferred marker; that selection is not permission to add arbitrary unrelated inner B batching. Broader inner batching remains a separate choice.
 
-The accepted outer-mutex waiting policy and this inner scheduling restriction establish no generic native progress parity. Deferred same-object reacquisition is excluded from this iteration; other availability-dependent source handshakes retain their stated limits. This restriction alone is not a proof. Draw the wait-for graph including affinities, oversubscription, physical owners, retained grants and CPU reservations. Bounded metadata does not guarantee bounded native lock waits or scheduler fairness.
+The accepted outer-mutex waiting policy and this inner scheduling restriction establish no generic native progress parity. Availability-dependent source handshakes retain their stated limits. This restriction alone is not a proof. Draw the wait-for graph including affinities, oversubscription, physical owners, retained grants and CPU reservations. Bounded metadata does not guarantee bounded native lock waits or scheduler fairness.
 
 ## 7 Ordering and retirement
 
@@ -540,7 +537,7 @@ These retain audit identities and cover v0.6 topics under the current F/S/P auth
 | R04 | Every lock/unlock ends its fragment before the operation. The lock code performs the operation once and chooses the next current-state continuation. |
 | R05 | No recovery replays completed effects, CALL stack transitions, acquisition or release. |
 | R06 | Logical W and physical current/context remain distinct, including task/CPU-specific context restoration. |
-| R07 | Release and mode change resolve exact acquisition/authority, including imported ancestors and A1/A2 reuse. |
+| R07 | Release and mode change resolve exact acquisition/authority, including imported ancestors and acquisition-record reuse. |
 | R08 | Source request/return, deferred marker, unwind, owner handling and physical release are distinct. RELEASED means actual physical release; selected mutex deferral carries no early-release promise. |
 | R09 | Execution ancestry, live grants and source scope remain independent; referenced identities/bindings stay valid under the chosen storage/index scheme. |
 | R10 | Final dependent access and child-binding closure precede final reuse permission; intermediate deferred/source-return results do not permit retirement. Retain responsible owner context and exact request/return/notifier users through their last use. |

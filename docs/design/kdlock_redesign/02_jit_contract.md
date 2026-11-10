@@ -202,7 +202,14 @@ Every live return address/token, including source-to-JIT hybrid chains, needs a 
 ### 3.4 GS and physical kernel context
 
 C02 uses the active MCS request's direct node->state pointer. All nested
-requests name the same original core. The [task root](../../../kernel/task_state.h)
+requests name the same original core. C05 supplies task-owned preallocated
+request contexts, without allocation at each lock or a temporary local-node
+fallback. Simultaneously live requests use distinct contexts; capacity includes
+late release/control, return and current-native-endpoint users, not just depth.
+Queue detachment or a result does not end those exact users. A private capacity
+failure cannot be returned as a public void mutex_lock result; provisioning and
+admission must reserve the required context before that boundary. No pool size
+or one-node sufficiency is implied. The [task root](../../../kernel/task_state.h)
 supplies initial own backing and the selected auxiliary wait stack before a
 first node exists; it is not a borrowed-source registry or active-S_W task field.
 JIT entry/return still requires exact current binding and packet materialization.

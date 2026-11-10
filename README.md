@@ -36,6 +36,16 @@ result/binding, child-return and notifier users retain their exact controls;
 only the responsible physical owner releases/reaps its batch. No callback has
 executed, and no performance or complete public mutex lane is claimed.
 
+C05 selects task-owned preallocated request-node contexts, provisioned before
+lock calls and reused only after each request and all its exact users finish.
+There is no allocation at each mutex_lock and no temporary local-node fallback.
+Simultaneously live requests use distinct contexts. Capacity covers every
+retained request, including physical-owner, return and current-native-endpoint
+users after queue removal or logical completion; nesting depth alone is not a
+capacity bound. No pool size or proof that one node suffices is selected. Private
+capacity failure is not a result from the public void mutex_lock API; provisioning
+and admission must supply the required context before that boundary.
+
 The [canonical state](kernel/state.c) owns W's register packet exactly once.
 The [JIT bridge](kernel/jit.c) connects exact execution bindings, image-bound
 pending exits, once-only source operation transitions, MCS acquisition and
@@ -61,20 +71,14 @@ closes before replacement; publication requires all active users to drain and
 old readers pass a grace period before reclamation. JIT entry reserves a
 separate claimed pending-exit use, which ordinary put cannot drop early.
 
-Overall integration remains incomplete. Public wrappers/native fallback,
-task/resource allocation and exit drain, recursive episode driving,
+Overall integration remains incomplete. Public native wrappers and reserved
+local MCS routing,
+task-time context provisioning and exit drain, recursive episode driving,
 source validation/executable publication and persistent cumulative feedback
 still need integration. Generated execution requires a distinct physical task
 and admitted nonoverlapping executor/source/wait-control stacks. W's own body
 uses a native route; a runtime instruction budget does not establish stack
 separation. No build system or runtime support is claimed yet.
-
-Same-object reacquisition after a deferred logical unlock while its earlier physical
-batch remains OPEN with deferred history is unsupported and excluded from the current workload.
-Its implementation is deferred. The common request preflight reports this
-before API entry or queue effects; it supplies no regrant, success or automatic
-native continuation. Normal nondeferred relock and distinct-object nesting keep
-the ordinary/common path.
 
 All new components have source/static review only. Ten focused private planner
 cases passed earlier on `13f2630f` with Python 3.10.12; they validate only that
@@ -117,8 +121,7 @@ remains retained through its return. The selected contract permits a correctly
 materialized post-unlock continuation without waiting solely for physical
 release/object lifetime. The private bridge now implements explicit CALL/return/cursor phases;
 a marker alone authorizes no arbitrary execution. Whole-lane integration and
-runtime correctness remain unvalidated. The exact deferred same-object
-reacquisition case above is outside this iteration; other availability-dependent
+runtime correctness remain unvalidated. Availability-dependent source
 handshakes keep their stated progress limits.
 
 ## Git history
