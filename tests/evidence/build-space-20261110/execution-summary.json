@@ -1,0 +1,10 @@
+{
+  "deleted_allocated_bytes": 41121030144,
+  "deleted_files": 149828,
+  "elapsed_seconds": 431.82,
+  "manifest_sha256": "821e71492b1b769f177a38c0315d7c68fdf230138e06cbb79188a705bb72c8e9",
+  "protected_hashes_verified": 106,
+  "scope4_touched": false,
+  "status": "COMPLETE",
+  "trim_performed": false
+}

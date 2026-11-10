@@ -1,0 +1,19 @@
+{
+  "start_utc": "2026-11-10T14:30:45.413372+00:00",
+  "argv": [
+    "fstrim",
+    "--verbose",
+    "/mnt/kdlock-builds2"
+  ],
+  "before": {
+    "available_bytes": 48796282880
+  },
+  "returncode": 0,
+  "stdout": "/mnt/kdlock-builds2: 46.4 GiB (49843331072 bytes) trimmed\n",
+  "stderr": "",
+  "elapsed_seconds": 7.750449188999482,
+  "end_utc": "2026-11-10T14:30:53.164034+00:00",
+  "after": {
+    "available_bytes": 48796282880
+  }
+}
