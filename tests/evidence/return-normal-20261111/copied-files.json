@@ -1,0 +1,92 @@
+[
+  {
+    "local_path": "vm/post-normal/activity.txt",
+    "origin": "guest",
+    "raw_bytes": 35012,
+    "raw_sha256": "0c5e4d1b3ab3109a47d7426250b90356cfbe83e96a396530ba9ce1601ef9685d",
+    "retained_bytes": 35012,
+    "retained_sha256": "0c5e4d1b3ab3109a47d7426250b90356cfbe83e96a396530ba9ce1601ef9685d"
+  },
+  {
+    "local_path": "vm/post-normal/dmesg.txt",
+    "origin": "guest",
+    "raw_bytes": 53659,
+    "raw_sha256": "6a202eb604451659e330092c47b0894b66887e5cb9861cc0b2d88bd3ccbb31ab",
+    "retained_bytes": 53659,
+    "retained_sha256": "6a202eb604451659e330092c47b0894b66887e5cb9861cc0b2d88bd3ccbb31ab"
+  },
+  {
+    "local_path": "vm/post-normal/grub-environment.txt",
+    "origin": "guest",
+    "raw_bytes": 12,
+    "raw_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0",
+    "retained_bytes": 12,
+    "retained_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+  },
+  {
+    "local_path": "vm/post-normal/kernel-notes.bin",
+    "origin": "guest",
+    "raw_bytes": 476,
+    "raw_sha256": "ff3f5318675db0cd606e636ef3a5b57272622ee4113ed9822328d64003aa54fe",
+    "retained_bytes": 476,
+    "retained_sha256": "ff3f5318675db0cd606e636ef3a5b57272622ee4113ed9822328d64003aa54fe"
+  },
+  {
+    "local_path": "vm/post-normal/modules.txt",
+    "origin": "guest",
+    "raw_bytes": 2799,
+    "raw_sha256": "eda39b63121505d67ca14b2c3b71495e65b860adc60f2e2d983183e8c588cf28",
+    "retained_bytes": 2799,
+    "retained_sha256": "eda39b63121505d67ca14b2c3b71495e65b860adc60f2e2d983183e8c588cf28"
+  },
+  {
+    "local_path": "vm/post-normal/result.json",
+    "origin": "guest",
+    "raw_bytes": 680,
+    "raw_sha256": "68769e3c857871814be0ac14059eb862c3f00633a8e1f5c13a67b0f65ba9fbdb",
+    "retained_bytes": 680,
+    "retained_sha256": "68769e3c857871814be0ac14059eb862c3f00633a8e1f5c13a67b0f65ba9fbdb"
+  },
+  {
+    "local_path": "vm/pre-reboot.json",
+    "origin": "guest",
+    "raw_bytes": 35927,
+    "raw_sha256": "e33381823118279469df7354527b47c19d5d8e53ddaa8b66eb303b5dd4575773",
+    "retained_bytes": 35927,
+    "retained_sha256": "e33381823118279469df7354527b47c19d5d8e53ddaa8b66eb303b5dd4575773"
+  },
+  {
+    "local_path": "vm/reboot-result.json",
+    "origin": "guest",
+    "raw_bytes": 36021,
+    "raw_sha256": "83e19e72770e182c05a2f5b4143c997bdc451630122dbb368eb0e4687fff0462",
+    "retained_bytes": 36021,
+    "retained_sha256": "83e19e72770e182c05a2f5b4143c997bdc451630122dbb368eb0e4687fff0462"
+  },
+  {
+    "local_path": "guest-index.json",
+    "origin": "guest",
+    "raw_bytes": 2724,
+    "raw_sha256": "ca7023a80f69f4a24503b414946694ce05be647a125acc3026cc411e40efe9c9",
+    "retained_bytes": 2724,
+    "retained_sha256": "ca7023a80f69f4a24503b414946694ce05be647a125acc3026cc411e40efe9c9"
+  },
+  {
+    "local_path": "return-helper.py.txt",
+    "origin": "sourcehost",
+    "raw_bytes": 4010,
+    "raw_sha256": "57254ed07eb4acd89f707672f430398d7693225a665293fc4af5907d6552eba1",
+    "retained_bytes": 4010,
+    "retained_sha256": "57254ed07eb4acd89f707672f430398d7693225a665293fc4af5907d6552eba1",
+    "source_path": "/tmp/kdlock-main-return-normal-after-live4.py"
+  },
+  {
+    "local_path": "reconnect.json",
+    "origin": "sourcehost",
+    "raw_bytes": 174,
+    "raw_sha256": "e8c855741a0443f256816f5a83abd599bd7a695ee6bfc1c166835a45396abe75",
+    "retained_bytes": 174,
+    "retained_sha256": "e8c855741a0443f256816f5a83abd599bd7a695ee6bfc1c166835a45396abe75",
+    "source_path": "/tmp/kdlock-main-normal-return-reconnect-20261111.json"
+  }
+]

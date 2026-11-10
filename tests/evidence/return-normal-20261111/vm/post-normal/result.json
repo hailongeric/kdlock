@@ -1,0 +1,20 @@
+{
+  "utc": "2026-11-10T18:48:20.940548+00:00",
+  "status": "NORMAL_KERNEL_RETURN_VERIFIED",
+  "release": "7.0.0-38-kdlock1",
+  "boot_id": "ca0b717b-c19d-4027-b598-6a1cf58b93d2",
+  "taint": "0",
+  "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+  "module_absent": true,
+  "devices_absent": true,
+  "grub_cfg_sha256": "8d4c66b404bdf56ea6a94569882a495bd9d5ed23a4d38e98d11950c0d0c54089",
+  "grub_environment": {
+    "next_entry": ""
+  },
+  "free_bytes": {
+    "/": 1983856640,
+    "/mnt/kdlock-builds": 14333890560,
+    "/mnt/kdlock-builds2": 11452841984
+  },
+  "scope": "Read-only normal-return identity; candidate/liveJIT evidence remains bound to earlier kernel2 boots."
+}

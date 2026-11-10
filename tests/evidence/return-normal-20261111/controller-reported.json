@@ -1,0 +1,9 @@
+{
+  "collector_actions": "Only saved-file reads/copies and source-host static note inspection; no VM controls/tests/probes",
+  "post_normal_observer_source": "Inline controller command, not saved as a standalone file; no script artifact is invented",
+  "reported_post_normal_inline_observer_returncode": 0,
+  "reported_reboot_helper_returncode": 0,
+  "saved_post_normal_result": "vm/post-normal/result.json",
+  "saved_post_normal_status": "NORMAL_KERNEL_RETURN_VERIFIED",
+  "scope": "Root controller transcript report; raw saved results are retained independently"
+}

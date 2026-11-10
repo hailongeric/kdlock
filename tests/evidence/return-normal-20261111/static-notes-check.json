@@ -1,0 +1,8 @@
+{
+  "gnu_build_ids": [
+    "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62"
+  ],
+  "input": "vm/post-normal/kernel-notes.bin",
+  "input_sha256": "ff3f5318675db0cd606e636ef3a5b57272622ee4113ed9822328d64003aa54fe",
+  "scope": "Source-host static inspection of saved kernel ELF notes only; not another VM observation"
+}

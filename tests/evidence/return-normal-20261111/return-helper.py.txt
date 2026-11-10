@@ -1,0 +1,44 @@
+from pathlib import Path
+import datetime,hashlib,json,os,subprocess,time
+base=Path('/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-live4-20261111-01')
+base.mkdir(mode=0o700)
+live=Path('/mnt/kdlock-builds/kdlock-main-work/live4-runtime-9f327952-20261111-01')
+controller=live.parent/'live4-controller-9f327952-20261111-01/result.json'
+result=json.loads((live/'result.json').read_text());control=json.loads(controller.read_text())
+assert control['returncode']==0 and control['status']=='RETURNED'
+assert result['status']=='partial_jit_mechanism_pass' and result['managed_fork_exit']['shutdown_native_holds_drained'] is True
+assert result['pending_before_shutdown']==result['settled_keys']==0
+assert len(result['ordinary_indirect_learning']['acknowledged'])==8
+wire=[json.loads(p.read_text()) for p in sorted((live/'wire').glob('attempt-*/result.json'))]
+assert len(wire)==30 and all(row['status']==0 and row['completed_response'] is True for row in wire)
+assert [row['operation'] for row in wire[-4:]]==[9,10,11,6]
+assert os.uname().release=='7.0.0-38-kdrebuild2'
+assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()=='0f3f9c09-8837-4763-8320-388278bd83d7'
+assert Path('/proc/sys/kernel/tainted').read_text().strip()=='12288'
+modules=Path('/proc/modules').read_text()
+assert not any(l.startswith('kd_runtime_fixture ') for l in modules.splitlines())
+assert not any(Path('/dev').glob('kd_runtime_fixture*'))
+ps=subprocess.run(['ps','-eo','pid,ppid,comm,args'],capture_output=True,text=True,timeout=10,check=True).stdout
+bad=[]
+for p in Path('/proc').iterdir():
+ if not p.name.isdigit() or int(p.name)==os.getpid():continue
+ try:
+  comm=(p/'comm').read_text().strip();cmd=(p/'cmdline').read_bytes().replace(b'\0',b' ').decode(errors='replace')
+ except OSError:continue
+ if comm in {'make','gcc','cc1','ld','ld.bfd','as','insmod','rmmod','perf','fio'} or 'kd-fixture' in comm or any(x in cmd for x in ['run_runtime_fixture.py','pytest','unittest']):bad.append({'pid':p.name,'comm':comm,'argv':cmd})
+assert not bad,bad
+grub=Path('/boot/grub/grub.cfg').read_bytes()
+assert hashlib.sha256(grub).hexdigest()=='8d4c66b404bdf56ea6a94569882a495bd9d5ed23a4d38e98d11950c0d0c54089'
+default='gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961'
+assert ('set default="'+default+'"').encode() in grub
+g=subprocess.run(['grub-editenv','/boot/grub/grubenv','list'],capture_output=True,text=True,timeout=10,check=True)
+env=dict(line.split('=',1) for line in g.stdout.splitlines() if '=' in line)
+assert not env.get('next_entry') and not env.get('prev_saved_entry')
+record={'utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'boot_before':'0f3f9c09-8837-4763-8320-388278bd83d7','release_before':os.uname().release,'taint':'12288','live_result_sha256':hashlib.sha256((live/'result.json').read_bytes()).hexdigest(),'live_controller_sha256':hashlib.sha256(controller.read_bytes()).hexdigest(),'wire_operations':[row['operation'] for row in wire],'all_wire_status_zero':True,'module_absent':True,'devices_absent':True,'activity':ps,'unexpected':bad,'grub_cfg_sha256':hashlib.sha256(grub).hexdigest(),'normal_default':default,'grub_environment':env,'argv':['systemctl','reboot'],'timeout_seconds':30,'policy':'Ordinary reboot after actual complete drain/unload; normal default retained; no arm, force, reset or cleanup command.'}
+(base/'pre-reboot.json').write_text(json.dumps(record,indent=2)+'\n')
+print(json.dumps({k:v for k,v in record.items() if k!='activity'},indent=2),flush=True)
+start=time.monotonic();r=subprocess.run(record['argv'],capture_output=True,text=True,timeout=30,check=False)
+record.update(returncode=r.returncode,stdout=r.stdout,stderr=r.stderr,elapsed_seconds=time.monotonic()-start)
+(base/'reboot-result.json').write_text(json.dumps(record,indent=2)+'\n')
+print(json.dumps({k:v for k,v in record.items() if k!='activity'},indent=2),flush=True)
+raise SystemExit(r.returncode)

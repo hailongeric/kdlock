@@ -1,0 +1,54 @@
+{
+  "collected_unix": 1794336560.6220565,
+  "files": [
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-live4-20261111-01/post-normal/activity.txt",
+      "member": "vm/post-normal/activity.txt",
+      "raw_bytes": 35012,
+      "raw_sha256": "0c5e4d1b3ab3109a47d7426250b90356cfbe83e96a396530ba9ce1601ef9685d"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-live4-20261111-01/post-normal/dmesg.txt",
+      "member": "vm/post-normal/dmesg.txt",
+      "raw_bytes": 53659,
+      "raw_sha256": "6a202eb604451659e330092c47b0894b66887e5cb9861cc0b2d88bd3ccbb31ab"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-live4-20261111-01/post-normal/grub-environment.txt",
+      "member": "vm/post-normal/grub-environment.txt",
+      "raw_bytes": 12,
+      "raw_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-live4-20261111-01/post-normal/kernel-notes.bin",
+      "member": "vm/post-normal/kernel-notes.bin",
+      "raw_bytes": 476,
+      "raw_sha256": "ff3f5318675db0cd606e636ef3a5b57272622ee4113ed9822328d64003aa54fe"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-live4-20261111-01/post-normal/modules.txt",
+      "member": "vm/post-normal/modules.txt",
+      "raw_bytes": 2799,
+      "raw_sha256": "eda39b63121505d67ca14b2c3b71495e65b860adc60f2e2d983183e8c588cf28"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-live4-20261111-01/post-normal/result.json",
+      "member": "vm/post-normal/result.json",
+      "raw_bytes": 680,
+      "raw_sha256": "68769e3c857871814be0ac14059eb862c3f00633a8e1f5c13a67b0f65ba9fbdb"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-live4-20261111-01/pre-reboot.json",
+      "member": "vm/pre-reboot.json",
+      "raw_bytes": 35927,
+      "raw_sha256": "e33381823118279469df7354527b47c19d5d8e53ddaa8b66eb303b5dd4575773"
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-live4-20261111-01/reboot-result.json",
+      "member": "vm/reboot-result.json",
+      "raw_bytes": 36021,
+      "raw_sha256": "83e19e72770e182c05a2f5b4143c997bdc451630122dbb368eb0e4687fff0462"
+    }
+  ],
+  "scope": "Read-only saved normal-return proof files; collection is not a new VM observation"
+}
