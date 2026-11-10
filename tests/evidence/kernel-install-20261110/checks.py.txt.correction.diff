@@ -1,0 +1,5 @@
+--- attempt-v1/checks.py.txt
++++ attempt-v2/checks.py.txt
+@@ -119 +119 @@
+-        if comm in names or any(x in comm for x in ('gcc', 'clang', 'cc1')) or any(x in command for x in ('pytest', 'unittest', 'run_runtime_fixture.py', 'will-it-scale')):
++            if comm in names or any(x in comm for x in ('gcc', 'clang', 'cc1')) or any(x in command for x in ('pytest', 'unittest', 'run_runtime_fixture.py', 'will-it-scale')):

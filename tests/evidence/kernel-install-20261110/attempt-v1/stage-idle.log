@@ -1,0 +1,4 @@
+  File "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f/checks.py", line 119
+    if comm in names or any(x in comm for x in ('gcc', 'clang', 'cc1')) or any(x in command for x in ('pytest', 'unittest', 'run_runtime_fixture.py', 'will-it-scale')):
+    ^^
+SyntaxError: expected 'except' or 'finally' block

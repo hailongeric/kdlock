@@ -1,0 +1,8 @@
+{
+  "error": "RuntimeError('command failed; preserve partial state: idle')",
+  "one_shot_may_be_set": false,
+  "phase": "stage",
+  "preserve_partial_state": true,
+  "reboot_performed": false,
+  "status": "FAILED_NO_AUTOMATIC_RETRY"
+}

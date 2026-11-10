@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f/checks.py",
+    "idle",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f/stage-idle.json"
+  ],
+  "elapsed_seconds": 0.1741916629980551,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f/stage-idle.log",
+  "log_sha256": "02779afc1762aa90d019d31a1705753fde5fce344e885f294a12165414a4b938",
+  "returncode": 1,
+  "timed_out": false
+}

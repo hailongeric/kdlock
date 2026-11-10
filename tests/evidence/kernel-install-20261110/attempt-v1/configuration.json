@@ -1,0 +1,11 @@
+{
+  "controller_review": "actual final build success and idle/recovery reviewed externally",
+  "final_build_receipt": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-950ee6fc/result.json",
+  "final_build_receipt_sha256": "e89fd23bb01c64aa8ad1bb934f67c46f55cc0d275bae12612e74b042f1950c81",
+  "initrd_budget_bytes": 268435456,
+  "recovery_receipt": "/tmp/kdlock-main-install-recovery-20261110.json",
+  "recovery_receipt_sha256": "ce60632a1439be60b359346cada9d58480289a996781f5223a541792cbb34ee7",
+  "root_reserve_bytes": 1073741824,
+  "runtime_overlay_commit": "950ee6fc",
+  "runtime_sha256": "e9ff1fdd21542e3dd87a9b6fe97bd8b7efb0540382d551c983f10192a67cca1c"
+}

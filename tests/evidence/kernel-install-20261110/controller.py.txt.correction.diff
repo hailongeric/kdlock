@@ -1,0 +1,7 @@
+--- attempt-v1/controller.py.txt
++++ attempt-v2/controller.py.txt
+@@ -22,2 +22,2 @@
+-STAGE = BASE / 'install-stage-kdrebuild1-01a1bc4f'
+-RECEIPTS = BASE / 'receipts/install-kdrebuild1-01a1bc4f'
++STAGE = BASE / 'install-stage-kdrebuild1-01a1bc4f-v2'
++RECEIPTS = BASE / 'receipts/install-kdrebuild1-01a1bc4f-v2'

@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "update-grub"
+  ],
+  "elapsed_seconds": 1.5746347420063103,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/install-update-grub.log",
+  "log_sha256": "d89d1e8bf784d702db60ba2c6892f1a948ed3461f6c46b3409417641e8348236",
+  "returncode": 0,
+  "timed_out": false
+}

@@ -1,0 +1,4 @@
+Filesystem        1B-blocks         Used   Available Use% Mounted on
+/dev/sda1      106156367872 102495707136  3643883520  97% /
+/dev/sda1      106156367872 102495707136  3643883520  97% /
+/dev/sdc       176958459904 163093639168 12817252352  93% /mnt/kdlock-builds2

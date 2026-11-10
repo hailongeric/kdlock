@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "modprobe",
+    "-S",
+    "7.0.0-38-kdrebuild1",
+    "--show-depends",
+    "sd_mod"
+  ],
+  "elapsed_seconds": 0.007834795003873296,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/install-dependencies-sd_mod.log",
+  "log_sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785",
+  "returncode": 0,
+  "timed_out": false
+}

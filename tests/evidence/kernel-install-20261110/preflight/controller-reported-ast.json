@@ -1,0 +1,31 @@
+{
+  "evidence_kind": "controller transcript report, not a saved raw VM artifact",
+  "limitation": "No invented raw AST artifact and no rerun. Actual copied-helper v2 idle and stage executions independently parsed successfully.",
+  "raw_ast_command_output_retained": false,
+  "reported_imports": [
+    "ast",
+    "hashlib",
+    "json",
+    "pathlib",
+    "subprocess"
+  ],
+  "reported_steps": [
+    "Read each named helper as bytes and assert its expected SHA256.",
+    "Call ast.parse(data, filename=name).",
+    "Print JSON syntax_parsed_files.",
+    "Run checks-v2.py idle with check=True and timeout=30, writing the retained preflight idle JSON.",
+    "Print Actual VM idle preflight returned zero."
+  ],
+  "reported_tool_returncode": 0,
+  "retained_idle_artifact": "preflight/kdlock-kdrebuild1-v2-preflight-idle.json",
+  "validated_helpers": [
+    {
+      "path": "/tmp/kdlock-kdrebuild1-checks-v2.py",
+      "sha256": "d0554e9590d2c17249894a9aadf121512b5c7f21227c27290bf0bd0ac5ac05b8"
+    },
+    {
+      "path": "/tmp/kdlock-kdrebuild1-install-v2.py",
+      "sha256": "cc31b2ebeffac4c074e1a389fb95d1c149faef0b9bbfca1a90f63cc9ee68132b"
+    }
+  ]
+}

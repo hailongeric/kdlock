@@ -1,0 +1,8 @@
+{
+  "boot_bytes": 28056052,
+  "initrd_budget_bytes": 268435456,
+  "module_allocated_bytes": 691494912,
+  "needed": 2061728244,
+  "root_free": 3643731968,
+  "root_reserve_bytes": 1073741824
+}

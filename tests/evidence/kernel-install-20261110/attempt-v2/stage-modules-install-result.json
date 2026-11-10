@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "make",
+    "-C",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+    "O=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+    "KERNELRELEASE=7.0.0-38-kdrebuild1",
+    "INSTALL_MOD_PATH=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild1-01a1bc4f-v2",
+    "INSTALL_MOD_STRIP=1",
+    "modules_install"
+  ],
+  "elapsed_seconds": 162.20628352199856,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild1-01a1bc4f-v2/stage-modules-install.log",
+  "log_sha256": "47efffeac9ee895e7cdf034132d5b55e428cc11c3db757d3326451b4e10f9101",
+  "returncode": 0,
+  "timed_out": false
+}
