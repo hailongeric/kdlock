@@ -1,57 +1,79 @@
-# Direct task anchors for the source-rebuilt lane
+# External task registry for the source-rebuilt lane
 
-C02 selects two direct `task_struct` pointers: `kd_own_state` to that task's one
-canonical core and `kd_active_state` to an active borrowed origin. The latter is
-NULL for the ordinary own/native path, which uses `kd_own_state`. Both fields
-are pointers only; no packet, duplicate source state, registry, allocator,
-capacity or control-stack placement is introduced.
+C02 selects an external per-task registry with explicit lookup and lifetime
+management. [task_state.h](../task_state.h) defines caller-supplied persistent
+`kd_task_anchor` storage: one hash link, retained task key, own-core pointer and
+active borrowed-core pointer. It contains no packet. `task_struct` is unchanged;
+there is no task-copy reset hook or direct-field integration patch. A new child
+has no registered entry and cannot acquire its parent's core by shallow copy.
+The rejected direct-field source remains in Git history.
 
-The repository does not contain the exact selected Linux 7.0 source tree.
-[task_struct.patch](task_struct.patch) is a context-anchored integration template,
-with nominal hunk positions, not an applied or source-revision-verified patch.
-It has not been applied, built or executed. Rebase its anchors against the exact
-source/configuration before any implementation validation. Keep architecture
-first-member requirements intact: the fields follow
-`randomized_struct_fields_start`, not the beginning of `task_struct`.
+[task_state.c](../task_state.c) implements a private task-pointer hash index with
+short independently locked buckets. Its 64 buckets are an internal mapping
+choice, not an anchor capacity or a scaling result. Bucket guards protect only
+registry/anchor metadata, bucket-list traversal and fixed-size attach/detach
+checks; no source body, wait, allocation, provider callback or physical unlock
+runs under them. Bucket traversal is linear in that bucket's retained entries;
+no lookup-latency bound is claimed. Calls
+are current-task-only in ordinary task context, without IRQ/NMI or concurrent
+reentry. No arbitrary-task lookup, global family lock, allocator, default
+capacity or C05 control-stack placement is introduced.
 
-The task copy path must clear both copied pointers immediately after successful
-`dup_task_struct`, before publishing the child or any child cleanup that reads
-the fields. A shallow task copy did not acquire a reference to the parent's
-core; reset never modifies or frees that core. The static initial task's omitted
-pointer fields are zero initialized. Do not reset either field on a live task.
+The caller initializes a private anchor with `kd_task_anchor_init`, supplies a
+fresh own core and initialized native binding, then calls
+`kd_task_state_attach(anchor, core, origin_gs, native_binding)` on that task.
+Attach initializes that same canonical core, takes `get_task_struct(current)`
+and publishes the exact anchor under its bucket guard. It captures no source
+registers and clears no packet. An unattached task gets NULL from lookup rather
+than allocation or substitution of another task's state. A registered anchor
+must not be copied, reinitialized, concurrently reused or shared with a second
+task; anchor/core backing remains caller owned and retained.
 
-[kernel/task_state.c](../task_state.c) implements the current-task anchor layer.
-The caller supplies a fresh canonical core and initialized native binding;
-attach initializes that same core and publishes its pointer. It captures no
-registers, chooses no allocator and clears no packet. An unattached task has no
-core: lookup returns NULL rather than allocate or substitute another task's
-state.
+`kd_task_state_own` and `kd_task_state_active` perform explicit current-task
+lookup under the bucket guard. Active returns the borrowed pointer when one is
+present and own otherwise. These functions read anchor pointers, never the own
+packet while borrowed execution is active. Bucket locking orders publication;
+lookup does not acquire another core/storage reference or execution right.
+The returned own pointer stays valid because this task's registration and
+caller-owned backing remain live through its last use. The same current task
+cannot detach itself concurrently under the task-only contract. Any pointer
+that escapes that serial scope requires its caller's existing retained user,
+and every such user must drain before detach. A borrowed core additionally
+stays valid through the enclosing scope and its exact runtime users.
 
-Borrowed entry validates the retained current JIT binding for a foreign origin,
-saves only the prior active pointer in caller-owned small scope control, and
-publishes the borrowed pointer. Leave restores that pointer after the bridge has
-materialized/stopped or transferred the entered source. It neither restores an
-old packet nor grants execution authority. Serial scopes are strict LIFO;
-same-state nesting cannot detect every out-of-order close with only these two
-fields. Scope storage/lifetime remains caller supplied and selects no C05
-control-stack policy. Callback/entry integration must retain each old binding
-and MCS result user through its actual last binding access.
+Borrow entry validates the retained current JIT binding for a foreign origin,
+looks up the current registered anchor, and saves its exact anchor and previous
+borrowed pointer in small caller-owned scope storage. Leave verifies that same
+registered anchor, restores only its previous pointer after source has stopped
+or transferred, and closes the scope. It does not restore an old packet or
+binding authority. Serial scopes are strict LIFO; same-state nesting cannot
+detect every out-of-order close from pointer identity alone. The scope and both
+cores remain retained through leave. No registry reference replaces existing
+MCS result/binding/grant users, and the last old binding access still precedes
+its exact user drop.
 
-Before task exit releases the original stack, or before own-core storage is
-reused, source admission must close and every queued/executing/bound source,
-grant, code, return, notification and borrowed-pointer user must drain. The
-source integration must then call `kd_task_state_detach` on the origin task with
-its retained exact current native binding. Detach rejects an active borrowed
-anchor, another origin, any grant or pending image exit, or any operation
-other than IDLE/RESUMABLE.
-Its acquire-before-read binding check and pointer removal do not infer all
-escaped last users; the caller provides that complete proof. -EBUSY is not
-permission to continue exit or free the core/stack.
+Before task exit releases its stack, or before anchor/core reuse, close source
+admission and drain every queued/executing/bound source, grant, code, return,
+notification, lookup, binding and borrowed-scope user. Then call
+`kd_task_state_detach` on the origin task with the retained exact current native
+binding. Detach first rejects an active borrowed pointer without inspecting the
+own mutable source packet. It then checks exact origin/native ownership,
+acquires before reading binding fields, and rejects any grant, pending image
+exit or operation other than IDLE/RESUMABLE. It revokes the canonical binding,
+removes the exact anchor, completes its final anchor access and drops the
+registry's retained task reference outside the guard. It never dereferences the
+anchor or state after that drop.
 
-Detach does not free storage or release providers. Actual allocation/free,
-source-admission closure, exit drain scheduling, build wiring and any exact
-kernel exit hook remain integration work; no generic module callback or default
-waiting policy is selected here. The original task, its stack, owner/control
-containing allocations and callback code keep their separate actual last-user
-contracts. Stable mutex-object lifetime through physical release does not end
-those longer obligations.
+Those checks do not infer all escaped last users; the caller supplies the full
+drain proof before detach. A held task reference retains task identity, not an
+exiting task's kernel stack or all caller-owned allocations. Task exit/stack
+release therefore waits for successful detach AND the complete last-user proof.
+-EBUSY is not permission to continue exit or free storage. Detach does not free
+storage, release providers or choose a drain-wait policy. Allocation/free,
+source-admission closure, exit drain scheduling, exact kernel lifecycle hooks
+and build wiring remain integration work. Owner/control-containing allocations,
+callback code and source stacks keep their separate actual last-user duties;
+stable mutex-object lifetime through physical release does not end them.
+
+This layer has source review only. No import, compile, build, behavioral test or
+kernel execution is claimed.
