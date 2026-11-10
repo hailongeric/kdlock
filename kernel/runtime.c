@@ -370,11 +370,12 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 	if (!runtime)
 		return -ENOMEM;
 	runtime->config = *config;
-	runtime->records = kcalloc(config->feedback_capacity, sizeof(*runtime->records), GFP_KERNEL);
-	runtime->cycles = kcalloc(config->cycle_capacity, sizeof(*runtime->cycles), GFP_KERNEL);
-	runtime->items = kcalloc(total, sizeof(*runtime->items), GFP_KERNEL);
-	runtime->images = kcalloc(config->image_capacity, sizeof(*runtime->images), GFP_KERNEL);
-	runtime->private_released = kcalloc(config->image_capacity, sizeof(*runtime->private_released), GFP_KERNEL);
+	/* Cold arrays need stable virtual storage, not contiguous physical pages. */
+	runtime->records = kvcalloc(config->feedback_capacity, sizeof(*runtime->records), GFP_KERNEL);
+	runtime->cycles = kvcalloc(config->cycle_capacity, sizeof(*runtime->cycles), GFP_KERNEL);
+	runtime->items = kvcalloc(total, sizeof(*runtime->items), GFP_KERNEL);
+	runtime->images = kvcalloc(config->image_capacity, sizeof(*runtime->images), GFP_KERNEL);
+	runtime->private_released = kvcalloc(config->image_capacity, sizeof(*runtime->private_released), GFP_KERNEL);
 	if (!runtime->records || !runtime->cycles || !runtime->items || !runtime->images || !runtime->private_released) {
 		result = -ENOMEM;
 		goto free;
@@ -443,8 +444,8 @@ drop:
 		runtime->feedback_live = false;
 	}
 free:
-	kfree(runtime->private_released); kfree(runtime->images); kfree(runtime->items);
-	kfree(runtime->cycles); kfree(runtime->records); kfree(runtime);
+	kvfree(runtime->private_released); kvfree(runtime->images); kvfree(runtime->items);
+	kvfree(runtime->cycles); kvfree(runtime->records); kfree(runtime);
 	return result;
 }
 
@@ -773,7 +774,7 @@ int kd_jit_runtime_destroy(struct kd_jit_runtime *runtime)
 		runtime->feedback_live = false;
 	}
 	/* No source provider/payload access follows the final cold controller put. */
-	kfree(runtime->private_released); kfree(runtime->images); kfree(runtime->items);
-	kfree(runtime->cycles); kfree(runtime->records); kfree(runtime);
+	kvfree(runtime->private_released); kvfree(runtime->images); kvfree(runtime->items);
+	kvfree(runtime->cycles); kvfree(runtime->records); kfree(runtime);
 	return 0;
 }
