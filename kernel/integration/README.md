@@ -42,6 +42,18 @@ admission until every private setup step succeeds:
 4. Bind the resources and explicit complete control-stack requirement through
    `kd_mutex_bind_current` before using the ordinary source pair.
 
+[task_setup.h](../task_setup.h) composes those private steps through
+`kd_task_setup_current`. It copies the small call-only inputs before output
+initialization, validates known retained object/array extents, alignment,
+overflow and source/auxiliary disjointness, then performs attach/resources/bind.
+An already attached current task is refused before initialization. Later failure
+attempts exact unused initial-native detach; an unwind error keeps all attached
+backing retained for explicit resolution. Backing stays caller-owned.
+Opaque context/code extents and actual auxiliary context compatibility remain
+caller proofs. `kd_task_teardown_current` composes one native progress pass with
+exact detach, including when the current endpoint keeps pending true. Neither
+helper allocates or supplies a global fork/exit policy.
+
 The supported workload guarantees that a persistent record is available whenever
 it needs one. The pool is finite: `pool->capacity` and `resources->capacity` are
 the actual supplied count, and must cover simultaneously nested requests plus

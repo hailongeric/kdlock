@@ -87,7 +87,7 @@ entry_B
 
 This is a conceptual example, not a prescribed global naming scheme. Fragment identity must include enough source/ABI information to distinguish the actual cursor, operation phase, required input state and live-grant/context contract. Generic structures/dispatch combine lock family/API/mode, original S_W identity, operation phase, source cursor/dependency epoch and ABI compatibility. Reusable code-cache keys may omit W's identity only with proven input compatibility; each execution binding still names its exact S_W. A lock object's address or mmap/munmap root name is not a sufficient key or a protocol selector.
 
-An entry associates source/dependency identity, publication state and fragment descriptors. An image is a versioned unit of code and metadata; coherent immutable descriptors are replaced through the selected quiesced RCU rule. One image may contain several fragments. A cursor can have no available fragment, in which case the operation still completes through its admitted local/native route. C06/C09 select quiesced RCU replacement and exact active-user retention; source/executable integration remains work.
+An entry associates source/dependency identity, publication state and fragment descriptors. An image is a versioned unit of code and metadata; coherent immutable descriptors are replaced through the selected quiesced RCU rule. One image may contain several fragments. A cursor can have no available fragment, in which case the operation still completes through its admitted local/native route. C06/C09 select quiesced RCU replacement and exact active-user retention. Source-epoch/input validation and code-owner retention now have private implementations; actual live provider lease acquisition and executable allocation/publication orchestration remain work.
 
 ### 2.1 Bridge from A to B
 
@@ -131,11 +131,22 @@ and valid remaining dependencies. No publication redirects a saved source/JIT
 return into incompatible code or revives an old execution endpoint. RCU alone
 neither serializes builders nor retains a sleeping episode.
 
+The retained-input sources now include `source_epoch.[ch]` (`a660342c`),
+artifact `kd_jit_image_inputs`/raw decoded bytes (`0c3ccb10`) and
+`image_owner.[ch]` (`a23b82c1`). The epoch receives an already-owned coherent
+lease; the owner validates exact epoch/configuration/load/version/GS/byte inputs,
+derives IMAGE retention from BUILD and keeps the existing code hold through
+actual slot retirement. NULL publication can remove the final image through
+exact drain/grace. These checks do not acquire live provider/module/text holds,
+allocate executable memory or automate publication. Epoch/owner closure is
+retention-only; independent native suffix/return text and execution-admission
+closure remain provider duties.
+
 ## 3 Original backend and kdlock ABI
 
 Original UB means `glarer/UserspaceBypass` at `1a5b98a06b058a7adce9805c8c6d061e2212f56a`. Its translation/feedback pattern is retained; its old userspace wrapper is not copied byte for byte into kdlock.
 
-**Pinned evidence (E):** the register roles, packet fields/offsets, 168-byte size, two-word args and entry offsets below describe `20fde062729703208ac54445f51fc0f21f24e0e8`, with later checks in [the evidence file](04_evidence_and_reconciliation.md). C04 now retains the KD mapping in which physical R11 holds the same canonical packet base and logical R11 is virtualized. This does not freeze the old packet size/offsets or private entry ABI. Private entry, exit, capture, materialization and reentry sources now exist; whole native/recursive integration and runtime proof remain under C12. Reusing the old adapter makes its actual constraints conditional obligations of that lane. A new adapter must keep the original backend/GS lowering and prove equivalent source effects without inventing absent input bits.
+**Pinned evidence (E):** the register roles, packet fields/offsets, 168-byte size, two-word args and entry offsets below describe `20fde062729703208ac54445f51fc0f21f24e0e8`, with later checks in [the evidence file](04_evidence_and_reconciliation.md). C04 now retains the KD mapping in which physical R11 holds the same canonical packet base and logical R11 is virtualized. This does not freeze the old packet size/offsets or private entry ABI. Private entry, exit, capture, materialization and reentry sources now connect the ordinary/recursive path at `ce423858`; actual provider/task/kernel integration and runtime proof remain under C12. Reusing the old adapter makes its actual constraints conditional obligations of that lane. A new adapter must keep the original backend/GS lowering and prove equivalent source effects without inventing absent input bits.
 
 ### 3.1 Physical and logical registers
 
@@ -277,7 +288,7 @@ At a supported handback, preserve:
 - live grant identities, deferred outer-unlock phases, retained responsible owner contexts and actionable physical release routes;
 - supported context guards and unique execution sequence.
 
-A pending call executes once. A source acquisition/unlock resumes after its CALL only when that source operation's exact return/phase effects have been handled once. For the selected deferred mutex unlock, a correctly materialized post-unlock continuation need not wait solely for physical release/object lifetime. Deferred acceptance or OWNER_HANDLED is not PHYSICALLY_RELEASED and alone advances no source. The private CALL/return/cursor bridge has source code; whole native/recursive integration and runtime proof remain work, with remaining logical grants and physical duties exact; The KD physical-R11 canonical-packet-base mapping is selected; whole native/recursive integration and runtime proof remain outstanding. Owner/control/notifier storage survives through its separate last users afterward. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
+A pending call executes once. A source acquisition/unlock resumes after its CALL only when that source operation's exact return/phase effects have been handled once. For the selected deferred mutex unlock, a correctly materialized post-unlock continuation need not wait solely for physical release/object lifetime. Deferred acceptance or OWNER_HANDLED is not PHYSICALLY_RELEASED and alone advances no source. The private CALL/return/cursor bridge and ordinary/recursive driver are connected in source at `ce423858` under the selected KD physical-R11 mapping; remaining logical grants and physical duties stay exact. Actual provider/task/kernel integration and runtime proof remain outstanding. Owner/control/notifier storage survives through its separate last users afterward. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
 
 Before delegated effects, unsupported admission can choose W's ordinary local path. After effects, only a pre-established forward continuation is legal. An absent bridge cannot be repaired by saying the invocation should have run locally from the start.
 
@@ -354,6 +365,16 @@ Lockless lookup, writer exclusion, source admission and execution retention have
 Use supported x86_64 executable-memory publication rules in addition to pointer ordering. Source-module residency does not freeze livepatch/ftrace/kprobe/static-call/jump-label changes. Choose a supported mutation interlock or enforceable immutable-source restriction; a hash check alone does not prevent later changes.
 
 Closing source admission cannot strand admitted descendants/suffixes or free text they can still reach, and completion must not need a resource held by the closer. Lease counters/subleases are current mechanisms, not prescribed storage. C08/C09 choose compiler/daemon organization, if any, and restart/reset: preserve or reconstruct valid source-versioned coverage, or explicitly coordinate a drain/reset. Never silently discard knowledge while live code/bindings still depend on it. Compilation support is not an independent source-body execution architecture.
+
+The [copied-exit adapter](../../../disassem/feedback.py) (`c9b468ee`) supplies
+one stateless input bridge: copied scalar exits plus the exact producing
+LoweredImage, caller-retained epoch version bytes and explicit target
+classification yield immutable dispositions. Only matched ordinary indirect
+CALL/JMP facts become ObservedTarget inputs for cumulative snapshot merge.
+Consumed RET, typed operations, frontiers, resources and mismatches remain
+distinct; no operand is reevaluated and no source word is staged or popped.
+This is not live feedback storage, transport, saturation/late-report/reset policy
+or coverage ACK; the pending C08 selection still governs those mechanisms.
 
 ## 6 Required boundary examples
 

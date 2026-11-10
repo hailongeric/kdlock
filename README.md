@@ -24,9 +24,21 @@ private ABI is version 1: a 168-byte packet and 56-byte control IO. No assembly
 has been assembled, loaded or executed.
 
 The [artifact exporter](disassem/artifact.py) returns the same assembly with
-coordinated C image/site metadata, exact source-version bytes and a construction
-receipt. The caller supplies the actual retained source-epoch object; generated
-strings/descriptors are neither source leases nor publication acknowledgments.
+coordinated C image/site metadata, exact source-version bytes, retained decoded
+bytes/GS inputs and a construction receipt (`0c3ccb10`). The caller supplies the
+actual retained source-epoch object; generated strings/descriptors are neither source leases nor publication acknowledgments.
+
+The [source epoch](kernel/source_epoch.c) (`a660342c`) validates supplied
+coherent version/region/configuration/load inputs and retains a lease already
+established by the caller. The [image owner](kernel/image_owner.c) (`a23b82c1`)
+binds exact construction inputs to that epoch and an existing code-provider hold,
+then retains published slots through actual drain/grace retirement. These are
+retention/validation components, without a live-text lease acquirer, executable
+allocator or publication orchestrator.
+
+The [copied-exit adapter](disassem/feedback.py) (`c9b468ee`) preserves exit
+facts and derives only matched ordinary indirect CALL/JMP compiler inputs.
+It implements no C08 storage, transport, capacity, persistence or coverage ACK.
 
 The [MCS mutex](kernel/mutex.c) supplies sleepable physical exclusion, optional
 local/proxy selection and retained physical batches on top of the
@@ -65,13 +77,31 @@ core and the task-owned auxiliary-stack header for initial entry, with no
 registry or active-S_W task field. Its [Linux task patch](kernel/integration/README.md)
 is an unapplied context template; the exact kernel tree is absent from main.
 
+The [current-task setup helper](kernel/task_setup.c) (`57599619`) composes
+caller-owned range checks, root attachment, episode-resource setup/binding and
+exact unused-root rollback. Its teardown composes one progress pass and detach;
+it supplies no allocator or automatic fork/exit/stack integration.
+
+Reviewed source commit `ce423858` connects the
+[ordinary source pair](include/kd_mutex_api.h),
+[native bootstrap](kernel/mutex_api.c) and
+[serial episode driver](kernel/episode.c). Distinct operation CALL targets enter
+the persistent request path; the driver consumes exact image exits and serial
+child returns, then exports before deferred notification. Empty/closing root
+images can decline proxy eligibility while retaining normal persistent local
+acquisition. Native unlock uses its existing exact grant and hardware CALL/RET,
+without a new request slot or stale packet restoration.
+
 The [prepared prefix](include/kd_mutex.h), [stack switch](include/mutex_entry.S)
 and [native entry preflight](kernel/native_entry.c) preserve source SP/IP/BP and
 switch wait/control code to the task-owned auxiliary stack before lending W's
 source stack. Exact PREPARED/ENTERED/COMPLETE phases retain auxiliary occupancy;
-final handback restores the current canonical continuation, never old C frames.
-Capacity, persistent control backing and kernel stack-context compatibility still
-need their complete admission/lifecycle proof.
+the final auxiliary actor closes only after all entry/binding reads, before
+restoring the current canonical native continuation. The
+[native task progress helper](kernel/task_progress.c) connects owner progress,
+episode/grant actor collection and pool collection. These paths have independent
+source review, with no execution or complete stack/lifecycle proof. See the
+[integration guide](kernel/integration/README.md).
 
 The [image slot](kernel/image.c) uses RCU lookup plus exact linked users for
 sleeping/suspended execution, source and return dependencies. New admission
@@ -79,9 +109,11 @@ closes before replacement; publication requires all active users to drain and
 old readers pass a grace period before reclamation. JIT entry reserves a
 separate claimed pending-exit use, which ordinary put cannot drop early.
 
-Overall integration remains incomplete. Public native wrappers, task-time
-provisioning/full lifecycle wiring, recursive episode driving, source validation/executable publication and persistent cumulative feedback
-still need integration. Generated execution requires a distinct physical task
+Overall integration remains incomplete. Actual task allocation/fork/exit and
+provider glue, actual coherent live-source lease acquisition/mutation admission,
+executable allocation/publication orchestration, C08 compiler transport/cumulative
+feedback policy and exact kernel/build wiring remain work. No deployment pool count or complete auxiliary/control-stack budget is configured.
+Generated execution requires a distinct physical task
 and admitted nonoverlapping executor/source/wait-control stacks. W's own body
 uses a native route; a runtime instruction budget does not establish stack
 separation. No build system or runtime support is claimed yet.

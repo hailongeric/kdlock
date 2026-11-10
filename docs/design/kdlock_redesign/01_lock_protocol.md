@@ -13,9 +13,10 @@ not a compatibility promise. Other families follow later. This selects scope,
 not a validated support lane. C03 now selects TCLock-style out-of-order outer
 mutex unlock deferral with the responsible physical outer-combiner context
 retained. The earlier transferable-grant proposal is superseded. C11 selects an
-MCS queue; C04 retains the KD physical-R11 canonical-packet-base mapping. Optional
-local/proxy/origin-combiner claims, MCS/request lifetimes, exact state bridges and
-remaining resource, native-wrapper/recursive and lifecycle integration still needs implementation/proof. This selection
+MCS queue; C04 retains the KD physical-R11 canonical-packet-base mapping. Private
+local/proxy claims, persistent request/state bridges, ordinary native bootstrap
+and recursive episodes are connected in source at `ce423858`. Actual task/provider/
+kernel wiring, concrete resource bounds and runtime lifetime/progress proof remain incomplete. This selection
 accepts extra waiting without generic native release-timing or progress parity.
 
 ## 1 Roles are temporary parts of the lock
@@ -120,7 +121,7 @@ An ACK for an older retained grant may still finish that grant's matching custod
 
 **Fixed cardinality and physical target:** one thread-owned core S_W containing W's canonical regs packet once. The former invocation/continuation split is consolidated below. Nested entries, lock nodes and outer-control users point directly to that original core; none owns a duplicate source continuation or reserves another full W packet. C02 keeps active/nested lookup on each MCS node's direct S_W pointer; task-owned root backing supplies initial entry. Task-time provisioning of the selected persistent request records and exact reuse remain caller/integration duties, not another packet or state level.
 
-Small synchronous role control can use the C stack only while its call remains alive through every remote access and final ACK; the unified ordinary local/proxy request contexts use task-owned preallocated persistent storage. The target core survives all admitted queue, grant, executor, return and native-suffix users. Nested relationships use the same S_W, not another execution state; the complete target core is not claimed to exist already.
+Small synchronous role control can use the C stack only while its call remains alive through every remote access and final ACK; the unified ordinary local/proxy request contexts use task-owned preallocated persistent storage. The target core survives all admitted queue, grant, executor, return and native-suffix users. Nested relationships use the same S_W, not another execution state. The initial mutex core and referring actors have private source implementations; full kernel integration and runtime proof remain incomplete.
 
 ### Two storage/reference levels
 
@@ -285,8 +286,12 @@ contains exactly one core, the initial native endpoint, task hold and auxiliary
 bounds/cursor/reservation. A single task pointer locates that stable root header;
 it is not a borrowed-source index. The [integration artifact](../../../kernel/integration/README.md)
 is an unapplied task-field/child-reset context template, because exact Linux 7.0
-source is absent from main. Task-time provisioning, explicit capacity and lifecycle wiring
-remain explicit duties.
+source is absent from main. The [setup composition](../../../kernel/task_setup.c)
+at `57599619` validates caller-supplied known storage extents and composes
+attach/resources/bind, with exact unused-root rollback and one-pass teardown.
+It does not allocate backing or install automatic fork/exit/stack hooks.
+Task-time provisioning, explicit capacity and actual lifecycle wiring remain
+explicit duties.
 
 Task copy clears its inherited header alias before publication without changing
 the parent's core. Attach publishes initialized own backing. Before detach or
@@ -304,11 +309,32 @@ borrowed-stack body engine. Exact entry phases, disjoint ranges, full callback/
 recursion capacity, native context and last-user validity precede admission.
 No origin-local JIT on overlapping C frames is enabled.
 
+At reviewed source commit `ce423858`, the [ordinary source pair](../../../include/kd_mutex_api.h)
+and [native bootstrap](../../../kernel/mutex_api.c) connect that prefix to the
+[serial episode driver](../../../kernel/episode.c). It handles exact producing-image
+exits, child return endpoints and deferred notifications after export. Native
+unlock uses its exact existing grant/control and actual hardware CALL/RET;
+it neither needs a new request slot nor restores old native packet SP/IP.
+The final auxiliary actor survives root completion through the last entry/binding
+read and closes before the native jump. [Task progress](../../../kernel/task_progress.c)
+connects owner handling, episode/grant actors and pool collection. See the
+[integration guide](../../../kernel/integration/README.md) for the caller setup and
+drain contract. These private paths have independent source review only; actual
+allocation/fork/exit/provider and kernel/build wiring remain work.
+
 Public unlock resolves its exact logical grant from current S_W, never only the
 object address or physical task. Every source advance validates its retained
 current execution binding. Lookup alone grants neither execution nor storage
 ownership. Own-root lookup remains confined to native entry/handback; active
 borrowed source remains the request's direct node->state.
+
+The [source epoch](../../../kernel/source_epoch.c) (`a660342c`) and
+[image owner](../../../kernel/image_owner.c) (`a23b82c1`) implement exact source
+and code-provider retention records. They validate supplied source/configuration/
+load/byte inputs and bind actual slot retirement transactions; they do not
+establish live source coherence, executable allocation or native-text lifetime.
+Caller-established leases and independent native suffix/return holds remain
+required, and retention closure alone does not close execution admission.
 
 ### 3.2 Grant identity and native object lifetime
 
@@ -469,7 +495,7 @@ OWNER_HANDLED -> PHYSICALLY_RELEASED -> RETIRED
 - At owner initialization, the caller has already acquired physical exclusion and binds its exact ordinary unlock callback/object. The owner-only finish validates all obligations as OWNER_HANDLED, closes the batch/binding and takes/clears the saved callback/object under its internal guard. It invokes that bound synchronous complete ordinary unlock exactly once outside the guard, then records PHYSICALLY_RELEASED on the obligations. A marker, an acceptance callback or an unlock callback chosen only at release time cannot stand for physical release.
 - Exact source-request, return and notifier users, plus the physical release duty, gate RETIRED. Source return, a marker, owner handling and even physical release do not individually prove every last user has finished.
 
-The helper retains one physical-owner context/list of exact per-acquisition controls and checks owner operations against the current task. Correct initial callback binding, synchronous complete ordinary-unlock behavior and callback code/object lifetime through return remain caller obligations; the protocol performs no late object dereference. Its internal guard protects owner/control transitions and is not the selected C11 MCS acquisition/claim protocol. The separate MCS, canonical-state/JIT and task-anchor sources now implement those private components; their full public/native integration remains incomplete. The helper has static review only; no build, callback invocation or behavioral execution is claimed.
+The helper retains one physical-owner context/list of exact per-acquisition controls and checks owner operations against the current task. Correct initial callback binding, synchronous complete ordinary-unlock behavior and callback code/object lifetime through return remain caller obligations; the protocol performs no late object dereference. Its internal guard protects owner/control transitions and is not the selected C11 MCS acquisition/claim protocol. The separate MCS, canonical-state/JIT, task-anchor, ordinary-bootstrap and recursive-episode sources connect those private components through `ce423858`. Actual provider/task/kernel wiring remains incomplete. The helper has static review only; no build, callback invocation or behavioral execution is claimed.
 
 A source unlock ending a logical scope is not a frame pop or physical batch release. The initial mutex lane requires stable lock-object storage through actual physical release and final backend object access. The caller establishes that validity; a retained context alone does not pin its lock container. If owner/control records share the containing allocation, keep that allocation through their later exact source-request/return/notifier last users, not merely physical release. Callback code remains retained through callback return. Record request/return, marker, unwind, outer handling, actual release and reclamation separately; acceptance is not physical completion or retirement. The selected stable-object contract permits a correctly materialized post-unlock continuation without waiting solely for physical release/object lifetime. The helper does not advance source. The private C04 bridge and its remaining integration must preserve the exact operation/CALL-return/cursor phase, exclusive executor, remaining logical grants and pending physical duties, once only; a marker alone authorizes no arbitrary execution.
 
@@ -499,7 +525,7 @@ Parents waiting for a child must handle the selected ancestor notification/unwin
 
 **Initial C07 service-admission implementation strategy (P):** before publishing any root or recursive acquisition, the exact current S_W holder scans its grant index for an already `logical_open` grant. This includes a fresh native-root B request with an older open A grant; `frame.parent` alone does not identify nesting. If any such grant exists, that request's new locally won physical batch uses a zero proxy-service limit for its entire lifetime. Keep the same persistent request, ready/offer and local/proxy selection path: an existing external B combiner may still select W's request. No source grant or physical release authority changes.
 
-This removes the extra scheduling edge where C_A holds A, locally wins B, then runs unrelated B waiter X before W receives its B grant, and X waits on C_A-held A. It is a conservative optional-service strategy being implemented, not a separately user-selected fixed policy or proof against arbitrary deadlock, timing changes or progress loss. Broader unrelated inner batching remains unselected. Logically closed records retained for physical release/return/image users are not open logical grants; their deferred notification, owner handling and physical/last-user duties remain separate. Necessary owner/queue progress still runs, and the responsible outer combiner follows its selected normal deferred-release protocol.
+This removes the extra scheduling edge where C_A holds A, locally wins B, then runs unrelated B waiter X before W receives its B grant, and X waits on C_A-held A. It is a conservative optional-service strategy with a private source implementation at `ce423858`, not a separately user-selected fixed policy or proof against arbitrary deadlock, timing changes or progress loss. Broader unrelated inner batching remains unselected. Logically closed records retained for physical release/return/image users are not open logical grants; their deferred notification, owner handling and physical/last-user duties remain separate. Necessary owner/queue progress still runs, and the responsible outer combiner follows its selected normal deferred-release protocol.
 
 The accepted outer-mutex waiting policy and this inner scheduling restriction establish no generic native progress parity. Availability-dependent source handshakes retain their stated limits. This restriction alone is not a proof. Draw the wait-for graph including affinities, oversubscription, physical owners, retained grants and CPU reservations. Bounded metadata does not guarantee bounded native lock waits or scheduler fairness.
 

@@ -138,7 +138,8 @@ CALL/RET. General flags/SIMD use AS01. Return mitigation coverage and kernel
 assembly wiring remain unvalidated. Generated execution uses a distinct physical
 task/stack and requires executor/source/origin-wait control stacks to be
 nonoverlapping; current==W JIT is refused. A budget is not stack-separation
-proof, and no integrated/live auxiliary stack route has been validated.
+proof. The private ordinary/auxiliary route is connected in source at `ce423858`,
+but no live auxiliary-stack route has been validated.
 
 Every active/nested request uses its direct node->state pointer. The
 [task root](../../../kernel/task_state.c) contains the one own core and the
@@ -147,7 +148,9 @@ active-S_W registry. Its [task field artifact](../../../kernel/integration/READM
 is an unapplied context template; constructor aliases clear before publication
 and exit requires complete last-user/auxiliary drain.
 
-The [prepared prefix](../../../include/kd_mutex.h),
+The [ordinary source pair](../../../include/kd_mutex_api.h),
+[native bootstrap](../../../kernel/mutex_api.c),
+[prepared prefix](../../../include/kd_mutex.h),
 [stack switch](../../../include/mutex_entry.S) and
 [native preflight](../../../kernel/native_entry.c) preserve source SP/IP/BP and
 switch to task-owned auxiliary control before publication. Descriptor phases
@@ -190,7 +193,8 @@ documentation-only support limitation, with no handler, recovery/local fallback
 or new special assertion. Normal local winners keep their persistent controls
 in the same path. This supersedes the temporary-waiter/object-head fallback and
 held-local native interval strategy preserved in Git at
-`0cedb299618004d5867791551b45bdf66cfb81fa`. Earlier storage-choice history,
+`0cedb299618004d5867791551b45bdf66cfb81fa`, removed by the scoped follow-up
+`26325fe4`. Earlier storage-choice history,
 including `b95995b5`, remains reachable. Neither historical selection is runtime
 evidence for the current contract.
 
@@ -204,11 +208,63 @@ wait callbacks connect progress/readiness after source export; no callback has
 executed. Caller-provisioned capacity and actual task lifecycle integration still
 need their complete proof.
 
-Remaining whole-lane work includes public native wrappers and recursive episode
-driving, task-time provisioning/full lifecycle wiring, source validation and
-executable publication, coherent compiler transport and persistent cumulative
-feedback/ACKs. Selected stable object storage extends through physical release
-and final object access; independent control/code users can last longer.
+Reviewed source commit `ce423858` connects the ordinary source CALL pair/native
+bootstrap to the [serial episode driver](../../../kernel/episode.c). It uses actual
+producing-image exits, once-only operation phases, distinct child/returned/native
+endpoints and deferred notification after export. A no-image root retains
+persistent local eligibility. Native unlock uses its existing exact grant and a
+temporary retained actor, completing through hardware CALL/RET without another
+request slot or canonical native SP/IP restoration. Root completion retains its
+separate auxiliary actor until the final entry/binding reads finish; that actor
+closes before the native jump. The [task progress helper](../../../kernel/task_progress.c)
+connects actual-owner progress, episode/grant actor collection and finished-slot
+collection. The initial C07 logical-open scan fixes a new locally won batch's
+service bound at zero while an outer logical grant is open, leaving the same
+ready/external-proxy path. These private paths have independent source review;
+no operation, generated fragment, callback or assembly path has executed.
+
+Subsequent independently reviewed source milestones are:
+
+- `57599619`: [current-task setup composition](../../../kernel/task_setup.c)
+  validates explicit caller-owned ranges, composes attach/resources/bind and exact
+  unused-root rollback, and attempts detach after one progress pass. It supplies
+  no allocator or automatic fork/exit/stack integration.
+- `a660342c`: [source epochs](../../../kernel/source_epoch.c) validate supplied
+  coherent version/region/configuration/load inputs and retain an already-owned
+  lease through exact BUILD/IMAGE/FEEDBACK users. Closure is retention-only;
+  actual live acquisition/mutation admission and native-text holds stay external.
+- `c9b468ee`: [copied-exit classification](../../../disassem/feedback.py)
+  preserves original immutable facts and yields only matched ordinary indirect
+  CALL/JMP compiler inputs. It implements no C08 storage/transport/capacity/
+  saturation/late-report/reset/ACK policy.
+- `0c3ccb10`: [artifact input maps](../../../kernel/image_inputs.h) retain exact
+  version/GS/decoded-byte construction inputs; image-slot transactions also allow
+  final NULL removal through the same exact drain/RCU grace. Neither is a lease
+  acquirer or executable-memory allocator.
+- `a23b82c1`: [image-owner envelopes](../../../kernel/image_owner.c) validate
+  descriptor/input correspondence to an existing coherent epoch and code hold,
+  derive IMAGE retention from BUILD, bridge publication with live parent users,
+  and release old published memberships only through exact retirement transactions
+  and the actual returned old descriptor after grace. Finalizers run the retained
+  code callback before the final source put, with independent control/callback
+  backing. This is retention ownership, not executable allocation or publisher
+  orchestration.
+
+The [image integration guide](../../../kernel/integration/IMAGES.md) records the
+conditional initial/NULL publication sequence, candidate/baseline bridges,
+SOURCE self-drain avoidance and independent native-text/finalizer lifetimes.
+All these additions remain source/static review only; no import, assembly,
+build, behavioral check or VM execution has run.
+
+Remaining whole-lane implementation work includes actual task allocation/fork/
+exit and provider glue, concrete pool/control-stack provisioning, actual coherent
+live-source lease acquisition/mutation admission, executable allocation/publication
+orchestration, C08 compiler transport/persistent cumulative feedback/ACK policy,
+and exact kernel/build wiring. The source interfaces do not choose deployment
+capacities, lifecycle hook placement or
+publication/feedback organization. Assembly/build/runtime, lifetime/progress and
+acceptance validation are separate unrun evidence gaps. Selected stable object
+storage extends through physical release and final object access; independent control/code users can last longer.
 
 Ten private cases ran only on the earlier intraprocedural planner `13f2630f`
 with Python 3.10.12: all four boundary kinds with a safe shared join and unchanged
@@ -419,15 +475,24 @@ In that reference, the deferred value `7` keeps exclusion held; outer handling r
 
 The active tree contains the five design documents, project instructions,
 compiler/decoder/planner/lowerer and original backend, selected private ABI,
-MCS/release protocol, canonical state/JIT bridges, task-owned auxiliary entry and exact RCU image users.
+MCS/release protocol, canonical state/JIT bridges, task-owned auxiliary entry,
+exact RCU image users and connected in source ordinary/recursive mutex episodes,
+existing-grant native unlock, final auxiliary cleanup and task progress at
+`ce423858`, plus reviewed setup composition, source epochs, artifact input maps,
+image-owner retention and stateless copied-exit facts at the commits listed in
+section 2.1.
 Legacy implementation, receipts and datasets remain in preservation history;
 none must be restored to claim source progress or select another kernel target.
 
 C12 source rebuild, ordinary-mutex C01, C03 retained-owner deferral and stable
 lock-object storage, C11 MCS, C04 physical-R11 mapping, C02 direct MCS pointers,
 C05 task-owned auxiliary entry/persistent requests with supported-workload availability and C06/C09 quiesced RCU replacement are selected. R11 optimization/T56 stay deferred. Remaining
-native/recursive integration, source/executable integration, feedback capacity/persistence/ACK and resource/stack bounds,
-lifecycle and exact last-user duties are listed in section 2.1 and the plan.
+actual task allocation/fork/exit/provider and kernel/build wiring, coherent live
+source-lease acquisition/mutation admission, executable allocation/publication
+orchestration, C08 transport/feedback capacity/persistence/ACK and concrete
+resource/stack provisioning are listed in section 2.1 and the plan. These missing
+implementation pieces are separate from all-unrun runtime/context/lifetime/
+progress acceptance evidence.
 
 Only source/static inspection and whitespace checks cover these new components.
 No new imports, assembly, compilation, runtime correctness, kernel integration,
