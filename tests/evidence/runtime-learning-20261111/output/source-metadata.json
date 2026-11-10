@@ -1,0 +1,60 @@
+{
+  "dependency_page_count": 1,
+  "limits": {
+    "dependency_pages": 4,
+    "total_source_bytes": 262144
+  },
+  "old": 0,
+  "region_count": 3,
+  "regions": [
+    {
+      "length": 4096,
+      "start": 18446744072646197248
+    },
+    {
+      "length": 116,
+      "start": 18446744072646205456
+    },
+    {
+      "length": 865,
+      "start": 18446744072646205600
+    }
+  ],
+  "sites": [
+    {
+      "boundary": "lock",
+      "site": 18446744071584155968
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744071584156032
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072646205677
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072646205828
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072646205935
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072646205968
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072646206042
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072646206139
+    }
+  ],
+  "slot": 18379471568484926728,
+  "source_bytes": 5077,
+  "version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+}

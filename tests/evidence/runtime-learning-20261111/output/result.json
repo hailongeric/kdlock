@@ -1,0 +1,1083 @@
+{
+  "actual_call_records": [
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8ae5f3ec1",
+      "site": 18446744072646205533,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "lock",
+      "raw_hex": "e84e68b2c0",
+      "site": 18446744072646205677,
+      "target": 18446744071584155968
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8d0deffff",
+      "site": 18446744072646205771,
+      "target": 18446744072646197280
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "lock",
+      "raw_hex": "e8b767b2c0",
+      "site": 18446744072646205828,
+      "target": 18446744071584155968
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e856deffff",
+      "site": 18446744072646205896,
+      "target": 18446744072646197283
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e88c67b2c0",
+      "site": 18446744072646205935,
+      "target": 18446744071584156032
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e86b67b2c0",
+      "site": 18446744072646205968,
+      "target": 18446744071584156032
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e82167b2c0",
+      "site": 18446744072646206042,
+      "target": 18446744071584156032
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e886ddffff",
+      "site": 18446744072646206107,
+      "target": 18446744072646197286
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e8c066b2c0",
+      "site": 18446744072646206139,
+      "target": 18446744071584156032
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e80c5d3ec1",
+      "site": 18446744072646206207,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8f75c3ec1",
+      "site": 18446744072646206228,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8e25c3ec1",
+      "site": 18446744072646206249,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8cd5c3ec1",
+      "site": 18446744072646206270,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8b85c3ec1",
+      "site": 18446744072646206291,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8a45c3ec1",
+      "site": 18446744072646206311,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e88f5c3ec1",
+      "site": 18446744072646206332,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e87a5c3ec1",
+      "site": 18446744072646206353,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8655c3ec1",
+      "site": 18446744072646206374,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8515c3ec1",
+      "site": 18446744072646206394,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e83d5c3ec1",
+      "site": 18446744072646206414,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8285c3ec1",
+      "site": 18446744072646206435,
+      "target": 18446744071593328656
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8145c3ec1",
+      "site": 18446744072646206455,
+      "target": 18446744071593328656
+    }
+  ],
+  "actual_dependency_page_count": 1,
+  "actual_source_bytes": 5077,
+  "actual_source_region_count": 3,
+  "actual_source_regions": [
+    {
+      "length": 4096,
+      "start": 18446744072646197248
+    },
+    {
+      "length": 116,
+      "start": 18446744072646205456
+    },
+    {
+      "length": 865,
+      "start": 18446744072646205600
+    }
+  ],
+  "archive_sha256": "25512da1296248f09ffefdb2fbf975d756dbf970c43200c488b234c6b383239d",
+  "cases": [
+    {
+      "actual_call_effects": 8,
+      "expected_call_effects": 8,
+      "iterations": 8,
+      "mode": 0,
+      "name": "native-local",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=1 finished=1 iterations=8 completed=8 calls=8 a=8 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=865 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=2454 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "8",
+        "b": "0",
+        "calls": "8",
+        "completed": "8",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "1",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2454",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "1"
+      },
+      "workers": 1
+    },
+    {
+      "actual_call_effects": 32,
+      "expected_call_effects": 32,
+      "iterations": 8,
+      "mode": 0,
+      "name": "contended-local",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=4 finished=4 iterations=8 completed=32 calls=32 a=32 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=865 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=2454 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "32",
+        "b": "0",
+        "calls": "32",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2454",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 32,
+      "expected_call_effects": 32,
+      "iterations": 4,
+      "mode": 1,
+      "name": "jit-while-pending",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=4 finished=4 iterations=4 completed=16 calls=32 a=16 b=16 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=865 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=2454 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "16",
+        "b": "16",
+        "calls": "32",
+        "completed": "16",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "iterations": "4",
+        "locks_clear": "1",
+        "mode": "1",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2454",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 64,
+      "expected_call_effects": 64,
+      "iterations": 8,
+      "mode": 1,
+      "name": "nested",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=4 finished=4 iterations=8 completed=32 calls=64 a=32 b=32 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=865 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=2454 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "32",
+        "b": "32",
+        "calls": "64",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "1",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2454",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 96,
+      "expected_call_effects": 96,
+      "iterations": 8,
+      "mode": 2,
+      "name": "out-of-order",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=2 workers=4 finished=4 iterations=8 completed=32 calls=96 a=32 b=64 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=865 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=2454 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+      "values": {
+        "a": "32",
+        "b": "64",
+        "calls": "96",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "2",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "2454",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "4"
+      },
+      "workers": 4
+    }
+  ],
+  "compiler_cycles": [
+    {
+      "acknowledged_keys": 0,
+      "claim_rows": 0,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 2,
+      "claim_rows": 2,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 4,
+      "claim_rows": 4,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 2,
+      "claim_rows": 2,
+      "published": true
+    }
+  ],
+  "compiler_thunk_symbols": [
+    "__x86_indirect_thunk_rax",
+    "__x86_return_thunk"
+  ],
+  "evidence": "kernel-mechanism",
+  "generated_exit_records": [
+    {
+      "acknowledged": [
+        "d005b146030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "00144a5a030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646205456,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646197280,
+        "target": 18446744072646205456
+      },
+      "image": "38d10b4d030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "00144a5a030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646197280,
+        "source_version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646205456
+      },
+      "producer": "00d00b4d030011ff",
+      "published": [
+        "6805b146030011ff"
+      ],
+      "record": "e4005053030011ff",
+      "source_region": {
+        "index": 0,
+        "offset": 32,
+        "start": 18446744072646197248
+      }
+    },
+    {
+      "acknowledged": [
+        "d005b146030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "00144a5a030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646205456,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646197280,
+        "target": 18446744072646205456
+      },
+      "image": "38d10b4d030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "00144a5a030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646197280,
+        "source_version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646205456
+      },
+      "producer": "00d00b4d030011ff",
+      "published": [
+        "6805b146030011ff"
+      ],
+      "record": "d4015053030011ff",
+      "source_region": {
+        "index": 0,
+        "offset": 32,
+        "start": 18446744072646197248
+      }
+    },
+    {
+      "acknowledged": [
+        "6809b146030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "003c4a5a030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646205456,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646197280,
+        "target": 18446744072646205456
+      },
+      "image": "38d10b4d030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "003c4a5a030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646197280,
+        "source_version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646205456
+      },
+      "producer": "00d00b4d030011ff",
+      "published": [
+        "0009b146030011ff"
+      ],
+      "record": "c4025053030011ff",
+      "source_region": {
+        "index": 0,
+        "offset": 32,
+        "start": 18446744072646197248
+      }
+    },
+    {
+      "acknowledged": [
+        "6809b146030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "003c4a5a030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646205456,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646197280,
+        "target": 18446744072646205456
+      },
+      "image": "38d10b4d030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "003c4a5a030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646197280,
+        "source_version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646205456
+      },
+      "producer": "00d00b4d030011ff",
+      "published": [
+        "0009b146030011ff"
+      ],
+      "record": "b4035053030011ff",
+      "source_region": {
+        "index": 0,
+        "offset": 32,
+        "start": 18446744072646197248
+      }
+    },
+    {
+      "acknowledged": [
+        "6809b146030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "003c4a5a030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646205456,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646197283,
+        "target": 18446744072646205456
+      },
+      "image": "38154a5a030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "003c4a5a030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646197283,
+        "source_version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646205456
+      },
+      "producer": "00144a5a030011ff",
+      "published": [
+        "0009b146030011ff"
+      ],
+      "record": "a4045053030011ff",
+      "source_region": {
+        "index": 0,
+        "offset": 35,
+        "start": 18446744072646197248
+      }
+    },
+    {
+      "acknowledged": [
+        "6809b146030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "003c4a5a030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646205456,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646197283,
+        "target": 18446744072646205456
+      },
+      "image": "38154a5a030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "003c4a5a030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646197283,
+        "source_version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646205456
+      },
+      "producer": "00144a5a030011ff",
+      "published": [
+        "0009b146030011ff"
+      ],
+      "record": "94055053030011ff",
+      "source_region": {
+        "index": 0,
+        "offset": 35,
+        "start": 18446744072646197248
+      }
+    },
+    {
+      "acknowledged": [
+        "000db146030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "001c4a5a030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646205456,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646197286,
+        "target": 18446744072646205456
+      },
+      "image": "383d4a5a030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "001c4a5a030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646197286,
+        "source_version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646205456
+      },
+      "producer": "003c4a5a030011ff",
+      "published": [
+        "980cb146030011ff"
+      ],
+      "record": "84065053030011ff",
+      "source_region": {
+        "index": 0,
+        "offset": 38,
+        "start": 18446744072646197248
+      }
+    },
+    {
+      "acknowledged": [
+        "000db146030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "001c4a5a030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072646205456,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072646197286,
+        "target": 18446744072646205456
+      },
+      "image": "383d4a5a030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "001c4a5a030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072646197286,
+        "source_version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072646205456
+      },
+      "producer": "003c4a5a030011ff",
+      "published": [
+        "980cb146030011ff"
+      ],
+      "record": "74075053030011ff",
+      "source_region": {
+        "index": 0,
+        "offset": 38,
+        "start": 18446744072646197248
+      }
+    }
+  ],
+  "generated_exit_seen": true,
+  "gs_proof": {
+    "boot_id": "0f3f9c09-8837-4763-8320-388278bd83d7",
+    "build_id": "fd2262c047e130787ef669419111eba6eb9ebb2c",
+    "const_current_task": "0xffffffff8440f018",
+    "current_task_gs_offset": "0xffffffff8440f018",
+    "gs_symbol": "current_task",
+    "kaslr_disabled": true,
+    "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "kernel_elf_sha256": "7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809",
+    "kernel_release": "7.0.0-38-kdrebuild2",
+    "percpu_section_va": "0xffffffff843f7000",
+    "scope": "Exact linked/running kernel identity and full GS symbol input; fixture GS relocation and execution remain separate.",
+    "verified_for_running_kernel": true
+  },
+  "iterations": 8,
+  "kernel_release": "7.0.0-38-kdrebuild2",
+  "managed_fork_exit": {
+    "child_pid": 2459,
+    "child_record": {
+      "pid": 2459,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=865 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=2459 self_root=ff1100034be0c000 self_core=ff1100034be0c000 self_regs=ff1100034be0c000 self_binding=ff1100034be0c158 self_own=1 self_native=1 self_managed=1\n",
+      "values": {
+        "a": "0",
+        "b": "0",
+        "calls": "0",
+        "completed": "0",
+        "core_errors": "0",
+        "errors": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "0",
+        "iterations": "0",
+        "locks_clear": "1",
+        "mode": "0",
+        "origin_errors": "0",
+        "runtime": "1",
+        "self_binding": "ff1100034be0c158",
+        "self_core": "ff1100034be0c000",
+        "self_managed": "1",
+        "self_native": "1",
+        "self_own": "1",
+        "self_pid": "2459",
+        "self_regs": "ff1100034be0c000",
+        "self_root": "ff1100034be0c000",
+        "source_size": "865",
+        "source_start": "ffffffffc09ea0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc09ea010",
+        "workers": "0"
+      }
+    },
+    "packet_contents_copied": false,
+    "parent_after": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=865 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=2454 self_root=ff11000357614c00 self_core=ff11000357614c00 self_regs=ff11000357614c00 self_binding=ff11000357614d58 self_own=1 self_native=1 self_managed=1\n",
+    "parent_before": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=865 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=2454 self_root=ff11000357614c00 self_core=ff11000357614c00 self_regs=ff11000357614c00 self_binding=ff11000357614d58 self_own=1 self_native=1 self_managed=1\n",
+    "parent_detached": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc09ea0a0 source_size=865 step_start=ffffffffc09ea010 step_size=116 locks_clear=1 runtime=1 self_pid=2454 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0\n",
+    "shutdown_native_holds_drained": true,
+    "status": "child_exited_parent_detached",
+    "wait_status": 0
+  },
+  "module_sha256": "bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048",
+  "module_sizes": {
+    "body": 865,
+    "callee": 116
+  },
+  "near_indirect_call_sites": [],
+  "ordinary_indirect_kernel_learning": "acknowledged",
+  "ordinary_indirect_learning": {
+    "acknowledged": [
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "e4005053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "d4015053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "c4025053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "b4035053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "a4045053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "94055053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "84065053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "74075053030011ff"
+      }
+    ],
+    "candidate_inputs": [
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "e4005053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "d4015053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "c4025053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "b4035053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "a4045053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "94055053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "84065053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "74075053030011ff"
+      }
+    ],
+    "emitted": [
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "e4005053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "d4015053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "c4025053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "b4035053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "a4045053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "94055053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "84065053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "74075053030011ff"
+      }
+    ],
+    "merged": [
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "e4005053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "d4015053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "c4025053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "b4035053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "a4045053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "94055053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "84065053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "74075053030011ff"
+      }
+    ],
+    "observed": [
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "e4005053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "d4015053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "c4025053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "b4035053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "a4045053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "94055053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "84065053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "74075053030011ff"
+      }
+    ],
+    "published_inputs": [
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "e4005053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "d4015053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "c4025053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "b4035053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "a4045053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "94055053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "84065053030011ff"
+      },
+      {
+        "epoch": "c02f0151030011ff",
+        "incarnation": 1,
+        "record": "74075053030011ff"
+      }
+    ]
+  },
+  "pending_before_shutdown": 0,
+  "returned_full_jit_body": "not_established",
+  "root_entry": 18446744072646205682,
+  "settled_keys": 0,
+  "source_limits": {
+    "dependency_pages": 4,
+    "total_source_bytes": 262144
+  },
+  "source_version": "fixture-bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048-7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "status": "partial_jit_mechanism_pass",
+  "typed_generated_exit_records": 8,
+  "wire_log": {
+    "byte_limit": 134217728,
+    "reservations": 30,
+    "reserved_bytes": 66127410
+  },
+  "workers": 4
+}
