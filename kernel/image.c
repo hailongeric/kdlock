@@ -253,8 +253,7 @@ int kd_jit_image_update_begin(struct kd_jit_image_slot *slot,
 {
 	int result = 0;
 
-	if (!slot || !update || !candidate || !owner_identity ||
-	    candidate == expected_old)
+	if (!slot || !update || !owner_identity || candidate == expected_old)
 		return -EINVAL;
 	/* Caller owns fresh private transaction storage until this publication. */
 	if (update->slot || update->phase != KD_JIT_IMAGE_UPDATE_PRIVATE)

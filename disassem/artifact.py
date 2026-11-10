@@ -55,6 +55,7 @@ class ImageArtifact:
     descriptor_symbol: str
     source_identity_symbol: str
     entry_symbol: str
+    inputs_symbol: str
     entry_sites: tuple[int, ...]
     source_sites: tuple[ArtifactSourceSite, ...]
     receipt: EmissionReceipt
@@ -106,11 +107,12 @@ def _source_sites(image: LoweredImage) -> tuple[ArtifactSourceSite, ...]:
 
 
 def _c_metadata(image, descriptor, identity, symbols, sites, version):
-    entries, source_table, version_data, version_length = symbols
+    entries, source_table, version_data, version_length, byte_table, inputs = symbols[:6]
+    raw_symbols = symbols[6:]
     declarations = (descriptor, identity, image.entry.symbol, *symbols)
     text = [
         "/* Constructed metadata only; source/code retention and publication are caller-owned. */\n",
-        '#include "kernel/jit.h"\n\n',
+        '#include "kernel/image_inputs.h"\n\n',
     ]
     # An identifier can still name a macro in the caller's build environment.
     # Diagnose that collision instead of allowing declaration/initializer rewriting.
@@ -141,6 +143,15 @@ def _c_metadata(image, descriptor, identity, symbols, sites, version):
             for site in sites
         )
         text.append("};\n\n")
+        for site, symbol in zip(sites, raw_symbols):
+            raw = ", ".join(f"0x{value:02x}" for value in site.raw)
+            text.append(f"static const unsigned char {symbol}[] = {{ {raw} }};\n")
+        text.append(f"\nstatic const struct kd_jit_image_source_bytes {byte_table}[] = {{\n")
+        text.extend(
+            f"\t{{ .ip = {_hex(site.ip)}UL, .bytes = {symbol}, .length = {len(site.raw)}U }},\n"
+            for site, symbol in zip(sites, raw_symbols)
+        )
+        text.append("};\n\n")
     text.extend([
         f"const struct kd_jit_image {descriptor} = {{\n",
         f"\t.source_identity = &{identity},\n",
@@ -151,6 +162,14 @@ def _c_metadata(image, descriptor, identity, symbols, sites, version):
         f"\t.entry_sites = {entries},\n",
         f"\t.entry_count = {len(image.entry.entry_sites)}U,\n",
         f"\t.source_sites = {source_table if sites else 'NULL'},\n",
+        f"\t.source_count = {len(sites)}U,\n",
+        "};\n\n",
+        f"const struct kd_jit_image_inputs {inputs} = {{\n",
+        f"\t.image = &{descriptor},\n",
+        f"\t.source_version = {version_data},\n",
+        f"\t.source_version_length = sizeof({version_data}),\n",
+        f"\t.current_task_gs_offset = {_hex(image.entry.current_task_gs_offset)}UL,\n",
+        f"\t.source_bytes = {byte_table if sites else 'NULL'},\n",
         f"\t.source_count = {len(sites)}U,\n",
         "};\n",
     ])
@@ -176,8 +195,11 @@ def export_image(image: LoweredImage, *, descriptor_symbol: str,
     descriptor = _identifier(descriptor_symbol)
     identity = _identifier(source_identity_symbol)
     entry = _identifier(image.entry.symbol)
+    sites = _source_sites(image)
     symbols = tuple(_identifier(descriptor + suffix) for suffix in (
         "_entry_sites", "_source_sites", "_source_version", "_source_version_length",
+        "_source_bytes", "_inputs",
+        *(f"_source_bytes_{index}" for index in range(len(sites))),
     ))
     all_symbols = (descriptor, identity, entry, *symbols)
     if len(set(all_symbols)) != len(all_symbols):
@@ -197,7 +219,6 @@ def export_image(image: LoweredImage, *, descriptor_symbol: str,
         version = image.source_version.encode("utf-8", errors="strict")
     except UnicodeEncodeError as error:
         raise ValueError("source version has no strict UTF-8 byte representation") from error
-    sites = _source_sites(image)
     receipt = construct_emission_receipt(image)
     observations = [
         {
@@ -218,6 +239,8 @@ def export_image(image: LoweredImage, *, descriptor_symbol: str,
         "data_symbols": {
             "entry_sites": symbols[0], "source_sites": symbols[1] if sites else None,
             "source_version": symbols[2], "source_version_length": symbols[3],
+            "source_bytes": symbols[4] if sites else None,
+            "inputs": symbols[5], "source_byte_records": list(symbols[6:]),
         },
         "source_version": {"encoding": "utf-8", "bytes_hex": version.hex(), "length": len(version)},
         "abi_version": image.abi_version,
@@ -270,6 +293,7 @@ def export_image(image: LoweredImage, *, descriptor_symbol: str,
         descriptor_symbol=descriptor,
         source_identity_symbol=identity,
         entry_symbol=entry,
+        inputs_symbol=symbols[5],
         entry_sites=image.entry.entry_sites,
         source_sites=sites,
         receipt=receipt,

@@ -152,8 +152,10 @@ int kd_jit_image_use_put(struct kd_jit_image_use *use, const void *holder);
  * Once begin closes the exact slot, that slot/transaction retain the old base;
  * drop any publisher SOURCE use before commit so it does not block its own drain.
  * A failed begin does not consume the caller's baseline hold.
- * candidate is a different non-NULL immutable descriptor validated before begin;
- * it remains caller-retained through the transaction and any published users.
+ * A non-NULL candidate is a different immutable descriptor validated before
+ * begin and retained through the transaction and its published users. NULL
+ * retires an existing image to an empty slot through the same drain and grace
+ * sequence; an already-empty NULL -> NULL update is refused.
  */
 int kd_jit_image_update_begin(struct kd_jit_image_slot *slot,
 			      struct kd_jit_image_update *update,
