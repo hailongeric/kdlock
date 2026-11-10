@@ -113,7 +113,7 @@ struct kd_jit_control_session;
  * and native/JIT return lifetimes. Module residency alone is insufficient.
  *
  * allocate/release govern cycle control storage, not published image controls.
- * current/published/retired govern this exact slot's retained provider bindings;
+ * get_published/published/retired govern this exact slot's retained provider bindings;
  * the single configured session is its exclusive controller. published/retired
  * are nonfailing metadata handoffs, never source execution. retired retains old
  * controls until image_collect and every independent observer have finished.
@@ -129,7 +129,7 @@ struct kd_jit_control_session;
 struct kd_jit_control_provider_ops {
 	int (*allocate)(void *context, struct kd_jit_control_storage **storage);
 	void (*release)(void *context, struct kd_jit_control_storage *storage);
-	struct kd_jit_control_image *(*current)(void *context, struct kd_jit_image_slot *slot);
+	struct kd_jit_control_image *(*get_published)(void *context, struct kd_jit_image_slot *slot);
 	int (*reserve)(void *context, struct kd_jit_source_epoch *epoch,
 		struct kd_jit_control_candidate *candidate);
 	int (*load)(void *context, const struct kd_jit_control_candidate *candidate,

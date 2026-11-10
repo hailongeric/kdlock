@@ -148,7 +148,7 @@ int kd_jit_control_session_init(struct kd_jit_control_session *session,
 		void *context)
 {
 	if (!session || !feedback || !epoch || !slot || !ops || !ops->allocate ||
-	    !ops->release || !ops->current || !ops->reserve || !ops->load ||
+	    !ops->release || !ops->get_published || !ops->reserve || !ops->load ||
 	    !ops->published || !ops->retired || !ops->idle)
 		return -EINVAL;
 	session->feedback = feedback;
@@ -332,7 +332,7 @@ static int build_command(struct kd_jit_control_session *session, struct reader *
 		return -EINVAL;
 	if (!storage->reserved) {
 		if (!storage->baseline_live) {
-			storage->old = session->ops->current(session->context, session->slot);
+			storage->old = session->ops->get_published(session->context, session->slot);
 			if (storage->old) {
 				if (!storage->old->published_live)
 					return -ESTALE;

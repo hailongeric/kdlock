@@ -38,7 +38,7 @@ struct kd_jit_runtime {
 	struct kd_jit_feedback_claim_item *items;
 	struct kd_jit_compiled_image **images;
 	bool *private_released;
-	struct kd_jit_control_image *current;
+	struct kd_jit_control_image *published_image;
 	unsigned int cycles_used;
 	unsigned int images_used;
 	struct kd_jit_source_use source_hold;
@@ -119,7 +119,7 @@ static struct kd_jit_control_image *current_image(void *context, struct kd_jit_i
 {
 	struct kd_jit_runtime *runtime = context;
 
-	return slot == &runtime->slot ? runtime->current : NULL;
+	return slot == &runtime->slot ? runtime->published_image : NULL;
 }
 
 static int reserve_image(void *context, struct kd_jit_source_epoch *epoch,
@@ -165,7 +165,7 @@ static void published_image(void *context, struct kd_jit_image_slot *slot,
 
 	(void)slot;
 	(void)old;
-	runtime->current = candidate;
+	runtime->published_image = candidate;
 }
 
 static void retired_image(void *context, struct kd_jit_control_image *old)
@@ -222,7 +222,7 @@ static int admit_publish(void *context)
 }
 
 static const struct kd_jit_control_provider_ops provider_ops = {
-	.allocate = allocate_cycle, .release = release_cycle, .current = current_image,
+	.allocate = allocate_cycle, .release = release_cycle, .get_published = current_image,
 	.reserve = reserve_image, .load = load_image, .published = published_image,
 	.retired = retired_image, .idle = runtime_idle, .admit_publish = admit_publish,
 	.command = extension,
@@ -541,8 +541,8 @@ static int shutdown_runtime(struct kd_jit_runtime *runtime)
 	result = kd_jit_source_provider_close(runtime->config.source);
 	if (result && result != -EALREADY) return result;
 	if (runtime->session.storage) return -EBUSY;
-	if (!runtime->shutdown_started && runtime->current) {
-		runtime->shutdown_old = runtime->current;
+	if (!runtime->shutdown_started && runtime->published_image) {
+		runtime->shutdown_old = runtime->published_image;
 		if (!runtime->shutdown_baseline_live) {
 			result = kd_jit_image_owner_use_get(&runtime->shutdown_old->owner,
 				&runtime->shutdown_baseline, runtime, KD_JIT_IMAGE_OWNER_USE_BASELINE);
@@ -571,7 +571,7 @@ static int shutdown_runtime(struct kd_jit_runtime *runtime)
 			runtime->shutdown_old, &runtime->shutdown_update, runtime, runtime->shutdown_retired);
 		if (result) return result;
 		runtime->shutdown_old->published_live = false;
-		runtime->current = NULL;
+		runtime->published_image = NULL;
 		runtime->shutdown_finished = true;
 	}
 	if (runtime->shutdown_baseline_live) {
