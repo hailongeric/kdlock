@@ -447,7 +447,7 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 	kd_source_grant_init(&call->grant, state, NULL,
 		&call->acquisition_identity, &call->node.release, &call->grant,
 		drop_grant, call);
-	return kd_mutex_node_init(&call->node, state, NULL, &call->acquisition_identity,
+	return kd_mutex_node_init(&call->node, state, &call->acquisition_identity,
 		&call->acquisition_identity, &call->grant, &call->result_identity,
 		ready, &source_ops, call);
 }
@@ -507,65 +507,6 @@ int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
 	return result;
 }
 
-/* Current S_W ownership makes this index stable; each linked grant retains
- * its exact node/control. Inspect every same-object record: an older physical
- * completion cannot hide a later still-held gate. No registry/lock->owner
- * lookup or foreign packet access is involved.
- */
-static int find_retained_gate(struct kd_jit_mutex_call *call,
-			      struct kd_mutex *lock)
-{
-	struct kd_thread_state *state = call->node.state;
-	struct kd_source_grant *grant;
-	struct kd_mutex_node *selected = NULL;
-	struct kd_mutex_release_owner *selected_owner = NULL;
-
-	list_for_each_entry(grant, &state->grants, state_link) {
-		struct kd_jit_mutex_call *prior_call;
-		struct kd_mutex_release_owner *owner;
-		int disposition;
-
-		if (grant->object != lock)
-			continue;
-		if (grant->logical_open)
-			return -EDEADLK;
-		/* Only this bridge's typed controls can be interpreted as calls. */
-		if (grant->drop != drop_grant || !grant->control)
-			return -EOPNOTSUPP;
-		prior_call = grant->control;
-		if (grant != &prior_call->grant || grant->state != state ||
-		    grant->release != &prior_call->node.release ||
-		    grant->user != prior_call->node.grant_user)
-			return -ESTALE;
-		call->node.retained_prior = &prior_call->node;
-		disposition = kd_mutex_preflight(lock, &call->node);
-		if (disposition == KD_MUTEX_QUEUE_PATH_READY)
-			continue;
-		if (disposition != KD_MUTEX_UNSUPPORTED_DEFERRED_REACQUIRE)
-			return disposition;
-		owner = call->node.retained_gate.owner;
-		if (selected_owner && selected_owner != owner) {
-			int result;
-
-			/* Exact prior users exclude reuse; owner phases are monotonic.
-			 * If A is still OPEN after B's OPEN snapshot, their physical
-			 * duties really overlap. A committed release instead permits
-			 * replacing the old candidate without a second guard.
-			 */
-			call->node.retained_prior = selected;
-			result = kd_mutex_preflight(lock, &call->node);
-			if (result == KD_MUTEX_UNSUPPORTED_DEFERRED_REACQUIRE)
-				return -EUCLEAN;
-			if (result)
-				return result;
-		}
-		selected = &prior_call->node;
-		selected_owner = owner;
-	}
-	call->node.retained_prior = selected;
-	return kd_mutex_preflight(lock, &call->node);
-}
-
 int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,
 		 struct kd_mutex *lock, struct kd_execution_binding **binding,
 		 unsigned int proxy_limit, enum kd_mutex_outcome *outcome)
@@ -580,9 +521,6 @@ int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,
 	    state->operation.identity != &call->acquisition_identity ||
 	    state->operation.kind != KD_OPERATION_MUTEX_LOCK)
 		return -EINVAL;
-	result = find_retained_gate(call, lock);
-	if (result)
-		return result;
 	result = kd_operation_enter(state, *binding, &call->acquisition_identity);
 	if (result)
 		return result;

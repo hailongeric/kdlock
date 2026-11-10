@@ -179,12 +179,6 @@ int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
 		 struct kd_execution_binding *capture_binding, struct kd_mutex *lock,
 		 unsigned long source_sp, unsigned long continuation_ip,
 		 unsigned long source_bp, unsigned long api_target);
-/* Positive UNSUPPORTED_DEFERRED_REACQUIRE leaves the exact pending API and
- * current binding intact before ENTERED/publication/queue effects. That exact
- * same-object pattern is outside this iteration and does not occur in its
- * declared workload; do not replay, enter a self-wait or synthesize API success.
- * Normal queue-safe histories and distinct objects use this common path.
- */
 int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,
 		 struct kd_mutex *lock, struct kd_execution_binding **binding,
 		 unsigned int proxy_limit, enum kd_mutex_outcome *outcome);
