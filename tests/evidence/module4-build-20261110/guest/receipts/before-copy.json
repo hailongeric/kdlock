@@ -1,0 +1,9 @@
+{
+  "scope": "Approved fresh copy/extract/verify/AST only; no build or module operation.",
+  "utc": 1794340565.761408,
+  "release": "7.0.0-38-kdlock1",
+  "boot_id": "ca0b717b-c19d-4027-b598-6a1cf58b93d2",
+  "taint": "0",
+  "base": "/mnt/kdlock-builds/kdlock-main-work/module4-69ba6b03-01a1bc4f",
+  "free_bytes": 14333878272
+}

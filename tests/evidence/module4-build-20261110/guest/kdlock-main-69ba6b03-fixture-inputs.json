@@ -1,0 +1,27 @@
+{
+  "files": {
+    "tests/kernel/payload/runtime_fixture.c": {
+      "bytes": 25892,
+      "sha256": "52501bf96c6ce37127cb3e04df2f2e90e6022fc73cd8441989953de18640b87c"
+    },
+    "tests/kernel/payload/runtime_fixture_observe.inc": {
+      "bytes": 6985,
+      "sha256": "98c057a587baf459b13c8d0b5f4026eb3796dc1625be6a8dcd739c24f2650047"
+    },
+    "tests/kernel/run_runtime_fixture.py": {
+      "bytes": 53624,
+      "sha256": "7fa158d3f28eab9f9f5474a6a46bee6b1338ce0228a8c8859c36f213ad108281"
+    }
+  },
+  "required_invocation_limits": {
+    "deadline_seconds": 120,
+    "dependency_page_limit": 4,
+    "event_capacity": 65536,
+    "iterations": 8,
+    "total_source_byte_limit": 262144,
+    "wire_log_byte_limit": 134217728,
+    "workers": 4
+  },
+  "scope": "Frozen fixture inputs and explicitly selected future VM arguments, not execution evidence.",
+  "source_git_head": "69ba6b030c1eb7e5f1c3f9461b70f5fef6791309"
+}

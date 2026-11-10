@@ -1,0 +1,73 @@
+{
+  "base": "/mnt/kdlock-builds/kdlock-main-work/module4-69ba6b03-01a1bc4f",
+  "files": {
+    "build-receipts/build.log": {
+      "bytes": 17809,
+      "sha256": "64c29a6e03bb78d8823fdb2d1559d135cc77091bd12971277390b0796fa464b7"
+    },
+    "build-receipts/command.json": {
+      "bytes": 32043,
+      "sha256": "0d0b13b33c83789133a4dbaf9565714978fb55490e4acf7149d1db3be0f65982"
+    },
+    "build-receipts/idle-after.json": {
+      "bytes": 184,
+      "sha256": "3f5d1e9d697ad519646786025d5c07fb3af644180e9d80ef1f49bc0b358c29ec"
+    },
+    "build-receipts/modinfo.txt": {
+      "bytes": 1477,
+      "sha256": "d229deedf5d8834e67a971693d841502c3053bb4b10113bd4ba5de2ddad11eea"
+    },
+    "build-receipts/result.json": {
+      "bytes": 33144,
+      "sha256": "91265ea4ec931fbcf2cd96f79aa13475525602c45f35a6de42197fe739963a18"
+    },
+    "build-receipts/symbols.txt": {
+      "bytes": 7941,
+      "sha256": "598da21bc2a5b11ab43d373a5d1e37fbd6ebfac8ace7e49ccef8a168e02f9e0d"
+    },
+    "kdlock-main-69ba6b03-build-inputs.json": {
+      "bytes": 13172,
+      "sha256": "8779c43983d5ee4c2ae7ce4886b38ba2806f8ca91d1c0dbb97a8cd2f23f777ad"
+    },
+    "kdlock-main-69ba6b03-fixture-inputs.json": {
+      "bytes": 920,
+      "sha256": "8db68acd54bfb1860f3d18cc0047b47c45ab1b45aa02f397150f5cf321d02d93"
+    },
+    "kdlock-main-69ba6b03-manifest.json": {
+      "bytes": 14856,
+      "sha256": "f0284c0318f4712524bd0274e887c5454b947cbcdbef578c1dfb8646273d5ff1"
+    },
+    "kdlock-main-69ba6b03-state.json": {
+      "bytes": 778,
+      "sha256": "1f0def8e58be2b44bb7b2a3fefb99606074c6c993db908f9f5f37e325948c174"
+    },
+    "kdlock-main-module4-actual-argv.json": {
+      "bytes": 1535,
+      "sha256": "d2071516e131519f822aed6d699b41d57e9cfb2ccb7b3b122e776c16a8f49abc"
+    },
+    "kernel3-six-pins.json": {
+      "bytes": 544,
+      "sha256": "c3ff591b1a60d2f4a094d41d4c2241d72691c04d6ed67720a2a0e91e65037f0e"
+    },
+    "live5-controller-ast.json": {
+      "bytes": 351,
+      "sha256": "6c7ad2a90d99f038796164caddd9c3e13bca16f13b1c07c7104fb518d2891910"
+    },
+    "live5-controller.py": {
+      "bytes": 7225,
+      "sha256": "ce7ce07c512a5f0c158225fea378163d292f05208fad45c29e7890e6fe6ce6a1"
+    },
+    "module4-build.py": {
+      "bytes": 8405,
+      "sha256": "778207b4ec618e10b63f553c58fdfebec35ea2696f50a4c24ff12a191a00435d"
+    },
+    "receipts/before-copy.json": {
+      "bytes": 326,
+      "sha256": "8142e64e8d7138b56e44f5b5824353f233c4847ef428fdae165590875c2824a6"
+    },
+    "receipts/preparation.json": {
+      "bytes": 1345,
+      "sha256": "c1e99a7b1ca1e9f7b4745f15f975c726da514943d0c2a8a2fad3ba544bb3f5bf"
+    }
+  }
+}

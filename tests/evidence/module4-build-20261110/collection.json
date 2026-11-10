@@ -1,0 +1,8 @@
+{
+  "all_copies_match_guest_index": true,
+  "copied_bytes": 142055,
+  "copied_files": 17,
+  "guest_base": "/mnt/kdlock-builds/kdlock-main-work/module4-69ba6b03-01a1bc4f",
+  "kernel_module_binary_retained_on_guest_only": "module-build/kd_runtime_fixture.ko",
+  "scope": "Read-only guest receipt copies; no build, tests, source execution or module operations during collection."
+}

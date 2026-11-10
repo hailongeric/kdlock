@@ -1,0 +1,28 @@
+{
+  "archive_pins": {
+    "-build-inputs.json": "8779c43983d5ee4c2ae7ce4886b38ba2806f8ca91d1c0dbb97a8cd2f23f777ad",
+    "-fixture-inputs.json": "8db68acd54bfb1860f3d18cc0047b47c45ab1b45aa02f397150f5cf321d02d93",
+    "-manifest.json": "f0284c0318f4712524bd0274e887c5454b947cbcdbef578c1dfb8646273d5ff1",
+    "-state.json": "1f0def8e58be2b44bb7b2a3fefb99606074c6c993db908f9f5f37e325948c174",
+    ".tar": "75c45d74697862b9d4fe527b1be7f41d0a9a7a5f679f28b9c4217ef904a47e57"
+  },
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "-c",
+    "import ast; from pathlib import Path; p=Path(\"tests/kernel/run_runtime_fixture.py\"); ast.parse(p.read_text(),filename=str(p)); print(\"RUNNER_AST_PASS\")"
+  ],
+  "boot_id": "ca0b717b-c19d-4027-b598-6a1cf58b93d2",
+  "cwd": "/mnt/kdlock-builds/kdlock-main-work/module4-69ba6b03-01a1bc4f/input",
+  "end_unix": 1794340630.7109885,
+  "kernel_input_count": 66,
+  "release": "7.0.0-38-kdlock1",
+  "returncode": 0,
+  "scope": "Copy/extract/full byte verification and VM-only runner AST; no project import, test, build or module operation.",
+  "source_files_after_ast": 109,
+  "source_files_before_ast": 109,
+  "source_git_head": "69ba6b030c1eb7e5f1c3f9461b70f5fef6791309",
+  "start_unix": 1794340630.6542838,
+  "stderr": "",
+  "stdout": "RUNNER_AST_PASS\n",
+  "taint": "0"
+}
