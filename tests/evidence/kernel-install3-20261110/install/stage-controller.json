@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 1800 python3 -u /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/kdlock-kdrebuild3-install.py stage --controller-idle-recovery-confirmed --final-build-success-reviewed --final-build-receipt /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/result.json --final-build-receipt-sha256 5de4354fab0b5ea0d4477285023c86739163bc0b1b3c1320e409c99245efe8e7 --recovery-receipt /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/preinstall-recovery-20261110-UTC-01.json --recovery-receipt-sha256 64d8f8fde29f1f489531475d150a244470e25d2bb040c1fc5fd34420b6232495 --root-reserve-bytes 1073741824 --initrd-budget-bytes 268435456 --checks /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/kdlock-kdrebuild3-checks.py"
+  ],
+  "started_unix": 1794341531.8226485,
+  "stdout_path": "/tmp/kdlock-kdrebuild3-stage-20261110-UTC-01.stdout.log",
+  "returncode": 0,
+  "finished_unix": 1794341739.69805,
+  "elapsed_seconds": 207.87540197372437
+}

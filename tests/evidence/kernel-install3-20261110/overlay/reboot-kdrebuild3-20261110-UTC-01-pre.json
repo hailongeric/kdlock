@@ -1,0 +1,29 @@
+{
+  "phase": "PRE_REBOOT_VERIFIED",
+  "unix": 1794342376.4207141,
+  "argv": [
+    "systemctl",
+    "reboot"
+  ],
+  "timeout_seconds": 30,
+  "before": {
+    "boot_id": "ca0b717b-c19d-4027-b598-6a1cf58b93d2",
+    "checked_unix_time": 1794342376.2808845,
+    "modules": "nfnetlink 20480 1 - Live 0xffffffffc09e6000\ncfg80211 1462272 0 - Live 0xffffffffc0941000\nbinfmt_misc 24576 1 - Live 0xffffffffc093f000\nnls_iso8859_1 12288 1 - Live 0xffffffffc093c000\nintel_rapl_msr 20480 0 - Live 0xffffffffc093e000\nintel_rapl_common 57344 1 intel_rapl_msr, Live 0xffffffffc0937000\nintel_uncore_frequency_common 20480 0 - Live 0xffffffffc0928000\nskx_edac_common 28672 0 - Live 0xffffffffc0933000\nnfit 81920 1 skx_edac_common, Live 0xffffffffc092a000\nkvm_intel 544768 0 - Live 0xffffffffc08dc000\nppdev 24576 0 - Live 0xffffffffc08d9000\nkvm 1507328 1 kvm_intel, Live 0xffffffffc0834000\nirqbypass 16384 1 kvm, Live 0xffffffffc0831000\nrapl 20480 0 - Live 0xffffffffc0823000\njoydev 32768 0 - Live 0xffffffffc081f000\ni2c_piix4 32768 0 - Live 0xffffffffc082e000\ninput_leds 12288 0 - Live 0xffffffffc082c000\nparport_pc 53248 0 - Live 0xffffffffc0825000\nparport 77824 2 ppdev,parport_pc, Live 0xffffffffc0817000\ni2c_smbus 20480 1 i2c_piix4, Live 0xffffffffc0805000\nmac_hid 12288 0 - Live 0xffffffffc0815000\nsch_fq_codel 28672 2 - Live 0xffffffffc0812000\ndm_multipath 45056 0 - Live 0xffffffffc080c000\nefi_pstore 12288 0 - Live 0xffffffffc0097000\ndmi_sysfs 28672 0 - Live 0xffffffffc0809000\nqemu_fw_cfg 24576 0 - Live 0xffffffffc0807000\nvirtiofs 36864 0 - Live 0xffffffffc0801000\nvmw_vsock_virtio_transport 20480 0 - Live 0xffffffffc01fe000\nvmw_vsock_virtio_transport_common 61440 1 vmw_vsock_virtio_transport, Live 0xffffffffc01f9000\nvsock 73728 2 vmw_vsock_virtio_transport,vmw_vsock_virtio_transport_common, Live 0xffffffffc01f1000\nautofs4 57344 2 - Live 0xffffffffc01eb000\nbtrfs 2244608 0 - Live 0xffffffffc00a7000\nlibblake2b 20480 1 btrfs, Live 0xffffffffc00a5000\nraid10 73728 0 - Live 0xffffffffc0099000\nraid456 200704 0 - Live 0xffffffffc0078000\nasync_raid6_recov 20480 1 raid456, Live 0xffffffffc0075000\nasync_memcpy 16384 2 raid456,async_raid6_recov, Live 0xffffffffc0066000\nasync_pq 20480 2 raid456,async_raid6_recov, Live 0xffffffffc0070000\nasync_xor 16384 3 raid456,async_raid6_recov,async_pq, Live 0xffffffffc006e000\nasync_tx 16384 5 raid456,async_raid6_recov,async_memcpy,async_pq,async_xor, Live 0xffffffffc006b000\nxor 24576 2 btrfs,async_xor, Live 0xffffffffc0068000\nraid6_pq 126976 4 btrfs,raid456,async_raid6_recov,async_pq, Live 0xffffffffc0060000\nraid1 61440 0 - Live 0xffffffffc0057000\nraid0 24576 0 - Live 0xffffffffc002d000\nlinear 16384 0 - Live 0xffffffffc001d000\npsmouse 217088 0 - Live 0xffffffffc003b000\nvga16fb 36864 0 - Live 0xffffffffc0037000\nserio_raw 20480 0 - Live 0xffffffffc0034000\nvgastate 16384 1 vga16fb, Live 0xffffffffc0030000\nghash_clmulni_intel 12288 0 - Live 0xffffffffc002f000\nfloppy 135168 0 - Live 0xffffffffc001f000\nbochs 24576 0 - Live 0xffffffffc001b000\npata_acpi 12288 0 - Live 0xffffffffc0019000\naesni_intel 98304 0 - Live 0xffffffffc000a000\n",
+    "release": "7.0.0-38-kdlock1",
+    "taint": 0
+  },
+  "grub": {
+    "candidate_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild3-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "environment": {
+      "next_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild3-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+    },
+    "grub_cfg_sha256": "17c2ab033f0f294e903ebf53b4a1c3aac5fe88ed8ee4df19aa3c0661937a6fbd",
+    "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+  },
+  "arm_complete_sha256": "872dad316b1a4df4c9b67e92509277efe51ecc25b177bc0ba7d3dd9faadb0558",
+  "root_free": 1272942592,
+  "postboot_helper_sha256": "e89de9585165702af7e35d6fd456fa6aaa0bd48166cea6b54158a51d33743495",
+  "hmp_sha256": "d47477c6dc0ab28cddcd3af96c2cd1f9ca7e39a46abef51ea4739808548c3387",
+  "reboot_invoked": false
+}

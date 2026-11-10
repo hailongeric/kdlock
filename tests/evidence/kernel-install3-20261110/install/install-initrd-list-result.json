@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "lsinitramfs",
+    "/boot/initrd.img-7.0.0-38-kdrebuild3"
+  ],
+  "elapsed_seconds": 0.47359100799985754,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild3-1b50e373-v1/install-initrd-list.log",
+  "log_sha256": "bc40ba24d7478ded9c19997e8198cb2092de012664df48f337819fccb3f36582",
+  "returncode": 0,
+  "timed_out": false
+}

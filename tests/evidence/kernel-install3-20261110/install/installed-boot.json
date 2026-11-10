@@ -1,0 +1,39 @@
+{
+  "dependencies": {
+    "ext4": [],
+    "sd_mod": [],
+    "virtio_net": [],
+    "virtio_pci": [],
+    "virtio_scsi": []
+  },
+  "files": [
+    {
+      "path": "/boot/vmlinuz-7.0.0-38-kdrebuild3",
+      "sha256": "582e7b7b7be00fe9ba6f373ed25ad27864a13949c0bff1d7fa466271d479733e",
+      "size": 17187328
+    },
+    {
+      "path": "/boot/System.map-7.0.0-38-kdrebuild3",
+      "sha256": "e7723218a35731108e2a1ae4ea1b33942fe7c1e44cc6671bc9345f08222c4d22",
+      "size": 10565464
+    },
+    {
+      "path": "/boot/config-7.0.0-38-kdrebuild3",
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "size": 308548
+    },
+    {
+      "path": "/boot/initrd.img-7.0.0-38-kdrebuild3",
+      "sha256": "30edb5699e61260afd54efedf1f23f0ab5ba77248ecdd55895b923b54eae045c",
+      "size": 103176800
+    }
+  ],
+  "grub": {
+    "candidate_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild3-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "environment": {
+      "next_entry": ""
+    },
+    "grub_cfg_sha256": "17c2ab033f0f294e903ebf53b4a1c3aac5fe88ed8ee4df19aa3c0661937a6fbd",
+    "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+  }
+}

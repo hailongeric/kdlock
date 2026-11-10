@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild3-1b50e373-v1/checks.py",
+    "verify-protected",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild3-1b50e373-v1/arm-protected-before-arm.json",
+    "--snapshot",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild3-1b50e373-v1/stage-protected-before.json"
+  ],
+  "elapsed_seconds": 24.177763384000173,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild3-1b50e373-v1/arm-protected-before-arm.log",
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "returncode": 0,
+  "timed_out": false
+}

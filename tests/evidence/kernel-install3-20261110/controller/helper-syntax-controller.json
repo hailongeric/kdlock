@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 20 python3 -c 'import ast,base64,hashlib,json,os,pathlib,sys,time\np=pathlib.Path(\"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01\")\nexpected={\"kdlock-kdrebuild3-checks.py\":\"cbd13822335df23503060fd41eae4cf67787d68206739743274692a83f81506c\",\"kdlock-kdrebuild3-install.py\":\"0785dfc33c7401b9576a05da187316dfae7b1b4a8b0e682810f4a9db989c521e\",\"kdlock-kdrebuild3-postboot.py\":\"e89de9585165702af7e35d6fd456fa6aaa0bd48166cea6b54158a51d33743495\"}\nrows=json.load(sys.stdin);assert len(rows)==len(expected) and {x[\"name\"] for x in rows}==set(expected);saved=[]\nfor x in rows:\n d=base64.b64decode(x[\"bytes\"],validate=True);assert hashlib.sha256(d).hexdigest()==x[\"sha256\"]==expected[x[\"name\"]];ast.parse(d,filename=x[\"name\"])\n with (p/x[\"name\"]).open(\"xb\") as f:f.write(d);f.flush();os.fsync(f.fileno())\n assert hashlib.sha256((p/x[\"name\"]).read_bytes()).hexdigest()==x[\"sha256\"]\n saved.append({\"name\":x[\"name\"],\"sha256\":x[\"sha256\"],\"size\":len(d),\"ast_parsed\":True})\nr={\"phase\":\"HELPER_SHA_AST_VERIFIED\",\"files\":saved,\"unix\":time.time(),\"scope\":\"VM syntax/hash check only; no helper phase executed.\"}\nwith (p/\"install-helper-syntax-20261110-UTC-01.json\").open(\"x\") as f:json.dump(r,f,indent=2);f.write(\"\\n\");f.flush();os.fsync(f.fileno())\nfd=os.open(p,os.O_RDONLY|os.O_DIRECTORY);os.fsync(fd);os.close(fd);print(json.dumps(r))\n'"
+  ],
+  "returncode": 0,
+  "stdout": "{\"phase\": \"HELPER_SHA_AST_VERIFIED\", \"files\": [{\"name\": \"kdlock-kdrebuild3-checks.py\", \"sha256\": \"cbd13822335df23503060fd41eae4cf67787d68206739743274692a83f81506c\", \"size\": 11919, \"ast_parsed\": true}, {\"name\": \"kdlock-kdrebuild3-install.py\", \"sha256\": \"0785dfc33c7401b9576a05da187316dfae7b1b4a8b0e682810f4a9db989c521e\", \"size\": 17228, \"ast_parsed\": true}, {\"name\": \"kdlock-kdrebuild3-postboot.py\", \"sha256\": \"e89de9585165702af7e35d6fd456fa6aaa0bd48166cea6b54158a51d33743495\", \"size\": 17882, \"ast_parsed\": true}], \"unix\": 1794341408.6672266, \"scope\": \"VM syntax/hash check only; no helper phase executed.\"}\n",
+  "stderr": ""
+}

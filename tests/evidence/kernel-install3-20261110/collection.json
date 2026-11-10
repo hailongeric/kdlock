@@ -1,0 +1,96 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "ssh",
+        "-p",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "root@10.176.26.71",
+        "timeout 45 python3 -c 'import datetime,hashlib,json,pathlib,stat\nbase=pathlib.Path('\"'\"'/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts'\"'\"')\nroots={\"install\":base/'\"'\"'install-kdrebuild3-1b50e373-v1'\"'\"',\"postboot\":base/'\"'\"'postboot-kdrebuild3-20261110-UTC-01'\"'\"'}\nselected={}\nfor label,root in roots.items():\n assert root.resolve()==root\n for p in root.iterdir():\n  assert p.is_file() and not p.is_symlink(),str(p)\n  selected[label+\"/\"+p.name]=p\nfor name in ['\"'\"'kdlock-kdrebuild3-checks.py'\"'\"', '\"'\"'kdlock-kdrebuild3-install.py'\"'\"', '\"'\"'kdlock-kdrebuild3-postboot.py'\"'\"', '\"'\"'install-helper-syntax-20261110-UTC-01.json'\"'\"', '\"'\"'preinstall-recovery-20261110-UTC-01.json'\"'\"', '\"'\"'preinstall-idle-20261110-UTC-01.json'\"'\"', '\"'\"'pre-reboot-idle-20261110-UTC-01.json'\"'\"', '\"'\"'pre-reboot-grub-20261110-UTC-01.json'\"'\"', '\"'\"'beforeboot-recovery-20261110-UTC-01.json'\"'\"', '\"'\"'reboot-kdrebuild3-20261110-UTC-01-pre.json'\"'\"', '\"'\"'reboot-kdrebuild3-20261110-UTC-01-result.json'\"'\"', '\"'\"'final-identity.json'\"'\"', '\"'\"'result.json'\"'\"', '\"'\"'gs-config.json'\"'\"']:\n p=base/'\"'\"'overlay-1b50e373-kdrebuild3-20261111-01'\"'\"'/name;assert p.is_file() and not p.is_symlink();selected[\"overlay/\"+name]=p\nassert len(selected)<=250\nrows={};total=0\nfor label,p in sorted(selected.items()):\n a=p.stat();assert a.st_size<=32*1024*1024\n h=hashlib.sha256()\n with p.open(\"rb\") as f:\n  for b in iter(lambda:f.read(4*1024*1024),b\"\"):h.update(b)\n b=p.stat();assert (a.st_dev,a.st_ino,a.st_size,a.st_mtime_ns,a.st_ctime_ns)==(b.st_dev,b.st_ino,b.st_size,b.st_mtime_ns,b.st_ctime_ns)\n rows[label]={\"path\":str(p),\"bytes\":a.st_size,\"sha256\":h.hexdigest(),\"dev\":a.st_dev,\"ino\":a.st_ino,\"mtime_ns\":a.st_mtime_ns,\"ctime_ns\":a.st_ctime_ns};total+=a.st_size\nassert total<=100*1024*1024\nprint(json.dumps({\"count\":len(rows),\"bytes\":total,\"files\":rows,\"collected_utc\":datetime.datetime.now(datetime.timezone.utc).isoformat(),\"scope\":\"Read-only immutable installation/postboot receipts; no live status or proc checks.\"}))\n'"
+      ],
+      "finished_unix": 1794342764.7868905,
+      "returncode": 0,
+      "started_unix": 1794342763.8484755,
+      "stderr": "",
+      "stdout_bytes": 45599,
+      "stdout_sha256": "cf059564fa7a267b091a1f30e642d8151d1263539fb6c9cfd61a7c9128d4e05a"
+    },
+    {
+      "argv": [
+        "scp",
+        "-P",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "-r",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild3-1b50e373-v1",
+        "/tmp/kdlock-install3-raw-20261110-UTC-01/install"
+      ],
+      "finished_unix": 1794342765.3550296,
+      "returncode": 0,
+      "started_unix": 1794342764.7900343,
+      "stderr": "",
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "scp",
+        "-P",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "-r",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild3-20261110-UTC-01",
+        "/tmp/kdlock-install3-raw-20261110-UTC-01/postboot"
+      ],
+      "finished_unix": 1794342765.698105,
+      "returncode": 0,
+      "started_unix": 1794342765.3550935,
+      "stderr": "",
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "scp",
+        "-P",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/kdlock-kdrebuild3-checks.py",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/kdlock-kdrebuild3-install.py",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/kdlock-kdrebuild3-postboot.py",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/install-helper-syntax-20261110-UTC-01.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/preinstall-recovery-20261110-UTC-01.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/preinstall-idle-20261110-UTC-01.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/pre-reboot-idle-20261110-UTC-01.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/pre-reboot-grub-20261110-UTC-01.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/beforeboot-recovery-20261110-UTC-01.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/reboot-kdrebuild3-20261110-UTC-01-pre.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/reboot-kdrebuild3-20261110-UTC-01-result.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/final-identity.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/result.json",
+        "root@10.176.26.71:/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/gs-config.json",
+        "/tmp/kdlock-install3-raw-20261110-UTC-01/overlay"
+      ],
+      "finished_unix": 1794342768.5428872,
+      "returncode": 0,
+      "started_unix": 1794342765.698283,
+      "stderr": "",
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "scope": "Only receipt reads/SCP and source-host lossless compression; no guest helper execution or writes during live window."
+}

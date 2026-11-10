@@ -1,0 +1,347 @@
+#!/usr/bin/env python3
+"""One-off stage/check/install/arm controller. Never boots or loads a module.
+
+Prepared and source-reviewed only. Execution belongs to the authorized guest
+controller after the final reviewed kernel3 observation build and real recovery/idle review.
+No phase automatically retries, removes partial state or overwrites old kernels.
+"""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import shlex
+import shutil
+import signal
+import stat
+import subprocess
+import time
+
+BASE = Path('/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f')
+SOURCE, BUILD = BASE / 'source', BASE / 'build'
+STAGE = BASE / 'install-stage-kdrebuild3-1b50e373-v1'
+RECEIPTS = BASE / 'receipts/install-kdrebuild3-1b50e373-v1'
+RELEASE = '7.0.0-38-kdrebuild3'
+RUNTIME_SHA256 = '04a3a5d8337aa9111e3f29e1cb67994d905b00ad0bded23c431b1a9ced74c321'
+ENTRY = 'gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild3-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961'
+EVENTS = None
+PHASE = None
+
+
+def digest(path):
+    result = hashlib.sha256()
+    with open(path, 'rb') as stream:
+        while True:
+            block = stream.read(1024 * 1024)
+            if not block:
+                return result.hexdigest()
+            result.update(block)
+
+
+def syncdir(path):
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def save(name, value):
+    with open(RECEIPTS / name, 'x', encoding='utf-8') as stream:
+        json.dump(value, stream, sort_keys=True, indent=2)
+        stream.write('\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+    syncdir(RECEIPTS)
+
+
+def event(kind, **values):
+    data = dict(event=kind, phase=PHASE, unix_time=time.time(), **values)
+    EVENTS.write(json.dumps(data, sort_keys=True) + '\n')
+    EVENTS.flush()
+    os.fsync(EVENTS.fileno())
+    print(json.dumps(data, sort_keys=True), flush=True)
+
+
+def command(label, argv, seconds):
+    log = RECEIPTS / (PHASE + '-' + label + '.log')
+    started = time.monotonic()
+    event('command_started', label=label, argv=list(map(str, argv)), timeout_seconds=seconds)
+    with open(log, 'xb') as output:
+        proc = subprocess.Popen(list(map(str, argv)), stdout=output,
+                                stderr=subprocess.STDOUT, start_new_session=True)
+        timed_out = False
+        try:
+            code = proc.wait(timeout=seconds)
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            try:
+                os.killpg(proc.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                code = proc.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                code = proc.wait(timeout=15)
+        output.flush()
+        os.fsync(output.fileno())
+    result = dict(argv=list(map(str, argv)), returncode=code,
+                  timed_out=timed_out, elapsed_seconds=time.monotonic()-started,
+                  log=str(log), log_sha256=digest(log))
+    save(PHASE + '-' + label + '-result.json', result)
+    event('command_finished', label=label, **result)
+    if timed_out or code:
+        raise RuntimeError('command failed; preserve partial state: ' + label)
+    return log.read_text(errors='replace')
+
+
+def check(label, mode, extra=(), seconds=600):
+    output = PHASE + '-' + label + '.json'
+    command(label, ['python3', RECEIPTS / 'checks.py', mode,
+                    '--output', RECEIPTS / output, *extra], seconds)
+    return json.loads((RECEIPTS / output).read_text())
+
+
+def ready(phase):
+    data = json.loads((RECEIPTS / (phase + '-complete.json')).read_text())
+    if data.get('status') != 'COMPLETE':
+        raise RuntimeError('prior phase not complete: ' + phase)
+    return data
+
+
+def verify_records(rows):
+    for row in rows:
+        path = Path(row['path'])
+        if 'symlink' in row:
+            if not path.is_symlink() or os.readlink(path) != row['symlink']:
+                raise RuntimeError('retained link changed: ' + str(path))
+            continue
+        if path.is_symlink() or not path.is_file():
+            raise RuntimeError('expected regular retained file: ' + str(path))
+        if path.stat().st_size != row['size'] or digest(path) != row['sha256']:
+            raise RuntimeError('retained bytes changed: ' + str(path))
+        if 'mode' in row and stat.S_IMODE(path.stat().st_mode) != row['mode']:
+            raise RuntimeError('retained mode changed: ' + str(path))
+
+
+def module_table(data):
+    root = Path(data['root'])
+    return sorted((str(Path(row['path']).relative_to(root)), row['size'],
+                   row['sha256'], row['mode']) for row in data['modules'])
+
+
+def budget(config):
+    if os.stat('/').st_dev != os.stat('/boot').st_dev:
+        raise RuntimeError('root/boot filesystem layout changed')
+    blocks = 0
+    for directory, dirs, names in os.walk(STAGE, followlinks=False):
+        dirs[:] = [name for name in dirs if not (Path(directory)/name).is_symlink()]
+        blocks += sum((Path(directory)/name).lstat().st_blocks * 512 for name in names)
+    boot = sum((BUILD/name).stat().st_size for name in ('arch/x86/boot/bzImage', 'System.map', '.config'))
+    fs = os.statvfs('/')
+    free = fs.f_bavail * fs.f_frsize
+    needed = blocks + boot + config['root_reserve_bytes'] + config['initrd_budget_bytes']
+    if free <= needed:
+        raise RuntimeError('root budget does not fit: ' + str((free, needed)))
+    return dict(root_free=free, module_allocated_bytes=blocks, boot_bytes=boot,
+                root_reserve_bytes=config['root_reserve_bytes'],
+                initrd_budget_bytes=config['initrd_budget_bytes'], needed=needed)
+
+
+def stage(args):
+    if STAGE.exists() or RECEIPTS.exists():
+        raise RuntimeError('fresh stage and receipt required')
+    if args.root_reserve_bytes <= 0 or args.initrd_budget_bytes <= 0:
+        raise RuntimeError('explicit positive installation budgets required')
+    for name in ('final_build_receipt', 'recovery_receipt'):
+        path = Path(getattr(args, name))
+        expected = getattr(args, name + '_sha256')
+        if len(expected) != 64 or digest(path) != expected:
+            raise RuntimeError('controller receipt hash mismatch: ' + name)
+    if digest(SOURCE / 'kernel/kdlock/kernel/runtime.c') != RUNTIME_SHA256:
+        raise RuntimeError('source differs from unchanged runtime within the reviewed 1b50e373 core')
+    STAGE.mkdir(mode=0o700)
+    RECEIPTS.mkdir(mode=0o700)
+    syncdir(STAGE.parent)
+    syncdir(RECEIPTS.parent)
+    return dict(root_reserve_bytes=args.root_reserve_bytes,
+                initrd_budget_bytes=args.initrd_budget_bytes,
+                final_build_receipt=args.final_build_receipt,
+                final_build_receipt_sha256=args.final_build_receipt_sha256,
+                recovery_receipt=args.recovery_receipt,
+                recovery_receipt_sha256=args.recovery_receipt_sha256,
+                controller_review='actual final build success and idle/recovery reviewed externally',
+                kernel_code_commit='1b50e373', runtime_sha256=RUNTIME_SHA256)
+
+
+def require_fresh_targets():
+    paths = [Path('/lib/modules') / RELEASE]
+    paths += [Path('/boot') / (prefix + RELEASE) for prefix in
+              ('vmlinuz-', 'System.map-', 'config-', 'initrd.img-')]
+    if any(os.path.lexists(path) for path in paths):
+        raise RuntimeError('candidate installed namespace is not fresh')
+
+
+def main():
+    global EVENTS, PHASE
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('phase', choices=('stage', 'check', 'install', 'arm'))
+    parser.add_argument('--controller-idle-recovery-confirmed', action='store_true')
+    parser.add_argument('--final-build-success-reviewed', action='store_true')
+    parser.add_argument('--final-build-receipt')
+    parser.add_argument('--final-build-receipt-sha256')
+    parser.add_argument('--recovery-receipt')
+    parser.add_argument('--recovery-receipt-sha256')
+    parser.add_argument('--root-reserve-bytes', type=int)
+    parser.add_argument('--initrd-budget-bytes', type=int)
+    parser.add_argument('--checks', default=str(Path(__file__).with_name('kdlock-kdrebuild3-checks.py')))
+    args = parser.parse_args()
+    PHASE = args.phase
+    if os.geteuid() != 0 or not args.controller_idle_recovery_confirmed:
+        parser.error('guest root and actual prior controller idle/recovery review required')
+    if args.phase == 'stage':
+        required = (args.final_build_success_reviewed, args.final_build_receipt,
+                    args.final_build_receipt_sha256, args.recovery_receipt,
+                    args.recovery_receipt_sha256, args.root_reserve_bytes,
+                    args.initrd_budget_bytes)
+        if not all(required):
+            parser.error('stage needs final-build/recovery receipts+hashes and explicit budgets')
+        config = stage(args)
+        shutil.copyfile(args.checks, RECEIPTS / 'checks.py')
+        shutil.copyfile(__file__, RECEIPTS / 'controller.py')
+        save('configuration.json', config)
+        save('helper-hashes.json', {name: digest(RECEIPTS/name) for name in ('checks.py', 'controller.py')})
+    else:
+        config = json.loads((RECEIPTS / 'configuration.json').read_text())
+        for name, expected in json.loads((RECEIPTS/'helper-hashes.json').read_text()).items():
+            if digest(RECEIPTS/name) != expected:
+                raise RuntimeError('retained helper changed')
+        if digest(__file__) != digest(RECEIPTS/'controller.py'):
+            raise RuntimeError('different controller from stage')
+    EVENTS = open(RECEIPTS / (PHASE+'-journal.jsonl'), 'x', encoding='utf-8')
+    syncdir(RECEIPTS)
+    try:
+        event('phase_started')
+        check('idle', 'idle', seconds=30)
+        if PHASE == 'stage':
+            require_fresh_targets()
+            check('protected-before', 'protect')
+            identity = check('identity-before', 'identity', seconds=120)
+            shutil.copyfile('/boot/grub/grub.cfg', RECEIPTS/'grub.cfg-before')
+            save('identity-pin.json', identity)
+            command('modules-install', ['make', '-C', SOURCE, 'O='+str(BUILD),
+                    'KERNELRELEASE='+RELEASE, 'INSTALL_MOD_PATH='+str(STAGE),
+                    'INSTALL_MOD_STRIP=1', 'modules_install'], 900)
+        elif PHASE == 'check':
+            ready('stage')
+            current = check('identity-after-stage', 'identity', seconds=120)
+            if current != json.loads((RECEIPTS/'identity-pin.json').read_text()):
+                raise RuntimeError('build/source/tools changed during stage')
+            modules = check('modules-stage', 'modules', ('--root', str(STAGE)), seconds=900)
+            if modules['count'] != 6901:
+                raise RuntimeError('module count differs from reviewed final source inventory')
+            save('root-budget.json', budget(config))
+        elif PHASE == 'install':
+            ready('check')
+            require_fresh_targets()
+            identity = json.loads((RECEIPTS/'identity-pin.json').read_text())
+            verify_records(identity['artifacts'])
+            verify_records(identity['package_source'])
+            staged = json.loads((RECEIPTS/'check-modules-stage.json').read_text())
+            verify_records(staged['modules'])
+            save('root-budget-before-install.json', budget(config))
+            shutil.copytree(STAGE/'lib/modules'/RELEASE, Path('/lib/modules')/RELEASE,
+                            symlinks=True, copy_function=shutil.copy2)
+            syncdir(Path('/lib/modules').resolve())
+            command('depmod', ['depmod', '-a', '-e', '-F', BUILD/'System.map', RELEASE], 120)
+            installed = check('modules-installed', 'modules', ('--root', '/'), seconds=900)
+            if module_table(installed) != module_table(staged):
+                raise RuntimeError('installed module copy differs')
+            pins = {row['path']: row['sha256'] for row in identity['artifacts']}
+            for name, prefix in (('arch/x86/boot/bzImage', 'vmlinuz'), ('System.map', 'System.map'), ('.config', 'config')):
+                source = BUILD / name
+                data = source.read_bytes()
+                if hashlib.sha256(data).hexdigest() != pins[str(source)]:
+                    raise RuntimeError('boot input changed')
+                target = Path('/boot') / (prefix+'-'+RELEASE)
+                with open(target, 'xb') as output:
+                    os.fchmod(output.fileno(), 0o644)
+                    output.write(data)
+                    output.flush()
+                    os.fsync(output.fileno())
+                if digest(target) != pins[str(source)]:
+                    raise RuntimeError('boot copy differs: '+str(target))
+            syncdir('/boot')
+            command('initramfs', ['update-initramfs', '-c', '-k', RELEASE], 300)
+            command('update-grub', ['update-grub'], 120)
+            listing = command('initrd-list', ['lsinitramfs', '/boot/initrd.img-'+RELEASE], 120).splitlines()
+            dependencies = {}
+            module_root = (Path('/lib/modules')/RELEASE).resolve()
+            for name in ('virtio_pci', 'virtio_scsi', 'sd_mod', 'ext4', 'virtio_net'):
+                text = command('dependencies-'+name, ['modprobe', '-S', RELEASE, '--show-depends', name], 20)
+                paths = []
+                for line in text.splitlines():
+                    words = shlex.split(line)
+                    if not words or words[0] == 'builtin':
+                        continue
+                    if words[0] != 'insmod' or len(words) < 2:
+                        raise RuntimeError('unknown boot dependency form: '+line)
+                    path = Path(words[1]).resolve()
+                    relative = path.relative_to(module_root)
+                    suffix = 'lib/modules/'+RELEASE+'/'+str(relative)
+                    if not path.is_file():
+                        raise RuntimeError('installed candidate dependency missing: '+str(path))
+                    if name != 'virtio_net' and not any(item == suffix or item.endswith('/'+suffix) for item in listing):
+                        raise RuntimeError('root dependency missing from initrd: '+str(path))
+                    paths.append(str(path))
+                dependencies[name] = paths
+            check('protected-after', 'verify-protected', ('--snapshot', str(RECEIPTS/'stage-protected-before.json')))
+            grub = check('grub-installed', 'grub', seconds=30)
+            boot = [Path('/boot')/(prefix+RELEASE) for prefix in
+                    ('vmlinuz-', 'System.map-', 'config-', 'initrd.img-')]
+            if boot[-1].stat().st_size > config['initrd_budget_bytes']:
+                raise RuntimeError('initrd exceeded reviewed budget')
+            fs = os.statvfs('/')
+            if fs.f_bavail*fs.f_frsize < config['root_reserve_bytes']:
+                raise RuntimeError('root reserve consumed')
+            save('installed-boot.json', dict(files=[dict(path=str(path), size=path.stat().st_size,
+                 sha256=digest(path)) for path in boot], dependencies=dependencies, grub=grub))
+        else:
+            ready('install')
+            installed = json.loads((RECEIPTS/'installed-boot.json').read_text())
+            verify_records(installed['files'])
+            verify_records(json.loads((RECEIPTS/'install-modules-installed.json').read_text())['modules'])
+            fs = os.statvfs('/')
+            if fs.f_bavail*fs.f_frsize < config['root_reserve_bytes']:
+                raise RuntimeError('root reserve consumed before arm')
+            check('protected-before-arm', 'verify-protected', ('--snapshot', str(RECEIPTS/'stage-protected-before.json')))
+            before = check('grub-before-arm', 'grub', seconds=30)
+            if before['grub_cfg_sha256'] != installed['grub']['grub_cfg_sha256']:
+                raise RuntimeError('GRUB configuration changed after install')
+            command('one-shot', ['grub-reboot', ENTRY], 30)
+            after = check('grub-after-arm', 'grub', ('--armed',), seconds=30)
+            if before['grub_cfg_sha256'] != after['grub_cfg_sha256'] or {
+                k:v for k,v in before['environment'].items() if k != 'next_entry'
+            } != {k:v for k,v in after['environment'].items() if k != 'next_entry'}:
+                raise RuntimeError('one-shot changed other GRUB state')
+            command('sync', ['sync'], 30)
+        command('disk-usage', ['df', '-B1', '/', '/boot', BASE], 30)
+        save(PHASE+'-complete.json', dict(status='COMPLETE', phase=PHASE,
+             reboot_performed=False, module_load_performed=False, unix_time=time.time()))
+        event('phase_complete')
+    except BaseException as error:
+        save(PHASE+'-failure.json', dict(status='FAILED_NO_AUTOMATIC_RETRY',
+             phase=PHASE, error=repr(error), preserve_partial_state=True,
+             one_shot_may_be_set=(PHASE == 'arm'), reboot_performed=False))
+        event('phase_failed', error=repr(error))
+        raise
+    finally:
+        EVENTS.close()
+
+
+if __name__ == '__main__':
+    main()

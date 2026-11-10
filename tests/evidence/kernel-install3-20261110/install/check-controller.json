@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 1200 python3 -u -c 'import hashlib,json,os,pathlib,sys; r=json.loads(pathlib.Path('\"'\"'/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild3-1b50e373-v1/stage-complete.json'\"'\"').read_text()); assert r[\"status\"]==\"COMPLETE\" and r[\"phase\"]==\"stage\"; p=pathlib.Path('\"'\"'/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/kdlock-kdrebuild3-install.py'\"'\"'); assert hashlib.sha256(p.read_bytes()).hexdigest()==\"0785dfc33c7401b9576a05da187316dfae7b1b4a8b0e682810f4a9db989c521e\"; print(\"Actual stage-complete and controller SHA verified\",flush=True); os.execv(sys.executable,[sys.executable,\"-u\",str(p),\"check\",\"--controller-idle-recovery-confirmed\"])'"
+  ],
+  "started_unix": 1794341774.8200068,
+  "stdout_path": "/tmp/kdlock-kdrebuild3-check-20261110-UTC-01.stdout.log",
+  "returncode": 0,
+  "finished_unix": 1794341805.029106,
+  "elapsed_seconds": 30.209099292755127
+}

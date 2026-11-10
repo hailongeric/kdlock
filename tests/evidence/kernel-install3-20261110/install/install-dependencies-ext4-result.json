@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "modprobe",
+    "-S",
+    "7.0.0-38-kdrebuild3",
+    "--show-depends",
+    "ext4"
+  ],
+  "elapsed_seconds": 0.007699705999584694,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild3-1b50e373-v1/install-dependencies-ext4.log",
+  "log_sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5",
+  "returncode": 0,
+  "timed_out": false
+}

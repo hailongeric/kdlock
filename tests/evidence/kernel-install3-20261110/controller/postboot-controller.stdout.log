@@ -1,0 +1,2 @@
+Actual new boot and frozen postboot helper SHA verified
+{"phase": "POSTBOOT_IDENTITY_VERIFIED", "output": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild3-20261110-UTC-01", "boot_id": "bceee25d-a189-4f51-89fa-0e31322b70e6"}

@@ -1,0 +1,25 @@
+{
+  "phase": "HELPER_SHA_AST_VERIFIED",
+  "files": [
+    {
+      "name": "kdlock-kdrebuild3-checks.py",
+      "sha256": "cbd13822335df23503060fd41eae4cf67787d68206739743274692a83f81506c",
+      "size": 11919,
+      "ast_parsed": true
+    },
+    {
+      "name": "kdlock-kdrebuild3-install.py",
+      "sha256": "0785dfc33c7401b9576a05da187316dfae7b1b4a8b0e682810f4a9db989c521e",
+      "size": 17228,
+      "ast_parsed": true
+    },
+    {
+      "name": "kdlock-kdrebuild3-postboot.py",
+      "sha256": "e89de9585165702af7e35d6fd456fa6aaa0bd48166cea6b54158a51d33743495",
+      "size": 17882,
+      "ast_parsed": true
+    }
+  ],
+  "unix": 1794341408.6672266,
+  "scope": "VM syntax/hash check only; no helper phase executed."
+}

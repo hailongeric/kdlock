@@ -1,0 +1,17 @@
+{
+  "current_task": "0xffffffff8440f018",
+  "function": "kd_mutex_release_request",
+  "instruction_hex": "65488b059f68f102",
+  "kernel_config": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/.config",
+  "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "line": "ffffffff814f8771:\t65 48 8b 05 9f 68 f1 02                      \tmov    rax,QWORD PTR gs:[rip+0x2f1689f]        # ffffffff8440f018 <current_task>",
+  "per_cpu_start": "0xffffffff843f7000",
+  "scope": "Fresh linked ELF metadata; no boot or generated execution.",
+  "signed_displacement": 49375391,
+  "site": "0xffffffff814f8771",
+  "source_next_ip": "0xffffffff814f8779",
+  "system_map": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/System.map",
+  "system_map_sha256": "e7723218a35731108e2a1ae4ea1b33942fe7c1e44cc6671bc9345f08222c4d22",
+  "vmlinux": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux",
+  "vmlinux_sha256": "c099d66949ba99bc0ec200ef1570cc2917e7b8a3eb0acdd97811333247d2a43d"
+}

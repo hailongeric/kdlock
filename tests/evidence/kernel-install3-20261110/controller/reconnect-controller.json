@@ -1,0 +1,37 @@
+{
+  "status": "NEW_KERNEL3_BOOT_OBSERVED",
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "python3 -c 'import json,os,pathlib; print(json.dumps({\"release\":os.uname().release,\"boot\":pathlib.Path(\"/proc/sys/kernel/random/boot_id\").read_text().strip(),\"taint\":int(pathlib.Path(\"/proc/sys/kernel/tainted\").read_text())}))'"
+  ],
+  "started_unix": 1794342448.755935,
+  "finished_unix": 1794342449.8575444,
+  "attempts": [
+    {
+      "attempt": 1,
+      "started_unix": 1794342448.7560253,
+      "returncode": 0,
+      "stdout": "{\"release\": \"7.0.0-38-kdrebuild3\", \"boot\": \"bceee25d-a189-4f51-89fa-0e31322b70e6\", \"taint\": 0}\n",
+      "stderr": "",
+      "identity": {
+        "release": "7.0.0-38-kdrebuild3",
+        "boot": "bceee25d-a189-4f51-89fa-0e31322b70e6",
+        "taint": 0
+      },
+      "finished_unix": 1794342449.8573985
+    }
+  ],
+  "identity": {
+    "release": "7.0.0-38-kdrebuild3",
+    "boot": "bceee25d-a189-4f51-89fa-0e31322b70e6",
+    "taint": 0
+  },
+  "scope": "Read-only reconnect observations; no reboot retry or recovery action."
+}

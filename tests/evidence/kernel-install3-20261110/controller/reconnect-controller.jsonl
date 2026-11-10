@@ -1,0 +1,1 @@
+{"attempt": 1, "started_unix": 1794342448.7560253, "returncode": 0, "stdout": "{\"release\": \"7.0.0-38-kdrebuild3\", \"boot\": \"bceee25d-a189-4f51-89fa-0e31322b70e6\", \"taint\": 0}\n", "stderr": "", "identity": {"release": "7.0.0-38-kdrebuild3", "boot": "bceee25d-a189-4f51-89fa-0e31322b70e6", "taint": 0}, "finished_unix": 1794342449.8573985}

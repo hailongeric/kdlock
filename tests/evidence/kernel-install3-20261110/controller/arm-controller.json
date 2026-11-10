@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 1800 python3 -u -c 'import hashlib,json,os,pathlib,sys\np=pathlib.Path(\"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild3-1b50e373-v1\");r=json.loads((p/\"install-complete.json\").read_text());assert r[\"status\"]==\"COMPLETE\" and r[\"phase\"]==\"install\"\na=json.loads((p/\"check-modules-stage.json\").read_text());b=json.loads((p/\"install-modules-installed.json\").read_text());assert a[\"count\"]==b[\"count\"]==6901\ndef rows(v):\n root=pathlib.Path(v[\"root\"]);return sorted((str(pathlib.Path(x[\"path\"]).relative_to(root)),x[\"size\"],x[\"sha256\"],x[\"mode\"]) for x in v[\"modules\"])\nassert rows(a)==rows(b)\nprotected=json.loads((p/\"install-protected-after.json\").read_text());assert protected=={\"unchanged\":True,\"file_count\":95760}\ninstalled=json.loads((p/\"installed-boot.json\").read_text());config=json.loads((p/\"configuration.json\").read_text());f=os.statvfs(\"/\");assert f.f_bavail*f.f_frsize>=config[\"root_reserve_bytes\"]\nassert not installed[\"grub\"][\"environment\"].get(\"next_entry\");assert installed[\"files\"][-1][\"size\"]<=config[\"initrd_budget_bytes\"]\ncontroller=pathlib.Path(\"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/kdlock-kdrebuild3-install.py\");assert hashlib.sha256(controller.read_bytes()).hexdigest()==\"0785dfc33c7401b9576a05da187316dfae7b1b4a8b0e682810f4a9db989c521e\"\nprint(json.dumps({\"phase\":\"ACTUAL_INSTALL_PRECONDITIONS_VERIFIED\",\"root_free\":f.f_bavail*f.f_frsize,\"protected\":protected,\"modules\":a[\"count\"],\"initrd_bytes\":installed[\"files\"][-1][\"size\"]}),flush=True)\nos.execv(sys.executable,[sys.executable,\"-u\",str(controller),\"arm\",\"--controller-idle-recovery-confirmed\"])\n'"
+  ],
+  "started_unix": 1794342163.6922646,
+  "stdout_path": "/tmp/kdlock-kdrebuild3-arm-20261110-UTC-01.stdout.log",
+  "returncode": 0,
+  "finished_unix": 1794342191.2461016,
+  "elapsed_seconds": 27.553837299346924
+}

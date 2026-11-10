@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 300 python3 -u -c 'import hashlib,os,pathlib,sys; p=pathlib.Path('\"'\"'/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01/kdlock-kdrebuild3-postboot.py'\"'\"'); assert hashlib.sha256(p.read_bytes()).hexdigest()==\"e89de9585165702af7e35d6fd456fa6aaa0bd48166cea6b54158a51d33743495\"; assert os.uname().release==\"7.0.0-38-kdrebuild3\" and pathlib.Path(\"/proc/sys/kernel/random/boot_id\").read_text().strip()==\"bceee25d-a189-4f51-89fa-0e31322b70e6\" and pathlib.Path(\"/proc/sys/kernel/tainted\").read_text().strip()==\"0\"; print(\"Actual new boot and frozen postboot helper SHA verified\",flush=True); os.execv(sys.executable,[sys.executable,\"-u\",str(p),\"--output\",'\"'\"'/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild3-20261110-UTC-01'\"'\"',\"--timeout\",\"30\",\"--max-command-bytes\",\"67108864\",\"--max-notes-bytes\",\"65536\"])'"
+  ],
+  "started_unix": 1794342498.7214146,
+  "stdout_path": "/tmp/kdlock-kdrebuild3-postboot-20261110-UTC-01.stdout.log",
+  "returncode": 0,
+  "finished_unix": 1794342502.5482445,
+  "elapsed_seconds": 3.8268303871154785
+}
