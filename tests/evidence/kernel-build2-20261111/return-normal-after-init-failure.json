@@ -1,0 +1,11 @@
+{
+  "utc": "2026-11-10T16:19:47.597631+00:00",
+  "boot_before": "91f48b75-2d02-4de1-81cf-f99902f6e3c7",
+  "reason": "Return to normal kernel after preserved failed module initialization; no fixture module or device remains.",
+  "module_absent": true,
+  "grub_environment": "next_entry=\n",
+  "argv": [
+    "systemctl",
+    "reboot"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "utc": "2026-11-10T16:21:55.944932+00:00",
+  "argv": [
+    "fstrim",
+    "--verbose",
+    "/mnt/kdlock-builds2"
+  ],
+  "release": "7.0.0-38-kdlock1",
+  "returncode": 0,
+  "stdout": "/mnt/kdlock-builds2: 12.4 GiB (13303353344 bytes) trimmed\n",
+  "stderr": "",
+  "elapsed_seconds": 4.332217591999992
+}

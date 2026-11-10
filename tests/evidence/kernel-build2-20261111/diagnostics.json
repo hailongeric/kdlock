@@ -1,0 +1,141 @@
+{
+  "final_lines": [
+    "  LD [M]  drivers/leds/leds-lp50xx.ko",
+    "  BTF [M] drivers/leds/leds-lp3944.ko",
+    "  LD [M]  drivers/leds/leds-lp8788.ko",
+    "  BTF [M] drivers/leds/leds-lp3952.ko",
+    "  BTF [M] drivers/leds/leds-lp50xx.ko",
+    "  LD [M]  drivers/leds/leds-lt3593.ko",
+    "  BTF [M] drivers/leds/leds-lp8788.ko",
+    "  LD [M]  drivers/leds/leds-max5970.ko",
+    "  BTF [M] drivers/leds/leds-lt3593.ko",
+    "  BTF [M] drivers/leds/leds-max5970.ko",
+    "make[1]: Leaving directory '/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build'",
+    "make: Leaving directory '/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source'"
+  ],
+  "first_perl_context": [
+    {
+      "line": 58,
+      "text": "perl: warning: Setting locale failed."
+    },
+    {
+      "line": 59,
+      "text": "perl: warning: Please check that your locale settings:"
+    },
+    {
+      "line": 60,
+      "text": "\tLANGUAGE = \"C\","
+    },
+    {
+      "line": 61,
+      "text": "\tLC_ALL = (unset),"
+    },
+    {
+      "line": 62,
+      "text": "\tLC_CTYPE = \"C.UTF-8\","
+    },
+    {
+      "line": 63,
+      "text": "\tLC_NUMERIC = \"C\","
+    },
+    {
+      "line": 64,
+      "text": "\tLC_COLLATE = \"C\","
+    },
+    {
+      "line": 65,
+      "text": "\tLC_TIME = \"zh_CN.UTF-8\","
+    },
+    {
+      "line": 66,
+      "text": "\tLC_MESSAGES = (unset),"
+    },
+    {
+      "line": 67,
+      "text": "\tLC_MONETARY = \"zh_CN.UTF-8\","
+    },
+    {
+      "line": 68,
+      "text": "\tLC_ADDRESS = \"zh_CN.UTF-8\","
+    },
+    {
+      "line": 69,
+      "text": "\tLC_IDENTIFICATION = \"zh_CN.UTF-8\","
+    },
+    {
+      "line": 70,
+      "text": "\tLC_MEASUREMENT = \"zh_CN.UTF-8\","
+    },
+    {
+      "line": 71,
+      "text": "\tLC_PAPER = \"zh_CN.UTF-8\","
+    },
+    {
+      "line": 72,
+      "text": "\tLC_TELEPHONE = \"zh_CN.UTF-8\","
+    },
+    {
+      "line": 73,
+      "text": "\tLC_NAME = \"zh_CN.UTF-8\","
+    },
+    {
+      "line": 74,
+      "text": "\tLANG = \"C\""
+    },
+    {
+      "line": 75,
+      "text": "    are supported and installed on your system."
+    },
+    {
+      "line": 76,
+      "text": "perl: warning: Falling back to the standard locale (\"C\")."
+    }
+  ],
+  "format": "kdlock.build2-log-summary.v1",
+  "matched_error_lines": [],
+  "non_locale_warning_lines": [
+    {
+      "kind": "kd_handwritten_entry_mitigation",
+      "line": 134285,
+      "text": "vmlinux.o: warning: objtool: kd_mutex_lock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+    },
+    {
+      "kind": "kd_handwritten_entry_mitigation",
+      "line": 134286,
+      "text": "vmlinux.o: warning: objtool: kd_mutex_unlock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+    },
+    {
+      "kind": "kd_handwritten_entry_mitigation",
+      "line": 134287,
+      "text": "vmlinux.o: warning: objtool: kd_mutex_entry_asm+0x24: indirect call found in MITIGATION_RETPOLINE build"
+    },
+    {
+      "kind": "kd_handwritten_entry_mitigation",
+      "line": 134288,
+      "text": "vmlinux.o: warning: objtool: kd_native_resume+0x49: 'naked' return found in MITIGATION_RETHUNK build"
+    },
+    {
+      "kind": "kd_jit_fallthrough",
+      "line": 134289,
+      "text": "vmlinux.o: warning: objtool: kd_jit_resume_origin() falls through to next function kd_jit_mutex_grant_call()"
+    },
+    {
+      "kind": "vendor_module_description",
+      "line": 134292,
+      "text": "WARNING: modpost: missing MODULE_DESCRIPTION() in ubuntu/ubuntu-host/ubuntu-host.o"
+    }
+  ],
+  "perl_warning_text_counts": {
+    "perl: warning: Falling back to the standard locale (\"C\").": 7064,
+    "perl: warning: Please check that your locale settings:": 7064,
+    "perl: warning: Setting locale failed.": 7064
+  },
+  "scope": "One category per case-insensitive warning line, not distinct defects or passed tests. Complete original log retained losslessly.",
+  "warning_classes": {
+    "kd_handwritten_entry_mitigation": 4,
+    "kd_jit_fallthrough": 1,
+    "perl_locale": 21192,
+    "vendor_module_description": 1
+  },
+  "warning_line_count": 21198
+}

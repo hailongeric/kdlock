@@ -1,0 +1,101 @@
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import signal
+import subprocess
+import time
+
+root = Path('/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f')
+source, build, receipts = root / 'source', root / 'build', root / 'receipts'
+overlay = receipts / 'overlay-81feb2d7'
+package = source / 'kernel/kdlock'
+manifest_path = overlay / 'kdlock-main-81feb2d7-build-inputs.json'
+if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != 'fc93427521aaa3bab2af9eccb9dc10f300f040bd07ffc4ac4b365bb16200a369':
+    raise SystemExit('external source manifest hash mismatch')
+manifest = json.loads(manifest_path.read_text())
+report = overlay / 'result.json'
+if report.exists() or json.loads((receipts / 'full-build-result.json').read_text())['phase'] != 'BUILT':
+    raise SystemExit('review existing receipt or incomplete prerequisite')
+if os.uname().release != '7.0.0-38-kdlock1' or Path('/proc/sys/kernel/tainted').read_text().strip() != '0':
+    raise SystemExit('offline update requires the clean normal kernel')
+if Path('/sys/module/kd_runtime_fixture').exists():
+    raise SystemExit('fixture remains loaded')
+retained = json.loads((receipts / 'retained-kdrebuild1-950ee6fc/manifest.json').read_text())
+if retained['phase'] != 'V1_ARTIFACTS_RETAINED' or retained['build_files']['vmlinux']['sha256'] != '466907d2a9e392eaa976035595ca99da8e5a8a25653efead677de82cab006db9':
+    raise SystemExit('old kernel retention prerequisite failed')
+for proc in Path('/proc').iterdir():
+    if not proc.name.isdecimal():
+        continue
+    try:
+        comm = (proc / 'comm').read_text().strip()
+    except (FileNotFoundError, PermissionError, ProcessLookupError):
+        continue
+    if comm in ('make', 'cc1', 'cc1plus', 'fstrim', 'as', 'ld', 'ld.bfd'):
+        raise SystemExit('active build/trim: ' + proc.name + ' ' + comm)
+sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
+if sha(build / '.config') != '31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483':
+    raise SystemExit('configuration changed')
+target = package / 'kernel/runtime.c'
+incoming = overlay / 'kdlock-main-81feb2d7-runtime.c'
+if sha(target) != manifest['old_runtime_sha256'] or sha(incoming) != manifest['files']['kernel/runtime.c']:
+    raise SystemExit('overlay old/new hash mismatch')
+for name, expected in manifest['files'].items():
+    if name != 'kernel/runtime.c' and sha(package / name) != expected:
+        raise SystemExit('other package input changed: ' + name)
+shutil.copy2(target, overlay / 'runtime-before.c')
+for name in ['arch/x86/boot/bzImage', 'System.map', '.config']:
+    out = overlay / 'first-full-build' / name
+    out.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(build / name, out)
+r = {'phase': 'OVERLAY_PREPARED', 'start_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+     'base_git_head': manifest['base_git_head'], 'git_head': manifest['git_head'],
+     'changed_file': 'kernel/runtime.c', 'before_sha256': sha(target), 'after_sha256': sha(incoming),
+     'verified_build_inputs': len(manifest['files']), 'kernelrelease': manifest['intended_kernelrelease'],
+     'normal_boot_id': Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
+     'retained_v1': str(receipts / 'retained-kdrebuild1-950ee6fc/manifest.json'),
+     'environment_overrides': {'LC_ALL': 'C', 'LANG': 'C', 'LANGUAGE': 'C'}}
+def save():
+    report.write_text(json.dumps(r, indent=2) + '\n')
+save()
+temporary = target.with_name('.runtime.c-81feb2d7')
+with temporary.open('xb') as f:
+    f.write(incoming.read_bytes())
+    f.flush()
+    os.fsync(f.fileno())
+os.replace(temporary, target)
+for name, expected in manifest['files'].items():
+    if sha(package / name) != expected:
+        raise SystemExit('installed package input mismatch: ' + name)
+r['phase'] = 'BUILDING'
+r['argv'] = ['make', '-C', str(source), 'O=' + str(build),
+             'KERNELRELEASE=7.0.0-38-kdrebuild2', '-j32', 'bzImage', 'modules']
+save()
+env = dict(os.environ)
+env.update(r['environment_overrides'])
+start = time.monotonic()
+with (overlay / 'build.log').open('x') as log:
+    child = subprocess.Popen(r['argv'], stdout=log, stderr=subprocess.STDOUT, env=env, start_new_session=True)
+    r['pid'] = child.pid
+    while child.poll() is None:
+        v = os.statvfs(build)
+        r['guest_available_bytes'] = v.f_bavail * v.f_frsize
+        r['elapsed_seconds'] = time.monotonic() - start
+        save()
+        if r['elapsed_seconds'] > 900 or r['guest_available_bytes'] < 4_000_000_000:
+            r['stop_reason'] = 'deadline_or_guest_space'
+            os.killpg(child.pid, signal.SIGTERM)
+            try:
+                child.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                os.killpg(child.pid, signal.SIGKILL)
+                child.wait(timeout=15)
+            break
+        time.sleep(5)
+    r['returncode'] = child.wait()
+r.update(phase='BUILT' if r['returncode'] == 0 else 'BUILD_FAILED', elapsed_seconds=time.monotonic()-start,
+         end_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
+save()
+print(json.dumps(r, indent=2))

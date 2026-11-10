@@ -1,0 +1,33 @@
+{
+  "phase": "BUILT",
+  "start_utc": "2026-11-10T16:26:34.271012+00:00",
+  "base_git_head": "950ee6fc494af2db129911b57f567ac4c5e5d3b6",
+  "git_head": "81feb2d749ebbca468c0ab2eb895dcdd82fe519e",
+  "changed_file": "kernel/runtime.c",
+  "before_sha256": "e9ff1fdd21542e3dd87a9b6fe97bd8b7efb0540382d551c983f10192a67cca1c",
+  "after_sha256": "04a3a5d8337aa9111e3f29e1cb67994d905b00ad0bded23c431b1a9ced74c321",
+  "verified_build_inputs": 64,
+  "kernelrelease": "7.0.0-38-kdrebuild2",
+  "normal_boot_id": "5dde9006-ad3c-44eb-81ed-213cd003f31c",
+  "retained_v1": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/retained-kdrebuild1-950ee6fc/manifest.json",
+  "environment_overrides": {
+    "LC_ALL": "C",
+    "LANG": "C",
+    "LANGUAGE": "C"
+  },
+  "argv": [
+    "make",
+    "-C",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+    "O=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+    "KERNELRELEASE=7.0.0-38-kdrebuild2",
+    "-j32",
+    "bzImage",
+    "modules"
+  ],
+  "pid": 3333,
+  "guest_available_bytes": 12222976000,
+  "elapsed_seconds": 270.040330487,
+  "returncode": 0,
+  "end_utc": "2026-11-10T16:31:04.318654+00:00"
+}

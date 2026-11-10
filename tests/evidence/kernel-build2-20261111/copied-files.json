@@ -1,0 +1,71 @@
+[
+  {
+    "bytes": 1178,
+    "local_path": "result.json",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/result.json",
+    "sha256": "9bde196b061b3cfba00a48dc1b836cc11ea4ffb79c45ad739f888bcf14a5f7b4"
+  },
+  {
+    "bytes": 34476,
+    "local_path": "final-identity.json",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/final-identity.json",
+    "sha256": "5c5caa830b6b5af9379aa9ec37a061dfd502ae5fe0955db924f71b086f26fb9b"
+  },
+  {
+    "bytes": 5136,
+    "local_path": "controller.py.txt",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/controller.py",
+    "sha256": "d98059763a77def6ea8aadffc2f2a5cb78036d0b656665408cefa3c34a067d88"
+  },
+  {
+    "bytes": 6841,
+    "local_path": "kdlock-main-81feb2d7-build-inputs.json",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/kdlock-main-81feb2d7-build-inputs.json",
+    "sha256": "fc93427521aaa3bab2af9eccb9dc10f300f040bd07ffc4ac4b365bb16200a369"
+  },
+  {
+    "bytes": 29942,
+    "local_path": "kdlock-main-81feb2d7-runtime.c",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/kdlock-main-81feb2d7-runtime.c",
+    "sha256": "04a3a5d8337aa9111e3f29e1cb67994d905b00ad0bded23c431b1a9ced74c321"
+  },
+  {
+    "bytes": 29848,
+    "local_path": "runtime-before.c",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/runtime-before.c",
+    "sha256": "e9ff1fdd21542e3dd87a9b6fe97bd8b7efb0540382d551c983f10192a67cca1c"
+  },
+  {
+    "bytes": 305,
+    "local_path": "rebuild2-trim.json",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/rebuild2-trim.json",
+    "sha256": "4722aafb5d90c2c32b93d2207ce723e981fb9cc3a067e138300bbc7b6baf612f"
+  },
+  {
+    "bytes": 338,
+    "local_path": "return-normal-after-init-failure.json",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-init-failure.json",
+    "sha256": "2907e9abc6ced6758b74253f79ad746f2e8c5564f816af0da6d1639f9d034e64"
+  },
+  {
+    "bytes": 8510,
+    "local_path": "retained-v1-manifest.json",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/retained-kdrebuild1-950ee6fc/manifest.json",
+    "sha256": "224cfc528ea77f2cd09d36293ba9db7045c9c8b9d39114bb954497c85545e700"
+  },
+  {
+    "bytes": 7961,
+    "local_path": "independent-readback.json",
+    "origin": "Read-only collector stdout, not a pre-existing VM file",
+    "sha256": "0af7f101bd973bf7b80c5647f6bcccd65d3b7bc5576f769fe398624a691404ab"
+  },
+  {
+    "compressed_bytes": 88127,
+    "compressed_sha256": "954ee8057ed6d1f5c2021fba5b6ae629d3008fefed1c0bb97c51ddb35b1b4ca6",
+    "compression": "gzip level9 mtime0 after read-only transfer; original exact bytes preserved",
+    "local_path": "build.log.gz",
+    "origin": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-81feb2d7/build.log",
+    "raw_bytes": 4636976,
+    "raw_sha256": "ae7054e608dbb1b36cbdf33232a803eb493968041af7cfd794e77c27e0f19a93"
+  }
+]
