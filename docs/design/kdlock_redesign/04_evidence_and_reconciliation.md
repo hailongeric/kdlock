@@ -1,7 +1,7 @@
 # kdlock design reconciliation and evidence gates
 
 **Status:** active design authority, reconciliation and validation boundaries
-**Design basis:** revision 1.8, selected stable mutex-object lifetime through physical release
+**Design basis:** revision 1.11, direct MCS state and task-owned auxiliary entry
 **Target:** Linux kernel 7.0, x86_64, non-PREEMPT_RT
 
 ## 1 Active authority and scope
@@ -17,8 +17,11 @@ and no old binary lock/object-layout compatibility promise. C01 starts with
 ordinary mutex lock/unlock in sleepable task context; other families follow
 later. C03 subsequently selects TCLock-style out-of-order outer-mutex unlock
 deferral with responsible physical-owner context retained. The earlier
-transferable-grant recommendation is superseded; C11 queue/arbitration and
-remaining C02-C11/C01 choices stay open. These selections establish no validated
+transferable-grant recommendation is superseded. C11 now selects an MCS queue
+and C04 retains the KD physical-R11 canonical-packet-base mapping. Optional
+local/proxy/origin-combiner transactions, MCS/request lifetimes and exact
+adapter/bridge details still need implementation/proof; remaining C08/C10, resource/native-fallback and lifecycle/integration
+choices stay open. R11 optimization discussion/T56 are deferred future work. These selections establish no validated
 support lane or generic native release-timing/progress parity.
 Keep one canonical S_W, optional unique selection, every source lock/unlock as
 a pre-operation fragment boundary, serial recursive delegation, exact no-replay
@@ -30,7 +33,7 @@ handback and cumulative source-versioned learning with the original backend.
 | --- | --- | --- |
 | Ordinary trusted-source translatability | Original UB-derived backend; known special instructions clip only affected paths, preserving safe alternatives/joins | No universal instruction or kernel equivalence is established |
 | AS01: general flags/SIMD | Assume correct for this iteration, without extra general capture, virtualization, shadow state or blanket admission gate | An explicit assumption, not a general equivalence result |
-| PUSHFQ/POPFQ local exception | Temporary GPR and exactly one virtual-source push/pop, preserved live values and balanced physical-stack temporaries | The concrete lowering and covered POPFQ values/effects remain C04 work |
+| PUSHFQ/POPFQ local exception | Temporary GPR and exactly one virtual-source push/pop, preserved live values and balanced physical-stack temporaries | Lowering source is present; covered POPFQ effects and runtime proof remain unrun |
 | Selected ordinary-mutex outer unlock | Exact source request and deferred marker, retained responsible outer combiner, notification/unwind and owner handling, normal batch then physical release | Extra waiting accepted; no generic native timing/progress parity. Initial mutex lock-object storage stays valid through actual physical release/final object access; owner/control/notifier last users and callback-code retention remain separate |
 | Target downgrade | C10 chooses mode semantics with native API behavior and generic operation boundaries | A prior retained-writer/read-label mechanism is not a target boundary exception or concurrency proof; the mutex deferral choice creates no downgrade exception |
 
@@ -38,134 +41,173 @@ handback and cumulative source-versioned learning with the original backend.
 
 ### 2.1 Rebuild status
 
-The first implementation is the private
-[source-flow fragment planner](../../../disassem/fragment.py). Its caller supplies
-a finite, stable, already classified graph. The pass cuts before typed
-boundaries, retains safe alternatives/joins, terminates on cycles and reports
-known missing targets separately from unresolved alternatives. The current
-extension also represents ordinary matched direct CALL/RET explicitly. A local
-least fixed point establishes modeled boundary-free routes to RET, then each
-reached call retains its own continuation only if its callee has such a route.
-Call-target and return-summary relations remain distinct from ordinary edges;
-RET sites are not connected indiscriminately to callers.
+All current implementation evidence is source/static inspection. No new module
+has been imported, generated assembly assembled, C compiled, code loaded or
+behavioral check executed. The public ordinary-mutex lane remains incomplete;
+private component source is not integrated Linux support or performance evidence.
 
-This is static source-flow planning, not a runtime-return or semantic
-nonreturning-function proof. Indirect calls and changed return targets are
-outside this helper's input contract; it cannot detect misclassified inputs.
-It does not recognize APIs, emit/execute instructions, perform runtime CALL/RET
-effects, materialize S_W or hand back execution. Runtime source/dependency
-identity and lifetime remain future integration obligations.
+The [fragment planner](../../../disassem/fragment.py) retains typed source
+boundaries, safe alternatives/joins, finite cycles, missing edges and unknown
+alternatives. Explicit direct/indirect CALL records retain each call's own
+continuation and known callee targets. A local least fixed point derives
+boundary-free routes to explicit RET; only known returning callees contribute
+caller return summaries. An unknown alternative cannot invent a return, and RET
+sites are not connected indiscriminately to all callers. Changed source return
+structures remain outside the matched-return input contract.
 
-The private [supplied-byte decoder](../../../disassem/source_decode.py) uses the
-original Miasm x86_64 decoder interface and relative-target arithmetic preserved
-in `archive/before-main-20261109` at
-`7ce7db54334960fe0d9db2c425c5c581cdedf4b0`, `disassem/reached_path.py`. It decodes
-only the first instruction at each supplied site, preserves its exact bytes and
-length, and accepts exact BoundaryKind metadata. It has no provider/source read,
-successor discovery, instruction lowering or packet/register mapping. Decode
-failures and unmodeled transfers remain separately attributable; absence from
-its modeled graph alone is not an ordinary coverage miss. The decoder pins in
-[disassem/requirements.txt](../../../disassem/requirements.txt) retain the
-archived decoder dependency set; they have not been installed or imported.
-The decoder also retains its actual Miasm instruction, including prefix and
-method metadata consumed by the original backend. Archived `disassem/assist.py`
-uses prefix-group/default-prefix metadata for LOCK/REP spelling; name/operands
-alone are insufficient. These nested decoder objects are read-only by contract;
-a mutating lowerer must take an independent instruction/expression copy.
+The [supplied-byte decoder](../../../disassem/source_decode.py) preserves the
+original Miasm x86_64 interface and relative-target arithmetic from
+`archive/before-main-20261109` at `7ce7db54334960fe0d9db2c425c5c581cdedf4b0`,
+`disassem/reached_path.py`. It retains exact site/bytes/length, operands and the
+actual Miasm instruction, including prefix/method metadata. Mutating lowerers
+copy instructions/expressions independently. The dependency set in
+[requirements.txt](../../../disassem/requirements.txt) has not been installed or
+imported. Decoding is not source residence, semantic equivalence or lowering
+support.
 
-The [integrated front end](../../../disassem/compiler.py) now connects a finite
-immutable source snapshot/version to discovery, decoding and fragment planning.
-It checks overlapping bytes and retains the complete supplied snapshot in its
-result, without provider reads or runtime leases. Boundary sites end discovery;
-minimum direct-CALL depth permits shallower rediscovery, while the final planner
-retains caller continuation only with a modeled returning callee. No global
-function/root refusal follows from a stopped path.
+The [integrated compiler](../../../disassem/compiler.py) consumes a finite,
+immutable source/version snapshot and exact source-operation metadata. It
+checks overlapping bytes, discovers/decode-plans both known direct and observed
+ordinary indirect alternatives, and preserves source/decode/unmodeled/resource
+outcomes. Observations must match the source version and accumulate immutably;
+attachment to the graph is explicitly distinct from emitted coverage. Exact
+source-operation metadata takes precedence over observations. Unknown dynamic
+targets still require runtime API classification before operation effects.
 
-The only default is the selected five direct-CALL discovery edges. Decode-site,
-submitted decoder-window-byte and CFG-work limits must be supplied by the caller.
-Resource receipts retain kind, source edge/site, limit, consumption and required
-quantity. Window bytes include overlaps and failed attempts; CFG work counts
-popped edges, including redundant visits. These are not runtime nesting bounds,
-unique source-cache bytes or per-invocation exit observations. Zero source bytes,
-decode failure, unmodeled flow and resource boundaries remain distinct. Partial
-or unsupported decoding is a decode failure with available bytes retained, not
-proof of invalid source or a permanent capability frontier. The integrated
-front end has source/static review only; no import, build, behavioral execution,
-emitted-coverage acknowledgement or runtime handback is claimed.
+Only the selected five direct-CALL discovery edges have a default. Observed
+indirect target expansion keeps the current direct-call depth; explicit decode,
+window and CFG limits bound it. Decoder-window consumption counts submitted
+overlapping/failed windows, and CFG work counts popped redundant edges. Receipts
+retain resource kind, site/edge, limit, consumed and required quantities. They
+are not runtime nesting, unique source-cache or per-invocation exit evidence.
+Zero available bytes, partial/unsupported decode, unmodeled flow and resource
+refusal stay distinct; stopped paths do not refuse the whole function/root.
 
-The private [C mutex-release protocol](../../../kernel/mutex_release.c) and
-[header](../../../kernel/mutex_release.h) retain physical-owner context and a
-list of exact logical per-acquisition controls within a physical batch. Logical
-A1/A2 grants do not inherently require separate physical acquisitions or a free
-gate between them; concrete same-source reacquisition under deferred custody
-remains unimplemented and needs progress/authority evidence. No A2
-batching/arbitration policy is selected. The controls record HELD, REQUESTED, DEFERRED,
-UNWIND_READY, OWNER_HANDLED, PHYSICALLY_RELEASED and RETIRED separately. Exact
-source-request, return and notifier users gate retirement; owner operations
-check the current task. REQUESTED atomically includes OWNER or DEFERRED_OUTER
-from the caller's exact active relationship; task equality alone is insufficient
-for a same-task outer unlock. Owner handling accepts OWNER+REQUESTED or
-DEFERRED_OUTER+UNWIND_READY, and deferral rejects OWNER. The helper does not
-advance source; its actual C04 continuation bridge remains unimplemented.
+The [lowerer](../../../disassem/lowering.py),
+[original mapper](../../../disassem/backend) and
+[wrapper](../../../include/wrapper.S) now construct standalone assembly and
+static emission/exit metadata. Physical R11 holds the one canonical packet;
+logical R11 and mapped GPRs use that backing. Source CALL/RET words, GS and logical
+current_task lowering remain explicit. PUSHFQ/POPFQ use temporary GPRs and one
+virtual-source stack operation. Path-specific operation, special, construction
+and resource exits preserve reached-only behavior. The coordinated private ABI
+is version 1, packet 168 bytes and IO 56 bytes; it promises no legacy binary
+compatibility. This is construction source, not executable publication, a
+returned body, full instruction equivalence or a coverage ACK.
 
-At owner initialization the caller, which has already acquired physical
-exclusion, binds the exact ordinary backend unlock callback and object. The
-owner-only finish operation validates every obligation as OWNER_HANDLED, closes
-the batch/binding and takes/clears that saved callback/object under its internal
-guard. It then invokes the bound synchronous complete ordinary unlock once
-outside the guard and only afterward records PHYSICALLY_RELEASED for the
-obligations. A marker, an owner-handled result or a callback selected only at
-release time cannot stand for physical release. Correct callback binding and
-callback code/object lifetime through its return remain caller obligations;
-there is no later object dereference by the protocol.
+The [release protocol](../../../kernel/mutex_release.c) retains exact owner and
+per-acquisition controls with HELD, REQUESTED, DEFERRED, UNWIND_READY,
+OWNER_HANDLED, PHYSICALLY_RELEASED and RETIRED phases. REQUESTED publishes OWNER
+versus DEFERRED_OUTER from the exact active relationship. Same-task equality
+alone cannot classify an outer release. Bound complete unlock callback/object
+are taken/cleared under the owner guard, called once outside it, and only then
+marked physically released. Source/return/notifier users remain separate.
+The protocol itself advances no source and performs no late object access.
 
-This is a limited protocol implementation with static review only, not a
-concrete physical mutex backend, acquisition/queue/arbitration, source adapter,
-C04 register mapping, C02 task-core anchor or source-cursor advancement. Its
-internal owner guard does not select C11 family arbitration. No callback or
-physical release has executed. The initial mutex lane now requires stable
-lock-object storage through actual physical release and final backend object
-access. The caller establishes that validity; a retained context alone does not
-pin its lock container. Owner/control storage and any containing allocation
-remain valid through exact source/return/notifier last users after physical
-release, and callback code stays retained through its return. This selects no
-C11 arbitration or C04 mapping. The selected stable-object contract permits a
-correctly materialized post-unlock continuation without waiting solely for
-physical release/object lifetime; no further lifetime-related resumption choice
-is pending. The actual C04 bridge remains unimplemented. It must preserve
-once-only CALL/return/cursor effects, the exclusive executor, remaining logical
-grants and pending physical duties; a marker alone authorizes no arbitrary
-execution. Same-source reacquisition and availability-dependent handshakes
-still need explicit
-progress/authority evidence, not a new source-admission whitelist.
+The [MCS mutex](../../../kernel/mutex.c), committed in `4d3e40a1`, supplies actual
+sleepable queue/exclusion source, optional local/proxy claims, exact batch grants
+and physical release/reap paths. It never skips an immediate local-only/local
+selected successor. Proxy service has an explicit total batch bound; successful
+grants are not returned bodies or measured physical chains. Live-grant outcomes
+publish a result before owner waiting so a retained actor can reach unlock.
+Result/binding access, core grant membership, queue producer access, return and
+notifier users all finish before retirement; owner reaping must progress
+independently. Source review found no confirmed queue-link/retirement defect
+under those contracts. No MCS callback has executed.
 
-The earlier intraprocedural implementation in `13f2630f` passed ten focused cases
-with Python 3.10.12: each of the four boundary kinds with a safe shared join and
-unchanged input, a cycle with repeated edges, two predecessors of a missing target, a known successor plus an
-unresolved alternative, a missing entry, a boundary at entry and a supplied
-scope end. These were in-memory helper checks with no decoder, generated code,
-JIT/kernel execution or selected kernel configuration/API lane. They establish
-only the exercised graph behavior, not exact handback or callee-return handling.
-These checks preceded the user's clarification to finish overall functionality
-before further behavioral testing. They have not been rerun on the CALL/RET
-extension and do not validate it, the supplied-byte decoder or integrated front
-end. The compiler extensions and C protocol have source/static review only. No
-decoder dependency/import check or behavioral execution has run. Further behavioral tests and suites are deferred until
-overall functionality is complete.
+The [canonical state](../../../kernel/state.c) contains one W packet, one
+current source operation, exact referring grants and execution bindings.
+Distinct live offer/run/return endpoints avoid pointer reuse across an ownership
+episode. The [JIT bridge](../../../kernel/jit.c) invokes that actual ABI and binds
+a pending exit to its exact retained producing image. It classifies retained
+targets without rereading operands, stages CALL words once, distinguishes
+already-staged CALL and consumed RET, handles exact MCS acquisition/unlock and
+collects logically closed physically completed grants. A compiler-clobber root
+captures post-call continuation IP with pre-CALL SP; completion does not pop a
+source word. Unsupported TARGET_READY calls must stage their retained target
+before native handback; reentry cannot discard it.
 
-T01-T56 remain unrun acceptance specifications. Source, build, live execution,
-integration, retirement and performance evidence must be recorded separately
-for each implemented lane and exact source/configuration. The compiler helpers'
-provisional records select no remaining kernel or adapter mechanism. The
-C12/C01/C03 selections and C protocol source are separate from validation; no
-complete mutex lane is claimed.
+The [native restore](../../../include/native_resume.S) restores source GPRs and
+exact IP/SP on original W using one admitted writable SP-8 bridge word. That
+bridge push/RET leaves final source SP unchanged and is not another logical
+CALL/RET. General flags/SIMD use AS01. Return mitigation coverage and kernel
+assembly wiring remain unvalidated. Generated execution uses a distinct physical
+task/stack and requires executor/source/origin-wait control stacks to be
+nonoverlapping; current==W JIT is refused. A budget is not stack-separation
+proof, and no integrated/live auxiliary stack route has been validated.
+
+Every active/nested request uses its direct node->state pointer. The
+[task root](../../../kernel/task_state.c) contains the one own core and the
+selected task-owned auxiliary header for initial native entry. It supplies no
+active-S_W registry. Its [task field artifact](../../../kernel/integration/README.md)
+is an unapplied context template; constructor aliases clear before publication
+and exit requires complete last-user/auxiliary drain.
+
+The [prepared prefix](../../../include/kd_mutex.h),
+[stack switch](../../../include/mutex_entry.S) and
+[native preflight](../../../kernel/native_entry.c) preserve source SP/IP/BP and
+switch to task-owned auxiliary control before publication. Descriptor phases
+separate private preparation, entered control and completed native restore.
+Range/alignment, mandatory return-word capacity, ordinary task context and exact
+reservation checks are source implementations. Full callback/recursive capacity,
+opaque control placement and scheduler/IRQ/unwind compatibility remain explicit
+admission duties, without runtime evidence. Capture refreshes active kernel GS
+under a short non-sleeping interval, not an episode-wide pinning guarantee.
+
+The [image component](../../../kernel/image.c) implements the selected quiesced
+RCU rule. Exact preallocated execution/return/source records retain sleeping and
+suspended users. Closing blocks new roots; already-admitted parents can extend
+child/return holds. A coherent pointer swap requires all exact users to drain,
+and old lookup readers then pass a grace period. Expected-base and transaction
+identities retain their own lifetimes. JIT invocation uses actual EXECUTION
+records and claims a distinct pending-exit child before code; ordinary put
+cannot remove it. The bridge clears pending observers before the final child
+drop and copies required source scalars before final metadata access ends.
+
+The temporary external-registry variant is unselected and retained only at
+`archive/c02-registry-not-selected`, commit
+`38d1bfb827f33e86ce2b50456d22a00aed89b8ad`. The earlier two-task-pointer
+implementation remains at `archive/c02-direct-task-fields-not-selected`,
+commit `727facf0537e60a1842f4ff8c89fa39aa217e9a0`. Current source derives borrowed
+execution from MCS node pointers and uses the stable task root only for initial
+own backing/auxiliary control. These snapshots are not runtime validation.
+
+Remaining whole-lane work includes public native wrappers/fallback, recursive
+episode driving, task/resource allocation and drain, source validation and
+executable publication, coherent compiler transport and persistent cumulative
+feedback/ACKs. Selected stable object storage extends through physical release
+and final object access; independent control/code users can last longer.
+
+Same-object reacquisition after a deferred logical unlock while the earlier physical
+batch remains OPEN with deferred history is unsupported and excluded from the current workload.
+Its implementation is deferred. Common preflight reports it before ENTERED,
+state publication or MCS queue effects, with no success/regrant/native-replay
+claim. Normal nondeferred OWNER_HANDLED history and committed releases remain
+queue eligible; distinct objects use the common recursive path. No marker or
+source return permits premature reuse.
+
+Ten private cases ran only on the earlier intraprocedural planner `13f2630f`
+with Python 3.10.12: all four boundary kinds with a safe shared join and unchanged
+input; a cycle with repeated edges; two predecessors of a missing target; a known
+successor with an unresolved alternative; missing entry; boundary at entry; and
+supplied scope end. They used no decoder/generated code/kernel lane and establish
+only those old graph cases. They preceded the user's instruction to finish
+overall functionality before further behavioral testing. They have not been
+rerun on, and do not validate, any later component.
+
+Further behavioral tests and suites remain deferred until overall functionality
+is complete. T01-T56 remain unrun acceptance specifications. Source, build,
+execution, integration, retirement and performance evidence stay separate for
+exact source/configuration identities; no complete mutex lane is claimed.
 
 ### 2.2 Original backend
 
 The original UB-derived JIT, software register virtualization and kdlock's
-GS/current-task lowering remain fixed directions. The private adapter/layout,
-packet-base register choice, source/return bindings and locally simulated
-PUSHFQ/POPFQ sequence remain selected target contracts under C04/C06/C12.
+GS/current-task lowering remain fixed directions. C04 now retains the KD physical-R11 canonical-packet-base mapping, with logical
+R11 virtualized; its optimization discussion is deferred. Exact private
+adapter/layout inputs, source/return bindings, current-state bridges and local
+temporary-GPR PUSHFQ/POPFQ sequence now have private source implementations.
+Whole-lane integration and runtime proof under C04/C06/C12 remain work.
 Original source locations below are implementation references, not support
 claims for an inherited runtime.
 
@@ -173,8 +215,10 @@ claims for an inherited runtime.
 
 Publishing eligibility does not force remote execution. Local origin
 acquisition, origin-as-combiner and remote selection must be exclusive under
-the selected family's arbitration. Reusing an old queue or owner word is an
-open mechanism choice, not a requirement inferred from prior code.
+the selected family's arbitration. C11 selects MCS for the initial ordinary-mutex queue, but its optional claims,
+actual grant transitions and node/request last-use ordering must be implemented
+and proved. This does not select inherited owner words, pools, capacities or
+TCLock borrowed-stack execution merely because the comparison code uses them.
 
 ### 2.4 Synthetic mechanism limits
 
@@ -248,7 +292,7 @@ own affected checks.
 | I05, I06, I19, I25 | R07, R08, R14: exact retained owner, source request/deferred/unwind/handling versus actual physical release, and A1/A2/object lifetime |
 | I07, I11, I14 | R09, R10, R14: separate ancestry/grants, stable records and final-access retirement |
 | I08, I10, I24 | R11, R13: progress and resource-reserved forward completion |
-| I13 | R15: prefer local/direct ownership (P); any shared routing choice needs necessity, scaling, completeness, publication, identity and lifetime proof (S) |
+| I13 | R15: direct MCS state pointers and stable task-owned initial backing; no borrowed-state registry; exact lookup/publication/identity and last-user lifetime remain required |
 | I15, I20, I23 | R16, R17, R19: retained code, binding, independent source epoch and generation |
 | I16, I17, I18 | R17, R18, R20: independent current completion, exact coverage ACK and distinct exit outcomes |
 | I21, I22 | R19, R21: exact boundary recipe and full cross-task data ordering |
@@ -256,9 +300,9 @@ own affected checks.
 
 The old decision topics remain covered: D01 through D09 and D12 map to C01/C05/C07/C10 and the family/context plan; D02/D10/D11/D21 map to C02/C03; D13/D14/D19/D22 map to C09/C10; D15/D18 map to C08; D16/D17/D20 map to C04/C06 and the mailbox/continuation contract.
 
-R23-R29 retain fixed core cardinality/direct references, generic continuation and exact attribution/lifetime duties. R27 now preserves reader semantics while making placement C10, correcting the earlier roadmap-derived mandate. R15 similarly distinguishes preferred local ownership from an absolute shared-index ban. C12 source rebuild and C03 retained-owner deferral are selected; C11 queue/arbitration remains open. Neither selection reopens the fixed one-core/original-JIT model. The mutex timing policy is the explicit limited exception to earlier immediate-release requirements.
+R23-R29 retain fixed core cardinality/direct references, generic continuation and exact attribution/lifetime duties. R27 now preserves reader semantics while making placement C10, correcting the earlier roadmap-derived mandate. R15 similarly distinguishes preferred local ownership from an absolute shared-index ban. C12 source rebuild, C03 retained-owner deferral/stable objects, C11 MCS queue and C04 retained KD physical-R11 mapping are selected. Private queue/claim and adapter/bridge sources now exist; full integration and lifetime/progress proof remain outstanding. None of these selections reopens the fixed one-core/original-JIT model. The mutex timing policy is the explicit limited exception to earlier immediate-release requirements.
 
-The acceptance register is T01 through T56. T01-T51 retain their audit identities and chosen-target scope. T52 adds special-path/bypass/shared-join behavior, T53 safe callee returns/caller fallthrough, T54 local temporary-GPR PUSHFQ/POPFQ effects under AS01, and T55 target downgrade versus the candidate-only exception. T56 adds the matched original-backend mapping comparison without a speed/AS01 validation claim. These remain unrun acceptance specifications; private graph-helper checks and source/static review of compiler/C protocol code do not satisfy them. T15-T19, T25/T26, T41/T45/T48-T51 now attribute the selected deferred-release phases and lifetime limits rather than requiring early physical availability.
+The acceptance register is T01 through T56. T01-T51 retain their audit identities and chosen-target scope. T52 adds special-path/bypass/shared-join behavior, T53 safe callee returns/caller fallthrough, T54 local temporary-GPR PUSHFQ/POPFQ effects under AS01, and T55 target downgrade versus the candidate-only exception. T56 preserves a deferred, unrun future original-backend mapping comparison without a speed/AS01 claim; it is not an active R11 optimization question or current-baseline implementation gate. These remain unrun acceptance specifications; private graph-helper checks and source/static review of compiler/C protocol code do not satisfy them. T15-T19, T25/T26, T41/T45/T48-T51 now attribute the selected deferred-release phases and lifetime limits rather than requiring early physical availability.
 
 ### 3.2 Authority audit and correction register
 
@@ -268,12 +312,12 @@ N IDs identify this normative-origin audit, distinct from the historical v0.6 A0
 | --- | --- | --- | --- |
 | N01 | Latest explicit target versus inherited architecture | F/S govern the target; source presence alone gives no mandate. Operational editing/testing rules remain in force | Overview authority rule; all five files |
 | N02 | "Existing S_W/storage" implied a complete current core or mandatory reuse | F requires one thread-owned core and direct second-level users; fresh physical layout is allowed, current packet sharing is E | C02, protocol section 3, P1/T48 |
-| N03 | Two-word args, 168 bytes/offsets, reserved registers, object size or entry offsets treated as fixed ABI | E unless deliberately selected. P chooses/version-controls target adapter and source-rebuilt versus binary/layout compatibility; complete capture/materialization and API effects remain S | C04/C12, JIT section 3, T12/T50 |
+| N03 | Two-word args, 168 bytes/offsets, reserved registers, object size or entry offsets treated as fixed ABI | C04 explicitly retains KD physical R11 as canonical-packet base, not all old private offsets/layouts. C12 source rebuild is selected; complete target input/materialization/API contracts still need implementation/proof | C04/C12, JIT section 3, T12/T50 |
 | N04 | Roadmap local-reader lane promoted to fixed direction | Placement is P; concurrency/mode/API/context are S. Origin-local is conservative initial P, with no unselected remote support | C10, R27, support matrix/T27/T46 |
 | N05 | Current hotness, waiter pinning/parking, owner words, pool sizes and family order | E/P mechanism/rollout choices, not target invariants; prove selected eligibility/context/capacity/progress | C01/C02/C05/C11, P1/P3/P7 |
 | N06 | OSQ plus delegation and separate links required everywhere | Conditional on a selected dual-membership backend. S requires every selection/cancel/progress/retirement duty; a merged/different protocol needs equivalent proof | C11, node proposal/P1/T49 |
 | N07 | Exact authority equated with an inherited backend or implicit S_W grant transfer | C03 now selects retained responsible physical outer-combiner context for deferred mutex unlocks; the transferable proposal is superseded. Exact source/deferred/physical phases and owner checks remain required | C03, protocol section 5, T15/T51 |
-| N08 | Current pop/array/index/registry shape promoted to lifetime law | E mechanisms; S is exclusive binding, valid reference/lookup and final access before reuse. Local/direct ownership is preferred P; shared routing needs explicit justification, not an inherited ban | C02/C05, R09/R10/R15, T25 |
+| N08 | Current pop/array/index/registry shape promoted to lifetime law | C02 uses direct MCS state pointers and stable task-owned initial backing, without a borrowed-state registry. Exclusive binding, valid retained references and final access before reuse remain mandatory; allocation/control layout and exact lifecycle wiring remain separate | C02/C05, R09/R10/R15, T25 |
 | N09 | Lease counters, completion subleases, session-only/image-count retention | E/P storage/reclamation choices. S is valid text/code/return/object lifetime through actual last use and nonstranding drain | C06/C09, JIT sections 2.3/5.3, T29/T30 |
 | N10 | Five CALL edges, compatibility depth, 32 ledger rows and other budgets | Five-edge discovery is the explicitly approved current default P, not immutable F. Other capacities/encoding and any change to the default require a deliberate P choice with bounded completion | C08/C05, JIT sections 1.2/5.2, T24/T44 |
 | N11 | One build/upload owner, fd staging, receipt encoding or daemon organization | E/candidate P solutions; S is candidate isolation, coherent publication, exact cumulative coverage acknowledgement and valid restart/reset | C08/C09, JIT section 5, T31-T37 |
@@ -284,9 +328,9 @@ N IDs identify this normative-origin audit, distinct from the historical v0.6 A0
 | N16 | Deferred/unproved general flags/SIMD text could become a new gate | AS01 is the user's explicit assumed-correct iteration scope, not evidence; no separate general subsystem/shadow/gate, with local PUSHFQ/POPFQ simulation the exception | JIT section 3.5, C04, T54 |
 | N17 | Broad admission/frontier wording could reject a whole root | Ordinary trusted-source translation is target intent; recognized special instructions clip only affected paths. Keep safe alternatives/joins/returns and exact reached handback without replay | JIT section 1.3, T43/T52/T53 |
 | N18 | Experimental typed proxy downgrade could weaken target boundaries/native semantics | Retained writer/admission and same-root exception are E only; target mode handling/native equivalence remain separate decisions. Stable point/merge does not prove a consumed branch or general flags correctness | Section 2.7, C10, T55 |
-| N19 | Reserved packet-base versus resident logical R11 read as a settled optimization | Pinned mappings are E and C04 optimization candidates under one original backend. Compare remap/spill work versus boundary materialization/transfer with one canonical core, no per-user spare packet and no measured gain claim | JIT section 3.1.1, T56 |
+| N19 | Reserved packet-base versus resident logical R11 treated as an active optimization choice | User selected retention of KD physical-R11 canonical-packet-base mapping. Optimization discussion/T56 are deferred, unrun future work; selection implies no measured gain or general equivalence evidence | JIT section 3.1.1, T56 |
 | N20 | Immediate outer physical release treated as unconditional | Latest user selection supersedes it only for ordinary-mutex out-of-order outer unlock: retain responsible combiner, defer/notify/unwind, handle and continue normal batch/release. Extra waiting is accepted without generic native timing/progress parity | Protocol section 5, P5, T15/T51 |
-| N21 | Retained context or source unlock marker treated as lock-object lifetime | Initial mutex lane now requires stable lock-object storage through actual physical release/final access. Caller establishes validity; owner/control allocations and exact source/return/notifier users can outlive release, and callback code stays through return. Same-source reacquisition/handshakes remain unresolved progress/authority issues | Protocol section 3.2/5, C03, T16/T17 |
+| N21 | Retained context or source unlock marker treated as lock-object lifetime | Initial mutex lane now requires stable lock-object storage through actual physical release/final access. Caller establishes validity; owner/control allocations and exact source/return/notifier users can outlive release, and callback code stays through return. Deferred same-object reacquisition is excluded; other handshakes retain stated progress limits | Protocol section 3.2/5, C03, T16/T17 |
 
 ## 4 TCLock guidance and limits
 
@@ -302,7 +346,10 @@ bounds, cache layout, native API behavior or progress. The explicit user-selecte
 ordinary-mutex outer-unlock deferral is the limited accepted policy; comparison
 source alone selects no other shortcut, borrowed-stack engine or kernel target.
 The selection creates no spin/rwlock/rwsem/downgrade exception and proves no
-generic native release-timing/progress parity.
+generic native release-timing/progress parity. The user also selected an MCS
+queue, whose optional local/proxy/origin-combiner arbitration and lifetimes must
+be implemented with the original UB JIT/KD GS lowering and one S_W. It does not
+mechanically select TCLock's complete native borrowed-stack protocol.
 
 ## 5 Primary source map
 
@@ -342,20 +389,25 @@ In that reference, the deferred value `7` keeps exclusion held; outer handling r
 ## 6 Baseline verification
 
 The active tree contains the five design documents, project instructions,
-integrated source-discovery/decoder/planner code and the private retained-owner
-C release protocol. No legacy implementation, receipt documents or datasets
-need be restored. The complete original design snapshot remains in preservation history;
-historical source links do not select another kernel target.
+compiler/decoder/planner/lowerer and original backend, selected private ABI,
+MCS/release protocol, canonical state/JIT bridges, task-owned auxiliary entry and exact RCU image users.
+Legacy implementation, receipts and datasets remain in preservation history;
+none must be restored to claim source progress or select another kernel target.
 
-C12 source rebuild, the ordinary-mutex C01 lane and C03 retained-owner outer
-unlock deferral and stable lock-object storage through actual physical release
-are selected. C11 queue/arbitration, C02 placement, C04 mapping and other affected
-mechanisms remain open. Separate owner/control allocations, exact
-source/return/notifier users and callback-code retention keep their own last-use
-requirements after physical release.
-The C release protocol has source/static review only; its bound unlock callback
-has not executed and no concrete backend, queue or JIT/source adapter is
-implemented. Builds, runtime correctness, kernel integration, retirement and
-performance checks remain unrun. T01-T56 remain unrun; the older ten helper
-checks remain tied only to `13f2630f`. Further behavioral testing is deferred
-until overall functionality is complete, which is not claimed here.
+C12 source rebuild, ordinary-mutex C01, C03 retained-owner deferral and stable
+lock-object storage, C11 MCS, C04 physical-R11 mapping, C02 direct MCS pointers,
+C05 task-owned auxiliary entry and C06/C09 quiesced RCU replacement are selected. R11 optimization/T56 stay deferred. Remaining
+native/recursive integration, source/executable integration, feedback capacity/persistence/ACK and resource/stack bounds,
+lifecycle and exact last-user duties are listed in section 2.1 and the plan.
+
+Only source/static inspection and whitespace checks cover these new components.
+No new imports, assembly, compilation, runtime correctness, kernel integration,
+retirement or performance checks ran. T01-T56 stay unrun; the older ten helper
+checks remain tied only to `13f2630f`. Overall functionality is incomplete, so
+further behavioral testing remains deferred as requested.
+
+A staged whitespace check excludes only the patch template's required unified
+context markers before tab-indented source; the full check reports those format
+lines. `git apply --numstat` parses that template as five additions in sched.h
+and four in fork.c. This is syntax inspection, not application to the exact
+kernel source, compilation or behavioral validation.

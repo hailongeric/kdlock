@@ -6,48 +6,83 @@ non-PREEMPT_RT**.
 ## Current state
 
 The private [compiler front end](disassem/compiler.py) connects a finite,
-immutable source snapshot to instruction discovery, the original Miasm decoder
-and [fragment planning](disassem/fragment.py). It checks overlapping source bytes,
-retains the snapshot/version and complete decoded instructions, cuts at exact
-source-operation metadata, and preserves modeled branches, joins and direct
-CALL/RET alternatives. Shallower CALL paths can expand previously reached sites.
+immutable source snapshot to the original Miasm decoder and
+[fragment planner](disassem/fragment.py). It retains complete decoded records,
+source-operation boundaries, safe alternatives/joins, matched CALL/RET paths and
+versioned observed indirect targets. Unknown targets invent no callee return.
+Only direct CALL edges consume the selected five-edge discovery default; other
+source/decode/CFG bounds are explicit caller inputs. Observations are compiler
+inputs, not emitted-coverage acknowledgments or live feedback storage.
 
-Only the selected five-edge direct-CALL discovery limit has a default. Decode
-sites, submitted decoder-window bytes and CFG work require explicit caller
-limits. Missing source, decode failures, unmodeled transfers and resource stops
-have separate results. This is compiler input/output, not emitted coverage or a
-runtime handback recipe. It reads no provider and selects no register/packet ABI.
+The [original-backend lowerer](disassem/lowering.py),
+[mapper](disassem/backend) and [entry wrapper](include/wrapper.S) construct
+source assembly under the selected physical-R11 packet-base mapping. They retain
+actual source CALL/RET words, original GS/current-task lowering and local
+PUSHFQ/POPFQ temporary-GPR handling. Typed operations, special frontiers,
+construction gaps and resource exits remain path specific. The coordinated
+private ABI is version 1: a 168-byte packet and 56-byte control IO. No assembly
+has been assembled, loaded or executed.
 
-The [decoder](disassem/source_decode.py) retains the actual Miasm instruction,
-including LOCK/REP prefix metadata and methods. Lowerers that mutate instructions
-must work on independent copies; authoritative source bytes remain unchanged.
+The [artifact exporter](disassem/artifact.py) returns the same assembly with
+coordinated C image/site metadata, exact source-version bytes and a construction
+receipt. The caller supplies the actual retained source-epoch object; generated
+strings/descriptors are neither source leases nor publication acknowledgments.
 
-The private [mutex release protocol](kernel/mutex_release.c) and its
-[header](kernel/mutex_release.h) retain physical-owner context and exact
-per-acquisition controls. They distinguish source request, deferred marker,
-unwind readiness, owner handling, physical release and retirement; exact
-source-request, return and notifier users gate retirement. The request publishes
-its exact OWNER or DEFERRED_OUTER route; same-task identity alone cannot classify
-an outer unlock. The helper does not advance source; the actual C04 continuation
-bridge remains unimplemented. Initialization binds
-the already-acquired backend's exact ordinary unlock callback/object. An
-owner-only finish validates handled obligations, closes the batch/binding and
-takes/clears that binding under its guard, invokes the bound synchronous complete
-unlock once outside the guard, then records physical release. Owner operations
-check the current task. Correct callback binding and code/object lifetime remain
-caller obligations; no callback has executed. This is protocol code with static
-review only, not a physical mutex backend, queue, JIT adapter or source-cursor
-advancement implementation.
+The [MCS mutex](kernel/mutex.c) supplies sleepable physical exclusion, optional
+local/proxy selection and retained physical batches on top of the
+[exact release protocol](kernel/mutex_release.c). Queue removal, source return,
+physical release and record retirement have separate conditions. Source,
+result/binding, child-return and notifier users retain their exact controls;
+only the responsible physical owner releases/reaps its batch. No callback has
+executed, and no performance or complete public mutex lane is claimed.
 
-There is no API recognition, instruction emission, runtime CALL/RET effect
-handling, complete lock implementation, build system or benchmark payload yet.
-Ten focused private cases passed on the earlier intraprocedural planner in
-`13f2630f` with Python 3.10.12. The integrated front end, CALL/RET planning,
-decoder and C protocol have static review only; decoder dependencies have not
-been installed or imported. Further behavioral tests are deferred until overall functionality is
-complete. See the [evidence limits](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#21-rebuild-status).
-No build, JIT execution, kernel integration or performance result is claimed.
-Acceptance specifications T01-T56 remain unrun.
+The [canonical state](kernel/state.c) owns W's register packet exactly once.
+The [JIT bridge](kernel/jit.c) connects exact execution bindings, image-bound
+pending exits, once-only source operation transitions, MCS acquisition and
+source unlock. A compiler-clobber root continuation skips the translated-CALL
+pop recipe. [Native restore](include/native_resume.S) resumes exact IP/SP on W
+under its declared retained-stack contract. Every active/nested MCS node points
+directly to that same S_W. The [task root](kernel/task_state.c) contains one own
+core and the task-owned auxiliary-stack header for initial entry, with no
+registry or active-S_W task field. Its [Linux task patch](kernel/integration/README.md)
+is an unapplied context template; the exact kernel tree is absent from main.
+
+The [prepared prefix](include/kd_mutex.h), [stack switch](include/mutex_entry.S)
+and [native entry preflight](kernel/native_entry.c) preserve source SP/IP/BP and
+switch wait/control code to the task-owned auxiliary stack before lending W's
+source stack. Exact PREPARED/ENTERED/COMPLETE phases retain auxiliary occupancy;
+final handback restores the current canonical continuation, never old C frames.
+Capacity, persistent control backing and kernel stack-context compatibility still
+need their complete admission/lifecycle proof.
+
+The [image slot](kernel/image.c) uses RCU lookup plus exact linked users for
+sleeping/suspended execution, source and return dependencies. New admission
+closes before replacement; publication requires all active users to drain and
+old readers pass a grace period before reclamation. JIT entry reserves a
+separate claimed pending-exit use, which ordinary put cannot drop early.
+
+Overall integration remains incomplete. Public wrappers/native fallback,
+task/resource allocation and exit drain, recursive episode driving,
+source validation/executable publication and persistent cumulative feedback
+still need integration. Generated execution requires a distinct physical task
+and admitted nonoverlapping executor/source/wait-control stacks. W's own body
+uses a native route; a runtime instruction budget does not establish stack
+separation. No build system or runtime support is claimed yet.
+
+Same-object reacquisition after a deferred logical unlock while its earlier physical
+batch remains OPEN with deferred history is unsupported and excluded from the current workload.
+Its implementation is deferred. The common request preflight reports this
+before API entry or queue effects; it supplies no regrant, success or automatic
+native continuation. Normal nondeferred relock and distinct-object nesting keep
+the ordinary/common path.
+
+All new components have source/static review only. Ten focused private planner
+cases passed earlier on `13f2630f` with Python 3.10.12; they validate only that
+older helper. No new decoder import, assembly, compilation, behavioral check,
+VM work, installation or reboot has run. Further behavioral tests remain
+deferred until overall functionality is complete. Acceptance specifications
+T01-T56 remain unrun. See the
+[evidence limits](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#21-rebuild-status).
 
 Read the design in order:
 
@@ -66,8 +101,12 @@ mutex unlock deferral: retain the responsible outer combiner, notify/unwind to
 it, continue its normal batch protocol and physically release through that
 protocol. Extra waiting is accepted; this is not a generic native release-timing
 or progress-parity claim. The earlier transferable-grant proposal is superseded.
-C11 queue/arbitration, the original-backend adapter and remaining mechanisms
-stay open.
+C11 now selects an MCS queue for the initial mutex lane. C04 retains the KD
+physical-R11 canonical-packet-base mapping; R11 optimization discussion and T56
+are deferred future work. Private local/proxy arbitration and adapter bridges now have source
+implementations; their full integration and correctness/progress proofs remain
+work. Selecting MCS does not select TCLock's borrowed-stack
+execution or complete the integration.
 
 The initial mutex lane now requires stable lock-object storage through actual
 physical release and the backend's final object access. A source unlock or
@@ -76,11 +115,11 @@ storage, including any containing allocation, must remain valid through its
 separate source/return/notifier last users after physical release; callback code
 remains retained through its return. The selected contract permits a correctly
 materialized post-unlock continuation without waiting solely for physical
-release/object lifetime. The exact CALL/return/cursor/executor bridge remains
-unimplemented C04 work; a marker alone authorizes no arbitrary execution. C11
-arbitration and C04 mapping remain open. Same-source reacquisition and
-handshakes depending on outer-lock availability still need explicit
-progress/authority evidence.
+release/object lifetime. The private bridge now implements explicit CALL/return/cursor phases;
+a marker alone authorizes no arbitrary execution. Whole-lane integration and
+runtime correctness remain unvalidated. The exact deferred same-object
+reacquisition case above is outside this iteration; other availability-dependent
+handshakes keep their stated progress limits.
 
 ## Git history
 

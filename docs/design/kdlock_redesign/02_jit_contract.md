@@ -87,7 +87,7 @@ entry_B
 
 This is a conceptual example, not a prescribed global naming scheme. Fragment identity must include enough source/ABI information to distinguish the actual cursor, operation phase, required input state and live-grant/context contract. Generic structures/dispatch combine lock family/API/mode, original S_W identity, operation phase, source cursor/dependency epoch and ABI compatibility. Reusable code-cache keys may omit W's identity only with proven input compatibility; each execution binding still names its exact S_W. A lock object's address or mmap/munmap root name is not a sufficient key or a protocol selector.
 
-An entry associates source/dependency identity, publication state and fragment descriptors. An image is a versioned unit of code and metadata; immutable generations are the proposed starting strategy, not a requirement on all target update schemes. One image may contain several fragments. A cursor can have no available fragment, in which case the operation still completes through its admitted local/native route. C06/C09 choose binding and update/reclamation.
+An entry associates source/dependency identity, publication state and fragment descriptors. An image is a versioned unit of code and metadata; coherent immutable descriptors are replaced through the selected quiesced RCU rule. One image may contain several fragments. A cursor can have no available fragment, in which case the operation still completes through its admitted local/native route. C06/C09 select quiesced RCU replacement and exact active-user retention; source/executable integration remains work.
 
 ### 2.1 Bridge from A to B
 
@@ -105,29 +105,41 @@ Crossing images creates no source CALL or RET of its own. Any source call-stack 
 
 ### 2.2 General post-operation reentry
 
-After **any successfully handled source acquisition, unlock or supported mode operation**, lock code must provide a generic current-state route using S_W's exact cursor, operation phase, registers, logical grants, pending physical duties and context. For selected outer mutex unlocks, deferred acceptance, owner handling and physical release are distinct; no marker alone proves source-API return or authorizes cursor advancement. The selected stable-object contract permits a correctly materialized post-unlock continuation before physical release without waiting solely for object lifetime. Implementing its actual C04 bridge remains work: preserve current logical registers/stack, exact CALL/return/cursor phase, exclusive executor, remaining logical grants and pending physical duties once only. The helper does not advance source, and its marker alone authorizes no arbitrary execution. Fragment admission remains body-independent, without an operation-specific application adapter. Failed operations instead select their actual result branch. An admitted next fragment never repeats the operation or infers protection from a retained outer frame.
+After **any successfully handled source acquisition, unlock or supported mode operation**, lock code must provide a generic current-state route using S_W's exact cursor, operation phase, registers, logical grants, pending physical duties and context. For selected outer mutex unlocks, deferred acceptance, owner handling and physical release are distinct; no marker alone proves source-API return or authorizes cursor advancement. The selected stable-object contract permits a correctly materialized post-unlock continuation before physical release without waiting solely for object lifetime. The private C04 source bridge and its remaining whole-lane integration must preserve current logical registers/stack, exact CALL/return/cursor phase, exclusive executor, remaining logical grants and pending physical duties once only. The helper does not advance source, and its marker alone authorizes no arbitrary execution. Fragment admission remains body-independent, without an operation-specific application adapter. Failed operations instead select their actual result branch. An admitted next fragment never repeats the operation or infers protection from a retained outer frame.
 
 Admission still validates that source execution is legal for the chosen physical task. After the last protected scope ends, an origin-local fragment can be eligible; arbitrary unprotected code does not thereby become eligible on a remote combiner. When coverage, capability, resource or context prevents admission, a correct terminal native suffix is the fallback. That fallback completes the application without demonstrating full JIT completion. No already-entered terminal suffix implicitly regains old JIT-resume rights.
 
 Reader placement is open C10. Under the conservative origin-local initial lane, C_A-local acquisition does not authorize W's read body on C_A; use a proved origin route or pre-effect restriction. A separately selected remote lane would need its own concurrency/mode/API/context and continuation evidence. This document enables neither that lane nor general context equivalence.
 
-### 2.3 Generation binding
+### 2.3 Selected RCU replacement and retained users
 
-**Proposed baseline (P):** retain each selected immutable generation through its active/suspended episode and saved code/return users. This is one way to keep bindings valid; session-only retention and a fixed retained-image count are not requirements. C06/C09 may choose finer last-user reclamation or a proved quiesced update. A and B remain independently identified entries/versions.
+C06/C09 select RCU pointer replacement after active users drain. Exact linked
+execution, source and return records retain code/metadata beyond the RCU lookup
+section, including sleeping/suspended episodes. Each JIT entry reserves a
+separate claimed use for its exact producing image before executing code. A
+pending pointer alone is not retention, and ordinary put cannot drop that claim.
 
-A completed operation starts a fragment only through a validated current-state bridge. Whether fresh admission selects a newer version is C06, not an automatic consequence of fragment termination. The conservative proposed baseline keeps that episode's bindings until its last users finish.
+Closing an entry prevents new roots. A still-live admitted parent can extend its
+same-state/image use for an admitted child or return before dropping the parent;
+closing cannot strand that completion. Publication requires the exact users list
+to be empty, then swaps the coherent pointer and waits for old lookup readers to
+pass a grace period before reclamation. Candidate/base transaction identities,
+source/code validation and independent source holds remain exact.
 
-Never redirect an old source/JIT return address into incompatible code without a validated current-state mapping. Existing bound instructions/returns and source dependencies must stay valid until their last use, or reach a proved quiescent/explicitly rebound state before replacement. C06 selects whether fresh fragment admission can use a newer version; publication alone confers no reentry right.
+A completed operation admits another fragment only from current canonical state
+and valid remaining dependencies. No publication redirects a saved source/JIT
+return into incompatible code or revives an old execution endpoint. RCU alone
+neither serializes builders nor retains a sleeping episode.
 
 ## 3 Original backend and kdlock ABI
 
 Original UB means `glarer/UserspaceBypass` at `1a5b98a06b058a7adce9805c8c6d061e2212f56a`. Its translation/feedback pattern is retained; its old userspace wrapper is not copied byte for byte into kdlock.
 
-**Pinned evidence (E):** the register roles, packet fields/offsets, 168-byte size, two-word args and entry offsets below describe `20fde062729703208ac54445f51fc0f21f24e0e8`, with later checks in [the evidence file](04_evidence_and_reconciliation.md). They do not freeze the target private ABI. C04 selects/version-controls entry, exit, capture, materialization and reentry; C12 decides any compatibility promise. Reusing the old adapter makes its actual constraints conditional obligations of that lane. A new adapter must keep the original backend/GS lowering and prove equivalent source effects without inventing absent input bits.
+**Pinned evidence (E):** the register roles, packet fields/offsets, 168-byte size, two-word args and entry offsets below describe `20fde062729703208ac54445f51fc0f21f24e0e8`, with later checks in [the evidence file](04_evidence_and_reconciliation.md). C04 now retains the KD mapping in which physical R11 holds the same canonical packet base and logical R11 is virtualized. This does not freeze the old packet size/offsets or private entry ABI. Private entry, exit, capture, materialization and reentry sources now exist; whole native/recursive integration and runtime proof remain under C12. Reusing the old adapter makes its actual constraints conditional obligations of that lane. A new adapter must keep the original backend/GS lowering and prove equivalent source effects without inventing absent input bits.
 
 ### 3.1 Physical and logical registers
 
-| Physical register | Pinned kdlock role |
+| Physical register | Retained KD mapping/reference role |
 | --- | --- |
 | RSP/RBP | Physical combiner wrapper stack/frame, not W's logical SP/BP |
 | R11 | Authoritative shared packet pointer; logical R11 is virtualized |
@@ -135,22 +147,17 @@ Original UB means `glarer/UserspaceBypass` at `1a5b98a06b058a7adce9805c8c6d061e2
 | R14/R15 | Control/dispatch scratch or mapped logical values; setup aliases for packet/args |
 | Other resident GPRs | Source register values, not generally free lock-helper scratch |
 
-UB's old physical R11 was resident logical R11 and its spills used wrapper-stack backing. kdlock's packet-backed reserved-R11 convention is an intentional adaptation of the same backend.
+The selected baseline retains KD's physical-R11 canonical-packet-base convention and its logical-R11 virtualization. UB's old physical R11 was resident logical R11 and its spills used wrapper-stack backing; that pattern is deferred comparison material, not the active implementation choice. Both belong to the same original backend, and selecting the KD mapping does not freeze old packet offsets or create another W state.
 
-The chosen mapper/save-restore contract must preserve every admitted live logical value. Native caller-saved classification alone does not authorize clobbering boundary state. Under the pinned mapping, raw physical R11 through R15 cannot be copied as W's same-named GPRs. A different target reservation/mapping needs its own generated-code proof, not assumptions imported from this table.
+The chosen mapper/save-restore contract must preserve every admitted live logical value. Native caller-saved classification alone does not authorize clobbering boundary state. Under the selected KD mapping, raw physical R11 through R15 cannot be copied as W's same-named GPRs. Consistent mapper/wrapper inputs and current-state export/reentry still need generated-code proof; the physical-R11 baseline is selected and its optimization discussion is deferred.
 
-### 3.1.1 Open mapping/adapter comparison
+### 3.1.1 Deferred R11 mapping comparison
 
-These pinned mappings are E and candidate optimizations under C04, not different JIT backends. Both target variants retain the one thread-owned S_W/regs backing and original UB-derived translation/GS lowering.
+C04 retains the current KD physical-R11 canonical-packet-base mapping for this implementation. R11 optimization discussion is deferred; there is no active choice between packet-backed R11 and original-UB-style resident logical R11. T56 remains deferred, unrun future work and supplies no performance or equivalence evidence.
 
-| Mapping candidate | Potential work/cost | Potential reuse/benefit and required boundary work |
-| --- | --- | --- |
-| Pinned KD: physical R11 is the shared kd_regs base; logical R11 and R12-R15 are virtualized | An extra reserved register can increase logical-R11 remapping, register pressure and spill/reload work | Direct shared backing can avoid wrapper-backing-to-packet transfers and makes the S_W binding direct; resident values still require export/materialization |
-| Original UB pattern: logical R11 resides in physical R11; logical R12-R15 use wrapper-stack backing | Local working backing may require transfer/materialization to establish canonical S_W at redesigned entry/exit/handoff points | R11 remains available for its source value, with local wrapper backing; the target must still publish the same current canonical core before ownership changes |
+If that comparison is reopened later, keep the same original UB-derived backend/KD GS lowering, one thread-owned S_W and one canonical packet. Compare KD remap/spill work against the original-UB resident-R11/wrapper-backing pattern's boundary materialization/transfer work under matched source, admitted state, workload, generated code and nesting/miss/handoff frequency. Working spills/native saves are transient preservation, never another canonical W state or a packet-sized reserve in every nested user. Direct packet backing does not make all resident values current in memory.
 
-Working spills and native register saves are transient preservation, not another canonical W state. Neither candidate may reserve an unused full packet in every nested user or add a packet-owning middle level. Direct packet backing does not make resident registers automatically current in memory.
-
-Compare later at matched source, admitted ABI/state semantics, workload, generated code and nesting/miss/handoff frequency. Record remap/spill/reload and transfer/materialization work, code size, memory/cache behavior and actual local/fragment/handback/whole-root outcomes before interpreting throughput. T56 is a planned comparison, not a measured saving/speedup or validation of AS01/general flags equivalence.
+Any future T56 result must separately establish local/fragment/handback/whole-root outcomes and report code size and memory/cache behavior. It cannot establish AS01/general flags/SIMD equivalence or authorize changing the selected mapping without a deliberate later decision. The current implementation target is the retained KD mapping and its required temporary-GPR PUSHFQ/POPFQ lowering; selecting it is not an implementation/validation claim and does not activate that optimization comparison.
 
 ### 3.2 Packet layout and inputs
 
@@ -194,6 +201,22 @@ Every live return address/token, including source-to-JIT hybrid chains, needs a 
 
 ### 3.4 GS and physical kernel context
 
+C02 uses the active MCS request's direct node->state pointer. All nested
+requests name the same original core. The [task root](../../../kernel/task_state.h)
+supplies initial own backing and the selected auxiliary wait stack before a
+first node exists; it is not a borrowed-source registry or active-S_W task field.
+JIT entry/return still requires exact current binding and packet materialization.
+The prepared prefix switches wait/control code off W's source stack before
+publication; translated virtual SP still addresses that original source stack.
+
+Native capture refreshes active MSR_GS_BASE under a short preemption-disabled
+metadata interval before waiting, rather than inheriting attachment-time CPU
+state. This is the original kernel GS base input, with no extra per-CPU offset.
+It confers no per-CPU exclusion or episode-wide pinning. Linux 7 CPU setup
+[writes cpu_kernelmode_gs_base directly to MSR_GS_BASE](https://github.com/torvalds/linux/blob/v7.0/arch/x86/kernel/cpu/common.c#L744-L762);
+that active base needs no additional per-CPU offset. Exact Ubuntu-source,
+stack-context and runtime equivalence remain unvalidated.
+
 Retain kdlock's original software GS-base-plus-offset lowering and recognized logical-task replacement for `current_task` loads (F). The target adapter must deliver the required origin kernel GS/task inputs correctly; the old args placement is E, not the requirement. UB's historical userspace FS example is not the kernel input contract.
 
 These rewrites do not switch hardware GS, scheduler `current`, CR3, IRQ state, RCU state or arbitrary task-owned resources. Native lock helpers run as the physical executor. Admission must establish any inherited task/CPU/RCU and recoverable-fault/fixup requirements separately.
@@ -213,7 +236,7 @@ The recorded STD pre-instruction SOURCE_FRONTIER in ordinary __memmove is E for 
 
 For the x86_64 word form, the source SP change is one eight-byte word per instruction. Preserve all live source values and virtual R11-R15 mappings as required by the selected original-backend adapter; a physically caller-saved GPR is not automatically free. If the concrete lowering uses a temporary physical-stack push/pop sequence, balance it and preserve wrapper/native return state. Native register/stack preservation is separate from W's source push/pop.
 
-This specifies local effects, not an exact instruction sequence or verified implementation. The flags-source acquisition, temporary reservation/spill/restore and local apply sequence, and the covered POPFQ values/effects still need implementation and focused testing. Intermediate-register simulation proves neither arbitrary POPFQ bit-value behavior nor general flags equivalence. It cannot bypass selected special CPU-state boundaries. Tests T54 and the branch/callee cases T52/T53 are acceptance specifications only.
+The local source in backend/instructions.py implements temporary reservation, mapped spill/restore, one virtual source word and local flags apply. Its covered POPFQ values/effects and runtime correctness remain unrun; the source is not verified instruction equivalence. Intermediate-register simulation proves neither arbitrary POPFQ bit-value behavior nor general flags equivalence. It cannot bypass selected special CPU-state boundaries. Tests T54 and the branch/callee cases T52/T53 are acceptance specifications only.
 
 ## 4 Exact operation boundaries and miss handback
 
@@ -245,7 +268,7 @@ At a supported handback, preserve:
 - live grant identities, deferred outer-unlock phases, retained responsible owner contexts and actionable physical release routes;
 - supported context guards and unique execution sequence.
 
-A pending call executes once. A source acquisition/unlock resumes after its CALL only when that source operation's exact return/phase effects have been handled once. For the selected deferred mutex unlock, a correctly materialized post-unlock continuation need not wait solely for physical release/object lifetime. Deferred acceptance or OWNER_HANDLED is not PHYSICALLY_RELEASED and alone advances no source. The actual CALL/return/cursor/executor bridge remains unimplemented C04 work, with remaining logical grants and physical duties exact; C04 mapping is still open. Owner/control/notifier storage survives through its separate last users afterward. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
+A pending call executes once. A source acquisition/unlock resumes after its CALL only when that source operation's exact return/phase effects have been handled once. For the selected deferred mutex unlock, a correctly materialized post-unlock continuation need not wait solely for physical release/object lifetime. Deferred acceptance or OWNER_HANDLED is not PHYSICALLY_RELEASED and alone advances no source. The private CALL/return/cursor bridge has source code; whole native/recursive integration and runtime proof remain work, with remaining logical grants and physical duties exact; The KD physical-R11 canonical-packet-base mapping is selected; whole native/recursive integration and runtime proof remain outstanding. Owner/control/notifier storage survives through its separate last users afterward. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
 
 Before delegated effects, unsupported admission can choose W's ordinary local path. After effects, only a pre-established forward continuation is legal. An absent bridge cannot be repaired by saying the invocation should have run locally from the start.
 
@@ -288,14 +311,14 @@ The three identities are different:
 
 ### 5.1 Build and commit protocol
 
-**Proposed workflow (P):** private candidates and serialized per-entry commit provide a simple starting proof. Parallel isolated builders, different staging or a quiesced update strategy are choices under C08/C09; the required outcomes are valid source/code dependencies, isolated publication, truthful coverage acknowledgement and no lost later knowledge.
+**Proposed workflow (P):** private candidates and serialized per-entry commit provide a simple starting proof. Parallel isolated builders and staging organization remain choices under C08/C09; quiesced RCU replacement is selected; the required outcomes are valid source/code dependencies, isolated publication, truthful coverage acknowledgement and no lost later knowledge.
 
 1. Retain a safe source snapshot/lease before asynchronous reading of a reported target. A raw address is not a lifetime lease.
 2. Deduplicate observations using source identity, entry/fragment context, operation/control site, target and kind as required by the actual decoder.
 3. In this proposed workflow, snapshot pending inputs and previously validated coverage under one build owner; another isolated build scheme may be selected by C09.
 4. Build a complete private candidate using the original backend. Union relevant learned dispatch edges with retained knowledge. Preserve lock/unlock boundaries.
 5. Validate discovered source dependencies, chosen target ABI/capabilities, the candidate's valid base/current-code relation and source admission state. A numeric base-generation receipt is one encoding, not a required interface.
-6. Publish the entire executable descriptor with coherent release ordering under serialized commit ownership.
+6. Close new-root admission, drain exact active users, publish the entire executable descriptor under exact serialized commit ownership, then pass old readers through an RCU grace period before reclaiming.
 7. Acknowledge only observations the candidate actually translated. A snapshot input is not automatically covered.
 8. Track settled lock boundaries/capability dispositions separately. Preserve later observations and any uncovered/unsettled snapshot input under the declared bounded policy.
 
@@ -313,7 +336,7 @@ Accepting a source-valid observation from an old retained generation can improve
 
 ### 5.3 Publication and lifetime
 
-**P:** private immutable generations with per-episode retention are the conservative starting strategy. C09 must deliberately choose update/reclamation: immutable replacement with a last-user rule, or an in-place update only after proved quiescence of every affected instruction/return/fixup user, with correct reentry/publication. No current retained-image count or session-only drain rule is inherited automatically. **S:** no active code user may observe partial or incompatible code/metadata.
+**Selected C06/C09:** close new-root admission, drain exact active image users, replace the RCU pointer coherently, then wait for old lookup readers before reclaiming. Sleeping/pending/return/source users have explicit records outside the RCU read section. No current retained-image count or session-only drain rule is inherited automatically. **S:** no active code user may observe partial or incompatible code/metadata.
 
 **S:** candidate construction/publication must prevent unrelated uploads/builds from mixing and stale commit/abort from corrupting another candidate. **E, conditional:** if the current file-description staging interface is retained, dup/fork can share it and chunk locking alone is insufficient. Whole-transaction ownership or isolated staging are candidate solutions. A fresh interface/compiler organization is open C09; neither one file description nor one upload/build owner is architecture. Validate the complete candidate and its actual base/source relation at commit.
 
@@ -339,7 +362,7 @@ Closing source admission cannot strand admitted descendants/suffixes or free tex
 | Callee has a special path and a safe return | Keep the safe RET/caller fallthrough; terminated path invents neither return nor replay |
 | PUSHFQ/POPFQ local simulation | One source word/SP change per instruction, mapped temporary preserved, physical-stack balance and AS01 clearly separate from proof |
 | W -> C_A -> C_B -> C_A/W | Same S_W/packet identity at every hop, refreshed resident state and one authorized sequence holder |
-| Same combiner serves W and V | Separate S_W/S_V; restore active pointer and role without copying or merging origin packets |
+| Same combiner serves W and V | Separate S_W/S_V; restore explicit current-node/parent-role routing and role without copying or merging origin packets |
 | Any handled acquisition/unlock/mode operation | Generic exact-phase route under remaining context and the selected stable-object contract; deferred acceptance is not physical-release or source-return evidence |
 | Direction flag or compiler capacity stop | Precise capability/resource class and first-unexecuted cursor; no body-specific model or ordinary-learning claim |
 
