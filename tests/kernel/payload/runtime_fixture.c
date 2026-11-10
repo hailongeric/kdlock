@@ -73,6 +73,15 @@ struct fixture_worker {
 /* Each round has stable distinct objects. No worker reacquires an object
  * whose earlier deferred physical release may still be outstanding.
  */
+/* The open control keeps only its exact opener task alive. Managed task storage
+ * belongs to the real lifecycle, so release must never dereference a stale
+ * storage/root after the opener's do_exit has already reclaimed it.
+ */
+struct fixture_control {
+	struct task_struct *owner;
+	bool entered;
+};
+
 static struct kd_mutex lock_a[FIXTURE_MAX_ITERATIONS];
 static struct kd_mutex lock_b[FIXTURE_MAX_ITERATIONS];
 static unsigned long protected_a[FIXTURE_MAX_ITERATIONS];
@@ -301,16 +310,94 @@ static int notrace start_workers(unsigned int mode, unsigned int count, unsigned
 	return 0;
 }
 
+static int notrace control_open(struct inode *inode, struct file *file)
+{
+	struct fixture_control *control;
+
+	(void)inode;
+	control = kzalloc(sizeof(*control), GFP_KERNEL);
+	if (!control)
+		return -ENOMEM;
+	control->owner = current;
+	get_task_struct(current);
+	file->private_data = control;
+	return 0;
+}
+
+static int notrace control_release(struct inode *inode, struct file *file)
+{
+	struct fixture_control *control = file->private_data;
+
+	(void)inode;
+	/* The normal do_exit hook owns automatic native/storage drain. An fd may
+	 * be inherited by a child and finally closed after its opener has exited.
+	 * Neither this scalar flag nor this task ref is storage ownership.
+	 */
+	put_task_struct(control->owner);
+	kfree(control);
+	return 0;
+}
+
+static int notrace control_enter(struct fixture_control *control)
+{
+	struct kd_task_storage *storage = NULL;
+	unsigned long origin_gs;
+	int result;
+
+	if (!runtime || worker_count || control->entered ||
+	    smp_load_acquire(&current->kd_root_context))
+		return -EBUSY;
+	preempt_disable();
+	rdmsrl(MSR_GS_BASE, origin_gs);
+	preempt_enable();
+	result = kd_jit_runtime_enter_current(runtime, origin_gs, &storage);
+	/* Non-NULL failed setup is still retained for exact leave/real do_exit. */
+	control->entered = storage != NULL;
+	return result;
+}
+
+static int notrace control_leave(struct fixture_control *control)
+{
+	struct kd_task_root_context *root = smp_load_acquire(&current->kd_root_context);
+	struct kd_execution_binding *binding;
+	bool pending;
+	int result;
+
+	if (!control->entered || !root || !root->attached || root->task != current ||
+	    !root->storage || !root->lifecycle || root->aux_entry)
+		return -EPERM;
+	binding = smp_load_acquire(&root->core.binding);
+	result = kd_jit_runtime_leave_current(root->storage, binding, &pending);
+	if (!result)
+		control->entered = false;
+	/* No root/storage/binding access after successful lifecycle reclamation. */
+	return result;
+}
+
 static ssize_t notrace control_read(struct file *file, char __user *output, size_t size, loff_t *position)
 {
 	char buffer[2048];
 	unsigned int index, finished = 0;
 	unsigned long completed = 0, calls = 0, errors = 0, core_errors = 0, origin_errors = 0;
 	unsigned long total_a = 0, total_b = 0;
+	struct kd_task_root_context *self;
+	struct kd_execution_binding *binding = NULL;
+	bool own = false, native = false, managed = false;
 	int length;
 
 	(void)file;
 	mutex_lock(&control_mutex);
+	/* This is the actual calling task on its ordinary native stack. Snapshot
+	 * only identities; no source GPR/cursor or packet contents are copied.
+	 */
+	self = smp_load_acquire(&current->kd_root_context);
+	if (self && self->attached && self->task == current && !self->aux_entry) {
+		own = self->core.origin == current;
+		managed = self->lifecycle && self->storage;
+		binding = smp_load_acquire(&self->core.binding);
+		native = own && binding && binding->state == &self->core &&
+			binding->task == current && binding->kind == KD_EXECUTION_NATIVE;
+	}
 	for (index = 0; index < worker_count; ++index) {
 		finished += smp_load_acquire(&workers[index].finished);
 		completed += READ_ONCE(workers[index].completed);
@@ -324,11 +411,14 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 		total_b += READ_ONCE(protected_b[index]);
 	}
 	length = scnprintf(buffer, sizeof(buffer),
-		"evidence=kernel-mechanism mode=%u workers=%u finished=%u iterations=%u completed=%lu calls=%lu a=%lu b=%lu errors=%lu core_errors=%lu origin_errors=%lu source_start=%px source_size=%u step_start=%px step_size=%u locks_clear=%u runtime=%u\n",
+		"evidence=kernel-mechanism mode=%u workers=%u finished=%u iterations=%u completed=%lu calls=%lu a=%lu b=%lu errors=%lu core_errors=%lu origin_errors=%lu source_start=%px source_size=%u step_start=%px step_size=%u locks_clear=%u runtime=%u self_pid=%d self_root=%016lx self_core=%016lx self_regs=%016lx self_binding=%016lx self_own=%u self_native=%u self_managed=%u\n",
 		requested_mode, worker_count, finished, requested_iterations, completed, calls,
 		total_a, total_b, errors, core_errors, origin_errors,
 		fixture_source_body, source_size, fixture_source_step, step_size,
-		fixture_locks_clear(), runtime != NULL);
+		fixture_locks_clear(), runtime != NULL, task_pid_nr(current), (unsigned long)self,
+		self ? (unsigned long)&self->core : 0UL,
+		self ? (unsigned long)&self->core.regs : 0UL, (unsigned long)binding,
+		own, native, managed);
 	mutex_unlock(&control_mutex);
 	return simple_read_from_buffer(output, size, position, buffer, length);
 }
@@ -336,10 +426,13 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 static ssize_t notrace control_write(struct file *file, const char __user *input, size_t size, loff_t *position)
 {
 	char buffer[96];
+	struct fixture_control *control = file->private_data;
 	unsigned int mode, count, iterations;
 	int used = 0, result = -EINVAL;
 
-	(void)file; (void)position;
+	(void)position;
+	if (!control || control->owner != current)
+		return -EPERM;
 	if (!size || size >= sizeof(buffer) || copy_from_user(buffer, input, size))
 		return -EINVAL;
 	buffer[size] = 0;
@@ -347,6 +440,10 @@ static ssize_t notrace control_write(struct file *file, const char __user *input
 	if (sscanf(buffer, "start %u %u %u %n", &mode, &count, &iterations, &used) == 3 &&
 	    used > 0 && !buffer[used])
 		result = start_workers(mode, count, iterations);
+	else if (sysfs_streq(buffer, "enter"))
+		result = control_enter(control);
+	else if (sysfs_streq(buffer, "leave"))
+		result = control_leave(control);
 	else if (sysfs_streq(buffer, "stop"))
 		result = stop_workers();
 	else if (sysfs_streq(buffer, "destroy")) {
@@ -367,7 +464,8 @@ static ssize_t notrace control_write(struct file *file, const char __user *input
 }
 
 static const struct file_operations control_operations = {
-	.owner = THIS_MODULE, .read = control_read, .write = control_write, .llseek = default_llseek,
+	.owner = THIS_MODULE, .open = control_open, .release = control_release,
+	.read = control_read, .write = control_write, .llseek = default_llseek,
 };
 static struct miscdevice control_device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_runtime_fixture_ctl",

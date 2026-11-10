@@ -14,6 +14,7 @@ import math
 import os
 from pathlib import Path
 import re
+import select
 import shutil
 import subprocess
 import sys
@@ -191,6 +192,100 @@ def main():
         if os.write(control, payload) != len(payload):
             raise RuntimeError("fixture control did not consume the exact command")
 
+    def managed_fork_case():
+        # Actual ordinary fd calls and fork/wait/exit syscalls exercise the
+        # managed-parent kernel hooks. No child register state is fabricated.
+        control_command("enter")
+        parent_raw, parent = status()
+        keys = ("self_root", "self_core", "self_regs", "self_binding")
+
+        def identities(values):
+            return tuple(int(values[key], 16) for key in keys)
+
+        def native_scope(values, pid):
+            return (int(values["self_pid"]) == pid
+                    and all(int(values[key]) == 1 for key in
+                            ("self_own", "self_native", "self_managed"))
+                    and all(identities(values)))
+
+        if not native_scope(parent, os.getpid()):
+            raise AssertionError("actual parent native task/root identity is absent")
+        read_pipe, write_pipe = os.pipe()
+        child_pid = os.fork()
+        if child_pid == 0:
+            os.close(read_pipe)
+            child_result = 1
+            try:
+                child_raw, child_values = status()
+                row = {"pid": os.getpid(), "raw_status": child_raw, "values": child_values}
+                payload = (json.dumps(row, sort_keys=True) + "\n").encode("ascii")
+                if len(payload) > 4096 or os.write(write_pipe, payload) != len(payload):
+                    raise RuntimeError("child identity record was not transferred exactly")
+                child_result = 0
+            except BaseException as error:
+                failure = (json.dumps({"pid": os.getpid(), "error": repr(error)}) + "\n").encode("ascii")
+                try:
+                    os.write(write_pipe, failure[:4096])
+                except OSError:
+                    pass
+            finally:
+                os.close(write_pipe)
+                # No explicit leave: actual child do_exit must drain/release
+                # its independently inherited provider/context lifetime.
+                os._exit(child_result)
+        os.close(write_pipe)
+        results["managed_fork_exit"] = {"child_pid": child_pid, "parent_before": parent_raw,
+                                        "status": "child_not_yet_reaped"}
+        deadline = time.monotonic() + args.deadline
+        copied = bytearray()
+        try:
+            while not copied.endswith(b"\n"):
+                remaining = deadline - time.monotonic()
+                if remaining <= 0 or not select.select((read_pipe,), (), (), max(0, remaining))[0]:
+                    raise TimeoutError("managed child identity wait expired; no child kill/drain inferred")
+                block = os.read(read_pipe, 4096 - len(copied))
+                if not block:
+                    raise RuntimeError("managed child exited without its complete identity record")
+                copied.extend(block)
+                if len(copied) >= 4096 and not copied.endswith(b"\n"):
+                    raise ValueError("managed child identity record exceeds fixture extent")
+            child = json.loads(copied)
+            results["managed_fork_exit"]["child_record"] = child
+            while True:
+                reaped, wait_status = os.waitpid(child_pid, os.WNOHANG)
+                if reaped == child_pid:
+                    break
+                if time.monotonic() >= deadline:
+                    raise TimeoutError("managed child exit-hook wait expired; process/module retained")
+                time.sleep(0.02)
+        finally:
+            os.close(read_pipe)
+            (args.output / "managed-child-record.bin").write_bytes(copied)
+        results["managed_fork_exit"]["wait_status"] = wait_status
+        if (not os.WIFEXITED(wait_status) or os.WEXITSTATUS(wait_status)
+                or child["pid"] != child_pid or not native_scope(child["values"], child_pid)
+                or any(first == second for first, second in
+                       zip(identities(parent), identities(child["values"])))):
+            raise AssertionError("child inherited a parent's core/binding or lacks its own native origin")
+        after_raw, after = status()
+        if not native_scope(after, os.getpid()) or identities(parent) != identities(after):
+            raise AssertionError("managed fork changed the parent's current root/core/binding")
+        while True:
+            try:
+                control_command("leave")
+                break
+            except OSError as error:
+                if error.errno not in (errno.EBUSY, errno.EAGAIN) or time.monotonic() >= deadline:
+                    raise
+                time.sleep(0.02)
+        detached_raw, detached = status()
+        if any(identities(detached)) or any(int(detached[key]) for key in
+                                          ("self_own", "self_native", "self_managed")):
+            raise AssertionError("parent leave did not remove its actual native task context")
+        results["managed_fork_exit"].update({"status": "child_exited_parent_detached",
+                                            "parent_after": after_raw, "parent_detached": detached_raw,
+                                            "packet_contents_copied": False})
+
     def body_case(name, mode, workers, iterations):
         control_command(f"start {mode} {workers} {iterations}")
         deadline = time.monotonic() + args.deadline
@@ -228,6 +323,7 @@ def main():
         return workflow.result
 
     try:
+        managed_fork_case()
         body_case("native-local", 0, 1, args.iterations)
         limits = WireLimits(2 * 1024 * 1024, 4096, 256, 256, 512 * 1024)
         transport = FdTransport.open("/dev/kd_runtime_fixture", limits, 4 * 1024 * 1024 + 48)
@@ -321,6 +417,7 @@ def main():
             0x2000, 4096, str(args.output / "shutdown-archive.json"), 64 * 1024 * 1024, 0o600,
             (("module_sha256", results["module_sha256"]), ("kernel_release", os.uname().release),
              ("evidence", "kernel-mechanism")),)))
+        results["managed_fork_exit"]["shutdown_native_holds_drained"] = True
         results["archive_sha256"] = archive.archive.identity.hex()
         results["settled_keys"] = len(archive.settlement.keys)
         transport.close()
