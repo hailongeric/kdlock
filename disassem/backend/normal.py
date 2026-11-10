@@ -1,5 +1,5 @@
 # Lower ordinary operands/instructions using conflict.py's physical mapping.
-# GS memory uses the pinned waiter's base; current_task uses its logical task.
+# GS memory uses the captured origin base; current_task uses its logical task.
 # FS/base manipulation remains unsupported. No use-time bounds guard exists.
 from . import diagnostics
 from .assist import make_inst
