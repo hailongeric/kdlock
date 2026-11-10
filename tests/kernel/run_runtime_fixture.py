@@ -175,10 +175,7 @@ def main():
     (args.output / "module.disassembly.txt").write_bytes(module_listing)
     results["compiler_thunk_symbols"] = sorted(set(re.findall(
         r"__(?:x86_indirect|x86_return)_thunk[A-Za-z0-9_]*", module_listing.decode(errors="replace"))))
-    command([tools["insmod"], str(args.module), f"gs_offset={args.gs_offset}", "gs_verified=1",
-             "immutable_text=1", "auxiliary_contract=1", f"source_size={body_size}",
-             f"step_size={step_size}", f"source_version={version}"], args.deadline)
-    control = os.open("/dev/kd_runtime_fixture_ctl", os.O_RDWR | os.O_CLOEXEC)
+    control = -1
     transport = None
 
     def status():
@@ -323,6 +320,10 @@ def main():
         return workflow.result
 
     try:
+        command([tools["insmod"], str(args.module), f"gs_offset={args.gs_offset}", "gs_verified=1",
+                 "immutable_text=1", "auxiliary_contract=1", f"source_size={body_size}",
+                 f"step_size={step_size}", f"source_version={version}"], args.deadline)
+        control = os.open("/dev/kd_runtime_fixture_ctl", os.O_RDWR | os.O_CLOEXEC)
         managed_fork_case()
         body_case("native-local", 0, 1, args.iterations)
         limits = WireLimits(2 * 1024 * 1024, 4096, 256, 256, 512 * 1024)
