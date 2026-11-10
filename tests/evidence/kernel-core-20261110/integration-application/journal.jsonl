@@ -1,0 +1,8 @@
+{"phase":"PREPARED"}
+{"files":{"include/linux/sched.h":"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/.kdlock-apply-7c568e7511044ddd8acbdc1563f5a0b3","init/Kconfig":"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/init/.kdlock-apply-c67048b20c404a2fa08fde9bf2942f73","kernel/Makefile":"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/.kdlock-apply-1bf0d049fcc9449889f811db0d9cf787","kernel/exit.c":"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/.kdlock-apply-efd7b3a68a1c4e3babdf712fcb3abe76","kernel/fork.c":"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/.kdlock-apply-5b2ce5ce11fc48c6b9487752ffad9caa"},"phase":"STAGED"}
+{"file":"include/linux/sched.h","phase":"REPLACED","sha256":"c0ddfcc8be427faebb47d9807a891a650081e3bcd26e139253da9c8b67f264e8"}
+{"file":"kernel/fork.c","phase":"REPLACED","sha256":"330c947b46444b7eb4543febb26b16f80ce6e632de88af540c4f462844f05bb1"}
+{"file":"kernel/exit.c","phase":"REPLACED","sha256":"1bb762d02021af4d2d61945bc3deb01372d9468a7762acc6612e8ad43561e6cb"}
+{"file":"init/Kconfig","phase":"REPLACED","sha256":"4a715d514aadc22c22bacd33964596336ace7b0e18bc4ea55dcca6b53d29d872"}
+{"file":"kernel/Makefile","phase":"REPLACED","sha256":"81d7f2489749b47d6cc57735885c9a749dfe82ad120b73e8f9f5a298cdb8d6fb"}
+{"phase":"COMMITTED"}

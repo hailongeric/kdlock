@@ -1,0 +1,949 @@
+{
+  "baseline": {
+    "acquisition_source_version": "7.0.0-38.38",
+    "acquisition_status": "COMPLETE",
+    "build_files": {
+      ".config": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+      "Makefile": "65139af3d3f20b935adad9473f1ed963737d8b6da96b4b48ba0c62566a799283",
+      "Module.symvers": "dd08f84264e64d09ff3c4b8d11139952f101a727c7402ff5b9b9f376f5d6056c",
+      "System.map": "1b06d9aee8db0dcb36480985a83ef1d48cba19ef2f1be9abb82955bed7b53159",
+      "arch/x86/boot/bzImage": "8530a19fcca7b3ef65c39aa35ad2e8a46904ded34d124afb2e4f4285f9631d71",
+      "include/config/auto.conf": "00e8e07d50fdc07c56d9a5c37067872866e20b4257c0f4fbedc96a2109111498",
+      "include/config/kernel.release": "379851c1a39e3680bb4b2322ed6e6a5deafe69b3e17d70583f489abf26afcccf",
+      "include/generated/autoconf.h": "8ee24f96217bcb0a3dfe328896f5f38638e5c73a9a0fa06052ced6c27efa3754",
+      "include/generated/uapi/linux/version.h": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c",
+      "include/generated/utsrelease.h": "6ec275fd0efcece30daea97f0f00d799161a6f3e97159e5cd49dc833f8155ef3",
+      "include/generated/utsversion.h": "371a7071d4e61f302ffcc66ba18c319cd7167ae6de2bcae2156c84e61bf3c282",
+      "vmlinux": "f91b7d06025d1ae4bf6f88da44013462811f025d2f180e664a2c1a5f4563a252"
+    },
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "downloaded_file_hashes_verified": true,
+    "manifest_matches_preparation": true,
+    "manifest_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+    "running": {
+      "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+      "machine": "x86_64",
+      "release": "7.0.0-38-kdlock1",
+      "version": "#2 SMP PREEMPT_DYNAMIC Tue Oct 27 05:36:25 UTC 2026"
+    },
+    "schema": 2,
+    "selected_configuration": {
+      "CONFIG_CC_VERSION_TEXT": "\"x86_64-linux-gnu-gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\"",
+      "CONFIG_DEBUG_LOCK_ALLOC": "n",
+      "CONFIG_DEBUG_MUTEXES": "n",
+      "CONFIG_LOCALVERSION": "\"\"",
+      "CONFIG_LOCKDEP": null,
+      "CONFIG_PREEMPT_DYNAMIC": "y",
+      "CONFIG_PREEMPT_RT": "n",
+      "CONFIG_X86_64": "y"
+    },
+    "source_acquisition_matches_preparation": true,
+    "source_acquisition_sha256": "5c5e8a574cf8affb7aedd66e9f609ca006041c1cde0d3fc4e086a4f9849f545a",
+    "source_archives": {
+      "linux_7.0.0-38.38.diff.gz": "98e913d4a1c1f810e4dcfa573cbcf0f1a3a4427bdcd503722555298a794c52b2",
+      "linux_7.0.0-38.38.dsc": "016d43577bd8a61629a02e140e3b88072b5ccdd1c90cb1ce2f3c8e5c28756e7e",
+      "linux_7.0.0.orig.tar.gz": "c6343795c8c7e4feff55f5b309365c8e0eaf49cd6abcb412e32315313f149536"
+    },
+    "source_package": "linux=7.0.0-38.38",
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source",
+    "source_scope": "named core/MM inputs; not a complete source-tree audit"
+  },
+  "boot_id": "3d32656f-6162-4a0a-9304-bf383d34298d",
+  "candidate_applied_files": {
+    "include/linux/sched.h": {
+      "actual_sha256": "c0ddfcc8be427faebb47d9807a891a650081e3bcd26e139253da9c8b67f264e8",
+      "expected_sha256": "c0ddfcc8be427faebb47d9807a891a650081e3bcd26e139253da9c8b67f264e8",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sched.h"
+    },
+    "init/Kconfig": {
+      "actual_sha256": "4a715d514aadc22c22bacd33964596336ace7b0e18bc4ea55dcca6b53d29d872",
+      "expected_sha256": "4a715d514aadc22c22bacd33964596336ace7b0e18bc4ea55dcca6b53d29d872",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/init/Kconfig"
+    },
+    "kernel/Makefile": {
+      "actual_sha256": "81d7f2489749b47d6cc57735885c9a749dfe82ad120b73e8f9f5a298cdb8d6fb",
+      "expected_sha256": "81d7f2489749b47d6cc57735885c9a749dfe82ad120b73e8f9f5a298cdb8d6fb",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/Makefile"
+    },
+    "kernel/exit.c": {
+      "actual_sha256": "1bb762d02021af4d2d61945bc3deb01372d9468a7762acc6612e8ad43561e6cb",
+      "expected_sha256": "1bb762d02021af4d2d61945bc3deb01372d9468a7762acc6612e8ad43561e6cb",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/exit.c"
+    },
+    "kernel/fork.c": {
+      "actual_sha256": "330c947b46444b7eb4543febb26b16f80ce6e632de88af540c4f462844f05bb1",
+      "expected_sha256": "330c947b46444b7eb4543febb26b16f80ce6e632de88af540c4f462844f05bb1",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/fork.c"
+    }
+  },
+  "commands": {
+    "include/mutex_api.o": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/kernel/kdlock/include/.mutex_api.o.cmd",
+      "sha256": "0ee4ef2ef9c2f62dc10f7ce3456aac01b384655341d122257927bbe1f6b19c5e",
+      "text": "savedcmd_kernel/kdlock/include/mutex_api.o := gcc -Wp,-MMD,kernel/kdlock/include/.mutex_api.o.d -nostdinc -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include -I./arch/x86/include/generated -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include -I./include -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi -I./include/generated/uapi -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler-version.h -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kconfig.h -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/ubuntu/include -D__KERNEL__ -fmacro-prefix-map=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/= -D__ASSEMBLY__ -fno-PIE -m64 -DCC_USING_FENTRY -g -gdwarf-5 -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock -Ikernel/kdlock    -DKBUILD_MODFILE='\"kernel/kdlock/kdlock_rebuild\"' -DKBUILD_MODNAME='\"kdlock_rebuild\"' -D__KBUILD_MODNAME=kdlock_rebuild -c -o kernel/kdlock/include/mutex_api.o /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/mutex_api.S \n\nsource_kernel/kdlock/include/mutex_api.o := /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/mutex_api.S\n\ndeps_kernel/kdlock/include/mutex_api.o := \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler-version.h \\\n    $(wildcard include/config/CC_VERSION_TEXT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kconfig.h \\\n    $(wildcard include/config/CPU_BIG_ENDIAN) \\\n    $(wildcard include/config/BOOGER) \\\n    $(wildcard include/config/FOO) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/kd_mutex_api.h \\\n\nkernel/kdlock/include/mutex_api.o: $(deps_kernel/kdlock/include/mutex_api.o)\n\n$(deps_kernel/kdlock/include/mutex_api.o):\n"
+    },
+    "kernel/mutex.o": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/kernel/kdlock/kernel/.mutex.o.cmd",
+      "sha256": "db61bc5cdf377f62eee316ba3de5229e747c49aa118eab77c793898d9f9de31b",
+      "text": "savedcmd_kernel/kdlock/kernel/mutex.o := gcc -Wp,-MMD,kernel/kdlock/kernel/.mutex.o.d -nostdinc -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include -I./arch/x86/include/generated -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include -I./include -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi -I./include/generated/uapi -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler-version.h -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kconfig.h -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/ubuntu/include -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler_types.h -D__KERNEL__ -fmacro-prefix-map=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/= -std=gnu11 -fshort-wchar -funsigned-char -fno-common -fno-PIE -fno-strict-aliasing -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -mno-sse4a -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -march=x86-64 -mtune=generic -mno-red-zone -mcmodel=kernel -mstack-protector-guard-reg=gs -mstack-protector-guard-symbol=__ref_stack_chk_guard -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -mindirect-branch-cs-prefix -mfunction-return=thunk-extern -fno-jump-tables -mharden-sls=all -fpatchable-function-entry=16,16 -fno-delete-null-pointer-checks -O2 -fno-allow-store-data-races -fstack-protector-strong -fno-omit-frame-pointer -fno-optimize-sibling-calls -ftrivial-auto-var-init=zero -fzero-init-padding-bits=all -fno-stack-clash-protection -fzero-call-used-regs=used-gpr -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -fmin-function-alignment=16 -fstrict-flex-arrays=3 -fms-extensions -fno-strict-overflow -fno-stack-check -fconserve-stack -fno-builtin-wcslen -Wall -Wextra -Wundef -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Werror=strict-prototypes -Wno-format-security -Wno-trigraphs -Wno-frame-address -Wno-address-of-packed-member -Wmissing-declarations -Wmissing-prototypes -Wframe-larger-than=1024 -Wno-main -Wno-type-limits -Wno-dangling-pointer -Wvla-larger-than=1 -Wno-pointer-sign -Wcast-function-type -Wno-unterminated-string-initialization -Wno-array-bounds -Wno-stringop-overflow -Wno-alloc-size-larger-than -Wimplicit-fallthrough=5 -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wenum-conversion -Wunused -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-packed-not-aligned -Wno-format-overflow -Wno-format-truncation -Wno-stringop-truncation -Wno-override-init -Wno-missing-field-initializers -Wno-shift-negative-value -Wno-maybe-uninitialized -Wno-sign-compare -Wno-unused-parameter -g -gdwarf-5 -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/target.h  -fsanitize=bounds-strict -fsanitize=shift -fsanitize=bool -fsanitize=enum   -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock -Ikernel/kdlock    -DKBUILD_MODFILE='\"kernel/kdlock/kdlock_rebuild\"' -DKBUILD_BASENAME='\"mutex\"' -DKBUILD_MODNAME='\"kdlock_rebuild\"' -D__KBUILD_MODNAME=kdlock_rebuild -c -o kernel/kdlock/kernel/mutex.o /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex.c  \n\nsource_kernel/kdlock/kernel/mutex.o := /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex.c\n\ndeps_kernel/kdlock/kernel/mutex.o := \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler-version.h \\\n    $(wildcard include/config/CC_VERSION_TEXT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kconfig.h \\\n    $(wildcard include/config/CPU_BIG_ENDIAN) \\\n    $(wildcard include/config/BOOGER) \\\n    $(wildcard include/config/FOO) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler_types.h \\\n    $(wildcard include/config/DEBUG_INFO_BTF) \\\n    $(wildcard include/config/PAHOLE_HAS_BTF_TAG) \\\n    $(wildcard include/config/FUNCTION_ALIGNMENT) \\\n    $(wildcard include/config/CC_HAS_SANE_FUNCTION_ALIGNMENT) \\\n    $(wildcard include/config/X86_64) \\\n    $(wildcard include/config/ARM64) \\\n    $(wildcard include/config/LD_DEAD_CODE_DATA_ELIMINATION) \\\n    $(wildcard include/config/LTO_CLANG) \\\n    $(wildcard include/config/HAVE_ARCH_COMPILER_H) \\\n    $(wildcard include/config/KCSAN) \\\n    $(wildcard include/config/CC_HAS_ASSUME) \\\n    $(wildcard include/config/CC_HAS_COUNTED_BY) \\\n    $(wildcard include/config/FORTIFY_SOURCE) \\\n    $(wildcard include/config/UBSAN_BOUNDS) \\\n    $(wildcard include/config/CC_HAS_COUNTED_BY_PTR) \\\n    $(wildcard include/config/CC_HAS_MULTIDIMENSIONAL_NONSTRING) \\\n    $(wildcard include/config/UBSAN_INTEGER_WRAP) \\\n    $(wildcard include/config/CFI) \\\n    $(wildcard include/config/ARCH_USES_CFI_GENERIC_LLVM_PASS) \\\n    $(wildcard include/config/CC_HAS_BROKEN_COUNTED_BY_REF) \\\n    $(wildcard include/config/CC_HAS_ASM_INLINE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler-context-analysis.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler_attributes.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler-gcc.h \\\n    $(wildcard include/config/ARCH_USE_BUILTIN_BSWAP) \\\n    $(wildcard include/config/SHADOW_CALL_STACK) \\\n    $(wildcard include/config/KCOV) \\\n    $(wildcard include/config/CC_HAS_TYPEOF_UNQUAL) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/target.h \\\n    $(wildcard include/config/PREEMPT_RT) \\\n  include/generated/uapi/linux/version.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/bug.h \\\n    $(wildcard include/config/GENERIC_BUG) \\\n    $(wildcard include/config/PRINTK) \\\n    $(wildcard include/config/BUG_ON_DATA_CORRUPTION) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/bug.h \\\n    $(wildcard include/config/DEBUG_BUGVERBOSE) \\\n    $(wildcard include/config/DEBUG_BUGVERBOSE_DETAILED) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/stringify.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/instrumentation.h \\\n    $(wildcard include/config/NOINSTR_VALIDATION) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/objtool.h \\\n    $(wildcard include/config/OBJTOOL) \\\n    $(wildcard include/config/FRAME_POINTER) \\\n    $(wildcard include/config/MITIGATION_UNRET_ENTRY) \\\n    $(wildcard include/config/MITIGATION_SRSO) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/objtool_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/types.h \\\n    $(wildcard include/config/HAVE_UID16) \\\n    $(wildcard include/config/UID16) \\\n    $(wildcard include/config/ARCH_DMA_ADDR_T_64BIT) \\\n    $(wildcard include/config/PHYS_ADDR_T_64BIT) \\\n    $(wildcard include/config/64BIT) \\\n    $(wildcard include/config/ARCH_32BIT_USTAT_F_TINODE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/types.h \\\n  arch/x86/include/generated/uapi/asm/types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/int-ll64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/int-ll64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/bitsperlong.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bitsperlong.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/bitsperlong.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/posix_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/stddef.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/stddef.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/posix_types.h \\\n    $(wildcard include/config/X86_32) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/posix_types_64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/posix_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/annotate.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/asm.h \\\n    $(wildcard include/config/KPROBES) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/asm-offsets.h \\\n  include/generated/asm-offsets.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/extable_fixup_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/static_call_types.h \\\n    $(wildcard include/config/HAVE_STATIC_CALL) \\\n    $(wildcard include/config/HAVE_STATIC_CALL_INLINE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler.h \\\n    $(wildcard include/config/TRACE_BRANCH_PROFILING) \\\n    $(wildcard include/config/PROFILE_ALL_BRANCHES) \\\n  arch/x86/include/generated/asm/rwonce.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/rwonce.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kasan-checks.h \\\n    $(wildcard include/config/KASAN_GENERIC) \\\n    $(wildcard include/config/KASAN_SW_TAGS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kcsan-checks.h \\\n    $(wildcard include/config/KCSAN_WEAK_MEMORY) \\\n    $(wildcard include/config/KCSAN_IGNORE_ATOMICS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bug.h \\\n    $(wildcard include/config/BUG) \\\n    $(wildcard include/config/GENERIC_BUG_RELATIVE_POINTERS) \\\n    $(wildcard include/config/SMP) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/once_lite.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/panic.h \\\n    $(wildcard include/config/PANIC_TIMEOUT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/stdarg.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/printk.h \\\n    $(wildcard include/config/MESSAGE_LOGLEVEL_DEFAULT) \\\n    $(wildcard include/config/CONSOLE_LOGLEVEL_DEFAULT) \\\n    $(wildcard include/config/CONSOLE_LOGLEVEL_QUIET) \\\n    $(wildcard include/config/EARLY_PRINTK) \\\n    $(wildcard include/config/PRINTK_INDEX) \\\n    $(wildcard include/config/DYNAMIC_DEBUG) \\\n    $(wildcard include/config/DYNAMIC_DEBUG_CORE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/init.h \\\n    $(wildcard include/config/MEMORY_HOTPLUG) \\\n    $(wildcard include/config/HAVE_ARCH_PREL32_RELOCATIONS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/build_bug.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kern_levels.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/linkage.h \\\n    $(wildcard include/config/ARCH_USE_SYM_ANNOTATIONS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/export.h \\\n    $(wildcard include/config/MODVERSIONS) \\\n    $(wildcard include/config/GENDWARFKSYMS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/linkage.h \\\n    $(wildcard include/config/CALL_PADDING) \\\n    $(wildcard include/config/MITIGATION_RETHUNK) \\\n    $(wildcard include/config/MITIGATION_RETPOLINE) \\\n    $(wildcard include/config/MITIGATION_SLS) \\\n    $(wildcard include/config/FUNCTION_PADDING_BYTES) \\\n    $(wildcard include/config/UML) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/ibt.h \\\n    $(wildcard include/config/X86_KERNEL_IBT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/ratelimit_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/bits.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/bits.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/const.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/const.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/bits.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/overflow.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/limits.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/limits.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/limits.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/const.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/param.h \\\n  arch/x86/include/generated/uapi/asm/param.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/param.h \\\n    $(wildcard include/config/HZ) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/param.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/spinlock_types_raw.h \\\n    $(wildcard include/config/DEBUG_SPINLOCK) \\\n    $(wildcard include/config/DEBUG_LOCK_ALLOC) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/spinlock_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/qspinlock_types.h \\\n    $(wildcard include/config/NR_CPUS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/qrwlock_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/byteorder.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/byteorder/little_endian.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/byteorder/little_endian.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/swab.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/swab.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/swab.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/byteorder/generic.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/lockdep_types.h \\\n    $(wildcard include/config/PROVE_RAW_LOCK_NESTING) \\\n    $(wildcard include/config/LOCKDEP) \\\n    $(wildcard include/config/LOCK_STAT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/dynamic_debug.h \\\n    $(wildcard include/config/JUMP_LABEL) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/jump_label.h \\\n    $(wildcard include/config/HAVE_ARCH_JUMP_LABEL_RELATIVE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/cleanup.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/err.h \\\n  arch/x86/include/generated/uapi/asm/errno.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/errno.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/errno-base.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/args.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/jump_label.h \\\n    $(wildcard include/config/HAVE_JUMP_LABEL_HACK) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/nops.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/errno.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/errno.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kernel.h \\\n    $(wildcard include/config/PREEMPT_VOLUNTARY_BUILD) \\\n    $(wildcard include/config/PREEMPT_DYNAMIC) \\\n    $(wildcard include/config/HAVE_PREEMPT_DYNAMIC_CALL) \\\n    $(wildcard include/config/HAVE_PREEMPT_DYNAMIC_KEY) \\\n    $(wildcard include/config/PREEMPT_) \\\n    $(wildcard include/config/DEBUG_ATOMIC_SLEEP) \\\n    $(wildcard include/config/MMU) \\\n    $(wildcard include/config/PROVE_LOCKING) \\\n    $(wildcard include/config/DYNAMIC_FTRACE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/align.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/align.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/array_size.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/container_of.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/bitops.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/typecheck.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/kernel.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/sysinfo.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bitops/generic-non-atomic.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/barrier.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/alternative.h \\\n    $(wildcard include/config/CALL_THUNKS) \\\n    $(wildcard include/config/MITIGATION_ITS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/barrier.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/bitops.h \\\n    $(wildcard include/config/X86_CMOV) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/rmwcc.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bitops/sched.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/arch_hweight.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/cpufeatures.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bitops/const_hweight.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bitops/instrumented-atomic.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/instrumented.h \\\n    $(wildcard include/config/DEBUG_ATOMIC) \\\n    $(wildcard include/config/DEBUG_ATOMIC_LARGEST_ALIGN) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kmsan-checks.h \\\n    $(wildcard include/config/KMSAN) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bitops/instrumented-non-atomic.h \\\n    $(wildcard include/config/KCSAN_ASSUME_PLAIN_WRITES_ATOMIC) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bitops/instrumented-lock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bitops/le.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/bitops/ext2-atomic-setbit.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kstrtox.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/log2.h \\\n    $(wildcard include/config/ARCH_HAS_ILOG2_U32) \\\n    $(wildcard include/config/ARCH_HAS_ILOG2_U64) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/math.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/div64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/div64.h \\\n    $(wildcard include/config/CC_OPTIMIZE_FOR_PERFORMANCE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/minmax.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sprintf.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/trace_printk.h \\\n    $(wildcard include/config/TRACING) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/instruction_pointer.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/util_macros.h \\\n    $(wildcard include/config/FOO_SUSPEND) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/wordpart.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sched.h \\\n    $(wildcard include/config/VIRT_CPU_ACCOUNTING_NATIVE) \\\n    $(wildcard include/config/SCHED_INFO) \\\n    $(wildcard include/config/SCHEDSTATS) \\\n    $(wildcard include/config/SCHED_CORE) \\\n    $(wildcard include/config/FAIR_GROUP_SCHED) \\\n    $(wildcard include/config/RT_GROUP_SCHED) \\\n    $(wildcard include/config/RT_MUTEXES) \\\n    $(wildcard include/config/UCLAMP_TASK) \\\n    $(wildcard include/config/UCLAMP_BUCKETS_COUNT) \\\n    $(wildcard include/config/KMAP_LOCAL) \\\n    $(wildcard include/config/THREAD_INFO_IN_TASK) \\\n    $(wildcard include/config/MEM_ALLOC_PROFILING) \\\n    $(wildcard include/config/SCHED_CLASS_EXT) \\\n    $(wildcard include/config/CGROUP_SCHED) \\\n    $(wildcard include/config/CFS_BANDWIDTH) \\\n    $(wildcard include/config/PREEMPT_NOTIFIERS) \\\n    $(wildcard include/config/BLK_DEV_IO_TRACE) \\\n    $(wildcard include/config/PREEMPT_RCU) \\\n    $(wildcard include/config/TASKS_RCU) \\\n    $(wildcard include/config/TASKS_TRACE_RCU) \\\n    $(wildcard include/config/MEMCG_V1) \\\n    $(wildcard include/config/LRU_GEN) \\\n    $(wildcard include/config/COMPAT_BRK) \\\n    $(wildcard include/config/CGROUPS) \\\n    $(wildcard include/config/BLK_CGROUP) \\\n    $(wildcard include/config/PSI) \\\n    $(wildcard include/config/PAGE_OWNER) \\\n    $(wildcard include/config/EVENTFD) \\\n    $(wildcard include/config/ARCH_HAS_CPU_PASID) \\\n    $(wildcard include/config/X86_BUS_LOCK_DETECT) \\\n    $(wildcard include/config/TASK_DELAY_ACCT) \\\n    $(wildcard include/config/STACKPROTECTOR) \\\n    $(wildcard include/config/ARCH_HAS_SCALED_CPUTIME) \\\n    $(wildcard include/config/VIRT_CPU_ACCOUNTING_GEN) \\\n    $(wildcard include/config/NO_HZ_FULL) \\\n    $(wildcard include/config/POSIX_CPUTIMERS) \\\n    $(wildcard include/config/POSIX_CPU_TIMERS_TASK_WORK) \\\n    $(wildcard include/config/KEYS) \\\n    $(wildcard include/config/SYSVIPC) \\\n    $(wildcard include/config/DETECT_HUNG_TASK) \\\n    $(wildcard include/config/IO_URING) \\\n    $(wildcard include/config/AUDIT) \\\n    $(wildcard include/config/AUDITSYSCALL) \\\n    $(wildcard include/config/DETECT_HUNG_TASK_BLOCKER) \\\n    $(wildcard include/config/TRACE_IRQFLAGS) \\\n    $(wildcard include/config/UBSAN) \\\n    $(wildcard include/config/UBSAN_TRAP) \\\n    $(wildcard include/config/COMPACTION) \\\n    $(wildcard include/config/TASK_XACCT) \\\n    $(wildcard include/config/CPUSETS) \\\n    $(wildcard include/config/X86_CPU_RESCTRL) \\\n    $(wildcard include/config/FUTEX) \\\n    $(wildcard include/config/COMPAT) \\\n    $(wildcard include/config/PERF_EVENTS) \\\n    $(wildcard include/config/DEBUG_PREEMPT) \\\n    $(wildcard include/config/NUMA) \\\n    $(wildcard include/config/NUMA_BALANCING) \\\n    $(wildcard include/config/ARCH_HAS_LAZY_MMU_MODE) \\\n    $(wildcard include/config/FAULT_INJECTION) \\\n    $(wildcard include/config/LATENCYTOP) \\\n    $(wildcard include/config/KUNIT) \\\n    $(wildcard include/config/FUNCTION_GRAPH_TRACER) \\\n    $(wildcard include/config/MEMCG) \\\n    $(wildcard include/config/UPROBES) \\\n    $(wildcard include/config/BCACHE) \\\n    $(wildcard include/config/VMAP_STACK) \\\n    $(wildcard include/config/LIVEPATCH) \\\n    $(wildcard include/config/SECURITY) \\\n    $(wildcard include/config/BPF_SYSCALL) \\\n    $(wildcard include/config/KSTACK_ERASE) \\\n    $(wildcard include/config/KSTACK_ERASE_METRICS) \\\n    $(wildcard include/config/RANDOMIZE_KSTACK_OFFSET) \\\n    $(wildcard include/config/X86_MCE) \\\n    $(wildcard include/config/KRETPROBES) \\\n    $(wildcard include/config/RETHOOK) \\\n    $(wildcard include/config/ARCH_HAS_PARANOID_L1D_FLUSH) \\\n    $(wildcard include/config/RV) \\\n    $(wildcard include/config/RV_PER_TASK_MONITORS) \\\n    $(wildcard include/config/USER_EVENTS) \\\n    $(wildcard include/config/UNWIND_USER) \\\n    $(wildcard include/config/SCHED_PROXY_EXEC) \\\n    $(wildcard include/config/PREEMPTION) \\\n    $(wildcard include/config/MEM_ALLOC_PROFILING_DEBUG) \\\n    $(wildcard include/config/SCHED_MM_CID) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/sched.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/current.h \\\n    $(wildcard include/config/USE_X86_SEG_SUPPORT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/cache.h \\\n    $(wildcard include/config/ARCH_HAS_CACHE_LINE_SIZE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/cache.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/cache.h \\\n    $(wildcard include/config/X86_L1_CACHE_SHIFT) \\\n    $(wildcard include/config/X86_INTERNODE_CACHE_SHIFT) \\\n    $(wildcard include/config/X86_VSMP) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/percpu.h \\\n    $(wildcard include/config/CC_HAS_NAMED_AS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/percpu.h \\\n    $(wildcard include/config/HAVE_SETUP_PER_CPU_AREA) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/threads.h \\\n    $(wildcard include/config/BASE_SMALL) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/percpu-defs.h \\\n    $(wildcard include/config/ARCH_MODULE_NEEDS_WEAK_PER_CPU) \\\n    $(wildcard include/config/DEBUG_FORCE_WEAK_PER_CPU) \\\n    $(wildcard include/config/AMD_MEM_ENCRYPT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/processor.h \\\n    $(wildcard include/config/X86_VMX_FEATURE_NAMES) \\\n    $(wildcard include/config/X86_IOPL_IOPERM) \\\n    $(wildcard include/config/VM86) \\\n    $(wildcard include/config/X86_USER_SHADOW_STACK) \\\n    $(wildcard include/config/X86_DEBUG_FPU) \\\n    $(wildcard include/config/PARAVIRT_XXL) \\\n    $(wildcard include/config/CPU_SUP_AMD) \\\n    $(wildcard include/config/XEN) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/processor-flags.h \\\n    $(wildcard include/config/MITIGATION_PAGE_TABLE_ISOLATION) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/processor-flags.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mem_encrypt.h \\\n    $(wildcard include/config/ARCH_HAS_MEM_ENCRYPT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/mem_encrypt.h \\\n    $(wildcard include/config/X86_MEM_ENCRYPT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/cc_platform.h \\\n    $(wildcard include/config/ARCH_HAS_CC_PLATFORM) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/math_emu.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/ptrace.h \\\n    $(wildcard include/config/PARAVIRT) \\\n    $(wildcard include/config/IA32_EMULATION) \\\n    $(wildcard include/config/X86_DEBUGCTLMSR) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/segment.h \\\n    $(wildcard include/config/XEN_PV) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/page_types.h \\\n    $(wildcard include/config/PHYSICAL_START) \\\n    $(wildcard include/config/PHYSICAL_ALIGN) \\\n    $(wildcard include/config/DYNAMIC_PHYSICAL_MASK) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/page.h \\\n    $(wildcard include/config/PAGE_SHIFT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/page_64_types.h \\\n    $(wildcard include/config/KASAN) \\\n    $(wildcard include/config/RANDOMIZE_BASE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/kaslr.h \\\n    $(wildcard include/config/RANDOMIZE_MEMORY) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/ptrace.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/ptrace-abi.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/paravirt-base.h \\\n    $(wildcard include/config/PARAVIRT_SPINLOCKS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/proto.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/ldt.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/sigcontext.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/cpuid/api.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/cpuid/types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/string.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/string_64.h \\\n    $(wildcard include/config/ARCH_HAS_UACCESS_FLUSHCACHE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/paravirt.h \\\n    $(wildcard include/config/DEBUG_ENTRY) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/paravirt_types.h \\\n    $(wildcard include/config/ZERO_CALL_USED_REGS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/desc_defs.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/pgtable_types.h \\\n    $(wildcard include/config/X86_INTEL_MEMORY_PROTECTION_KEYS) \\\n    $(wildcard include/config/X86_PAE) \\\n    $(wildcard include/config/MEM_SOFT_DIRTY) \\\n    $(wildcard include/config/HAVE_ARCH_USERFAULTFD_WP) \\\n    $(wildcard include/config/PGTABLE_LEVELS) \\\n    $(wildcard include/config/PROC_FS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/pgtable_64_types.h \\\n    $(wildcard include/config/DEBUG_KMAP_LOCAL_FORCE_MAP) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/sparsemem.h \\\n    $(wildcard include/config/SPARSEMEM) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/nospec-branch.h \\\n    $(wildcard include/config/CALL_THUNKS_DEBUG) \\\n    $(wildcard include/config/MITIGATION_CALL_DEPTH_TRACKING) \\\n    $(wildcard include/config/MITIGATION_IBPB_ENTRY) \\\n    $(wildcard include/config/BPF_JIT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/static_key.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/msr-index.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/unwind_hints.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/orc_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/GEN-for-each-reg.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/cpumask.h \\\n    $(wildcard include/config/FORCE_NR_CPUS) \\\n    $(wildcard include/config/HOTPLUG_CPU) \\\n    $(wildcard include/config/DEBUG_PER_CPU_MAPS) \\\n    $(wildcard include/config/CPUMASK_OFFSTACK) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/atomic.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/atomic.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/cmpxchg.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/cmpxchg_64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/atomic64_64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/atomic/atomic-arch-fallback.h \\\n    $(wildcard include/config/GENERIC_ATOMIC64) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/atomic/atomic-long.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/atomic/atomic-instrumented.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/bitmap.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/find.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/string.h \\\n    $(wildcard include/config/BINARY_PRINTF) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/string.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/fortify-string.h \\\n    $(wildcard include/config/CC_HAS_KASAN_MEMINTRINSIC_PREFIX) \\\n    $(wildcard include/config/GENERIC_ENTRY) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/bitmap-str.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/cpumask_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/gfp_types.h \\\n    $(wildcard include/config/KASAN_HW_TAGS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/numa.h \\\n    $(wildcard include/config/NUMA_KEEP_MEMINFO) \\\n    $(wildcard include/config/HAVE_ARCH_NODE_DEV_GROUP) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/nodemask.h \\\n    $(wildcard include/config/HIGHMEM) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/nodemask_types.h \\\n    $(wildcard include/config/NODES_SHIFT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/random.h \\\n    $(wildcard include/config/VMGENID) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/list.h \\\n    $(wildcard include/config/LIST_HARDENED) \\\n    $(wildcard include/config/DEBUG_LIST) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/poison.h \\\n    $(wildcard include/config/ILLEGAL_POINTER_VALUE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/random.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/ioctl.h \\\n  arch/x86/include/generated/uapi/asm/ioctl.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/ioctl.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/ioctl.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/irqnr.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/irqnr.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/frame.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/page.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/page_64.h \\\n    $(wildcard include/config/DEBUG_VIRTUAL) \\\n    $(wildcard include/config/X86_VSYSCALL_EMULATION) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mmdebug.h \\\n    $(wildcard include/config/DEBUG_VM) \\\n    $(wildcard include/config/DEBUG_VM_IRQSOFF) \\\n    $(wildcard include/config/DEBUG_VM_PGFLAGS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/range.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/memory_model.h \\\n    $(wildcard include/config/FLATMEM) \\\n    $(wildcard include/config/SPARSEMEM_VMEMMAP) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/pfn.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/getorder.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/special_insns.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/irqflags.h \\\n    $(wildcard include/config/IRQSOFF_TRACER) \\\n    $(wildcard include/config/PREEMPT_TRACER) \\\n    $(wildcard include/config/DEBUG_IRQFLAGS) \\\n    $(wildcard include/config/TRACE_IRQFLAGS_SUPPORT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/irqflags_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/irqflags.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/fpu/types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/vmxfeatures.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/vdso/processor.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/shstk.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/personality.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/personality.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/math64.h \\\n    $(wildcard include/config/ARCH_SUPPORTS_INT128) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/math64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/thread_info.h \\\n    $(wildcard include/config/ARCH_HAS_PREEMPT_LAZY) \\\n    $(wildcard include/config/HAVE_ARCH_WITHIN_STACK_FRAMES) \\\n    $(wildcard include/config/SH) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/restart_block.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/time64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/time64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/time.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/time_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/thread_info.h \\\n    $(wildcard include/config/X86_FRED) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/cpufeature.h \\\n  arch/x86/include/generated/asm/cpufeaturemasks.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/thread_info_tif.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/preempt.h \\\n    $(wildcard include/config/PREEMPT_COUNT) \\\n    $(wildcard include/config/TRACE_PREEMPT_TOGGLE) \\\n    $(wildcard include/config/PREEMPT_NONE) \\\n    $(wildcard include/config/PREEMPT_VOLUNTARY) \\\n    $(wildcard include/config/PREEMPT) \\\n    $(wildcard include/config/PREEMPT_LAZY) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/preempt.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/smp_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/llist.h \\\n    $(wildcard include/config/ARCH_HAVE_NMI_SAFE_CMPXCHG) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/pid_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sem_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/shm.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/shmparam.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kmsan_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mutex_types.h \\\n    $(wildcard include/config/MUTEX_SPIN_ON_OWNER) \\\n    $(wildcard include/config/DEBUG_MUTEXES) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/osq_lock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/spinlock_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rwlock_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/plist_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/hrtimer_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/timerqueue_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rbtree_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/timer_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/seccomp_types.h \\\n    $(wildcard include/config/SECCOMP) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/refcount_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/resource.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/resource.h \\\n  arch/x86/include/generated/uapi/asm/resource.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/resource.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/resource.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/latencytop.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sched/prio.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sched/types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/signal_types.h \\\n    $(wildcard include/config/OLD_SIGACTION) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/signal.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/signal.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/signal.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/signal-defs.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/siginfo.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/asm-generic/siginfo.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/spinlock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/bottom_half.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/lockdep.h \\\n    $(wildcard include/config/DEBUG_LOCKING_API_SELFTESTS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/smp.h \\\n    $(wildcard include/config/UP_LATE_INIT) \\\n    $(wildcard include/config/CSD_LOCK_WAIT_DEBUG) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/smp.h \\\n    $(wildcard include/config/DEBUG_NMI_SELFTEST) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/cpumask.h \\\n  arch/x86/include/generated/asm/mmiowb.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/mmiowb.h \\\n    $(wildcard include/config/MMIOWB) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/spinlock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/qspinlock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/paravirt-spinlock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/qspinlock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/qrwlock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/qrwlock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rwlock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/spinlock_api_smp.h \\\n    $(wildcard include/config/INLINE_SPIN_LOCK) \\\n    $(wildcard include/config/INLINE_SPIN_LOCK_BH) \\\n    $(wildcard include/config/INLINE_SPIN_LOCK_IRQ) \\\n    $(wildcard include/config/INLINE_SPIN_LOCK_IRQSAVE) \\\n    $(wildcard include/config/INLINE_SPIN_TRYLOCK) \\\n    $(wildcard include/config/INLINE_SPIN_TRYLOCK_BH) \\\n    $(wildcard include/config/UNINLINE_SPIN_UNLOCK) \\\n    $(wildcard include/config/INLINE_SPIN_UNLOCK_BH) \\\n    $(wildcard include/config/INLINE_SPIN_UNLOCK_IRQ) \\\n    $(wildcard include/config/INLINE_SPIN_UNLOCK_IRQRESTORE) \\\n    $(wildcard include/config/GENERIC_LOCKBREAK) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rwlock_api_smp.h \\\n    $(wildcard include/config/INLINE_READ_LOCK) \\\n    $(wildcard include/config/INLINE_WRITE_LOCK) \\\n    $(wildcard include/config/INLINE_READ_LOCK_BH) \\\n    $(wildcard include/config/INLINE_WRITE_LOCK_BH) \\\n    $(wildcard include/config/INLINE_READ_LOCK_IRQ) \\\n    $(wildcard include/config/INLINE_WRITE_LOCK_IRQ) \\\n    $(wildcard include/config/INLINE_READ_LOCK_IRQSAVE) \\\n    $(wildcard include/config/INLINE_WRITE_LOCK_IRQSAVE) \\\n    $(wildcard include/config/INLINE_READ_TRYLOCK) \\\n    $(wildcard include/config/INLINE_WRITE_TRYLOCK) \\\n    $(wildcard include/config/INLINE_READ_UNLOCK) \\\n    $(wildcard include/config/INLINE_WRITE_UNLOCK) \\\n    $(wildcard include/config/INLINE_READ_UNLOCK_BH) \\\n    $(wildcard include/config/INLINE_WRITE_UNLOCK_BH) \\\n    $(wildcard include/config/INLINE_READ_UNLOCK_IRQ) \\\n    $(wildcard include/config/INLINE_WRITE_UNLOCK_IRQ) \\\n    $(wildcard include/config/INLINE_READ_UNLOCK_IRQRESTORE) \\\n    $(wildcard include/config/INLINE_WRITE_UNLOCK_IRQRESTORE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/syscall_user_dispatch_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mm_types_task.h \\\n    $(wildcard include/config/ARCH_WANT_BATCHED_UNMAP_TLB_FLUSH) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/tlbbatch.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/netdevice_xmit.h \\\n    $(wildcard include/config/NET_ACT_MIRRED) \\\n    $(wildcard include/config/NET_EGRESS) \\\n    $(wildcard include/config/NF_DUP_NETDEV) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/task_io_accounting.h \\\n    $(wildcard include/config/TASK_IO_ACCOUNTING) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/posix-timers_types.h \\\n    $(wildcard include/config/POSIX_TIMERS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rseq_types.h \\\n    $(wildcard include/config/RSEQ) \\\n    $(wildcard include/config/RSEQ_SLICE_EXTENSION) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/irq_work_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/workqueue_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/seqlock_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kcsan.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rv.h \\\n    $(wildcard include/config/RV_LTL_MONITOR) \\\n    $(wildcard include/config/RV_REACTORS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/uidgid_types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/tracepoint-defs.h \\\n    $(wildcard include/config/TRACEPOINTS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/unwind_deferred_types.h \\\n  arch/x86/include/generated/asm/kmap_size.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/kmap_size.h \\\n    $(wildcard include/config/DEBUG_KMAP_LOCAL) \\\n  include/generated/rq-offsets.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sched/ext.h \\\n    $(wildcard include/config/EXT_GROUP_SCHED) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rhashtable-types.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/alloc_tag.h \\\n    $(wildcard include/config/MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/codetag.h \\\n    $(wildcard include/config/MODULES) \\\n    $(wildcard include/config/CODE_TAGGING) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mutex.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/debug_locks.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sched/task.h \\\n    $(wildcard include/config/HAVE_EXIT_THREAD) \\\n    $(wildcard include/config/ARCH_WANTS_DYNAMIC_TASK_STRUCT) \\\n    $(wildcard include/config/HAVE_ARCH_THREAD_STRUCT_WHITELIST) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rcupdate.h \\\n    $(wildcard include/config/TINY_RCU) \\\n    $(wildcard include/config/RCU_STRICT_GRACE_PERIOD) \\\n    $(wildcard include/config/RCU_LAZY) \\\n    $(wildcard include/config/RCU_STALL_COMMON) \\\n    $(wildcard include/config/VIRT_XFER_TO_GUEST_WORK) \\\n    $(wildcard include/config/RCU_NOCB_CPU) \\\n    $(wildcard include/config/TASKS_RCU_GENERIC) \\\n    $(wildcard include/config/TASKS_RUDE_RCU) \\\n    $(wildcard include/config/TREE_RCU) \\\n    $(wildcard include/config/DEBUG_OBJECTS_RCU_HEAD) \\\n    $(wildcard include/config/PROVE_RCU) \\\n    $(wildcard include/config/ARCH_WEAK_RELEASE_ACQUIRE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/context_tracking_irq.h \\\n    $(wildcard include/config/CONTEXT_TRACKING_IDLE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rcutree.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/refcount.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/uaccess.h \\\n    $(wildcard include/config/ARCH_HAS_SUBPAGE_FAULTS) \\\n    $(wildcard include/config/HARDENED_USERCOPY) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/fault-inject-usercopy.h \\\n    $(wildcard include/config/FAULT_INJECTION_USERCOPY) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/nospec.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/ucopysize.h \\\n    $(wildcard include/config/HARDENED_USERCOPY_DEFAULT_ON) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/uaccess.h \\\n    $(wildcard include/config/CC_HAS_ASM_GOTO_OUTPUT) \\\n    $(wildcard include/config/CC_HAS_ASM_GOTO_TIED_OUTPUT) \\\n    $(wildcard include/config/ARCH_HAS_COPY_MC) \\\n    $(wildcard include/config/X86_INTEL_USERCOPY) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mm_types.h \\\n    $(wildcard include/config/KDLOCK_MMAP) \\\n    $(wildcard include/config/HAVE_ALIGNED_STRUCT_PAGE) \\\n    $(wildcard include/config/SLAB_OBJ_EXT) \\\n    $(wildcard include/config/HUGETLB_PMD_PAGE_TABLE_SHARING) \\\n    $(wildcard include/config/SLAB_FREELIST_HARDENED) \\\n    $(wildcard include/config/USERFAULTFD) \\\n    $(wildcard include/config/ANON_VMA_NAME) \\\n    $(wildcard include/config/PER_VMA_LOCK) \\\n    $(wildcard include/config/SWAP) \\\n    $(wildcard include/config/HAVE_ARCH_COMPAT_MMAP_BASES) \\\n    $(wildcard include/config/MEMBARRIER) \\\n    $(wildcard include/config/FUTEX_PRIVATE_HASH) \\\n    $(wildcard include/config/ARCH_HAS_ELF_CORE_EFLAGS) \\\n    $(wildcard include/config/AIO) \\\n    $(wildcard include/config/MMU_NOTIFIER) \\\n    $(wildcard include/config/TRANSPARENT_HUGEPAGE) \\\n    $(wildcard include/config/SPLIT_PMD_PTLOCKS) \\\n    $(wildcard include/config/HUGETLB_PAGE) \\\n    $(wildcard include/config/IOMMU_MM_DATA) \\\n    $(wildcard include/config/KSM) \\\n    $(wildcard include/config/LRU_GEN_WALKS_MMU) \\\n    $(wildcard include/config/MM_ID) \\\n    $(wildcard include/config/CORE_DUMP_DEFAULT_ELF_HEADERS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/auxvec.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/auxvec.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/auxvec.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kref.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rbtree.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/maple_tree.h \\\n    $(wildcard include/config/MAPLE_RCU_DISABLED) \\\n    $(wildcard include/config/DEBUG_MAPLE_TREE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rwsem.h \\\n    $(wildcard include/config/RWSEM_SPIN_ON_OWNER) \\\n    $(wildcard include/config/DEBUG_RWSEMS) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/completion.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/swait.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/wait.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/uprobes.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/timer.h \\\n    $(wildcard include/config/DEBUG_OBJECTS_TIMERS) \\\n    $(wildcard include/config/NO_HZ_COMMON) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/ktime.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/jiffies.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/time.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/time32.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/timex.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi/linux/timex.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/timex.h \\\n    $(wildcard include/config/X86_TSC) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/tsc.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/msr.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/msr.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/shared/msr.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/percpu.h \\\n    $(wildcard include/config/RANDOM_KMALLOC_CACHES) \\\n    $(wildcard include/config/PAGE_SIZE_4KB) \\\n    $(wildcard include/config/NEED_PER_CPU_PAGE_FIRST_CHUNK) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/time32.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/time.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/jiffies.h \\\n  include/generated/timeconst.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/vdso/ktime.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/timekeeping.h \\\n    $(wildcard include/config/POSIX_AUX_CLOCKS) \\\n    $(wildcard include/config/GENERIC_CMOS_UPDATE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/clocksource_ids.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/debugobjects.h \\\n    $(wildcard include/config/DEBUG_OBJECTS) \\\n    $(wildcard include/config/DEBUG_OBJECTS_FREE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/seqlock.h \\\n    $(wildcard include/config/CC_IS_GCC) \\\n    $(wildcard include/config/GCC_VERSION) \\\n    $(wildcard include/config/UBSAN_ALIGNMENT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/uprobes.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/notifier.h \\\n    $(wildcard include/config/TREE_SRCU) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/srcu.h \\\n    $(wildcard include/config/TINY_SRCU) \\\n    $(wildcard include/config/NEED_SRCU_NMI_SAFE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/workqueue.h \\\n    $(wildcard include/config/DEBUG_OBJECTS_WORK) \\\n    $(wildcard include/config/FREEZER) \\\n    $(wildcard include/config/SYSFS) \\\n    $(wildcard include/config/WQ_WATCHDOG) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rcu_segcblist.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/srcutree.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/rcu_node_tree.h \\\n    $(wildcard include/config/RCU_FANOUT) \\\n    $(wildcard include/config/RCU_FANOUT_LEAF) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/page-flags-layout.h \\\n  include/generated/bounds.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/percpu_counter.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/mmu.h \\\n    $(wildcard include/config/MODIFY_LDT_SYSCALL) \\\n    $(wildcard include/config/ADDRESS_MASKING) \\\n    $(wildcard include/config/BROADCAST_TLB_FLUSH) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mmap_lock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sched/mm.h \\\n    $(wildcard include/config/MMU_LAZY_TLB_REFCOUNT) \\\n    $(wildcard include/config/ARCH_HAS_MEMBARRIER_CALLBACKS) \\\n    $(wildcard include/config/ARCH_HAS_SYNC_CORE_BEFORE_USERMODE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/gfp.h \\\n    $(wildcard include/config/ZONE_DMA) \\\n    $(wildcard include/config/ZONE_DMA32) \\\n    $(wildcard include/config/ZONE_DEVICE) \\\n    $(wildcard include/config/CONTIG_ALLOC) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mmzone.h \\\n    $(wildcard include/config/ARCH_FORCE_MAX_ORDER) \\\n    $(wildcard include/config/PAGE_BLOCK_MAX_ORDER) \\\n    $(wildcard include/config/CMA) \\\n    $(wildcard include/config/MEMORY_ISOLATION) \\\n    $(wildcard include/config/ZSMALLOC) \\\n    $(wildcard include/config/UNACCEPTED_MEMORY) \\\n    $(wildcard include/config/IOMMU_SUPPORT) \\\n    $(wildcard include/config/LRU_GEN_STATS) \\\n    $(wildcard include/config/MEMORY_FAILURE) \\\n    $(wildcard include/config/PAGE_EXTENSION) \\\n    $(wildcard include/config/DEFERRED_STRUCT_PAGE_INIT) \\\n    $(wildcard include/config/HAVE_MEMORYLESS_NODES) \\\n    $(wildcard include/config/SPARSEMEM_EXTREME) \\\n    $(wildcard include/config/SPARSEMEM_VMEMMAP_PREINIT) \\\n    $(wildcard include/config/HAVE_ARCH_PFN_VALID) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/list_nulls.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/pageblock-flags.h \\\n    $(wildcard include/config/HUGETLB_PAGE_SIZE_VARIABLE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/page-flags.h \\\n    $(wildcard include/config/PAGE_IDLE_FLAG) \\\n    $(wildcard include/config/ARCH_USES_PG_ARCH_2) \\\n    $(wildcard include/config/ARCH_USES_PG_ARCH_3) \\\n    $(wildcard include/config/MIGRATION) \\\n    $(wildcard include/config/HUGETLB_PAGE_OPTIMIZE_VMEMMAP) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/local_lock.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/local_lock_internal.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/zswap.h \\\n    $(wildcard include/config/ZSWAP) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/memory_hotplug.h \\\n    $(wildcard include/config/ARCH_HAS_ADD_PAGES) \\\n    $(wildcard include/config/MEMORY_HOTREMOVE) \\\n  arch/x86/include/generated/asm/mmzone.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/mmzone.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/topology.h \\\n    $(wildcard include/config/USE_PERCPU_NUMA_NODE_ID) \\\n    $(wildcard include/config/SCHED_SMT) \\\n    $(wildcard include/config/GENERIC_ARCH_TOPOLOGY) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/arch_topology.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/topology.h \\\n    $(wildcard include/config/X86_LOCAL_APIC) \\\n    $(wildcard include/config/SCHED_MC_PRIO) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/mpspec.h \\\n    $(wildcard include/config/EISA) \\\n    $(wildcard include/config/X86_MPPARSE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/mpspec_def.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/x86_init.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/apicdef.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/topology.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/cpu_smt.h \\\n    $(wildcard include/config/HOTPLUG_SMT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sync_core.h \\\n    $(wildcard include/config/ARCH_HAS_PREPARE_SYNC_CORE_CMD) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/sync_core.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sched/coredump.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/smap.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/extable.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/tlbflush.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/mmu_notifier.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/interval_tree.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/invpcid.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/pti.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/pgtable.h \\\n    $(wildcard include/config/DEBUG_WX) \\\n    $(wildcard include/config/HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD) \\\n    $(wildcard include/config/ARCH_SUPPORTS_PMD_PFNMAP) \\\n    $(wildcard include/config/ARCH_SUPPORTS_PUD_PFNMAP) \\\n    $(wildcard include/config/HAVE_ARCH_SOFT_DIRTY) \\\n    $(wildcard include/config/ARCH_ENABLE_THP_MIGRATION) \\\n    $(wildcard include/config/PAGE_TABLE_CHECK) \\\n    $(wildcard include/config/X86_SGX) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/pkru.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/fpu/api.h \\\n    $(wildcard include/config/MATH_EMULATION) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/coco.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/pgtable_uffd.h \\\n    $(wildcard include/config/PTE_MARKER_UFFD_WP) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/page_table_check.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/pgtable_64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/fixmap.h \\\n    $(wildcard include/config/PROVIDE_OHCI1394_DMA_INIT) \\\n    $(wildcard include/config/X86_IO_APIC) \\\n    $(wildcard include/config/PCI_MMCONFIG) \\\n    $(wildcard include/config/ACPI_APEI_GHES) \\\n    $(wildcard include/config/INTEL_TXT) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi/asm/vsyscall.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/fixmap.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/pgtable-invert.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/uaccess_64.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/runtime-const.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/access_ok.h \\\n    $(wildcard include/config/ALTERNATE_USER_ADDRESS_SPACE) \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex.h \\\n  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex_release.h \\\n\nkernel/kdlock/kernel/mutex.o: $(deps_kernel/kdlock/kernel/mutex.o)\n\n$(deps_kernel/kdlock/kernel/mutex.o):\n"
+    }
+  },
+  "config": {
+    "after_matches_result": true,
+    "after_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "before_matches_pin": true,
+    "before_sha256": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+    "current_matches_after": true,
+    "current_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+  },
+  "copied_package_files": {
+    "Kbuild": {
+      "actual_sha256": "d9d06edd3efd567c104fb74c2bf1d0dd7859fc8d6cb490bf75ed5993071e80e7",
+      "expected_sha256": "d9d06edd3efd567c104fb74c2bf1d0dd7859fc8d6cb490bf75ed5993071e80e7",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/Kbuild"
+    },
+    "Kconfig": {
+      "actual_sha256": "2546e02759b4bea08d5a27395e58421d0ef21936d5085281ecfb7236f38cd340",
+      "expected_sha256": "2546e02759b4bea08d5a27395e58421d0ef21936d5085281ecfb7236f38cd340",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/Kconfig"
+    },
+    "include/asm_head.h": {
+      "actual_sha256": "dcae354686db004a515957fb73f6645d19f98bbb1fe3a07f1b73dfaff318455c",
+      "expected_sha256": "dcae354686db004a515957fb73f6645d19f98bbb1fe3a07f1b73dfaff318455c",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/asm_head.h"
+    },
+    "include/kd_control.h": {
+      "actual_sha256": "403b7ef160f75b5f149abafd35da59bac89215a5f5e22c4138714d6b6dcbad6a",
+      "expected_sha256": "403b7ef160f75b5f149abafd35da59bac89215a5f5e22c4138714d6b6dcbad6a",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/kd_control.h"
+    },
+    "include/kd_mutex.h": {
+      "actual_sha256": "56b8541b70beb5c9b952d66b2eab8f89d57ea9e92bdec4617757fdf5eefdad3e",
+      "expected_sha256": "56b8541b70beb5c9b952d66b2eab8f89d57ea9e92bdec4617757fdf5eefdad3e",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/kd_mutex.h"
+    },
+    "include/kd_mutex_api.h": {
+      "actual_sha256": "b811bead916e7794dca79f3b5419dadb4a602a38f02f5f7d2baab1024b443aba",
+      "expected_sha256": "b811bead916e7794dca79f3b5419dadb4a602a38f02f5f7d2baab1024b443aba",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/kd_mutex_api.h"
+    },
+    "include/kd_regs.h": {
+      "actual_sha256": "72ee3d149d22570e960e536c6a8c2e1e1bae289b8a2c1c17bd2599e64aa4ca1a",
+      "expected_sha256": "72ee3d149d22570e960e536c6a8c2e1e1bae289b8a2c1c17bd2599e64aa4ca1a",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/kd_regs.h"
+    },
+    "include/mutex_api.S": {
+      "actual_sha256": "88adb97b2df9b8afeed88ffd73f44b17b145592175a9d5401dec05cd38d95218",
+      "expected_sha256": "88adb97b2df9b8afeed88ffd73f44b17b145592175a9d5401dec05cd38d95218",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/mutex_api.S"
+    },
+    "include/mutex_entry.S": {
+      "actual_sha256": "6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108",
+      "expected_sha256": "6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/mutex_entry.S"
+    },
+    "include/native_resume.S": {
+      "actual_sha256": "5adaacf3f97f6fb84da5836e4c6b059a1f97a31e8f2a0b5869eb81c6d454805a",
+      "expected_sha256": "5adaacf3f97f6fb84da5836e4c6b059a1f97a31e8f2a0b5869eb81c6d454805a",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/native_resume.S"
+    },
+    "include/wrapper.S": {
+      "actual_sha256": "42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5",
+      "expected_sha256": "42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/wrapper.S"
+    },
+    "kernel/channel.c": {
+      "actual_sha256": "17803ac448b5f836c311457451106df047fc73e2dd5a3aa32b837159e3c69b03",
+      "expected_sha256": "17803ac448b5f836c311457451106df047fc73e2dd5a3aa32b837159e3c69b03",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/channel.c"
+    },
+    "kernel/channel.h": {
+      "actual_sha256": "606ce81101fc1c53805dc22c870747b6faba3b931302fcf003a3b7bd2fd948f3",
+      "expected_sha256": "606ce81101fc1c53805dc22c870747b6faba3b931302fcf003a3b7bd2fd948f3",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/channel.h"
+    },
+    "kernel/compiled_image.c": {
+      "actual_sha256": "0ef92a96b335041523341c2918641cef0c7aa7c0cbfc32e5f3ccd0484db47f2d",
+      "expected_sha256": "0ef92a96b335041523341c2918641cef0c7aa7c0cbfc32e5f3ccd0484db47f2d",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/compiled_image.c"
+    },
+    "kernel/compiled_image.h": {
+      "actual_sha256": "ec54afc42d2aa32079c2c28de7af7ba7141abbdece9c0c1e36361ea6ad2b29c9",
+      "expected_sha256": "ec54afc42d2aa32079c2c28de7af7ba7141abbdece9c0c1e36361ea6ad2b29c9",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/compiled_image.h"
+    },
+    "kernel/control.c": {
+      "actual_sha256": "c50a6de92ef238f387e023473937c418c02314bd7353082db69915a7fb79853d",
+      "expected_sha256": "c50a6de92ef238f387e023473937c418c02314bd7353082db69915a7fb79853d",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/control.c"
+    },
+    "kernel/control.h": {
+      "actual_sha256": "410021ca0e235e57e093b1056af2cb19d9d2199d679a3811efebaeef53002912",
+      "expected_sha256": "410021ca0e235e57e093b1056af2cb19d9d2199d679a3811efebaeef53002912",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/control.h"
+    },
+    "kernel/episode.c": {
+      "actual_sha256": "da61941895c0251639e7ed222bc17ade2d6b5f74de537fe223a516115f453cbd",
+      "expected_sha256": "da61941895c0251639e7ed222bc17ade2d6b5f74de537fe223a516115f453cbd",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/episode.c"
+    },
+    "kernel/episode.h": {
+      "actual_sha256": "8ebf157110f402ed80a479aad28d0bc4be1fa6dc5c09b36dca911d951f7bbbc3",
+      "expected_sha256": "8ebf157110f402ed80a479aad28d0bc4be1fa6dc5c09b36dca911d951f7bbbc3",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/episode.h"
+    },
+    "kernel/exports.c": {
+      "actual_sha256": "d7e33d428edf2545eab9207c07fa28c1950436fa1773200f555ac8db3d91721a",
+      "expected_sha256": "d7e33d428edf2545eab9207c07fa28c1950436fa1773200f555ac8db3d91721a",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/exports.c"
+    },
+    "kernel/feedback.c": {
+      "actual_sha256": "fb00418fd7443ff0cff4ab5af9d1a4ffe0fd691f29f0b17ae33d8baa653960f0",
+      "expected_sha256": "fb00418fd7443ff0cff4ab5af9d1a4ffe0fd691f29f0b17ae33d8baa653960f0",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/feedback.c"
+    },
+    "kernel/feedback.h": {
+      "actual_sha256": "e65def1ab23fdc490a7ab0b18a2f1b8bc00f538c17e62e0f1cacbc6c809a0464",
+      "expected_sha256": "e65def1ab23fdc490a7ab0b18a2f1b8bc00f538c17e62e0f1cacbc6c809a0464",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/feedback.h"
+    },
+    "kernel/feedback_publish.c": {
+      "actual_sha256": "eab297e4eb31259d1f0ca9b32be051c6604e2f80d5fe7a0c2fa7c89017c96104",
+      "expected_sha256": "eab297e4eb31259d1f0ca9b32be051c6604e2f80d5fe7a0c2fa7c89017c96104",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/feedback_publish.c"
+    },
+    "kernel/feedback_publish.h": {
+      "actual_sha256": "04c14ae7abb8346230fbe2f6eeadf79c57f91be4cf8204676b7e79a1153d4066",
+      "expected_sha256": "04c14ae7abb8346230fbe2f6eeadf79c57f91be4cf8204676b7e79a1153d4066",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/feedback_publish.h"
+    },
+    "kernel/image.c": {
+      "actual_sha256": "2045cb89d88175e9b73f7d3b247b72943fbcfa8eaaa3a2ffede0e670968e2bd3",
+      "expected_sha256": "2045cb89d88175e9b73f7d3b247b72943fbcfa8eaaa3a2ffede0e670968e2bd3",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image.c"
+    },
+    "kernel/image.h": {
+      "actual_sha256": "49b080029f0abc3ea87e6230cbb925a22f8dbdea50242b42664ce47b135044e5",
+      "expected_sha256": "49b080029f0abc3ea87e6230cbb925a22f8dbdea50242b42664ce47b135044e5",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image.h"
+    },
+    "kernel/image_inputs.h": {
+      "actual_sha256": "a56154b1717dfa494c767a87355128d92f9f710c9bc4ebdc0729a4ca3f8bdc40",
+      "expected_sha256": "a56154b1717dfa494c767a87355128d92f9f710c9bc4ebdc0729a4ca3f8bdc40",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image_inputs.h"
+    },
+    "kernel/image_owner.c": {
+      "actual_sha256": "c647127502b78d6a3d0d29040d98bf97bc87e666f5418755a876ff0a6b14ff15",
+      "expected_sha256": "c647127502b78d6a3d0d29040d98bf97bc87e666f5418755a876ff0a6b14ff15",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image_owner.c"
+    },
+    "kernel/image_owner.h": {
+      "actual_sha256": "0bdc71a22db182ee6ffc89834a30c28a348c1724c60ea6649ef53141380ffccb",
+      "expected_sha256": "0bdc71a22db182ee6ffc89834a30c28a348c1724c60ea6649ef53141380ffccb",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image_owner.h"
+    },
+    "kernel/jit.c": {
+      "actual_sha256": "b4ef42259e0b0c63663dac5a3aaccdbb5b373779c1218ae43065aab5b1a2b008",
+      "expected_sha256": "b4ef42259e0b0c63663dac5a3aaccdbb5b373779c1218ae43065aab5b1a2b008",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/jit.c"
+    },
+    "kernel/jit.h": {
+      "actual_sha256": "6741fe3f8fd63cca0f77f00f9eed43e688ea5bb3fdf66ee50028f8bf10dc1342",
+      "expected_sha256": "6741fe3f8fd63cca0f77f00f9eed43e688ea5bb3fdf66ee50028f8bf10dc1342",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/jit.h"
+    },
+    "kernel/lifecycle.c": {
+      "actual_sha256": "2c687ff078212732b86ba8438b5e04bb0ae9bc0d7f7ef0a2b2693a793e5585dc",
+      "expected_sha256": "2c687ff078212732b86ba8438b5e04bb0ae9bc0d7f7ef0a2b2693a793e5585dc",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/lifecycle.c"
+    },
+    "kernel/lifecycle.h": {
+      "actual_sha256": "946cb5cad5e7a6895efb3617f935f8369a58e03bccf002ca4ed2bb24d02aafdc",
+      "expected_sha256": "946cb5cad5e7a6895efb3617f935f8369a58e03bccf002ca4ed2bb24d02aafdc",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/lifecycle.h"
+    },
+    "kernel/mutex.c": {
+      "actual_sha256": "774204b23ee57c100da72b08855ea3e40a04b80eb2876e5711e8a014633fedeb",
+      "expected_sha256": "774204b23ee57c100da72b08855ea3e40a04b80eb2876e5711e8a014633fedeb",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex.c"
+    },
+    "kernel/mutex.h": {
+      "actual_sha256": "2d5c4eab39c5e67c26447c13c3d9f52f1de6d983838fb6e1e34f77ead642a474",
+      "expected_sha256": "2d5c4eab39c5e67c26447c13c3d9f52f1de6d983838fb6e1e34f77ead642a474",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex.h"
+    },
+    "kernel/mutex_api.c": {
+      "actual_sha256": "22c11a9ae96e736dd5bf01289de5018322d19463671fc222544f74999c4ed5cd",
+      "expected_sha256": "22c11a9ae96e736dd5bf01289de5018322d19463671fc222544f74999c4ed5cd",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex_api.c"
+    },
+    "kernel/mutex_api.h": {
+      "actual_sha256": "54b9039a7e18e0a66ea952affe59b81ccc1d61bf3d701f2c2e33c5ee73c30972",
+      "expected_sha256": "54b9039a7e18e0a66ea952affe59b81ccc1d61bf3d701f2c2e33c5ee73c30972",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex_api.h"
+    },
+    "kernel/mutex_release.c": {
+      "actual_sha256": "58c7f9e89788cfe6d6c9aebb53e2c2930556556e6320821e748e98a9b4765aec",
+      "expected_sha256": "58c7f9e89788cfe6d6c9aebb53e2c2930556556e6320821e748e98a9b4765aec",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex_release.c"
+    },
+    "kernel/mutex_release.h": {
+      "actual_sha256": "27467f86bac3bb3127e4b740c60391082c1b3edac2a0cd5119881f5806aea95d",
+      "expected_sha256": "27467f86bac3bb3127e4b740c60391082c1b3edac2a0cd5119881f5806aea95d",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex_release.h"
+    },
+    "kernel/native_entry.c": {
+      "actual_sha256": "e25f4be810d6ada92420d8cd20df990c31c37f47cca1f8f50095fb2427b76a41",
+      "expected_sha256": "e25f4be810d6ada92420d8cd20df990c31c37f47cca1f8f50095fb2427b76a41",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/native_entry.c"
+    },
+    "kernel/native_entry.h": {
+      "actual_sha256": "80d60672aaa65bb4cdf1884b5f25031571c1ab5e2d7f589cf2fce6524bb70c2e",
+      "expected_sha256": "80d60672aaa65bb4cdf1884b5f25031571c1ab5e2d7f589cf2fce6524bb70c2e",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/native_entry.h"
+    },
+    "kernel/owner_progress.c": {
+      "actual_sha256": "a5a884758f5d27c1d14d3634d928542841c4e30ab63bda396fe0503197955735",
+      "expected_sha256": "a5a884758f5d27c1d14d3634d928542841c4e30ab63bda396fe0503197955735",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/owner_progress.c"
+    },
+    "kernel/owner_progress.h": {
+      "actual_sha256": "42a5f8bb0278020cf479cfa80d3d634f6810410e0567c70818d1c971d548487d",
+      "expected_sha256": "42a5f8bb0278020cf479cfa80d3d634f6810410e0567c70818d1c971d548487d",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/owner_progress.h"
+    },
+    "kernel/request_pool.c": {
+      "actual_sha256": "c383a20c5de830d1d13143dc887c7bd81ca417c63242da659044a2da201e7ccc",
+      "expected_sha256": "c383a20c5de830d1d13143dc887c7bd81ca417c63242da659044a2da201e7ccc",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/request_pool.c"
+    },
+    "kernel/request_pool.h": {
+      "actual_sha256": "f1450e3bc166f0a784809fd496d6471ef5ec13baa25c1e71ecf73e78cb6ecc90",
+      "expected_sha256": "f1450e3bc166f0a784809fd496d6471ef5ec13baa25c1e71ecf73e78cb6ecc90",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/request_pool.h"
+    },
+    "kernel/runtime.c": {
+      "actual_sha256": "dccbc0e7676f4903b34807969e157ad841fa5d570c5df43113557ea108ea4be3",
+      "expected_sha256": "dccbc0e7676f4903b34807969e157ad841fa5d570c5df43113557ea108ea4be3",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/runtime.c"
+    },
+    "kernel/runtime.h": {
+      "actual_sha256": "f55ed9e81b160e813fcb821a071c1071687eddfa831c155136cd693fc49f47ef",
+      "expected_sha256": "f55ed9e81b160e813fcb821a071c1071687eddfa831c155136cd693fc49f47ef",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/runtime.h"
+    },
+    "kernel/source_epoch.c": {
+      "actual_sha256": "2ef40e9ad005caf758c31f9947bf0b49b67f7bf19eae3a0ec8684090ebe8ff12",
+      "expected_sha256": "2ef40e9ad005caf758c31f9947bf0b49b67f7bf19eae3a0ec8684090ebe8ff12",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_epoch.c"
+    },
+    "kernel/source_epoch.h": {
+      "actual_sha256": "f1838dbd76af0232cbee8909f85dbefe2972bd8bce8271faf909a98ec05fe0bb",
+      "expected_sha256": "f1838dbd76af0232cbee8909f85dbefe2972bd8bce8271faf909a98ec05fe0bb",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_epoch.h"
+    },
+    "kernel/source_provider.c": {
+      "actual_sha256": "c242e5bd9a091461a2c6f9d5d8907102d8986c62897959629c04789f8f0aa49e",
+      "expected_sha256": "c242e5bd9a091461a2c6f9d5d8907102d8986c62897959629c04789f8f0aa49e",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_provider.c"
+    },
+    "kernel/source_provider.h": {
+      "actual_sha256": "0bde73385ec8620af476303299b559440d2da181797fb82a1d39a36a26c5f261",
+      "expected_sha256": "0bde73385ec8620af476303299b559440d2da181797fb82a1d39a36a26c5f261",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_provider.h"
+    },
+    "kernel/source_stack.c": {
+      "actual_sha256": "81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302",
+      "expected_sha256": "81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_stack.c"
+    },
+    "kernel/source_stack.h": {
+      "actual_sha256": "91458b0aa42309ebcf3c8b474bd2420f24574558e3362b1f993f21f0d7d4f16d",
+      "expected_sha256": "91458b0aa42309ebcf3c8b474bd2420f24574558e3362b1f993f21f0d7d4f16d",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_stack.h"
+    },
+    "kernel/state.c": {
+      "actual_sha256": "8f3ac15b3840e370672de1e56a83003ad90426cc7030add4322a4cf7482c766f",
+      "expected_sha256": "8f3ac15b3840e370672de1e56a83003ad90426cc7030add4322a4cf7482c766f",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/state.c"
+    },
+    "kernel/state.h": {
+      "actual_sha256": "dc01ce48d9ca5729afbf71bed9ef85c6c4513b6272663a8aa2999c481768aafd",
+      "expected_sha256": "dc01ce48d9ca5729afbf71bed9ef85c6c4513b6272663a8aa2999c481768aafd",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/state.h"
+    },
+    "kernel/target.h": {
+      "actual_sha256": "37c98012e3bca9db2ff3bac401bfb3eefe2c63b0625cb96ec67774bd8e3a225f",
+      "expected_sha256": "37c98012e3bca9db2ff3bac401bfb3eefe2c63b0625cb96ec67774bd8e3a225f",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/target.h"
+    },
+    "kernel/task_progress.c": {
+      "actual_sha256": "11d8eea049f3214c1c12875ba9696025096b728d2448f1172df233aacd4245cb",
+      "expected_sha256": "11d8eea049f3214c1c12875ba9696025096b728d2448f1172df233aacd4245cb",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_progress.c"
+    },
+    "kernel/task_progress.h": {
+      "actual_sha256": "e51bb0e84a9ce4aed2d575d59f09b3048b16bca4b0d8f8417711cd55635ad4c3",
+      "expected_sha256": "e51bb0e84a9ce4aed2d575d59f09b3048b16bca4b0d8f8417711cd55635ad4c3",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_progress.h"
+    },
+    "kernel/task_setup.c": {
+      "actual_sha256": "a4a510f30b3dddeff1b9eb8d3f09f25bfd5b98529326aaa3628db7fc4160c30a",
+      "expected_sha256": "a4a510f30b3dddeff1b9eb8d3f09f25bfd5b98529326aaa3628db7fc4160c30a",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_setup.c"
+    },
+    "kernel/task_setup.h": {
+      "actual_sha256": "bb1e830d13f49f6235dc0587a4828bb3ecf2307fa3a8901698c658399420f975",
+      "expected_sha256": "bb1e830d13f49f6235dc0587a4828bb3ecf2307fa3a8901698c658399420f975",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_setup.h"
+    },
+    "kernel/task_state.c": {
+      "actual_sha256": "ac0fc225b6b46773cf1f2729a03dfbf02aef5e695470bba3e4d20c5706af733c",
+      "expected_sha256": "ac0fc225b6b46773cf1f2729a03dfbf02aef5e695470bba3e4d20c5706af733c",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_state.c"
+    },
+    "kernel/task_state.h": {
+      "actual_sha256": "221f9c6e0ca4a91b43e033aa9285e7297ae18ff498cce404e2b5f3bc12ed9f39",
+      "expected_sha256": "221f9c6e0ca4a91b43e033aa9285e7297ae18ff498cce404e2b5f3bc12ed9f39",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_state.h"
+    },
+    "kernel/task_storage.c": {
+      "actual_sha256": "074a17a90cd495d4bca78e94e40cac849a1d9df7bec46a7deca2a31147085462",
+      "expected_sha256": "074a17a90cd495d4bca78e94e40cac849a1d9df7bec46a7deca2a31147085462",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_storage.c"
+    },
+    "kernel/task_storage.h": {
+      "actual_sha256": "2f53c1f3899cf311cfc3d9bb6028180d2f40b295ff124ec23b1ccc6388b54b95",
+      "expected_sha256": "2f53c1f3899cf311cfc3d9bb6028180d2f40b295ff124ec23b1ccc6388b54b95",
+      "matches": true,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_storage.h"
+    }
+  },
+  "core": {
+    "assembly_count": 3,
+    "c_count": 26,
+    "diagnostic_lines": [],
+    "expected_count": 29,
+    "kbuild_expected_objects": [
+      "kernel/mutex.o",
+      "kernel/mutex_release.o",
+      "kernel/state.o",
+      "kernel/task_state.o",
+      "kernel/request_pool.o",
+      "kernel/owner_progress.o",
+      "kernel/source_epoch.o",
+      "kernel/source_provider.o",
+      "kernel/feedback.o",
+      "kernel/feedback_publish.o",
+      "kernel/control.o",
+      "kernel/channel.o",
+      "kernel/compiled_image.o",
+      "kernel/runtime.o",
+      "kernel/exports.o",
+      "kernel/image.o",
+      "kernel/image_owner.o",
+      "kernel/jit.o",
+      "kernel/native_entry.o",
+      "kernel/episode.o",
+      "kernel/mutex_api.o",
+      "kernel/task_progress.o",
+      "kernel/task_setup.o",
+      "kernel/task_storage.o",
+      "kernel/lifecycle.o",
+      "kernel/source_stack.o",
+      "include/mutex_api.o",
+      "include/mutex_entry.o",
+      "include/native_resume.o"
+    ],
+    "lifecycle_hooks_logged": {
+      "kernel/exit.o": true,
+      "kernel/fork.o": true
+    },
+    "logged_compilations": [
+      {
+        "kind": "CC",
+        "object": "kernel/mutex.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/mutex_release.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/state.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/task_state.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/request_pool.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/owner_progress.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/source_epoch.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/source_provider.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/feedback.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/feedback_publish.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/control.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/channel.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/compiled_image.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/runtime.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/exports.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/image.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/image_owner.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/jit.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/native_entry.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/episode.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/mutex_api.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/task_progress.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/task_setup.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/task_storage.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/lifecycle.o"
+      },
+      {
+        "kind": "CC",
+        "object": "kernel/source_stack.o"
+      },
+      {
+        "kind": "AS",
+        "object": "include/mutex_api.o"
+      },
+      {
+        "kind": "AS",
+        "object": "include/mutex_entry.o"
+      },
+      {
+        "kind": "AS",
+        "object": "include/native_resume.o"
+      }
+    ],
+    "logged_count": 29,
+    "logged_exact_expected": true,
+    "objects": [
+      {
+        "bytes": 260432,
+        "elf_magic": true,
+        "object": "kernel/mutex.o",
+        "sha256": "243ffd453475ae1027c55c2afec956cbefb95a72a17ca47ca0c43d20fbc42999",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 95752,
+        "elf_magic": true,
+        "object": "kernel/mutex_release.o",
+        "sha256": "191061cc73646c8c1fe5585b613d71fc64941693b7f81bdcc0b1413e844baa77",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 123552,
+        "elf_magic": true,
+        "object": "kernel/state.o",
+        "sha256": "09efb4840ddb7e6bf914b351a8f65e29d50d9fc7b63cba18e1be5ec9684d1047",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 124664,
+        "elf_magic": true,
+        "object": "kernel/task_state.o",
+        "sha256": "eadf760c9168f7284b31d600eeea90fb0021d6944fe9b2d3d7edc584bbdfab62",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 187560,
+        "elf_magic": true,
+        "object": "kernel/request_pool.o",
+        "sha256": "23c691557f7065ecec3a5266461451995fc00a3ad3d6b8b44818975656d57ea1",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 111672,
+        "elf_magic": true,
+        "object": "kernel/owner_progress.o",
+        "sha256": "640e0ed81706bdbb1d6446e7be31c30b74f08e417aa960bffe82db1241893b7d",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 45976,
+        "elf_magic": true,
+        "object": "kernel/source_epoch.o",
+        "sha256": "c5cfb1832a3ecb6568d11560da663ec7e0b9fe1b2d17be8977c4085cd78b61e9",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 183616,
+        "elf_magic": true,
+        "object": "kernel/source_provider.o",
+        "sha256": "f4b286445138d6bac5b9ceeabf4431f4600e010b733ee8fa50a54f4879eb60e8",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 96472,
+        "elf_magic": true,
+        "object": "kernel/feedback.o",
+        "sha256": "a85d8991ca3f11780134b2123fcd53c53cf41dbfdf4fece3d23a03f2e50a502a",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 55832,
+        "elf_magic": true,
+        "object": "kernel/feedback_publish.o",
+        "sha256": "55963a0ee3201c6a6efd77ca8f56717b63daf8e84d746880983c3862b91c8de0",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 210848,
+        "elf_magic": true,
+        "object": "kernel/control.o",
+        "sha256": "d289a659b791cda685a32892903caf886a7b031f60402f26587f6f42c3002c67",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 251536,
+        "elf_magic": true,
+        "object": "kernel/channel.o",
+        "sha256": "0db90e42fd61d4fb3ea41b5acb98c1cf219f65de6b7c9a9e8fdbfbfe9ac4feb1",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 94488,
+        "elf_magic": true,
+        "object": "kernel/compiled_image.o",
+        "sha256": "738a1c0e06927b50a2fc41815ab5b28520be5bb1957c60cfa4d76fb4e078d536",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 369824,
+        "elf_magic": true,
+        "object": "kernel/runtime.o",
+        "sha256": "d4b55e39ef2e53da9ccd43c345bf42900b6887cb82c28da8072dcc4de3441ba8",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 191216,
+        "elf_magic": true,
+        "object": "kernel/exports.o",
+        "sha256": "986e76bb3a14c0fd157e92a2c21c20180bcab58306704a595d3136ba0c519422",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 65008,
+        "elf_magic": true,
+        "object": "kernel/image.o",
+        "sha256": "c05b5a1018715e1fe8ef1728f853f4ca8d3853fcf2f50d89dc8a08b255091c2a",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 94584,
+        "elf_magic": true,
+        "object": "kernel/image_owner.o",
+        "sha256": "94b4c54c36af555ae11758657c287506a86480396f4a45dd6b37c9373b743a47",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 147856,
+        "elf_magic": true,
+        "object": "kernel/jit.o",
+        "sha256": "f3af698b0bafb55bebc2d436bda7b8a60f67d2d6d292d6bea6a8a312fa637578",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 99264,
+        "elf_magic": true,
+        "object": "kernel/native_entry.o",
+        "sha256": "1327c65d2a6f8896d0869df9a21fe32d17c4b6b35bb0341f5cd82f4bfdd4028e",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 241512,
+        "elf_magic": true,
+        "object": "kernel/episode.o",
+        "sha256": "237578b808467d8a2be80755130d866907ed12f216c393ac4f66b57ab7e1f718",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 93696,
+        "elf_magic": true,
+        "object": "kernel/mutex_api.o",
+        "sha256": "8172b8b3d8cc55c2ed28d659cf24684b41ca41372b684f1e8edc12521d794949",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 96472,
+        "elf_magic": true,
+        "object": "kernel/task_progress.o",
+        "sha256": "0bb33c839fe3b541859bfe667bf1a434c46156447968ccde93607bad26f38e93",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 111976,
+        "elf_magic": true,
+        "object": "kernel/task_setup.o",
+        "sha256": "716310e05cc27514e37b24ee58535d9528739834e06de7f7d8169d8bb402dbc8",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 138024,
+        "elf_magic": true,
+        "object": "kernel/task_storage.o",
+        "sha256": "645ce6feb1a229a237bd6f1310bbf094367294233572f05d89a960022f67b257",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 111768,
+        "elf_magic": true,
+        "object": "kernel/lifecycle.o",
+        "sha256": "d721b0cc0a7ef35f19125a80bea65734c40ed76fc307ccf5ccdc8f1d0e6ed19a",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 99192,
+        "elf_magic": true,
+        "object": "kernel/source_stack.o",
+        "sha256": "1fff873df4735baf26bcd4e2087f8716bf4ae613745fa2e1c7c33740468e896a",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 3048,
+        "elf_magic": true,
+        "object": "include/mutex_api.o",
+        "sha256": "c54c218d3b8cad589b8c7500c935efa99564d32f2382fdfb7dea24dea6d7caf2",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 2520,
+        "elf_magic": true,
+        "object": "include/mutex_entry.o",
+        "sha256": "9d8d235b3294e4b00ea8fb8d61045a2c2f81f13a391053c4615d1d7b5cfefb8f",
+        "stable_during_hash": true
+      },
+      {
+        "bytes": 2560,
+        "elf_magic": true,
+        "object": "include/native_resume.o",
+        "sha256": "dd49d3549b80f305f199e73fd51a10e4b87fb963341ec5b2a3ffa3a3e942f34e",
+        "stable_during_hash": true
+      }
+    ]
+  },
+  "core_receipt_sha256": {
+    "apply.log": "68444971eebd40ddc1bede5c88b6eec2b70f78d560b30f8e6b76b7d37b9b89fc",
+    "configure-core-result.json": "dd9b180ec049a06971934d7c3fbe07b09d92a0ff5d74c9afc65e1fba5145a901",
+    "core-and-hooks.log": "d07264a8b9751be17bca580b0824d21de6df9a1258f6faa4ae6c1d3179441c71",
+    "integration-application/journal.jsonl": "54d84c971cd9a09895358ae303034c72ed642951725218768777d6414bac296e",
+    "integration-application/manifest.json": "bdf12887d541dcda4de208b88bc006065ee91db0502b88d8cbf12a1beaf45851",
+    "olddefconfig.log": "c0e4878836e20134ac2e58f9fd831545d335bd48c1335639feaa94d4b865e41c",
+    "pins.json": "bcaac1e3cbbf7c4517093ed1bcbc311073b5df60d1f8b7167ae24831c8c8ba47",
+    "preparation.json": "1d0f6efef5d5c3a17be7b0ba2e46da5f4fe8f78d886c59e704fe8e0653378dd5",
+    "verify.log": "db031cdac86c8a006a51307798cdbf889564af76b72a5b48942e75ff465a2c48"
+  },
+  "format": "kdlock.kernel-core-readback.v1",
+  "full_kernel_build": "Separate concurrent parent-owned run; this receipt does not record its outcome.",
+  "protected_build_files": {
+    ".config": {
+      "actual_sha256": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+      "expected_sha256": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build/.config"
+    },
+    "Module.symvers": {
+      "actual_sha256": "dd08f84264e64d09ff3c4b8d11139952f101a727c7402ff5b9b9f376f5d6056c",
+      "expected_sha256": "dd08f84264e64d09ff3c4b8d11139952f101a727c7402ff5b9b9f376f5d6056c",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build/Module.symvers"
+    },
+    "System.map": {
+      "actual_sha256": "1b06d9aee8db0dcb36480985a83ef1d48cba19ef2f1be9abb82955bed7b53159",
+      "expected_sha256": "1b06d9aee8db0dcb36480985a83ef1d48cba19ef2f1be9abb82955bed7b53159",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build/System.map"
+    },
+    "arch/x86/boot/bzImage": {
+      "actual_sha256": "8530a19fcca7b3ef65c39aa35ad2e8a46904ded34d124afb2e4f4285f9631d71",
+      "expected_sha256": "8530a19fcca7b3ef65c39aa35ad2e8a46904ded34d124afb2e4f4285f9631d71",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build/arch/x86/boot/bzImage"
+    }
+  },
+  "protected_source_files": {
+    "Makefile": {
+      "actual_sha256": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+      "expected_sha256": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source/Makefile"
+    },
+    "include/linux/sched.h": {
+      "actual_sha256": "aee5c39f6114cf358e28e64e7ce53c8358f0f90d70467f2c2e643d4128bfea2d",
+      "expected_sha256": "aee5c39f6114cf358e28e64e7ce53c8358f0f90d70467f2c2e643d4128bfea2d",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source/include/linux/sched.h"
+    },
+    "init/Kconfig": {
+      "actual_sha256": "c94d452b20157fd93b4cdce2147d5f4c777f65b97ea7c98bddbd1a6a30c567a7",
+      "expected_sha256": "c94d452b20157fd93b4cdce2147d5f4c777f65b97ea7c98bddbd1a6a30c567a7",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source/init/Kconfig"
+    },
+    "kernel/Makefile": {
+      "actual_sha256": "18ab5bdeb31f60dd99554e807be2042b2733451d3bd10b74c1e7ea8603c5eeda",
+      "expected_sha256": "18ab5bdeb31f60dd99554e807be2042b2733451d3bd10b74c1e7ea8603c5eeda",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source/kernel/Makefile"
+    },
+    "kernel/exit.c": {
+      "actual_sha256": "c409a652107d68488ffe1bee096025d6b224736c33dab04ea4441bbc88f63a2f",
+      "expected_sha256": "c409a652107d68488ffe1bee096025d6b224736c33dab04ea4441bbc88f63a2f",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source/kernel/exit.c"
+    },
+    "kernel/fork.c": {
+      "actual_sha256": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0",
+      "expected_sha256": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0",
+      "matches": true,
+      "path": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source/kernel/fork.c"
+    }
+  },
+  "read_utc": "2026-11-10T14:46:28.142401+00:00",
+  "scope": "Read-only receipt/object/protected-input inspection; no build, test, install or boot invoked by this collector.",
+  "tainted": "0",
+  "tool_versions": {
+    "as": "GNU assembler (GNU Binutils for Ubuntu) 2.46",
+    "gcc": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+    "ld": "GNU ld (GNU Binutils for Ubuntu) 2.46"
+  },
+  "uname": [
+    "Linux",
+    "ubuntu",
+    "7.0.0-38-kdlock1",
+    "#2 SMP PREEMPT_DYNAMIC Tue Oct 27 05:36:25 UTC 2026",
+    "x86_64"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "phase": "PLAN_READY",
+  "start_utc": "2026-11-10T14:34:59.015140+00:00",
+  "baseline": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1",
+  "baseline_build_files": {
+    ".config": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+    "Module.symvers": "dd08f84264e64d09ff3c4b8d11139952f101a727c7402ff5b9b9f376f5d6056c",
+    "System.map": "1b06d9aee8db0dcb36480985a83ef1d48cba19ef2f1be9abb82955bed7b53159",
+    "arch/x86/boot/bzImage": "8530a19fcca7b3ef65c39aa35ad2e8a46904ded34d124afb2e4f4285f9631d71"
+  },
+  "baseline_manifest_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+  "source_acquisition_sha256": "5c5e8a574cf8affb7aedd66e9f609ca006041c1cde0d3fc4e086a4f9849f545a",
+  "snapshot": "/mnt/kdlock-builds/kdlock-main-work/run-c6becf81-01a1bc4f/input",
+  "git_head": "c6becf81987ae29a97000a641d76a0ff2e300860",
+  "root": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f",
+  "kernelrelease": "7.0.0-38-kdrebuild1",
+  "inspect_argv": [
+    "python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/integration/apply_target.py",
+    "plan",
+    "--tree",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+    "--build",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+    "--package",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock",
+    "--source-identity",
+    "Ubuntu linux=7.0.0-38.38 with protected kdlock1 source changes",
+    "--package-identity",
+    "c6becf81987ae29a97000a641d76a0ff2e300860",
+    "--source-fingerprint",
+    "e239a781b049f12fc247e298ff02551b0b35246eaf7fba58dba1fd4db5f64e90",
+    "--config-sha256",
+    "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+    "--package-fingerprint",
+    "c23f80daf6f86ee219ae6d8ecdb5a29b5af2c96dba52b69c203a8a3842796b43"
+  ],
+  "inspect_returncode": 0,
+  "end_utc": "2026-11-10T14:35:16.772533+00:00",
+  "pins": {
+    "source_fingerprint": "e239a781b049f12fc247e298ff02551b0b35246eaf7fba58dba1fd4db5f64e90",
+    "config_sha256": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+    "package_fingerprint": "c23f80daf6f86ee219ae6d8ecdb5a29b5af2c96dba52b69c203a8a3842796b43"
+  },
+  "plan_returncode": 0
+}

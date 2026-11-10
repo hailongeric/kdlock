@@ -1,0 +1,131 @@
+{
+  "start_utc": "2026-11-10T14:38:05.445603+00:00",
+  "steps": [
+    {
+      "name": "apply",
+      "argv": [
+        "python3",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/integration/apply_target.py",
+        "verify",
+        "--tree",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+        "--build",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+        "--package",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock",
+        "--source-identity",
+        "Ubuntu linux=7.0.0-38.38 with protected kdlock1 source changes",
+        "--package-identity",
+        "c6becf81987ae29a97000a641d76a0ff2e300860",
+        "--source-fingerprint",
+        "e239a781b049f12fc247e298ff02551b0b35246eaf7fba58dba1fd4db5f64e90",
+        "--config-sha256",
+        "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+        "--package-fingerprint",
+        "c23f80daf6f86ee219ae6d8ecdb5a29b5af2c96dba52b69c203a8a3842796b43",
+        "--protected-tree",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source",
+        "--protected-tree",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--protected-tree",
+        "/mnt/kdlock-builds/kdlock-main-work/run-c6becf81-01a1bc4f/input",
+        "--receipt-dir",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/integration-application",
+        "--idle-confirmed"
+      ],
+      "start_utc": "2026-11-10T14:38:05.445685+00:00",
+      "returncode": 0,
+      "elapsed_seconds": 0.21480121699278243
+    },
+    {
+      "name": "verify",
+      "argv": [
+        "python3",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/integration/apply_target.py",
+        "verify",
+        "--tree",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+        "--build",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+        "--package",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock",
+        "--source-identity",
+        "Ubuntu linux=7.0.0-38.38 with protected kdlock1 source changes",
+        "--package-identity",
+        "c6becf81987ae29a97000a641d76a0ff2e300860",
+        "--source-fingerprint",
+        "e239a781b049f12fc247e298ff02551b0b35246eaf7fba58dba1fd4db5f64e90",
+        "--config-sha256",
+        "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+        "--package-fingerprint",
+        "c23f80daf6f86ee219ae6d8ecdb5a29b5af2c96dba52b69c203a8a3842796b43",
+        "--protected-tree",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source",
+        "--protected-tree",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--protected-tree",
+        "/mnt/kdlock-builds/kdlock-main-work/run-c6becf81-01a1bc4f/input",
+        "--receipt-dir",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/integration-application",
+        "--idle-confirmed"
+      ],
+      "start_utc": "2026-11-10T14:38:05.661944+00:00",
+      "returncode": 0,
+      "elapsed_seconds": 0.11415931599913165
+    },
+    {
+      "name": "select-core",
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/scripts/config",
+        "--file",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/.config",
+        "--enable",
+        "KDLOCK_REBUILD"
+      ],
+      "start_utc": "2026-11-10T14:38:05.777254+00:00",
+      "returncode": 0,
+      "elapsed_seconds": 0.01583014700736385
+    },
+    {
+      "name": "olddefconfig",
+      "argv": [
+        "make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+        "KERNELRELEASE=7.0.0-38-kdrebuild1",
+        "olddefconfig"
+      ],
+      "start_utc": "2026-11-10T14:38:05.793424+00:00",
+      "returncode": 0,
+      "elapsed_seconds": 8.987269432996982
+    },
+    {
+      "name": "core-and-hooks",
+      "argv": [
+        "make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+        "KERNELRELEASE=7.0.0-38-kdrebuild1",
+        "-j16",
+        "kernel/kdlock/",
+        "kernel/fork.o",
+        "kernel/exit.o"
+      ],
+      "start_utc": "2026-11-10T14:38:14.795652+00:00",
+      "returncode": 0,
+      "elapsed_seconds": 53.40272369899321
+    }
+  ],
+  "config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "config_added": [
+    "CONFIG_CC_VERSION_TEXT=\"gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\"",
+    "CONFIG_KDLOCK_REBUILD=y"
+  ],
+  "config_removed": [
+    "CONFIG_CC_VERSION_TEXT=\"x86_64-linux-gnu-gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\""
+  ],
+  "phase": "CORE_COMPILED",
+  "end_utc": "2026-11-10T14:39:08.199170+00:00"
+}

@@ -1,0 +1,101 @@
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -817,6 +817,8 @@
+ #endif
+ };
+ 
++struct kd_task_root_context;
++
+ struct task_struct {
+ #ifdef CONFIG_THREAD_INFO_IN_TASK
+ 	/*
+@@ -835,6 +837,9 @@
+ 	 * scheduling-critical items should be added above here.
+ 	 */
+ 	randomized_struct_fields_start
++
++	/* Own native-root/core and task-owned auxiliary-control backing. */
++	struct kd_task_root_context	*kd_root_context;
+ 
+ 	void				*stack;
+ 	refcount_t			usage;
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -21,6 +21,9 @@
+ #include <linux/sched/stat.h>
+ #include <linux/sched/task.h>
+ #include <linux/sched/task_stack.h>
++#ifdef CONFIG_KDLOCK_REBUILD
++#include "kdlock/kernel/lifecycle.h"
++#endif
+ #include <linux/sched/cputime.h>
+ #include <linux/sched/ext.h>
+ #include <linux/seq_file.h>
+@@ -2069,6 +2072,11 @@
+ 	p = dup_task_struct(current, node);
+ 	if (!p)
+ 		goto fork_out;
++#ifdef CONFIG_KDLOCK_REBUILD
++	retval = kd_task_lifecycle_prepare_unpublished(p);
++	if (retval)
++		goto bad_fork_free;
++#endif
+ 	p->flags &= ~PF_KTHREAD;
+ 	if (args->kthread)
+ 		p->flags |= PF_KTHREAD;
+@@ -2546,6 +2554,10 @@
+ 	exit_cred_namespaces(p);
+ 	exit_creds(p);
+ bad_fork_free:
++#ifdef CONFIG_KDLOCK_REBUILD
++	/* Unpublished child holds end before the kernel drops its stack. */
++	BUG_ON(kd_task_lifecycle_abort_unpublished(p));
++#endif
+ 	WRITE_ONCE(p->__state, TASK_DEAD);
+ 	exit_task_stack_account(p);
+ 	put_task_stack(p);
+--- a/kernel/exit.c
++++ b/kernel/exit.c
+@@ -12,6 +12,9 @@
+ #include <linux/sched/stat.h>
+ #include <linux/sched/task.h>
+ #include <linux/sched/task_stack.h>
++#ifdef CONFIG_KDLOCK_REBUILD
++#include "kdlock/kernel/lifecycle.h"
++#endif
+ #include <linux/sched/cputime.h>
+ #include <linux/interrupt.h>
+ #include <linux/module.h>
+@@ -908,6 +911,11 @@
+ 	WARN_ON(irqs_disabled());
+ 	WARN_ON(tsk->plug);
+ 
++#ifdef CONFIG_KDLOCK_REBUILD
++	/* Refuse freeing live source/owner state; perform no source unlock. */
++	BUG_ON(kd_task_lifecycle_exit_current());
++#endif
++
+ 	kthread = tsk_is_kthread(tsk);
+ 	if (unlikely(kthread))
+ 		kthread_do_exit(kthread, code);
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -2236,6 +2236,8 @@
+ 
+ source "kernel/liveupdate/Kconfig"
+ 
++source "kernel/kdlock/Kconfig"
++
+ endmenu		# General setup
+ 
+ source "arch/Kconfig"
+--- a/kernel/Makefile
++++ b/kernel/Makefile
+@@ -49,6 +49,7 @@
+ 
+ obj-y += sched/
+ obj-y += locking/
++obj-$(CONFIG_KDLOCK_REBUILD) += kdlock/
+ obj-y += power/
+ obj-y += printk/
+ obj-y += irq/
