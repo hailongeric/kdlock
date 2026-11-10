@@ -7,11 +7,15 @@
 #include <linux/sched/task.h>
 
 #include "task_state.h"
+#include "request_pool.h"
 
 void kd_task_root_context_init(struct kd_task_root_context *context)
 {
 	/* Private constructor only; the canonical regs are captured, not cleared. */
 	context->task = NULL;
+	kd_owner_progress_init(&context->owners, NULL);
+	context->mutex_resources = NULL;
+	context->mutex_control_bytes = 0;
 	context->aux_low = 0;
 	context->aux_high = 0;
 	context->aux_current = 0;
@@ -34,13 +38,16 @@ struct kd_thread_state *kd_task_state_own(void)
 
 int kd_task_root_attach(struct kd_task_root_context *context,
 		       unsigned long origin_gs, unsigned long aux_low,
-		       unsigned long aux_high, unsigned long aux_current)
+		       unsigned long aux_high, unsigned long aux_current,
+		       struct kd_request_pool *pool,
+		       struct kd_request_slot *slots, unsigned int capacity)
 {
 	unsigned long header_low = (unsigned long)context;
 	unsigned long header_high = header_low + sizeof(*context);
 	int result;
 
-	if (!context || aux_low >= aux_high || aux_current < aux_low ||
+	if (!context || !pool || !slots || !capacity || aux_low >= aux_high ||
+	    aux_current < aux_low ||
 	    aux_current > aux_high || header_high < header_low ||
 	    (aux_low < header_high && aux_high > header_low))
 		return -EINVAL;
@@ -57,6 +64,11 @@ int kd_task_root_attach(struct kd_task_root_context *context,
 			       &context->initial_native);
 	if (result)
 		return result;
+	result = kd_request_pool_init(pool, &context->core, slots, capacity);
+	if (result)
+		return result;
+	context->core.requests = pool;
+	kd_owner_progress_init(&context->owners, current);
 	get_task_struct(current);
 	context->task = current;
 	context->aux_low = aux_low;
@@ -86,7 +98,7 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 		return -ESTALE;
 	if (!context->attached || context->task != current)
 		return -EPERM;
-	if (context->aux_entry)
+	if (context->aux_entry || !list_empty(&context->owners.batches))
 		return -EBUSY;
 	/* Caller has stopped/drained auxiliary and borrowed work before this
 	 * first own-state access; neither a cursor nor task identity proves that.
@@ -105,8 +117,19 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 	    (state->operation.phase != KD_OPERATION_IDLE &&
 	     state->operation.phase != KD_OPERATION_RESUMABLE))
 		return -EBUSY;
-	if (cmpxchg_release(&state->binding, native_binding, NULL) != native_binding)
-		return -ESTALE;
+	if (!state->requests)
+		return -EUCLEAN;
+	kd_request_pool_collect(state->requests);
+	/* Final close validates all otherwise finished requests and revokes the
+	 * exact native binding under the pool metadata guard. No fallible cleanup
+	 * remains after that revocation. Caller already drained every actor.
+	 */
+	{
+		int result = kd_request_pool_detach(state->requests, native_binding);
+
+		if (result)
+			return result;
+	}
 	/* All escaped lookup/binding/control users already drained. The single
 	 * task pointer, not a registry/borrowed-state field, is revoked here.
 	 */
@@ -114,6 +137,9 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 	task = context->task;
 	context->task = NULL;
 	context->attached = false;
+	context->mutex_resources = NULL;
+	context->mutex_control_bytes = 0;
+	state->requests = NULL;
 	/* No context/core access follows the final retained task-key release. */
 	put_task_struct(task);
 	return 0;

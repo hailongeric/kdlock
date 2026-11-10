@@ -121,6 +121,20 @@ int kd_jit_resume_origin(struct kd_thread_state *state,
 struct kd_jit_mutex_call;
 
 struct kd_jit_mutex_driver {
+	/* Initialize every field, including absent hooks, before call_init. Keep
+	 * driver/context/callback code through all request/owner wait callbacks and
+	 * final exported return. Selection and export are committed: callbacks
+	 * must complete without failure, source work or binding mutation.
+	 */
+	/* Metadata only, on the actual local physical-owner task, before service. */
+	int (*selected_local)(struct kd_jit_mutex_call *call, void *context);
+	/* Pump this physical task's retained owners while MCS control waits.
+	 * Supply both callbacks or neither. They never read or execute a borrowed
+	 * source packet.
+	 */
+	int (*wait_progress)(struct kd_jit_mutex_call *call, void *context,
+			     bool *blocked);
+	bool (*wait_ready)(struct kd_jit_mutex_call *call, void *context);
 	/*
 	 * Execute fragments and serial recursive operations on this same S_W.
 	 * Update *binding only to a retained, known exact current endpoint. On a
@@ -133,6 +147,15 @@ struct kd_jit_mutex_driver {
 	enum kd_mutex_outcome (*run)(struct kd_jit_mutex_call *call,
 				      struct kd_execution_binding **binding,
 				      void *context);
+	/*
+	 * Called after run stopped and the current binding was exported to the
+	 * exact returned/native endpoint, before MCS result publication. Finish
+	 * deferred notifications and referring child/control users here. It must
+	 * not read S_W: native W may already advance after terminal propagation.
+	 * The call/control itself stays retained through callback return.
+	 */
+	int (*exported)(struct kd_jit_mutex_call *call,
+			enum kd_mutex_outcome outcome, void *context);
 	const struct kd_source_stack_ops *stack;
 	/* Fresh native endpoint for this episode, retained through all users.
 	 * Do not reuse the original native binding across an outstanding offer.
@@ -145,8 +168,9 @@ struct kd_jit_mutex_driver {
  * One persistent referring call/control, not another W packet. Storage is
  * reserved before effects and retained through node retirement AND all binding
  * observers. MCS requests point directly to S_W; task-owned root/auxiliary
- * backing supplies initial entry. Allocation, depth bounds and
- * native wait/control stack reservation remain open, without hidden defaults.
+ * backing supplies initial entry. Task-owned storage is preallocated and reused
+ * only after exact last users. Capacity and native wait/control stack admission
+ * remain caller obligations, without hidden defaults or per-lock allocation.
  */
 struct kd_jit_mutex_call {
 	struct kd_mutex_node node;
@@ -156,6 +180,8 @@ struct kd_jit_mutex_call {
 	struct kd_execution_binding execution;
 	struct kd_execution_binding returned;
 	const struct kd_jit_mutex_driver *driver;
+	/* One run attempt owns the one fresh immutable returned endpoint. */
+	bool drive_started;
 	char acquisition_identity;
 	char unlock_identity;
 	char result_identity;
@@ -179,9 +205,30 @@ int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
 		 struct kd_execution_binding *capture_binding, struct kd_mutex *lock,
 		 unsigned long source_sp, unsigned long continuation_ip,
 		 unsigned long source_bp, unsigned long api_target);
+/* Native unlock uses its own pre-reserved referring control and fresh capture
+ * endpoint, while the exact open acquisition retains its unlock identity/grant.
+ * This does not enqueue a second lock request or fabricate a source CALL word.
+ */
+int kd_jit_capture_mutex_unlock(struct kd_jit_mutex_call *control,
+		 struct kd_jit_mutex_call *acquisition,
+		 struct kd_execution_binding *native_binding,
+		 struct kd_execution_binding *capture_binding, struct kd_mutex *lock,
+		 unsigned long source_sp, unsigned long continuation_ip,
+		 unsigned long source_bp, unsigned long api_target);
 int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,
 		 struct kd_mutex *lock, struct kd_execution_binding **binding,
 		 unsigned int proxy_limit, enum kd_mutex_outcome *outcome);
+
+/* One common stopped-episode adapter for local and proxy selections, after the
+ * source acquisition has completed exactly once. run advances current S_W;
+ * export uses a fresh returned endpoint, or the already-published native route.
+ * Exactly one run attempt is permitted per initialized persistent call; the
+ * started flag is set before run and is never cleared on an error. On success
+ * *binding is returned or NULL for immutable ORIGIN_SUFFIX. Errors after run
+ * are invariant failures, never permission to retry, replay or auto-forward.
+ */
+int kd_jit_mutex_drive(struct kd_jit_mutex_call *call,
+		 struct kd_execution_binding **binding, enum kd_mutex_outcome *outcome);
 
 /*
  * Find the exact logical grant for regs.di before preparing its unlock using

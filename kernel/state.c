@@ -33,6 +33,7 @@ int kd_state_init(struct kd_thread_state *state, struct task_struct *origin,
 	    native_binding->task != origin ||
 	    native_binding->kind != KD_EXECUTION_NATIVE)
 		return -EINVAL;
+	state->requests = NULL;
 	state->origin = origin;
 	state->origin_gs = origin_gs;
 	state->io.origin_gs = origin_gs;

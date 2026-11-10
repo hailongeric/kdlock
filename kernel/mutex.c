@@ -70,13 +70,43 @@ static struct kd_mutex_node *wait_link(struct kd_mutex_node *node)
 	}
 }
 
+static bool progress_wait(struct kd_mutex_node *node)
+{
+	bool blocked = false;
+	int result;
+
+	/* Callbacks can reschedule or finish backend release; never run them
+	 * with an artificial sleep state inherited from the wait loop.
+	 */
+	__set_current_state(TASK_RUNNING);
+	if (node->ops && node->ops->wait_progress) {
+		BUG_ON(!node->ops->wait_ready);
+		result = node->ops->wait_progress(node, node->context, &blocked);
+		BUG_ON(result);
+	}
+	return blocked;
+}
+
+static bool progress_ready(struct kd_mutex_node *node)
+{
+	return node->ops && node->ops->wait_ready &&
+	       node->ops->wait_ready(node, node->context);
+}
+
 static void wait_request(struct kd_mutex_node *node)
 {
 	for (;;) {
+		bool blocked = progress_wait(node);
+
 		set_current_state(TASK_UNINTERRUPTIBLE);
-		if (smp_load_acquire(&node->turn) ||
-		    smp_load_acquire(&node->result_ready))
+		if (!blocked && (smp_load_acquire(&node->turn) ||
+		    smp_load_acquire(&node->result_ready)))
 			break;
+		/* A release notification before sleep publication is seen here;
+		 * one afterward wakes the published state. No notification is lost.
+		 */
+		if (progress_ready(node))
+			continue;
 		schedule();
 	}
 	__set_current_state(TASK_RUNNING);
@@ -139,6 +169,8 @@ int kd_mutex_node_init(struct kd_mutex_node *node,
 	if (!state || !acquisition || !operation || !grant_user || !result_user)
 		return -EINVAL;
 	if (ready && (!ops || !ops->selected_local || !ops->execute_proxy))
+		return -EINVAL;
+	if (ops && (!!ops->wait_progress != !!ops->wait_ready))
 		return -EINVAL;
 	/* Private fresh storage, or previous node retirement has completed. */
 	node->next = NULL;
@@ -259,21 +291,26 @@ static enum kd_mutex_unlock_phase release_phase(struct kd_mutex_node *node)
 /* A live grant blocks the next source grant, even after a proxy outcome. */
 static void wait_owner_handled(struct kd_mutex_node *node)
 {
+	struct kd_mutex_node *head = node->batch->head;
+
 	for (;;) {
 		enum kd_mutex_unlock_phase phase;
+		bool blocked = progress_wait(head);
 		int result;
 
 		set_current_state(TASK_UNINTERRUPTIBLE);
 		phase = release_phase(node);
-		if (phase == KD_MUTEX_UNLOCK_OWNER_HANDLED)
-			break;
 		if (phase == KD_MUTEX_UNLOCK_REQUESTED ||
 		    phase == KD_MUTEX_UNLOCK_UNWIND_READY) {
 			result = kd_mutex_release_owner_handle(&node->release);
+			BUG_ON(result && result != -EAGAIN);
 			if (!result)
-				break;
-			BUG_ON(result != -EAGAIN);
+				phase = KD_MUTEX_UNLOCK_OWNER_HANDLED;
 		}
+		if (phase == KD_MUTEX_UNLOCK_OWNER_HANDLED && !blocked)
+			break;
+		if (progress_ready(head))
+			continue;
 		schedule();
 	}
 	__set_current_state(TASK_RUNNING);

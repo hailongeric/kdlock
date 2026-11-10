@@ -370,6 +370,37 @@ static int accept_selected(struct kd_mutex_node *node, void *context)
 	return kd_state_accept(node->state, &call->offer, &call->execution);
 }
 
+static int accept_local(struct kd_mutex_node *node, void *context)
+{
+	struct kd_jit_mutex_call *call = context;
+	int result = accept_selected(node, context);
+
+	if (result || !call->driver->selected_local)
+		return result;
+	return call->driver->selected_local(call, call->driver->context);
+}
+
+static int progress_wait(struct kd_mutex_node *node, void *context,
+			 bool *blocked)
+{
+	struct kd_jit_mutex_call *call = context;
+
+	if (node != &call->node)
+		return -ESTALE;
+	*blocked = false;
+	if (!call->driver->wait_progress)
+		return 0;
+	return call->driver->wait_progress(call, call->driver->context, blocked);
+}
+
+static bool progress_ready(struct kd_mutex_node *node, void *context)
+{
+	struct kd_jit_mutex_call *call = context;
+
+	return node == &call->node && call->driver->wait_ready &&
+	       call->driver->wait_ready(call, call->driver->context);
+}
+
 static int finish_acquisition(struct kd_jit_mutex_call *call,
 			       struct kd_execution_binding *binding)
 {
@@ -392,6 +423,47 @@ static int finish_acquisition(struct kd_jit_mutex_call *call,
 				   call->driver->stack);
 }
 
+int kd_jit_mutex_drive(struct kd_jit_mutex_call *call,
+		 struct kd_execution_binding **binding, enum kd_mutex_outcome *outcome)
+{
+	enum kd_mutex_outcome stopped;
+	int result;
+
+	if (!call || !binding || !outcome)
+		return -EPERM;
+	if (call->drive_started)
+		return -EALREADY;
+	if (!kd_state_is_jit_current(call->node.state, *binding))
+		return -EPERM;
+	/* One immutable returned endpoint belongs to exactly this run attempt. */
+	call->drive_started = true;
+	stopped = call->driver->run(call, binding, call->driver->context);
+	if (stopped < KD_MUTEX_PROXY_OPERATION_DONE ||
+	    stopped > KD_MUTEX_PROXY_UNWIND_PARENT)
+		return -EUCLEAN;
+	if (stopped != KD_MUTEX_PROXY_ORIGIN_SUFFIX) {
+		/* The callback stopped source; export current state, never old state.
+		 * This return endpoint has not been used for an earlier episode.
+		 */
+		result = kd_state_transfer(call->node.state, *binding, &call->returned);
+		if (result)
+			return result;
+		*binding = &call->returned;
+	} else {
+		/* The terminal route was transferred before run returned. The old
+		 * control must not sample the now-native source packet or binding.
+		 */
+		*binding = NULL;
+	}
+	if (call->driver->exported) {
+		result = call->driver->exported(call, stopped, call->driver->context);
+		if (result)
+			return result;
+	}
+	*outcome = stopped;
+	return 0;
+}
+
 static enum kd_mutex_outcome execute_selected(struct kd_mutex_node *node,
 					       void *context)
 {
@@ -404,20 +476,16 @@ static enum kd_mutex_outcome execute_selected(struct kd_mutex_node *node,
 	BUG_ON(result);
 	result = finish_acquisition(call, binding);
 	BUG_ON(result);
-	outcome = call->driver->run(call, &binding, call->driver->context);
-	BUG_ON(outcome < KD_MUTEX_PROXY_OPERATION_DONE ||
-	       outcome > KD_MUTEX_PROXY_UNWIND_PARENT);
-	if (outcome != KD_MUTEX_PROXY_ORIGIN_SUFFIX) {
-		/* The callback stopped source; export current state, never old state. */
-		result = kd_state_transfer(node->state, binding, &call->returned);
-		BUG_ON(result);
-	}
+	result = kd_jit_mutex_drive(call, &binding, &outcome);
+	BUG_ON(result);
 	return outcome;
 }
 
 static const struct kd_mutex_ops source_ops = {
-	.selected_local = accept_selected,
+	.selected_local = accept_local,
 	.execute_proxy = execute_selected,
+	.wait_progress = progress_wait,
+	.wait_ready = progress_ready,
 };
 
 int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
@@ -427,6 +495,7 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 	int result;
 
 	if (!call || !state || !driver || !driver->run || !driver->stack ||
+	    (!!driver->wait_progress != !!driver->wait_ready) ||
 	    !driver->stack->read_word || !driver->stack->write_word ||
 	    !driver->origin_binding || driver->origin_binding->state != state ||
 	    driver->origin_binding->task != state->origin ||
@@ -435,6 +504,7 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 	if (!kd_task_state_own())
 		return -ENOENT;
 	call->driver = driver;
+	call->drive_started = false;
 	kd_mutex_batch_init(&call->possible_batch);
 	result = kd_execution_binding_init(&call->offer, state, NULL, call,
 					   KD_EXECUTION_OFFER);
@@ -452,7 +522,8 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 		ready, &source_ops, call);
 }
 
-int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
+static int capture_mutex_operation(struct kd_jit_mutex_call *call,
+		 const void *identity, enum kd_operation_kind kind,
 		 struct kd_execution_binding *native_binding,
 		 struct kd_execution_binding *capture_binding, struct kd_mutex *lock,
 		 unsigned long source_sp, unsigned long continuation_ip,
@@ -467,10 +538,14 @@ int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
 		return -EPERM;
 	if (kd_task_state_own() != state)
 		return -ESTALE;
-	if (!capture_binding || !lock || !api_target || !continuation_ip ||
+	if (!identity || (kind != KD_OPERATION_MUTEX_LOCK &&
+	    kind != KD_OPERATION_MUTEX_UNLOCK) || !capture_binding || !lock ||
+	    !api_target || !continuation_ip ||
 	    call->node.enqueued || call->node.requester != current ||
-	    capture_binding == native_binding || capture_binding == &call->offer ||
-	    capture_binding == &call->execution || capture_binding == &call->returned)
+	    capture_binding == native_binding ||
+	    capture_binding == call->driver->origin_binding ||
+	    capture_binding == &call->offer || capture_binding == &call->execution ||
+	    capture_binding == &call->returned)
 		return -EINVAL;
 	if (state->exit_image || state->exit_use || state->exit_holder ||
 	    (state->operation.phase != KD_OPERATION_IDLE &&
@@ -500,11 +575,39 @@ int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
 	state->regs.ip = continuation_ip;
 	state->regs.bp = source_bp;
 	state->regs.di = (unsigned long)lock;
-	result = kd_operation_begin(state, capture_binding,
-		&call->acquisition_identity, KD_OPERATION_MUTEX_LOCK,
+	result = kd_operation_begin(state, capture_binding, identity, kind,
 		KD_OPERATION_CAPTURED_CONTINUATION, 0, api_target, continuation_ip);
 	preempt_enable();
 	return result;
+}
+
+int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
+		 struct kd_execution_binding *native_binding,
+		 struct kd_execution_binding *capture_binding, struct kd_mutex *lock,
+		 unsigned long source_sp, unsigned long continuation_ip,
+		 unsigned long source_bp, unsigned long api_target)
+{
+	return capture_mutex_operation(call, &call->acquisition_identity,
+		KD_OPERATION_MUTEX_LOCK, native_binding, capture_binding, lock,
+		source_sp, continuation_ip, source_bp, api_target);
+}
+
+int kd_jit_capture_mutex_unlock(struct kd_jit_mutex_call *control,
+		 struct kd_jit_mutex_call *acquisition,
+		 struct kd_execution_binding *native_binding,
+		 struct kd_execution_binding *capture_binding, struct kd_mutex *lock,
+		 unsigned long source_sp, unsigned long continuation_ip,
+		 unsigned long source_bp, unsigned long api_target)
+{
+	/* The exact open source grant retains acquisition through the operation;
+	 * the independent control entry owns the fresh capture/return endpoints.
+	 */
+	if (!control || !acquisition || control == acquisition ||
+	    control->node.state != acquisition->node.state)
+		return -EINVAL;
+	return capture_mutex_operation(control, &acquisition->unlock_identity,
+		KD_OPERATION_MUTEX_UNLOCK, native_binding, capture_binding, lock,
+		source_sp, continuation_ip, source_bp, api_target);
 }
 
 int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,

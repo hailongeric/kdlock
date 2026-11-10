@@ -50,6 +50,17 @@ enum kd_mutex_unlock_action {
 
 struct kd_mutex_ops {
 	/*
+	 * Optional physical-task metadata progress while waiting. Use the
+	 * requester node for turn/result waits and the actual batch head for
+	 * owner waits; a proxy node's source origin is not this task's controller.
+	 * progress runs TASK_RUNNING and may finish/reap stopped physical duties.
+	 * blocked prevents source/turn return while terminal foreign duties remain.
+	 * ready is a nonblocking exact-metadata recheck after sleep publication.
+	 * Both callbacks must be supplied together and never execute/read source.
+	 */
+	int (*wait_progress)(struct kd_mutex_node *node, void *context, bool *blocked);
+	bool (*wait_ready)(struct kd_mutex_node *node, void *context);
+	/*
 	 * Accept the exact stopped offer for this local physical winner.
 	 * Optional for a raw local-only request; if supplied it also runs when
 	 * ready is false. Proxy eligibility does not decide local bridge needs.

@@ -4,9 +4,13 @@
 
 #include <linux/types.h>
 #include "state.h"
+#include "owner_progress.h"
 
 struct task_struct;
 struct kd_mutex_entry;
+struct kd_request_pool;
+struct kd_request_slot;
+struct kd_episode_resources;
 
 /*
  * One stable task-owned root/auxiliary header, never another borrowed packet.
@@ -19,6 +23,11 @@ struct kd_task_root_context {
 	struct kd_thread_state core;
 	struct kd_execution_binding initial_native;
 	struct task_struct *task;
+	/* Physical owners stay with this task even when their source moves. */
+	struct kd_owner_progress owners;
+	/* Own native-entry configuration, never an active borrowed S_W. */
+	struct kd_episode_resources *mutex_resources;
+	unsigned long mutex_control_bytes;
 	unsigned long aux_low;
 	unsigned long aux_high;
 	unsigned long aux_current;
@@ -48,13 +57,19 @@ struct kd_thread_state *kd_task_state_own(void);
  * Attach initializes the one core and initial_native endpoint, retains current
  * and publishes the single task pointer. A live aux_entry blocks attach and
  * detach; it names control-storage occupancy, never active borrowed S_W.
- * Attach captures no source registers.
+ * pool and slots are caller-provisioned task-owned backing, with an explicit
+ * nonzero count covering every simultaneously retained request/control, not
+ * only lock depth. They and the header survive all final users. Attach reserves
+ * no per-lock storage and captures no source registers. No capacity default or
+ * public void-lock allocation-error route is supplied.
  * The initial endpoint must not be reinitialized/reused while any old observer
  * remains. Later native handbacks use fresh caller-reserved binding records.
  */
 int kd_task_root_attach(struct kd_task_root_context *context,
 		       unsigned long origin_gs, unsigned long aux_low,
-		       unsigned long aux_high, unsigned long aux_current);
+		       unsigned long aux_high, unsigned long aux_current,
+		       struct kd_request_pool *pool,
+		       struct kd_request_slot *slots, unsigned int capacity);
 
 /*
  * Constructor hook before a copied child is published or cleanup consumes the
@@ -69,7 +84,10 @@ void kd_task_root_reset_unpublished(struct task_struct *task);
  * the original task and its stacks. Do not call during borrowed execution or
  * from a retained auxiliary frame. An idle cursor or empty grant list cannot
  * prove that drain. current must be the exact origin/native owner, with no
- * pending exit and operation IDLE/RESUMABLE. Detach revokes binding/task lookup
+ * pending exit, empty physical-owner progress and operation IDLE/RESUMABLE.
+ * Otherwise finished pool storage may still retain the exact current native
+ * endpoint; final close revokes that binding and reclaims it atomically.
+ * Detach revokes binding/task lookup
  * and drops its task reference after the final header access, without freeing
  * storage or clearing the packet. Exit/stack release and reuse require success
  * AND the caller's full last-user proof. No allocator/drain-wait policy is added.

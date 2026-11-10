@@ -10,6 +10,7 @@ struct task_struct;
 struct kd_thread_state;
 struct kd_jit_image;
 struct kd_jit_image_use;
+struct kd_request_pool;
 
 /* These small records live in existing request/role storage, never a packet. */
 enum kd_execution_kind {
@@ -82,7 +83,7 @@ struct kd_source_grant {
  * Exactly one canonical packet and current operation for original W. Every
  * request/role points directly here through its MCS node, including nested
  * requests. A task-owned root/auxiliary header supplies initial own backing;
- * storage allocation and capacity remain integration choices. The
+ * request storage is provisioned with W and reused after exact final users. The
  * caller retains this core and origin task/stack through all queue, grant, return, notification and code users.
  */
 struct kd_thread_state {
@@ -96,6 +97,8 @@ struct kd_thread_state {
 	const void *exit_holder;
 	struct kd_source_operation operation;
 	struct kd_execution_binding *binding;
+	/* Immutable task-provisioned storage; nested executors use W's pool. */
+	struct kd_request_pool *requests;
 	struct task_struct *origin;
 	unsigned long origin_gs;
 	struct list_head grants;
