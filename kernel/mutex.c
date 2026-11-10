@@ -19,6 +19,33 @@
 #include <asm/processor.h>
 
 #include "mutex.h"
+#include "observation.h"
+#include "state.h"
+
+static unsigned long node_observation_flags(struct kd_mutex_node *node)
+{
+	return (READ_ONCE(node->enqueued) ? KD_OBS_FLAG_ENQUEUED : 0) |
+		(READ_ONCE(node->source_granted) ? KD_OBS_FLAG_SOURCE_GRANTED : 0) |
+		(smp_load_acquire(&node->queue_done) ? KD_OBS_FLAG_QUEUE_DONE : 0) |
+		(smp_load_acquire(&node->result_ready) ? KD_OBS_FLAG_RESULT_READY : 0) |
+		(READ_ONCE(node->result_user) ? KD_OBS_FLAG_RESULT_USER_PRESENT : 0);
+}
+
+/* These node/control fields remain retained through each call. origin is
+ * immutable lifecycle metadata; no register packet or current binding is read.
+ */
+static void observe_node(unsigned long kind, struct kd_mutex_node *node,
+		struct kd_mutex_batch *batch, const void *related,
+		unsigned long phase, unsigned long result)
+{
+	kd_observe(kind, .state = (unsigned long)node->state,
+		.origin = (unsigned long)node->state->origin,
+		.node = (unsigned long)node, .acquisition = (unsigned long)node->acquisition,
+		.owner = batch ? (unsigned long)&batch->release_owner : 0,
+		.owner_task = batch ? (unsigned long)batch->release_owner.task : 0,
+		.object = (unsigned long)node->lock, .related = (unsigned long)related,
+		.phase = phase, .result = result, .flags = node_observation_flags(node));
+}
 
 /*
  * Capture an independent task reference before the final condition store.
@@ -129,6 +156,8 @@ static void mcs_physical_unlock(void *object)
 	if (!next && cmpxchg(&lock->tail, head, NULL) == head) {
 		/* No producer can still hold head as its predecessor. */
 		smp_store_release(&head->queue_done, 1);
+		observe_node(KD_OBS_QUEUE_DONE, head, batch, NULL,
+			     KD_MUTEX_SELECTED_LOCAL, 0);
 		return;
 	}
 	/* No lock-object access follows the tail operation/owner clear above. */
@@ -139,6 +168,8 @@ static void mcs_physical_unlock(void *object)
 	BUG_ON(selection != KD_MUTEX_OFFERED &&
 	       selection != KD_MUTEX_SELECTED_LOCAL);
 	smp_store_release(&head->queue_done, 1);
+	observe_node(KD_OBS_QUEUE_DONE, head, batch, next,
+		     KD_MUTEX_SELECTED_LOCAL, 0);
 	/* Turn is actual MCS handoff, not an offered request or source result. */
 	publish_condition(next, &next->turn);
 }
@@ -210,6 +241,7 @@ int kd_mutex_node_discard(struct kd_mutex_node *node)
 	task = node->requester;
 	node->requester = NULL;
 	node->result_user = NULL;
+	observe_node(KD_OBS_NODE_RETIRE_READY, node, NULL, NULL, KD_MUTEX_PRIVATE, 0);
 	smp_store_release(&node->retirable, 1);
 	put_task_struct(task);
 	return 0;
@@ -236,6 +268,9 @@ int kd_mutex_enqueue(struct kd_mutex *lock, struct kd_mutex_node *node)
 	} else {
 		smp_store_release(&node->turn, 1);
 	}
+	/* The producer's final predecessor-link access has completed. */
+	observe_node(KD_OBS_ENQUEUE, node, NULL, previous,
+		     node->ready ? KD_MUTEX_OFFERED : KD_MUTEX_SELECTED_LOCAL, 0);
 	return 0;
 }
 
@@ -268,6 +303,8 @@ static void detach_proxy(struct kd_mutex_batch *batch, struct kd_mutex_node *nod
 		WRITE_ONCE(head->next, NULL);
 		if (cmpxchg(&batch->lock->tail, node, head) == node) {
 			smp_store_release(&node->queue_done, 1);
+			observe_node(KD_OBS_QUEUE_DONE, node, batch, head,
+				     KD_MUTEX_SELECTED_PROXY, 0);
 			return;
 		}
 		next = wait_link(node);
@@ -275,6 +312,8 @@ static void detach_proxy(struct kd_mutex_batch *batch, struct kd_mutex_node *nod
 	WRITE_ONCE(head->next, next);
 	/* Observing next proves its producer's final node access completed. */
 	smp_store_release(&node->queue_done, 1);
+	observe_node(KD_OBS_QUEUE_DONE, node, batch, head,
+		     KD_MUTEX_SELECTED_PROXY, 0);
 }
 
 static enum kd_mutex_unlock_phase release_phase(struct kd_mutex_node *node)
@@ -325,6 +364,8 @@ static void bind_grant(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
 				       node->state, node->acquisition, node->grant_user);
 	BUG_ON(result);
 	WRITE_ONCE(node->source_granted, true);
+	observe_node(KD_OBS_GRANT, node, batch, &node->release,
+		     KD_MUTEX_UNLOCK_HELD, 0);
 }
 
 int kd_mutex_combine(struct kd_mutex_batch *batch, unsigned int proxy_limit,
@@ -346,6 +387,8 @@ int kd_mutex_combine(struct kd_mutex_batch *batch, unsigned int proxy_limit,
 		return -EBUSY;
 	while (count < proxy_limit && batch->proxy_served < batch->proxy_limit) {
 		struct kd_mutex_node *node = smp_load_acquire(&head->next);
+		struct task_struct *origin;
+		struct kd_thread_state *state;
 		enum kd_mutex_outcome outcome;
 
 		if (!node)
@@ -354,16 +397,31 @@ int kd_mutex_combine(struct kd_mutex_batch *batch, unsigned int proxy_limit,
 		if (atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
 				   KD_MUTEX_SELECTED_PROXY) != KD_MUTEX_OFFERED)
 			break;
+		observe_node(KD_OBS_SELECT_PROXY, node, batch, head,
+			     KD_MUTEX_SELECTED_PROXY, 0);
 		BUG_ON(!node->ready || !node->ops || !node->ops->execute_proxy);
 		detach_proxy(batch, node);
 		bind_grant(batch, node);
 		batch->serving = node;
 		batch->proxy_served++;
+		/* Terminal source export may let W advance before this callback
+		 * returns. Cache only immutable identities beforehand.
+		 */
+		state = node->state;
+		origin = state->origin;
 		outcome = node->ops->execute_proxy(node, node->context);
 		BUG_ON(outcome < KD_MUTEX_PROXY_OPERATION_DONE ||
 		       outcome > KD_MUTEX_PROXY_UNWIND_PARENT);
 		BUG_ON(batch->release_owner.phase != KD_MUTEX_OWNER_OPEN);
 		node->outcome = outcome;
+		kd_observe(KD_OBS_PROXY_RETURN, .state = (unsigned long)state,
+			.origin = (unsigned long)origin, .node = (unsigned long)node,
+			.acquisition = (unsigned long)node->acquisition,
+			.owner = (unsigned long)&batch->release_owner,
+			.owner_task = (unsigned long)batch->release_owner.task,
+			.object = (unsigned long)batch->lock, .related = (unsigned long)head,
+			.phase = KD_MUTEX_SELECTED_PROXY, .result = outcome,
+			.flags = node_observation_flags(node));
 		/*
 		 * The requester may now follow current S_W, but result alone is
 		 * neither source-grant release nor permission to reuse this node.
@@ -414,6 +472,9 @@ int kd_mutex_await(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 	WRITE_ONCE(batch->lock->owner, batch);
 	batch->initialized = true;
 	node->batch = batch;
+	/* Actual MCS turn and physical-owner publication, not a local preclaim. */
+	observe_node(KD_OBS_SELECT_LOCAL, node, batch, node,
+		     KD_MUTEX_SELECTED_LOCAL, 0);
 	if (node->ops && node->ops->selected_local) {
 		result = node->ops->selected_local(node, node->context);
 		BUG_ON(result);
@@ -577,8 +638,19 @@ int kd_mutex_finish_batch(struct kd_mutex_batch *batch)
 static void publish_retirable(struct kd_mutex_node *node)
 {
 	struct task_struct *task = node->requester;
+	struct kd_mutex_batch *batch = node->batch;
 
 	/* Transfer the node's persistent task reference before final node access. */
+	kd_observe(KD_OBS_NODE_RETIRE_READY, .state = (unsigned long)node->state,
+		.origin = (unsigned long)node->state->origin,
+		.node = (unsigned long)node, .acquisition = (unsigned long)node->acquisition,
+		.owner = (unsigned long)&batch->release_owner,
+		.owner_task = (unsigned long)batch->release_owner.task,
+		.object = (unsigned long)node->lock, .related = (unsigned long)&node->release,
+		.phase = node->release.phase, .flags = node_observation_flags(node),
+		.source_user = (unsigned long)node->release.source_user,
+		.return_user = (unsigned long)node->release.return_user,
+		.notifier = (unsigned long)node->release.notifier);
 	smp_store_release(&node->retirable, 1);
 	wake_up_process(task);
 	put_task_struct(task);

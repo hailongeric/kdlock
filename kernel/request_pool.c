@@ -2,6 +2,7 @@
 #include <linux/errno.h>
 #include <linux/sched.h>
 #include "request_pool.h"
+#include "observation.h"
 
 void kd_request_user_init(struct kd_request_user *user)
 {
@@ -90,6 +91,39 @@ static void free_locked(struct kd_request_slot *slot)
 {
 	struct kd_request_pool *pool = slot->pool;
 
+	/* Every caller has completed reusable_locked (or the exact detach
+	 * equivalent). Snapshot before claim clearing or immediate slot reuse.
+	 * cursor here is only the atomic binding identity, never source IP/GPRs.
+	 */
+	kd_observe(KD_OBS_SLOT_FREE, .state = (unsigned long)pool->state,
+		.origin = (unsigned long)pool->state->origin,
+		.node = (unsigned long)&slot->call.node,
+		.acquisition = (unsigned long)&slot->call.acquisition_identity,
+		.parent = (unsigned long)slot->claim, .owner = (unsigned long)pool,
+		.object = slot->phase == KD_REQUEST_SLOT_LIVE && slot->call.node.enqueued ?
+			(unsigned long)slot->call.node.lock : 0,
+		.cursor = (unsigned long)kd_state_current_binding(pool->state),
+		.related = (unsigned long)slot, .phase = slot->phase,
+		.flags = (list_empty(&slot->users) ? KD_OBS_FLAG_POOL_USERS_EMPTY : 0) |
+			(controls_idle(slot) ? KD_OBS_FLAG_COMPONENTS_IDLE : 0) |
+			(slot->phase == KD_REQUEST_SLOT_LIVE &&
+			 smp_load_acquire(&slot->call.node.retirable) ? KD_OBS_FLAG_NODE_RETIRABLE : 0) |
+			(slot->phase == KD_REQUEST_SLOT_LIVE && slot->call.node.enqueued ?
+			 KD_OBS_FLAG_ENQUEUED : 0) |
+			(slot->phase == KD_REQUEST_SLOT_LIVE && slot->call.node.source_granted ?
+			 KD_OBS_FLAG_SOURCE_GRANTED : 0) |
+			(slot->phase == KD_REQUEST_SLOT_LIVE &&
+			 smp_load_acquire(&slot->call.node.queue_done) ? KD_OBS_FLAG_QUEUE_DONE : 0) |
+			(slot->phase == KD_REQUEST_SLOT_LIVE &&
+			 smp_load_acquire(&slot->call.node.result_ready) ? KD_OBS_FLAG_RESULT_READY : 0) |
+			(slot->phase == KD_REQUEST_SLOT_LIVE && slot->call.node.result_user ?
+			 KD_OBS_FLAG_RESULT_USER_PRESENT : 0),
+		.source_user = slot->phase == KD_REQUEST_SLOT_LIVE && slot->call.node.source_granted ?
+			(unsigned long)slot->call.node.release.source_user : 0,
+		.return_user = slot->phase == KD_REQUEST_SLOT_LIVE && slot->call.node.source_granted ?
+			(unsigned long)slot->call.node.release.return_user : 0,
+		.notifier = slot->phase == KD_REQUEST_SLOT_LIVE && slot->call.node.source_granted ?
+			(unsigned long)slot->call.node.release.notifier : 0);
 	slot->claim = NULL;
 	slot->phase = KD_REQUEST_SLOT_FREE;
 	list_move_tail(&slot->pool_link, &pool->free_slots);
@@ -206,6 +240,13 @@ static int reserve_slot(struct kd_request_pool *pool,
 		slot->claim = claim ? claim : &slot->call.acquisition_identity;
 		slot->phase = KD_REQUEST_SLOT_RESERVED;
 		list_move_tail(&slot->pool_link, &pool->live_slots);
+		/* Node subrecords have not been initialized for this reservation. */
+		kd_observe(KD_OBS_SLOT_RESERVE, .state = (unsigned long)pool->state,
+			.origin = (unsigned long)pool->state->origin,
+			.node = (unsigned long)&slot->call.node,
+			.acquisition = (unsigned long)&slot->call.acquisition_identity,
+			.parent = (unsigned long)slot->claim, .owner = (unsigned long)pool,
+			.related = (unsigned long)slot, .phase = slot->phase);
 	}
 	raw_spin_unlock_irqrestore(&pool->guard, flags);
 	if (error)

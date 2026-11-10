@@ -27,6 +27,7 @@ kdlock_rebuild-y := \
 	kernel/image_owner.o \
 	kernel/jit.o \
 	kernel/native_entry.o \
+	kernel/observation.o \
 	kernel/episode.o \
 	kernel/mutex_api.o \
 	kernel/task_progress.o \

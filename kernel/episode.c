@@ -9,6 +9,7 @@
 #include <linux/sched.h>
 
 #include "episode.h"
+#include "observation.h"
 
 static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 		struct kd_execution_binding **binding, void *context);
@@ -140,6 +141,18 @@ static bool wait_ready(struct kd_jit_mutex_call *call, void *context)
 
 	return call == &frame->slot->call && progress && kd_owner_progress_ready(progress);
 }
+
+/* Frame/control users retain these identities for this synchronous snapshot.
+ * Only call sites with current stopped source rights add cursor/IO values.
+ */
+#define observe_frame(_frame, _kind, ...) \
+	kd_observe(_kind, \
+	 .state = (unsigned long)(_frame)->resources->pool->state, \
+	 .origin = (unsigned long)(_frame)->origin, \
+	 .node = (unsigned long)&(_frame)->slot->call.node, \
+	 .acquisition = (unsigned long)&(_frame)->slot->call.acquisition_identity, \
+	 .parent = (unsigned long)((_frame)->parent ? \
+	  &(_frame)->parent->slot->call.node : NULL), __VA_ARGS__)
 
 static int pump(void)
 {
@@ -465,6 +478,9 @@ static int prepare(struct kd_episode_resources *resources,
 	if (error)
 		goto failed;
 	prepared = true;
+	observe_frame(frame, KD_OBS_FRAME_PREPARE,
+		.image = (unsigned long)(frame->source_image ? slot->source_use.image : NULL),
+		.related = (unsigned long)binding, .phase = slot->phase);
 	*result = frame;
 	return 0;
 failed:
@@ -570,6 +586,10 @@ static enum kd_mutex_outcome forward(struct kd_episode_frame *frame,
 	report(frame, image, state, entry_result, state->exit_image != NULL);
 	if (!kd_state_is_jit_current(state, *binding))
 		return KD_MUTEX_OUTCOME_UNSET;
+	observe_frame(frame, KD_OBS_FORWARD, .image = (unsigned long)image,
+		.ip = state->io.source_ip, .cursor = state->regs.ip,
+		.related = state->io.target, .phase = state->io.phase,
+		.result = (unsigned long)(long)entry_result, .flags = state->io.kind);
 	if (state->exit_image) {
 		if (state->io.phase == KD_JIT_PHASE_TARGET_READY)
 			result = kd_jit_stage_forward_call(image, state, *binding,
@@ -609,9 +629,25 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 		result = pump();
 		BUG_ON(result);
 		if (frame->source_closed) {
+			enum kd_mutex_outcome completed = list_empty(&frame->deferred) ?
+				KD_MUTEX_PROXY_EPISODE_DONE : KD_MUTEX_PROXY_UNWIND_PARENT;
+
 			frame->flush_deferred = true;
-			return list_empty(&frame->deferred) ? KD_MUTEX_PROXY_EPISODE_DONE :
-				KD_MUTEX_PROXY_UNWIND_PARENT;
+			if (trace_kdlock_observe_tp_enabled()) {
+				bool owned = kd_state_is_jit_current(state, *binding);
+
+				/* Collection may already have dropped the last image use.
+				 * Join earlier JIT_EXIT/accepted-unlock records by this
+				 * retained acquisition; do not dereference retired code.
+				 */
+				observe_frame(frame, KD_OBS_EPISODE_DONE,
+					.cursor = owned ? state->regs.ip : 0,
+					.related = (unsigned long)*binding,
+					.result = completed,
+					.flags = KD_OBS_FLAG_SOURCE_CLOSED |
+						(owned ? KD_OBS_FLAG_CURRENT_JIT : 0));
+			}
+			return completed;
 		}
 		if (!frame->source_image || current == frame->origin)
 			return forward(frame, binding,
@@ -622,6 +658,8 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 		BUG_ON(result);
 		frame->execution_image = true;
 		image = frame->slot->execution_use.image;
+		observe_frame(frame, KD_OBS_JIT_ENTER, .image = (unsigned long)image,
+			.cursor = state->regs.ip, .related = (unsigned long)*binding);
 		result = kd_jit_enter(&frame->slot->execution_use, &frame->image_user,
 			&frame->slot->exit_use, &frame->image_user, state, *binding);
 		{
@@ -635,6 +673,10 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 		}
 		frame->exit_pending = true;
 		image = state->exit_image;
+		observe_frame(frame, KD_OBS_JIT_EXIT, .image = (unsigned long)image,
+			.ip = state->io.source_ip, .cursor = state->regs.ip,
+			.related = state->io.target, .phase = state->io.phase,
+			.result = state->io.kind, .flags = state->io.detail);
 		operation_exit = ((state->io.kind == KD_JIT_EXIT_LOCK_OPERATION &&
 		       (state->io.phase == KD_JIT_PHASE_BEFORE_INSTRUCTION ||
 			state->io.phase == KD_JIT_PHASE_TARGET_READY ||
@@ -675,6 +717,8 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			struct kd_episode_frame *child;
 			struct kd_execution_binding *child_binding = *binding;
 			enum kd_mutex_outcome outcome;
+			unsigned long operation_ip = state->io.source_ip;
+			unsigned long object = state->regs.di;
 
 			result = prepare(resources, *binding, frame, &child);
 			BUG_ON(result);
@@ -698,6 +742,11 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 				return forward(frame, binding, image, result);
 			}
 			frame->exit_pending = false;
+			observe_frame(frame, KD_OBS_JIT_OPERATION,
+				.image = (unsigned long)image, .ip = operation_ip,
+				.cursor = state->regs.ip, .object = object,
+				.related = (unsigned long)&child->slot->call.node,
+				.phase = state->operation.phase, .result = KD_OPERATION_MUTEX_LOCK);
 			result = kd_jit_mutex_acquire(&child->slot->call,
 				(struct kd_mutex *)state->regs.di, &child_binding,
 				local_service_limit(resources, child_binding), &outcome);
@@ -705,6 +754,20 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			if (outcome == KD_MUTEX_LOCAL_GRANTED) {
 				result = kd_jit_mutex_drive(&child->slot->call, &child_binding, &outcome);
 				BUG_ON(result);
+			}
+			/* A terminal source transfer may already let W advance. Only
+			 * successful structured returns still permit canonical reads.
+			 */
+			if (trace_kdlock_observe_tp_enabled()) {
+				bool owned = outcome != KD_MUTEX_PROXY_ORIGIN_SUFFIX &&
+					kd_state_is_jit_current(state, child_binding);
+
+				observe_frame(frame, KD_OBS_CHILD_RETURN,
+					.related = (unsigned long)&child->slot->call.node,
+					.result = outcome, .cursor = owned ? state->regs.ip : 0,
+					.return_user = (unsigned long)child_binding,
+					.source_user = (unsigned long)*binding,
+					.flags = owned ? KD_OBS_FLAG_CURRENT_JIT : 0);
 			}
 			result = drop_return(child);
 			BUG_ON(result);
@@ -728,6 +791,8 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			struct kd_mutex_batch *active = call->node.batch;
 			enum kd_mutex_unlock_action action;
 			bool deferred;
+			unsigned long operation_ip = state->io.source_ip;
+			unsigned long object = state->regs.di;
 
 			BUG_ON(IS_ERR(grant));
 			target = grant_frame(grant);
@@ -754,6 +819,11 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 				deferred ? &target->notifier_user : NULL, &action);
 			BUG_ON(result);
 			target->source_closed = true;
+			observe_frame(frame, KD_OBS_JIT_OPERATION,
+				.image = (unsigned long)image, .ip = operation_ip,
+				.cursor = state->regs.ip, .object = object,
+				.related = (unsigned long)&target->slot->call.node,
+				.phase = action, .result = KD_OPERATION_MUTEX_UNLOCK);
 			continue;
 		}
 		return forward(frame, binding, image, 0);
@@ -902,6 +972,9 @@ int kd_episode_unlock_native(struct kd_episode_resources *resources,
 	result = kd_state_close_grant(&root->core, native_binding, grant);
 	BUG_ON(result);
 	frame->source_closed = true;
+	observe_frame(frame, KD_OBS_NATIVE_UNLOCK, .object = (unsigned long)lock,
+		.related = (unsigned long)native_binding, .phase = action,
+		.flags = KD_OBS_FLAG_SOURCE_CLOSED);
 	if (action == KD_MUTEX_UNLOCK_DEFERRED_PARENT) {
 		result = kd_mutex_publish_outer_unwind(&frame->slot->call.node, &user, &owner);
 		BUG_ON(result);

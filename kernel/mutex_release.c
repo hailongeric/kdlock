@@ -16,6 +16,25 @@
 #include <linux/sched.h>
 
 #include "mutex_release.h"
+#include "observation.h"
+
+/* Called only with the existing owner guard held. User fields identify the
+ * current membership, or the exact consumed token for a *_DROP/NOTIFY_DONE.
+ * Generic release controls need not be embedded in a mutex queue node.
+ */
+static void observe_release(unsigned long kind, struct kd_mutex_release *release,
+		struct kd_mutex_release_owner *owner, const void *source_user,
+		const void *return_user, const void *notifier)
+{
+	kd_observe(kind, .state = (unsigned long)release->state,
+		.acquisition = (unsigned long)release->acquisition,
+		.owner = (unsigned long)owner, .owner_task = (unsigned long)owner->task,
+		.object = (unsigned long)owner->object, .related = (unsigned long)release,
+		.phase = release->phase, .result = release->route,
+		.source_user = (unsigned long)source_user,
+		.return_user = (unsigned long)return_user,
+		.notifier = (unsigned long)notifier);
+}
 
 static int release_lock(struct kd_mutex_release *release,
 			struct kd_mutex_release_owner **owner_out)
@@ -82,6 +101,8 @@ int kd_mutex_release_bind(struct kd_mutex_release_owner *owner,
 		release->route = KD_MUTEX_UNLOCK_ROUTE_UNSET;
 		release->deferred = false;
 		list_add_tail(&release->owner_link, &owner->obligations);
+		observe_release(KD_OBS_RELEASE_BIND, release, owner, release->source_user,
+				release->return_user, release->notifier);
 	}
 out:
 	raw_spin_unlock(&owner->guard);
@@ -110,6 +131,8 @@ int kd_mutex_release_request(struct kd_mutex_release *release,
 	else {
 		release->route = route;
 		release->phase = KD_MUTEX_UNLOCK_REQUESTED;
+		observe_release(KD_OBS_RELEASE_REQUEST, release, owner, release->source_user,
+				release->return_user, release->notifier);
 	}
 	raw_spin_unlock(&owner->guard);
 	return result;
@@ -134,6 +157,8 @@ int kd_mutex_release_defer(struct kd_mutex_release *release,
 		release->notifier = notifier;
 		release->deferred = true;
 		release->phase = KD_MUTEX_UNLOCK_DEFERRED;
+		observe_release(KD_OBS_RELEASE_DEFER, release, owner, release->source_user,
+				release->return_user, release->notifier);
 	}
 	raw_spin_unlock(&owner->guard);
 	return result;
@@ -159,6 +184,8 @@ int kd_mutex_release_publish_unwind(struct kd_mutex_release *release,
 		/* Unlocking the guard publishes the completed export/stop first. */
 		release->phase = KD_MUTEX_UNLOCK_UNWIND_READY;
 		*target = owner;
+		observe_release(KD_OBS_RELEASE_UNWIND, release, owner, release->source_user,
+				release->return_user, release->notifier);
 	}
 	raw_spin_unlock(&owner->guard);
 	return result;
@@ -176,8 +203,11 @@ int kd_mutex_release_notification_done(struct kd_mutex_release *release,
 		result = -ESTALE;
 	else if (release->phase == KD_MUTEX_UNLOCK_DEFERRED)
 		result = -EAGAIN;
-	else
+	else {
 		release->notifier = NULL;
+		observe_release(KD_OBS_RELEASE_NOTIFY_DONE, release, owner,
+				release->source_user, release->return_user, notifier);
+	}
 	/* No record/notification access follows this final guard unlock. */
 	raw_spin_unlock(&owner->guard);
 	return result;
@@ -195,9 +225,11 @@ int kd_mutex_release_owner_handle(struct kd_mutex_release *release)
 	else if ((release->phase == KD_MUTEX_UNLOCK_REQUESTED &&
 		  release->route == KD_MUTEX_UNLOCK_ROUTE_OWNER) ||
 		 (release->phase == KD_MUTEX_UNLOCK_UNWIND_READY &&
-		  release->route == KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER))
+		  release->route == KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER)) {
 		release->phase = KD_MUTEX_UNLOCK_OWNER_HANDLED;
-	else
+		observe_release(KD_OBS_RELEASE_HANDLED, release, owner, release->source_user,
+				release->return_user, release->notifier);
+	} else
 		result = -EAGAIN;
 	/* OPEN remains OPEN: owner handling may continue its normal batch. */
 	raw_spin_unlock(&owner->guard);
@@ -233,8 +265,11 @@ int kd_mutex_release_drop_return(struct kd_mutex_release *release,
 		return result;
 	if (!return_user || release->return_user != return_user)
 		result = -ESTALE;
-	else
+	else {
 		release->return_user = NULL;
+		observe_release(KD_OBS_RELEASE_RETURN_DROP, release, owner,
+				release->source_user, return_user, release->notifier);
+	}
 	raw_spin_unlock(&owner->guard);
 	return result;
 }
@@ -251,8 +286,11 @@ int kd_mutex_release_drop_source(struct kd_mutex_release *release,
 		result = -ESTALE;
 	else if (release->phase == KD_MUTEX_UNLOCK_HELD)
 		result = -EAGAIN;
-	else
+	else {
 		release->source_user = NULL;
+		observe_release(KD_OBS_RELEASE_SOURCE_DROP, release, owner,
+				source_user, release->return_user, release->notifier);
+	}
 	raw_spin_unlock(&owner->guard);
 	return result;
 }
@@ -287,7 +325,8 @@ static int prepare_physical(struct kd_mutex_release_owner *owner,
 	return result;
 }
 
-static int mark_physical(struct kd_mutex_release_owner *owner)
+static int mark_physical(struct kd_mutex_release_owner *owner,
+			 kd_mutex_backend_unlock_fn unlock, void *object)
 {
 	struct kd_mutex_release *release;
 	int result = 0;
@@ -302,6 +341,9 @@ static int mark_physical(struct kd_mutex_release_owner *owner)
 		owner->phase = KD_MUTEX_OWNER_PHYSICALLY_RELEASED;
 		list_for_each_entry(release, &owner->obligations, owner_link)
 			release->phase = KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED;
+		kd_observe(KD_OBS_PHYSICAL_END, .owner = (unsigned long)owner,
+			.owner_task = (unsigned long)owner->task, .object = (unsigned long)object,
+			.related = (unsigned long)unlock, .phase = owner->phase);
 	}
 	raw_spin_unlock(&owner->guard);
 	return result;
@@ -315,9 +357,12 @@ int kd_mutex_release_finish_physical(struct kd_mutex_release_owner *owner)
 
 	if (result)
 		return result;
+	kd_observe(KD_OBS_PHYSICAL_BEGIN, .owner = (unsigned long)owner,
+		.owner_task = (unsigned long)owner->task, .object = (unsigned long)object,
+		.related = (unsigned long)unlock, .phase = KD_MUTEX_OWNER_RELEASE_PREPARED);
 	unlock(object);
 	/* All later accesses are to independently retained control, not object. */
-	return mark_physical(owner);
+	return mark_physical(owner, unlock, object);
 }
 
 int kd_mutex_release_retire(struct kd_mutex_release *release)
@@ -333,10 +378,19 @@ int kd_mutex_release_retire(struct kd_mutex_release *release)
 		 release->source_user || release->return_user || release->notifier)
 		result = -EBUSY;
 	else {
+		struct kd_thread_state *state = release->state;
+
 		list_del_init(&release->owner_link);
 		release->state = NULL;
 		release->phase = KD_MUTEX_UNLOCK_RETIRED;
 		WRITE_ONCE(release->owner, NULL);
+		kd_observe(KD_OBS_RELEASE_RETIRE, .state = (unsigned long)state,
+			.acquisition = (unsigned long)release->acquisition,
+			.owner = (unsigned long)owner, .owner_task = (unsigned long)owner->task,
+			.related = (unsigned long)release, .phase = release->phase,
+			.result = release->route, .source_user = (unsigned long)release->source_user,
+			.return_user = (unsigned long)release->return_user,
+			.notifier = (unsigned long)release->notifier);
 	}
 	raw_spin_unlock(&owner->guard);
 	return result;
@@ -352,8 +406,11 @@ int kd_mutex_release_owner_retire(struct kd_mutex_release_owner *owner)
 	else if (owner->phase != KD_MUTEX_OWNER_PHYSICALLY_RELEASED ||
 		 !list_empty(&owner->obligations))
 		result = -EBUSY;
-	else
+	else {
 		owner->phase = KD_MUTEX_OWNER_RETIRED;
+		kd_observe(KD_OBS_OWNER_RETIRE, .owner = (unsigned long)owner,
+			.owner_task = (unsigned long)owner->task, .phase = owner->phase);
+	}
 	raw_spin_unlock(&owner->guard);
 	return result;
 }

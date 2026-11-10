@@ -9,6 +9,7 @@
 
 #include "mutex.h"
 #include "owner_progress.h"
+#include "observation.h"
 
 void kd_owner_progress_init(struct kd_owner_progress *progress,
 			    struct task_struct *task)
@@ -79,6 +80,15 @@ int kd_owner_progress_control_stopped(struct kd_owner_batch *item,
 		return -EBUSY;
 	item->terminal_foreign = terminal_foreign;
 	item->control_stopped = true;
+	kd_observe(KD_OBS_OWNER_STOP, .state = (unsigned long)item->batch->head->state,
+		.node = (unsigned long)item->batch->head,
+		.acquisition = (unsigned long)item->batch->head->acquisition,
+		.owner = (unsigned long)&item->batch->release_owner,
+		.owner_task = (unsigned long)item->batch->release_owner.task,
+		.object = (unsigned long)item->batch->lock, .related = (unsigned long)item,
+		.phase = item->batch->release_owner.phase,
+		.flags = KD_OBS_FLAG_CONTROL_STOPPED |
+			(terminal_foreign ? KD_OBS_FLAG_TERMINAL_FOREIGN : 0));
 	return 0;
 }
 
