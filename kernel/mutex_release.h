@@ -130,8 +130,9 @@ int kd_mutex_release_drop_source(struct kd_mutex_release *release,
  * the combiner role or submitting another deferred source unlock is insufficient.
  * No later helper dereferences the object.
  * Its provider/code retention and memory/context effects are caller duties.
- * A marker, owner_handle or dropped user is not physical completion. This API
- * chooses no source-resumption/object-lifetime policy for the deferred period.
+ * A marker, owner_handle or dropped user is not physical completion. The
+ * initial lane requires object storage valid through actual physical release.
+ * Source-resumption/cursor handling still belongs to its chosen state adapter.
  */
 int kd_mutex_release_finish_physical(struct kd_mutex_release_owner *owner);
 /* Only the actual owner task retires records and then its empty context. */

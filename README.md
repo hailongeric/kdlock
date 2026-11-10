@@ -27,7 +27,8 @@ per-acquisition controls. They distinguish source request, deferred marker,
 unwind readiness, owner handling, physical release and retirement; exact
 source-request, return and notifier users gate retirement. The request publishes
 its exact OWNER or DEFERRED_OUTER route; same-task identity alone cannot classify
-an outer unlock. No default source resumption is selected. Initialization binds
+an outer unlock. The helper does not advance source; the actual C04 continuation
+bridge remains unimplemented. Initialization binds
 the already-acquired backend's exact ordinary unlock callback/object. An
 owner-only finish validates handled obligations, closes the batch/binding and
 takes/clears that binding under its guard, invokes the bound synchronous complete
@@ -67,11 +68,18 @@ or progress-parity claim. The earlier transferable-grant proposal is superseded.
 C11 queue/arbitration, the original-backend adapter and remaining mechanisms
 stay open.
 
-The lock-object lifetime choice is still pending: require stable lock objects
-through physical release, or hold post-unlock source continuation until physical
-release. Neither is selected here. Early reacquisition and source handshakes
-that depend on outer-lock availability remain unresolved scope issues; a
-deferred marker is not physical release or permission to reclaim the object.
+The initial mutex lane now requires stable lock-object storage through actual
+physical release and the backend's final object access. A source unlock or
+deferred marker cannot authorize destruction/reinitialization. Owner/control
+storage, including any containing allocation, must remain valid through its
+separate source/return/notifier last users after physical release; callback code
+remains retained through its return. The selected contract permits a correctly
+materialized post-unlock continuation without waiting solely for physical
+release/object lifetime. The exact CALL/return/cursor/executor bridge remains
+unimplemented C04 work; a marker alone authorizes no arbitrary execution. C11
+arbitration and C04 mapping remain open. Same-source reacquisition and
+handshakes depending on outer-lock availability still need explicit
+progress/authority evidence.
 
 ## Git history
 

@@ -80,7 +80,8 @@ entry_A
 
 entry_B
   fragment B0 after acquired B -> pending unlock(A)
-  fragment B1 only under the chosen post-unlock(A) phase/lifetime contract
+  fragment B1 only under its validated post-unlock(A) phase bridge
+              and selected stable-object lifetime contract
               with B live -> pending unlock(B)
 ```
 
@@ -104,7 +105,7 @@ Crossing images creates no source CALL or RET of its own. Any source call-stack 
 
 ### 2.2 General post-operation reentry
 
-After **any successfully handled source acquisition, unlock or supported mode operation**, lock code must provide a generic current-state route using S_W's exact cursor, operation phase, registers, logical grants, pending physical duties and context. For selected outer mutex unlocks, deferred acceptance, owner handling and physical release are distinct; no marker alone proves source-API return or authorizes cursor advancement. Post-unlock source continuation depends on the still-pending lock-object lifetime choice. Once its phase/continuation contract is established, fragment admission must remain body-independent, without an operation-specific application adapter. Failed operations instead select their actual result branch. An admitted next fragment never repeats the operation or infers protection from a retained outer frame.
+After **any successfully handled source acquisition, unlock or supported mode operation**, lock code must provide a generic current-state route using S_W's exact cursor, operation phase, registers, logical grants, pending physical duties and context. For selected outer mutex unlocks, deferred acceptance, owner handling and physical release are distinct; no marker alone proves source-API return or authorizes cursor advancement. The selected stable-object contract permits a correctly materialized post-unlock continuation before physical release without waiting solely for object lifetime. Implementing its actual C04 bridge remains work: preserve current logical registers/stack, exact CALL/return/cursor phase, exclusive executor, remaining logical grants and pending physical duties once only. The helper does not advance source, and its marker alone authorizes no arbitrary execution. Fragment admission remains body-independent, without an operation-specific application adapter. Failed operations instead select their actual result branch. An admitted next fragment never repeats the operation or infers protection from a retained outer frame.
 
 Admission still validates that source execution is legal for the chosen physical task. After the last protected scope ends, an origin-local fragment can be eligible; arbitrary unprotected code does not thereby become eligible on a remote combiner. When coverage, capability, resource or context prevents admission, a correct terminal native suffix is the fallback. That fallback completes the application without demonstrating full JIT completion. No already-entered terminal suffix implicitly regains old JIT-resume rights.
 
@@ -244,7 +245,7 @@ At a supported handback, preserve:
 - live grant identities, deferred outer-unlock phases, retained responsible owner contexts and actionable physical release routes;
 - supported context guards and unique execution sequence.
 
-A pending call executes once. A source acquisition/unlock resumes after its CALL only when that source operation's return/phase contract is completed. Deferred acceptance or OWNER_HANDLED is not PHYSICALLY_RELEASED and cannot alone decide source cursor advancement; the lock-object lifetime choice is still pending. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
+A pending call executes once. A source acquisition/unlock resumes after its CALL only when that source operation's exact return/phase effects have been handled once. For the selected deferred mutex unlock, a correctly materialized post-unlock continuation need not wait solely for physical release/object lifetime. Deferred acceptance or OWNER_HANDLED is not PHYSICALLY_RELEASED and alone advances no source. The actual CALL/return/cursor/executor bridge remains unimplemented C04 work, with remaining logical grants and physical duties exact; C04 mapping is still open. Owner/control/notifier storage survives through its separate last users afterward. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
 
 Before delegated effects, unsupported admission can choose W's ordinary local path. After effects, only a pre-established forward continuation is legal. An absent bridge cannot be repaired by saying the invocation should have run locally from the start.
 
@@ -258,7 +259,7 @@ W receives ownership of the same S_W after the current executor has materialized
 
 This ownership return needs no packet copy, additional continuation or separately allocated handback object. The target core/users and proposed structured return ordering can carry it where their lifetimes suffice. Frame, custody and completion terms denote semantic last-user duties; extra storage/accounting needs the concrete escape conditions in [the minimal mechanism table](01_lock_protocol.md#minimal-starting-mechanism-versus-optional-extensions).
 
-Subsequent native unlock(B) follows its selected operation route: it may record a deferred outer-mutex request rather than immediately release physical exclusion. It never revives an old A fragment. Source handback does not discard a retained owner's batch/release obligations or settle the pending lock-container lifetime choice. An explicitly supported resumable W service can return to a specified fragment through a new reverse ownership transfer, but it is a different contract and is not implied by "fragment."
+Subsequent native unlock(B) follows its selected operation route: it may record a deferred outer-mutex request rather than immediately release physical exclusion. It never revives an old A fragment. Source handback does not discard a retained owner's batch/release obligations or the selected stable-object contract. It also cannot retire owner/control storage or any containing allocation before its exact last users finish, or release callback code before callback return. An explicitly supported resumable W service can return to a specified fragment through a new reverse ownership transfer, but it is a different contract and is not implied by "fragment."
 
 Miss handling cannot depend on a new image appearing, daemon success or future observations. The current invocation must finish correctly even if learning is disabled.
 
@@ -339,7 +340,7 @@ Closing source admission cannot strand admitted descendants/suffixes or free tex
 | PUSHFQ/POPFQ local simulation | One source word/SP change per instruction, mapped temporary preserved, physical-stack balance and AS01 clearly separate from proof |
 | W -> C_A -> C_B -> C_A/W | Same S_W/packet identity at every hop, refreshed resident state and one authorized sequence holder |
 | Same combiner serves W and V | Separate S_W/S_V; restore active pointer and role without copying or merging origin packets |
-| Any handled acquisition/unlock/mode operation | Generic exact-phase route under remaining context and the chosen lifetime contract; deferred acceptance is not physical-release or source-return evidence |
+| Any handled acquisition/unlock/mode operation | Generic exact-phase route under remaining context and the selected stable-object contract; deferred acceptance is not physical-release or source-return evidence |
 | Direction flag or compiler capacity stop | Precise capability/resource class and first-unexecuted cursor; no body-specific model or ordinary-learning claim |
 
 ## 7 Completion and exit attribution

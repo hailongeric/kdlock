@@ -2,7 +2,7 @@
 
 **Status:** integrated design for review, not an implementation claim  
 **Target:** Linux 7.0, x86_64, non-PREEMPT_RT
-**Revision:** 1.7, selected ordinary-mutex outer-unlock deferral
+**Revision:** 1.8, selected stable mutex-object lifetime through physical release
 **Scope:** a complete kdlock redesign for general lock replacement, independent of the ongoing mmap1 workstream
 
 ## Purpose and conclusion
@@ -38,7 +38,7 @@ This set guides a refactor or rewrite. The latest explicit user directions and s
 
 Proposed defaults are P, including the explicitly approved **current five-edge direct-CALL discovery default**. That default remains selected unless deliberately changed; it is not immutable architecture. Normative statements in the protocol express F/S unless identified as a proposal, example or condition of a selected backend. The C register records P choices; the evidence file preserves E and the [audit/correction register](04_evidence_and_reconciliation.md#32-authority-audit-and-correction-register) records reclassifications. Historical revision records describe their original scope, not new target mandates.
 
-API result, context, lifetime, exclusion and ordering duties remain required. The selected ordinary-mutex policy below changes outer release-timing/progress expectations only; it does not waive last-use proof or lock-container validity. The concrete lock-object lifetime policy remains pending. C12 selects source-rebuilt integration with fresh private layouts; old binary lock/object-layout compatibility is not promised. C01 starts with ordinary mutex lock/unlock in sleepable task context, with other families later. C03 selects retention of the responsible physical outer-combiner context for deferred outer unlocks. C11 queue/arbitration, target core placement and adapter mapping remain open. No selection establishes support evidence.
+API result, context, lifetime, exclusion and ordering duties remain required. The selected ordinary-mutex policy below changes outer release-timing/progress expectations only; it does not waive last-use proof or lock-container validity. The initial ordinary-mutex lane requires stable lock-object storage through actual physical release and final backend object access. C12 selects source-rebuilt integration with fresh private layouts; old binary lock/object-layout compatibility is not promised. C01 starts with ordinary mutex lock/unlock in sleepable task context, with other families later. C03 selects retention of the responsible physical outer-combiner context for deferred outer unlocks. C11 queue/arbitration, target core placement and adapter mapping remain open. No selection establishes support evidence.
 
 ### Selected ordinary-mutex outer unlock
 
@@ -46,7 +46,7 @@ For an out-of-order outer mutex unlock, end the source fragment before the opera
 
 Source request/return, deferred acceptance, unwind readiness, owner handling, actual physical release and last-use/reclamation are distinct events. A marker or owner-handled result is not physical release. Extra waiting is accepted, without a generic native release-timing or progress-parity claim. Spin/rwlock/rwsem and downgrade contracts receive no deferral exception.
 
-The lock-object lifetime choice is pending: stable objects through actual physical release versus holding post-unlock source continuation until physical release. Neither is selected. Early reacquisition and source handshakes depending on outer-lock availability remain unresolved scope issues, not a new source-admission whitelist. Retaining a combiner context does not itself retain its caller-owned lock container.
+The user selected stable lock-object storage through actual physical release for the initial mutex lane, including the complete backend unlock's final object access. A source unlock/deferred marker is not permission to destroy or reinitialize the object. Owner/control records and any allocation containing them remain valid through their own exact source/return/notifier last users, which may extend beyond physical release; callback code remains retained through callback return. The caller must establish these lifetimes: retaining a combiner pointer alone does not retain its lock container. This permits a correctly materialized post-unlock continuation without waiting solely for physical release/object lifetime; no further lifetime-related resumption choice is pending. The helper does not advance source, and the exact CALL/return/cursor/executor bridge remains unimplemented C04 work. A marker alone authorizes no arbitrary execution; C11 arbitration and C04 mapping remain open. Same-source reacquisition and availability-dependent handshakes remain unresolved progress/authority issues, not a new source-admission whitelist.
 
 ## Current iteration policy and assumption
 
@@ -116,7 +116,7 @@ For `lock(A); prefix; lock(B); middle; unlock(A); suffix; unlock(B)`:
 3. Lock code handles B. It may acquire B on the current task, become B's combiner, or publish an optional child node pointing to the same S_W and suspend the outer continuation. A new executor must win lock selection and become the exclusive source executor under that ordering.
 4. The chosen executor runs `middle` in an admitted fragment. Encountering `unlock(A)` ends that fragment even though B remains held.
 5. For the selected ordinary-mutex route, lock code records A1's exact source-unlock request and deferred marker. A remains physically excluded while the responsible outer-combiner context is retained and notified/unwound to; the marker is not RELEASED.
-6. Any post-unlock source route needs its exact operation phase and a validated current-state bridge. Whether source continuation waits for physical release or instead requires stable lock-object lifetime is still open. Encountering `unlock(B)` always ends its fragment.
+6. The selected stable-object contract permits a correctly materialized post-unlock continuation without waiting solely for A's physical release. It uses the exact current operation/CALL-return/cursor phase, exclusive executor, remaining logical grants and pending A physical duties, once only. The actual C04 bridge remains unimplemented; the marker alone advances no source. Encountering `unlock(B)` always ends its fragment.
 7. On return to the responsible outer context, it handles A1's marker and continues its normal batch/release protocol. Actual physical release and last-user retirement are recorded separately. Ownership of the same S_W follows the saved execution relationship or returns to W; only outer combiner control is restored, never a pre-B packet or old whole-region cursor.
 
 The exact source operation determines which acquisition receives an unlock request. For the selected mutex route, the exact acquisition binding and live execution relationship identify the responsible retained outer combiner; ancestry alone is not acquisition identity and the source request is not physical release. Ending a fragment neither releases exclusion nor retires an execution record.

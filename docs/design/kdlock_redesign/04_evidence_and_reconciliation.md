@@ -1,7 +1,7 @@
 # kdlock design reconciliation and evidence gates
 
 **Status:** active design authority, reconciliation and validation boundaries
-**Design basis:** revision 1.7, selected ordinary-mutex outer-unlock deferral
+**Design basis:** revision 1.8, selected stable mutex-object lifetime through physical release
 **Target:** Linux kernel 7.0, x86_64, non-PREEMPT_RT
 
 ## 1 Active authority and scope
@@ -31,7 +31,7 @@ handback and cumulative source-versioned learning with the original backend.
 | Ordinary trusted-source translatability | Original UB-derived backend; known special instructions clip only affected paths, preserving safe alternatives/joins | No universal instruction or kernel equivalence is established |
 | AS01: general flags/SIMD | Assume correct for this iteration, without extra general capture, virtualization, shadow state or blanket admission gate | An explicit assumption, not a general equivalence result |
 | PUSHFQ/POPFQ local exception | Temporary GPR and exactly one virtual-source push/pop, preserved live values and balanced physical-stack temporaries | The concrete lowering and covered POPFQ values/effects remain C04 work |
-| Selected ordinary-mutex outer unlock | Exact source request and deferred marker, retained responsible outer combiner, notification/unwind and owner handling, normal batch then physical release | Extra waiting accepted; no generic native timing/progress parity. Stable object lifetime versus holding post-unlock source continuation is pending |
+| Selected ordinary-mutex outer unlock | Exact source request and deferred marker, retained responsible outer combiner, notification/unwind and owner handling, normal batch then physical release | Extra waiting accepted; no generic native timing/progress parity. Initial mutex lock-object storage stays valid through actual physical release/final object access; owner/control/notifier last users and callback-code retention remain separate |
 | Target downgrade | C10 chooses mode semantics with native API behavior and generic operation boundaries | A prior retained-writer/read-label mechanism is not a target boundary exception or concurrency proof; the mutex deferral choice creates no downgrade exception |
 
 ## 2 Evidence boundaries
@@ -80,8 +80,8 @@ source-request, return and notifier users gate retirement; owner operations
 check the current task. REQUESTED atomically includes OWNER or DEFERRED_OUTER
 from the caller's exact active relationship; task equality alone is insufficient
 for a same-task outer unlock. Owner handling accepts OWNER+REQUESTED or
-DEFERRED_OUTER+UNWIND_READY, and deferral rejects OWNER. No default source
-resumption is selected.
+DEFERRED_OUTER+UNWIND_READY, and deferral rejects OWNER. The helper does not
+advance source; its actual C04 continuation bridge remains unimplemented.
 
 At owner initialization the caller, which has already acquired physical
 exclusion, binds the exact ordinary backend unlock callback and object. The
@@ -98,11 +98,21 @@ This is a limited protocol implementation with static review only, not a
 concrete physical mutex backend, acquisition/queue/arbitration, source adapter,
 C04 register mapping, C02 task-core anchor or source-cursor advancement. Its
 internal owner guard does not select C11 family arbitration. No callback or
-physical release has executed. The lock-object lifetime choice remains pending:
-stable objects through physical release versus holding post-unlock source
-continuation until physical release. A retained context alone does not pin its
-lock container. Early reacquisition and availability-dependent handshakes remain
-unresolved scope issues, not a new source-admission whitelist.
+physical release has executed. The initial mutex lane now requires stable
+lock-object storage through actual physical release and final backend object
+access. The caller establishes that validity; a retained context alone does not
+pin its lock container. Owner/control storage and any containing allocation
+remain valid through exact source/return/notifier last users after physical
+release, and callback code stays retained through its return. This selects no
+C11 arbitration or C04 mapping. The selected stable-object contract permits a
+correctly materialized post-unlock continuation without waiting solely for
+physical release/object lifetime; no further lifetime-related resumption choice
+is pending. The actual C04 bridge remains unimplemented. It must preserve
+once-only CALL/return/cursor effects, the exclusive executor, remaining logical
+grants and pending physical duties; a marker alone authorizes no arbitrary
+execution. Same-source reacquisition and availability-dependent handshakes
+still need explicit
+progress/authority evidence, not a new source-admission whitelist.
 
 The earlier intraprocedural implementation in `13f2630f` passed ten focused cases
 with Python 3.10.12: each of the four boundary kinds with a safe shared join and
@@ -251,7 +261,7 @@ N IDs identify this normative-origin audit, distinct from the historical v0.6 A0
 | N18 | Experimental typed proxy downgrade could weaken target boundaries/native semantics | Retained writer/admission and same-root exception are E only; target mode handling/native equivalence remain separate decisions. Stable point/merge does not prove a consumed branch or general flags correctness | Section 2.7, C10, T55 |
 | N19 | Reserved packet-base versus resident logical R11 read as a settled optimization | Pinned mappings are E and C04 optimization candidates under one original backend. Compare remap/spill work versus boundary materialization/transfer with one canonical core, no per-user spare packet and no measured gain claim | JIT section 3.1.1, T56 |
 | N20 | Immediate outer physical release treated as unconditional | Latest user selection supersedes it only for ordinary-mutex out-of-order outer unlock: retain responsible combiner, defer/notify/unwind, handle and continue normal batch/release. Extra waiting is accepted without generic native timing/progress parity | Protocol section 5, P5, T15/T51 |
-| N21 | Retained context or source unlock marker treated as lock-object lifetime | Neither pins the container nor proves physical release. Stable objects through release versus holding post-unlock source continuation is pending; early reacquisition/handshakes remain unresolved scope issues | Protocol section 3.2/5, C03, T16/T17 |
+| N21 | Retained context or source unlock marker treated as lock-object lifetime | Initial mutex lane now requires stable lock-object storage through actual physical release/final access. Caller establishes validity; owner/control allocations and exact source/return/notifier users can outlive release, and callback code stays through return. Same-source reacquisition/handshakes remain unresolved progress/authority issues | Protocol section 3.2/5, C03, T16/T17 |
 
 ## 4 TCLock guidance and limits
 
@@ -313,8 +323,11 @@ restored. The complete original design snapshot remains in preservation history;
 historical source links do not select another kernel target.
 
 C12 source rebuild, the ordinary-mutex C01 lane and C03 retained-owner outer
-unlock deferral are selected. C11 queue/arbitration, the lock-object lifetime
-choice, C02 placement, C04 mapping and other affected mechanisms remain open.
+unlock deferral and stable lock-object storage through actual physical release
+are selected. C11 queue/arbitration, C02 placement, C04 mapping and other affected
+mechanisms remain open. Separate owner/control allocations, exact
+source/return/notifier users and callback-code retention keep their own last-use
+requirements after physical release.
 The C release protocol has source/static review only; its bound unlock callback
 has not executed and no concrete backend, queue or JIT/source adapter is
 implemented. Builds, runtime correctness, kernel integration, retirement and
