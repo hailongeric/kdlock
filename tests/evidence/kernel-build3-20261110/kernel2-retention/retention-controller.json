@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 620 python3 -u -c 'import ast,hashlib,os,pathlib,sys; p=pathlib.Path(\"/tmp/kdlock-retain-kernel2-witness-6c93a44c.py\"); d=p.read_bytes(); assert hashlib.sha256(d).hexdigest()==\"6c93a44c36ad5579cf04fc9e71d78b369ef3f0530900b2a54501fe14a412a07c\"; ast.parse(d,filename=str(p)); print(\"VM helper SHA and AST verified\",flush=True); os.execv(sys.executable,[sys.executable,\"-u\",str(p)])'"
+  ],
+  "started_unix": 1794340606.0632489,
+  "stdout_path": "/tmp/kdlock-retain-kernel2-witness-20261110-UTC-01.stdout.log",
+  "returncode": 0,
+  "finished_unix": 1794340614.4054632,
+  "elapsed_seconds": 8.342214345932007
+}

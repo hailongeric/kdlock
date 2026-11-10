@@ -1,0 +1,94 @@
+{
+  "current": {
+    "boot": "ca0b717b-c19d-4027-b598-6a1cf58b93d2",
+    "release": "7.0.0-38-kdlock1",
+    "taint": 0
+  },
+  "free_bytes": {
+    "/": 2101960704,
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f": 11321069568
+  },
+  "helper": {
+    "identity": {
+      "allocated": 16384,
+      "ctime_ns": 1794340451091000000,
+      "dev": 35,
+      "gid": 0,
+      "ino": 32,
+      "mode": 420,
+      "mtime_ns": 1794340451091000000,
+      "nlink": 1,
+      "size": 14525,
+      "uid": 0
+    },
+    "sha256": "6c93a44c36ad5579cf04fc9e71d78b369ef3f0530900b2a54501fe14a412a07c",
+    "size": 14525
+  },
+  "installed_before": {
+    "/boot/System.map-7.0.0-38-kdrebuild2": {
+      "identity": {
+        "allocated": 10571776,
+        "ctime_ns": 1794330559029336955,
+        "dev": 2049,
+        "gid": 0,
+        "ino": 37530,
+        "mode": 420,
+        "mtime_ns": 1794330559029336955,
+        "nlink": 1,
+        "size": 10564272,
+        "uid": 0
+      },
+      "sha256": "47cc1e87e95f2e118f9a20ff01ec8e31dee1f9d0f650ef9649392a25db98395f",
+      "size": 10564272
+    },
+    "/boot/config-7.0.0-38-kdrebuild2": {
+      "identity": {
+        "allocated": 311296,
+        "ctime_ns": 1794330559063407986,
+        "dev": 2049,
+        "gid": 0,
+        "ino": 37531,
+        "mode": 420,
+        "mtime_ns": 1794330559063407986,
+        "nlink": 1,
+        "size": 308548,
+        "uid": 0
+      },
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "size": 308548
+    },
+    "/boot/initrd.img-7.0.0-38-kdrebuild2": {
+      "identity": {
+        "allocated": 103190528,
+        "ctime_ns": 1794330571478000000,
+        "dev": 2049,
+        "gid": 0,
+        "ino": 37534,
+        "mode": 420,
+        "mtime_ns": 1794330571221000000,
+        "nlink": 1,
+        "size": 103185042,
+        "uid": 0
+      },
+      "sha256": "fc61d1e8578632686049e56f773801cbc2b741549002a34466d2880d6eb19e17",
+      "size": 103185042
+    },
+    "/boot/vmlinuz-7.0.0-38-kdrebuild2": {
+      "identity": {
+        "allocated": 17190912,
+        "ctime_ns": 1794330558953216796,
+        "dev": 2049,
+        "gid": 0,
+        "ino": 2774,
+        "mode": 420,
+        "mtime_ns": 1794330558953216796,
+        "nlink": 1,
+        "size": 17183232,
+        "uid": 0
+      },
+      "sha256": "a5fc091793ac0b4dbe9ccb59a390743967d89aa61192eb29e497ac066f356439",
+      "size": 17183232
+    }
+  },
+  "recovery_check": "Controller freshly queried QEMU info snapshots: kdlock-builddisk-clean-20261031 present on all3disks; raw output in controller transcript."
+}

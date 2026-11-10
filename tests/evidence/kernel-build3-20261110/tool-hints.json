@@ -1,0 +1,60 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "gcc",
+        "--version"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    },
+    {
+      "argv": [
+        "make",
+        "--version"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "GNU Make 4.4.1\nBuilt for x86_64-pc-linux-gnu\nCopyright (C) 1988-2023 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n"
+    },
+    {
+      "argv": [
+        "ld",
+        "--version"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty.\n"
+    },
+    {
+      "argv": [
+        "as",
+        "--version"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'.\n"
+    },
+    {
+      "argv": [
+        "objdump",
+        "--version"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty.\n"
+    },
+    {
+      "argv": [
+        "readelf",
+        "--version"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "GNU readelf (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty.\n"
+    }
+  ],
+  "scope": "Read-only tool identity after completed kernel3 build; not another build/test or idle assertion.",
+  "utc": "2026-11-10T20:09:44.107765+00:00"
+}

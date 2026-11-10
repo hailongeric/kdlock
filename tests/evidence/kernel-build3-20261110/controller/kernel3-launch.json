@@ -1,0 +1,26 @@
+{
+  "phase": "HELPER_STARTED",
+  "helper_sha256": "7285b40a514d08c85d7ae453245da143c76c98fb78be4f1e065dfa680c68594c",
+  "argv": [
+    "python3",
+    "/mnt/kdlock-builds/kdlock-main-work/module4-69ba6b03-01a1bc4f/kdlock-kernel3-build-7285b40a.py",
+    "--input",
+    "/mnt/kdlock-builds/kdlock-main-work/module4-69ba6b03-01a1bc4f/input",
+    "--manifest",
+    "/mnt/kdlock-builds/kdlock-main-work/module4-69ba6b03-01a1bc4f/kdlock-main-69ba6b03-build-inputs.json",
+    "--manifest-sha256",
+    "8779c43983d5ee4c2ae7ce4886b38ba2806f8ca91d1c0dbb97a8cd2f23f777ad",
+    "--retention-manifest",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/retained-kdrebuild2-81feb2d7-20261110-UTC-01/manifest.json",
+    "--retention-sha256",
+    "ac0a6e0ee74abb3fba101be5532806b3aa5d237a8969273ef031f60a74ac85c9",
+    "--expected-boot",
+    "ca0b717b-c19d-4027-b598-6a1cf58b93d2",
+    "--receipt-dir",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-1b50e373-kdrebuild3-20261111-01"
+  ],
+  "utc": "2026-11-10T19:59:46.694384+00:00",
+  "syntax": "PASS",
+  "no_install_boot_or_load": true,
+  "pid": 6906
+}
