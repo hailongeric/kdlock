@@ -133,7 +133,7 @@ class KernelGSRIPTests(unittest.TestCase):
         instruction = self.decode(self.raw[:2] + b"\x8d" + self.raw[3:])
         self.assertEqual(instruction.name, "LEA")
         _lowerer, code = self.lower(instruction)
-        self.assertIn(hex(self.current_task), code)
+        self.assertIn(hex(self.current_task), code.lower())
         self.assertNotIn("Stack_TASK", code)
         self.assertNotIn("Stack_RGS", code)
 
