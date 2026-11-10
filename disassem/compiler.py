@@ -3,8 +3,10 @@
 The caller supplies one immutable, source-versioned byte snapshot and exact
 operation metadata. This front end reads only that snapshot. It performs no
 provider access, runtime source retention, code emission or publication and
-selects no register/packet ABI. Ordinary matched direct CALL/RET remains the
-planner's input contract; successful decoding proves no lowering support.
+selects no register/packet ABI. Ordinary matched direct/indirect CALL/RET remains
+the planner's input contract; successful decoding proves no lowering support.
+Observed indirect targets add versioned ordinary alternatives without replacing
+the actual decoded operand or treating observations as emitted coverage.
 
 All resource limits are explicit caller inputs except the already selected
 five-edge direct-CALL discovery default. Decode sites count distinct attempts,
@@ -13,6 +15,9 @@ windows presented to the decoder, including overlapping bytes and failed
 attempts; they are not unique source-cache bytes. CFG work counts popped
 worklist edges, including the entry and redundant visits. These are discovery
 limits, not runtime lock/call nesting limits or invocation exit attribution.
+Only direct CALL edges consume the selected depth bound. Observed indirect CALL
+targets keep the current direct-call depth and are bounded by the caller's
+decode/window/CFG limits; no indirect depth default is introduced.
 Finite snapshot validation is input preparation, outside these discovery
 counters; no source-cache capacity or executable-image budget is selected.
 """
@@ -96,20 +101,53 @@ class SourceSite:
                 raise ValueError("source boundary and unmodeled transfer overlap")
 
 
+class IndirectKind(Enum):
+    CALL = "call"
+    JUMP = "jump"
+
+
+@dataclass(frozen=True)
+class ObservedTarget:
+    """One source-versioned, ordinary indirect source/target observation.
+
+    The caller must have classified this as an ordinary target rather than a
+    source lock/unlock/mode operation. Observations cannot authorize crossing a
+    source-operation boundary or rewrite a mutable decoded operand. Unknown
+    targets still require runtime classification before source CALL effects;
+    this record implements neither that bridge nor runtime feedback retention.
+    """
+
+    source_version: str
+    site: int
+    target: int
+    kind: IndirectKind
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.source_version, str) or not self.source_version:
+            raise ValueError("an observed target needs an explicit source version")
+        _address(self.site)
+        _address(self.target)
+        if not isinstance(self.kind, IndirectKind):
+            raise TypeError("an observed target needs an exact IndirectKind")
+
+
 @dataclass(frozen=True)
 class SourceSnapshot:
     """Finite coherent compiler input, not a runtime source-lifetime lease.
 
-    version names this fixed source/dependency snapshot. The caller must not
-    reuse it for different source versions. Tuple/frozen records and immutable
-    byte regions bind the actual input to the result regardless of external
-    source changes. Overlapping regions must contain identical bytes. Gaps are
+    version names fixed source/dependency bytes and source-site metadata. The
+    caller must not reuse it for a different source version or classification.
+    Version-matched observations may accumulate without changing those inputs.
+    Tuple/frozen records and immutable byte regions bind the actual input to
+    the result regardless of external source changes. Overlapping regions must
+    contain identical bytes. Gaps are
     never padded or silently read from elsewhere.
     """
 
     version: str
     regions: tuple[SourceRegion, ...]
     sites: tuple[SourceSite, ...] = ()
+    observed_targets: tuple[ObservedTarget, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.version, str) or not self.version:
@@ -122,6 +160,16 @@ class SourceSnapshot:
             isinstance(site, SourceSite) for site in self.sites
         ):
             raise TypeError("source metadata must be a tuple of SourceSite records")
+        if not isinstance(self.observed_targets, tuple) or not all(
+            isinstance(target, ObservedTarget) for target in self.observed_targets
+        ):
+            raise TypeError("observations must be a tuple of ObservedTarget records")
+        if any(target.source_version != self.version for target in self.observed_targets):
+            raise ValueError("an observed target belongs to another source version")
+        observations = tuple(sorted(
+            set(self.observed_targets),
+            key=lambda target: (target.site, target.kind.value, target.target),
+        ))
         regions = tuple(sorted(
             self.regions, key=lambda region: (region.start, region.end)
         ))
@@ -143,6 +191,24 @@ class SourceSnapshot:
                 raise ValueError("source site metadata must be unique")
             seen.add(metadata.site)
         object.__setattr__(self, "regions", regions)
+        object.__setattr__(self, "observed_targets", observations)
+
+    def with_observed_targets(
+        self, additional: tuple[ObservedTarget, ...]
+    ) -> "SourceSnapshot":
+        """Accumulate finite version-matched observations without losing old ones.
+
+        The immutable source bytes and source-operation metadata stay bound to
+        this source version. This is compiler input composition, not a live
+        publication, persistence, coverage ACK or capacity/saturation policy.
+        """
+
+        if not isinstance(additional, tuple):
+            raise TypeError("additional observations must be an immutable tuple")
+        return SourceSnapshot(
+            self.version, self.regions, self.sites,
+            self.observed_targets + additional,
+        )
 
     def window(self, site: int) -> bytes:
         """Return contiguous supplied bytes for one architectural instruction."""
@@ -206,7 +272,8 @@ class ResourceStop:
     consumed is the quantity used before the attempt, required is its additional
     quantity, and limit is the selected bound. For DIRECT_CALL_EDGES these
     quantities describe that path, not a global edge total. A later independent
-    route may supply the target; inspect missing_outcomes for edges still absent from the final plan.
+    route may supply the target; inspect missing_outcomes for edges still absent
+    from the final plan.
     """
 
     resource: ResourceKind
@@ -238,6 +305,19 @@ class MissingKind(Enum):
     RESOURCE_BOUNDARY = "resource_boundary"
 
 
+class ObservationOutcome(Enum):
+    """Input-observation disposition, never an emitted-coverage acknowledgment."""
+
+    ATTACHED = "attached_to_decoded_graph"
+    NOT_DISCOVERED = "source_site_not_discovered"
+    SOURCE_UNAVAILABLE = "source_unavailable"
+    DECODE_FAILURE = "decode_failure"
+    UNMODELED_TRANSFER = "unmodeled_transfer"
+    RESOURCE_BOUNDARY = "resource_boundary"
+    SOURCE_BOUNDARY = "source_boundary"
+    FLOW_MISMATCH = "decoded_flow_kind_mismatch"
+
+
 @dataclass(frozen=True)
 class CompilationPlan:
     """Version-bound discovered source and its reachable fragment alternatives.
@@ -247,6 +327,9 @@ class CompilationPlan:
     translated continuation after a modeled returning callee. Decode/resource
     outcomes on other discovered paths do not reject the whole entry. This
     result acknowledges neither emitted coverage nor a runtime handback recipe.
+    observation_outcomes distinguishes attachment to the decoded graph from
+    observations not usable in this candidate; even ATTACHED may lie outside
+    fragment.body_sites or point to a missing/resource-limited target.
     """
 
     snapshot: SourceSnapshot
@@ -257,6 +340,7 @@ class CompilationPlan:
     missing_source: frozenset[int]
     resource_stops: tuple[ResourceStop, ...]
     missing_outcomes: Mapping[SourceEdge, MissingKind]
+    observation_outcomes: Mapping[ObservedTarget, ObservationOutcome]
     minimum_call_depth: Mapping[int, int]
     consumption: DiscoveryConsumption
 
@@ -275,13 +359,17 @@ def compile_fragment_plan(
     Each available site is decoded at most once. A modeled site reached with
     fewer direct CALL edges is expanded again, so an earlier deeper visit
     cannot suppress a later shallower route. Branches and caller continuations
-    keep their caller depth; only entering a direct callee adds an edge. The
-    selected CALL bound limits discovery, not reuse of code already discovered
-    through another route and not runtime nesting.
+    keep their caller depth; only entering a direct callee adds an edge. Known
+    observed indirect callees retain that depth and consume only the explicit
+    decode/window/CFG resources. The selected direct-CALL bound limits discovery,
+    not reuse of code already discovered through another route and not runtime
+    nesting.
 
     Source boundaries have no outgoing discovery edges. Missing bytes, decode
     failures, unmodeled transfers and each actual resource refusal remain
-    distinct. No result permits replay or advances any source state.
+    distinct. Observations attach only to the matching decoded indirect kind,
+    after exact boundary classification; they cannot learn away a source cut.
+    No result permits replay or advances any source state.
     """
 
     if not isinstance(snapshot, SourceSnapshot) or not isinstance(
@@ -290,6 +378,10 @@ def compile_fragment_plan(
         raise TypeError("compiler needs a SourceSnapshot and explicit DiscoveryLimits")
     _address(entry)
     metadata = {item.site: item for item in snapshot.sites}
+    observations: dict[int, list[ObservedTarget]] = {}
+    for observed in snapshot.observed_targets:
+        observations.setdefault(observed.site, []).append(observed)
+    attached: set[ObservedTarget] = set()
     instructions: dict[int, DecodedInstruction] = {}
     graph: dict[int, SourceInstruction] = {}
     failures: dict[int, DecodeFailure] = {}
@@ -354,22 +446,49 @@ def compile_fragment_plan(
             unmodeled.update(result.unmodeled_transfers)
             if site not in graph:
                 continue
+            node = graph[site]
+            if isinstance(node, SourceCall) and node.indirect:
+                selected = tuple(
+                    observed for observed in observations.get(site, ())
+                    if observed.kind is IndirectKind.CALL
+                )
+                graph[site] = SourceCall(
+                    None, node.return_site,
+                    tuple(observed.target for observed in selected),
+                )
+                attached.update(selected)
+            elif (
+                isinstance(node, SourceNode)
+                and node.boundary is None and node.indirect
+            ):
+                selected = tuple(
+                    observed for observed in observations.get(site, ())
+                    if observed.kind is IndirectKind.JUMP
+                )
+                graph[site] = SourceNode(
+                    tuple(observed.target for observed in selected),
+                    unresolved_successor=True, indirect=True,
+                )
+                attached.update(selected)
         minimum_depth[site] = depth
         node = graph[site]
         if isinstance(node, SourceNode):
             if node.boundary is not None:
                 continue
+            kind = EdgeKind.JUMP_TARGET if node.indirect else EdgeKind.ORDINARY
             for target in node.successors:
-                pending.append(_Pending(SourceEdge(site, target), depth))
+                pending.append(_Pending(SourceEdge(site, target, kind), depth))
         elif isinstance(node, SourceCall):
-            target = _Pending(
-                SourceEdge(site, node.target, EdgeKind.CALL_TARGET), depth + 1
-            )
-            if depth >= limits.direct_call_edges:
-                stop(ResourceKind.DIRECT_CALL_EDGES, target,
-                     limits.direct_call_edges, depth, 1)
-            else:
-                pending.append(target)
+            for callee in node.known_targets:
+                target = _Pending(
+                    SourceEdge(site, callee, EdgeKind.CALL_TARGET),
+                    depth if node.indirect else depth + 1,
+                )
+                if not node.indirect and depth >= limits.direct_call_edges:
+                    stop(ResourceKind.DIRECT_CALL_EDGES, target,
+                         limits.direct_call_edges, depth, 1)
+                else:
+                    pending.append(target)
             pending.append(_Pending(
                 SourceEdge(site, node.return_site, EdgeKind.CALL_RETURN), depth
             ))
@@ -396,6 +515,29 @@ def compile_fragment_plan(
         else:
             raise RuntimeError("missing planner edge has no discovery outcome")
         missing_outcomes[edge] = kind
+    observation_outcomes: dict[ObservedTarget, ObservationOutcome] = {}
+    for observed in snapshot.observed_targets:
+        site = observed.site
+        if observed in attached:
+            disposition = ObservationOutcome.ATTACHED
+        elif site in graph:
+            node = graph[site]
+            disposition = (
+                ObservationOutcome.SOURCE_BOUNDARY
+                if isinstance(node, SourceNode) and node.boundary is not None
+                else ObservationOutcome.FLOW_MISMATCH
+            )
+        elif site in failures:
+            disposition = ObservationOutcome.DECODE_FAILURE
+        elif site in unmodeled:
+            disposition = ObservationOutcome.UNMODELED_TRANSFER
+        elif site in missing_source:
+            disposition = ObservationOutcome.SOURCE_UNAVAILABLE
+        elif site in resource_targets:
+            disposition = ObservationOutcome.RESOURCE_BOUNDARY
+        else:
+            disposition = ObservationOutcome.NOT_DISCOVERED
+        observation_outcomes[observed] = disposition
     return CompilationPlan(
         snapshot=snapshot,
         entry=entry,
@@ -405,6 +547,7 @@ def compile_fragment_plan(
         missing_source=frozenset(missing_source),
         resource_stops=tuple(stops),
         missing_outcomes=MappingProxyType(missing_outcomes),
+        observation_outcomes=MappingProxyType(observation_outcomes),
         minimum_call_depth=MappingProxyType(minimum_depth),
         consumption=DiscoveryConsumption(
             decode_sites, decode_window_bytes, cfg_work_steps

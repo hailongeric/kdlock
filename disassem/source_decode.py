@@ -9,8 +9,8 @@ data and select no machine-state or public lock ABI.
 Each supplied site is decoded independently. The caller owns source identity,
 residency, coherent stable bytes and exact source-operation metadata. Overlapping
 supplied byte windows must agree; this adapter does not establish that source
-snapshot's coherence or lifetime. Ordinary matched
-source CALL/RET structure is an input contract, not a conclusion of decoding one
+snapshot's coherence or lifetime. Ordinary matched direct/indirect source
+CALL/RET structure is an input contract, not a conclusion of decoding one
 instruction. Known changed-return structures must be supplied as unmodeled
 transfer metadata. No source read, successor discovery or discovery budget is
 performed by this adapter.
@@ -137,11 +137,12 @@ def _flow(line) -> tuple[SourceInstruction | None, str]:
             return None, "non-near CALL/JMP operand has no planner representation"
         target = _direct_target(line)
         if name == "CALL":
-            if target is None:
-                return None, "indirect CALL has no matched continuation representation"
+            # Keep a dynamic CALL in the modeled body even before any target is
+            # observed. The actual operand remains on backend_instruction; no
+            # source word or returning alternative is synthesized here.
             return SourceCall(target, next_site), ""
         if target is None:
-            return SourceNode(unresolved_successor=True), ""
+            return SourceNode(unresolved_successor=True, indirect=True), ""
         return SourceNode((target,)), ""
 
     if name in conditional_branch or name.startswith("LOOP"):
@@ -172,10 +173,11 @@ def decode_source(sites: Mapping[int, SourceBytes]) -> DecodedSource:
     this adapter does not invent its instruction bytes or length.
 
     A normal instruction always retains its next-site edge, including when the
-    caller did not supply that site. An indirect JMP retains unresolved flow;
-    an indirect CALL or another unmodeled transfer produces no graph node and
-    no fabricated fallthrough. Existing known limitations are not classified as
-    special instructions. Dependency import failures remain environment errors,
+    caller did not supply that site. Indirect CALL/JMP retain explicit dynamic
+    flow without inventing a target. A CALL records its own source continuation,
+    but no caller fallthrough is planned without a known returning callee. Other
+    unmodeled transfers produce no graph node. Existing known limitations are
+    not classified as special instructions. Dependency import failures remain environment errors,
     not source decode outcomes. No runtime route or instruction support claim is
     established by a successful decode.
     """
