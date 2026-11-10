@@ -36,23 +36,17 @@ result/binding, child-return and notifier users retain their exact controls;
 only the responsible physical owner releases/reaps its batch. No callback has
 executed, and no performance or complete public mutex lane is claimed.
 
-C05 keeps task-owned preallocated persistent records for delegation. Distinct
-simultaneously retained delegation/control records use distinct slots, reused
-only after all exact users finish; capacity includes late physical-owner,
-return and current-native-endpoint users, not just nesting depth. No pool size
-or one-node sufficiency is selected.
-
-The selected local MCS fallback uses a temporary waiter released before lock
-returns and a stable object-owned queue head. The initial implementation
-strategy (P) uses an exact task-root `held_local` index for local ownership:
-while any unimported local owner remains, later native acquisitions also use local MCS and source continues natively. Optional
-delegation admission can resume after the index empties. This supports mixed
-locking source patterns without importing local grants or transferring their
-physical authority; no JIT coverage is claimed during that native interval.
-The small queue link remains separate from persistent delegation release/grant/
-return controls. Their exact lifetimes and full integration still need proof.
-A private capacity refusal is not a public void mutex_lock result or permission
-to replay source.
+C05 uses task-owned preallocated persistent request records for the unified
+ordinary local/proxy path. Simultaneously live requests use distinct records,
+reused only after all exact users finish. The finite caller-supplied capacity
+covers concurrent nested requests and retained physical-owner/release, return,
+notification, image/binding and current-native-endpoint records, not just depth.
+The supported workload guarantees an available record whenever one is needed.
+Task attachment/resources supply the actual count; no deployment value or
+one-node sufficiency is configured here. Pool exhaustion is a documentation-only
+limitation, with no exhaustion handler, recovery/local fallback or new special
+assertion. This is neither a mathematically unbounded pool nor a public error
+result. A normal local winner still uses the same persistent request path.
 
 At reviewed source commit `2c3f7cbc`, the [request pool](kernel/request_pool.c)
 implements exact persistent-slot users/reuse and atomic final detach, and
@@ -85,9 +79,8 @@ closes before replacement; publication requires all active users to drain and
 old readers pass a grace period before reclamation. JIT entry reserves a
 separate claimed pending-exit use, which ordinary put cannot drop early.
 
-Overall integration remains incomplete. Public native wrappers, local MCS fallback
-and held-local routing, task-time provisioning/full lifecycle wiring, recursive
-episode driving, source validation/executable publication and persistent cumulative feedback
+Overall integration remains incomplete. Public native wrappers, task-time
+provisioning/full lifecycle wiring, recursive episode driving, source validation/executable publication and persistent cumulative feedback
 still need integration. Generated execution requires a distinct physical task
 and admitted nonoverlapping executor/source/wait-control stacks. W's own body
 uses a native route; a runtime instruction budget does not establish stack

@@ -57,9 +57,9 @@ static void wake_retained_task(struct task_struct *task)
  * predecessor-node access, so no embedded wake state extends that reference.
  * Preemptible link polling yields when needed, outside any atomic obligation.
  */
-static struct kd_mutex_link *wait_link(struct kd_mutex_link *node)
+static struct kd_mutex_node *wait_link(struct kd_mutex_node *node)
 {
-	struct kd_mutex_link *next;
+	struct kd_mutex_node *next;
 
 	for (;;) {
 		next = smp_load_acquire(&node->next);
@@ -99,7 +99,7 @@ static void wait_request(struct kd_mutex_node *node)
 		bool blocked = progress_wait(node);
 
 		set_current_state(TASK_UNINTERRUPTIBLE);
-		if (!blocked && (smp_load_acquire(&node->queue.turn) ||
+		if (!blocked && (smp_load_acquire(&node->turn) ||
 		    smp_load_acquire(&node->result_ready)))
 			break;
 		/* A release notification before sleep publication is seen here;
@@ -112,118 +112,47 @@ static void wait_request(struct kd_mutex_node *node)
 	__set_current_state(TASK_RUNNING);
 }
 
-void kd_mutex_link_init(struct kd_mutex_link *link,
-			struct kd_mutex_node *request,
-			enum kd_mutex_selection selection)
-{
-	link->next = NULL;
-	atomic_set(&link->selection, selection);
-	link->turn = 0;
-	link->task = current;
-	link->request = request;
-}
-
-void kd_mutex_link_enqueue(struct kd_mutex *lock, struct kd_mutex_link *link)
-{
-	struct kd_mutex_link *previous = xchg(&lock->tail, link);
-
-	if (previous)
-		/* Final previous-link access, including an object-owned head. */
-		smp_store_release(&previous->next, link);
-	else
-		smp_store_release(&link->turn, 1);
-}
-
-void kd_mutex_link_replace_head(struct kd_mutex *lock,
-				struct kd_mutex_link *temporary,
-				struct kd_mutex_link *stable)
-{
-	struct kd_mutex_link *next = smp_load_acquire(&temporary->next);
-
-	/* Acquiring temporary.turn already closed the predecessor's last access.
-	 * Stable was initialized BEFORE this tail replacement. If CAS succeeds,
-	 * a new producer may immediately publish stable.next: never overwrite it.
-	 */
-	if (!next && cmpxchg(&lock->tail, temporary, stable) == temporary)
-		return;
-	if (!next)
-		next = wait_link(temporary);
-	/* A failed CAS means a producer already exchanged away from temporary.
-	 * Its observed next store is its FINAL temporary access. Stable was not
-	 * published as tail in this branch, so this successor copy cannot race
-	 * a producer linking to stable. The temporary is now entirely unobserved.
-	 */
-	WRITE_ONCE(stable->next, next);
-}
-
-static void publish_turn(struct kd_mutex_link *link)
-{
-	struct task_struct *task = link->task;
-
-	get_task_struct(task);
-	smp_store_release(&link->turn, 1);
-	/* A local temporary waiter may return immediately after that store. */
-	wake_up_process(task);
-	put_task_struct(task);
-}
-
-void kd_mutex_link_release(struct kd_mutex *lock, struct kd_mutex_link *head,
-			   struct kd_mutex_node *retained_head)
-{
-	struct kd_mutex_link *next = smp_load_acquire(&head->next);
-	int selection;
-
-	if (!next && cmpxchg(&lock->tail, head, NULL) == head) {
-		/* The successful empty-tail CAS is the FINAL lock/head access.
-		 * In particular, do not store queue_done into an object-owned head:
-		 * the next owner can already be reinitializing it. Persistent control
-		 * is independently retained and is safe to finish after object release.
-		 */
-		if (retained_head)
-			smp_store_release(&retained_head->queue_done, 1);
-		return;
-	}
-	if (!next)
-		next = wait_link(head);
-	selection = atomic_cmpxchg(&next->selection, KD_MUTEX_OFFERED,
-				  KD_MUTEX_SELECTED_LOCAL);
-	BUG_ON(selection != KD_MUTEX_OFFERED &&
-	       selection != KD_MUTEX_SELECTED_LOCAL);
-	if (retained_head)
-		smp_store_release(&retained_head->queue_done, 1);
-	/* All previous lock/head accesses ended before actual successor handoff. */
-	publish_turn(next);
-}
-
 /* Actual normal backend release, bound to this mutex at batch initialization. */
 static void mcs_physical_unlock(void *object)
 {
 	struct kd_mutex *lock = object;
 	struct kd_mutex_batch *batch = READ_ONCE(lock->owner);
 	struct kd_mutex_node *head;
-	struct kd_mutex_link *queue_head;
+	struct kd_mutex_node *next;
+	int selection;
 
 	BUG_ON(!batch || batch->release_owner.task != current);
 	head = batch->head;
-	queue_head = batch->queue_head;
-	BUG_ON(!head || !queue_head);
+	BUG_ON(!head);
+	next = smp_load_acquire(&head->next);
 	WRITE_ONCE(lock->owner, NULL);
-	kd_mutex_link_release(lock, queue_head, head);
+	if (!next && cmpxchg(&lock->tail, head, NULL) == head) {
+		/* No producer can still hold head as its predecessor. */
+		smp_store_release(&head->queue_done, 1);
+		return;
+	}
+	/* No lock-object access follows the tail operation/owner clear above. */
+	if (!next)
+		next = wait_link(head);
+	selection = atomic_cmpxchg(&next->selection, KD_MUTEX_OFFERED,
+				  KD_MUTEX_SELECTED_LOCAL);
+	BUG_ON(selection != KD_MUTEX_OFFERED &&
+	       selection != KD_MUTEX_SELECTED_LOCAL);
+	smp_store_release(&head->queue_done, 1);
+	/* Turn is actual MCS handoff, not an offered request or source result. */
+	publish_condition(next, &next->turn);
 }
 
 void kd_mutex_init(struct kd_mutex *lock)
 {
 	WRITE_ONCE(lock->tail, NULL);
 	WRITE_ONCE(lock->owner, NULL);
-	WRITE_ONCE(lock->local_owner, NULL);
-	INIT_LIST_HEAD(&lock->local_link);
 }
 
 void kd_mutex_batch_init(struct kd_mutex_batch *batch)
 {
 	batch->lock = NULL;
 	batch->head = NULL;
-	batch->queue_head = NULL;
 	batch->serving = NULL;
 	batch->proxy_limit = 0;
 	batch->proxy_served = 0;
@@ -244,7 +173,9 @@ int kd_mutex_node_init(struct kd_mutex_node *node,
 	if (ops && (!!ops->wait_progress != !!ops->wait_ready))
 		return -EINVAL;
 	/* Private fresh storage, or previous node retirement has completed. */
-	kd_mutex_link_init(&node->queue, node, KD_MUTEX_PRIVATE);
+	node->next = NULL;
+	atomic_set(&node->selection, KD_MUTEX_PRIVATE);
+	node->turn = 0;
 	node->queue_done = 0;
 	node->result_ready = 0;
 	node->retirable = 0;
@@ -274,7 +205,7 @@ int kd_mutex_node_discard(struct kd_mutex_node *node)
 
 	if (node->requester != current)
 		return -EPERM;
-	if (node->enqueued || atomic_read(&node->queue.selection) != KD_MUTEX_PRIVATE)
+	if (node->enqueued || atomic_read(&node->selection) != KD_MUTEX_PRIVATE)
 		return -EBUSY;
 	task = node->requester;
 	node->requester = NULL;
@@ -286,17 +217,25 @@ int kd_mutex_node_discard(struct kd_mutex_node *node)
 
 int kd_mutex_enqueue(struct kd_mutex *lock, struct kd_mutex_node *node)
 {
+	struct kd_mutex_node *previous;
+
 	if (node->requester != current)
 		return -EPERM;
 	if (!lock)
 		return -EINVAL;
-	if (node->enqueued || atomic_read(&node->queue.selection) != KD_MUTEX_PRIVATE)
+	if (node->enqueued || atomic_read(&node->selection) != KD_MUTEX_PRIVATE)
 		return -EALREADY;
 	node->lock = lock;
 	node->enqueued = true;
-	atomic_set(&node->queue.selection, node->ready ? KD_MUTEX_OFFERED :
+	atomic_set(&node->selection, node->ready ? KD_MUTEX_OFFERED :
 		   KD_MUTEX_SELECTED_LOCAL);
-	kd_mutex_link_enqueue(lock, &node->queue);
+	previous = xchg(&lock->tail, node);
+	if (previous) {
+		/* Final previous-node access: the consumer may detach after this. */
+		smp_store_release(&previous->next, node);
+	} else {
+		smp_store_release(&node->turn, 1);
+	}
 	return 0;
 }
 
@@ -308,7 +247,7 @@ bool kd_mutex_choose_local(struct kd_mutex_node *node)
 	    smp_load_acquire(&node->result_ready) ||
 	    smp_load_acquire(&node->retirable))
 		return false;
-	selection = atomic_cmpxchg(&node->queue.selection, KD_MUTEX_OFFERED,
+	selection = atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
 				  KD_MUTEX_SELECTED_LOCAL);
 	return selection == KD_MUTEX_OFFERED ||
 	       selection == KD_MUTEX_SELECTED_LOCAL;
@@ -317,23 +256,24 @@ bool kd_mutex_choose_local(struct kd_mutex_node *node)
 /* Remove a uniquely proxy-selected successor while keeping head's MCS turn. */
 static void detach_proxy(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
 {
-	struct kd_mutex_link *head = batch->queue_head;
-	struct kd_mutex_link *next = smp_load_acquire(&node->queue.next);
+	struct kd_mutex_node *head = batch->head;
+	struct kd_mutex_node *next = smp_load_acquire(&node->next);
 
-	BUG_ON(smp_load_acquire(&head->next) != &node->queue);
+	BUG_ON(smp_load_acquire(&head->next) != node);
 	if (!next) {
-		/* Clear before tail replacement, so a later head producer's new
-		 * link is never overwritten by this consumer after successful CAS.
+		/*
+		 * Clear BEFORE replacing tail: a later producer can then link to
+		 * head without its new link being overwritten by this consumer.
 		 */
 		WRITE_ONCE(head->next, NULL);
-		if (cmpxchg(&batch->lock->tail, &node->queue, head) == &node->queue) {
+		if (cmpxchg(&batch->lock->tail, node, head) == node) {
 			smp_store_release(&node->queue_done, 1);
 			return;
 		}
-		next = wait_link(&node->queue);
+		next = wait_link(node);
 	}
 	WRITE_ONCE(head->next, next);
-	/* Observing next proves its producer's final queue-link access ended. */
+	/* Observing next proves its producer's final node access completed. */
 	smp_store_release(&node->queue_done, 1);
 }
 
@@ -405,16 +345,13 @@ int kd_mutex_combine(struct kd_mutex_batch *batch, unsigned int proxy_limit,
 	    release_phase(head) != KD_MUTEX_UNLOCK_OWNER_HANDLED)
 		return -EBUSY;
 	while (count < proxy_limit && batch->proxy_served < batch->proxy_limit) {
-		struct kd_mutex_link *link =
-			smp_load_acquire(&batch->queue_head->next);
-		struct kd_mutex_node *node;
+		struct kd_mutex_node *node = smp_load_acquire(&head->next);
 		enum kd_mutex_outcome outcome;
 
-		if (!link || !link->request)
+		if (!node)
 			break;
-		node = link->request;
 		/* Never skip a local-only or already locally selected successor. */
-		if (atomic_cmpxchg(&node->queue.selection, KD_MUTEX_OFFERED,
+		if (atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
 				   KD_MUTEX_SELECTED_PROXY) != KD_MUTEX_OFFERED)
 			break;
 		BUG_ON(!node->ready || !node->ops || !node->ops->execute_proxy);
@@ -457,25 +394,23 @@ int kd_mutex_await(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 	node->wait_started = true;
 	wait_request(node);
 	if (smp_load_acquire(&node->result_ready)) {
-		BUG_ON(atomic_read(&node->queue.selection) != KD_MUTEX_SELECTED_PROXY);
+		BUG_ON(atomic_read(&node->selection) != KD_MUTEX_SELECTED_PROXY);
 		*outcome = node->outcome;
 		return 0;
 	}
-	selection = atomic_cmpxchg(&node->queue.selection, KD_MUTEX_OFFERED,
+	selection = atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
 				  KD_MUTEX_SELECTED_LOCAL);
 	BUG_ON(selection != KD_MUTEX_OFFERED &&
 	       selection != KD_MUTEX_SELECTED_LOCAL);
 	batch->lock = node->lock;
 	batch->head = node;
-	batch->queue_head = &node->queue;
 	batch->serving = NULL;
 	batch->proxy_limit = proxy_limit;
 	batch->proxy_served = 0;
 	batch->head_retired = false;
 	result = kd_mutex_release_owner_init(&batch->release_owner,
 					     mcs_physical_unlock, batch->lock);
-	BUG_ON(result || READ_ONCE(batch->lock->owner) ||
-	       READ_ONCE(batch->lock->local_owner));
+	BUG_ON(result || READ_ONCE(batch->lock->owner));
 	WRITE_ONCE(batch->lock->owner, batch);
 	batch->initialized = true;
 	node->batch = batch;
@@ -694,7 +629,6 @@ int kd_mutex_reap_batch(struct kd_mutex_batch *batch)
 		return result;
 	BUG_ON(!batch->head_retired);
 	batch->head = NULL;
-	batch->queue_head = NULL;
 	batch->initialized = false;
 	/* Head storage can also contain batch: no later access to either. */
 	publish_retirable(head);

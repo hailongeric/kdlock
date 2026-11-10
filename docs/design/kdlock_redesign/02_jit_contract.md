@@ -203,18 +203,15 @@ Every live return address/token, including source-to-JIT hybrid chains, needs a 
 
 C02 uses the active MCS request's direct node->state pointer. All nested
 requests name the same original core. C05 keeps task-owned preallocated
-persistent delegation records; their exact users include late release/control,
-return and current-native-endpoint users, so capacity is not just depth. The
-selected local MCS fallback has a temporary waiter released before lock returns
-and a stable object-owned queue head. The initial implementation strategy (P)
-uses the task root's exact `held_local` index to keep later native acquisitions
-on local MCS while any unimported local owner remains. Source executes natively during that interval; after the index empties,
-a later acquisition can again seek optional delegation admission. No local
-grant import, physical authority transfer or JIT coverage for that interval is
-claimed. Queue-link and persistent control lifetimes still need their separate
-proof. A private capacity refusal is not a public void-lock result or permission to replay; local/native
-admission must preserve the current source phase and existing duties. No pool
-size or one-node sufficiency is implied. The [task root](../../../kernel/task_state.h)
+persistent request records for unified normal local/proxy selection. Finite
+caller-supplied capacity covers concurrently live nested requests and late
+release/control, return, notification, image/binding and current-native-endpoint
+users, not just depth. The supported workload guarantees a record whenever
+needed; task attachment/resources supply the actual count, with no deployment
+value or unbounded-capacity claim. Exhaustion is a documentation-only support
+limitation, without a handler, recovery/local fallback or new special assertion.
+Ordinary local selection still uses persistent controls. Current source phase,
+exact authority and all last-user duties remain required. The [task root](../../../kernel/task_state.h)
 supplies initial own backing and the selected auxiliary wait stack before a
 first node exists; it is not a borrowed-source registry or active-S_W task field.
 JIT entry/return still requires exact current binding and packet materialization.

@@ -21,12 +21,11 @@ transferable-grant recommendation is superseded. C11 now selects an MCS queue
 and C04 retains the KD physical-R11 canonical-packet-base mapping. Optional
 local/proxy/origin-combiner transactions, MCS/request lifetimes and exact
 adapter/bridge details still need implementation/proof; remaining C08/C10 and provisioning/admission/lifecycle integration
-choices stay open. C05 keeps task-owned persistent delegation records and
-selects a temporary-waiter/object-owned-head local MCS fallback. The initial
-implementation strategy (P) uses an exact root held_local index to keep later
-acquisitions native/local until all unimported local owners unlock, then optional delegation admission can resume; no local grant
-import or physical authority transfer is selected. Full control/lifetime proof
-remains work. R11 optimization discussion/T56 are deferred future work. These selections establish no validated
+choices stay open. C05 selects task-owned preallocated persistent requests for
+normal local/proxy selection. The supported workload guarantees availability
+within an explicit finite caller capacity covering all live/retained users;
+exhaustion is documentation-only, with no handler/recovery/local fallback or new
+special assertion. Full provisioning/control/lifetime proof remains work. R11 optimization discussion/T56 are deferred future work. These selections establish no validated
 support lane or generic native release-timing/progress parity.
 Keep one canonical S_W, optional unique selection, every source lock/unlock as
 a pre-operation fragment boundary, serial recursive delegation, exact no-replay
@@ -177,26 +176,23 @@ commit `727facf0537e60a1842f4ff8c89fa39aa217e9a0`. Current source derives borrow
 execution from MCS node pointers and uses the stable task root only for initial
 own backing/auxiliary control. These snapshots are not runtime validation.
 
-C05 keeps preallocated persistent task-owned records for delegation. Distinct
-simultaneously retained records remain occupied through exact late physical,
-control, return, notification, image/binding and current-native-endpoint users;
-queue detachment or source/result completion alone is insufficient. Capacity
-counts all non-free records, not only depth, with no size default or one-node
-sufficiency claim.
+C05 selects preallocated persistent task-owned request records for the unified
+normal local/proxy path. Distinct simultaneously live records stay occupied
+through exact physical-owner/release, grant, control, return, notification,
+image/binding and current-native-endpoint users. Queue detachment or source/
+result completion alone is insufficient. Finite explicit caller capacity covers
+concurrent nested requests and every still-retained record, not only depth.
 
-The latest selection adds a local MCS fallback using a temporary waiter released
-before lock returns and a stable object-owned queue head. The initial
-implementation strategy (P) uses the exact root held_local index to keep later
-acquisitions native/local while any unimported local owner remains. Optional delegation admission resumes after the index empties;
-no local grant import or physical authority transfer is selected. The ordinary
-native bootstrap completes this local path before source capture/lending and
-returns normally. This supports the mixed locking source pattern with no
-JIT/delegation coverage claimed for that native interval. Queue-link and
-continuing release/grant/return control lifetimes need their separate proof.
-This choice supersedes
-the earlier no-local-fallback instruction preserved in Git history, including
-`b95995b5`; it is not runtime evidence. A private capacity refusal is not a
-public void-lock result, success or replay authorization.
+The supported workload guarantees a record for every need. Task attachment/
+resources supply the actual count; no deployment count, one-node sufficiency or
+mathematically unbounded capacity is configured or proved. Exhaustion is a
+documentation-only support limitation, with no handler, recovery/local fallback
+or new special assertion. Normal local winners keep their persistent controls
+in the same path. This supersedes the temporary-waiter/object-head fallback and
+held-local native interval strategy preserved in Git at
+`0cedb299618004d5867791551b45bdf66cfb81fa`. Earlier storage-choice history,
+including `b95995b5`, remains reachable. Neither historical selection is runtime
+evidence for the current contract.
 
 Reviewed source commit `2c3f7cbc` connects the
 [request pool](../../../kernel/request_pool.c), exact generic users and final
@@ -208,9 +204,8 @@ wait callbacks connect progress/readiness after source export; no callback has
 executed. Caller-provisioned capacity and actual task lifecycle integration still
 need their complete proof.
 
-Remaining whole-lane work includes public native wrappers, local MCS fallback/
-held-local routing and recursive episode driving, task-time provisioning/full
-lifecycle wiring, source validation and
+Remaining whole-lane work includes public native wrappers and recursive episode
+driving, task-time provisioning/full lifecycle wiring, source validation and
 executable publication, coherent compiler transport and persistent cumulative
 feedback/ACKs. Selected stable object storage extends through physical release
 and final object access; independent control/code users can last longer.
@@ -305,7 +300,7 @@ own affected checks.
 | Earlier invocation/continuation sketch could imply separate mutable states | Consolidated into exactly one S_W; all lock nodes and suspended controls reference its one packet/cursor/phase |
 | Semantic frame/grant/completion vocabulary read as mandatory allocations | Target one-core/users with proposed bounded calls/local ordering; fresh layouts are allowed and current reuse is optional; extra machinery needs a concrete lifetime/resource reason |
 | Shared `regs_ref` interpreted as proof of the physical split | Audit actual members/unions/pool stride: one regs backing in the thread core, direct referring users with no reserved duplicate packet; preserve required native saves and per-lock control |
-| MCS scheduling-node ownership interpreted as full request lifetime | Persistent delegation records retain every exact late user. The selected local fallback releases its temporary waiter before lock returns using a stable object-owned queue head; the initial implementation strategy (P) uses an exact root held_local index to keep later acquisitions native/local until all unimported owners unlock, then optional delegation admission can resume. No local grant import is selected; continuing controls need their separate lifetime proof |
+| MCS scheduling-node ownership interpreted as full request lifetime | Unified normal local/proxy requests retain every exact late user in task-owned persistent storage. Queue detachment/result alone does not permit reuse. Finite caller capacity covers concurrent nested and still-retained records under the supported-workload availability guarantee; no exhaustion fallback or handler is introduced |
 | "Local" interpreted only by physical caller | Root-local is W; nested-local can be C_A executing W. Reader placement is open C10; the origin-local initial proposal must not count C_A execution as W-local |
 | Every-operation wording applied to lock implementation bookkeeping | Only source operations enter boundary/nesting dispatch. Internal queue/metadata locks retain physical obligations but create no W source grants |
 | Correct post-release native suffix treated as complete JIT support | Generic post-operation fragment admission is a design requirement; terminal suffix remains fallback with a distinct completion classification |
@@ -353,7 +348,7 @@ N IDs identify this normative-origin audit, distinct from the historical v0.6 A0
 | N12 | Current signal/reader/downgrade/IRQ/debug exclusions read as permanent bans | E support limits and P initial scope/extension choices; no new route/configuration is claimed. Linux 7.0 x86_64 non-PREEMPT_RT remains fixed F | C01/C10, support matrix/P7 |
 | N13 | Terminal native suffix read as only possible architecture | Terminal suffix is conservative P; no replay/exact state is F/S. Resumable service/reentry requires an explicit new contract, never automatic old-cursor revival | C04/C06/C10, JIT section 4.3 |
 | N14 | "Preserve current implementation first" made architectural | Declared API/context/lifetime duties and evidence classification remain; selected mutex deferral is an explicit limited timing policy, not native parity. Independent source rebuild/fresh layouts are selected | C01/C03/C12, P0-P8 |
-| N15 | Queue-waiter lifetime and continuing request/control lifetime conflated | C05 keeps task-owned persistent delegation records and selects a temporary local waiter released before lock returns with a stable object-owned queue head. Persistent capacity includes every late user; the initial held_local implementation strategy (P) keeps later acquisitions native/local until empty without local grant import. Continuing controls and provisioning/lifecycle proof remain work. No size default or one-node sufficiency is selected | C02/C05, selected storage/T48/T49 |
+| N15 | Queue scheduling lifetime and persistent request/control lifetime conflated | C05 selects task-owned persistent request records for normal local/proxy selection. Finite explicit caller capacity includes concurrently live nested requests and every retained release/control/return/image/current-native user. The supported workload guarantees availability; exhaustion is documentation-only, with no handler/recovery/local fallback or new special assertion. Provisioning/reuse/lifecycle proof remains work; no deployment value or unbounded claim is supplied | C02/C05, selected storage/T48/T49 |
 | N16 | Deferred/unproved general flags/SIMD text could become a new gate | AS01 is the user's explicit assumed-correct iteration scope, not evidence; no separate general subsystem/shadow/gate, with local PUSHFQ/POPFQ simulation the exception | JIT section 3.5, C04, T54 |
 | N17 | Broad admission/frontier wording could reject a whole root | Ordinary trusted-source translation is target intent; recognized special instructions clip only affected paths. Keep safe alternatives/joins/returns and exact reached handback without replay | JIT section 1.3, T43/T52/T53 |
 | N18 | Experimental typed proxy downgrade could weaken target boundaries/native semantics | Retained writer/admission and same-root exception are E only; target mode handling/native equivalence remain separate decisions. Stable point/merge does not prove a consumed branch or general flags correctness | Section 2.7, C10, T55 |
@@ -369,12 +364,12 @@ waiting, recursive combining and release remain parts of the lock. Do not
 replace the original JIT with a native borrowed-stack engine or introduce a
 separate execution worker architecture.
 
-Persistent task-owned delegation records, auxiliary control and the local
-MCS temporary-waiter/object-head fallback are selected under C05. Continuing
-local controls and bounded call-local role control still need their own proof.
-The initial held-local implementation strategy (P) keeps the source native while
-any unimported local owner remains; it selects no grant import or physical authority transfer and
-claims no delegated coverage for that interval.
+Task-owned persistent requests and auxiliary control are selected under C05.
+Normal local/proxy selection uses the unified persistent path; the supported
+workload guarantees availability within finite explicit caller capacity covering
+all concurrently live and retained records. Exhaustion is documentation-only,
+without a separate local fallback, recovery handler or new special assertion.
+Bounded call-local role control still needs its own last-user proof.
 Source comparisons do not prove the target's retention, stack/resource
 bounds, cache layout, native API behavior or progress. The explicit user-selected
 ordinary-mutex outer-unlock deferral is the limited accepted policy; comparison
@@ -430,7 +425,7 @@ none must be restored to claim source progress or select another kernel target.
 
 C12 source rebuild, ordinary-mutex C01, C03 retained-owner deferral and stable
 lock-object storage, C11 MCS, C04 physical-R11 mapping, C02 direct MCS pointers,
-C05 task-owned auxiliary entry/persistent delegation records with local MCS fallback and C06/C09 quiesced RCU replacement are selected. R11 optimization/T56 stay deferred. Remaining
+C05 task-owned auxiliary entry/persistent requests with supported-workload availability and C06/C09 quiesced RCU replacement are selected. R11 optimization/T56 stay deferred. Remaining
 native/recursive integration, source/executable integration, feedback capacity/persistence/ACK and resource/stack bounds,
 lifecycle and exact last-user duties are listed in section 2.1 and the plan.
 

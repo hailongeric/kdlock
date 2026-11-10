@@ -25,8 +25,6 @@ struct kd_task_root_context {
 	struct task_struct *task;
 	/* Physical owners stay with this task even when their source moves. */
 	struct kd_owner_progress owners;
-	/* Exact native-local owners outside borrowed source execution. */
-	struct list_head held_local;
 	/* Own native-entry configuration, never an active borrowed S_W. */
 	struct kd_episode_resources *mutex_resources;
 	unsigned long mutex_control_bytes;
@@ -60,13 +58,10 @@ struct kd_thread_state *kd_task_state_own(void);
  * and publishes the single task pointer. A live aux_entry blocks attach and
  * detach; it names control-storage occupancy, never active borrowed S_W.
  * pool and slots are caller-provisioned task-owned backing, with an explicit
- * count covering every simultaneously retained delegation request/control, not
+ * nonzero count covering every simultaneously retained request/control, not
  * only lock depth. They and the header survive all final users. Attach reserves
  * no per-lock storage and captures no source registers. No capacity default or
- * public void-lock allocation-error route is supplied. An explicit zero count
- * permits local execution without persistent delegation records. The native
- * fallback keeps a temporary waiter only through its queue admission and uses
- * stable object-owned queue storage afterward.
+ * public void-lock allocation-error route is supplied.
  * The initial endpoint must not be reinitialized/reused while any old observer
  * remains. Later native handbacks use fresh caller-reserved binding records.
  */
@@ -89,8 +84,7 @@ void kd_task_root_reset_unpublished(struct task_struct *task);
  * the original task and its stacks. Do not call during borrowed execution or
  * from a retained auxiliary frame. An idle cursor or empty grant list cannot
  * prove that drain. current must be the exact origin/native owner, with no
- * pending exit, empty physical-owner/local-held indexes and operation
- * IDLE/RESUMABLE.
+ * pending exit, empty physical-owner progress and operation IDLE/RESUMABLE.
  * Otherwise finished pool storage may still retain the exact current native
  * endpoint; final close revokes that binding and reclaims it atomically.
  * Detach revokes binding/task lookup

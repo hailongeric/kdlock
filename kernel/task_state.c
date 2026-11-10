@@ -14,7 +14,6 @@ void kd_task_root_context_init(struct kd_task_root_context *context)
 	/* Private constructor only; the canonical regs are captured, not cleared. */
 	context->task = NULL;
 	kd_owner_progress_init(&context->owners, NULL);
-	INIT_LIST_HEAD(&context->held_local);
 	context->mutex_resources = NULL;
 	context->mutex_control_bytes = 0;
 	context->aux_low = 0;
@@ -47,7 +46,7 @@ int kd_task_root_attach(struct kd_task_root_context *context,
 	unsigned long header_high = header_low + sizeof(*context);
 	int result;
 
-	if (!context || !pool || (capacity && !slots) || aux_low >= aux_high ||
+	if (!context || !pool || !slots || !capacity || aux_low >= aux_high ||
 	    aux_current < aux_low ||
 	    aux_current > aux_high || header_high < header_low ||
 	    (aux_low < header_high && aux_high > header_low))
@@ -55,8 +54,7 @@ int kd_task_root_attach(struct kd_task_root_context *context,
 	if (kd_task_root_context_current())
 		return -EEXIST;
 	/* Private initialized storage cannot be shared/reused by another task. */
-	if (context->attached || context->task || context->aux_entry ||
-	    !list_empty(&context->held_local))
+	if (context->attached || context->task || context->aux_entry)
 		return -EBUSY;
 	result = kd_execution_binding_init(&context->initial_native, &context->core,
 					   current, context, KD_EXECUTION_NATIVE);
@@ -100,8 +98,7 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 		return -ESTALE;
 	if (!context->attached || context->task != current)
 		return -EPERM;
-	if (context->aux_entry || !list_empty(&context->owners.batches) ||
-	    !list_empty(&context->held_local))
+	if (context->aux_entry || !list_empty(&context->owners.batches))
 		return -EBUSY;
 	/* Caller has stopped/drained auxiliary and borrowed work before this
 	 * first own-state access; neither a cursor nor task identity proves that.
