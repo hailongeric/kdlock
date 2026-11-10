@@ -1,0 +1,534 @@
+2026-11-10T14:49:25Z
+7.0.0-38-kdlock1
+31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/.config
+6b2d348fb95a5bc25d2e1d4ed3b29f7604601f74f30b9b9f7b35dfd87aa37c95  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/current.h
+6cdba5b7859679b77ba6ffe0a7e4949c02f9c76165117262dac0c226283e35a2  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/processor.h
+d6c553b18dd5352dd7286ac75dd66fcf6e952c8229ed405c0248586d01e03fbe  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/irq_stack.h
+279146802964e364c982ab91e6482bf404789e056ed60d6ac1afa2bd521f2806  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/kernel/cpu/common.c
+0578d3a5ed8a9d1f14fd57229a908d313754a8a3deb7128ec851e341db2003cd  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/kernel/setup_percpu.c
+9d66031ba4f3858beeeaa4e651c54127a554e39af58e380c0417d5e06ff5c728  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/kernel/vmlinux.lds.S
+0fc49a3e24fcc535d7acc97461021b07e1e43473d2c5a7c84b8d3dd857951773  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/asm-generic/vmlinux.lds.h
+21a092b3781bb3dae92973774eb290ae8a5aa91f3361d8c8041df293a6a60794  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/entry/entry_64.S
+baaaac7e41f6047d07286b7735c670754b144164338f6efd146ccbe8b4529f07  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/kernel/dumpstack.c
+f2b47285d343582b60da0869be1b75964bfd5c490071e0ec27fad80b634783ea  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/kernel/dumpstack_64.c
+232660d894725e0ea58edae86da3f49e6bc957e01984fcf04f170f31e01447a2  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/kernel/unwind_frame.c
+73266203a19085eeba7ac724469cbd68312cd0417f9f88afdd25df5ffc49c352  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/sched/task_stack.h
+7d6a2601752ebd0424be5936db9b2705cae17389b51a4c16e6dc846b2cfd4e3f  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/sched/core.c
+898b4d839464609e6a1ac5f58e20e459393a3f7a40ea83539460d8bf8b1edd63  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/entry/common.c
+46a8a08ce8c72680caa3388263bcad9c3c13d9ce08f3a6f8342171e619865dad  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/mm/vmalloc.c
+0eba4b1326498ddb04d5c3f665c5f27c029c46861f4b883af69a6e577ab4559a  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/Makefile
+156b669304b991ebc80a72fe04e2b8df9a0d13d7da8185f8c01b793f2363e04c  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/asm/nospec-branch.h
+db61bc5cdf377f62eee316ba3de5229e747c49aa118eab77c793898d9f9de31b  /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/kernel/kdlock/kernel/.mutex.o.cmd
+36:CONFIG_THREAD_INFO_IN_TASK=y
+141:CONFIG_PREEMPT_BUILD=y
+143:# CONFIG_PREEMPT is not set
+144:CONFIG_PREEMPT_LAZY=y
+145:# CONFIG_PREEMPT_RT is not set
+146:CONFIG_PREEMPT_COUNT=y
+147:CONFIG_PREEMPTION=y
+148:CONFIG_PREEMPT_DYNAMIC=y
+174:CONFIG_PREEMPT_RCU=y
+528:# CONFIG_X86_KERNEL_IBT is not set
+584:CONFIG_USE_X86_SEG_SUPPORT=y
+595:CONFIG_MITIGATION_PAGE_TABLE_ISOLATION=y
+596:CONFIG_MITIGATION_RETPOLINE=y
+597:CONFIG_MITIGATION_RETHUNK=y
+598:CONFIG_MITIGATION_UNRET_ENTRY=y
+599:CONFIG_MITIGATION_CALL_DEPTH_TRACKING=y
+601:CONFIG_MITIGATION_IBPB_ENTRY=y
+602:CONFIG_MITIGATION_IBRS_ENTRY=y
+603:CONFIG_MITIGATION_SRSO=y
+604:CONFIG_MITIGATION_SLS=y
+605:# CONFIG_MITIGATION_GDS is not set
+606:CONFIG_MITIGATION_RFDS=y
+607:CONFIG_MITIGATION_SPECTRE_BHI=y
+608:CONFIG_MITIGATION_MDS=y
+609:CONFIG_MITIGATION_TAA=y
+610:CONFIG_MITIGATION_MMIO_STALE_DATA=y
+611:CONFIG_MITIGATION_L1TF=y
+612:CONFIG_MITIGATION_RETBLEED=y
+613:CONFIG_MITIGATION_SPECTRE_V1=y
+614:CONFIG_MITIGATION_SPECTRE_V2=y
+615:CONFIG_MITIGATION_SRBDS=y
+616:CONFIG_MITIGATION_SSB=y
+617:CONFIG_MITIGATION_ITS=y
+618:CONFIG_MITIGATION_TSA=y
+619:CONFIG_MITIGATION_VMSCAPE=y
+972:CONFIG_STACKPROTECTOR=y
+973:CONFIG_STACKPROTECTOR_STRONG=y
+1000:CONFIG_SOFTIRQ_ON_OWN_STACK=y
+1026:CONFIG_VMAP_STACK=y
+1171:CONFIG_PREEMPT_NOTIFIERS=y
+12907:CONFIG_FRAME_POINTER=y
+12910:CONFIG_STACK_VALIDATION=y
+12986:CONFIG_SCHED_STACK_END_CHECK=y
+13139:CONFIG_FUNCTION_GRAPH_TRACER=y
+13153:# CONFIG_PREEMPT_TRACER is not set
+13192:# CONFIG_PREEMPTIRQ_DELAY_TEST is not set
+13264:# CONFIG_DEBUG_ENTRY is not set
+13268:# CONFIG_UNWINDER_ORC is not set
+13269:CONFIG_UNWINDER_FRAME_POINTER=y
+    12	
+    13	struct task_struct;
+    14	
+    15	DECLARE_PER_CPU_CACHE_HOT(struct task_struct *, current_task);
+    16	/* const-qualified alias provided by the linker. */
+    17	DECLARE_PER_CPU_CACHE_HOT(struct task_struct * const __percpu_seg_override,
+    18				  const_current_task);
+    19	
+    20	static __always_inline struct task_struct *get_current(void)
+    21	{
+    22		if (IS_ENABLED(CONFIG_USE_X86_SEG_SUPPORT))
+    23			return this_cpu_read_const(const_current_task);
+    24	
+    25		return this_cpu_read_stable(current_task);
+    26	}
+    27	
+    28	#define current get_current()
+    29	
+    30	#endif /* __ASSEMBLER__ */
+   435	#ifdef CONFIG_X86_64
+   436	static inline unsigned long cpu_kernelmode_gs_base(int cpu)
+   437	{
+   438	#ifdef CONFIG_SMP
+   439		return per_cpu_offset(cpu);
+   440	#else
+   441		return 0;
+   442	#endif
+   443	}
+   444	
+   550	
+   551	static __always_inline unsigned long current_top_of_stack(void)
+   552	{
+   553		/*
+   554		 *  We can't read directly from tss.sp0: sp0 on x86_32 is special in
+   555		 *  and around vm86 mode and sp0 on x86_64 is special because of the
+   556		 *  entry trampoline.
+   557		 */
+   558		if (IS_ENABLED(CONFIG_USE_X86_SEG_SUPPORT))
+   559			return this_cpu_read_const(const_cpu_current_top_of_stack);
+   560	
+   561		return this_cpu_read_stable(cpu_current_top_of_stack);
+   562	}
+   563	
+   564	static __always_inline bool on_thread_stack(void)
+   565	{
+   566		return (unsigned long)(current_top_of_stack() -
+   567				       current_stack_pointer) < THREAD_SIZE;
+   568	}
+   569	
+   570	#ifdef CONFIG_PARAVIRT_XXL
+   160			panic("cannot initialize percpu area (err=%d)", rc);
+   161	
+   162		/* alrighty, percpu areas up and running */
+   163		delta = (unsigned long)pcpu_base_addr - (unsigned long)__per_cpu_start;
+   164		for_each_possible_cpu(cpu) {
+   165			per_cpu_offset(cpu) = delta + pcpu_unit_offsets[cpu];
+   166			per_cpu(this_cpu_off, cpu) = per_cpu_offset(cpu);
+   167			per_cpu(cpu_number, cpu) = cpu;
+   168			setup_percpu_segment(cpu);
+   169			/*
+   170			 * Copy data used in early init routines from the
+   800		 *
+   801		 * Set GSBASE to the new offset. Until the wrmsrq() happens the
+   802		 * early mapping is still valid. That means the GSBASE update will
+   803		 * lose any prior per CPU data which was not copied over in
+   804		 * setup_per_cpu_areas().
+   805		 *
+   806		 * This works even with stackprotector enabled because the
+   807		 * per CPU stack canary is 0 in both per CPU areas.
+   808		 */
+   809		wrmsrq(MSR_GS_BASE, cpu_kernelmode_gs_base(cpu));
+   810	#else
+   811		/*
+   812		 * %fs is already set to __KERNEL_PERCPU, but after switching GDT
+  2233	}
+  2234	__setup("setcpuid=", setup_setcpuid);
+  2235	
+  2236	DEFINE_PER_CPU_CACHE_HOT(struct task_struct *, current_task) = &init_task;
+  2237	EXPORT_PER_CPU_SYMBOL(current_task);
+  2238	EXPORT_PER_CPU_SYMBOL(const_current_task);
+  2239	
+  2240	DEFINE_PER_CPU_CACHE_HOT(int, __preempt_count) = INIT_PREEMPT_COUNT;
+    42	ENTRY(phys_startup_64)
+    43	#endif
+    44	
+    45	jiffies = jiffies_64;
+    46	const_current_task = current_task;
+    47	const_cpu_current_top_of_stack = cpu_current_top_of_stack;
+    48	
+    49	#if defined(CONFIG_X86_64)
+   332		.exit.data : AT(ADDR(.exit.data) - LOAD_OFFSET) {
+   333			EXIT_DATA
+   334		}
+   335	
+   336		PERCPU_SECTION(L1_CACHE_BYTES)
+   337		ASSERT(__per_cpu_hot_end - __per_cpu_hot_start <= 64, "percpu cache hot data too large")
+   338	
+   339		RUNTIME_CONST_VARIABLES
+   340		RUNTIME_CONST(ptr, USER_PTR_MAX)
+  1088	 * sharing between subsections for different purposes.
+  1089	 */
+  1090	#define PERCPU_INPUT(cacheline)						\
+  1091		__per_cpu_start = .;						\
+  1092		. = ALIGN(PAGE_SIZE);						\
+  1093		*(.data..percpu..page_aligned)					\
+  1094		. = ALIGN(cacheline);						\
+  1095		__per_cpu_hot_start = .;					\
+  1096		*(SORT_BY_ALIGNMENT(.data..percpu..hot.*))			\
+  1097		__per_cpu_hot_end = .;						\
+  1098		. = ALIGN(cacheline);						\
+  1099		*(.data..percpu..read_mostly)					\
+  1100		. = ALIGN(cacheline);						\
+  1101		*(.data..percpu)						\
+  1102		*(.data..percpu..shared_aligned)				\
+  1103		PERCPU_DECRYPTED_SECTION					\
+  1104		__per_cpu_end = .;
+  1105	
+  1106	/**
+  1107	 * PERCPU_SECTION - define output section for percpu area
+  1108	 * @cacheline: cacheline size
+  1109	 *
+  1118			PERCPU_INPUT(cacheline)					\
+  1119		}
+  1120	
+  1121	
+  1122	/*
+  1123	 * Definition of the high level *_SECTION macros
+  1124	 * They will fit only a subset of the architectures
+  1125	 */
+  1126	
+  1127	
+  1128	/*
+   178		ANNOTATE_NOENDBR
+   179		/*
+   180		 * Save callee-saved registers
+   181		 * This must match the order in inactive_task_frame
+   182		 */
+   183		pushq	%rbp
+   184		pushq	%rbx
+   185		pushq	%r12
+   186		pushq	%r13
+   187		pushq	%r14
+   188		pushq	%r15
+   189	
+   190		/* switch stack */
+   191		movq	%rsp, TASK_threadsp(%rdi)
+   192		movq	TASK_threadsp(%rsi), %rsp
+   193	
+   194	#ifdef CONFIG_STACKPROTECTOR
+   195		movq	TASK_stack_canary(%rsi), %rbx
+   196		movq	%rbx, PER_CPU_VAR(__stack_chk_guard)
+   197	#endif
+   198	
+   199		/*
+   200		 * When switching from a shallower to a deeper call stack
+   201		 * the RSB may either underflow or use entries populated
+   202		 * with userspace addresses. On CPUs where those concerns
+   203		 * exist, overwrite the RSB with entries which capture
+   204		 * speculative execution to prevent attack.
+   205		 */
+   206		FILL_RETURN_BUFFER %r12, RSB_CLEAR_LOOPS, X86_FEATURE_RSB_CTXSW
+   207	
+   208		/* restore callee-saved registers */
+   209		popq	%r15
+   210		popq	%r14
+   211		popq	%r13
+   212		popq	%r12
+   213		popq	%rbx
+   214		popq	%rbp
+   215	
+   216		jmp	__switch_to
+   217	SYM_FUNC_END(__switch_to_asm)
+   218	.popsection
+   219	
+   220	/*
+   221	 * A newly forked process directly context switches into this address.
+   222	 *
+  1003	/*
+  1004	 * Switch GS and CR3 if needed.
+  1005	 */
+  1006	SYM_CODE_START(error_entry)
+  1007		ANNOTATE_NOENDBR
+  1008		UNWIND_HINT_FUNC
+  1009	
+  1010		PUSH_AND_CLEAR_REGS save_ret=1
+  1011		ENCODE_FRAME_POINTER 8
+  1012	
+  1013		testb	$3, CS+8(%rsp)
+  1014		jz	.Lerror_kernelspace
+  1015	
+  1016		/*
+  1017		 * We entered from user mode or we're pretending to have entered
+  1018		 * from user mode due to an IRET fault.
+  1019		 */
+  1020		swapgs
+  1021		FENCE_SWAPGS_USER_ENTRY
+  1040		je	.Lerror_bad_iret
+  1041		movl	%ecx, %eax			/* zero extend */
+  1042		cmpq	%rax, RIP+8(%rsp)
+  1043		je	.Lbstep_iret
+  1044	
+  1045		VALIDATE_UNRET_END
+  1046	
+  1047		HANDLE_INTR_SAFERET 8(%rsp)
+  1048	
+  1049		cmpq	$.Lgs_change, RIP+8(%rsp)
+  1050		jne	.Lerror_entry_done_lfence
+  1051	
+  1052		/*
+  1053		 * hack: .Lgs_change can fail with user gsbase.  If this happens, fix up
+  1054		 * gsbase and proceed.  We'll fix up the exception and land in
+  1055		 * .Lgs_change's error handler with kernel gsbase.
+  1056		 */
+  1057		swapgs
+  1058	
+  1059		/*
+  1060		 * Issue an LFENCE to prevent GS speculation, regardless of whether it is a
+  1061		 * kernel or user gsbase.
+  1062		 */
+  1063	.Lerror_entry_done_lfence:
+  1064		FENCE_SWAPGS_KERNEL_ENTRY
+  1065		CALL_DEPTH_ACCOUNT
+  1066		leaq	8(%rsp), %rax			/* return pt_regs pointer */
+  1067		RET
+  1068	
+  1069	.Lbstep_iret:
+  1070		/* Fix truncated RIP */
+  1071		movq	%rcx, RIP+8(%rsp)
+    84										\
+    85		tos = ((void *)(stack));					\
+    86										\
+    87		asm_inline volatile(						\
+    88		"movq	%%rsp, (%[tos])				\n"		\
+    89		"movq	%[tos], %%rsp				\n"		\
+    90										\
+    91		asm_call							\
+    92										\
+    93		"popq	%%rsp					\n"		\
+    94										\
+    95		: "+r" (tos), ASM_CALL_CONSTRAINT				\
+    96		: [__func] "i" (func), [tos] "r" (tos) argconstr		\
+    97		: "cc", "rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10",	\
+    98		  "memory"							\
+    99		);								\
+   100	}
+   101	
+   102	#define ASM_CALL_ARG0							\
+   103		"1: call %c[__func]				\n"		\
+   104		ANNOTATE_REACHABLE(1b) "			\n"
+   105	
+   146			 * places. Invoke the stack switch macro with the call	\
+   147			 * sequence which matches the above direct invocation.	\
+   148			 */							\
+   149			__this_cpu_write(hardirq_stack_inuse, true);		\
+   150			call_on_irqstack(func, asm_call, constr);		\
+   151			__this_cpu_write(hardirq_stack_inuse, false);		\
+   152		}								\
+   153	}
+   154	
+   155	/*
+   156	 * Function call sequence for __call_on_irqstack() for system vectors.
+   157	 *
+   158	 * Note that irq_enter_rcu() and irq_exit_rcu() do not use the input
+   159	 * mechanism because these functions are global and cannot be optimized out
+   160	 * when compiling a particular source file which uses one of these macros.
+   161	 *
+   162	 * The argument (regs) does not need to be pushed or stashed in a callee
+   163	 * saved register to be safe vs. the irq_enter_rcu() call because the
+   164	 * clobbers already prevent the compiler from storing it in a callee
+   165	 * clobbered register. As the compiler has to preserve @regs for the final
+   166	 * call to idtentry_exit() anyway, it's likely that it does not cause extra
+   167	 * effort for this asm magic.
+   168	 */
+   169	#define ASM_CALL_SYSVEC							\
+   170		"call irq_enter_rcu				\n"		\
+   171		ASM_CALL_ARG1							\
+   172		"call irq_exit_rcu				\n"
+   173	
+   187	
+   188	void raw_irqentry_exit_cond_resched(void)
+   189	{
+   190		if (!preempt_count()) {
+   191			/* Sanity check RCU and thread stack */
+   192			rcu_irq_exit_check_preempt();
+   193			if (IS_ENABLED(CONFIG_DEBUG_ENTRY))
+   194				WARN_ON_ONCE(!on_thread_stack());
+   195			if (need_resched() && arch_irqentry_exit_need_resched())
+   196				preempt_schedule_irq();
+   197		}
+   198	}
+   199	#ifdef CONFIG_PREEMPT_DYNAMIC
+    29	
+    30	bool noinstr in_task_stack(unsigned long *stack, struct task_struct *task,
+    31				   struct stack_info *info)
+    32	{
+    33		unsigned long *begin = task_stack_page(task);
+    34		unsigned long *end   = task_stack_page(task) + THREAD_SIZE;
+    35	
+    36		if (stack < begin || stack >= end)
+    37			return false;
+    38	
+    39		info->type	= STACK_TYPE_TASK;
+    40		info->begin	= begin;
+    41		info->end	= end;
+    42		info->next_sp	= NULL;
+    43	
+    44		return true;
+    45	}
+    46	
+    47	/* Called from get_stack_info_noinstr - so must be noinstr too */
+   170	bool noinstr get_stack_info_noinstr(unsigned long *stack, struct task_struct *task,
+   171					    struct stack_info *info)
+   172	{
+   173		if (in_task_stack(stack, task, info))
+   174			return true;
+   175	
+   176		if (task != current)
+   177			return false;
+   178	
+   179		if (in_exception_stack(stack, info))
+   180			return true;
+   181	
+   182		if (in_irq_stack(stack, info))
+   183			return true;
+   184	
+   185		if (in_entry_stack(stack, info))
+   186			return true;
+   187	
+   188		return false;
+   189	}
+   190	
+   195	
+   196		if (!stack)
+   197			goto unknown;
+   198	
+   199		if (!get_stack_info_noinstr(stack, task, info))
+   200			goto unknown;
+   201	
+   202		/*
+   203		 * Make sure we don't iterate through any given stack more than once.
+   219		}
+   220	
+   221		/*
+   222		 * If the next bp isn't on the current stack, switch to the next one.
+   223		 *
+   224		 * We may have to traverse multiple stacks to deal with the possibility
+   225		 * that info->next_sp could point to an empty stack and the next bp
+   226		 * could be on a subsequent stack.
+   227		 */
+   228		while (!on_stack(info, frame, len))
+   229			if (get_stack_info(info->next_sp, state->task, info,
+   230					   &state->stack_mask))
+   231				return false;
+   232	
+   233		/* Make sure it only unwinds up and doesn't overlap the prev frame: */
+   234		if (state->orig_sp && state->stack_info.type == prev_type &&
+   373	void __unwind_start(struct unwind_state *state, struct task_struct *task,
+   374			    struct pt_regs *regs, unsigned long *first_frame)
+   375	{
+   376		unsigned long *bp;
+   377	
+   378		memset(state, 0, sizeof(*state));
+   379		state->task = task;
+   380		state->got_irq = (regs);
+   381	
+   382		/* Don't even attempt to start from user mode regs: */
+   383		if (regs && user_mode(regs)) {
+   384			state->stack_info.type = STACK_TYPE_UNKNOWN;
+   385			return;
+   386		}
+   387	
+   388		bp = get_frame_pointer(task, regs);
+   389	
+   390		/*
+   391		 * If we crash with IP==0, the last successfully executed instruction
+   392		 * was probably an indirect function call with a NULL function pointer.
+   393		 * That means that SP points into the middle of an incomplete frame:
+   394		 * *SP is a return pointer, and *(SP-sizeof(unsigned long)) is where we
+   395		 * would have written a frame pointer if we hadn't crashed.
+   396		 * Pretend that the frame is complete and that BP points to it, but save
+   397		 * the real BP so that we can use it when looking for the next frame.
+   398		 */
+   399		if (regs && regs->ip == 0 && (unsigned long *)regs->sp >= first_frame) {
+   400			state->next_bp = bp;
+   401			bp = ((unsigned long *)regs->sp) - 1;
+   402		}
+   403	
+   404		/* Initialize stack info and make sure the frame data is accessible: */
+   405		get_stack_info(bp, state->task, &state->stack_info,
+   406			       &state->stack_mask);
+   407		update_stack_state(state, bp);
+   408	
+   409		/*
+   410		 * The caller can provide the address of the first frame directly
+   411		 * (first_frame) or indirectly (regs->sp) to indicate which stack frame
+   412		 * to start unwinding at.  Skip ahead until we reach it.
+   413		 */
+   414		while (!unwind_done(state) &&
+   415		       (!on_stack(&state->stack_info, first_frame, sizeof(long)) ||
+   416				(state->next_bp == NULL && state->bp < first_frame)))
+   417			unwind_next_frame(state);
+    21	static __always_inline void *task_stack_page(const struct task_struct *task)
+    22	{
+    23		return task->stack;
+    24	}
+    25	
+    26	#define setup_thread_stack(new,old)	do { } while(0)
+    27	
+    28	static __always_inline unsigned long *end_of_stack(const struct task_struct *task)
+    29	{
+    30	#ifdef CONFIG_STACK_GROWSUP
+    31		return (unsigned long *)((unsigned long)task->stack + THREAD_SIZE) - 1;
+    32	#else
+    33		return task->stack;
+    34	#endif
+    35	}
+    84	void exit_task_stack_account(struct task_struct *tsk);
+    85	
+    86	#define task_stack_end_corrupted(task) \
+    87			(*(end_of_stack(task)) != STACK_END_MAGIC)
+    88	
+    89	static inline int object_is_on_stack(const void *obj)
+    90	{
+    91		void *stack = task_stack_page(current);
+    92	
+    93		obj = kasan_reset_tag(obj);
+    94		return (obj >= stack) && (obj < (stack + THREAD_SIZE));
+  5861	 * Various schedule()-time debugging checks and statistics:
+  5862	 */
+  5863	static inline void schedule_debug(struct task_struct *prev, bool preempt)
+  5864	{
+  5865	#ifdef CONFIG_SCHED_STACK_END_CHECK
+  5866		if (task_stack_end_corrupted(prev))
+  5867			panic("corrupted stack end detected inside scheduler\n");
+  5868	
+  5869		if (task_scs_end_corrupted(prev))
+  5870			panic("corrupted shadow stack detected inside scheduler\n");
+  5871	#endif
+  5872	
+  5873	#ifdef CONFIG_DEBUG_ATOMIC_SLEEP
+732:	if (WARN_ON_ONCE(area->flags & VM_NO_GUARD))
+3225:	if (!(flags & VM_NO_GUARD))
+3226:		size += PAGE_SIZE;
+3549:	if (WARN_ON_ONCE(flags & VM_NO_GUARD))
+3550:		flags &= ~VM_NO_GUARD;
+3966: * @vm_flags:		  additional vm area flags (e.g. %VM_NO_GUARD)
+16:RETPOLINE_CFLAGS	:= -mindirect-branch=thunk-extern -mindirect-branch-register
+17:RETPOLINE_VDSO_CFLAGS	:= -mindirect-branch=thunk-inline -mindirect-branch-register
+23:RETPOLINE_CFLAGS	+= $(call cc-option,-mindirect-branch-cs-prefix)
+26:RETHUNK_CFLAGS		:= -mfunction-return=thunk-extern
+savedcmd_kernel/kdlock/kernel/mutex.o := gcc -Wp,-MMD,kernel/kdlock/kernel/.mutex.o.d -nostdinc -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include -I./arch/x86/include/generated -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include -I./include -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/uapi -I./include/generated/uapi -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler-version.h -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/kconfig.h -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/ubuntu/include -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/include/linux/compiler_types.h -D__KERNEL__ -fmacro-prefix-map=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/= -std=gnu11 -fshort-wchar -funsigned-char -fno-common -fno-PIE -fno-strict-aliasing -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -mno-sse4a -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -march=x86-64 -mtune=generic -mno-red-zone -mcmodel=kernel -mstack-protector-guard-reg=gs -mstack-protector-guard-symbol=__ref_stack_chk_guard -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -mindirect-branch-cs-prefix -mfunction-return=thunk-extern -fno-jump-tables -mharden-sls=all -fpatchable-function-entry=16,16 -fno-delete-null-pointer-checks -O2 -fno-allow-store-data-races -fstack-protector-strong -fno-omit-frame-pointer -fno-optimize-sibling-calls -ftrivial-auto-var-init=zero -fzero-init-padding-bits=all -fno-stack-clash-protection -fzero-call-used-regs=used-gpr -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -fmin-function-alignment=16 -fstrict-flex-arrays=3 -fms-extensions -fno-strict-overflow -fno-stack-check -fconserve-stack -fno-builtin-wcslen -Wall -Wextra -Wundef -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Werror=strict-prototypes -Wno-format-security -Wno-trigraphs -Wno-frame-address -Wno-address-of-packed-member -Wmissing-declarations -Wmissing-prototypes -Wframe-larger-than=1024 -Wno-main -Wno-type-limits -Wno-dangling-pointer -Wvla-larger-than=1 -Wno-pointer-sign -Wcast-function-type -Wno-unterminated-string-initialization -Wno-array-bounds -Wno-stringop-overflow -Wno-alloc-size-larger-than -Wimplicit-fallthrough=5 -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wenum-conversion -Wunused -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-packed-not-aligned -Wno-format-overflow -Wno-format-truncation -Wno-stringop-truncation -Wno-override-init -Wno-missing-field-initializers -Wno-shift-negative-value -Wno-maybe-uninitialized -Wno-sign-compare -Wno-unused-parameter -g -gdwarf-5 -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include -include /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/target.h  -fsanitize=bounds-strict -fsanitize=shift -fsanitize=bool -fsanitize=enum   -I/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock -Ikernel/kdlock    -DKBUILD_MODFILE='"kernel/kdlock/kdlock_rebuild"' -DKBUILD_BASENAME='"mutex"' -DKBUILD_MODNAME='"kdlock_rebuild"' -D__KBUILD_MODNAME=kdlock_rebuild -c -o kernel/kdlock/kernel/mutex.o /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex.c  
+165379:ffffffff830d7874 r __ksymtab_const_current_task
+221532:ffffffff841f0000 D __per_cpu_start
+221546:ffffffff84208018 D const_current_task
+221547:ffffffff84208018 D current_task
+221982:ffffffff84227000 D __per_cpu_end
+  [30] .data..percpu     PROGBITS        ffffffff841f0000 33f0000 037000 00  WA  0   0 4096
+Mitigation: Enhanced / Automatic IBRS; IBPB: conditional; PBRSB-eIBRS: SW sequence; BHI: SW loop, KVM: SW loop
+Not affected
+BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0
+/sys/kernel/tracing/current_tracer: nop
+/sys/kernel/tracing/tracing_on: 1
+/sys/kernel/debug/tracing/current_tracer: nop
+/sys/kernel/debug/tracing/tracing_on: 1
