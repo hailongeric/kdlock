@@ -356,6 +356,26 @@ static int drop_grant(void *control, const void *user)
 	return kd_mutex_grant_unlinked(&call->node, user);
 }
 
+struct kd_jit_mutex_call *kd_jit_mutex_grant_call(const struct kd_source_grant *grant)
+{
+	struct kd_jit_mutex_call *call;
+
+	/* A generic grant may belong to another provider. Prove the constructor
+	 * relationship before interpreting its containing allocation as a call.
+	 * The retained grant's immutable provider/control fields supply this type.
+	 */
+	if (!grant || grant->drop != drop_grant || !grant->control)
+		return ERR_PTR(-EOPNOTSUPP);
+	call = grant->control;
+	if (&call->grant != grant || call->node.state != grant->state ||
+	    grant->release != &call->node.release ||
+	    grant->acquisition != &call->acquisition_identity ||
+	    call->node.acquisition != grant->acquisition ||
+	    grant->user != grant || call->node.grant_user != grant)
+		return ERR_PTR(-ESTALE);
+	return call;
+}
+
 static int accept_selected(struct kd_mutex_node *node, void *context)
 {
 	struct kd_jit_mutex_call *call = context;

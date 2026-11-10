@@ -113,12 +113,14 @@ int kd_mutex_cancel_entry(struct kd_mutex_entry *entry,
 	return 0;
 }
 
+extern void __noreturn kd_native_resume(struct kd_regs *regs);
+
 void __noreturn kd_mutex_resume_entry(struct kd_mutex_entry *entry,
-		 struct kd_execution_binding *native_binding)
+		 struct kd_execution_binding *native_binding,
+		 void (*done)(void *context), void *context)
 {
 	struct kd_task_root_context *root = kd_task_root_context_current();
 	struct kd_thread_state *state;
-	int result;
 
 	BUG_ON(!in_task() || in_atomic() || irqs_disabled());
 	BUG_ON(!native_owned(root, native_binding));
@@ -138,7 +140,10 @@ void __noreturn kd_mutex_resume_entry(struct kd_mutex_entry *entry,
 	 */
 	entry->phase = KD_MUTEX_ENTRY_COMPLETE;
 	WRITE_ONCE(root->aux_entry, NULL);
-	result = kd_jit_resume_origin(state, native_binding);
-	BUG_ON(result);
-	BUG();
+	/* Final entry/native-binding access ended above. The exact actor cleanup
+	 * can permit control reuse; only stable task-core regs are read afterward.
+	 */
+	if (done)
+		done(context);
+	kd_native_resume(&state->regs);
 }

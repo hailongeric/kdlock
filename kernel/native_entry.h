@@ -27,9 +27,14 @@ int kd_mutex_cancel_entry(struct kd_mutex_entry *entry,
  * Final original-W route after the callback transferred to its fresh native
  * endpoint. Drop the exact auxiliary occupancy and immediately resume current
  * canonical IP/SP. Persistent descriptor/node/binding/code users remain held;
- * freeing them is separate from making the auxiliary stack reusable.
+ * freeing them is separate from making the auxiliary stack reusable. done is
+ * optional nonfailing metadata cleanup after all entry/native-binding reads and
+ * before the assembly jump. It may close the final exact referring actor; it
+ * must not mutate the binding or execute source. No entry/binding/context access
+ * follows callback return. The stable core/task backing remains retained.
  */
 void __noreturn kd_mutex_resume_entry(struct kd_mutex_entry *entry,
-		 struct kd_execution_binding *native_binding);
+		 struct kd_execution_binding *native_binding,
+		 void (*done)(void *context), void *context);
 
 #endif

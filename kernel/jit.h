@@ -192,6 +192,12 @@ struct kd_jit_mutex_call {
  * ready=false permits local arbitration without proxy eligibility, while still
  * accepting this JIT bridge's stopped offer at the actual local MCS win.
  */
+/* Retained generic grant -> exact JIT-call constructor relationship. An error
+ * pointer reports a different provider or inconsistent identity. This creates
+ * no storage/execution right; the caller keeps the grant/control through its
+ * last use and owns current source before inspecting mutable ledger state.
+ */
+struct kd_jit_mutex_call *kd_jit_mutex_grant_call(const struct kd_source_grant *grant);
 int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 		 struct kd_thread_state *state,
 		 const struct kd_jit_mutex_driver *driver, bool ready);
