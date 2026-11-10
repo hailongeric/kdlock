@@ -1,0 +1,25 @@
+{
+  "archive_bytes": 1310720,
+  "archive_sha256": "48fa2eec9764c62593872c055b2e059c6419047617a99a0c6339a5c602a7e83c",
+  "commit": "9f3279524b41c37fec5e0f29e1fd40975e2b8421",
+  "files": 106,
+  "paths": [
+    "AGENTS.md",
+    "Kbuild",
+    "Kconfig",
+    "README.md",
+    "docs",
+    "disassem",
+    "include",
+    "kernel",
+    "tests/kernel",
+    "tests/fixtures",
+    "tests/test_runtime_pipeline.py",
+    "tests/test_kernel_gs_rip.py",
+    "tests/test_multi_entry_pipeline.py",
+    "tests/evidence/runtime-pipeline-20261110/pipeline-config.json"
+  ],
+  "policy": "Exact committed source archive; unrelated worktree/evidence changes excluded.",
+  "source_bytes": 1220438,
+  "source_worktree_status": "## main\n M README.md\n M docs/design/kdlock_redesign/00_overview.md\n M docs/design/kdlock_redesign/01_lock_protocol.md\n M docs/design/kdlock_redesign/02_jit_contract.md\n M docs/design/kdlock_redesign/03_implementation_plan.md\n M docs/design/kdlock_redesign/04_evidence_and_reconciliation.md\n M kernel/integration/BUILDING.md\n M kernel/integration/CONTROL.md\n M kernel/integration/IMAGES.md\n M kernel/integration/README.md\n"
+}

@@ -1,0 +1,26 @@
+from pathlib import Path
+import hashlib,json,re,subprocess,sys,tarfile
+repo=Path('/home/eric/vm/vm-shared/kdlock-main')
+commit=sys.argv[1]
+if not re.fullmatch('[0-9a-f]{40}',commit):
+    raise SystemExit('full exact commit required')
+leaf=Path('/tmp')/('kdlock-main-module3-'+commit[:8])
+leaf.mkdir(mode=0o700)
+paths=['AGENTS.md','Kbuild','Kconfig','README.md','docs','disassem','include','kernel','tests/kernel','tests/fixtures','tests/test_runtime_pipeline.py','tests/test_kernel_gs_rip.py','tests/test_multi_entry_pipeline.py','tests/evidence/runtime-pipeline-20261110/pipeline-config.json']
+archive=leaf/'source.tar'
+subprocess.run(['git','archive','--format=tar','--output',str(archive),commit,'--',*paths],cwd=repo,check=True)
+manifest={}
+with tarfile.open(archive) as tar:
+    for member in tar.getmembers():
+        if member.isdir():
+            continue
+        if not member.isfile() or member.name.startswith('/') or '..' in Path(member.name).parts:
+            raise ValueError('unexpected source member')
+        data=tar.extractfile(member).read()
+        manifest[member.name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+(leaf/'source-manifest.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
+status=subprocess.run(['git','status','--short','--branch'],cwd=repo,capture_output=True,text=True,check=True).stdout
+record={'commit':commit,'paths':paths,'archive_bytes':archive.stat().st_size,'archive_sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'files':len(manifest),'source_bytes':sum(row['bytes'] for row in manifest.values()),'source_worktree_status':status,'policy':'Exact committed source archive; unrelated worktree/evidence changes excluded.'}
+(leaf/'source-state.json').write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
+
+print(json.dumps({'directory':str(leaf),**record},indent=2))

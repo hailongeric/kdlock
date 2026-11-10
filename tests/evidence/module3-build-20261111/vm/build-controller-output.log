@@ -1,0 +1,108 @@
+{
+  "argv": [
+    "make",
+    "-C",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+    "O=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+    "M=/mnt/kdlock-builds/kdlock-main-work/module3-9f327952-01a1bc4f/input/tests/kernel/payload",
+    "MO=/mnt/kdlock-builds/kdlock-main-work/module3-9f327952-01a1bc4f/module-build",
+    "-j8",
+    "V=1",
+    "modules"
+  ],
+  "source_state": {
+    "archive_bytes": 1310720,
+    "archive_sha256": "48fa2eec9764c62593872c055b2e059c6419047617a99a0c6339a5c602a7e83c",
+    "commit": "9f3279524b41c37fec5e0f29e1fd40975e2b8421",
+    "files": 106,
+    "paths": [
+      "AGENTS.md",
+      "Kbuild",
+      "Kconfig",
+      "README.md",
+      "docs",
+      "disassem",
+      "include",
+      "kernel",
+      "tests/kernel",
+      "tests/fixtures",
+      "tests/test_runtime_pipeline.py",
+      "tests/test_kernel_gs_rip.py",
+      "tests/test_multi_entry_pipeline.py",
+      "tests/evidence/runtime-pipeline-20261110/pipeline-config.json"
+    ],
+    "policy": "Exact committed source archive; unrelated worktree/evidence changes excluded.",
+    "source_bytes": 1220438,
+    "source_worktree_status": "## main\n M README.md\n M docs/design/kdlock_redesign/00_overview.md\n M docs/design/kdlock_redesign/01_lock_protocol.md\n M docs/design/kdlock_redesign/02_jit_contract.md\n M docs/design/kdlock_redesign/03_implementation_plan.md\n M docs/design/kdlock_redesign/04_evidence_and_reconciliation.md\n M kernel/integration/BUILDING.md\n M kernel/integration/CONTROL.md\n M kernel/integration/IMAGES.md\n M kernel/integration/README.md\n"
+  },
+  "start_utc": "2026-11-10T18:28:53.986541+00:00",
+  "boot_id": "fb0601dd-db5c-4396-aaa5-e59b91b16924",
+  "taint_before": "12288",
+  "kernel_pins": {
+    "vmlinux": "7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809",
+    ".config": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "System.map": "47cc1e87e95f2e118f9a20ff01ec8e31dee1f9d0f650ef9649392a25db98395f",
+    "Module.symvers": "2533c2a4becc4f99f8dacc38e9480608c9032e4c0f3d06a9b4a2fe51fda6752b"
+  },
+  "verified_source_before": 106,
+  "runner_ast": "PASS",
+  "observer_seconds": 180,
+  "policy": "Normal target compiler flags; observer timeout retains child and establishes no drain. No module load.",
+  "pid": 6014,
+  "returncode": 0,
+  "elapsed_seconds": 3.0025931400000445,
+  "end_utc": "2026-11-10T18:28:56.989412+00:00",
+  "status": "RETURNED",
+  "taint_after": "12288",
+  "verified_source_after": 106,
+  "kernel_pins_after": {
+    "vmlinux": "7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809",
+    ".config": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "System.map": "47cc1e87e95f2e118f9a20ff01ec8e31dee1f9d0f650ef9649392a25db98395f",
+    "Module.symvers": "2533c2a4becc4f99f8dacc38e9480608c9032e4c0f3d06a9b4a2fe51fda6752b"
+  },
+  "module": {
+    "path": "/mnt/kdlock-builds/kdlock-main-work/module3-9f327952-01a1bc4f/module-build/kd_runtime_fixture.ko",
+    "bytes": 528944,
+    "sha256": "bbd3ba41a3c4d4a68efbf24843b291ede0a38ef9223a24e421fe978a94635048"
+  },
+  "build_log_sha256": "fde3d6922227c0da79ff3d7d5dd69e60fe00e33e3a9f717d717587c428dd6add"
+}
+k_chk_guard -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -mindirect-branch-cs-prefix -mfunction-return=thunk-extern -fno-jump-tables -mharden-sls=all -fpatchable-function-entry=16,16 -fno-delete-null-pointer-checks -O2 -fno-allow-store-data-races -fstack-protector-strong -fno-omit-frame-pointer -fno-optimize-sibling-calls -ftrivial-auto-var-init=zero -fzero-init-padding-bits=all -fno-stack-clash-protection -fzero-call-used-regs=used-gpr -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -fmin-function-alignment=16 -fstrict-flex-arrays=3 -fms-extensions -fno-strict-overflow -fno-stack-check -fconserve-stack -fno-builtin-wcslen -Wall -Wextra -Wundef -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Werror=strict-prototypes -Wno-format-security -Wno-trigraphs -Wno-frame-address -Wno-address-of-packed-member -Wmissing-declarations -Wmissing-prototypes -Wframe-larger-than=1024 -Wno-main -Wno-type-limits -Wno-dangling-pointer -Wvla-larger-than=1 -Wno-pointer-sign -Wcast-function-type -Wno-unterminated-string-initialization -Wno-array-bounds -Wno-stringop-overflow -Wno-alloc-size-larger-than -Wimplicit-fallthrough=5 -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wenum-conversion -Wunused -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-packed-not-aligned -Wno-format-overflow -Wno-format-truncation -Wno-stringop-truncation -Wno-override-init -Wno-missing-field-initializers -Wno-shift-negative-value -Wno-maybe-uninitialized -Wno-sign-compare -Wno-unused-parameter -g -gdwarf-5  -fsanitize=bounds-strict -fsanitize=shift -fsanitize=bool -fsanitize=enum     -DMODULE  -DKBUILD_BASENAME='".module_common"' -DKBUILD_MODNAME='".module_common.o"' -D__KBUILD_MODNAME=.module_common.o -c -o .module-common.o /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/scripts/module-common.c   ; /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/tools/objtool/objtool --hacks=jump_label --hacks=noinstr --hacks=skylake --retpoline --rethunk --sls --stackval --static-call --uaccess --prefix=16  --link  --module .module-common.o
+# cmd_gen_objtooldep .module-common.o
+   { echo ; echo '.module-common.o: $(wildcard /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/tools/objtool/objtool)' ; } >> ./..module-common.o.cmd
+# cmd_gen_objtooldep kd_runtime_fixture.mod.o
+   { echo ; echo 'kd_runtime_fixture.mod.o: $(wildcard /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/tools/objtool/objtool)' ; } >> ./.kd_runtime_fixture.mod.o.cmd
+# LD [M]  kd_runtime_fixture.ko
+  ld -r -m elf_x86_64 -z noexecstack --no-warn-rwx-segments --build-id=sha1  -T /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/scripts/module.lds -o kd_runtime_fixture.ko kd_runtime_fixture.o kd_runtime_fixture.mod.o .module-common.o
+# BTF [M] kd_runtime_fixture.ko
+  if [ ! -f /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux ]; then printf "Skipping BTF generation for %s due to unavailability of vmlinux
+" kd_runtime_fixture.ko 1>&2; else sh /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/scripts/gen-btf.sh --btf_base /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux kd_runtime_fixture.ko; fi;
++ trap cleanup EXIT
++ BTFGEN_MODE=vmlinux
++ [ -n /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux ]
++ BTFGEN_MODE=module
++ gen_btf_data
++ btf1=kd_runtime_fixture.ko.BTF.1
++ pahole -J -j8 --btf_features=encode_force,var,float,enum64,decl_tag,type_tag,optimized_func,consistent_func,decl_tag_kfuncs --btf_features=attributes --lang_exclude=rust --btf_base /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux --btf_encode_detached=kd_runtime_fixture.ko.BTF.1 kd_runtime_fixture.ko
++ /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/tools/bpf/resolve_btfids/resolve_btfids --distill_base --verbose --btf_base /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux --btf kd_runtime_fixture.ko.BTF.1 kd_runtime_fixture.ko
+Cannot find .BTF_ids or symbols sections, skip symbols resolution
+Dumped 1939 bytes of data to kd_runtime_fixture.ko.BTF
+Dumped 399 bytes of data to kd_runtime_fixture.ko.BTF.base
++ embed_btf_data
++ objcopy --add-section .BTF=kd_runtime_fixture.ko.BTF kd_runtime_fixture.ko
++ btf_base=kd_runtime_fixture.ko.BTF.base
++ [ -f kd_runtime_fixture.ko.BTF.base ]
++ objcopy --add-section .BTF.base=kd_runtime_fixture.ko.BTF.base kd_runtime_fixture.ko
++ btf_ids=kd_runtime_fixture.ko.BTF_ids
++ [ -f kd_runtime_fixture.ko.BTF_ids ]
++ exit 0
++ cleanup
++ rm -f kd_runtime_fixture.ko.BTF.1
++ rm -f kd_runtime_fixture.ko.BTF
++ [ module = module ]
++ rm -f kd_runtime_fixture.ko.BTF.base
++ rm -f kd_runtime_fixture.ko.BTF_ids
+make[1]: Leaving directory '/mnt/kdlock-builds/kdlock-main-work/module3-9f327952-01a1bc4f/module-build'
+make: Leaving directory '/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source'
+

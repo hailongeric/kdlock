@@ -1,0 +1,58 @@
+{
+  "build-controller-output.log": {
+    "bytes": 8206,
+    "sha256": "f57685292e2c0f14453da063191d522a5eff60a1d3187b03d0b5ba026d4f22fe"
+  },
+  "build-receipts/build.log": {
+    "bytes": 17809,
+    "sha256": "fde3d6922227c0da79ff3d7d5dd69e60fe00e33e3a9f717d717587c428dd6add"
+  },
+  "build-receipts/command.json": {
+    "bytes": 2320,
+    "sha256": "1076b333bf99dced9378eee4e62073b9ce1a5e9772fd8113fea86ea5f891f664"
+  },
+  "build-receipts/modinfo.txt": {
+    "bytes": 1384,
+    "sha256": "1e51d29681ff0b829834b376ceea8a0fd6733dbdc4d5a30aa78e70956b0972f3"
+  },
+  "build-receipts/result.json": {
+    "bytes": 3205,
+    "sha256": "93cde66867106c3fff3c3a637222b20827aaf244d2361bc3dc754d743b9925fc"
+  },
+  "build-receipts/symbols.txt": {
+    "bytes": 6366,
+    "sha256": "0b5e8c24c79b1963c6a05e794d6fc0f1187dabf3420d5b008aff976f8cedc8a3"
+  },
+  "kdlock-main-module3-build.py": {
+    "bytes": 3866,
+    "sha256": "ed80a878ea94bf9447eb50012a6a19da3ae9e0e0a0e3fc48546966a5ee48eeb3"
+  },
+  "module-build/.kd_runtime_fixture.ko.cmd": {
+    "bytes": 281,
+    "sha256": "acde17e0018dcf74d54122abeb448415ff642305694cde37fd36be6c4e5bf066"
+  },
+  "module-build/.runtime_fixture.o.cmd": {
+    "bytes": 93311,
+    "sha256": "5864cdd74cd4c67094ede83910df2c21922ecc3f93da73fa07dd757d5d3852aa"
+  },
+  "module-build/Module.symvers": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "module-build/kd_runtime_fixture.mod.c": {
+    "bytes": 5144,
+    "sha256": "4a1849a49bda168bb816591b54e9697eda66afd4d4cfdb0004f6630806fe1975"
+  },
+  "preparation.json": {
+    "bytes": 34357,
+    "sha256": "5ba71a562251986d950439ce2e9ca6d014ed84f4aee784579d0b4290f9d54e61"
+  },
+  "source-manifest.json": {
+    "bytes": 14429,
+    "sha256": "4f4bc26381f3e48bdfd6dcac95df218b63979c7bb7effdc8b0c62279a34cfe7d"
+  },
+  "source-state.json": {
+    "bytes": 1138,
+    "sha256": "5a211b6b92550d5bb1b854dd74f5a1434a22b97d0fde0c9fa9cf06967465d960"
+  }
+}
