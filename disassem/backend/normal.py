@@ -36,14 +36,26 @@ class NormalLowering:
         return str(ptr_args[0]).upper(), ptr_args[1]
 
 
-    def is_current_task_operand(self, arg):
+    def is_current_task_operand(self, arg, offset=None):
+        """Match the exact source EA, including the target's GS:RIP load.
+
+        offset is this ORIGINAL instruction's next IP. Resolve only its
+        constant offset for the existing logical-task comparison; nonmatches
+        retain the original generic GS mapping/expansion. A 32-bit address is
+        zero-extended, so low bits alone cannot identify a full64 kernel alias.
+        """
         segment, address = self.segment_operand(arg)
         if segment != "GS" or self.current_task_offset is None:
             return False
-        if not isinstance(address, ExprInt):
+        if isinstance(address, ExprInt):
+            actual = expr_int_value(address) & ((1 << address.size) - 1)
+        elif offset is not None:
+            actual = self.rip_relative_address(ExprMem(address, arg.size), offset)
+            if actual is None:
+                return False
+        else:
             return False
-        mask = (1 << address.size) - 1
-        return (expr_int_value(address) & mask) == (self.current_task_offset & mask)
+        return actual == (self.current_task_offset & ((1 << 64) - 1))
 
 
     def extract_reg(self, arg, regs):
@@ -96,7 +108,7 @@ class NormalLowering:
                 return self.process_normal(name, unsegmented, offset, reg_map)
 
         for index, arg in enumerate(args):
-            if self.is_current_task_operand(arg) and not (
+            if self.is_current_task_operand(arg, offset) and not (
                 name.upper() == "MOV" and index == 1 and len(args) == 2
                 and arg.size == 64 and isinstance(args[0], ExprId)
                 and args[0].size == 64
@@ -130,7 +142,7 @@ class NormalLowering:
             if address is not None and (address < (1 << 31) or
                                         address >= (1 << 64) - (1 << 31)):
                 arg = ExprMem(ExprInt(address, 64), arg.size)
-            arg = self.arg_purify(arg, offset, self.is_current_task_operand(arg))
+            arg = self.arg_purify(arg, offset, self.is_current_task_operand(arg, offset))
             purified_args.append(arg)
             self.extract_reg(arg, regs)
         for reg in regs:
@@ -155,7 +167,7 @@ class NormalLowering:
         """
         for index, arg in enumerate(args):
             segment, address = self.segment_operand(arg)
-            if segment != "GS" or self.is_current_task_operand(arg):
+            if segment != "GS" or self.is_current_task_operand(arg, offset):
                 continue
             source = ExprMem(address, arg.size)
             purified = self.arg_purify(source, offset)
@@ -163,7 +175,7 @@ class NormalLowering:
                 continue
             registers, used = set(), set()
             for original in args:
-                self.extract_reg(self.arg_purify(original, offset, self.is_current_task_operand(original)),
+                self.extract_reg(self.arg_purify(original, offset, self.is_current_task_operand(original, offset)),
                             registers)
             for register in registers:
                 extract_conflict_regs(register, used)
