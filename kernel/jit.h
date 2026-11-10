@@ -26,8 +26,11 @@ struct kd_jit_source_site {
  * The owner retains code, source, metadata and return dependencies through all
  * their actual users; an address/version comparison cannot supply that hold.
  */
+struct kd_jit_feedback_producer;
+
 struct kd_jit_image {
 	const void *source_identity;
+	struct kd_jit_feedback_producer *feedback_producer;
 	unsigned int abi_version;
 	unsigned int packet_size;
 	unsigned int io_size;

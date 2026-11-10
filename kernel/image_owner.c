@@ -79,7 +79,7 @@ static bool inputs_valid(const struct kd_jit_image *image,
 	const struct kd_jit_source_description *source = &epoch->description;
 	unsigned int index, other;
 
-	if (!image || !inputs || inputs->image != image || image->source_identity != epoch ||
+	if (!image || !image->feedback_producer || !inputs || inputs->image != image || image->source_identity != epoch ||
 	    !configuration_identity || configuration_identity != source->configuration_identity ||
 	    !load_identity || load_identity != source->load_identity ||
 	    !image->entry || image->abi_version != KD_JIT_ABI_VERSION ||
@@ -138,7 +138,15 @@ int kd_jit_image_owner_init(struct kd_jit_image_owner *owner,
 					 owner, KD_JIT_SOURCE_USE_IMAGE);
 	if (result)
 		return result;
-	/* No fallible operation follows either retention/hold transfer. */
+	kd_jit_feedback_producer_use_init(&owner->producer_use);
+	result = kd_jit_feedback_producer_use_get(image->feedback_producer,
+		&owner->producer_use, owner, KD_JIT_FEEDBACK_PRODUCER_IMAGE, image);
+	if (result) {
+		int drop = kd_jit_source_use_put(&owner->source_use, owner);
+
+		return drop ? drop : result;
+	}
+	/* No fallible operation follows the code-provider hold transfer. */
 	raw_spin_lock_init(&owner->guard);
 	INIT_LIST_HEAD(&owner->users);
 	owner->image = image;
@@ -469,6 +477,7 @@ int kd_jit_image_owner_close(struct kd_jit_image_owner *owner)
 int kd_jit_image_owner_try_release(struct kd_jit_image_owner *owner)
 {
 	struct kd_jit_source_use *source_use;
+	struct kd_jit_feedback_producer_use *producer_use;
 	kd_jit_image_code_release_fn release;
 	const void *source_holder;
 	void *lease;
@@ -500,6 +509,7 @@ int kd_jit_image_owner_try_release(struct kd_jit_image_owner *owner)
 	release = owner->code_release;
 	lease = owner->code_lease;
 	source_use = &owner->source_use;
+	producer_use = &owner->producer_use;
 	source_holder = owner;
 	owner->code_release = NULL;
 	owner->code_lease = NULL;
@@ -510,5 +520,8 @@ int kd_jit_image_owner_try_release(struct kd_jit_image_owner *owner)
 	 * No image, inputs or code-provider payload is sampled after this callback.
 	 */
 	release(lease);
+	result = kd_jit_feedback_producer_use_put(producer_use, source_holder);
+	if (result)
+		return result;
 	return kd_jit_source_use_put(source_use, source_holder);
 }

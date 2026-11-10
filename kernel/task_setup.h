@@ -17,7 +17,8 @@
  * Every retained object/array is outside both original source and auxiliary
  * stacks, correctly aligned and mutually disjoint. image_slot and config.stack
  * are already initialized, caller-retained shared records, also outside those
- * regions. The helper validates their known extents without resetting them.
+ * regions, including config.feedback and its initialized record array. The
+ * helper validates their known extents without resetting them.
  *
  * capacity is the explicit nonzero common slot/frame array extent. The caller
  * supplies that storage; this helper allocates nothing and selects no default

@@ -13,7 +13,7 @@
 
 static bool image_valid(const struct kd_jit_image *image)
 {
-	return image && image->source_identity && image->entry &&
+	return image && image->source_identity && image->feedback_producer && image->entry &&
 	       image->abi_version == KD_JIT_ABI_VERSION &&
 	       image->packet_size == sizeof(struct kd_regs) &&
 	       image->io_size == sizeof(struct kd_jit_io) &&

@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import json
 import re
 
+from .compiler import IndirectKind
 from .coverage import EmissionReceipt, construct_emission_receipt
 from .lowering import LoweredImage
 from .source_decode import MASK64, MAX_INSTRUCTION_BYTES
@@ -54,6 +55,8 @@ class ImageArtifact:
     source_version_bytes: bytes
     descriptor_symbol: str
     source_identity_symbol: str
+    feedback_producer_symbol: str
+    receipt_symbol: str
     entry_symbol: str
     inputs_symbol: str
     entry_sites: tuple[int, ...]
@@ -106,13 +109,16 @@ def _source_sites(image: LoweredImage) -> tuple[ArtifactSourceSite, ...]:
     return tuple(sites)
 
 
-def _c_metadata(image, descriptor, identity, symbols, sites, version):
+def _c_metadata(image, descriptor, identity, producer, symbols, sites, version, receipt):
     entries, source_table, version_data, version_length, byte_table, inputs = symbols[:6]
     raw_symbols = symbols[6:]
-    declarations = (descriptor, identity, image.entry.symbol, *symbols)
+    receipt_symbol = descriptor + "_emission_receipt"
+    observations_symbol = descriptor + "_observations"
+    declarations = (descriptor, identity, producer, image.entry.symbol, receipt_symbol,
+                    observations_symbol, *symbols)
     text = [
         "/* Constructed metadata only; source/code retention and publication are caller-owned. */\n",
-        '#include "kernel/image_inputs.h"\n\n',
+        '#include "kernel/feedback_publish.h"\n\n',
     ]
     # An identifier can still name a macro in the caller's build environment.
     # Diagnose that collision instead of allowing declaration/initializer rewriting.
@@ -121,6 +127,7 @@ def _c_metadata(image, descriptor, identity, symbols, sites, version):
     text.extend([
         "\nstruct kd_jit_source_epoch;\n",
         f"extern struct kd_jit_source_epoch {identity};\n",
+        f"extern struct kd_jit_feedback_producer {producer};\n",
         f"extern void {image.entry.symbol}(struct kd_regs *, struct kd_jit_io *);\n\n",
         f'_Static_assert(KD_JIT_ABI_VERSION == {image.abi_version}U, "constructed image ABI");\n',
         f'_Static_assert(sizeof(struct kd_regs) == {image.packet_size}U, "constructed packet size");\n',
@@ -155,6 +162,7 @@ def _c_metadata(image, descriptor, identity, symbols, sites, version):
     text.extend([
         f"const struct kd_jit_image {descriptor} = {{\n",
         f"\t.source_identity = &{identity},\n",
+        f"\t.feedback_producer = &{producer},\n",
         f"\t.abi_version = {image.abi_version}U,\n",
         f"\t.packet_size = {image.packet_size}U,\n",
         f"\t.io_size = {image.io_size}U,\n",
@@ -173,17 +181,41 @@ def _c_metadata(image, descriptor, identity, symbols, sites, version):
         f"\t.source_count = {len(sites)}U,\n",
         "};\n",
     ])
+    outcomes = sorted(receipt.outcomes.items(),
+                      key=lambda pair: (pair[0].site, pair[0].kind.value, pair[0].target))
+    if outcomes:
+        text.append(f"\nstatic const struct kd_jit_feedback_emission {observations_symbol}[] = {{\n")
+        for observed, outcome in outcomes:
+            kind = "CALL" if observed.kind is IndirectKind.CALL else "JUMP"
+            text.append(
+                f"\t{{ .source_ip = {_hex(observed.site)}UL, .target = {_hex(observed.target)}UL, "
+                f".kind = KD_JIT_FEEDBACK_TRANSFER_{kind}, "
+                f".outcome = KD_JIT_FEEDBACK_EMISSION_{outcome.name} }},\n"
+            )
+        text.append("};\n")
+    text.extend([
+        f"\nconst struct kd_jit_feedback_emission_receipt {receipt_symbol} = {{\n",
+        f"\t.inputs = &{inputs},\n",
+        f"\t.observations = {observations_symbol if outcomes else 'NULL'},\n",
+        f"\t.observation_count = {len(outcomes)}U,\n",
+        "};\n",
+    ])
     return "".join(text)
 
 
 def export_image(image: LoweredImage, *, descriptor_symbol: str,
-                 source_identity_symbol: str) -> ImageArtifact:
+                 source_identity_symbol: str,
+                 feedback_producer_symbol: str) -> ImageArtifact:
     """Return coordinated source strings and immutable construction metadata.
 
     The external identity is an object of the caller-defined opaque tag
     struct kd_jit_source_epoch, not an exported version string or generated
     token. The caller defines that exact object/type and retains its actual
-    source epoch through every image/source/return user. Artifact-local symbol
+    source epoch through every image/source/return user. feedback_producer_symbol
+    names separately retained per-construction producer metadata, initialized
+    from this descriptor and a BUILD hold before image-owner construction.
+    Pending facts can then retain producer/source without keeping old code alive.
+    Artifact-local symbol
     collisions and reserved C spellings are rejected; generated C diagnoses
     macro collisions. Unique ownership in the final build remains caller-owned.
     """
@@ -194,6 +226,9 @@ def export_image(image: LoweredImage, *, descriptor_symbol: str,
         raise ValueError("constructed assembly and source version are inconsistent")
     descriptor = _identifier(descriptor_symbol)
     identity = _identifier(source_identity_symbol)
+    producer = _identifier(feedback_producer_symbol)
+    receipt_symbol = _identifier(descriptor + "_emission_receipt")
+    observations_symbol = _identifier(descriptor + "_observations")
     entry = _identifier(image.entry.symbol)
     sites = _source_sites(image)
     symbols = tuple(_identifier(descriptor + suffix) for suffix in (
@@ -201,7 +236,8 @@ def export_image(image: LoweredImage, *, descriptor_symbol: str,
         "_source_bytes", "_inputs",
         *(f"_source_bytes_{index}" for index in range(len(sites))),
     ))
-    all_symbols = (descriptor, identity, entry, *symbols)
+    all_symbols = (descriptor, identity, producer, entry, receipt_symbol,
+                   observations_symbol, *symbols)
     if len(set(all_symbols)) != len(all_symbols):
         raise ValueError("artifact function, descriptor, identity and data symbols must differ")
     for value in (image.abi_version, image.packet_size, image.io_size):
@@ -220,6 +256,7 @@ def export_image(image: LoweredImage, *, descriptor_symbol: str,
     except UnicodeEncodeError as error:
         raise ValueError("source version has no strict UTF-8 byte representation") from error
     receipt = construct_emission_receipt(image)
+    _c_uint(len(receipt.outcomes))
     observations = [
         {
             "site": _hex(observed.site), "target": _hex(observed.target),
@@ -235,12 +272,15 @@ def export_image(image: LoweredImage, *, descriptor_symbol: str,
         "format": "kdlock_private_image_construction_v1",
         "descriptor_symbol": descriptor,
         "source_identity_symbol": identity,
+        "feedback_producer_symbol": producer,
+        "receipt_symbol": receipt_symbol,
         "entry_symbol": entry,
         "data_symbols": {
             "entry_sites": symbols[0], "source_sites": symbols[1] if sites else None,
             "source_version": symbols[2], "source_version_length": symbols[3],
             "source_bytes": symbols[4] if sites else None,
             "inputs": symbols[5], "source_byte_records": list(symbols[6:]),
+            "observations": observations_symbol if receipt.outcomes else None,
         },
         "source_version": {"encoding": "utf-8", "bytes_hex": version.hex(), "length": len(version)},
         "abi_version": image.abi_version,
@@ -287,11 +327,13 @@ def export_image(image: LoweredImage, *, descriptor_symbol: str,
     }
     return ImageArtifact(
         assembly=image.assembly,
-        c_metadata=_c_metadata(image, descriptor, identity, symbols, sites, version),
+        c_metadata=_c_metadata(image, descriptor, identity, producer, symbols, sites, version, receipt),
         manifest_json=json.dumps(manifest, ensure_ascii=True, sort_keys=True, indent=2),
         source_version_bytes=version,
         descriptor_symbol=descriptor,
         source_identity_symbol=identity,
+        feedback_producer_symbol=producer,
+        receipt_symbol=receipt_symbol,
         entry_symbol=entry,
         inputs_symbol=symbols[5],
         entry_sites=image.entry.entry_sites,

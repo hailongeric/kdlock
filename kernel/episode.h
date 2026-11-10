@@ -3,6 +3,7 @@
 #define KDLOCK_EPISODE_H
 
 #include "request_pool.h"
+#include "feedback.h"
 
 struct kd_episode_frame;
 
@@ -12,12 +13,22 @@ struct kd_episode_frame;
  * at an empty/closing root. io == NULL means no source exit occurred;
  * entry_result then describes the no-source entry refusal. Non-NULL image/io
  * remain valid only through callback return and confer no publication/ACK.
+ * feedback is an initialized independently retained finite pool, with a free
+ * record guaranteed at every reached coverage miss. Its pending records never
+ * change JIT eligibility and can outlive task/resources without retaining S_W.
  */
 struct kd_episode_config {
 	struct kd_jit_image_slot *image_slot;
+	struct kd_jit_feedback_pool *feedback;
 	const struct kd_source_stack_ops *stack;
 	kd_jit_resolve_operation_fn resolve;
 	void *resolve_context;
+	/* Pure exact target classification. NONE from resolve is insufficient
+	 * to prove ordinary source; unknown targets stay UNCLASSIFIED.
+	 */
+	enum kd_jit_feedback_target_class (*classify_target)(
+		void *context, unsigned long target);
+	void *classify_context;
 	unsigned int proxy_limit;
 	void (*report)(void *context, const struct kd_jit_image *image,
 		       unsigned long source_ip, int entry_result,

@@ -91,9 +91,9 @@ int kd_episode_resources_init(struct kd_episode_resources *resources,
 	unsigned int index;
 
 	if (!resources || !pool || !pool->state || !config || capacity != pool->capacity ||
-	    (capacity && (!frames || !config->image_slot || !config->stack ||
+	    (capacity && (!frames || !config->image_slot || !config->feedback || !config->stack ||
 	     !config->stack->read_word || !config->stack->write_word ||
-	     !config->resolve || !config->report)))
+	     !config->resolve || !config->classify_target || !config->report)))
 		return -EINVAL;
 	/* Private setup only; no live frame or previous observer may exist. */
 	resources->pool = pool;
@@ -601,6 +601,8 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 	for (;;) {
 		const struct kd_jit_image *image;
 		struct cached_operation cached;
+		bool operation_exit;
+		enum kd_jit_feedback_target_class classification;
 
 		result = kd_episode_collect(resources, *binding);
 		BUG_ON(result);
@@ -633,26 +635,42 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 		}
 		frame->exit_pending = true;
 		image = state->exit_image;
-		if (state->io.kind == KD_JIT_EXIT_INVARIANT_FAILURE)
-			/* Retain the exact pending producer; no normal reconstruction
-			 * or source replay is proved for a staging invariant failure.
-			 */
-			return KD_MUTEX_OUTCOME_UNSET;
-		if (!((state->io.kind == KD_JIT_EXIT_LOCK_OPERATION &&
+		operation_exit = ((state->io.kind == KD_JIT_EXIT_LOCK_OPERATION &&
 		       (state->io.phase == KD_JIT_PHASE_BEFORE_INSTRUCTION ||
 			state->io.phase == KD_JIT_PHASE_TARGET_READY ||
 			state->io.phase == KD_JIT_PHASE_JUMP_RESOLVED)) ||
 		      (state->io.kind == KD_JIT_EXIT_COVERAGE_MISS &&
 		       (state->io.phase == KD_JIT_PHASE_TARGET_READY ||
 			state->io.phase == KD_JIT_PHASE_CALL_STAGED ||
-			state->io.phase == KD_JIT_PHASE_JUMP_RESOLVED))))
-			return forward(frame, binding, image, 0);
-		cached.target = state->io.phase == KD_JIT_PHASE_BEFORE_INSTRUCTION ?
-			state->regs.ip : state->io.target;
-		cached.kind = resources->config.resolve(resources->config.resolve_context,
-						       cached.target);
-		if (!kd_state_is_jit_current(state, *binding))
+			state->io.phase == KD_JIT_PHASE_JUMP_RESOLVED)));
+		classification = KD_JIT_FEEDBACK_UNCLASSIFIED;
+		cached.kind = KD_OPERATION_NONE;
+		if (operation_exit) {
+			cached.target = state->io.phase == KD_JIT_PHASE_BEFORE_INSTRUCTION ?
+				state->regs.ip : state->io.target;
+			cached.kind = resources->config.resolve(resources->config.resolve_context,
+							       cached.target);
+			if (!kd_state_is_jit_current(state, *binding))
+				return KD_MUTEX_OUTCOME_UNSET;
+			classification = cached.kind == KD_OPERATION_NONE ?
+				resources->config.classify_target(resources->config.classify_context,
+								  cached.target) : KD_JIT_FEEDBACK_SOURCE_API;
+			if (!kd_state_is_jit_current(state, *binding))
+				return KD_MUTEX_OUTCOME_UNSET;
+		}
+		/* Record this exact phase before a nested operation or forward CALL
+		 * can consume/change it. No old code is pinned by the copied fact.
+		 */
+		if (state->io.kind == KD_JIT_EXIT_COVERAGE_MISS) {
+			result = kd_jit_feedback_record_exit(resources->config.feedback, image,
+				state->regs.ip, 0, &state->io, classification);
+			if (result)
+				return KD_MUTEX_OUTCOME_UNSET;
+		}
+		if (state->io.kind == KD_JIT_EXIT_INVARIANT_FAILURE)
 			return KD_MUTEX_OUTCOME_UNSET;
+		if (!operation_exit)
+			return forward(frame, binding, image, 0);
 		if (cached.kind == KD_OPERATION_MUTEX_LOCK) {
 			struct kd_episode_frame *child;
 			struct kd_execution_binding *child_binding = *binding;

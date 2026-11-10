@@ -3,7 +3,7 @@
 #define KDLOCK_IMAGE_OWNER_H
 
 #include "image_inputs.h"
-#include "source_epoch.h"
+#include "feedback.h"
 
 struct kd_jit_image_owner;
 
@@ -44,7 +44,9 @@ struct kd_jit_image_owner_use {
  * Lifetime envelope, not executable allocation or publication. image/inputs and
  * their complete immutable backing belong to the transferred code-provider
  * lease. The embedded IMAGE membership independently retains the actual source
- * epoch; do not manipulate that private membership outside this component.
+ * epoch. The producer IMAGE membership keeps its durable exit recorder open
+ * through code release; pending FACT members then retain it without code. Do
+ * not manipulate these private memberships outside this component.
  * guard protects these records only, never source work or provider callbacks.
  * No owner/slot/source guards are nested by this component.
  */
@@ -54,6 +56,7 @@ struct kd_jit_image_owner {
 	const struct kd_jit_image *image;
 	const struct kd_jit_image_inputs *inputs;
 	struct kd_jit_source_use source_use;
+	struct kd_jit_feedback_producer_use producer_use;
 	void *code_lease;
 	kd_jit_image_code_release_fn code_release;
 	enum kd_jit_image_owner_phase phase;
@@ -71,8 +74,9 @@ struct kd_jit_image_owner {
  * generated-code equivalence, executable permission/publication or coverage ACK.
  *
  * All input backing is valid, immutable and retained during these reads. On
- * success, one same-epoch IMAGE use is derived from BUILD and the code hold is
- * transferred. Failure leaves no IMAGE use and keeps code-release ownership with
+ * success, same-epoch IMAGE retention and an exact producer IMAGE user are
+ * acquired, then the code hold is transferred. Failure leaves no IMAGE use and
+ * keeps code-release ownership with
  * the caller. Existing BUILD extension while the epoch is closed is retention
  * only; it grants no new source execution/publication admission.
  */
@@ -152,8 +156,9 @@ int kd_jit_image_owner_close(struct kd_jit_image_owner *owner);
 /*
  * Serialized sleepable finalizer, outside source/RCU read sections and guards.
  * CLOSED+no users claims release once under guard; invoke cached code_release
- * outside guard, then drop the exact epoch IMAGE membership. No code/descriptor/
- * inputs access follows code_release. No owner access follows source put.
+ * outside guard, then drop producer IMAGE and exact epoch IMAGE memberships.
+ * No code/descriptor/inputs access follows code_release. No owner access follows
+ * source put.
  * Code callback is complete, synchronous and nonfailing; it cannot mutate these
  * controls or release their active backing. Header/containing allocation,
  * embedded source-use backing and callback code/execution backing are separately
@@ -163,6 +168,8 @@ int kd_jit_image_owner_close(struct kd_jit_image_owner *owner);
  * released, source remains retained and that error is returned. Never replay the
  * code callback, infer complete retirement or free active control on that path.
  * RELEASE_CLAIMED/-EALREADY does not prove either final operation returned.
+ * A producer-put error also retains the remaining source use; code release is
+ * never repeated.
  * Source mutation/unload and arbitrary native suffix/return holds remain the
  * provider's independent duties under source_epoch.h; no allocator/module_get,
  * text freeze, feedback capacity, transport or runtime ACK is selected here.

@@ -15,6 +15,8 @@ kdlock_rebuild-y := \
 	kernel/request_pool.o \
 	kernel/owner_progress.o \
 	kernel/source_epoch.o \
+	kernel/feedback.o \
+	kernel/feedback_publish.o \
 	kernel/image.o \
 	kernel/image_owner.o \
 	kernel/jit.o \

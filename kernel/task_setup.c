@@ -27,6 +27,8 @@ enum setup_object {
 	SETUP_FRAMES,
 	SETUP_IMAGE_SLOT,
 	SETUP_STACK_OPS,
+	SETUP_FEEDBACK_POOL,
+	SETUP_FEEDBACK_RECORDS,
 	SETUP_OBJECTS,
 };
 
@@ -57,7 +59,7 @@ static int validate(const struct kd_task_setup_args *args,
 	struct setup_range ranges[SETUP_OBJECTS];
 	struct setup_range source, auxiliary;
 	unsigned long source_sp;
-	size_t slot_bytes, frame_bytes;
+	size_t slot_bytes, frame_bytes, feedback_bytes;
 	unsigned int index, other;
 	int result;
 
@@ -91,6 +93,17 @@ static int validate(const struct kd_task_setup_args *args,
 		    struct kd_jit_image_slot);
 	SETUP_RANGE(SETUP_STACK_OPS, config->stack, sizeof(*config->stack),
 		    struct kd_source_stack_ops);
+	SETUP_RANGE(SETUP_FEEDBACK_POOL, config->feedback, sizeof(*config->feedback),
+		    struct kd_jit_feedback_pool);
+	/* The pool was privately initialized before setup; its immutable extent
+	 * may be shared, but never aliases source/task control or either stack.
+	 */
+	if (!config->feedback->capacity ||
+	    check_mul_overflow((size_t)config->feedback->capacity,
+			       sizeof(*config->feedback->records), &feedback_bytes))
+		return -EINVAL;
+	SETUP_RANGE(SETUP_FEEDBACK_RECORDS, config->feedback->records, feedback_bytes,
+		    struct kd_jit_feedback_record);
 #undef SETUP_RANGE
 
 	result = object_range(&source, task_stack_page(current), THREAD_SIZE,
@@ -119,7 +132,7 @@ static int validate(const struct kd_task_setup_args *args,
 	 * No callback/context/code extent can be inferred from its address.
 	 */
 	if (!config->stack->read_word || !config->stack->write_word ||
-	    !config->resolve || !config->report)
+	    !config->resolve || !config->classify_target || !config->report)
 		return -EINVAL;
 	return 0;
 }
