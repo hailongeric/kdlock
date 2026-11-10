@@ -9,6 +9,7 @@
 struct task_struct;
 struct kd_thread_state;
 struct kd_jit_image;
+struct kd_jit_image_use;
 
 /* These small records live in existing request/role storage, never a packet. */
 enum kd_execution_kind {
@@ -79,15 +80,20 @@ struct kd_source_grant {
 
 /*
  * Exactly one canonical packet and current operation for original W. Every
- * request/role points directly here. Direct own/borrowed task anchors are
- * selected; storage allocation and capacity remain integration choices. The
+ * request/role points directly here through its MCS node, including nested
+ * requests. A task-owned root/auxiliary header supplies initial own backing;
+ * storage allocation and capacity remain integration choices. The
  * caller retains this core and origin task/stack through all queue, grant, return, notification and code users.
  */
 struct kd_thread_state {
 	struct kd_regs regs;
 	struct kd_jit_io io;
-	/* Exact retained producer of a pending exit, never another cursor. */
+	/* Exact producer and claimed referring use, never another cursor/packet.
+	 * These three fields are installed/cleared together by current source.
+	 */
 	const struct kd_jit_image *exit_image;
+	struct kd_jit_image_use *exit_use;
+	const void *exit_holder;
 	struct kd_source_operation operation;
 	struct kd_execution_binding *binding;
 	struct task_struct *origin;

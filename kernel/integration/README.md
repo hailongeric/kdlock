@@ -1,57 +1,97 @@
-# Direct task anchors for the source-rebuilt lane
+# Task-owned root and auxiliary context
 
-C02 selects two direct `task_struct` pointers: `kd_own_state` to that task's one
-canonical core and `kd_active_state` to an active borrowed origin. The latter is
-NULL for the ordinary own/native path, which uses `kd_own_state`. Both fields
-are pointers only; no packet, duplicate source state, registry, allocator,
-capacity or control-stack placement is introduced.
+Every active borrowed or nested request uses its current MCS call/node's direct
+`node->state` pointer to the original canonical S_W. A nested request retains
+that same pointer. The dispatcher passes its current call and parent role
+explicitly; changing the physical executor never replaces S_W with that task's
+own core. No external registry, borrowed-state task pointer or borrowed-pointer
+scope is part of this design.
 
-The repository does not contain the exact selected Linux 7.0 source tree.
-[task_struct.patch](task_struct.patch) is a context-anchored integration template,
-with nominal hunk positions, not an applied or source-revision-verified patch.
-It has not been applied, built or executed. Rebase its anchors against the exact
-source/configuration before any implementation validation. Keep architecture
-first-member requirements intact: the fields follow
-`randomized_struct_fields_start`, not the beginning of `task_struct`.
+Native root entry precedes the first MCS node, so it still needs stable own-core
+and auxiliary-control backing. [task_state.h](../task_state.h) defines one
+caller-supplied `kd_task_root_context` header containing exactly one own
+`kd_thread_state`, its initial native endpoint, retained owner task and explicit
+auxiliary low/high/current values and one exact prepared-entry reservation. The source-rebuilt task stores one pointer,
+`kd_root_context`, to this stable header. That root/auxiliary lookup does not
+select the state used for borrowed execution. [task_struct.patch](task_struct.patch)
+is an unapplied context template because the exact selected Linux 7.0 tree is
+absent here. It makes no application/build or revision-match claim.
 
-The task copy path must clear both copied pointers immediately after successful
-`dup_task_struct`, before publishing the child or any child cleanup that reads
-the fields. A shallow task copy did not acquire a reference to the parent's
-core; reset never modifies or frees that core. The static initial task's omitted
-pointer fields are zero initialized. Do not reset either field on a live task.
+The task-owned auxiliary cursor has the role of TCLock's
+`current->komb_stack_curr_ptr`: retain the physical task's waiting and control
+frames on its own stack, with serial caller-managed reservation/restoration.
+Here the cursor and bounds live in the one root header. The original UB-derived
+JIT keeps its physical wrapper/control stack separate from the original W's
+virtual source SP; no TCLock native waiter-stack body execution or context-switch
+engine is imported. The archived source patterns are design inputs, not current
+execution evidence. Restoring a saved cursor cannot reclaim an escaped owner,
+request, binding or return control before its actual last user.
 
-[kernel/task_state.c](../task_state.c) implements the current-task anchor layer.
-The caller supplies a fresh canonical core and initialized native binding;
-attach initializes that same core and publishes its pointer. It captures no
-registers, chooses no allocator and clears no packet. An unattached task has no
-core: lookup returns NULL rather than allocate or substitute another task's
-state.
+The caller initializes private header storage with `kd_task_root_context_init`
+and provides the writable auxiliary range `[aux_low, aux_high)` and initial
+cursor to `kd_task_root_attach`. The range must be disjoint from the stable
+header/core; attach checks those intervals and cursor containment. The caller
+also proves disjointness from each lent source stack, usable stack alignment,
+room for actual control frames, sleepable context and all required source/native
+entry resources. No allocator, byte capacity, recursion limit or default stack
+size is selected here, and interval checks do not prove available execution
+space. The aux_entry field names the single prepared native wait/control entry
+occupying this cursor; it is not an active borrowed-state pointer. Native
+preflight reserves it before the prefix, and only the exact entry may release
+it after its final auxiliary-frame/descriptor access, immediately before the
+exact native jump without source reentry in between. Nested JIT control uses
+that same physical auxiliary C stack and explicit node->state. A second native
+prefix cannot reuse the cursor while this reservation remains live. Actual
+reserve/switch/restore integration remains separate.
 
-Borrowed entry validates the retained current JIT binding for a foreign origin,
-saves only the prior active pointer in caller-owned small scope control, and
-publishes the borrowed pointer. Leave restores that pointer after the bridge has
-materialized/stopped or transferred the entered source. It neither restores an
-old packet nor grants execution authority. Serial scopes are strict LIFO;
-same-state nesting cannot detect every out-of-order close with only these two
-fields. Scope storage/lifetime remains caller supplied and selects no C05
-control-stack policy. Callback/entry integration must retain each old binding
-and MCS result user through its actual last binding access.
+Attach initializes the sole own core and its initial native endpoint, takes
+`get_task_struct(current)` and release-publishes the single task pointer. It
+captures no source registers and clears no packet. Later handbacks use fresh
+caller-reserved exact native bindings, not a reinitialized initial endpoint
+while old observers remain. Header/core/auxiliary storage must not be shared
+with a second task or reused while any retained user survives. Metadata writes
+are serial current-task operations in ordinary task context, without IRQ/NMI
+or concurrent reentry.
 
-Before task exit releases the original stack, or before own-core storage is
-reused, source admission must close and every queued/executing/bound source,
-grant, code, return, notification and borrowed-pointer user must drain. The
-source integration must then call `kd_task_state_detach` on the origin task with
-its retained exact current native binding. Detach rejects an active borrowed
-anchor, another origin, any grant or pending image exit, or any operation
-other than IDLE/RESUMABLE.
-Its acquire-before-read binding check and pointer removal do not infer all
-escaped last users; the caller provides that complete proof. -EBUSY is not
-permission to continue exit or free the core/stack.
+`kd_task_root_context_current` is explicit root/auxiliary lookup before the first
+request and during native preflight. `kd_task_state_own` only derives that
+header's embedded core address for capture/original-W checks; it reads no own
+packet during borrowed work and grants no execution permission. Lookup creates
+no new storage reference. The current-task lifecycle and caller-owned backing
+retain its result through the caller's last use; any escaped pointer needs its
+own retained user and must drain before detach. Generated source-operation
+handling instead receives the current MCS node explicitly. Its origin GS/task
+inputs still come from the same node's S_W, independent of the physical task's
+own root context.
 
-Detach does not free storage or release providers. Actual allocation/free,
-source-admission closure, exit drain scheduling, build wiring and any exact
-kernel exit hook remain integration work; no generic module callback or default
-waiting policy is selected here. The original task, its stack, owner/control
-containing allocations and callback code keep their separate actual last-user
-contracts. Stable mutex-object lifetime through physical release does not end
-those longer obligations.
+The copied task field owns no parent-context reference. Clear the child's one
+alias immediately after successful `dup_task_struct`, before child publication
+or cleanup can consume it; never modify the parent's header/core. A static
+initial task's omitted pointer field is zero initialized. Constructor reset is
+not permission to clear a live task. The template preserves architecture first
+member requirements by placing the field after `randomized_struct_fields_start`.
+
+Before task exit or header/core/auxiliary reuse, close source admission and drain
+all source, queue, owner, grant, code, notification, lookup and binding users,
+including suspended or abandoned auxiliary frames and their exact return users.
+Do not call detach during borrowed execution or from a retained auxiliary frame.
+A restored/idle cursor cannot prove that drain. `kd_task_root_detach` requires
+the same current origin and exact retained native endpoint, acquired before
+binding-field reads, no grants or pending image exit and an IDLE/RESUMABLE
+operation, and rejects a live aux_entry before reading the own state. It then revokes the binding and task pointer, completes its final
+header access and drops the task reference without later header/core reads.
+The structural checks do not establish all escaped last users; the caller must
+provide the complete proof before this function reads the own state.
+
+A task reference retains task identity, not an exiting kernel stack or arbitrary
+caller allocation. Stack release and storage reuse therefore wait for successful
+detach AND the full last-user proof. -EBUSY is not permission to exit/free.
+Allocation/free, admission closure, drain scheduling, exact lifecycle/build
+hooks and actual auxiliary admission/reservation remain integration work.
+Stable mutex-object lifetime through physical release does not end the longer
+owner/control, stack, source/code and callback obligations.
+
+This layer has source review only. No compile, assembly, behavioral test, kernel
+execution or whole-lane acceptance is claimed. The superseded two-field source
+and rejected external-registry implementation remain separate Git archives;
+neither is selected by this template.

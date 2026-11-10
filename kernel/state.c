@@ -43,6 +43,8 @@ int kd_state_init(struct kd_thread_state *state, struct task_struct *origin,
 	state->io.target = 0;
 	state->io.phase = KD_JIT_PHASE_BEFORE_INSTRUCTION;
 	state->exit_image = NULL;
+	state->exit_use = NULL;
+	state->exit_holder = NULL;
 	state->operation.identity = NULL;
 	state->operation.kind = KD_OPERATION_NONE;
 	state->operation.form = KD_OPERATION_NEW_CALL;
@@ -234,14 +236,18 @@ int kd_operation_return(struct kd_thread_state *state,
 		return -EINVAL;
 	if (state->operation.phase != KD_OPERATION_DONE)
 		return -EALREADY;
+	/* The JIT bridge must consume its exact pending use before operation
+	 * completion. Never discard a claimed image user while popping a word.
+	 */
+	if (state->exit_image || state->exit_use || state->exit_holder)
+		return -EBUSY;
 	if (state->operation.form != KD_OPERATION_CAPTURED_CONTINUATION) {
 		target = stack->read_word(stack->context, state->regs.sp);
 		state->regs.sp += sizeof(unsigned long);
 		state->regs.ip = target;
 	}
 	state->operation.phase = KD_OPERATION_RESUMABLE;
-	/* The handled operation consumed the old exit, including its target. */
-	state->exit_image = NULL;
+	/* The handled operation already consumed its exact pending exit use. */
 	state->io.kind = KD_JIT_EXIT_NONE;
 	state->io.phase = KD_JIT_PHASE_BEFORE_INSTRUCTION;
 	return 0;

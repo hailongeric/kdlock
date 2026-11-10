@@ -5,6 +5,7 @@
 #include "mutex.h"
 #include "state.h"
 #include "task_state.h"
+#include "image.h"
 
 /* All addresses describe one retained source/configuration identity. */
 enum kd_jit_site_kind {
@@ -44,12 +45,25 @@ struct kd_jit_image {
  * sleepable physical context before enabling this route. current == W is
  * refused; an instruction budget alone does not prevent stack overlap.
  */
-/* A pending exit retains this exact image until explicit consumption. */
-int kd_jit_enter(const struct kd_jit_image *image,
+/*
+ * execution_use must be a live exact EXECUTION member for this state/holder.
+ * exit_use is distinct caller-preallocated private storage; entry atomically
+ * validates execution membership and reserves/claims that SOURCE child before
+ * invoking code. Keep both records through their actual observers. The claimed
+ * child retains the actual pending producer until prepare/forward/consume drops
+ * it after final metadata access; ordinary image put cannot drop that child.
+ * Source/return users beyond this pending result remain the caller's duty.
+ */
+int kd_jit_enter(struct kd_jit_image_use *execution_use,
+		 const void *execution_holder,
+		 struct kd_jit_image_use *exit_use, const void *exit_holder,
 		 struct kd_thread_state *state,
 		 struct kd_execution_binding *binding);
 
-/* Exact registered API target lookup, never a name-substring classification. */
+/* Synchronous exact registered-target lookup, never name-substring matching.
+ * The resolver advances no source and changes no binding, operation, pending
+ * exit or canonical state. It retains its lookup inputs through callback return.
+ */
 typedef enum kd_operation_kind (*kd_jit_resolve_operation_fn)(
 		void *context, unsigned long target);
 
@@ -60,6 +74,13 @@ typedef enum kd_operation_kind (*kd_jit_resolve_operation_fn)(
  * entry/JMP uses the existing source frame. No operand is evaluated again.
  * -ENOENT leaves an ordinary coverage/frontier result for the forward route;
  * an unsupported recognized operation must also use that exact forward route.
+ * image is an expected producer identity only: the exact claimed pending use
+ * is validated under its slot guard before metadata access. Successful handling
+ * releases that use after copying operation scalars, with no later image reads.
+ * A final-drop error preserves the claim and prepared operation descriptor;
+ * NEW_CALL is still TARGET_READY and has not pushed. Do not rerun prepare or
+ * infer a native/replay route: begin would find that operation already pending.
+ * Under valid claim/control lifetimes this is an invariant failure to resolve.
  */
 int kd_jit_prepare_operation(const struct kd_jit_image *image,
 		 struct kd_thread_state *state,
@@ -70,13 +91,17 @@ int kd_jit_prepare_operation(const struct kd_jit_image *image,
 /* Consume/report the pending exit before admitting another image or native
  * suffix. TARGET_READY first needs exact operation handling or forward staging.
  * The caller records required learning/disposition data before consumption;
- * this helper is not a coverage ACK or a feedback-capacity policy.
+ * this helper is not a coverage ACK or a feedback-capacity policy. Success may
+ * retire the image/use; do not read old producer metadata after consumption.
  */
 int kd_jit_consume_exit(const struct kd_jit_image *image,
 		 struct kd_thread_state *state,
 		 struct kd_execution_binding *binding);
 
-/* Stage an ordinary/unsupported-operation CALL once for native forward work. */
+/* Stage an ordinary/unsupported-operation CALL once for native forward work.
+ * If its final use drop fails after the push, CALL_STAGED and the claim remain;
+ * consume the exact pending exit without staging or evaluating the CALL again.
+ */
 int kd_jit_stage_forward_call(const struct kd_jit_image *image,
 		 struct kd_thread_state *state,
 		 struct kd_execution_binding *binding,
@@ -119,7 +144,8 @@ struct kd_jit_mutex_driver {
 /*
  * One persistent referring call/control, not another W packet. Storage is
  * reserved before effects and retained through node retirement AND all binding
- * observers. Direct task anchors are selected. Allocation, depth bounds and
+ * observers. MCS requests point directly to S_W; task-owned root/auxiliary
+ * backing supplies initial entry. Allocation, depth bounds and
  * native wait/control stack reservation remain open, without hidden defaults.
  */
 struct kd_jit_mutex_call {
@@ -129,7 +155,6 @@ struct kd_jit_mutex_call {
 	struct kd_execution_binding offer;
 	struct kd_execution_binding execution;
 	struct kd_execution_binding returned;
-	struct kd_task_borrow_scope borrow_scope;
 	const struct kd_jit_mutex_driver *driver;
 	char acquisition_identity;
 	char unlock_identity;
@@ -154,14 +179,15 @@ int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
 		 struct kd_execution_binding *capture_binding, struct kd_mutex *lock,
 		 unsigned long source_sp, unsigned long continuation_ip,
 		 unsigned long source_bp, unsigned long api_target);
+/* Positive UNSUPPORTED_DEFERRED_REACQUIRE leaves the exact pending API and
+ * current binding intact before ENTERED/publication/queue effects. That exact
+ * same-object pattern is outside this iteration and does not occur in its
+ * declared workload; do not replay, enter a self-wait or synthesize API success.
+ * Normal queue-safe histories and distinct objects use this common path.
+ */
 int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,
 		 struct kd_mutex *lock, struct kd_execution_binding **binding,
 		 unsigned int proxy_limit, enum kd_mutex_outcome *outcome);
-
-/* Local winners close this role only after their episode is stopped/exported;
- * the proxy adapter closes its own role before publishing its result.
- */
-int kd_jit_mutex_leave(struct kd_jit_mutex_call *call);
 
 /*
  * Find the exact logical grant for regs.di before preparing its unlock using

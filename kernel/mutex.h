@@ -42,6 +42,27 @@ enum kd_mutex_outcome {
 	KD_MUTEX_PROXY_UNWIND_PARENT,
 };
 
+/* Positive pre-enqueue disposition; this is not a grant or queue membership. */
+enum kd_mutex_acquire_disposition {
+	KD_MUTEX_QUEUE_PATH_READY = 0,
+	KD_MUTEX_UNSUPPORTED_DEFERRED_REACQUIRE,
+};
+
+/*
+ * Snapshot for node.retained_prior from the common source-grant lookup. The
+ * caller retains that prior and its core grant user through every attempt.
+ * owner/phase/route are diagnostic observations, valid when owner is non-NULL;
+ * they confer no physical authority and acquire no independent storage user.
+ * Read/dereference these pointers only while that exact prior user remains held;
+ * a successful enqueue does not itself retain the prior control or owner.
+ */
+struct kd_mutex_retained_gate {
+	struct kd_mutex_release_owner *owner;
+	enum kd_mutex_owner_phase owner_phase;
+	enum kd_mutex_unlock_phase unlock_phase;
+	enum kd_mutex_unlock_route route;
+};
+
 enum kd_mutex_unlock_action {
 	KD_MUTEX_UNLOCK_BATCH_BODY,
 	KD_MUTEX_UNLOCK_BATCH_HEAD,
@@ -105,6 +126,8 @@ struct kd_mutex_node {
 	struct kd_mutex_batch *batch;
 	enum kd_mutex_outcome outcome;
 	struct kd_mutex_release release;
+	struct kd_mutex_node *retained_prior;
+	struct kd_mutex_retained_gate retained_gate;
 };
 
 /*
@@ -131,8 +154,17 @@ struct kd_mutex_batch {
 void kd_mutex_init(struct kd_mutex *lock);
 /* Private fresh storage only; this cannot reset an unreaped owner context. */
 void kd_mutex_batch_init(struct kd_mutex_batch *batch);
+/* Private preparation may start with retained_prior=NULL and update the field
+ * while the node remains PRIVATE. Before preflight/enqueue, NULL means the
+ * caller's exact node->state lookup found no matching retained grant or checked
+ * every matching grant as ordinary-queue eligible. Otherwise it names a distinct
+ * same-state/object acquisition with its exact core grant user held. Scan all
+ * matching grants, not merely released history.
+ * No registry lookup or source-packet copy belongs to this component.
+ */
 int kd_mutex_node_init(struct kd_mutex_node *node,
 		       struct kd_thread_state *state,
+		       struct kd_mutex_node *retained_prior,
 		       const void *acquisition, const void *operation,
 		       const void *grant_user, const void *result_user,
 		       bool ready, const struct kd_mutex_ops *ops, void *context);
@@ -140,10 +172,36 @@ int kd_mutex_node_init(struct kd_mutex_node *node,
 int kd_mutex_node_discard(struct kd_mutex_node *node);
 
 /*
+ * Check before source operation ENTERED/publication as well as before enqueue.
+ * 0 permits the ordinary queue path. A positive
+ * KD_MUTEX_UNSUPPORTED_DEFERRED_REACQUIRE reports an earlier same-object
+ * logical unlock that was deferred while its old physical batch remains OPEN.
+ * This pattern is outside the selected workload scope; do not resolve/enable
+ * it or synthesize a successful source mutex_lock result. The exact prior/gate
+ * snapshot remains available with no queue, selection, grant or source effect.
+ * Consume the observation before changing the retained prior.
+ * A still-live source acquisition is -EDEADLK, not a new nonrecursive grant.
+ * Negative identity/lifetime errors are not ordinary queue eligibility.
+ *
+ * A normal OWNER_HANDLED unlock with OWNER route and no deferred history is
+ * ordinary-queue eligible even while that prior batch holds the physical gate.
+ * Source continued after a completed normal proxy callback may acquire the
+ * object again; a retained batch alone does not make it the excluded case.
+ * A release already committed to RELEASE_PREPARED may complete normally; a
+ * PHYSICALLY_RELEASED prior no longer obstructs the ordinary queue path.
+ * This helper adds no special delegation path, regrant, mailbox, owner polling,
+ * forced physical release or transfer of release authority.
+ */
+int kd_mutex_preflight(struct kd_mutex *lock, struct kd_mutex_node *node);
+
+/*
  * Split enqueue/await permits a ready publisher to claim local before a
  * combiner wins the same atomic selection. choose_local reserves execution,
  * not physical exclusion: it must still wait for its MCS turn. A published
  * request cannot be discarded or treated as a failed native acquisition.
+ * enqueue/acquire propagate the positive preflight disposition before any
+ * physical queue effect; raw callers must handle it separately from success.
+ * Split enqueue callers receive the same check and cannot skip this boundary.
  * Reserve a freshly initialized or successfully reaped possible-local batch
  * before enqueue, even when this request may ultimately be served by a proxy.
  * Turn/result waiting uses ordinary TASK_UNINTERRUPTIBLE sleep/wakeup in this

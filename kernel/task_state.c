@@ -1,61 +1,97 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Direct current-task anchors for one canonical core and borrowed origins. */
+/* Task-owned native-root/core and auxiliary control-stack lifetime anchor. */
 #include <linux/atomic.h>
 #include <linux/compiler.h>
 #include <linux/errno.h>
 #include <linux/sched.h>
+#include <linux/sched/task.h>
 
-#include "state.h"
 #include "task_state.h"
+
+void kd_task_root_context_init(struct kd_task_root_context *context)
+{
+	/* Private constructor only; the canonical regs are captured, not cleared. */
+	context->task = NULL;
+	context->aux_low = 0;
+	context->aux_high = 0;
+	context->aux_current = 0;
+	context->aux_entry = NULL;
+	context->attached = false;
+}
+
+struct kd_task_root_context *kd_task_root_context_current(void)
+{
+	return smp_load_acquire(&current->kd_root_context);
+}
 
 struct kd_thread_state *kd_task_state_own(void)
 {
-	return smp_load_acquire(&current->kd_own_state);
+	struct kd_task_root_context *context = kd_task_root_context_current();
+
+	/* A pointer calculation never reads the possibly borrowed task's packet. */
+	return context ? &context->core : NULL;
 }
 
-struct kd_thread_state *kd_task_state_active(void)
+int kd_task_root_attach(struct kd_task_root_context *context,
+		       unsigned long origin_gs, unsigned long aux_low,
+		       unsigned long aux_high, unsigned long aux_current)
 {
-	struct kd_thread_state *borrowed =
-		smp_load_acquire(&current->kd_active_state);
-
-	return borrowed ? borrowed : kd_task_state_own();
-}
-
-void kd_task_state_reset_unpublished(struct task_struct *task)
-{
-	/* Constructor-only: copied aliases did not acquire parent-core users. */
-	WRITE_ONCE(task->kd_own_state, NULL);
-	WRITE_ONCE(task->kd_active_state, NULL);
-}
-
-int kd_task_state_attach(struct kd_thread_state *state, unsigned long origin_gs,
-			 struct kd_execution_binding *native_binding)
-{
+	unsigned long header_low = (unsigned long)context;
+	unsigned long header_high = header_low + sizeof(*context);
 	int result;
 
-	if (!state || !native_binding)
+	if (!context || aux_low >= aux_high || aux_current < aux_low ||
+	    aux_current > aux_high || header_high < header_low ||
+	    (aux_low < header_high && aux_high > header_low))
 		return -EINVAL;
-	if (smp_load_acquire(&current->kd_active_state))
-		return -EBUSY;
-	if (kd_task_state_own())
+	if (kd_task_root_context_current())
 		return -EEXIST;
-	result = kd_state_init(state, current, origin_gs, native_binding);
+	/* Private initialized storage cannot be shared/reused by another task. */
+	if (context->attached || context->task || context->aux_entry)
+		return -EBUSY;
+	result = kd_execution_binding_init(&context->initial_native, &context->core,
+					   current, context, KD_EXECUTION_NATIVE);
 	if (result)
 		return result;
-	/* State initialization/canonical binding precede anchor publication. */
-	smp_store_release(&current->kd_own_state, state);
+	result = kd_state_init(&context->core, current, origin_gs,
+			       &context->initial_native);
+	if (result)
+		return result;
+	get_task_struct(current);
+	context->task = current;
+	context->aux_low = aux_low;
+	context->aux_high = aux_high;
+	context->aux_current = aux_current;
+	context->attached = true;
+	/* Publish initialized header/core before native entry can find it. */
+	smp_store_release(&current->kd_root_context, context);
 	return 0;
 }
 
-int kd_task_state_detach(struct kd_thread_state *state,
-			 struct kd_execution_binding *native_binding)
+void kd_task_root_reset_unpublished(struct task_struct *task)
 {
-	if (!state || !native_binding)
+	/* The copied alias owns no parent-context/core/stack reference. */
+	WRITE_ONCE(task->kd_root_context, NULL);
+}
+
+int kd_task_root_detach(struct kd_task_root_context *context,
+		       struct kd_execution_binding *native_binding)
+{
+	struct kd_thread_state *state;
+	struct task_struct *task;
+
+	if (!context || !native_binding)
 		return -EINVAL;
-	if (smp_load_acquire(&current->kd_active_state))
-		return -EBUSY;
-	if (kd_task_state_own() != state)
+	if (kd_task_root_context_current() != context)
 		return -ESTALE;
+	if (!context->attached || context->task != current)
+		return -EPERM;
+	if (context->aux_entry)
+		return -EBUSY;
+	/* Caller has stopped/drained auxiliary and borrowed work before this
+	 * first own-state access; neither a cursor nor task identity proves that.
+	 */
+	state = &context->core;
 	if (state->origin != current)
 		return -EPERM;
 	/* Acquire and compare a retained endpoint before reading its fields. */
@@ -64,67 +100,21 @@ int kd_task_state_detach(struct kd_thread_state *state,
 	if (native_binding->state != state || native_binding->task != current ||
 	    native_binding->kind != KD_EXECUTION_NATIVE)
 		return -EPERM;
-	if (state->exit_image || !list_empty(&state->grants) ||
+	if (state->exit_image || state->exit_use || state->exit_holder ||
+	    !list_empty(&state->grants) ||
 	    (state->operation.phase != KD_OPERATION_IDLE &&
 	     state->operation.phase != KD_OPERATION_RESUMABLE))
 		return -EBUSY;
-	/* Caller has already excluded/drained every escaped observer, not merely
-	 * the grant list. Neither old endpoint nor packet storage is reused here.
-	 */
 	if (cmpxchg_release(&state->binding, native_binding, NULL) != native_binding)
 		return -ESTALE;
-	smp_store_release(&current->kd_own_state, NULL);
-	return 0;
-}
-
-void kd_task_borrow_scope_init(struct kd_task_borrow_scope *scope)
-{
-	scope->task = NULL;
-	scope->previous = NULL;
-	scope->entered = NULL;
-	scope->active = false;
-}
-
-int kd_task_borrow_enter(struct kd_task_borrow_scope *scope,
-			 struct kd_thread_state *state,
-			 struct kd_execution_binding *binding)
-{
-	struct kd_thread_state *own;
-
-	if (!scope || !state || !binding)
-		return -EINVAL;
-	if (scope->active)
-		return -EBUSY;
-	own = kd_task_state_own();
-	if (!own)
-		return -ENOENT;
-	if (!kd_state_is_jit_current(state, binding))
-		return -EPERM;
-	if (state == own || state->origin == current)
-		return -EINVAL;
-	scope->task = current;
-	scope->previous = smp_load_acquire(&current->kd_active_state);
-	scope->entered = state;
-	scope->active = true;
-	smp_store_release(&current->kd_active_state, state);
-	return 0;
-}
-
-int kd_task_borrow_leave(struct kd_task_borrow_scope *scope)
-{
-	if (!scope || !scope->active)
-		return -EINVAL;
-	if (scope->task != current)
-		return -EPERM;
-	if (smp_load_acquire(&current->kd_active_state) != scope->entered)
-		return -ESTALE;
-	/* Pointer restoration only. The prior core's CURRENT state, never an old
-	 * register snapshot, is used if its exact binding later permits source.
+	/* All escaped lookup/binding/control users already drained. The single
+	 * task pointer, not a registry/borrowed-state field, is revoked here.
 	 */
-	smp_store_release(&current->kd_active_state, scope->previous);
-	scope->active = false;
-	scope->task = NULL;
-	scope->previous = NULL;
-	scope->entered = NULL;
+	smp_store_release(&current->kd_root_context, NULL);
+	task = context->task;
+	context->task = NULL;
+	context->attached = false;
+	/* No context/core access follows the final retained task-key release. */
+	put_task_struct(task);
 	return 0;
 }

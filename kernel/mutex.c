@@ -132,11 +132,13 @@ void kd_mutex_batch_init(struct kd_mutex_batch *batch)
 
 int kd_mutex_node_init(struct kd_mutex_node *node,
 		       struct kd_thread_state *state,
+		       struct kd_mutex_node *retained_prior,
 		       const void *acquisition, const void *operation,
 		       const void *grant_user, const void *result_user,
 		       bool ready, const struct kd_mutex_ops *ops, void *context)
 {
-	if (!state || !acquisition || !operation || !grant_user || !result_user)
+	if (!state || !acquisition || !operation || !grant_user || !result_user ||
+	    retained_prior == node)
 		return -EINVAL;
 	if (ready && (!ops || !ops->selected_local || !ops->execute_proxy))
 		return -EINVAL;
@@ -164,6 +166,11 @@ int kd_mutex_node_init(struct kd_mutex_node *node,
 	node->batch = NULL;
 	node->outcome = KD_MUTEX_OUTCOME_UNSET;
 	node->release.owner = NULL;
+	node->retained_prior = retained_prior;
+	node->retained_gate.owner = NULL;
+	node->retained_gate.owner_phase = KD_MUTEX_OWNER_OPEN;
+	node->retained_gate.unlock_phase = KD_MUTEX_UNLOCK_HELD;
+	node->retained_gate.route = KD_MUTEX_UNLOCK_ROUTE_UNSET;
 	return 0;
 }
 
@@ -183,14 +190,107 @@ int kd_mutex_node_discard(struct kd_mutex_node *node)
 	return 0;
 }
 
+int kd_mutex_preflight(struct kd_mutex *lock, struct kd_mutex_node *node)
+{
+	struct kd_mutex_retained_gate *gate = &node->retained_gate;
+	struct kd_mutex_node *prior = node->retained_prior;
+	struct kd_mutex_batch *prior_batch;
+	struct kd_mutex_release_owner *owner;
+	enum kd_mutex_unlock_phase phase;
+	int result;
+
+	if (node->requester != current)
+		return -EPERM;
+	if (!lock || node->enqueued ||
+	    atomic_read(&node->selection) != KD_MUTEX_PRIVATE)
+		return -EINVAL;
+	gate->owner = NULL;
+	if (!prior)
+		return KD_MUTEX_QUEUE_PATH_READY;
+	/* prior and its owner are retained by the caller's exact core grant user.
+	 * No mutable S_W field or arbitrary lock->owner pointer is inspected.
+	 */
+	if (prior == node || prior->state != node->state ||
+	    prior->acquisition == node->acquisition || prior->lock != lock ||
+	    !READ_ONCE(prior->source_granted))
+		return -ESTALE;
+	prior_batch = READ_ONCE(prior->batch);
+	owner = READ_ONCE(prior->release.owner);
+	if (!prior_batch || owner != &prior_batch->release_owner)
+		return -ESTALE;
+	raw_spin_lock(&owner->guard);
+	if (prior->release.owner != owner ||
+	    prior->release.state != node->state ||
+	    prior->release.acquisition != prior->acquisition ||
+	    prior->release.source_user != prior->grant_user) {
+		result = -ESTALE;
+		goto out;
+	}
+	gate->owner = owner;
+	gate->owner_phase = owner->phase;
+	gate->unlock_phase = prior->release.phase;
+	gate->route = prior->release.route;
+	phase = prior->release.phase;
+	if (phase == KD_MUTEX_UNLOCK_HELD || phase == KD_MUTEX_UNLOCK_REQUESTED) {
+		/* An unreleased nonrecursive source acquisition is not a new grant. */
+		result = -EDEADLK;
+	} else if ((phase == KD_MUTEX_UNLOCK_DEFERRED ||
+		    phase == KD_MUTEX_UNLOCK_UNWIND_READY) &&
+		   prior->release.route != KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER) {
+		result = -ESTALE;
+	} else if (phase != KD_MUTEX_UNLOCK_DEFERRED &&
+		   phase != KD_MUTEX_UNLOCK_UNWIND_READY &&
+		   phase != KD_MUTEX_UNLOCK_OWNER_HANDLED &&
+		   phase != KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED) {
+		result = -ESTALE;
+	} else if (owner->phase == KD_MUTEX_OWNER_OPEN) {
+		if (owner->object != lock || phase == KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED)
+			result = -ESTALE;
+		else if (prior->release.deferred || phase == KD_MUTEX_UNLOCK_DEFERRED ||
+			 phase == KD_MUTEX_UNLOCK_UNWIND_READY)
+			/* Reacquiring after an earlier deferred logical unlock while
+			 * that batch stays OPEN is outside the selected workload.
+			 */
+			result = KD_MUTEX_UNSUPPORTED_DEFERRED_REACQUIRE;
+		else if (phase == KD_MUTEX_UNLOCK_OWNER_HANDLED &&
+			 prior->release.route == KD_MUTEX_UNLOCK_ROUTE_OWNER)
+			/* A normal completed unlock can relock through ordinary MCS.
+			 * Its prior batch still holding the gate is not deferral history.
+			 */
+			result = KD_MUTEX_QUEUE_PATH_READY;
+		else
+			result = -ESTALE;
+	} else if (owner->phase == KD_MUTEX_OWNER_RELEASE_PREPARED ||
+		   owner->phase == KD_MUTEX_OWNER_PHYSICALLY_RELEASED) {
+		/* The old gate is already on its committed normal release route.
+		 * Comparing the retained identity never dereferences the old object.
+		 */
+		result = KD_MUTEX_QUEUE_PATH_READY;
+	} else {
+		result = -ESTALE;
+	}
+out:
+	raw_spin_unlock(&owner->guard);
+	return result;
+}
+
 int kd_mutex_enqueue(struct kd_mutex *lock, struct kd_mutex_node *node)
 {
 	struct kd_mutex_node *previous;
+	int result;
 
 	if (node->requester != current)
 		return -EPERM;
 	if (node->enqueued || atomic_read(&node->selection) != KD_MUTEX_PRIVATE)
 		return -EALREADY;
+	result = kd_mutex_preflight(lock, node);
+	if (result)
+		return result;
+	/* Queue publication needs no later prior-control access. Its core user
+	 * can end independently after the old physical completion.
+	 */
+	node->retained_prior = NULL;
+	node->retained_gate.owner = NULL;
 	node->lock = lock;
 	node->enqueued = true;
 	atomic_set(&node->selection, node->ready ? KD_MUTEX_OFFERED :

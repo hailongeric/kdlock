@@ -3,79 +3,78 @@
 #define KDLOCK_TASK_STATE_H
 
 #include <linux/types.h>
+#include "state.h"
 
 struct task_struct;
-struct kd_thread_state;
-struct kd_execution_binding;
+struct kd_mutex_entry;
 
 /*
- * The source-rebuilt task_struct has only kd_own_state and kd_active_state
- * pointers. kd_active_state names a borrowed origin only; NULL selects own.
- * These current-task lookups return retained anchors, not execution permission
- * or a new storage reference. The caller still validates its exact binding.
+ * One stable task-owned root/auxiliary header, never another borrowed packet.
+ * The source-rebuilt task_struct stores only kd_root_context pointing here.
+ * Every active borrowed/nested request instead names S_W through node->state;
+ * no registry or active-S_W task field exists. Caller-provided auxiliary stack
+ * storage is disjoint from this header and from any lent source stack.
  */
-struct kd_thread_state *kd_task_state_own(void);
-struct kd_thread_state *kd_task_state_active(void);
-
-/*
- * Private constructor hook, before a copied child can be published or any
- * child cleanup can consume these fields. Copying task_struct took no core
- * reference: clear the two inherited aliases without modifying/freeing the
- * parent's core. Never use this to reset a live task or retained source state.
- */
-void kd_task_state_reset_unpublished(struct task_struct *task);
-
-/*
- * Caller supplies fresh canonical core and an initialized native binding for
- * current; no allocator, packet copy or capacity is selected here. Attach calls
- * kd_state_init and publishes that exact core. Capture of declared source input
- * values remains the entry bridge's duty; initialization does not clear regs.
- */
-int kd_task_state_attach(struct kd_thread_state *state, unsigned long origin_gs,
-			 struct kd_execution_binding *native_binding);
-
-/*
- * Before detach, close source admission and drain every queue, code, grant,
- * return, notification, binding and borrowed-pointer user of this core and the
- * original task/stack. Those escaped last users are not inferred from an empty
- * grant list. current must be the origin, have no active borrowed anchor, and
- * own the supplied exact native binding; no pending image exit may remain and
- * only IDLE/RESUMABLE is quiescent here.
- * Detach revokes the anchor/binding, but neither frees nor clears the packet.
- * Task exit/stack release and caller-owned storage reuse must wait for success
- * AND the caller's full last-user proof. -EBUSY is not permission to exit or
- * abandon a retained duty. No drain-wait, allocator or C05 stack policy is added.
- */
-int kd_task_state_detach(struct kd_thread_state *state,
-			 struct kd_execution_binding *native_binding);
-
-/*
- * Small caller-supplied role control; it contains no source registers/packet.
- * Keep the scope and previous/entered cores retained through leave. Initialize
- * private storage once, then enter/leave serially in strict LIFO order. With
- * only two task anchor pointers, same-state nested scopes cannot detect every
- * out-of-order close; structured LIFO is an explicit caller obligation, not a
- * counter/extra task-field mechanism or a selected control-stack allocation.
- */
-struct kd_task_borrow_scope {
+struct kd_task_root_context {
+	struct kd_thread_state core;
+	struct kd_execution_binding initial_native;
 	struct task_struct *task;
-	struct kd_thread_state *previous;
-	struct kd_thread_state *entered;
-	bool active;
+	unsigned long aux_low;
+	unsigned long aux_high;
+	unsigned long aux_current;
+	/* Exact prepared native control entry occupying the auxiliary cursor. */
+	struct kd_mutex_entry *aux_entry;
+	bool attached;
 };
 
-void kd_task_borrow_scope_init(struct kd_task_borrow_scope *scope);
-/* Enter only a foreign origin under the retained current JIT binding. */
-int kd_task_borrow_enter(struct kd_task_borrow_scope *scope,
-			 struct kd_thread_state *state,
-			 struct kd_execution_binding *binding);
+/* Constructor only, before publication or any retained user. No regs clear. */
+void kd_task_root_context_init(struct kd_task_root_context *context);
+
 /*
- * Materialize/stop or transfer the entered source before leaving. Leave only
- * restores the prior active pointer: it does not import an old packet, transfer
- * binding authority or authorize the outer source. A terminal W may already be
- * advancing elsewhere, so the entered binding need not still be current here.
- * The next source step separately validates its retained current binding.
+ * Current-task root lookup for native entry, auxiliary preflight and original
+ * W handback. NULL means no prepared root context. Lookup reads only the task
+ * anchor/header pointer, not the own packet while borrowed source executes.
+ * The current-task-only attach/detach lifecycle and caller backing retain the
+ * returned pointer through its last use; lookup acquires no new reference or
+ * execution right. Every escaped user must be retained and drained separately.
  */
-int kd_task_borrow_leave(struct kd_task_borrow_scope *scope);
+struct kd_task_root_context *kd_task_root_context_current(void);
+struct kd_thread_state *kd_task_state_own(void);
+
+/*
+ * Attach private initialized caller storage on current in ordinary task
+ * context. [aux_low, aux_high) is supplied writable control-stack storage;
+ * aux_current is its initial cursor, not a selected capacity or allocation.
+ * Attach initializes the one core and initial_native endpoint, retains current
+ * and publishes the single task pointer. A live aux_entry blocks attach and
+ * detach; it names control-storage occupancy, never active borrowed S_W.
+ * Attach captures no source registers.
+ * The initial endpoint must not be reinitialized/reused while any old observer
+ * remains. Later native handbacks use fresh caller-reserved binding records.
+ */
+int kd_task_root_attach(struct kd_task_root_context *context,
+		       unsigned long origin_gs, unsigned long aux_low,
+		       unsigned long aux_high, unsigned long aux_current);
+
+/*
+ * Constructor hook before a copied child is published or cleanup consumes the
+ * field. The copied alias acquired no reference; clear it without touching the
+ * parent's context. Never use this to reset a live task or source core.
+ */
+void kd_task_root_reset_unpublished(struct task_struct *task);
+
+/*
+ * Before detach, close admission and drain all source, auxiliary-frame, queue,
+ * grant, code, return, notification, binding and lookup users of this context,
+ * the original task and its stacks. Do not call during borrowed execution or
+ * from a retained auxiliary frame. An idle cursor or empty grant list cannot
+ * prove that drain. current must be the exact origin/native owner, with no
+ * pending exit and operation IDLE/RESUMABLE. Detach revokes binding/task lookup
+ * and drops its task reference after the final header access, without freeing
+ * storage or clearing the packet. Exit/stack release and reuse require success
+ * AND the caller's full last-user proof. No allocator/drain-wait policy is added.
+ */
+int kd_task_root_detach(struct kd_task_root_context *context,
+		       struct kd_execution_binding *native_binding);
 
 #endif
