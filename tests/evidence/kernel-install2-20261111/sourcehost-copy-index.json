@@ -1,0 +1,14 @@
+[
+  {
+    "bytes": 482,
+    "local_path": "reconnect.json",
+    "sha256": "e0cd1aadd3e2a2c1f0ac970f1ffc97ba4d4a42f1b5181b4e62b2f2217cf5bb14",
+    "source_path": "/tmp/kdlock-main-reconnect2-20261111.json"
+  },
+  {
+    "bytes": 16994,
+    "local_path": "prepared-install-recipe.md",
+    "sha256": "892bb1b8d56cd5c59678dda0807c6677f0ad50f3e8c8b27054637b81863f6894",
+    "source_path": "/tmp/kdlock-kdrebuild2-install.recipe.md"
+  }
+]

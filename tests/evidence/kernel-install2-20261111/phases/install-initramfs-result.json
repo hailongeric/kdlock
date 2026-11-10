@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "update-initramfs",
+    "-c",
+    "-k",
+    "7.0.0-38-kdrebuild2"
+  ],
+  "elapsed_seconds": 12.450030551000054,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild2-81feb2d7-v1/install-initramfs.log",
+  "log_sha256": "b47a993e50aa89e439b96202d473a194f7672900159c792ea2b4ce8ddc3aaaec",
+  "returncode": 0,
+  "timed_out": false
+}

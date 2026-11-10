@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild2-81feb2d7-v1/checks.py",
+    "identity",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild2-81feb2d7-v1/check-identity-after-stage.json"
+  ],
+  "elapsed_seconds": 0.7676842409996425,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild2-81feb2d7-v1/check-identity-after-stage.log",
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "returncode": 0,
+  "timed_out": false
+}

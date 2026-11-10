@@ -1,0 +1,782 @@
+{
+  "artifacts": [
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/.config",
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "size": 308548
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/arch/x86/boot/bzImage",
+      "sha256": "a5fc091793ac0b4dbe9ccb59a390743967d89aa61192eb29e497ac066f356439",
+      "size": 17183232
+    },
+    {
+      "mode": 493,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux",
+      "sha256": "7de39e303412b36ea7dd36f7260183669bc4d2829569dd1e3ac9bc2426e91809",
+      "size": 508210360
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/System.map",
+      "sha256": "47cc1e87e95f2e118f9a20ff01ec8e31dee1f9d0f650ef9649392a25db98395f",
+      "size": 10564272
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/Module.symvers",
+      "sha256": "2533c2a4becc4f99f8dacc38e9480608c9032e4c0f3d06a9b4a2fe51fda6752b",
+      "size": 2384816
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/modules.order",
+      "sha256": "53585e7c733e6ae2ca38882eb323756a8184adee0d878a49a2489b7f15e62f82",
+      "size": 226838
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/modules.builtin",
+      "sha256": "ef55d7bc5528d2c01f38fc0d8f6473c75e14ec62349898f6529be9bbac871366",
+      "size": 10431
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/modules.builtin.modinfo",
+      "sha256": "f173376892f5d1a020884e4c6062b51e7cf26718928e1225be5e4fb507c34d0c",
+      "size": 159067
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/include/config/kernel.release",
+      "sha256": "e3e48a568c9af5f2fd62c4b0648b92df9579804e41b0148656a13febd1d3684e",
+      "size": 20
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/include/generated/utsrelease.h",
+      "sha256": "46e934d076d324d0f049ce41484a4c37cdc91608e12adffcb4aeb55cad52497d",
+      "size": 42
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/certs/signing_key.x509",
+      "sha256": "d2cc0e225390e9f1b8e355a9b56ac5b7a6532cc49fb724b3d5a56622a23b35a5",
+      "size": 1324
+    }
+  ],
+  "build_id_notes": "\nDisplaying notes found in: .notes\n  Owner                Data size \tDescription\n  Linux                0x00000004\tfunc\n   description data: 00 00 00 00 \n  Linux                0x00000001\tOPEN\n   description data: 00 \n  Xen                  0x0000000c\tUnknown note type: (0x00000013)\n   description data: 00 00 20 00 00 00 00 01 ff ff ff 3f \n  Xen                  0x00000008\tUnknown note type: (0x00000012)\n   description data: d0 75 f2 03 00 00 00 00 \n  Xen                  0x00000006\tUnknown note type: (0x00000006)\n   description data: 6c 69 6e 75 78 00 \n  Xen                  0x00000004\tUnknown note type: (0x00000007)\n   description data: 32 2e 36 00 \n  Xen                  0x00000008\tUnknown note type: (0x00000005)\n   description data: 78 65 6e 2d 33 2e 30 00 \n  Xen                  0x00000008\tUnknown note type: (0x00000003)\n   description data: 00 00 00 80 ff ff ff ff \n  Xen                  0x00000008\tUnknown note type: (0x0000000f)\n   description data: 00 00 00 00 80 00 00 00 \n  Xen                  0x00000008\tNT_VERSION (version)\n   description data: 30 87 f2 83 ff ff ff ff \n  Xen                  0x00000015\tUnknown note type: (0x0000000a)\n   description data: 21 77 72 69 74 61 62 6c 65 5f 70 61 67 65 5f 74 61 62 6c 65 73 \n  Xen                  0x00000004\tUnknown note type: (0x00000009)\n   description data: 79 65 73 00 \n  Xen                  0x00000010\tUnknown note type: (0x0000000d)\n   description data: 01 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 \n  Xen                  0x00000004\tUnknown note type: (0x00000010)\n   description data: 01 00 00 00 \n  Xen                  0x00000008\tGO BUILDID\n   description data: 00 00 00 00 00 00 00 00 \n  Xen                  0x00000004\tUnknown note type: (0x00000011)\n   description data: 01 88 00 00 \n  Xen                  0x00000008\tUnknown note type: (0x00000008)\n   description data: 67 65 6e 65 72 69 63 00 \n  Xen                  0x00000004\tUnknown note type: (0x0000000e)\n   description data: 01 00 00 00 \n  GNU                  0x00000014\tNT_GNU_BUILD_ID (unique build ID bitstring)\n    Build ID: fd2262c047e130787ef669419111eba6eb9ebb2c\n",
+  "depmod_version": "kmod version 34.2\n+ZSTD +XZ -ZLIB +OPENSSL\n",
+  "make_version": "GNU Make 4.4.1\nBuilt for x86_64-pc-linux-gnu\nCopyright (C) 1988-2023 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n",
+  "package_source": [
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/Makefile",
+      "sha256": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+      "size": 75939
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/scripts/Makefile.modinst",
+      "sha256": "4e93a18a1bc86843d779fee67369538877555059e705ce9e39bd3dc721e41dc5",
+      "size": 4140
+    },
+    {
+      "mode": 493,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/scripts/depmod.sh",
+      "sha256": "90723b3a92b8b86b8990c7a1a415e51a19d6e2e1c3b5c83edc6e1bcbe7425ee4",
+      "size": 723
+    },
+    {
+      "mode": 484,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/debian/scripts/sign-module",
+      "sha256": "712d7ad2c2e92ef519d06c51bfa16aa1d499dfb73880cc3d8c40bbba97a7f549",
+      "size": 944
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/.gitignore",
+      "sha256": "8871109d3b4ca2bfb607fd388ada92b2af8b0871b63eb66d30332b3fed8b0740",
+      "size": 237
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/AGENTS.md",
+      "sha256": "6ab0935b9cae372c19809470e4207c415ee4226cff814e066a456c813c2d4303",
+      "size": 3363
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/Kbuild",
+      "sha256": "d9d06edd3efd567c104fb74c2bf1d0dd7859fc8d6cb490bf75ed5993071e80e7",
+      "size": 1243
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/Kconfig",
+      "sha256": "2546e02759b4bea08d5a27395e58421d0ef21936d5085281ecfb7236f38cd340",
+      "size": 876
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/README.md",
+      "sha256": "d3d5b1b7caa23769e97a589d5aa706d76b8a69115b7561d9830cdbfd8ff74fec",
+      "size": 14009
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/archive.py",
+      "sha256": "0dff097683107c37b57cda8e8edeb05b4f70a52adb05ac9efe55f15981d677ea",
+      "size": 18711
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/artifact.py",
+      "sha256": "09a5fe9cbbf44d04206f0a430b590a169c3bc1405105ba7d6f9aa4b1a0522815",
+      "size": 16131
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/compiler.py",
+      "sha256": "003002637f6ba1a2f0499ad45e70d8964b08da1e1a92a35e07fc24b271743baf",
+      "size": 22327
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/coverage.py",
+      "sha256": "6bfb02fa269588b9ad531d10e9e2a2738ef3c3bf9c35821e12d097209a3451e9",
+      "size": 3464
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/feedback.py",
+      "sha256": "4d68ebb58181006cb8b92c8fed78f20c76204ce0ca17202c9a7ccafca7c08cb4",
+      "size": 11273
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/fragment.py",
+      "sha256": "b5f2787df43b94540f26c9b5156bb476415bdb0d0adfa7565dfbc087767da7cd",
+      "size": 10679
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/image_builder.py",
+      "sha256": "30781d85aef41df36f6b6a1da3449e29871c4a181686f9dfcd3a962cbb1a02bf",
+      "size": 17601
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/learning.py",
+      "sha256": "7f0010b8f181d9c8dc29a587eb2a8eea0268e91e0beb7300beae7f1985a87d9d",
+      "size": 33419
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/lowering.py",
+      "sha256": "abd1ca8be29212916925f87c3205c84b6d68e32c702316632d6f743cbbad7328",
+      "size": 28755
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/requirements.txt",
+      "sha256": "dbca917470f57958f724a2ba13c131eee7f19ca3d3c7f9c97fbaef09a1bfa8e5",
+      "size": 193
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/session.py",
+      "sha256": "adbab87a51b65b92915cfde6d42f89e39588a4f070ad03adfb949b3b7e13c0e5",
+      "size": 37215
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/source_decode.py",
+      "sha256": "c172f53a1e0851d75b0d5f10c31fd801aaf9faf5472ecc1b1892a71063605206",
+      "size": 9867
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/wire.py",
+      "sha256": "ab9c6851df85392eeec500bac39ff9184ae4c6b6fade43bae30e39713cfeb31a",
+      "size": 11641
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/backend/__init__.py",
+      "sha256": "8a10f2d55cb13aaa224f43c9b527a6f91e24a79baa7b7c2bd03b9f1f4ac97ae7",
+      "size": 231
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/backend/assist.py",
+      "sha256": "4db555895df0c0c47daedb34bd2a88a4090ed1ab6b17e74428a2a6dd8faa1eda",
+      "size": 3729
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/backend/compat.py",
+      "sha256": "9234e51b76c3f9b3688408b17d6501d69d2b8581d4d169ed83865dda9fcebe5d",
+      "size": 904
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/backend/conflict.py",
+      "sha256": "ac4f435b4008130e03a8910b9159b1009216f5cf47748986eb090219db8f695d",
+      "size": 6749
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/backend/diagnostics.py",
+      "sha256": "adb0bde8d44dd287b8232272f31c1b746fbe0effdb670cd81c07143a38c19bcc",
+      "size": 514
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/backend/errors.py",
+      "sha256": "2df8c7e0313f907b7d89f8ef99154a8fc76fe10e88e789e532e579349c85c617",
+      "size": 412
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/backend/instructions.py",
+      "sha256": "78b70b7a883db410ea83add5ba94fb85685c159f82c6e959713a16bf9e64a6e1",
+      "size": 13935
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/disassem/backend/normal.py",
+      "sha256": "b7aa68e1e4a8ba5afeac39ed898d53d2524e59373e1d9a894c3f15285d54eab2",
+      "size": 10760
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/docs/design/kdlock_redesign/00_overview.md",
+      "sha256": "ad71bae004cc124453723de419042c33972309bb23fc4e71f8ef6127592cf6aa",
+      "size": 27192
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/docs/design/kdlock_redesign/01_lock_protocol.md",
+      "sha256": "eb6ef24577f75ff21bcd22d52d2f8f0fc4960953946e79f24d840b81a771f374",
+      "size": 67449
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/docs/design/kdlock_redesign/02_jit_contract.md",
+      "sha256": "eeb492e524a78c7c23c9fabbb00ad3165d3b215a2c5312d7dab6a5f2b9f42138",
+      "size": 51504
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/docs/design/kdlock_redesign/03_implementation_plan.md",
+      "sha256": "aa0441c20355951a7c8637c7a15365a24a62d86aec08c44ad0ea6e922c52d59a",
+      "size": 69880
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/docs/design/kdlock_redesign/04_evidence_and_reconciliation.md",
+      "sha256": "80dcfc189dc5ccab1c7405b8ac4d6c168a75f40e83f9e2fe5a52fa23a879f4fc",
+      "size": 48027
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/asm_head.h",
+      "sha256": "dcae354686db004a515957fb73f6645d19f98bbb1fe3a07f1b73dfaff318455c",
+      "size": 1442
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/kd_control.h",
+      "sha256": "403b7ef160f75b5f149abafd35da59bac89215a5f5e22c4138714d6b6dcbad6a",
+      "size": 1275
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/kd_mutex.h",
+      "sha256": "56b8541b70beb5c9b952d66b2eab8f89d57ea9e92bdec4617757fdf5eefdad3e",
+      "size": 5857
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/kd_mutex_api.h",
+      "sha256": "b811bead916e7794dca79f3b5419dadb4a602a38f02f5f7d2baab1024b443aba",
+      "size": 2523
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/kd_regs.h",
+      "sha256": "72ee3d149d22570e960e536c6a8c2e1e1bae289b8a2c1c17bd2599e64aa4ca1a",
+      "size": 7890
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/mutex_api.S",
+      "sha256": "88adb97b2df9b8afeed88ffd73f44b17b145592175a9d5401dec05cd38d95218",
+      "size": 1720
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/mutex_entry.S",
+      "sha256": "6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108",
+      "size": 1761
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/native_resume.S",
+      "sha256": "5adaacf3f97f6fb84da5836e4c6b059a1f97a31e8f2a0b5869eb81c6d454805a",
+      "size": 1457
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/include/wrapper.S",
+      "sha256": "42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5",
+      "size": 3456
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/channel.c",
+      "sha256": "17803ac448b5f836c311457451106df047fc73e2dd5a3aa32b837159e3c69b03",
+      "size": 8787
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/channel.h",
+      "sha256": "606ce81101fc1c53805dc22c870747b6faba3b931302fcf003a3b7bd2fd948f3",
+      "size": 2012
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/compiled_image.c",
+      "sha256": "0ef92a96b335041523341c2918641cef0c7aa7c0cbfc32e5f3ccd0484db47f2d",
+      "size": 14847
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/compiled_image.h",
+      "sha256": "ec54afc42d2aa32079c2c28de7af7ba7141abbdece9c0c1e36361ea6ad2b29c9",
+      "size": 4244
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/control.c",
+      "sha256": "c50a6de92ef238f387e023473937c418c02314bd7353082db69915a7fb79853d",
+      "size": 27904
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/control.h",
+      "sha256": "410021ca0e235e57e093b1056af2cb19d9d2199d679a3811efebaeef53002912",
+      "size": 7947
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/episode.c",
+      "sha256": "da61941895c0251639e7ed222bc17ade2d6b5f74de537fe223a516115f453cbd",
+      "size": 30355
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/episode.h",
+      "sha256": "8ebf157110f402ed80a479aad28d0bc4be1fa6dc5c09b36dca911d951f7bbbc3",
+      "size": 5499
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/exports.c",
+      "sha256": "d7e33d428edf2545eab9207c07fa28c1950436fa1773200f555ac8db3d91721a",
+      "size": 961
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/feedback.c",
+      "sha256": "fb00418fd7443ff0cff4ab5af9d1a4ffe0fd691f29f0b17ae33d8baa653960f0",
+      "size": 16318
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/feedback.h",
+      "sha256": "e65def1ab23fdc490a7ab0b18a2f1b8bc00f538c17e62e0f1cacbc6c809a0464",
+      "size": 9425
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/feedback_publish.c",
+      "sha256": "eab297e4eb31259d1f0ca9b32be051c6604e2f80d5fe7a0c2fa7c89017c96104",
+      "size": 13955
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/feedback_publish.h",
+      "sha256": "04c14ae7abb8346230fbe2f6eeadf79c57f91be4cf8204676b7e79a1153d4066",
+      "size": 7927
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image.c",
+      "sha256": "2045cb89d88175e9b73f7d3b247b72943fbcfa8eaaa3a2ffede0e670968e2bd3",
+      "size": 10329
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image.h",
+      "sha256": "49b080029f0abc3ea87e6230cbb925a22f8dbdea50242b42664ce47b135044e5",
+      "size": 8070
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image_inputs.h",
+      "sha256": "a56154b1717dfa494c767a87355128d92f9f710c9bc4ebdc0729a4ca3f8bdc40",
+      "size": 1311
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image_owner.c",
+      "sha256": "c647127502b78d6a3d0d29040d98bf97bc87e666f5418755a876ff0a6b14ff15",
+      "size": 17392
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/image_owner.h",
+      "sha256": "0bdc71a22db182ee6ffc89834a30c28a348c1724c60ea6649ef53141380ffccb",
+      "size": 9128
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/jit.c",
+      "sha256": "b4ef42259e0b0c63663dac5a3aaccdbb5b373779c1218ae43065aab5b1a2b008",
+      "size": 25181
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/jit.h",
+      "sha256": "6741fe3f8fd63cca0f77f00f9eed43e688ea5bb3fdf66ee50028f8bf10dc1342",
+      "size": 12479
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/lifecycle.c",
+      "sha256": "2c687ff078212732b86ba8438b5e04bb0ae9bc0d7f7ef0a2b2693a793e5585dc",
+      "size": 6301
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/lifecycle.h",
+      "sha256": "946cb5cad5e7a6895efb3617f935f8369a58e03bccf002ca4ed2bb24d02aafdc",
+      "size": 3154
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex.c",
+      "sha256": "774204b23ee57c100da72b08855ea3e40a04b80eb2876e5711e8a014633fedeb",
+      "size": 19034
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex.h",
+      "sha256": "2d5c4eab39c5e67c26447c13c3d9f52f1de6d983838fb6e1e34f77ead642a474",
+      "size": 9569
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex_api.c",
+      "sha256": "22c11a9ae96e736dd5bf01289de5018322d19463671fc222544f74999c4ed5cd",
+      "size": 4226
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex_api.h",
+      "sha256": "54b9039a7e18e0a66ea952affe59b81ccc1d61bf3d701f2c2e33c5ee73c30972",
+      "size": 1561
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex_release.c",
+      "sha256": "58c7f9e89788cfe6d6c9aebb53e2c2930556556e6320821e748e98a9b4765aec",
+      "size": 9944
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/mutex_release.h",
+      "sha256": "27467f86bac3bb3127e4b740c60391082c1b3edac2a0cd5119881f5806aea95d",
+      "size": 5765
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/native_entry.c",
+      "sha256": "e25f4be810d6ada92420d8cd20df990c31c37f47cca1f8f50095fb2427b76a41",
+      "size": 5730
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/native_entry.h",
+      "sha256": "80d60672aaa65bb4cdf1884b5f25031571c1ab5e2d7f589cf2fce6524bb70c2e",
+      "size": 1991
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/owner_progress.c",
+      "sha256": "a5a884758f5d27c1d14d3634d928542841c4e30ab63bda396fe0503197955735",
+      "size": 7576
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/owner_progress.h",
+      "sha256": "42a5f8bb0278020cf479cfa80d3d634f6810410e0567c70818d1c971d548487d",
+      "size": 3625
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/request_pool.c",
+      "sha256": "c383a20c5de830d1d13143dc887c7bd81ca417c63242da659044a2da201e7ccc",
+      "size": 16371
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/request_pool.h",
+      "sha256": "f1450e3bc166f0a784809fd496d6471ef5ec13baa25c1e71ecf73e78cb6ecc90",
+      "size": 9965
+    },
+    {
+      "mode": 420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/runtime.c",
+      "sha256": "04a3a5d8337aa9111e3f29e1cb67994d905b00ad0bded23c431b1a9ced74c321",
+      "size": 29942
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/runtime.h",
+      "sha256": "f55ed9e81b160e813fcb821a071c1071687eddfa831c155136cd693fc49f47ef",
+      "size": 3477
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_epoch.c",
+      "sha256": "2ef40e9ad005caf758c31f9947bf0b49b67f7bf19eae3a0ec8684090ebe8ff12",
+      "size": 6933
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_epoch.h",
+      "sha256": "f1838dbd76af0232cbee8909f85dbefe2972bd8bce8271faf909a98ec05fe0bb",
+      "size": 6567
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_provider.c",
+      "sha256": "c242e5bd9a091461a2c6f9d5d8907102d8986c62897959629c04789f8f0aa49e",
+      "size": 4789
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_provider.h",
+      "sha256": "0bde73385ec8620af476303299b559440d2da181797fb82a1d39a36a26c5f261",
+      "size": 3194
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_stack.c",
+      "sha256": "81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302",
+      "size": 2336
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/source_stack.h",
+      "sha256": "91458b0aa42309ebcf3c8b474bd2420f24574558e3362b1f993f21f0d7d4f16d",
+      "size": 2031
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/state.c",
+      "sha256": "8f3ac15b3840e370672de1e56a83003ad90426cc7030add4322a4cf7482c766f",
+      "size": 12879
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/state.h",
+      "sha256": "dc01ce48d9ca5729afbf71bed9ef85c6c4513b6272663a8aa2999c481768aafd",
+      "size": 7703
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/target.h",
+      "sha256": "37c98012e3bca9db2ff3bac401bfb3eefe2c63b0625cb96ec67774bd8e3a225f",
+      "size": 574
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_progress.c",
+      "sha256": "11d8eea049f3214c1c12875ba9696025096b728d2448f1172df233aacd4245cb",
+      "size": 2693
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_progress.h",
+      "sha256": "e51bb0e84a9ce4aed2d575d59f09b3048b16bca4b0d8f8417711cd55635ad4c3",
+      "size": 2386
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_setup.c",
+      "sha256": "a4a510f30b3dddeff1b9eb8d3f09f25bfd5b98529326aaa3628db7fc4160c30a",
+      "size": 6911
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_setup.h",
+      "sha256": "bb1e830d13f49f6235dc0587a4828bb3ecf2307fa3a8901698c658399420f975",
+      "size": 4511
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_state.c",
+      "sha256": "ac0fc225b6b46773cf1f2729a03dfbf02aef5e695470bba3e4d20c5706af733c",
+      "size": 7493
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_state.h",
+      "sha256": "221f9c6e0ca4a91b43e033aa9285e7297ae18ff498cce404e2b5f3bc12ed9f39",
+      "size": 5857
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_storage.c",
+      "sha256": "074a17a90cd495d4bca78e94e40cac849a1d9df7bec46a7deca2a31147085462",
+      "size": 7357
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/task_storage.h",
+      "sha256": "2f53c1f3899cf311cfc3d9bb6028180d2f40b295ff124ec23b1ccc6388b54b95",
+      "size": 5113
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/integration/BUILDING.md",
+      "sha256": "45b00c0e19316f81e264cf4cabd09e02145c6bf2ae4743e50c223fa5b183d108",
+      "size": 6358
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/integration/IMAGES.md",
+      "sha256": "4525947b518b24f0e0d149624a6c19351f373a39ef6580db842a1cb4adc82655",
+      "size": 13424
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/integration/README.md",
+      "sha256": "d56c00c0df477931f2d2f7385f2786bf5e9720a2e9558bc3de72c9b37a8a1dbc",
+      "size": 11017
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/integration/apply_target.py",
+      "sha256": "83983bed0868855fabb83ca0fd66f23e8120bdd6196ec621ef951464466f7086",
+      "size": 18590
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/kernel/integration/task_struct.patch",
+      "sha256": "ce09f22277695687904b9d181b52e5429c05413a9768060d405152fb848eb4ec",
+      "size": 2629
+    },
+    {
+      "mode": 292,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/kernel/kdlock/tests/test_runtime_pipeline.py",
+      "sha256": "fe8a17b4cc2c350b104dbee8c0ff9895d8860cdc73704b1a5c9092a45a2a7623",
+      "size": 24491
+    }
+  ],
+  "readelf_version": "GNU readelf (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty.\n",
+  "signing_private_key": "retained build certs/signing_key.pem; contents not exported",
+  "strip_version": "GNU strip (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty.\n",
+  "tools": {
+    "cp": {
+      "mode": 493,
+      "path": "/usr/bin/gnucp",
+      "sha256": "8fcdb2485ebc68f00392d647b3d3d9130f0d4bb9f72c69ee258086dd63e1c122",
+      "size": 137840
+    },
+    "depmod": {
+      "mode": 493,
+      "path": "/usr/bin/kmod",
+      "sha256": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7",
+      "size": 174472
+    },
+    "grub-editenv": {
+      "mode": 493,
+      "path": "/usr/bin/grub-editenv",
+      "sha256": "2e4f8b60ba8712989f87d927d731a368af8620da1227a3090455ea7897ce1338",
+      "size": 1368360
+    },
+    "grub-reboot": {
+      "mode": 493,
+      "path": "/usr/sbin/grub-reboot",
+      "sha256": "fbaa8970eabb7587f32368b14f4c9bd4a34c871b748c835b49e40a2d6c516c1a",
+      "size": 4841
+    },
+    "grub-script-check": {
+      "mode": 493,
+      "path": "/usr/bin/grub-script-check",
+      "sha256": "467b74d97b1064906e7fbdd3a3b141376880ae3d810efa5751f2f47a9415b0e3",
+      "size": 129880
+    },
+    "lsinitramfs": {
+      "mode": 493,
+      "path": "/usr/bin/lsinitramfs",
+      "sha256": "02edc77e42e2720a6c2ad990c31b2ef20c6b4fac5b453efc3baff129445edcd5",
+      "size": 735
+    },
+    "make": {
+      "mode": 493,
+      "path": "/usr/bin/make",
+      "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+      "size": 295120
+    },
+    "modinfo": {
+      "mode": 493,
+      "path": "/usr/bin/kmod",
+      "sha256": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7",
+      "size": 174472
+    },
+    "modprobe": {
+      "mode": 493,
+      "path": "/usr/bin/kmod",
+      "sha256": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7",
+      "size": 174472
+    },
+    "readelf": {
+      "mode": 493,
+      "path": "/usr/bin/x86_64-linux-gnu-readelf",
+      "sha256": "c857339616bbbfa5eba32733e22365048903fbaf6ed2126b897dd138bcb741fc",
+      "size": 818312
+    },
+    "strip": {
+      "mode": 493,
+      "path": "/usr/bin/x86_64-linux-gnu-strip",
+      "sha256": "4d2ca6ba80677c3b2975e328306a779cd7bd6590a87948b5ebea9c1b41a049c8",
+      "size": 130504
+    },
+    "sync": {
+      "mode": 493,
+      "path": "/usr/lib/cargo/bin/coreutils/sync",
+      "sha256": "f84e76ea4da1e0c4e92254bd0d7dccdabe2c8b3098e734f27997dae3ee5d8e02",
+      "size": 11807104
+    },
+    "update-grub": {
+      "mode": 493,
+      "path": "/usr/sbin/update-grub",
+      "sha256": "d34caba6343ba89573b3fc21df22ca3d041432c3008b6dbdf5c15fabdd0c418d",
+      "size": 64
+    },
+    "update-initramfs": {
+      "mode": 493,
+      "path": "/usr/sbin/update-initramfs",
+      "sha256": "77957a324a936d6ee5d1cd51043cac9f34af7daaed5971bf1a0f6982b1c4eb30",
+      "size": 8189
+    }
+  }
+}

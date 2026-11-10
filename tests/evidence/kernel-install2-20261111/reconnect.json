@@ -1,0 +1,17 @@
+{
+  "started_utc": "2026-11-10T17:17:10.558420+00:00",
+  "attempts": [
+    {
+      "utc": "2026-11-10T17:17:11.229299+00:00",
+      "returncode": 0,
+      "stdout": "{\"release\": \"7.0.0-38-kdrebuild2\", \"boot_id\": \"dea66234-7f70-4e5b-acb6-40a6f2884919\", \"taint\": \"0\"}\n",
+      "stderr": ""
+    }
+  ],
+  "result": {
+    "release": "7.0.0-38-kdrebuild2",
+    "boot_id": "dea66234-7f70-4e5b-acb6-40a6f2884919",
+    "taint": "0"
+  },
+  "status": "CANDIDATE2_BOOT_OBSERVED"
+}

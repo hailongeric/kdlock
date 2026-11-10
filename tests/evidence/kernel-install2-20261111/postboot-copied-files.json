@@ -1,0 +1,146 @@
+[
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/boot-kernel-journal.txt",
+    "member": "postboot/boot-kernel-journal.txt",
+    "raw_bytes": 63561,
+    "raw_sha256": "c78e844f8e8b28816da34e69fb69596b3ea859ddc206fe504c84efd40209d84c",
+    "retained_bytes": 63561,
+    "retained_sha256": "c78e844f8e8b28816da34e69fb69596b3ea859ddc206fe504c84efd40209d84c"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/cmdline.txt",
+    "member": "postboot/cmdline.txt",
+    "raw_bytes": 139,
+    "raw_sha256": "8fb7fd57613bcfd8b4466e07e5334e04d66e7a5b355775b0c3d41116891d0964",
+    "retained_bytes": 139,
+    "retained_sha256": "8fb7fd57613bcfd8b4466e07e5334e04d66e7a5b355775b0c3d41116891d0964"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/cpuinfo.txt",
+    "member": "postboot/cpuinfo.txt",
+    "raw_bytes": 111374,
+    "raw_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921",
+    "retained_bytes": 111374,
+    "retained_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/dmesg.txt",
+    "member": "postboot/dmesg.txt",
+    "raw_bytes": 53746,
+    "raw_sha256": "ebfd594ea5325f5bdf513fcf3317c05838ee0e46822a09cb2e3e06e74b7e964e",
+    "retained_bytes": 53746,
+    "retained_sha256": "ebfd594ea5325f5bdf513fcf3317c05838ee0e46822a09cb2e3e06e74b7e964e"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/grub-environment.txt",
+    "member": "postboot/grub-environment.txt",
+    "raw_bytes": 12,
+    "raw_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0",
+    "retained_bytes": 12,
+    "retained_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/grub.cfg",
+    "member": "postboot/grub.cfg",
+    "raw_bytes": 28533,
+    "raw_sha256": "8d4c66b404bdf56ea6a94569882a495bd9d5ed23a4d38e98d11950c0d0c54089",
+    "retained_bytes": 28533,
+    "retained_sha256": "8d4c66b404bdf56ea6a94569882a495bd9d5ed23a4d38e98d11950c0d0c54089"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/gs-proof.json",
+    "member": "postboot/gs-proof.json",
+    "raw_bytes": 709,
+    "raw_sha256": "367b06a8a120ab04773229955831d632c1a9e548d894d114d5080daf6ccee853",
+    "retained_bytes": 709,
+    "retained_sha256": "367b06a8a120ab04773229955831d632c1a9e548d894d114d5080daf6ccee853"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/modules.txt",
+    "member": "postboot/modules.txt",
+    "raw_bytes": 2799,
+    "raw_sha256": "f34e8ac0d43e570524dab6a1fd5f4cf3cf3586b2b0da7c78d8d7c25e9e89567e",
+    "retained_bytes": 2799,
+    "retained_sha256": "f34e8ac0d43e570524dab6a1fd5f4cf3cf3586b2b0da7c78d8d7c25e9e89567e"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/prior-arm-complete.json",
+    "member": "postboot/prior-arm-complete.json",
+    "raw_bytes": 143,
+    "raw_sha256": "edaae529c6c1fb348a7c28a53dd4088b15fa7f3d22f56cf048741a15bd83d478",
+    "retained_bytes": 143,
+    "retained_sha256": "edaae529c6c1fb348a7c28a53dd4088b15fa7f3d22f56cf048741a15bd83d478"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/prior-armed-grub.json",
+    "member": "postboot/prior-armed-grub.json",
+    "raw_bytes": 570,
+    "raw_sha256": "559f3bbe28549b9dab35015b0f05a3f169fb3f24d34600826924d11642f4a515",
+    "retained_bytes": 570,
+    "retained_sha256": "559f3bbe28549b9dab35015b0f05a3f169fb3f24d34600826924d11642f4a515"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/result.json",
+    "member": "postboot/result.json",
+    "raw_bytes": 161518,
+    "raw_sha256": "d4c1e42c77fd814eabee7d66b9f3fdda3bb292e56bca6291d8a14b3aa1302642",
+    "retained_bytes": 161518,
+    "retained_sha256": "d4c1e42c77fd814eabee7d66b9f3fdda3bb292e56bca6291d8a14b3aa1302642"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/running-kernel-notes.bin",
+    "member": "postboot/running-kernel-notes.bin",
+    "raw_bytes": 476,
+    "raw_sha256": "71c6a75f58eb91cdba0af8ca34b581118735e63f4b29779325c930490dd5e393",
+    "retained_bytes": 476,
+    "retained_sha256": "71c6a75f58eb91cdba0af8ca34b581118735e63f4b29779325c930490dd5e393"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/uname.json",
+    "member": "postboot/uname.json",
+    "raw_bytes": 120,
+    "raw_sha256": "73f6530e5e7357c915f2ea9119bb0f2f96975dba8f60942d1098001ee8d320eb",
+    "retained_bytes": 120,
+    "retained_sha256": "73f6530e5e7357c915f2ea9119bb0f2f96975dba8f60942d1098001ee8d320eb"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/vmlinux-notes.txt",
+    "member": "postboot/vmlinux-notes.txt",
+    "raw_bytes": 2120,
+    "raw_sha256": "79ecde65f3a98dd2e1b26b9d9b8d06a0455b43fa3021f6889d0aff99e822b2d0",
+    "retained_bytes": 2120,
+    "retained_sha256": "79ecde65f3a98dd2e1b26b9d9b8d06a0455b43fa3021f6889d0aff99e822b2d0"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/vmlinux-sections.txt",
+    "member": "postboot/vmlinux-sections.txt",
+    "raw_bytes": 5644,
+    "raw_sha256": "d55f3a1294b5825f661ac098ad99c42ae6ed7ae7cb17d8953f4b271b62208fd6",
+    "retained_bytes": 5644,
+    "retained_sha256": "d55f3a1294b5825f661ac098ad99c42ae6ed7ae7cb17d8953f4b271b62208fd6"
+  },
+  {
+    "evidence_dir": "kernel-install2-20261111",
+    "local_path": "postboot/vmlinux-symbols.txt.gz",
+    "member": "postboot/vmlinux-symbols.txt",
+    "raw_bytes": 13017905,
+    "raw_sha256": "e26b7db630c8884f75ed733f3ff3c2d567ce1a7fda43bb02e7b494e6e3bbbc3f",
+    "retained_bytes": 2136154,
+    "retained_sha256": "4d113d4176aa682bcc77628a1c5ebde863df048a664d6fc679baae679358ced7"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "helper_sha256": "91d0358d4017e834f489f01a2eb9a14d3ca66e7c6d45ecfb20537b64a0713a3a",
+  "reboot_dispatched_by": "root agent; collector did not reboot",
+  "reported_actual_vm_hash_and_ast_check": true,
+  "reported_by": "root agent",
+  "reported_helper_returncode": 0,
+  "saved_result": "postboot/result.json",
+  "saved_result_phase": "POSTBOOT_IDENTITY_VERIFIED",
+  "scope": "Controller transcript report; not a separately saved raw outer command receipt"
+}
