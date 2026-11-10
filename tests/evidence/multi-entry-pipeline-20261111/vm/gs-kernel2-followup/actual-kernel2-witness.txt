@@ -1,0 +1,9 @@
+
+/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+ffffffff8150e713 <kd_mutex_bind_current+0x43>:
+ffffffff8150e713:	65 48 8b 05 fd 08 f0 	mov    %gs:0x2f008fd(%rip),%rax        # ffffffff8440f018 <current_task>
+ffffffff8150e71a:	02 

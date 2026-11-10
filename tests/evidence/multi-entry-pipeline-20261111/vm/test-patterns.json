@@ -1,0 +1,14 @@
+[
+  {
+    "pattern": "test_multi_entry_pipeline.py",
+    "count": 4
+  },
+  {
+    "pattern": "test_runtime_pipeline.py",
+    "count": 12
+  },
+  {
+    "pattern": "test_kernel_gs_rip.py",
+    "count": 5
+  }
+]

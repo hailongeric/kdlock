@@ -1,0 +1,14 @@
+setUpClass (test_kernel_gs_rip.KernelGSRIPTests) ... ERROR
+
+======================================================================
+ERROR: setUpClass (test_kernel_gs_rip.KernelGSRIPTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/input/tests/test_kernel_gs_rip.py", line 81, in setUpClass
+    raise ValueError("actual retained target input differs: " + name)
+ValueError: actual retained target input differs: vmlinux
+
+----------------------------------------------------------------------
+Ran 0 tests in 0.610s
+
+FAILED (errors=1)

@@ -1,0 +1,107 @@
+{
+  "sourcehost/kdlock-main-prepare-focused3.py.txt": {
+    "bytes": 2080,
+    "sha256": "96a2a3e0b66cd780972843304ff826aea39e8dbf5a5cd9a09c07cc394b73ef28",
+    "source": "/tmp/kdlock-main-prepare-focused3.py"
+  },
+  "vm/controller-output.log": {
+    "bytes": 71406,
+    "sha256": "7aebd45cbb76b05d82981abd34b8df93b67f99424dbe9bca51d6667009ea67fd",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/controller-output.log"
+  },
+  "vm/gs-kernel2-followup/actual-kernel2-witness.txt": {
+    "bytes": 316,
+    "sha256": "923194b45aa39092c5827cd6497b5ca910ffdb85c7ac4164000d304ee76e74d9",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/gs-kernel2-followup/actual-kernel2-witness.txt"
+  },
+  "vm/gs-kernel2-followup/command.json": {
+    "bytes": 1046,
+    "sha256": "134fb5ff42ffc93f3db65edb1ac305b776dca5cbf38403d0e0ac58ef1d040e50",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/gs-kernel2-followup/command.json"
+  },
+  "vm/gs-kernel2-followup/gs-config.json": {
+    "bytes": 708,
+    "sha256": "b7ef68891f30cb99814e98bc59bdb0cd54e8227748be64d83941d100bb0a091a",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/gs-kernel2-followup/gs-config.json"
+  },
+  "vm/gs-kernel2-followup/result.json": {
+    "bytes": 1305,
+    "sha256": "7f940c2831b651946769098e7b9312108c85f9cfb2b72e60c0cbe47f7aedc43d",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/gs-kernel2-followup/result.json"
+  },
+  "vm/gs-kernel2-followup/unittest.log": {
+    "bytes": 835,
+    "sha256": "70e372fec2ec26869f470d8ae1ac22864382e2b70d7d13b196791da25f9403a5",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/gs-kernel2-followup/unittest.log"
+  },
+  "vm/kdlock-main-focused3-controller.py": {
+    "bytes": 5199,
+    "sha256": "2dd9710956bbc37f688d1d1df49ac57b082578caa715006a532faafdcfc70ef9",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/kdlock-main-focused3-controller.py"
+  },
+  "vm/preparation.json": {
+    "bytes": 27391,
+    "sha256": "b18e2915835f5ea3d2468b7423f29a45e88769cc4c523b0b1739e460db91b035",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/preparation.json"
+  },
+  "vm/receipt-reconciliation.json": {
+    "bytes": 862,
+    "sha256": "03a1b0897de0709c537808e6c2f4917f52a5c427a3162b53e09f0529bdc51910",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipt-reconciliation.json"
+  },
+  "vm/receipts/check-1.log": {
+    "bytes": 840,
+    "sha256": "09112066c10c568f8647680ab3bd8f9982c3120a89b797802f0770a50f040acf",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipts/check-1.log"
+  },
+  "vm/receipts/check-2.log": {
+    "bytes": 4887,
+    "sha256": "4e16cef2b762023544bce47effc6b9e211f91d5020b1e1a1cee06ea6b5528036",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipts/check-2.log"
+  },
+  "vm/receipts/check-3.log": {
+    "bytes": 664,
+    "sha256": "645f0de0df4587778ecd44b09bc34b380a960cece004f0a8a03c0b4c3def003c",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipts/check-3.log"
+  },
+  "vm/receipts/command.json": {
+    "bytes": 32602,
+    "sha256": "075a4e85a03878d9dadadc445f418461aa23717407c36c3caa08034c82eceb87",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipts/command.json"
+  },
+  "vm/receipts/gs-config.json": {
+    "bytes": 708,
+    "sha256": "d6be6f18951ee5754cf998d1e44e64602b332a2bb3ab04b0dfadadcbbe248222",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipts/gs-config.json"
+  },
+  "vm/receipts/partial-result.json": {
+    "bytes": 1667,
+    "sha256": "529ec750382a8245f63133e208a085e5f34c6e0b14313c6a262a43b36f0700fd",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipts/partial-result.json"
+  },
+  "vm/receipts/pipeline-config.json": {
+    "bytes": 1507,
+    "sha256": "1487e0021add4812aec1f8ea08c5f837fc1821a561dc804c326200c39d6828b7",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipts/pipeline-config.json"
+  },
+  "vm/receipts/result.json": {
+    "bytes": 65012,
+    "sha256": "d8cc5fa8ade818417a77b12d6935fc7a8786165e0ad074e993613047cfe618d1",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipts/result.json"
+  },
+  "vm/source-manifest.json": {
+    "bytes": 14429,
+    "sha256": "1fe9d1412f72df80d74da348bbd6755d814f342765a8fb9a2c741796aad17885",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/source-manifest.json"
+  },
+  "vm/source-state.json": {
+    "bytes": 715,
+    "sha256": "099baa79f18a41b750a22184ca1f370a5134f57dcfc0806a54ae417816a638a4",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/source-state.json"
+  },
+  "vm/test-patterns.json": {
+    "bytes": 206,
+    "sha256": "963586ed22a2ce4a883d928b6be2a572c5aa7be09f82694847b25de68adb5960",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/test-patterns.json"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "archive_bytes": 1300480,
+  "archive_sha256": "761de7017fa8da3716adedf7f7afe9aa27dd0ae79dd7a650e3b14130326f2928",
+  "commit": "18c8f2e499d5fb74972e92bad5748489b921035d",
+  "files": 106,
+  "paths": [
+    "AGENTS.md",
+    "Kbuild",
+    "Kconfig",
+    "README.md",
+    "docs",
+    "disassem",
+    "include",
+    "kernel",
+    "tests/kernel",
+    "tests/fixtures",
+    "tests/test_runtime_pipeline.py",
+    "tests/test_kernel_gs_rip.py",
+    "tests/test_multi_entry_pipeline.py",
+    "tests/evidence/runtime-pipeline-20261110/pipeline-config.json"
+  ],
+  "policy": "Exact committed source archive; unrelated worktree/evidence changes excluded.",
+  "source_bytes": 1209822,
+  "source_worktree_status": "## main\n"
+}

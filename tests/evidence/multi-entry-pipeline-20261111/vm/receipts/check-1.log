@@ -1,0 +1,9 @@
+test_actual_six_entries_reach_existing_learning_compile_lower_export (test_multi_entry_pipeline.MultiEntryPipelineTests.test_actual_six_entries_reach_existing_learning_compile_lower_export) ... ok
+test_secondary_roots_keep_exact_shared_decode_budget_frontiers (test_multi_entry_pipeline.MultiEntryPipelineTests.test_secondary_roots_keep_exact_shared_decode_budget_frontiers) ... ok
+test_separate_ret_root_does_not_prove_unknown_callee_returns (test_multi_entry_pipeline.MultiEntryPipelineTests.test_separate_ret_root_does_not_prove_unknown_callee_returns) ... ok
+test_single_root_still_rejects_unplanned_global_entry_table (test_multi_entry_pipeline.MultiEntryPipelineTests.test_single_root_still_rejects_unplanned_global_entry_table) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.108s
+
+OK

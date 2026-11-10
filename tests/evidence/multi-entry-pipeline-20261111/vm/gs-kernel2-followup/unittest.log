@@ -1,0 +1,10 @@
+test_actual_linked_current_task_load_uses_logical_task (test_kernel_gs_rip.KernelGSRIPTests.test_actual_linked_current_task_load_uses_logical_task) ... ok
+test_address32_low_bits_are_not_the_full64_kernel_alias (test_kernel_gs_rip.KernelGSRIPTests.test_address32_low_bits_are_not_the_full64_kernel_alias) ... ok
+test_lea_ignores_the_same_gs_override (test_kernel_gs_rip.KernelGSRIPTests.test_lea_ignores_the_same_gs_override) ... ok
+test_nearby_noncurrent_alias_keeps_original_gs_engine (test_kernel_gs_rip.KernelGSRIPTests.test_nearby_noncurrent_alias_keeps_original_gs_engine) ... ok
+test_original_direct_gs_form_still_uses_logical_task (test_kernel_gs_rip.KernelGSRIPTests.test_original_direct_gs_form_still_uses_logical_task) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.704s
+
+OK

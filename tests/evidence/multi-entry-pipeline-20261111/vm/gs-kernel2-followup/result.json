@@ -1,0 +1,39 @@
+{
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-p",
+    "test_kernel_gs_rip.py",
+    "-v"
+  ],
+  "cwd": "/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/input",
+  "environment_overrides": {
+    "KDLOCK_KERNEL_GS_TEST_CONFIG": "/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/gs-kernel2-followup/gs-config.json",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUNBUFFERED": "1",
+    "LC_ALL": "C",
+    "LANG": "C"
+  },
+  "start_utc": "2026-11-10T17:56:35.654102+00:00",
+  "witness_command": [
+    "objdump",
+    "-d",
+    "--start-address=0xffffffff8150e713",
+    "--stop-address=0xffffffff8150e71b",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux"
+  ],
+  "boot_id": "dea66234-7f70-4e5b-acb6-40a6f2884919",
+  "source_commit": "18c8f2e499d5fb74972e92bad5748489b921035d",
+  "scope": "GS-only followup with actual kernel2 ELF pin; prior0-test stale-pin failure remains failed.",
+  "returncode": 0,
+  "elapsed_seconds": 1.0669713610000144,
+  "reported_tests": 5,
+  "log_sha256": "70e372fec2ec26869f470d8ae1ac22864382e2b70d7d13b196791da25f9403a5",
+  "taint_after": "12288",
+  "status": "focused_pass",
+  "verified_source_files_after": 106
+}

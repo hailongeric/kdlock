@@ -1,0 +1,24 @@
+{
+  "copied_vm_bytes": 232305,
+  "copied_vm_files": 20,
+  "excluded": "Source archive, extracted input, GNU scratch/build outputs and kernel artifacts remain at their original VM paths; source state/manifest retain exact identities.",
+  "initial_copied_vm_bytes": 231443,
+  "initial_copied_vm_files": 19,
+  "later_readonly_reconciliation": {
+    "bytes": 862,
+    "sha256": "03a1b0897de0709c537808e6c2f4917f52a5c427a3162b53e09f0529bdc51910",
+    "source": "root@10.176.26.71:2222:/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f/receipt-reconciliation.json"
+  },
+  "scope": "Saved receipts and helpers copied read-only; no project import, parser, build, test, kernel/module or guest-state mutation by collection.",
+  "source_commit": "18c8f2e499d5fb74972e92bad5748489b921035d",
+  "sourcehost_controller": {
+    "matches_vm_copy": true,
+    "path": "/tmp/kdlock-main-focused3-controller.py",
+    "sha256": "2dd9710956bbc37f688d1d1df49ac57b082578caa715006a532faafdcfc70ef9"
+  },
+  "sourcehost_prepare_helper": {
+    "path": "/tmp/kdlock-main-prepare-focused3.py",
+    "sha256": "96a2a3e0b66cd780972843304ff826aea39e8dbf5a5cd9a09c07cc394b73ef28"
+  },
+  "vm_root": "/mnt/kdlock-builds/kdlock-main-work/focused3-18c8f2e4-01a1bc4f"
+}

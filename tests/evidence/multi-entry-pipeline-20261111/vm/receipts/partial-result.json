@@ -1,0 +1,71 @@
+[
+  {
+    "argv": [
+      "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-p",
+      "test_multi_entry_pipeline.py",
+      "-v"
+    ],
+    "check_pass": true,
+    "elapsed_seconds": 0.5654427370000121,
+    "expected_tests": 4,
+    "log": {
+      "bytes": 840,
+      "sha256": "09112066c10c568f8647680ab3bd8f9982c3120a89b797802f0770a50f040acf"
+    },
+    "reported_tests": 4,
+    "returncode": 0,
+    "start_utc": "2026-11-10T17:54:24.365709+00:00"
+  },
+  {
+    "argv": [
+      "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-p",
+      "test_runtime_pipeline.py",
+      "-v"
+    ],
+    "check_pass": true,
+    "elapsed_seconds": 0.6657322000000931,
+    "expected_tests": 12,
+    "log": {
+      "bytes": 4887,
+      "sha256": "4e16cef2b762023544bce47effc6b9e211f91d5020b1e1a1cee06ea6b5528036"
+    },
+    "reported_tests": 12,
+    "returncode": 0,
+    "start_utc": "2026-11-10T17:54:24.931787+00:00"
+  },
+  {
+    "argv": [
+      "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-p",
+      "test_kernel_gs_rip.py",
+      "-v"
+    ],
+    "check_pass": false,
+    "elapsed_seconds": 1.0166144320000967,
+    "expected_tests": 5,
+    "log": {
+      "bytes": 664,
+      "sha256": "645f0de0df4587778ecd44b09bc34b380a960cece004f0a8a03c0b4c3def003c"
+    },
+    "reported_tests": 0,
+    "returncode": 1,
+    "start_utc": "2026-11-10T17:54:25.598108+00:00"
+  }
+]
