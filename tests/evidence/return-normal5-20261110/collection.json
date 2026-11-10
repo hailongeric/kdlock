@@ -1,0 +1,9 @@
+{
+  "all_copies_match_guest_index": true,
+  "exit_code_source": "Actual tools.exec_command exit_code for the captured SSH invocations, not inferred from a timeout.",
+  "guest_bytes": 292429,
+  "guest_files": 9,
+  "observed_helper_post_normal_exit_code": 0,
+  "observed_helper_reboot_exit_code": 0,
+  "scope": "Read-only receipt collection; no reboot or proof rerun. Source-host SSH logs record the already completed commands."
+}

@@ -1,0 +1,17 @@
+{
+  "scope": "Read-only reconnect after one completed ordinary reboot; no reboot retry or mutation",
+  "seconds": 240,
+  "attempts": [
+    {
+      "utc": "2026-11-10T20:42:23.620137+00:00",
+      "returncode": 0,
+      "stdout": "{\"release\": \"7.0.0-38-kdlock1\", \"boot\": \"884c4a65-4f4c-4a6b-89a3-cefd65221615\"}\n",
+      "stderr": "",
+      "identity": {
+        "release": "7.0.0-38-kdlock1",
+        "boot": "884c4a65-4f4c-4a6b-89a3-cefd65221615"
+      }
+    }
+  ],
+  "phase": "NORMAL_RECONNECTED"
+}

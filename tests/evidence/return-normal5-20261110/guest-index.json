@@ -1,0 +1,44 @@
+{
+  "base": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts",
+  "bytes": 292429,
+  "count": 9,
+  "files": {
+    "postboot-kdrebuild3-20261110-UTC-01/gs-proof.json": {
+      "bytes": 709,
+      "sha256": "00c8abe89e71c4cb04ce2cf49401ba2cb6873f5a3ec12d3869ec4ccdaaede6b4"
+    },
+    "postboot-kdrebuild3-20261110-UTC-01/normal-recovery-boot-unchanged.json": {
+      "bytes": 1755,
+      "sha256": "5a755ff921248bfbbc6ff4a1dafcd779729404cceb40471ca7cdffa157cd1ce2"
+    },
+    "postboot-kdrebuild3-20261110-UTC-01/result.json": {
+      "bytes": 161712,
+      "sha256": "3d887623b4fc41467e9aa9422b1f3bc396067fd5a5f99bb2c65c757a4c9f1a0b"
+    },
+    "return-normal-after-live5-20261110-UTC-01/post-normal/result.json": {
+      "bytes": 38576,
+      "sha256": "f432e4b71cf04aa951750f1afa20c37621492074e8a8172f8b9a2b3279471314"
+    },
+    "return-normal-after-live5-20261110-UTC-01/post-normal/running-kernel-notes.bin": {
+      "bytes": 476,
+      "sha256": "ff3f5318675db0cd606e636ef3a5b57272622ee4113ed9822328d64003aa54fe"
+    },
+    "return-normal-after-live5-20261110-UTC-01/pre-reboot.json": {
+      "bytes": 37473,
+      "sha256": "d4c2fa9f76ab3b3a4faa06cf3554d51e18daebbd1540a699159362d219365372"
+    },
+    "return-normal-after-live5-20261110-UTC-01/reboot-result.json": {
+      "bytes": 37570,
+      "sha256": "c7786c184b866f5af5dc4bb4419e8f5ae26464cf38456629b8cbd79d80d16fa2"
+    },
+    "return-normal-live5-controller-9b3d-syntax.json": {
+      "bytes": 301,
+      "sha256": "302b82bd0765489379579b74f8b7f48746adfbf5ae65dfe1a4e0ef12c9e078d2"
+    },
+    "return-normal-live5-controller-9b3d.py": {
+      "bytes": 13857,
+      "sha256": "9b3d2ec7087bcf283d0217eee41341403b00c2b001e41ce42308eb5ad9db8f5a"
+    }
+  },
+  "scope": "Independent read-only copy index after successful normal proof; no execution rerun."
+}

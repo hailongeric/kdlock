@@ -1,0 +1,8 @@
+{
+  "scope": "VM syntax only; no helper phase executed or imported",
+  "sha256": "9b3d2ec7087bcf283d0217eee41341403b00c2b001e41ce42308eb5ad9db8f5a",
+  "syntax": "PASS",
+  "utc": "2026-11-10T20:35:39.303727+00:00",
+  "release": "7.0.0-38-kdrebuild3",
+  "boot": "bceee25d-a189-4f51-89fa-0e31322b70e6"
+}
