@@ -19,8 +19,10 @@ Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origin
 The approved first implementation lane is ordinary mutex lock/unlock in
 sleepable task context on Linux 7.0 x86_64 without PREEMPT_RT. Integration rebuilds
 affected source with fresh private layouts; old binary lock/object layouts are
-not a compatibility promise. Other families follow later. This selects scope,
-not a validated support lane. C03 now selects TCLock-style out-of-order outer
+not a compatibility promise. The separate plain-spin extension uses the same
+canonical state and MCS queue in an atomic task-context runtime. Its execution
+and validation scope are described in [plain spin context and progress](#61-plain-spin-context-and-progress).
+C03 now selects TCLock-style out-of-order outer
 mutex unlock deferral with the responsible physical outer-combiner context
 retained. The earlier transferable-grant proposal is superseded. C11 selects an
 MCS queue; C04 retains the KD physical-R11 canonical-packet-base mapping. Private
@@ -582,6 +584,47 @@ Parents waiting for a child must handle the selected ancestor notification/unwin
 This removes the extra scheduling edge where C_A holds A, locally wins B, then runs unrelated B waiter X before W receives its B grant, and X waits on C_A-held A. It is a conservative optional-service strategy with a private source implementation at `ce423858`, not a separately user-selected fixed policy or proof against arbitrary deadlock, timing changes or progress loss. Broader unrelated inner batching remains unselected. Logically closed records retained for physical release/return/image users are not open logical grants; their deferred notification, owner handling and physical/last-user duties remain separate. Necessary owner/queue progress still runs, and the responsible outer combiner follows its selected normal deferred-release protocol.
 
 The accepted outer-mutex waiting policy and this inner scheduling restriction establish no generic native progress parity. Availability-dependent source handshakes retain their stated limits. This restriction alone is not a proof. Draw the wait-for graph including affinities, oversubscription, physical owners, retained grants and CPU reservations. Bounded metadata does not guarantee bounded native lock waits or scheduler fairness.
+
+### 6.1 Plain spin context and progress
+
+The spin runtime uses the typed `kd_spin_lock` and `kd_spin_unlock` pair
+on the non-RT Linux 7.0 x86_64 target with preemption counting. Its managed
+tasks enter in ordinary task context with IRQs enabled and with preemption
+depth accounted for by their live native spin grants. An acquisition adds a
+control pin before switching to the auxiliary stack. Physical executors stay
+pinned across borrowed execution, including a child wait. Native handback
+reconciles W's preemption depth with the open logical grants in S_W. When
+none remain, W switches to its original stack before dropping the last pin.
+Each physical task manages its own preemption state.
+
+One physical spin turn binds one exact grant. When a local candidate C selects
+its immediate offered successor W, W's completed link ends its access to C's
+old queue position. W becomes the physical head and C owns that turn. C's
+own request stays stopped and ungranted. C publishes W's result before
+pumping any retained foreign physical duties off the queue, then rejoins once
+for its own local turn after those duties physically drain. This ordering lets
+W resume a native suffix, release A and reacquire A while still holding B
+physically owned by C. Rejoining before that drain could put C ahead of W on
+A while C waits for W to reach B's unlock. C retains its request and the
+queue object across both queue positions.
+
+A spin unlock submits an exact request to the physical owner. The owner
+handles it locally or while polling a child or queue condition. The source
+unlock completes only after acknowledgement of the actual physical release.
+This applies to an out-of-order A unlock while B remains held, including
+when C_B requests A's release from C_A. The mutex deferred marker, unwind
+notification and batch continuation are specific to the sleepable mutex
+lane. Physical spin release can precede the end of the source executor's
+control frames. Retirement still waits for control stop and every retained
+queue, result, source and return user.
+
+The spin wait path polls and advances exact physical-owner work without
+sleeping. Progress requires each necessary actor to have a CPU on which it
+can run while other actors remain pinned. The scope excludes mixed mutex and
+spin episodes, IRQ/BH/NMI variants, trylocks, unrelated preemption guards and
+RT/debug configurations. The source path uses the existing preallocated
+request capacity contract. Kernel execution, auxiliary stack bounds and
+progress beyond the scoped topology require separate evidence.
 
 ## 7 Ordering and retirement
 

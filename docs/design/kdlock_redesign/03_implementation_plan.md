@@ -47,6 +47,11 @@ recursion, with separate release/retirement events. General support and the
 T01-T56 matrix remain unvalidated. Live3's early prefix and later exact
 learning/ACK stages keep their separate receipts in the current checkpoint.
 
+The plain-spin extension is connected in source through the same compiler,
+task, image and request interfaces. Its atomic queue, release and native
+resume paths have separate context and progress requirements. Exact target
+build and live evidence are recorded separately in the current checkpoint.
+
 Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins). This plan implements the target semantic model; historical mechanisms are optional reuse evidence. Operational repository rules still govern any later authorized work.
 
 ## 1 Fixed directions and semantic gates (F/S)
@@ -76,8 +81,9 @@ Minimal bounded structured recursion, call-local control and lock-local ordering
 ## 2 Mechanism decisions and status
 
 The user approved C12 source-rebuilt integration with fresh private layouts and
-C01 ordinary mutex lock/unlock in sleepable task context as the first complete
-lane. Other families follow later. No old binary lock/object-layout compatibility
+C01 ordinary mutex lock/unlock in sleepable task context as the first lane.
+The user subsequently selected the separate ordinary plain-spin extension.
+No old binary lock/object-layout compatibility
 is promised. The user subsequently selected C03 owner-retained out-of-order
 outer-mutex unlock deferral, superseding the transferable-grant recommendation.
 The user now selects C11 MCS queue and C04 retained KD physical-R11 canonical-
@@ -88,9 +94,9 @@ actual physical release and final backend object access, as section 2.2 records.
 
 | ID | Decision | Current selection or proposed starting point | Evidence needed before enabling |
 | --- | --- | --- | --- |
-| C01 | Initial lanes, policy and delivery order | Selected: independent source rebuild; ordinary mutex lock/unlock in sleepable task context first, other families later. MCS queue is selected under C11; hotness/admission and pinning/parking remain open | Declare exact ordinary APIs/context, the selected deferral/lifetime contract, eligibility/progress limits and evidence scope; no signal/try/I/O, reader or IRQ/BH lane is implied |
+| C01 | Initial lanes, policy and delivery order | Independent source rebuild. Ordinary sleepable mutex first, followed by a separate ordinary task-context spin runtime. Both use MCS under C11 | Exact API/context, release and lifetime contracts, eligibility and progress limits. Signal/try/I/O, reader and IRQ/BH lanes remain outside this scope |
 | C02 | Core/users, control placement and lookup | Active/nested requests use MCS node->state directly. Initial own core and task-owned auxiliary stack have one stable root header; no external registry or active-S_W task field | Prove root attach/private child reset/detach, explicit node/parent routing and exact last users. Managed provisioning/fork/exit have source at 80095bfb; deployment capacity and exact target lifecycle validation remain outstanding |
-| C03 | Grant identity and release authority | Selected: TCLock-style deferred outer-mutex unlock with responsible physical outer-combiner context retained; exact per-acquisition identities. The transferable-grant recommendation is superseded | Distinct source request/return, marker, unwind, owner handling, actual normal physical release and last use; owner authority and selected stable lock-object storage through actual physical release/final object access; separate control/notifier last users and callback-code retention still apply |
+| C03 | Grant identity and release authority | TCLock-style deferred outer-mutex unlock retains the responsible physical outer combiner. Plain spin uses one grant per turn and exact synchronous owner-release acknowledgement | Distinct source request, owner handling, physical release and last use. Mutex also needs its deferred marker and unwind proof. Stable lock-object storage through final physical access and later independent control/code users remain required |
 | C04 | Target entry/exit/materialization ABI and local flags-stack lowering | Selected: retain KD physical R11 as the one canonical-packet base, with logical R11 virtualized. R11 optimization discussion/T56 are deferred. Keep original UB/KD GS lowering, AS01 and temporary-GPR PUSHFQ/POPFQ exception | Implement/prove complete GPR/virtual-stack/cursor/results/entry/exit/reentry contracts and local push/pop effects under that mapping; old packet sizes/offsets are not selected by this choice. AS01 is not equivalence evidence |
 | C05 | Recursive control, request storage and stack/resource bounds | Selected: task-owned preallocated persistent requests and auxiliary control for the unified ordinary local/proxy path; supported workload guarantees an available record for every need | Finite explicit caller capacity covers concurrent nested requests plus retained release/control, return, notification, image/binding and current-native-endpoint users, not only depth. Task attachment/resources supply the count; no deployment value or unbounded claim. Exhaustion is documentation-only, with no handler/recovery/local fallback or new special assertion. Exact reuse and full lifecycle proof remain work |
 | C06 | Code/return binding across fragments | Selected with C09: RCU pointer replacement after active users drain; exact sleeping/pending/return/source users retain old code/metadata | No RCU read section across sleeping source; preserve already-admitted child completion and exact pending producer; grace period before retired lookup data is freed |
@@ -98,7 +104,7 @@ actual physical release and final backend object access, as section 2.2 records.
 | C08 | Discovery, capacities and cumulative learning | Selected: preallocated JIT-miss fact pool with finite explicit caller capacity sufficient for the supported workload; pending facts/translation alone do not disable new JIT/delegation. Five direct-CALL edges remain the approved discovery default, not immutable architecture; 32 rows is E | Exact site/target/transfer-phase/producer/source-version facts and required holds; cumulative valid same-version compiler input BEFORE build; recording/emission/actual publication/ACK distinct, uncovered/later facts stay pending. Kernel pool/producer and actual commit/ACK bridge (`5989fbbb`) and host cumulative coordinator (`af997cb6`) have reviewed source. Shutdown selects actual fsynced host archival/content receipts followed by kernel SETTLED after image/native/JIT drain, separate from coverage ACK; kernel API source is 40ae39ce and the actual fd/host archive/runtime workflow has source at 80095bfb. Exact slot/base export follows at c6becf81. No numeric capacity or unbounded claim; deployment, crash/restart reconstruction and all acceptance evidence remain outstanding |
 | C09 | Source lifetime, code publication and reclamation | Selected: quiesced RCU replacement with exact active-user records and old-reader grace. Source epochs, artifact input maps and image-provider envelopes have reviewed source. Initial provider selects an explicit all-dependency immutable-text contract (module_get alone is no freeze); source snapshots/native holds have source at 40ae39ce. Provider/channel/executable/runtime and compiler/staging composition have source through c6becf81; exact target integration and execution require separate receipts | Coherent source/code/metadata validation, exact baseline/transaction identity, no stranded descendants, no premature free or false coverage ACK |
 | C10 | Reader placement and API/context support scope | Keep initial placement/API proposals and explicit signalable/downgrade/IRQ/BH/NMI/debug extension choices; AS01 removes separate general flags/SIMD handling from this iteration. PREEMPT_RT stays outside the fixed target | Native concurrency/mode/API/context/fault duties and chosen placement proof; test-specific retained-writer downgrade is E only, not a boundary exception or native-equivalence proof |
-| C11 | Family arbitration and W-state transfer | Selected: MCS queue for initial ordinary mutex. Implement optional local/proxy/origin-combiner claims; do not mechanically copy TCLock borrowed-stack execution, forced selection or old node/pool policy | Prove claim/grant ordering, queue/request/control last users, one executor, deferred owner retention and final access. MCS selection alone is not a complete arbitration or lifetime proof; state bridges follow selected C04 mapping |
+| C11 | Family arbitration and W-state transfer | MCS queue for ordinary mutex and the separate plain-spin runtime. Optional proxy selection retains the one S_W under the C04 mapping | Claim/grant ordering, one executor and exact queue/request/control last users. Spin adds the candidate's off-queue owner drain before one rejoin. Mutex retains the responsible deferred owner |
 | C12 | Integration and compatibility contract | Selected: source-rebuilt integration with fresh private layouts; no old binary lock/object-layout compatibility promise. API result/context/lifetime/exclusion/order duties remain; selected outer release timing changes establish no generic native timing/progress parity | Enumerate rebuilt callers/modules, source/adapter contracts, version transitions and integration evidence; fresh layouts do not choose C02/C04 or validate integration |
 
 Exclusion, exact source effects, owner authority and last-user obligations remain mandatory. The explicit mutex outer-unlock selection supersedes earlier immediate-release requirements only for that route; it is not generic native timing/progress parity. Other mechanism choices cannot extend that exception. Copied grant information still cannot create another physical mutation authority.
@@ -212,6 +218,32 @@ counts beyond the fixture and full execution proof remain outstanding. Target
 application/build/boot and bounded native/fork checks are recorded separately.
 The private ordinary entry/recursive path is connected in source; its full
 stack/context/last-user proof remains unvalidated beyond the scoped fixed-image fixture evidence.
+
+### 2.5 Plain spin extension
+
+The spin runtime admits the typed plain lock/unlock pair in IRQ-enabled
+ordinary task context. It uses the existing task-owned auxiliary stack,
+persistent request records and canonical S_W. W holds a preemption pin
+through capture and wait, then resumes with the depth required by its open
+spin grants. A last-unlock handback restores the original stack before
+enabling preemption. Each physical executor remains pinned while advancing
+borrowed source or polling on its behalf.
+
+The source implementation gives a selected proxy the sole grant of its
+physical MCS turn. The local candidate publishes the proxy's result, drains
+any terminal foreign physical duties off the queue and rejoins once for its
+own local turn. A foreign unlock polls its exact physical owner's release
+acknowledgement before the source operation completes. Retiring the grant
+and request requires the later control and reference checks. See
+[plain spin context and progress](01_lock_protocol.md#61-plain-spin-context-and-progress).
+
+The existing preallocated request-capacity contract applies. Atomic progress
+requires a runnable CPU route for every necessary actor while other actors
+remain pinned. Mixed families, IRQ/BH/NMI variants, trylocks, unrelated
+preemption guards and RT/debug configurations are outside this lane.
+Acceptance needs separate target evidence for pinning, native and JIT
+continuations, exact owner release and retirement. Source review supplies
+no scheduling, throughput or broader progress result.
 
 ## 3 Work packages
 
@@ -338,6 +370,10 @@ Cumulatively merge valid same-version observations into compiler input BEFORE ca
 
 ### P7 Enable additional families and modes one at a time
 
+The plain-spin extension has source code under the scope in section 2.5.
+Keep its atomic context and synchronous release evidence separate from
+sleepable mutex deferral.
+
 Select additional reader/writer, signalable, mode, mixed-family and context/configuration lanes under C01/C10. Origin-local readers are the conservative proposed initial lane, not a fixed rewrite restriction. Remote reader placement, debug/lockdep configurations and IRQ-related extensions remain unselected/unvalidated until explicitly scoped and proved; the current support exclusions do not permanently decide the target.
 
 The explicitly selected ordinary-mutex outer-unlock deferral is the limited accepted policy, not generic Linux release-timing/progress parity. Do not copy TCLock's other historical killable shortcut, disabled downgrade, forced caller changes or borrowed-stack/task metadata as faithful Linux 7.0 semantics. Do not infer that one-CAS mutex-to-spin success proves contended mixed support.
@@ -368,10 +404,10 @@ AS01 is a user-selected design assumption/scope, not a verified behavior row: ge
 
 | API/context lane | Required behavior (S) | Initial proposal (P) | Open choice / enabling evidence |
 | --- | --- | --- | --- |
-| Plain spinlock | Native atomicity/context and exact release | Simple task-context lane first | Execution/guard/progress proof; pinning or pools only if selected |
+| Plain spinlock | Native atomicity/context and exact physical release | IRQ-enabled task-context spin runtime with preemption pins and preallocated persistent requests. Source present | Target execution and guard checks, synchronous release and final retirement, off-queue drain and scoped topology progress |
 | rwlock/rwsem writers | Write exclusion, API result and interaction with readers | Choose initial family in C01 | C03 authority/composite contract; no inherited writer-first order |
 | rwlock/rwsem readers | Concurrent reader/mode/API/context semantics | Origin-local on W | C10 placement; C_A-local is still remote relative to W; no remote lane authorized yet |
-| Mutex | Sleepable ordinary API lane with exact owner/release/lifetime phases; selected outer-unlock deferral accepts extra waiting | Owner-retained deferred outer unlock and MCS queue selected; ordinary source/native bootstrap, recursive episodes and progress connected in source at ce423858; managed task/provider/compiler source connected through c6becf81; target build/boot and bounded native checks recorded, generated/recursive runtime proof pending | Distinct marker/unwind/handling/physical release, retained owner and exact users. Stable object storage through actual physical release selected; separate later control/notifier/code retention remains required; no native timing/progress parity |
+| Mutex | Sleepable ordinary API lane with exact owner/release/lifetime phases; selected outer-unlock deferral accepts extra waiting | Owner-retained deferred outer unlock and MCS queue selected; ordinary source/native bootstrap, recursive episodes and progress connected in source at ce423858; managed task/provider/compiler source connected through c6becf81; target build/boot and bounded native checks recorded, with kernel3 fixed-image protected recursion observed | Distinct marker/unwind/handling/physical release, retained owner and exact users. Stable object storage through actual physical release selected; separate later control/notifier/code retention remains required; no native timing/progress parity |
 | Trylock | Exact success/failure; no grant on failure | Local route until another is selected | One result winner and cleanup under the chosen protocol |
 | Killable/interruptible | W's intended signal/API result | Origin handling initially | Explicit cancellation/context contract, not C's substitute signals |
 | Downgrade | Continuous write-to-read protection | Origin-local read suffix initially | C10 mode/placement with exact custody; no unlock/relock substitute |
@@ -418,7 +454,7 @@ Each receipt records source commit and dirty state, kernel/config/toolchain, ena
 ### Context, lifetime and ordering
 
 - T21 Sleep/migrate a legal parent and race child/release events through the chosen wait/notification protocol. Prove no lost event or invalid storage; include per-CPU reservation cases only if used.
-- T22 Spin A/B non-LIFO release preserves required atomic guards on W and each physical authority.
+- T22 Spin A/B non-LIFO release preserves the pin on W and each physical executor. Join the A request to the original owner's actual physical release and acknowledgement before source continues with B held. Check final unpin after original-stack restoration and keep release evidence distinct from control and request retirement.
 - T23 Exercise allowed affinity/oversubscription and scheduling cycles; document exclusions rather than assume fairness.
 - T24 Exercise exhaustion only for other selected bounded resources, such as independently bounded frames, grants, mailboxes, tickets, states or images, at their declared effect boundaries. Exclude persistent request-pool exhaustion: the supported-workload availability guarantee makes it a documentation-only limitation, without a handler/recovery scenario or new special assertion. A semantic field group does not require a separate pool, and nested nodes still reference one S_W. This acceptance specification has not run.
 - T25 Prove final dependent access, physical release duty and exact source-request/return/notifier last users precede retirement/reuse; deferred acceptance and source return alone permit neither. A retained pop-based migration lane obeys its real detach rule; a fresh target proves its selected equivalent mechanism.
