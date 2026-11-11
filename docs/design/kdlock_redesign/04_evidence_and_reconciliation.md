@@ -4,6 +4,13 @@
 **Design basis:** revision 1.11, direct MCS state and task-owned auxiliary entry
 **Target:** Linux kernel 7.0, x86_64, non-PREEMPT_RT
 
+Later source checkpoints `532b68a6` and `02ffa1ec` add generic Linux rwsem API
+binding and native compatibility on one KD gate. They have independent source
+review but no build or behavioral receipt. The native API and real mmap/munmap
+fixtures, preserved failures/limits and pending recovery inspection are recorded
+in the [generic rwsem source checkpoint](../../../tests/evidence/generic-rwsem-source-20261111/README.md).
+Earlier kernel5 results below keep their original source/image scope.
+
 ## 1 Active authority and scope
 
 Use the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins).
