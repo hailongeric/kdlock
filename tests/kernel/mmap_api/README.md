@@ -175,6 +175,19 @@ establish hardware-current, per-CPU, scheduler, RCU, uaccess, fault-fixup or
 auxiliary-stack equivalence. Immutable complete dependencies and the declared
 context/workload contracts remain caller obligations.
 
+The new source-only native-context table
+supplies the existing runtime boundary interface with four SPECIAL entry
+addresses: `__rcu_read_lock`, `__rcu_read_unlock`, `_raw_spin_lock` and
+`_raw_spin_unlock`. Page-table mapping enters RCU before its later PTL spin
+acquisition, so a spin-only cut would already be inside read-side context.
+The table stops at the actual API entry before its physical effects. A host
+scanner may additionally cut before the actual source CALL. The entry table
+alone can leave that CALL's return word already staged. Inline context effects
+and IRQ/BH/NMI variants require their own exact metadata. This supplies a native
+prefix continuation, not physical-context service, mixed-family execution or
+full protected-MM completion. The default-disabled profile and ABI1 behavior
+are unchanged. [Reusable metadata](../payload/native_context_boundaries.inc)
+
 The ABI2 client requires `--jit-config`, `--jit-config-bytes`,
 `--jit-phase-timeout-ms` and `--jit-rounds`, alongside explicit ordinary workload
 bounds, `--control-device` and `--quiescent-mm`. Its configuration file is the

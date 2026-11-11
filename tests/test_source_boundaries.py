@@ -4,7 +4,11 @@ Synthetic instruction bytes isolate prefixed CALL and ordinary-ABI distinctions.
 The caller still supplies actual linked targets/source provenance for deployment.
 Do not import, parse or execute this module on the source host.
 """
+from pathlib import Path
+import shutil
 import struct
+import sys
+import tempfile
 import unittest
 
 from disassem.compiler import DiscoveryLimits, SourceRegion, SourceSnapshot, compile_fragment_plan
@@ -41,6 +45,57 @@ class SourceBoundaryTests(unittest.TestCase):
                          [(0x1000, BoundaryKind.SPECIAL_INSTRUCTION)])
         self.assertEqual(original.regions, result.snapshot.regions)
         self.assertEqual(original.sites, ())
+
+    def test_exported_special_reaches_shared_scanner_and_fragment_before_prefixed_call(self):
+        # GNU decodes these finite data bytes only. No emitted machine code or
+        # kernel/workload body is executed; missing tooling is a failure.
+        sys.path.insert(0, str(Path(__file__).resolve().parent / "kernel"))
+        from run_runtime_fixture import scan_operation_calls
+        objdump = shutil.which("objdump")
+        self.assertIsNotNone(objdump, "the directly affected check requires actual GNU objdump")
+        lock = b"\xe8" + struct.pack("<i", 0x3000 - 0x1005)
+        native = b"\x2e\x2e\xe8" + struct.pack("<i", 0x4000 - 0x100c)
+        ordinary = b"\xe8" + struct.pack("<i", 0x5000 - 0x1011)
+        implementation = b"\xe8" + struct.pack("<i", 0x4000 - 0x3005) + b"\xc3"
+        frame = SourceFrame((1, 2, 3, 0xffffffff84425018, 2, 4, 0),
+            ((0x1000, lock + native + ordinary + b"\xc3"),
+             (0x3000, implementation), (0x4000, b"\xc3"), (0x5000, b"\xc3")),
+            ((0x3000, 1), (0x4000, 4)), b"exported-native-context-case")
+        exported = source_export_from_frame(frame, b"saved-native-context-source-reply")
+        with tempfile.TemporaryDirectory(prefix="kd-source-call-case-") as temporary:
+            directory = Path(temporary)
+            snapshot, roots, calls, indirect = scan_operation_calls(exported, objdump, directory, 5)
+            for listing in directory.glob("*.disassembly.txt"):
+                self.assertLessEqual(listing.stat().st_size, 65536)
+        self.assertEqual(roots, (0x1005,))
+        self.assertEqual(indirect, ())
+        by_site = {call["site"]: call for call in calls}
+        self.assertEqual(by_site[0x1005], {"site":0x1005, "length":7, "target":0x4000,
+                         "indirect":False, "raw_hex":native.hex(), "operation":"special"})
+        self.assertEqual(by_site[0x1000]["operation"], "lock")
+        self.assertNotIn("operation", by_site[0x100c])
+        # Keep the entry's actual implementation CALL bytes without replacing
+        # its declared LOCK identity or inventing a source return/root at 0x3005.
+        self.assertEqual(by_site[0x3000], {"site":0x3000, "length":5, "target":0x4000,
+                         "indirect":False, "raw_hex":implementation[:5].hex()})
+        self.assertNotIn(0x3005, roots)
+        self.assertEqual(snapshot.regions, exported.snapshot.regions)
+        self.assertEqual([(site.site, site.boundary) for site in exported.snapshot.sites],
+                         [(0x3000, BoundaryKind.LOCK), (0x4000, BoundaryKind.SPECIAL_INSTRUCTION)])
+        self.assertEqual({site.site:site.boundary for site in snapshot.sites},
+                         {0x1000:BoundaryKind.LOCK, 0x1005:BoundaryKind.SPECIAL_INSTRUCTION,
+                          0x3000:BoundaryKind.LOCK, 0x4000:BoundaryKind.SPECIAL_INSTRUCTION})
+        plan = compile_fragment_plan(snapshot, 0x1005, DiscoveryLimits(8, 120, 8, 10))
+        image = lower_compilation(plan, EntryMetadata("kd_exported_special_case", (0x1005,), 0xffffffff84425018),
+                                  CodegenLimits(8, 8192, 8))
+        self.assertNotIn(0x4000, plan.decoded.instructions)
+        self.assertNotIn(0x1005, image.emitted_sites)
+        self.assertEqual([(item.site, item.kind, item.raw) for item in image.boundaries],
+                         [(0x1005, BoundaryKind.SPECIAL_INSTRUCTION, native)])
+        self.assertTrue(any(item.kind == "KD_JIT_EXIT_SPECIAL_FRONTIER" and item.source_ip == 0x1005
+                            and item.phase == "KD_JIT_PHASE_BEFORE_INSTRUCTION" for item in image.exits))
+        ordinary_plan = compile_fragment_plan(snapshot, 0x100c, DiscoveryLimits(8, 120, 8, 10))
+        self.assertIn(0x5000, ordinary_plan.decoded.instructions)
 
     def test_private_clobber_call_keeps_typed_operation(self):
         raw = b"\xe8" + struct.pack("<i", 0x3000 - 0x1005) + b"\xc3"

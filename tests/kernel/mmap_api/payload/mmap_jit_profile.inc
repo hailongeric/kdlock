@@ -1,5 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /* Optional source composition; ABI1 never allocates or enables these roles. */
+#include "../../payload/native_context_boundaries.inc"
+
 static bool enable_jit_profile;
 module_param(enable_jit_profile, bool, 0444);
 MODULE_PARM_DESC(enable_jit_profile, "Cold experimental ABI2 source profile opt-in (default false)");
@@ -375,6 +377,8 @@ static int jit_start(const struct kd_mmap_jit_request *request)
 #define MM_JIT_SYMBOL(text) { .data = (const unsigned char *)(text), .length = sizeof(text) - 1 }
 	config = (struct kd_jit_runtime_config) {
 		.source = jit->source,
+		.boundaries = kd_test_native_context_boundaries,
+		.boundary_count = ARRAY_SIZE(kd_test_native_context_boundaries),
 		.feedback_capacity = jit->config.feedback_capacity,
 		.cycle_capacity = jit->config.cycle_capacity,
 		.image_capacity = jit->config.image_capacity,

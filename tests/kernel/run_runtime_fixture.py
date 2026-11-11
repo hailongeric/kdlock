@@ -86,15 +86,20 @@ def scan_operation_calls(exported, objdump, directory, timeout):
     first lock is outside the pinned decoder. Explicit printed prefixes remain
     part of the same instruction bytes and address. Every selected CALL is decoded
     at its ACTUAL source address and its target/length must agree. No opcode search,
-    guessed wrapper length or application-specific lowering is used.
+    guessed wrapper length or application-specific lowering is used. Exported
+    SPECIAL targets retain their native frontier before the CALL, using the
+    same source-version-bound classifier as typed clobber entries.
     """
-    from disassem.compiler import SourceSite, SourceSnapshot
     from disassem.fragment import BoundaryKind, SourceCall
     from disassem.source_decode import SourceBytes, decode_source
+    from disassem.source_boundaries import (
+        BoundaryScanLimits, SourceEntryClass, SourceOperationTable,
+        SourceOperationTarget, scan_source_boundaries,
+    )
 
-    boundaries = {site.site: site.boundary for site in exported.snapshot.sites}
     api = {site.site: site.boundary for site in exported.snapshot.sites
-           if site.boundary in (BoundaryKind.LOCK, BoundaryKind.UNLOCK, BoundaryKind.MODE_CHANGE, BoundaryKind.QUERY)}
+           if site.boundary in (BoundaryKind.LOCK, BoundaryKind.UNLOCK, BoundaryKind.MODE_CHANGE,
+                                BoundaryKind.QUERY, BoundaryKind.SPECIAL_INSTRUCTION)}
     calls, lock_roots, indirect = [], [], []
     prefixes = {"cs", "ds", "es", "fs", "gs", "ss", "data16", "addr32",
                 "bnd", "notrack", "rep", "repe", "repz", "repne", "repnz"}
@@ -134,21 +139,29 @@ def scan_operation_calls(exported, objdump, directory, timeout):
             calls.append(item)
             if node.indirect:
                 indirect.append(site)
-            if node.target in api:
+            # The registered entry itself is authoritative. Its first CALL
+            # is implementation code, not another W source operation/root.
+            if site not in api and node.target in api:
                 kind = api[node.target]
-                old = boundaries.get(site)
-                if old is not None and old is not kind:
-                    raise ValueError("actual CALL and supplied source boundary disagree")
-                boundaries[site] = kind
-                item["operation"] = kind.value
+                # SPECIAL is a permanent native pre-operation frontier, not
+                # a clobber operation or an observed ordinary callee.
+                item["operation"] = "special" if kind is BoundaryKind.SPECIAL_INSTRUCTION else kind.value
                 if kind is BoundaryKind.LOCK:
                     lock_roots.append(record.next_site)
     if not lock_roots:
         raise ValueError("no actual source CALL to the exported ordinary lock entry")
-    sites = tuple(SourceSite(site, kind) for site, kind in sorted(boundaries.items()) if kind is not None)
-    snapshot = SourceSnapshot(exported.snapshot.version, exported.snapshot.regions,
-                              sites, exported.snapshot.observed_targets)
-    return snapshot, tuple(sorted(set(lock_roots))), tuple(calls), tuple(indirect)
+    # SOURCE already bounds regions/bytes/targets. Reuse the generic classifier
+    # over this finite set of corroborated CALL starts, including coherent
+    # overlapping regions, to retain conflicts and pre-CALL native semantics.
+    call_sites = tuple(sorted({item["site"] for item in calls}))
+    table = SourceOperationTable(exported.snapshot.version, tuple(
+        SourceOperationTarget(address, kind,
+            SourceEntryClass.NATIVE_LINUX if kind is BoundaryKind.SPECIAL_INSTRUCTION else SourceEntryClass.KD_CLOBBER,
+            f"exported_target_{address:016x}")
+        for address, kind in sorted(api.items())))
+    classified = scan_source_boundaries(exported.snapshot, call_sites, table,
+        BoundaryScanLimits(len(call_sites), 15 * len(call_sites), len(api)))
+    return classified.snapshot, tuple(sorted(set(lock_roots))), tuple(calls), tuple(indirect)
 
 
 def main(*, spin=False, family=None):
@@ -991,7 +1004,8 @@ def main(*, spin=False, family=None):
                 exported.slot_identity, old, 0x1000 + cycle_number, 4096, roots[0],
                 DiscoveryLimits(4096, 15 * 4096, 32768, 5),
                 EntryMetadata("kd_fixture_entry", tuple(sorted({record["site"] + record["length"]
-                              for record in calls if "operation" in record})), args.gs_offset),
+                              for record in calls if record.get("operation") in
+                              ("lock", "unlock", "mode_change", "query")})), args.gs_offset),
                 CodegenLimits(4096, 64 * 1024, args.runtime_block_visits if readers else 1000000)), builder)
             session.advance(); session.advance()  # actual claim, then copied/merged claim
             if session.phase is not SessionPhase.BUILD_START:

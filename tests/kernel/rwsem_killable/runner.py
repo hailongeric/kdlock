@@ -456,7 +456,9 @@ def main():
             session = FeedbackSession(transport, coordinator, producers, SessionConfig(
                 exported.slot_identity, old, 0x1000 + cycle_number, bounds["claim_capacity"], roots[0],
                 DiscoveryLimits(*(bounds[key] for key in ("decode_sites", "decode_window_bytes", "cfg_work_steps", "direct_call_edges"))),
-                EntryMetadata("kd_fixture_entry", tuple(sorted({call["site"] + call["length"] for call in calls if "operation" in call})), gs),
+                EntryMetadata("kd_fixture_entry", tuple(sorted({call["site"] + call["length"]
+                              for call in calls if call.get("operation") in
+                              ("lock", "unlock", "mode_change", "query")})), gs),
                 CodegenLimits(bounds["lowered_sites"], bounds["lowered_text_bytes"], bounds["runtime_block_visits"])), builder)
             session.advance(); session.advance()
             if session.phase is not SessionPhase.BUILD_START:
