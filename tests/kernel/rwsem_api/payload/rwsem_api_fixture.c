@@ -568,7 +568,8 @@ static ssize_t status_read(struct file *file, char __user *buffer, size_t length
 }
 
 static const struct file_operations operations = {
-	.owner = THIS_MODULE, .unlocked_ioctl = control, .read = status_read, .llseek = no_llseek,
+	/* Linux 7 clears FMODE_LSEEK when no seek callback is supplied. */
+	.owner = THIS_MODULE, .unlocked_ioctl = control, .read = status_read,
 };
 static struct miscdevice device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_rwsem_api", .fops = &operations, .mode = 0600,

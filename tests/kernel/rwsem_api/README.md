@@ -14,7 +14,9 @@ before the misc device is registered. The device is `/dev/kd_rwsem_api` with
 mode 0600. Privileged callers use `_IO('Q', 1)` with argument zero to RUN once,
 and `_IO('Q', 2)` with argument zero for ordinary STOP/drain. Reading the device
 returns JSON status, saved case outcomes, grant/pending flags, cumulative worker
-creation/join counts and native event counters. State values are COLD0,
+creation/join counts and native event counters. The controller opens a fresh fd
+for each status read. With no seek callback, Linux 7 clears FMODE_LSEEK at open
+and returns -ESPIPE for a seek. State values are COLD0,
 RUNNING1, PASS2, FAILED_RETAINED3 and DRAINED_FAILED4. Native counters are read
 acquire/release, write acquire/release, real downgrade, cancellation, try miss
 and MCS enqueue, in that order.
