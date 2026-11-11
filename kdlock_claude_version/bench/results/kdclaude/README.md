@@ -66,3 +66,11 @@ rotated per round, 3 rounds; `bench/ab_summary.py` prints median [min–max]).
 | #20 | holder of `->m` spins for the writer bit before sleeping (`ab20`) | w20 at 20 workers +16–33%; no change elsewhere | yes |
 | #21 | diagnosis (`diag21`): at a give-up the owner of `->m` was runnable in only ~3% of cases; it sleeps on the count holding `->m` | | |
 | #22/#23 | readers check the writer bits before adding (`ab22`, `ab23`: 1 read first, 2 `prefetchw` then read) | mixed: w20 +5–30%, c16 w1 −3% to −22% | no |
+
+## Round 4 (`grid-20261111-r4/`)
+
+Build #24 = commit `7e05332e`, bench `94f91a77` layout, Native, kd and TCLock
+alternating per point, 2 rounds, 1008 points, no failures.
+`corr24.jsonl`: correctness on the same boot, 297 points exact (all
+families, three backends, plus nest/mix under kd), `handback_pinned` 0.
+`summary.txt` holds the per-point table.

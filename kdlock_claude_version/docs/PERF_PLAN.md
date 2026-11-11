@@ -152,6 +152,27 @@ Status 2026-11-11 (raw data and the build map:
 * Open: the 3–6 worker region of spin and mutex (short sessions: the queue
   keeps draining), more rounds at the key points, fixed host frequency.
 
+Status after the TCLock comparison (commits `94f91a77`..`7e05332e`):
+
+* The bench now line-separates every shared object; before that, kd spin
+  depended on linker placement by up to 20% (round 3 is marked).
+* Small effects are decided by A/B **within one boot** (`bench/run_ab.sh`
+  with a temporary core parameter), not across reboots.
+* Accepted: owner poll every 1024 iterations and HANDOFF check every 16
+  sections (mutex at 32 workers 1.5 → 3.4 Mops); session prefetch without
+  dependent loads (+3–6%); spin-class early packet prefetch (+1–3%); rwsem
+  holder spin (w20 at 20 workers +16–33%).
+* Rejected with data (`bench/results/kdclaude/README.md`): link wait,
+  unqueued mutex spinner, linger, time-bounded rwsem spins, check before
+  add.
+* Understood, not fixed:
+  * 3–5 workers: each waiter's own cycle (resume, post work, offer, enqueue)
+    limits the rate, not the combiner; TCLock is in the same place there.
+  * rwsem across both NUMA nodes (20–32 workers): readers serialise through
+    `->m` and its holder sleeps on the count; TCLock (separate AQS reader
+    queue) is about 4 times faster. Needs a reader admission design of its
+    own (D11), not tuning.
+
 ### Task D: API switch and micro/API stage
 
 * Apply `integration/kd_linux_map.h`: replace `arch_spinlock_t`,

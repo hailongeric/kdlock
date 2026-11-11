@@ -282,6 +282,16 @@ atomic, and inside a delegated section it is always handed back.
   1.6–1.8 of Native in a single round, with per-worker progress near
   Native's. Readers still never delegate, and the per-reader polling is not
   head-only; both remain open.
+* **Measured against TCLock** (original `tclock_backend` rwsem, AQS reader
+  gate): equal up to 16 workers, but across both NUMA nodes (20–32
+  workers, 20% writes) kd is about a quarter of TCLock. Diagnosis: a
+  reader whose spin runs out queues on `->m` and, holding it, sleeps on the
+  count; every queued writer then sees an off-CPU owner and parks. Bounding
+  the spins by time, a holder spin (kept; +16–33% at 20 workers only) and
+  checking before adding did not change the regime. **Next step:** a reader
+  admission path that does not hold `->m` while it waits (a reader queue of
+  its own whose head alone polls, as TCLock's AQS and the GPT-era design
+  do).
 * **Effect (MM):** `mmap_write_downgrade` is used on common paths (munmap with
   downgrade); a delegated section that reaches it is handed back, so those
   sections lose delegation at that point. Not a correctness issue.
