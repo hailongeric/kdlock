@@ -34,13 +34,15 @@ DEFINE_STATIC_KEY_FALSE(kd_delegation);
 unsigned int kd_batch __read_mostly = 1024;
 core_param(kd_batch, kd_batch, uint, 0644);
 
+
 /* Serve waiters of the combiner's NUMA node first (see kd_session()). */
 bool kd_numa __read_mostly = true;
 core_param(kd_numa, kd_numa, bool, 0644);
 
 #define KD_WAIT_STACK_ORDER	2	/* 16 KiB; interrupts taken while waiting land here */
 #define KD_EXEC_PIN		32	/* extra preempt count while executing a section */
-#define KD_OWNER_POLL		64	/* queued sleepable waiter: owner check interval */
+#define KD_OWNER_POLL		1024	/* queued sleepable waiter: owner check interval */
+#define KD_HANDOFF_POLL		16	/* sleepable session: handoff check interval, in waiters */
 
 #define KD_CHECK(type, member, off) \
 	static_assert(offsetof(type, member) == (off))
@@ -434,7 +436,10 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	    kc->depth >= KD_MAX_DEPTH)
 		return false;
 
-	while ((n = READ_ONCE(me->next))) {
+	for (;;) {
+		n = READ_ONCE(me->next);
+		if (!n)
+			break;
 		if (*budget >= kd_batch) {
 			kd_stat_inc(kc, KD_STAT_STOP_BUDGET);
 			break;
@@ -447,7 +452,14 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			kd_stat_inc(kc, KD_STAT_STOP_RESCHED);
 			break;
 		}
-		if (sleepable && (READ_ONCE(q->flags) & KD_QF_HANDOFF)) {
+		/*
+		 * The flags share the queue word's cache line, which every
+		 * returning waiter swaps once per section; reading them per
+		 * section would miss nearly every time. A handoff request is
+		 * rare and may wait up to KD_HANDOFF_POLL short sections.
+		 */
+		if (sleepable && !(*budget % KD_HANDOFF_POLL) &&
+		    (READ_ONCE(q->flags) & KD_QF_HANDOFF)) {
 			kd_stat_inc(kc, KD_STAT_STOP_HANDOFF);
 			break;
 		}
@@ -478,14 +490,33 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			smp_store_release(&n->state, KD_N_FREE);
 			continue;
 		}
-		/* Warm the next waiter's packet and stack while this one runs. */
+		/*
+		 * Warm the next waiter while this one runs, without loading
+		 * through its lines: a dependent load here (node, then packet,
+		 * then stack pointer) stalls the session on two remote misses
+		 * before every section (measured: most of kd_session's time).
+		 * The node line is requested now, shared: its waiter polls its
+		 * state there, and an exclusive request would take the line
+		 * away from it (measured: -4% for mutex c16). The packet is
+		 * requested once the section is done, when the node has
+		 * arrived. Prefetches cannot fault,
+		 * and node storage is per-CPU and never freed, so a pointer
+		 * that is stale by then only costs a useless prefetch.
+		 */
 		nn = READ_ONCE(n->next);
-		if (nn && nn->regs) {
-			prefetchw(nn->regs);
-			prefetchw((void *)nn->regs->rsp - 64);
-		}
+		if (nn)
+			prefetch(nn);
 
 		handed = !kd_exec_one(root, n, f);
+		if (nn) {
+			struct kd_regs *nr = READ_ONCE(nn->regs);
+
+			if (nr) {
+				prefetchw(nr);
+				prefetchw((void *)nr + 64);
+				prefetchw((void *)nr + 128);
+			}
+		}
 		kd_q_detach(q, me, n);
 		smp_store_release(&n->state, KD_N_RESUME);
 		++*budget;
