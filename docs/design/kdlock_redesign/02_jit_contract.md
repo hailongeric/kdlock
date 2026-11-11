@@ -140,8 +140,10 @@ ends only at its matching up_read. That operation closes the writer cohort and
 waits for physical ACK before returning the post-up_read continuation to W, propagating terminal ownership through nested
 ancestors while retaining their physical release duties. Exact native handback
 on a miss in the retained tail is permitted with that writer custody intact.
-These new source paths have compiled. Runtime validation is pending, with no
-context-equivalence or general progress result.
+The kernel5 rwsem fixed-image fixture records these selected return and retained
+miss routes, with ordinary shared-read checks also recorded for rwlock. These
+bounded observations establish no context-equivalence or general progress result.
+[Current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
 
 ### 2.3 Selected RCU replacement and retained users
 

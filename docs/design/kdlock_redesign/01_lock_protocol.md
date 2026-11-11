@@ -465,7 +465,7 @@ At any reached B acquisition, the JIT fragment has already ended with B pending.
 | Origin continuation | A validated transfer gives W the current unfinished continuation and correctly routed live grants |
 | Native from initial entry | Before delegated effects, decline an invocation whose later forward continuation cannot be supported |
 
-Routes apply only to the selected family/context lanes. C10 permits C_A to acquire a real concurrent read credit for W and continue its current source. This is remote execution relative to W. An ordinary inner B read release returns current S_W to A's proxy through the normal child return. The initial standalone read path remains on W. None of these source additions has build or execution evidence yet.
+Routes apply only to the selected family/context lanes. C10 permits C_A to acquire a real concurrent read credit for W and continue its current source. This is remote execution relative to W. An ordinary inner B read release returns current S_W to A's proxy through the normal child return. The initial standalone read path remains on W. Kernel5 fixed-image reader fixtures now record these selected continuation and credit routes within their declared bounds. Broader context and progress proof remains open.
 
 An unavailable B image does not prevent B acquisition. Use a supported local/native continuation, never a wait for compilation. Executing arbitrary source natively on C_A is not a generic recovery engine; native execution on a non-origin task requires its own proven context/continuation contract.
 
@@ -584,8 +584,9 @@ before writer exclusion ends. Its later up_read releases that credit. It uses
 native hardware CALL/RET without importing an old canonical cursor. Ordinary
 inner shared-read release returns to the enclosing proxy instead of forcing
 terminal origin ownership. Rwlock has no downgrade. These selections establish
-source scope. Compilation has completed. Runtime validation is pending, with no
-native concurrency-equivalence claim for the retained-writer route.
+source scope. The bounded kernel5 rwsem fixture records native and retained
+writer downgrade, exact native miss suffixes and terminal up_read continuation.
+It makes no native concurrency-equivalence claim for the retained-writer route.
 [Historical downgrade evidence](04_evidence_and_reconciliation.md#27-newer-proxy-downgrade-and-flags-stack-evidence).
 
 Trylock failure and interrupted acquisition create no successful grant. Temporary queue/reservation claims still need cleanup. Signalable APIs must observe W's intended signals/results rather than silently substituting C's signals.
@@ -664,8 +665,9 @@ a bounded writer cohort before rejoining for its own source. Cohort control
 outlives individual source callbacks. Normal active member completion and the
 cohort's later physical release remain distinct. A foreign/outer synchronous
 release closes further service and waits for actual physical ACK. This is a
-private implementation strategy. The new paths have compiled, with runtime
-validation pending.
+private implementation strategy. Kernel5 reader fixtures record bounded
+writer/credit transitions and final retirement. General arbitration, context and
+progress validation remain outstanding.
 
 A logical grant records family, mode and physical custody independently.
 RETAINED_READ keeps the original writer control through up_read. A real READ

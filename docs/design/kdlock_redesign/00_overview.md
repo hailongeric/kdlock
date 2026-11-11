@@ -106,7 +106,10 @@ pairs in IRQ-enabled task context. Rwlock execution retains each physical task's
 preemption pins. They use the same S_W, operation boundaries, source CALL/RET
 bridge and original UB/KD GS lowering. Same-family nesting is in scope. Mixed
 families, signal/trylock, IRQ/BH/NMI and other configuration variants remain
-outside this addition. The new rwsem/rwlock source has compiled. Runtime validation is pending.
+outside this addition. Kernel5 fixed-image rwsem and rwlock fixtures now record
+bounded concurrent-credit and protected-continuation checks. General context,
+lifetime and progress coverage remain incomplete.
+[Current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
 
 A delegated rwsem downgrade changes the same acquisition from logical WRITE to
 RETAINED_READ while its physical writer remains held. Source may continue through

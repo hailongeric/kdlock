@@ -27,7 +27,7 @@ adapter/bridge details have source and scoped mutex observations. Broader
 correctness and progress proof remains open. C08 now selects
 preallocated miss-fact retention with continued admission as recorded below.
 C10 now selects ordinary rwsem/plain-rwlock read/write source and the rwsem
-mode routes below. These new additions have compiled. Runtime validation is pending. Other variants
+mode routes below. Bounded kernel5 reader fixtures now provide route-specific runtime evidence. Other variants
 remain separately scoped. Managed provisioning/lifecycle/provider
 composition is now source-connected through `c6becf81`; deployment and exact
 target validation remain separate. C05 selects task-owned preallocated persistent requests for normal
@@ -70,7 +70,7 @@ forced-local/defer option is superseded.
 | AS01: general flags/SIMD | Assume correct for this iteration, without extra general capture, virtualization, shadow state or blanket admission gate | An explicit assumption, not a general equivalence result |
 | PUSHFQ/POPFQ local exception | Temporary GPR and exactly one virtual-source push/pop, preserved live values and balanced physical-stack temporaries | Lowering source is present; covered POPFQ effects and runtime proof remain unrun |
 | Selected ordinary-mutex outer unlock | Exact source request and deferred marker, retained responsible outer combiner, notification/unwind and owner handling, normal batch then physical release | Extra waiting accepted; no generic native timing/progress parity. Initial mutex lock-object storage stays valid through actual physical release/final object access; owner/control/notifier last users and callback-code retention remain separate |
-| Selected rwsem downgrade | Delegated WRITE becomes RETAINED_READ in the same acquisition with physical WRITE through up_read, then physical writer ACK before exact terminal continuation goes to W. Native downgrade continuously creates true READ credit | Every operation remains a boundary. Exact native miss suffix is permitted with retained custody. No rwlock downgrade. Compilation completed. Runtime validation is pending and historical candidate evidence proves none of these routes |
+| Selected rwsem downgrade | Delegated WRITE becomes RETAINED_READ in the same acquisition with physical WRITE through up_read, then physical writer ACK before exact terminal continuation goes to W. Native downgrade continuously creates true READ credit | Every operation remains a boundary. Exact native miss suffix is permitted with retained custody. No rwlock downgrade. The kernel5 rwsem fixture records bounded native/retained routes. Historical candidate evidence proves none of these current routes |
 
 ## 2 Evidence boundaries
 
@@ -91,8 +91,10 @@ family. Repeated true read credits remain distinct and release finds the latest
 matching open family/object credit. Read acquisition under an already-held
 writer object is not a downgrade and is outside the distinct-object writer
 case. Mixed families, rwlock downgrade, signal/trylock, IRQ/BH/NMI and other
-configuration variants remain outside this addition. Compilation has completed
-for the selected source. Runtime validation remains pending.
+configuration variants remain outside this addition. Kernel5 fixed-image reader
+fixtures now record concurrent credits, writer exclusion and selected source
+continuations within explicit finite bounds. Broader context and progress
+validation remain incomplete.
 [Selected source scope](03_implementation_plan.md#26-rwsem-and-rwlock-extension).
 
 #### Current evidenced checkpoint
@@ -107,12 +109,17 @@ protected spin recursion and a separate mutex regression on fresh kernel4 boot
 `1b3b298f-051b-42ea-a53b-429c16f4e114`. The checkpoint retains each attempt's exact
 inputs, result and later operational return.
 
-The current reader/writer checkpoint at core `1114b41e` completed all 31 core
-units and the full kernel build with return 0, producing 6,901 modules in
-284.6 seconds. Separate rwsem, rwlock, spin and mutex fixture module builds
-returned 0, and six staged AST checks passed. Runtime validation has
-not begun. The build receipts are being collected. These compilation results
-establish no runtime or performance result.
+The reader/writer checkpoint at core `1114b41e` completed all 31 core units and
+the full kernel5 build with return 0, producing 6,901 modules in 284.6 seconds.
+All four family fixture builds and staged Python syntax checks returned 0 for
+the e5 and corrected 098 fixture revisions. Runtime observations below use
+unchanged production core `1114b41e`, the original JIT/GS lowering and one S_W.
+Rwsem uses `e5b78520` on boot `b827f92c-254a-4cd3-a989-c6ea32c74605`.
+Corrected rwlock uses `09834f09` on boot
+`03779fbf-d0ca-48da-b058-b0f9732d2571`. Separate spin and mutex regressions at
+that same 098 revision and boot also return their protected-mechanism pass
+statuses and complete ordinary unload. Their records remain separate.
+[Kernel5 checkpoint](../../../tests/evidence/kernel5-checkpoint-20261111/README.md).
 
 | Stage | Actual result and evidence boundary |
 | --- | --- |
@@ -139,8 +146,22 @@ establish no runtime or performance result.
 | Corrected protected spin recursion | The [spin receipt](../../../tests/evidence/runtime-spin-recursive-20261111/README.md) records controller and runner return 0, 5,190 events and zero overflow. Four source regions total 5,115 bytes. One warm plain proxy lifetime and both recursive scenes complete protected JIT episodes with one canonical S_W, distinct acquisitions and CA → CB → CA current-state return. Both child/root outcomes are DONE3. In mode 2, A's physical callback completes before accepted A unlock and the next B fragment. Four publications ACK 0/1/2/1 exact ordinary facts. A deliberate CALL_STAGED miss resumes native W with one checkpoint effect and matching pin checks, then its one pending fact is archived and SETTLED. All 32 wire exchanges return status 0 before ordinary destroy/unload. |
 | Mutex regression on kernel4 | The [mutex receipt](../../../tests/evidence/runtime-mutex-regression-20261111/README.md) records controller and runner return 0, 4,691 events and zero overflow. Four regions total 5,079 bytes. Two warm plain proxy lifetimes and both recursive scenes complete on one canonical S_W with distinct acquisitions. Mode 1 has child/root DONE3. Mode 2 has child UNWIND_PARENT5 and root DONE3, with responsible-owner deferred physical release and final retirement recorded separately. Four publications ACK 0/2/4/2 exact facts, all 32 wire exchanges return status 0, and pending/SETTLED counts are zero before ordinary destroy/unload. |
 | Independent saved-record audits | The first `a0ad2c4d` audit invocations returned 1 at a nonexistent per-runtime poststate path, after their earlier relation checks. Both failures are retained. Peer-reviewed schema correction `3fea6dab` reads the actual combined poststate and each controller's own idle/identity capture. Both corrected audits return 0 with `SAVED_RUNTIME_RELATIONS_VERIFIED`, retaining all event, physical, wire, fact and archive assertions in the [spin](../../../tests/evidence/runtime-spin-recursive-20261111/README.md) and [mutex](../../../tests/evidence/runtime-mutex-regression-20261111/README.md) receipts. |
-| Current rwsem/rwlock source additions | C10 selects current-proxy shared reads, ordinary inner read return, same-acquisition retained rwsem downgrade with exact native miss suffix and terminal up_read return to W, and native continuous downgrade. The typed state/JIT and reader/writer physical additions have compiled, with runtime validation pending. Existing mutex/spin receipts establish none of these new routes. [State](../../../kernel/state.h), [JIT bridge](../../../kernel/jit.c), [reader/writer core](../../../kernel/rw.c). |
+| Rwsem artifact-capacity failure | Fixture `e990fde3` failed first STAGE_LOAD at sequence 4 with ENOSPC before publication or generated entry. Its three text blobs total 582,630 bytes against a 524,288-byte combined reservation. `68a2e5ed` changes only reader fixture artifact capacity to three existing 512 KiB per-blob bounds. Actual ordinary abort/shutdown/archive/SETTLED/unload completed separately. [Capacity receipt](../../../tests/evidence/runtime-rwsem-capacity-20261111/README.md). |
+| Rwsem target-learning failure | Fixture `68a2e5ed` published images but failed its warm shared-B assertion. A reached prefixed CALL at `0xffffffffc000cff5` lacked the helper edge in the fixed image, so exact native handback preceded B up_read. The compiler had retained the CALL correctly. This is no reproduced parent-return defect. Scanner correction and bounded controlled learning follow at `e5b78520`. Ordinary recovery remains separate. [Target receipt](../../../tests/evidence/runtime-rwsem-target-20261111/README.md). |
+| Bounded rwsem reader/mode completion | Fixture `e5b78520` returns `protected_rwsem_jit_reader_mechanism_pass` with 7,147 records and zero overflow. Native concurrency/exclusion and real downgrade pass. One final fixed image records shared-B return to A proxy, outer READ across a nested writer, same-grant retained downgrade, nested terminal up_read return and retained native miss suffixes, with exact credit/control retirement. Sixteen compiler cycles produce 13 publications and 14 coverage-ACKed keys across 90 successful wire responses. The warm claim adds no facts but retains its exact two intentional facts, so it is nonempty. Four intentional facts are archived and SETTLED separately before ordinary unload. [Rwsem receipt](../../../tests/evidence/runtime-rwsem-readers-20261111/README.md). |
+| Rwlock native-validator failure | The e5 rwlock attempt fails before export, wire exchanges or JIT entry. Its 653 records show native write unlock operation 14 with own BATCH_HEAD action 1, followed by physical callback completion. The validator had required spin action 3. `09834f09` distinguishes native-owned rwlock action 1 from foreign SYNC action 4, preserving typed operation 14 and separate physical/retirement checks. Spin retains action 3 and operation 5. Ordinary stop/destroy/unload completes separately. [Native-validator receipt](../../../tests/evidence/runtime-rwlock-native-validation-20261111/README.md). |
+| Corrected bounded rwlock reader completion | Fixture `09834f09` returns `protected_rwlock_jit_reader_mechanism_pass` with 6,628 records and zero overflow on its fresh kernel5 boot, followed by ordinary shutdown/unload. Native reader overlap/exclusion, distinct/repeated credits, shared-B parent return and nested writer checks complete within same-family IRQ-enabled atomic context and numerical preemption-pin checks. Twelve cycles produce 10 publications and 10 coverage-ACKed keys across 70 successful wire responses. The nonempty warm claim retains one exact intentional fact with no new facts. Three suffix facts are archived and SETTLED separately. Rwlock has no downgrade API. [Rwlock receipt](../../../tests/evidence/runtime-rwlock-readers-20261111/README.md). |
+| Kernel5 spin regression | Fixture `09834f09` on boot `03779fbf-d0ca-48da-b058-b0f9732d2571` returns `protected_spin_jit_recursive_mechanism_pass`, with 5,190 records and zero overflow. Five cycles produce four publications and four coverage-ACKed keys across 32 successful wire responses. The warm claim is empty. One deliberate suffix fact is archived and SETTLED before ordinary shutdown/unload. These are new kernel5 observations, separate from the kernel4 receipt above. [Spin regression](../../../tests/evidence/runtime-spin-kernel5-20261111/README.md). |
+| Kernel5 mutex regression | The same 098 revision and kernel5 boot returns `protected_jit_recursive_mechanism_pass`, with 4,691 records and zero overflow. Five cycles produce four publications and eight coverage-ACKed keys across 32 successful wire responses. The warm claim is empty and SETTLED count is zero before ordinary shutdown/unload. The selected mutex deferred-release path retains its independent physical-owner and retirement checks. [Mutex regression](../../../tests/evidence/runtime-mutex-kernel5-20261111/README.md). |
 | Operational return after corrected kernel4 runs | The [normal-return receipt](../../../tests/evidence/return-normal4-db7-20261111/README.md) records one ordinary return with `NORMAL_IDENTITY_VERIFIED`, release `7.0.0-38-kdlock1`, boot `eefccc16-4d98-4834-b551-45767e83e442`, Build ID `b61c7bef25d2068f2a05ca3c31a5714c20c4aa62` and taint 0. |
+| Operational return after kernel5 reader/regression runs | The separate ordinary return verifies `7.0.0-38-kdlock1`, fresh boot `51b49fa4-4d99-457e-a73e-632b690eb95e`, Build ID `b61c7bef25d2068f2a05ca3c31a5714c20c4aa62` and taint 0. Fixture modules/devices/workers are absent, eight normal/legacy boot files are unchanged, and normal GRUB configuration/default are preserved. This later operational state does not replace the kernel5 execution identities above. [Normal-return receipt](../../../tests/evidence/return-normal5-readers-20261111/README.md). |
+
+The full three reader-failure cleanup directories are now retained in the
+[ordinary-recovery receipt](../../../tests/evidence/runtime-reader-recovery-20261111/README.md),
+including both actual fsynced rwsem history archives and the native-only rwlock
+stop/destroy/unload records. Earlier failure packages' missing-input notes
+describe their original collection slices. Their failed runtime results remain
+unchanged by this later complete recovery collection.
 
 Kernel4's full-link log retains five handwritten-return diagnostics, one
 indirect-call diagnostic, the function-fallthrough diagnostic and the
@@ -156,7 +177,7 @@ execution. The caller admits source valid under that context. Arbitrary
 context-changing APIs remain outside this evidence. Protected completion ends at the matching
 source unlock, while the unprotected C function epilogue remains native. These
 scoped fixtures establish no performance, general progress, complete mitigation
-or full auxiliary-stack unwind result. T01–T56 remain unrun.
+or full auxiliary-stack unwind result. The full T01–T56 acceptance matrix remains unrun.
 [Spin receipt](../../../tests/evidence/runtime-spin-recursive-20261111/README.md),
 [mutex regression](../../../tests/evidence/runtime-mutex-regression-20261111/README.md).
 
@@ -167,8 +188,8 @@ the complete recursive protocol. The final image adds the third JMP dispatch, bu
 later generated record from live4 proves that dispatch executed. ACK establishes exact
 published emitted coverage, not execution of every updated path. No whole
 protected JIT-body return was established by live4. Live5 separately records its
-complete protected episodes and exact release/retirement paths. T01-T56 remain
-unrun; no performance result follows. The
+complete protected episodes and exact release/retirement paths. The full T01-T56 acceptance matrix remains
+unrun. No performance result follows. The
 [auxiliary-context audit](../../../tests/evidence/auxiliary-context-20261110/README.md)
 retains the unrecognized auxiliary-stack unwinder/stack-end limits and missing
 full context/high-water proof. The fixture's exact retirement paths do not
@@ -176,6 +197,12 @@ establish general retirement, progress or mitigation coverage. Those remain
 unvalidated. Runtime creation refuses active CALL_DEPTH because
 its return thunk changes flags; the ordinary mitigation configuration remains
 enabled.
+
+The repeated real READ identity case has no pending writer. General same-object
+reader admission/progress, mixed-family and IRQ/BH/NMI behavior remain unproved.
+The new results are synthetic mechanism evidence, not a complete native
+concurrency-equivalence, general progress, whole-kernel, real-world syscall or
+performance result. The protected episode ends before the native C epilogue.
 
 #### Earlier focused host checkpoint
 
@@ -571,8 +598,9 @@ Every reached downgrade and unlock still ends the fragment first. Exact native
 miss handback retains that acquisition, and matching up_read closes the writer cohort and receives physical ACK before
 terminal origin ownership, with ancestor duties retained. Native downgrade has a separate
 continuous conversion to actual shared READ credit. This current selection is
-not inherited from the older candidate or its boundary exemption. The new source
-paths have compiled and await runtime validation.
+not inherited from the older candidate or its boundary exemption. The kernel5
+rwsem fixture now records these routes within its declared bounds. General
+context, lifetime and progress proof remain open.
 
 Neither focused fixtures, source merges nor whole-root returns establish
 general flags/SIMD equivalence. AS01 remains an assumption. PUSHFQ/POPFQ local
@@ -602,7 +630,7 @@ own affected checks.
 | Every-operation wording applied to lock implementation bookkeeping | Only source operations enter boundary/nesting dispatch. Internal queue/metadata locks retain physical obligations but create no W source grants |
 | Correct post-release native suffix treated as complete JIT support | Generic post-operation fragment admission is a design requirement; terminal suffix remains fallback with a distinct completion classification |
 | Observed mmap symptoms used to select a body-specific design | General family/API/mode, S_W, operation phase, source cursor/epoch and ABI contracts; no application-name dispatch or exceptions |
-| Reader and writer routes grouped under remote extensions | Reader concurrency/mode/API semantics remain S. Earlier roadmap placement was E/P. The user now selects current-proxy shared reads and the distinct retained-writer rwsem return route within declared same-family contexts. Compilation completed. Runtime validation is pending |
+| Reader and writer routes grouped under remote extensions | Reader concurrency/mode/API semantics remain S. Earlier roadmap placement was E/P. The user now selects current-proxy shared reads and the distinct retained-writer rwsem return route within declared same-family contexts. Kernel5 fixed-image fixtures provide bounded mechanism observations. Broader validation remains incomplete |
 
 ### 3.1 Invariant coverage
 
@@ -634,7 +662,7 @@ N IDs identify this normative-origin audit, distinct from the historical v0.6 A0
 | N01 | Latest explicit target versus inherited architecture | F/S govern the target; source presence alone gives no mandate. Operational editing/testing rules remain in force | Overview authority rule; all five files |
 | N02 | "Existing S_W/storage" implied a complete current core or mandatory reuse | F requires one thread-owned core and direct second-level users; fresh physical layout is allowed, current packet sharing is E | C02, protocol section 3, P1/T48 |
 | N03 | Two-word args, 168 bytes/offsets, reserved registers, object size or entry offsets treated as fixed ABI | C04 explicitly retains KD physical R11 as canonical-packet base, not all old private offsets/layouts. C12 source rebuild is selected; complete target input/materialization/API contracts still need implementation/proof | C04/C12, JIT section 3, T12/T50 |
-| N04 | Roadmap local-reader lane promoted to fixed direction | The earlier origin-local restriction was P. The user now selects current-proxy concurrent reads and distinct ordinary-read versus retained-writer return paths. Exact context/concurrency/custody duties remain S and new source has compiled, with runtime validation pending | C10, R27, support matrix/T27/T46 |
+| N04 | Roadmap local-reader lane promoted to fixed direction | The earlier origin-local restriction was P. The user now selects current-proxy concurrent reads and distinct ordinary-read versus retained-writer return paths. Exact context/concurrency/custody duties remain S and new source has bounded kernel5 fixture evidence, with broader validation incomplete | C10, R27, support matrix/T27/T46 |
 | N05 | Current hotness, waiter pinning/parking, owner words, pool sizes and family order | E/P mechanism/rollout choices, not target invariants; prove selected eligibility/context/capacity/progress | C01/C02/C05/C11, P1/P3/P7 |
 | N06 | OSQ plus delegation and separate links required everywhere | Conditional on a selected dual-membership backend. S requires every selection/cancel/progress/retirement duty; a merged/different protocol needs equivalent proof | C11, selected contexts/P1/T49 |
 | N07 | Exact authority equated with an inherited backend or implicit S_W grant transfer | C03 now selects retained responsible physical outer-combiner context for deferred mutex unlocks; the transferable proposal is superseded. Exact source/deferred/physical phases and owner checks remain required | C03, protocol section 5, T15/T51 |
@@ -642,13 +670,13 @@ N IDs identify this normative-origin audit, distinct from the historical v0.6 A0
 | N09 | Lease counters, completion subleases, session-only/image-count retention | E/P storage/reclamation choices. S is valid text/code/return/object lifetime through actual last use and nonstranding drain | C06/C09, JIT sections 2.3/5.3, T29/T30 |
 | N10 | Five CALL edges, compatibility depth, 32 ledger rows and other budgets | Five-edge discovery is the explicitly approved current default P, not immutable F. Other capacities/encoding and any change to the default require a deliberate P choice with bounded completion | C08/C05, JIT sections 1.2/5.2, T24/T44 |
 | N11 | One build/upload owner, fd staging, receipt encoding or daemon organization | E/candidate P solutions; S is candidate isolation, coherent publication, exact cumulative coverage acknowledgement and valid restart/reset | C08/C09, JIT section 5, T31-T37 |
-| N12 | Current family/API exclusions read as permanent bans | C10 now selects ordinary rwsem/plain-rwlock read/write and two rwsem downgrade routes as source scope. The new paths have compiled. Runtime validation is pending. Other variants stay separately scoped. Linux 7.0 x86_64 non-PREEMPT_RT remains fixed F | C01/C10, support matrix/P7 |
+| N12 | Current family/API exclusions read as permanent bans | C10 now selects ordinary rwsem/plain-rwlock read/write and two rwsem downgrade routes as source scope. The new paths have bounded kernel5 mechanism evidence. Broader validation remains incomplete. Other variants stay separately scoped. Linux 7.0 x86_64 non-PREEMPT_RT remains fixed F | C01/C10, support matrix/P7 |
 | N13 | Terminal native suffix read as only possible architecture | Terminal suffix is conservative P; no replay/exact state is F/S. Resumable service/reentry requires an explicit new contract, never automatic old-cursor revival | C04/C06/C10, JIT section 4.3 |
 | N14 | "Preserve current implementation first" made architectural | Declared API/context/lifetime duties and evidence classification remain; selected mutex deferral is an explicit limited timing policy, not native parity. Independent source rebuild/fresh layouts are selected | C01/C03/C12, P0-P8 |
 | N15 | Queue scheduling lifetime and persistent request/control lifetime conflated | C05 selects task-owned persistent request records for normal local/proxy selection. Finite explicit caller capacity includes concurrently live nested requests and every retained release/control/return/image/current-native user. The supported workload guarantees availability; exhaustion is documentation-only, with no handler/recovery/local fallback or new special assertion. Provisioning/reuse/lifecycle proof remains work; no deployment value or unbounded claim is supplied | C02/C05, selected storage/T48/T49 |
 | N16 | Deferred/unproved general flags/SIMD text could become a new gate | AS01 is the user's explicit assumed-correct iteration scope, not evidence; no separate general subsystem/shadow/gate, with local PUSHFQ/POPFQ simulation the exception | JIT section 3.5, C04, T54 |
 | N17 | Broad admission/frontier wording could reject a whole root | Ordinary trusted-source translation is target intent; recognized special instructions clip only affected paths. Keep safe alternatives/joins/returns and exact reached handback without replay | JIT section 1.3, T43/T52/T53 |
-| N18 | Experimental typed proxy downgrade could weaken target boundaries/native semantics | Older candidate receipts and same-root boundary exemption remain E. The user separately selects retained physical WRITE through logical up_read for delegated rwsem, with every-operation cuts and exact terminal return. Native downgrade creates real READ credit. Compilation completed. Runtime validation is pending | Section 2.7, C10, T55 |
+| N18 | Experimental typed proxy downgrade could weaken target boundaries/native semantics | Older candidate receipts and same-root boundary exemption remain E. The user separately selects retained physical WRITE through logical up_read for delegated rwsem, with every-operation cuts and exact terminal return. Native downgrade creates real READ credit. Kernel5 fixed-image fixtures provide bounded mechanism observations. Broader validation remains incomplete | Section 2.7, C10, T55 |
 | N19 | Reserved packet-base versus resident logical R11 treated as an active optimization choice | User selected retention of KD physical-R11 canonical-packet-base mapping. Optimization discussion/T56 are deferred, unrun future work; selection implies no measured gain or general equivalence evidence | JIT section 3.1.1, T56 |
 | N20 | Immediate outer physical release treated as unconditional | Latest user selection supersedes it only for ordinary-mutex out-of-order outer unlock: retain responsible combiner, defer/notify/unwind, handle and continue normal batch/release. Extra waiting is accepted without generic native timing/progress parity | Protocol section 5, P5, T15/T51 |
 | N21 | Retained context or source unlock marker treated as lock-object lifetime | Initial mutex lane now requires stable lock-object storage through actual physical release/final access. Caller establishes validity; owner/control allocations and exact source/return/notifier users can outlive release, and callback code stays through return. Availability-dependent handshakes retain stated progress limits | Protocol section 3.2/5, C03, T16/T17 |

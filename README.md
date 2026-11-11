@@ -19,8 +19,31 @@ matching `up_read` returns the exact continuation to W, including from a nested
 scope. A generated miss can return the exact native suffix with that writer
 still retained. An ordinary native downgrade creates a real read credit
 continuously. Core `1114b41e` passed all 31 object builds and the full kernel5
-build; all four family fixtures compiled. Behavioral validation is pending.
-The earlier spin/mutex receipts below remain separate.
+build. All four family fixtures compiled, with staged Python syntax checks.
+The bounded rwsem fixture at `e5b78520` and corrected rwlock fixture at
+`09834f09` returned their protected-reader mechanism pass statuses and completed
+ordinary shutdown/unload on separate kernel5 boots. These observations preserve
+the original JIT/GS engine and one S_W. They establish no general progress,
+performance, native concurrency equivalence, whole-kernel replacement or
+real-world syscall result. The earlier failures and spin/mutex receipts remain
+separate. [Reader evidence checkpoint](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
+
+The rwsem run records 7,147 events with zero overflow, concurrent real readers,
+writer exclusion, shared-B return to its enclosing proxy, both rwsem downgrade
+routes and an exact retained native miss suffix. Sixteen compiler cycles produce
+13 publications and 14 coverage-ACKed fact keys. The warm claim adds no facts
+while retaining its two intentional checkpoint facts, so it is not empty.
+All four intentional facts, including the final deliberate misses, are archived
+and SETTLED separately. [Rwsem receipt](tests/evidence/runtime-rwsem-readers-20261111/README.md).
+
+Corrected rwlock records 6,628 events with zero overflow, 12 compiler cycles,
+10 publications and 10 coverage-ACKed keys. Its one-fact intentional warm
+baseline is unchanged, and three suffix facts are archived and SETTLED.
+Separate spin and mutex regressions at `09834f09` also pass on that same kernel5
+boot. Their counters and provenance remain separate from the e5 rwsem run.
+[Rwlock receipt](tests/evidence/runtime-rwlock-readers-20261111/README.md),
+[spin regression](tests/evidence/runtime-spin-kernel5-20261111/README.md),
+[mutex regression](tests/evidence/runtime-mutex-kernel5-20261111/README.md).
 
 The [fixed-image recursive fixture](tests/evidence/runtime-recursive-20261110/README.md)
 returned `protected_jit_recursive_mechanism_pass` on kernel3. It records complete
@@ -272,7 +295,7 @@ The exact-target installer was added at `97130fe4`; subsequent target
 application/build, installation and boot have separate receipts linked from the
 current checkpoint. The retained
 [focused receipt](tests/evidence/runtime-pipeline-20261110/README.md)
-(`c6fbf7bb`) records the exact limits. T01-T56 remain unrun. See the
+(`c6fbf7bb`) records the exact limits. The full T01-T56 acceptance matrix remains unrun. See the
 [evidence limits](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#21-rebuild-status).
 
 Read the design in order:
