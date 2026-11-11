@@ -62,8 +62,8 @@ class SourceBoundaryTests(unittest.TestCase):
         query = next(item for item in image.exits if item.detail == "KD_JIT_OP_QUERY")
         self.assertEqual((query.kind, query.source_ip, query.resume_ip, query.target, query.phase),
                          ("KD_JIT_EXIT_LOCK_OPERATION", 0x1000, 0x1000, 0x3000, "KD_JIT_PHASE_TARGET_READY"))
-        disposition = adapt_runtime_exit(RuntimeExit(ExitKind.LOCK_OPERATION, 4, 0x1000, 0x3000,
-                                                    0x1000, ExitPhase.TARGET_READY),
+        disposition = adapt_runtime_exit(RuntimeExit(int(ExitKind.LOCK_OPERATION), 4, 0x1000, 0x3000,
+                                                    0x1000, int(ExitPhase.TARGET_READY)),
                                          image, result.snapshot.version.encode(), TargetClassification.API)
         self.assertIs(disposition.kind, DispositionKind.SOURCE_OPERATION)
         self.assertIsNone(disposition.observation)
