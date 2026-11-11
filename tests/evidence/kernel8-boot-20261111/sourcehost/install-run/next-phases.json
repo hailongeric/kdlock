@@ -1,0 +1,55 @@
+{
+  "install": {
+    "argv": [
+      "/usr/bin/python3",
+      "-B",
+      "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-install.py",
+      "install",
+      "--controller-idle-recovery-confirmed"
+    ],
+    "sha256": "c712768ac61721493a2d622c62cf62bf791b49857c76f4f53c3e8a4b310b0e01"
+  },
+  "arm": {
+    "argv": [
+      "/usr/bin/python3",
+      "-B",
+      "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-install.py",
+      "arm",
+      "--controller-idle-recovery-confirmed"
+    ],
+    "sha256": "9da84d612dc52a3758a4ea3591c0b6a114ca94bbca39ba980beec73061436e61"
+  },
+  "reboot": {
+    "argv": [
+      "ssh",
+      "-T",
+      "-p",
+      "2222",
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "ConnectTimeout=10",
+      "root@10.176.26.71",
+      "systemctl",
+      "reboot",
+      "--no-wall"
+    ],
+    "sha256": "5869d3d0433918d7a05b5d0415cdaede024f7d61dab87504758a66b337881d98"
+  },
+  "postboot": {
+    "argv": [
+      "/usr/bin/python3",
+      "-B",
+      "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-postboot.py",
+      "--output",
+      "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01",
+      "--timeout",
+      "120",
+      "--max-command-bytes",
+      "33554432",
+      "--max-notes-bytes",
+      "1048576"
+    ],
+    "sha256": "41f856f005d13684785d8e1ea79958defdff3a4ddc85bb7f91dc5410b62bbb1b"
+  }
+}

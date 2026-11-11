@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-install.py", line 666, in <module>
+    main()
+    ~~~~^^
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-install.py", line 620, in main
+    grub = check('grub-installed', 'grub', seconds=30)
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-install.py", line 146, in check
+    command(label, ['python3', RECEIPTS / 'checks.py', mode,
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    '--output', RECEIPTS / output, *extra], seconds)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-install.py", line 140, in command
+    raise RuntimeError('command failed; preserve partial state: ' + label)
+RuntimeError: command failed; preserve partial state: grub-installed

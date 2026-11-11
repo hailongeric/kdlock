@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "modprobe",
+    "-S",
+    "7.0.0-38-kdrebuild8",
+    "--show-depends",
+    "vfat"
+  ],
+  "elapsed_seconds": 0.006314956001006067,
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-vfat.log",
+  "log_sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9",
+  "pid": 137899,
+  "returncode": 0,
+  "timed_out": false
+}

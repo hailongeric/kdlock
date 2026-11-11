@@ -1,0 +1,2 @@
+{"phase": "DISPATCHED", "pid": 131702, "driver": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-driver-01", "recovery_sha256": "c4192766695d82a76859814064108592ace3ddb06ae5258f648b043ee37d392f"}
+{"phase": "RETURNED", "returncode": 0, "driver": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-driver-01"}

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "python3",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/checks.py",
+    "modules",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-modules-installed.json",
+    "--root",
+    "/"
+  ],
+  "elapsed_seconds": 0.11860910200266517,
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-modules-installed.log",
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "pid": 137173,
+  "returncode": 0,
+  "timed_out": false
+}

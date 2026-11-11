@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "bytes": 545,
+      "destination": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/arm-grub-after-arm.json",
+      "sha256": "36a246c5822a0607b1c54f3fc63e72858280f6dc41a3a87103580b4fc09fec96",
+      "source": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-grub-after-arm.json"
+    },
+    {
+      "bytes": 232,
+      "destination": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/arm-complete.json",
+      "sha256": "56695c9e08c49df85e0aacf7d761f60699d80cb388818a6f352bea9620041e91",
+      "source": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-complete.json"
+    }
+  ]
+}

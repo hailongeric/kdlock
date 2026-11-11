@@ -1,0 +1,10 @@
+{
+  "candidate_entry": "kdlock-kdrebuild8-api-01",
+  "custom_cfg_sha256": "caae2caa937b2888237daeabf110fb70a5a6de6573f88bde1e91c40efec6a6fc",
+  "custom_prefix_sha256": "10704ea47ac50dfef89b9a0f2a6870f668bbaf7bb4935254d14f4c2dea829255",
+  "environment": {
+    "next_entry": "kdlock-kdrebuild8-api-01"
+  },
+  "grub_cfg_sha256": "4cb0e54c275387c4e725b1dc3d6c69393ec98207a5ea71d1c736c227b5eb93be",
+  "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+}

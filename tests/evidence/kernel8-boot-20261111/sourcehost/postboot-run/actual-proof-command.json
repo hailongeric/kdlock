@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "from pathlib import Path\nimport base64,hashlib,json,os,shutil\np=Path('/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01');files={}\nfor n in ('result.json','gs-proof.json'):\n r=(p/n).read_bytes();assert len(r)<4*1024**2;files[n]={'sha256':hashlib.sha256(r).hexdigest(),'data':base64.b64encode(r).decode()}\nr=json.loads(base64.b64decode(files['result.json']['data']));assert r['phase']=='POSTBOOT_IDENTITY_VERIFIED';tools={}\nfor n in ('insmod','rmmod','modinfo','dmesg'):\n q=Path(shutil.which(n));x=q.resolve(strict=True);a=x.stat();h=hashlib.sha256(x.read_bytes()).hexdigest();b=x.stat();assert(a.st_dev,a.st_ino,a.st_size,a.st_mtime_ns,a.st_ctime_ns)==(b.st_dev,b.st_ino,b.st_size,b.st_mtime_ns,b.st_ctime_ns);tools[n]={'path':str(q),'resolved_path':str(x),'sha256':h,'bytes':b.st_size}\nprint(json.dumps({'files':files,'tools':tools,'boot':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'release':os.uname().release,'taint':Path('/proc/sys/kernel/tainted').read_text().strip(),'modules':Path('/proc/modules').read_text()}))\n",
+  "timeout_seconds": 30
+}

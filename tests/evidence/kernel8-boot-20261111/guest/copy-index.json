@@ -1,0 +1,4294 @@
+{
+  "bytes": 53899614,
+  "count": 268,
+  "files": [
+    {
+      "bytes": 232,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-complete.json",
+      "identity": [
+        2080,
+        7620071,
+        33188,
+        1,
+        232,
+        1794428083796421576,
+        1794428083796421576
+      ],
+      "name": "arm/arm-complete.json",
+      "path": "payload/arm/arm-complete.json",
+      "sha256": "56695c9e08c49df85e0aacf7d761f60699d80cb388818a6f352bea9620041e91"
+    },
+    {
+      "bytes": 425,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-efivarfs-result.json",
+      "identity": [
+        2080,
+        7620059,
+        33188,
+        1,
+        425,
+        1794428083173378461,
+        1794428083173378461
+      ],
+      "name": "arm/arm-dependencies-efivarfs-result.json",
+      "path": "payload/arm/arm-dependencies-efivarfs-result.json",
+      "sha256": "546426514327939f36dd7ae291956b654fc8aeb206b65949cf7f41aa1b0b5b09"
+    },
+    {
+      "bytes": 17,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-efivarfs.log",
+      "identity": [
+        2080,
+        7620058,
+        33188,
+        1,
+        17,
+        1794428083169000000,
+        1794428083169000000
+      ],
+      "name": "arm/arm-dependencies-efivarfs.log",
+      "path": "payload/arm/arm-dependencies-efivarfs.log",
+      "sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    {
+      "bytes": 417,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-ext4-result.json",
+      "identity": [
+        2080,
+        7620055,
+        33188,
+        1,
+        417,
+        1794428083149821422,
+        1794428083149821422
+      ],
+      "name": "arm/arm-dependencies-ext4-result.json",
+      "path": "payload/arm/arm-dependencies-ext4-result.json",
+      "sha256": "eb8d9bb7d9f9b7b5c8b02dcbb18bfbd4a9f2b8b12725b1f0ea49418416e1bc48"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-ext4.log",
+      "identity": [
+        2080,
+        7620054,
+        33188,
+        1,
+        13,
+        1794428083146000000,
+        1794428083146000000
+      ],
+      "name": "arm/arm-dependencies-ext4.log",
+      "path": "payload/arm/arm-dependencies-ext4.log",
+      "sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    {
+      "bytes": 435,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-nls_iso8859_1-result.json",
+      "identity": [
+        2080,
+        7620063,
+        33188,
+        1,
+        435,
+        1794428083194778720,
+        1794428083194778720
+      ],
+      "name": "arm/arm-dependencies-nls_iso8859_1-result.json",
+      "path": "payload/arm/arm-dependencies-nls_iso8859_1-result.json",
+      "sha256": "5c50678eccd69e867621194019d27aa28ba15997be506a4c3fd6c2b95e4dc2df"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-nls_iso8859_1.log",
+      "identity": [
+        2080,
+        7620062,
+        33188,
+        1,
+        72,
+        1794428083191000000,
+        1794428083191000000
+      ],
+      "name": "arm/arm-dependencies-nls_iso8859_1.log",
+      "path": "payload/arm/arm-dependencies-nls_iso8859_1.log",
+      "sha256": "e93050f76e68c95ff3c77ac22c06278ada0debd8b8faa6103530117c59007065"
+    },
+    {
+      "bytes": 421,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-sd_mod-result.json",
+      "identity": [
+        2080,
+        7620053,
+        33188,
+        1,
+        421,
+        1794428083138000000,
+        1794428083138000000
+      ],
+      "name": "arm/arm-dependencies-sd_mod-result.json",
+      "path": "payload/arm/arm-dependencies-sd_mod-result.json",
+      "sha256": "a135a01b0539cb073ea26a8b956eec09c3fe916d8b636ebfd13581d0d123d632"
+    },
+    {
+      "bytes": 15,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-sd_mod.log",
+      "identity": [
+        2080,
+        7620052,
+        33188,
+        1,
+        15,
+        1794428083134000000,
+        1794428083134000000
+      ],
+      "name": "arm/arm-dependencies-sd_mod.log",
+      "path": "payload/arm/arm-dependencies-sd_mod.log",
+      "sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    {
+      "bytes": 417,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-vfat-result.json",
+      "identity": [
+        2080,
+        7620061,
+        33188,
+        1,
+        417,
+        1794428083184078050,
+        1794428083184078050
+      ],
+      "name": "arm/arm-dependencies-vfat-result.json",
+      "path": "payload/arm/arm-dependencies-vfat-result.json",
+      "sha256": "04dfdd6cd3628e39225d5d3dc398fbe83440c9df92f898c85fff662db154efa3"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-vfat.log",
+      "identity": [
+        2080,
+        7620060,
+        33188,
+        1,
+        13,
+        1794428083180000000,
+        1794428083180000000
+      ],
+      "name": "arm/arm-dependencies-vfat.log",
+      "path": "payload/arm/arm-dependencies-vfat.log",
+      "sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    {
+      "bytes": 429,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-virtio_net-result.json",
+      "identity": [
+        2080,
+        7620057,
+        33188,
+        1,
+        429,
+        1794428083162495091,
+        1794428083162495091
+      ],
+      "name": "arm/arm-dependencies-virtio_net-result.json",
+      "path": "payload/arm/arm-dependencies-virtio_net-result.json",
+      "sha256": "effa6d75602d70b4964951d7ff5384381ce78c53a2494b1cdf03c443f96c3a6d"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-virtio_net.log",
+      "identity": [
+        2080,
+        7620056,
+        33188,
+        1,
+        19,
+        1794428083157000000,
+        1794428083157000000
+      ],
+      "name": "arm/arm-dependencies-virtio_net.log",
+      "path": "payload/arm/arm-dependencies-virtio_net.log",
+      "sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    {
+      "bytes": 429,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-virtio_pci-result.json",
+      "identity": [
+        2080,
+        7620049,
+        33188,
+        1,
+        429,
+        1794428083115000000,
+        1794428083115000000
+      ],
+      "name": "arm/arm-dependencies-virtio_pci-result.json",
+      "path": "payload/arm/arm-dependencies-virtio_pci-result.json",
+      "sha256": "67ea0bca7314afbb11c3b7099091d2177302f7383d5a68a648adfe9589ed95cc"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-virtio_pci.log",
+      "identity": [
+        2080,
+        7620048,
+        33188,
+        1,
+        19,
+        1794428083111000000,
+        1794428083111000000
+      ],
+      "name": "arm/arm-dependencies-virtio_pci.log",
+      "path": "payload/arm/arm-dependencies-virtio_pci.log",
+      "sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    {
+      "bytes": 431,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-virtio_scsi-result.json",
+      "identity": [
+        2080,
+        7620051,
+        33188,
+        1,
+        431,
+        1794428083126825723,
+        1794428083126825723
+      ],
+      "name": "arm/arm-dependencies-virtio_scsi-result.json",
+      "path": "payload/arm/arm-dependencies-virtio_scsi-result.json",
+      "sha256": "dceb18ac70dc2b2b44a919ffa93a76a0835fc37734f9eca823d52e762ddbaf4b"
+    },
+    {
+      "bytes": 20,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-dependencies-virtio_scsi.log",
+      "identity": [
+        2080,
+        7620050,
+        33188,
+        1,
+        20,
+        1794428083123000000,
+        1794428083123000000
+      ],
+      "name": "arm/arm-dependencies-virtio_scsi.log",
+      "path": "payload/arm/arm-dependencies-virtio_scsi.log",
+      "sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    {
+      "bytes": 425,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-exact-build-id-result.json",
+      "identity": [
+        2080,
+        7620047,
+        33188,
+        1,
+        425,
+        1794428066082023166,
+        1794428066082023166
+      ],
+      "name": "arm/arm-exact-build-id-result.json",
+      "path": "payload/arm/arm-exact-build-id-result.json",
+      "sha256": "d0f4fea01678b3a22eb97394c0726f3fe53ab1d679add2ef1d3498f4abd188f1"
+    },
+    {
+      "bytes": 2120,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-exact-build-id.log",
+      "identity": [
+        2080,
+        7620046,
+        33188,
+        1,
+        2120,
+        1794428066077000000,
+        1794428066077000000
+      ],
+      "name": "arm/arm-exact-build-id.log",
+      "path": "payload/arm/arm-exact-build-id.log",
+      "sha256": "fa613c666e63c5c67e0c230c168a9aa9fc5fdd4697ff2fd85055a52ec48201f4"
+    },
+    {
+      "bytes": 545,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-grub-after-arm.json",
+      "identity": [
+        2080,
+        7620070,
+        33188,
+        1,
+        545,
+        1794428083685827813,
+        1794428083685827813
+      ],
+      "name": "arm/arm-grub-after-arm.json",
+      "path": "payload/arm/arm-grub-after-arm.json",
+      "sha256": "36a246c5822a0607b1c54f3fc63e72858280f6dc41a3a87103580b4fc09fec96"
+    },
+    {
+      "bytes": 386,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-initrd-list-result.json",
+      "identity": [
+        2080,
+        7620065,
+        33188,
+        1,
+        386,
+        1794428083373505607,
+        1794428083373505607
+      ],
+      "name": "arm/arm-initrd-list-result.json",
+      "path": "payload/arm/arm-initrd-list-result.json",
+      "sha256": "2f4d62f7ffd4bb0b3f89ad25fb5d4da768c46fddc630c159e17fb348908f93f6"
+    },
+    {
+      "bytes": 12627,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-initrd-list.log",
+      "identity": [
+        2080,
+        7620064,
+        33188,
+        1,
+        12627,
+        1794428083350000000,
+        1794428083350000000
+      ],
+      "name": "arm/arm-initrd-list.log",
+      "path": "payload/arm/arm-initrd-list.log",
+      "sha256": "7beaa9903f4006bbc7f93e855c22a5318e157d650e03db290ac90e45c8d2a5c1"
+    },
+    {
+      "bytes": 371,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-one-shot-result.json",
+      "identity": [
+        2080,
+        7620067,
+        33188,
+        1,
+        371,
+        1794428083646524688,
+        1794428083646524688
+      ],
+      "name": "arm/arm-one-shot-result.json",
+      "path": "payload/arm/arm-one-shot-result.json",
+      "sha256": "3868b94a42e13f41b5c7fc8f99c11a9983f530f9ebaa8a590e55b831b23af7d6"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-one-shot.log",
+      "identity": [
+        2080,
+        7620066,
+        33188,
+        1,
+        0,
+        1794428083579000000,
+        1794428083579000000
+      ],
+      "name": "arm/arm-one-shot.log",
+      "path": "payload/arm/arm-one-shot.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 327,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-sync-result.json",
+      "identity": [
+        2080,
+        7620069,
+        33188,
+        1,
+        327,
+        1794428083681421161,
+        1794428083681421161
+      ],
+      "name": "arm/arm-sync-result.json",
+      "path": "payload/arm/arm-sync-result.json",
+      "sha256": "6672da12d3fd1598dc4d03416611129170cf423a54e655a9caf9139ee59d99f2"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-sync.log",
+      "identity": [
+        2080,
+        7620068,
+        33188,
+        1,
+        0,
+        1794428083670000000,
+        1794428083670000000
+      ],
+      "name": "arm/arm-sync.log",
+      "path": "payload/arm/arm-sync.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 9743,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/journal.jsonl",
+      "identity": [
+        2080,
+        7620044,
+        33188,
+        1,
+        9743,
+        1794428083683000000,
+        1794428083683000000
+      ],
+      "name": "arm/journal.jsonl",
+      "path": "payload/arm/journal.jsonl",
+      "sha256": "a05d9879d45d16dfed0618fb23ff9e90877bc4864f6b3debe4964b41ba88bd1e"
+    },
+    {
+      "bytes": 23595,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/result.json",
+      "identity": [
+        2080,
+        7620075,
+        33188,
+        1,
+        23595,
+        1794428083813593721,
+        1794428083815000000
+      ],
+      "name": "arm/result.json",
+      "path": "payload/arm/result.json",
+      "sha256": "7b4b9f6808fabd690797b8d1a6ce26e9dbd0995c5d3b76a3a445f6888f26cf8b"
+    },
+    {
+      "bytes": 682,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-arm-driver-01/command.json",
+      "identity": [
+        2080,
+        7620039,
+        33188,
+        1,
+        682,
+        1794428063834371378,
+        1794428063834371378
+      ],
+      "name": "drivers/arm/command.json",
+      "path": "payload/drivers/arm/command.json",
+      "sha256": "556bcc5c5b868a544909ca1b1f3f78d8e14bc99f608daa67b42241e5211cc376"
+    },
+    {
+      "bytes": 49,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-arm-driver-01/dispatch.json",
+      "identity": [
+        2080,
+        7620042,
+        33188,
+        1,
+        49,
+        1794428063837882635,
+        1794428063837882635
+      ],
+      "name": "drivers/arm/dispatch.json",
+      "path": "payload/drivers/arm/dispatch.json",
+      "sha256": "b048a6d0573dc6c3f164ae0c5756a3cfb80db2866d63e833c41bcbca6dd383e4"
+    },
+    {
+      "bytes": 63,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-arm-driver-01/result.json",
+      "identity": [
+        2080,
+        7620045,
+        33188,
+        1,
+        63,
+        1794428083853983519,
+        1794428083853983519
+      ],
+      "name": "drivers/arm/result.json",
+      "path": "payload/drivers/arm/result.json",
+      "sha256": "e94f2947571dcd74f96de01feeacc0c79bd49d09f827a847551f176321e0d5e8"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-arm-driver-01/stderr",
+      "identity": [
+        2080,
+        7620041,
+        33188,
+        1,
+        0,
+        1794428063836000000,
+        1794428063836000000
+      ],
+      "name": "drivers/arm/stderr",
+      "path": "payload/drivers/arm/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 9894,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-arm-driver-01/stdout",
+      "identity": [
+        2080,
+        7620040,
+        33188,
+        1,
+        9894,
+        1794428083817000000,
+        1794428083817000000
+      ],
+      "name": "drivers/arm/stdout",
+      "path": "payload/drivers/arm/stdout",
+      "sha256": "09f03007d6d4606037cb79ce72dbdc3a49f1f0708d38f06cadeda71fd5e7dde2"
+    },
+    {
+      "bytes": 4650,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-driver-install-01/command.json",
+      "identity": [
+        2080,
+        7619955,
+        33188,
+        1,
+        4650,
+        1794426828158431006,
+        1794426828158431006
+      ],
+      "name": "drivers/failed-install/command.json",
+      "path": "payload/drivers/failed-install/command.json",
+      "sha256": "d0c5449cbb4f9060770a487d3b03ef46a2cb86e85ec60dd001d3c81a928acd6c"
+    },
+    {
+      "bytes": 49,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-driver-install-01/dispatch.json",
+      "identity": [
+        2080,
+        7619958,
+        33188,
+        1,
+        49,
+        1794426828161000000,
+        1794426828161000000
+      ],
+      "name": "drivers/failed-install/dispatch.json",
+      "path": "payload/drivers/failed-install/dispatch.json",
+      "sha256": "a5bd8492c6af9ba5121641f16061001c67f2e1dd1c37fd67e3bfdf44dd58400d"
+    },
+    {
+      "bytes": 80,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-driver-install-01/return.json",
+      "identity": [
+        2080,
+        7619996,
+        33188,
+        1,
+        80,
+        1794426849380882148,
+        1794426849380882148
+      ],
+      "name": "drivers/failed-install/return.json",
+      "path": "payload/drivers/failed-install/return.json",
+      "sha256": "9e0b667942c3d016edd316507ad8ddcf5210ab848fd4d1bcad710228690768a0"
+    },
+    {
+      "bytes": 1060,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-driver-install-01/stderr",
+      "identity": [
+        2080,
+        7619957,
+        33188,
+        1,
+        1060,
+        1794426849338000000,
+        1794426849338000000
+      ],
+      "name": "drivers/failed-install/stderr",
+      "path": "payload/drivers/failed-install/stderr",
+      "sha256": "0efd34618ac8c33a84296608fb8679ec1691e4ba7571939ecf443ae3eff2447a"
+    },
+    {
+      "bytes": 14752,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-driver-install-01/stdout",
+      "identity": [
+        2080,
+        7619956,
+        33188,
+        1,
+        14752,
+        1794426849279000000,
+        1794426849279000000
+      ],
+      "name": "drivers/failed-install/stdout",
+      "path": "payload/drivers/failed-install/stdout",
+      "sha256": "f37038c75ff65f7908dd92b78668a24c0fd3635dbb30e8ce77dad8383882d345"
+    },
+    {
+      "bytes": 597,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-finalize-driver-01/command.json",
+      "identity": [
+        2080,
+        7619998,
+        33188,
+        1,
+        597,
+        1794427863563459465,
+        1794427863563459465
+      ],
+      "name": "drivers/finalize/command.json",
+      "path": "payload/drivers/finalize/command.json",
+      "sha256": "370a4468968276e49b6643033006b7aed38cbd461d6b1d65fae82424ce6b9168"
+    },
+    {
+      "bytes": 50,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-finalize-driver-01/dispatch.json",
+      "identity": [
+        2080,
+        7620001,
+        33188,
+        1,
+        50,
+        1794427863566999326,
+        1794427863566999326
+      ],
+      "name": "drivers/finalize/dispatch.json",
+      "path": "payload/drivers/finalize/dispatch.json",
+      "sha256": "1e1257d8971c21ce0ce37f68d9f63504d85ff8a9ea6aba8dc2ab12bec5cb24d1"
+    },
+    {
+      "bytes": 63,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-finalize-driver-01/result.json",
+      "identity": [
+        2080,
+        7620004,
+        33188,
+        1,
+        63,
+        1794427884332398364,
+        1794427884332398364
+      ],
+      "name": "drivers/finalize/result.json",
+      "path": "payload/drivers/finalize/result.json",
+      "sha256": "330adae934bdc9f616651bfd2e2d28d9ffa1aba49d1547ec91e2e7d01a5ab25a"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-finalize-driver-01/stderr",
+      "identity": [
+        2080,
+        7620000,
+        33188,
+        1,
+        0,
+        1794427863565000000,
+        1794427863565000000
+      ],
+      "name": "drivers/finalize/stderr",
+      "path": "payload/drivers/finalize/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 8761,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-finalize-driver-01/stdout",
+      "identity": [
+        2080,
+        7619999,
+        33188,
+        1,
+        8761,
+        1794427884317000000,
+        1794427884317000000
+      ],
+      "name": "drivers/finalize/stdout",
+      "path": "payload/drivers/finalize/stdout",
+      "sha256": "a655f0dbced15bebed56df6d67d91c22e5fe27e9812d8619815b1e6a1fdb06e7"
+    },
+    {
+      "bytes": 1349,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-driver-01/command.json",
+      "identity": [
+        2080,
+        7619810,
+        33188,
+        1,
+        1349,
+        1794425840350604652,
+        1794425840350604652
+      ],
+      "name": "drivers/offroot/command.json",
+      "path": "payload/drivers/offroot/command.json",
+      "sha256": "b774ca173f2a840ce993ca50a1a1cd64cde6c7e2eb5ad92ef7e0f531af0ad276"
+    },
+    {
+      "bytes": 57,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-driver-01/dispatch.json",
+      "identity": [
+        2080,
+        7619813,
+        33188,
+        1,
+        57,
+        1794425840354440916,
+        1794425840354440916
+      ],
+      "name": "drivers/offroot/dispatch.json",
+      "path": "payload/drivers/offroot/dispatch.json",
+      "sha256": "64c2a792a2b6e3e71d37e022cabf6201eaaeaf19a419f6dd4170c2d4408b4399"
+    },
+    {
+      "bytes": 80,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-driver-01/result.json",
+      "identity": [
+        2080,
+        7619845,
+        33188,
+        1,
+        80,
+        1794425858817405507,
+        1794425858817405507
+      ],
+      "name": "drivers/offroot/result.json",
+      "path": "payload/drivers/offroot/result.json",
+      "sha256": "2d66c8ca9dd9880a47f1fc02516d7ab007d92ef59784eb3b1a37189ff366bd12"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-driver-01/stderr",
+      "identity": [
+        2080,
+        7619812,
+        33188,
+        1,
+        0,
+        1794425840353000000,
+        1794425840353000000
+      ],
+      "name": "drivers/offroot/stderr",
+      "path": "payload/drivers/offroot/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 150,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-driver-01/stdout",
+      "identity": [
+        2080,
+        7619811,
+        33188,
+        1,
+        150,
+        1794425858769000000,
+        1794425858769000000
+      ],
+      "name": "drivers/offroot/stdout",
+      "path": "payload/drivers/offroot/stdout",
+      "sha256": "cf9a4e9570e22ff1f179e2e25aca8206c270585b885a38a175303059fc508956"
+    },
+    {
+      "bytes": 467,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-driver-api-01/command.json",
+      "identity": [
+        2080,
+        7518189,
+        33188,
+        1,
+        467,
+        1794428376678696292,
+        1794428376678696292
+      ],
+      "name": "drivers/postboot/command.json",
+      "path": "payload/drivers/postboot/command.json",
+      "sha256": "9e66f6afa12e0f247f2acf96f420f717ca9556c8872f7d688eb05bae0f312054"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-driver-api-01/dispatch.json",
+      "identity": [
+        2080,
+        7518192,
+        33188,
+        1,
+        48,
+        1794428376684219103,
+        1794428376684219103
+      ],
+      "name": "drivers/postboot/dispatch.json",
+      "path": "payload/drivers/postboot/dispatch.json",
+      "sha256": "d331480762b8f3a87fb6319fc3b6685e1c9c9ecee9b1b85bd166ec9aaf9c8845"
+    },
+    {
+      "bytes": 62,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-driver-api-01/return.json",
+      "identity": [
+        2080,
+        7518221,
+        33188,
+        1,
+        62,
+        1794428381463168494,
+        1794428381463168494
+      ],
+      "name": "drivers/postboot/return.json",
+      "path": "payload/drivers/postboot/return.json",
+      "sha256": "616f685743dd4ec7975c62e65346947427bd0c3398a394d6f6dd92b93daafb48"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-driver-api-01/stderr",
+      "identity": [
+        2080,
+        7518191,
+        33188,
+        1,
+        0,
+        1794428376683000000,
+        1794428376683000000
+      ],
+      "name": "drivers/postboot/stderr",
+      "path": "payload/drivers/postboot/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 192,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-driver-api-01/stdout",
+      "identity": [
+        2080,
+        7518190,
+        33188,
+        1,
+        192,
+        1794428381442000000,
+        1794428381442000000
+      ],
+      "name": "drivers/postboot/stdout",
+      "path": "payload/drivers/postboot/stdout",
+      "sha256": "5c12e91e97985e6bebb735174fd1d2d90b2b688c283959a3e617836fa16a856c"
+    },
+    {
+      "bytes": 350,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/check-command.json",
+      "identity": [
+        2080,
+        7619914,
+        33188,
+        1,
+        350,
+        1794426422436142440,
+        1794426422436142440
+      ],
+      "name": "drivers/stage-check/check-command.json",
+      "path": "payload/drivers/stage-check/check-command.json",
+      "sha256": "a1653d51352c0e9ac1eb1b3ddfc7defc21a7472b154044c65c9f8de6f74ea664"
+    },
+    {
+      "bytes": 50,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/check-dispatch.json",
+      "identity": [
+        2080,
+        7619917,
+        33188,
+        1,
+        50,
+        1794426422443099258,
+        1794426422443099258
+      ],
+      "name": "drivers/stage-check/check-dispatch.json",
+      "path": "payload/drivers/stage-check/check-dispatch.json",
+      "sha256": "29d0940b5df546dbf209b65f602c16b3698eb5184638c2bbbdb7b0c4369b98f2"
+    },
+    {
+      "bytes": 79,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/check-return.json",
+      "identity": [
+        2080,
+        7619953,
+        33188,
+        1,
+        79,
+        1794426427472045877,
+        1794426427472045877
+      ],
+      "name": "drivers/stage-check/check-return.json",
+      "path": "payload/drivers/stage-check/check-return.json",
+      "sha256": "eec1e0e9f6da14a227a9af83e1c0c54e17cbefd83ed973e6686a4a6b963d032b"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/check.stderr",
+      "identity": [
+        2080,
+        7619916,
+        33188,
+        1,
+        0,
+        1794426422441000000,
+        1794426422441000000
+      ],
+      "name": "drivers/stage-check/check.stderr",
+      "path": "payload/drivers/stage-check/check.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 14895,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/check.stdout",
+      "identity": [
+        2080,
+        7619915,
+        33188,
+        1,
+        14895,
+        1794426427427000000,
+        1794426427427000000
+      ],
+      "name": "drivers/stage-check/check.stdout",
+      "path": "payload/drivers/stage-check/check.stdout",
+      "sha256": "170afaac98f83f22eb4d5fa80396fdcd04a4194ede6eb1511779ed646612edaa"
+    },
+    {
+      "bytes": 1243,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/stage-command.json",
+      "identity": [
+        2080,
+        7619848,
+        33188,
+        1,
+        1243,
+        1794426365462093146,
+        1794426365462093146
+      ],
+      "name": "drivers/stage-check/stage-command.json",
+      "path": "payload/drivers/stage-check/stage-command.json",
+      "sha256": "79eeac7af6055a2421972ba279b5f22c253b461045e07f820eb89e67130771e5"
+    },
+    {
+      "bytes": 50,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/stage-dispatch.json",
+      "identity": [
+        2080,
+        7619851,
+        33188,
+        1,
+        50,
+        1794426365470409379,
+        1794426365470409379
+      ],
+      "name": "drivers/stage-check/stage-dispatch.json",
+      "path": "payload/drivers/stage-check/stage-dispatch.json",
+      "sha256": "23cbd866643d002f518b7c2384eb87ab8fef6a28f4e271a55cb7b3c355559c98"
+    },
+    {
+      "bytes": 79,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/stage-return.json",
+      "identity": [
+        2080,
+        7619913,
+        33188,
+        1,
+        79,
+        1794426422432191316,
+        1794426422432191316
+      ],
+      "name": "drivers/stage-check/stage-return.json",
+      "path": "payload/drivers/stage-check/stage-return.json",
+      "sha256": "58269a9181670c87cee6a58d9aacd1432da70b53959a900ddc4dc7e3499eed8b"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/stage.stderr",
+      "identity": [
+        2080,
+        7619850,
+        33188,
+        1,
+        0,
+        1794426365469000000,
+        1794426365469000000
+      ],
+      "name": "drivers/stage-check/stage.stderr",
+      "path": "payload/drivers/stage-check/stage.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 18422,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01/stage.stdout",
+      "identity": [
+        2080,
+        7619849,
+        33188,
+        1,
+        18422,
+        1794426422400000000,
+        1794426422400000000
+      ],
+      "name": "drivers/stage-check/stage.stdout",
+      "path": "payload/drivers/stage-check/stage.stdout",
+      "sha256": "f07b8001752a42f28e36c2ec8578962cd21987b24a511d5f8e7c79093f516091"
+    },
+    {
+      "bytes": 953755,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/Module.symvers",
+      "identity": [
+        2080,
+        7397052,
+        33188,
+        1,
+        953755,
+        1794423815673486061,
+        1794423815673486061
+      ],
+      "name": "exports/Module.symvers",
+      "path": "payload/exports/Module.symvers",
+      "sha256": "ae12c954017277f2c9d87205f916167d8461955d957d3d1c99a30cd75ba2c43a"
+    },
+    {
+      "bytes": 19860,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/checks-menu.py",
+      "identity": [
+        2080,
+        7208985,
+        33188,
+        1,
+        19860,
+        1794427750377081225,
+        1794427750377081225
+      ],
+      "name": "finalize-input/checks-menu.py",
+      "path": "payload/finalize-input/checks-menu.py",
+      "sha256": "2610bc0c19dafc9ccf87b56dd85802ac4f22d0dce2ac1b9ae6d0dd4c3cb8ecab"
+    },
+    {
+      "bytes": 15493,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/finalize-arm.py",
+      "identity": [
+        2080,
+        7208984,
+        33188,
+        1,
+        15493,
+        1794427750368142266,
+        1794427750368142266
+      ],
+      "name": "finalize-input/finalize-arm.py",
+      "path": "payload/finalize-input/finalize-arm.py",
+      "sha256": "02de841b268a66d5321dc6d0be3bd907b17ac1349e1d52463e47ba6c363926f7"
+    },
+    {
+      "bytes": 3259,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/origin-pins.json",
+      "identity": [
+        2080,
+        7208987,
+        33188,
+        1,
+        3259,
+        1794427750382859849,
+        1794427750382859849
+      ],
+      "name": "finalize-input/origin-pins.json",
+      "path": "payload/finalize-input/origin-pins.json",
+      "sha256": "8550478a37e6dcb4bea6ee99a2d6082b8fd9b5b7dbc225f679d4f51a439bdbb3"
+    },
+    {
+      "bytes": 22823,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/postboot.py",
+      "identity": [
+        2080,
+        7208986,
+        33188,
+        1,
+        22823,
+        1794427750380140347,
+        1794427750380140347
+      ],
+      "name": "finalize-input/postboot.py",
+      "path": "payload/finalize-input/postboot.py",
+      "sha256": "7ba6bd53f6d281715f21dfdb11280cde751fc3bb6a471f5f33f40274c32146a7"
+    },
+    {
+      "bytes": 23263,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/recovery-arm.json",
+      "identity": [
+        2080,
+        7208989,
+        33188,
+        1,
+        23263,
+        1794428063825627165,
+        1794428063825627165
+      ],
+      "name": "finalize-input/recovery-arm.json",
+      "path": "payload/finalize-input/recovery-arm.json",
+      "sha256": "c0f6cf2c3c7adb1db18731437ee0d1158899201ebe51d6748eef26791f3ef9ca"
+    },
+    {
+      "bytes": 23263,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/recovery-finalize.json",
+      "identity": [
+        2080,
+        7208988,
+        33188,
+        1,
+        23263,
+        1794427863529405580,
+        1794427863529405580
+      ],
+      "name": "finalize-input/recovery-finalize.json",
+      "path": "payload/finalize-input/recovery-finalize.json",
+      "sha256": "91a12eca46b1d2fe91c82d5f47a891cfdd5de19835488584be65e432064fbb23"
+    },
+    {
+      "bytes": 232,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/arm-complete.json",
+      "identity": [
+        2080,
+        7620073,
+        33188,
+        1,
+        232,
+        1794428083808255018,
+        1794428083808255018
+      ],
+      "name": "finalize/arm-complete.json",
+      "path": "payload/finalize/arm-complete.json",
+      "sha256": "56695c9e08c49df85e0aacf7d761f60699d80cb388818a6f352bea9620041e91"
+    },
+    {
+      "bytes": 545,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/arm-grub-after-arm.json",
+      "identity": [
+        2080,
+        7620072,
+        33188,
+        1,
+        545,
+        1794428083805462061,
+        1794428083805462061
+      ],
+      "name": "finalize/arm-grub-after-arm.json",
+      "path": "payload/finalize/arm-grub-after-arm.json",
+      "sha256": "36a246c5822a0607b1c54f3fc63e72858280f6dc41a3a87103580b4fc09fec96"
+    },
+    {
+      "bytes": 782,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/arm-origin-manifest.json",
+      "identity": [
+        2080,
+        7620074,
+        33188,
+        1,
+        782,
+        1794428083810904459,
+        1794428083810904459
+      ],
+      "name": "finalize/arm-origin-manifest.json",
+      "path": "payload/finalize/arm-origin-manifest.json",
+      "sha256": "d8303705da135ebd144ac7e29e548af8fb6c4e2ea125574c60f761fcbe9c153c"
+    },
+    {
+      "bytes": 1008,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/candidate-entry.cfg",
+      "identity": [
+        2080,
+        7620027,
+        33188,
+        1,
+        1008,
+        1794427884081000000,
+        1794427884081000000
+      ],
+      "name": "finalize/candidate-entry.cfg",
+      "path": "payload/finalize/candidate-entry.cfg",
+      "sha256": "a1e1d2d0fa3c5bae829549d830a6591b1b2937fa1a56ee5ac21b47e74d91217e"
+    },
+    {
+      "bytes": 1171,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/configuration.json",
+      "identity": [
+        2080,
+        7620030,
+        33188,
+        1,
+        1171,
+        1794427884186191732,
+        1794427884186191732
+      ],
+      "name": "finalize/configuration.json",
+      "path": "payload/finalize/configuration.json",
+      "sha256": "13290c2a8f2c1a5e4ef06d9da839d8729244bbfc41c821e3dbddc7a21b3527ae"
+    },
+    {
+      "bytes": 9216,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/custom.cfg-before",
+      "identity": [
+        2080,
+        7620026,
+        33188,
+        1,
+        9216,
+        1794427884079002632,
+        1794427884079002632
+      ],
+      "name": "finalize/custom.cfg-before",
+      "path": "payload/finalize/custom.cfg-before",
+      "sha256": "10704ea47ac50dfef89b9a0f2a6870f668bbaf7bb4935254d14f4c2dea829255"
+    },
+    {
+      "bytes": 434,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-efivarfs-result.json",
+      "identity": [
+        2080,
+        7620018,
+        33188,
+        1,
+        434,
+        1794427883672640406,
+        1794427883672640406
+      ],
+      "name": "finalize/finalize-dependencies-efivarfs-result.json",
+      "path": "payload/finalize/finalize-dependencies-efivarfs-result.json",
+      "sha256": "1285de43449b563779f85c39e734636e1fdc09bfc18450a63048503588c94c26"
+    },
+    {
+      "bytes": 17,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-efivarfs.log",
+      "identity": [
+        2080,
+        7620017,
+        33188,
+        1,
+        17,
+        1794427883667000000,
+        1794427883667000000
+      ],
+      "name": "finalize/finalize-dependencies-efivarfs.log",
+      "path": "payload/finalize/finalize-dependencies-efivarfs.log",
+      "sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    {
+      "bytes": 426,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-ext4-result.json",
+      "identity": [
+        2080,
+        7620014,
+        33188,
+        1,
+        426,
+        1794427883648000000,
+        1794427883648000000
+      ],
+      "name": "finalize/finalize-dependencies-ext4-result.json",
+      "path": "payload/finalize/finalize-dependencies-ext4-result.json",
+      "sha256": "ef659d75bbf22af3612b41c940842720f5fa5b5b79c3257bd9c8ab7fc031db60"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-ext4.log",
+      "identity": [
+        2080,
+        7620013,
+        33188,
+        1,
+        13,
+        1794427883645000000,
+        1794427883645000000
+      ],
+      "name": "finalize/finalize-dependencies-ext4.log",
+      "path": "payload/finalize/finalize-dependencies-ext4.log",
+      "sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    {
+      "bytes": 444,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-nls_iso8859_1-result.json",
+      "identity": [
+        2080,
+        7620022,
+        33188,
+        1,
+        444,
+        1794427883694098875,
+        1794427883694098875
+      ],
+      "name": "finalize/finalize-dependencies-nls_iso8859_1-result.json",
+      "path": "payload/finalize/finalize-dependencies-nls_iso8859_1-result.json",
+      "sha256": "ff742954c86e1984abb04fe8b97390ff54c5c172b9ad8969a43637f15b637613"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-nls_iso8859_1.log",
+      "identity": [
+        2080,
+        7620021,
+        33188,
+        1,
+        72,
+        1794427883690000000,
+        1794427883690000000
+      ],
+      "name": "finalize/finalize-dependencies-nls_iso8859_1.log",
+      "path": "payload/finalize/finalize-dependencies-nls_iso8859_1.log",
+      "sha256": "e93050f76e68c95ff3c77ac22c06278ada0debd8b8faa6103530117c59007065"
+    },
+    {
+      "bytes": 430,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-sd_mod-result.json",
+      "identity": [
+        2080,
+        7620012,
+        33188,
+        1,
+        430,
+        1794427883638104040,
+        1794427883638104040
+      ],
+      "name": "finalize/finalize-dependencies-sd_mod-result.json",
+      "path": "payload/finalize/finalize-dependencies-sd_mod-result.json",
+      "sha256": "3860471d85722df02d4a538292f1143720675fd92077d5d69f87a7a2115fdccc"
+    },
+    {
+      "bytes": 15,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-sd_mod.log",
+      "identity": [
+        2080,
+        7620011,
+        33188,
+        1,
+        15,
+        1794427883634000000,
+        1794427883634000000
+      ],
+      "name": "finalize/finalize-dependencies-sd_mod.log",
+      "path": "payload/finalize/finalize-dependencies-sd_mod.log",
+      "sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    {
+      "bytes": 426,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-vfat-result.json",
+      "identity": [
+        2080,
+        7620020,
+        33188,
+        1,
+        426,
+        1794427883683318962,
+        1794427883683318962
+      ],
+      "name": "finalize/finalize-dependencies-vfat-result.json",
+      "path": "payload/finalize/finalize-dependencies-vfat-result.json",
+      "sha256": "048bab031eabfd8d4fec61610d140d67d02f0bdbd1fdec33ca35e064974d074e"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-vfat.log",
+      "identity": [
+        2080,
+        7620019,
+        33188,
+        1,
+        13,
+        1794427883679000000,
+        1794427883679000000
+      ],
+      "name": "finalize/finalize-dependencies-vfat.log",
+      "path": "payload/finalize/finalize-dependencies-vfat.log",
+      "sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    {
+      "bytes": 438,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-virtio_net-result.json",
+      "identity": [
+        2080,
+        7620016,
+        33188,
+        1,
+        438,
+        1794427883660000000,
+        1794427883660000000
+      ],
+      "name": "finalize/finalize-dependencies-virtio_net-result.json",
+      "path": "payload/finalize/finalize-dependencies-virtio_net-result.json",
+      "sha256": "cf6bd7331a49e97a2bc6931e68c445b4dec66acb1cd2a04f275bea10295eadf9"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-virtio_net.log",
+      "identity": [
+        2080,
+        7620015,
+        33188,
+        1,
+        19,
+        1794427883657000000,
+        1794427883657000000
+      ],
+      "name": "finalize/finalize-dependencies-virtio_net.log",
+      "path": "payload/finalize/finalize-dependencies-virtio_net.log",
+      "sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    {
+      "bytes": 437,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-virtio_pci-result.json",
+      "identity": [
+        2080,
+        7620008,
+        33188,
+        1,
+        437,
+        1794427883616359508,
+        1794427883616359508
+      ],
+      "name": "finalize/finalize-dependencies-virtio_pci-result.json",
+      "path": "payload/finalize/finalize-dependencies-virtio_pci-result.json",
+      "sha256": "1650eb39c4afb1ad826b0ad89cb61e4a776aef90e23b2c5f97263669180812c2"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-virtio_pci.log",
+      "identity": [
+        2080,
+        7620007,
+        33188,
+        1,
+        19,
+        1794427883611000000,
+        1794427883611000000
+      ],
+      "name": "finalize/finalize-dependencies-virtio_pci.log",
+      "path": "payload/finalize/finalize-dependencies-virtio_pci.log",
+      "sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    {
+      "bytes": 440,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-virtio_scsi-result.json",
+      "identity": [
+        2080,
+        7620010,
+        33188,
+        1,
+        440,
+        1794427883627130920,
+        1794427883627130920
+      ],
+      "name": "finalize/finalize-dependencies-virtio_scsi-result.json",
+      "path": "payload/finalize/finalize-dependencies-virtio_scsi-result.json",
+      "sha256": "a98d52c5cc772fbb71a930fdc43e726fc9a064fbdaeedeb59fb441352398f31f"
+    },
+    {
+      "bytes": 20,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-dependencies-virtio_scsi.log",
+      "identity": [
+        2080,
+        7620009,
+        33188,
+        1,
+        20,
+        1794427883623000000,
+        1794427883623000000
+      ],
+      "name": "finalize/finalize-dependencies-virtio_scsi.log",
+      "path": "payload/finalize/finalize-dependencies-virtio_scsi.log",
+      "sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    {
+      "bytes": 434,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-exact-build-id-result.json",
+      "identity": [
+        2080,
+        7620006,
+        33188,
+        1,
+        434,
+        1794427865812824802,
+        1794427865812824802
+      ],
+      "name": "finalize/finalize-exact-build-id-result.json",
+      "path": "payload/finalize/finalize-exact-build-id-result.json",
+      "sha256": "8a6cad2249fb14869751c5f92f38465d075b2f5a6ddaa29b4a63b0a3970054e5"
+    },
+    {
+      "bytes": 2120,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-exact-build-id.log",
+      "identity": [
+        2080,
+        7620005,
+        33188,
+        1,
+        2120,
+        1794427865808000000,
+        1794427865808000000
+      ],
+      "name": "finalize/finalize-exact-build-id.log",
+      "path": "payload/finalize/finalize-exact-build-id.log",
+      "sha256": "fa613c666e63c5c67e0c230c168a9aa9fc5fdd4697ff2fd85055a52ec48201f4"
+    },
+    {
+      "bytes": 395,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-initrd-list-result.json",
+      "identity": [
+        2080,
+        7620024,
+        33188,
+        1,
+        395,
+        1794427883872355413,
+        1794427883872355413
+      ],
+      "name": "finalize/finalize-initrd-list-result.json",
+      "path": "payload/finalize/finalize-initrd-list-result.json",
+      "sha256": "db1f7aeddf711ed3b736e3d122c335c2b66e0fcba72c661f955965732486e988"
+    },
+    {
+      "bytes": 12627,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/finalize-initrd-list.log",
+      "identity": [
+        2080,
+        7620023,
+        33188,
+        1,
+        12627,
+        1794427883849000000,
+        1794427883849000000
+      ],
+      "name": "finalize/finalize-initrd-list.log",
+      "path": "payload/finalize/finalize-initrd-list.log",
+      "sha256": "7beaa9903f4006bbc7f93e855c22a5318e157d650e03db290ac90e45c8d2a5c1"
+    },
+    {
+      "bytes": 173,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/helper-hashes.json",
+      "identity": [
+        2080,
+        7620033,
+        33188,
+        1,
+        173,
+        1794427884194334436,
+        1794427884194334436
+      ],
+      "name": "finalize/helper-hashes.json",
+      "path": "payload/finalize/helper-hashes.json",
+      "sha256": "6c05a231cf900978f5a3921bbcbb9e6cb152fba302a4904a5f7d27be93b7295b"
+    },
+    {
+      "bytes": 35018,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/identity-pin.json",
+      "identity": [
+        2080,
+        7620031,
+        33188,
+        1,
+        35018,
+        1794427884188899887,
+        1794427884188899887
+      ],
+      "name": "finalize/identity-pin.json",
+      "path": "payload/finalize/identity-pin.json",
+      "sha256": "e7aa7108fe90670e7c34632415b6481b2351a206178407a838f3a00a2f8718ea"
+    },
+    {
+      "bytes": 659,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/install-modules-installed.json",
+      "identity": [
+        2080,
+        7620029,
+        33188,
+        1,
+        659,
+        1794427884182245633,
+        1794427884182245633
+      ],
+      "name": "finalize/install-modules-installed.json",
+      "path": "payload/finalize/install-modules-installed.json",
+      "sha256": "0c4d9a28b5c3ba38d250125d1dc14390825baab033a76b411868f9c377ed4ac1"
+    },
+    {
+      "bytes": 1876,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/installed-boot.json",
+      "identity": [
+        2080,
+        7620036,
+        33188,
+        1,
+        1876,
+        1794427884202192974,
+        1794427884202192974
+      ],
+      "name": "finalize/installed-boot.json",
+      "path": "payload/finalize/installed-boot.json",
+      "sha256": "f53772dc4f7a1f6da5122cabd3ad27d6288e154d62eefa1a3eb178494c845449"
+    },
+    {
+      "bytes": 8604,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/journal.jsonl",
+      "identity": [
+        2080,
+        7620003,
+        33188,
+        1,
+        8604,
+        1794427883874000000,
+        1794427883874000000
+      ],
+      "name": "finalize/journal.jsonl",
+      "path": "payload/finalize/journal.jsonl",
+      "sha256": "cf17bc6d3df834ce503e40c819d2857231260b31e228f35e6237a41481644a1f"
+    },
+    {
+      "bytes": 3481,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/limited-stage.json",
+      "identity": [
+        2080,
+        7620032,
+        33188,
+        1,
+        3481,
+        1794427884191740553,
+        1794427884191740553
+      ],
+      "name": "finalize/limited-stage.json",
+      "path": "payload/finalize/limited-stage.json",
+      "sha256": "0f6805ef4a6127f1066a37718dc3a6f14a28130f57c3c1a86124ec3f05bd19a7"
+    },
+    {
+      "bytes": 3953,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/origin-manifest.json",
+      "identity": [
+        2080,
+        7620035,
+        33188,
+        1,
+        3953,
+        1794427884199654783,
+        1794427884199654783
+      ],
+      "name": "finalize/origin-manifest.json",
+      "path": "payload/finalize/origin-manifest.json",
+      "sha256": "3775a3146d8683f1422c3b47e663069fad748ec8d31feb5ae8c857466af0bbc6"
+    },
+    {
+      "bytes": 62021,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/result.json",
+      "identity": [
+        2080,
+        7620037,
+        33188,
+        1,
+        62021,
+        1794427884311564831,
+        1794427884315000000
+      ],
+      "name": "finalize/result.json",
+      "path": "payload/finalize/result.json",
+      "sha256": "21980a9b699e13733f584efc9665e89aa2e37e233cfa24cc7ce0e4925bc0e5bc"
+    },
+    {
+      "bytes": 217,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/root-budget-before-install.json",
+      "identity": [
+        2080,
+        7620034,
+        33188,
+        1,
+        217,
+        1794427884197053620,
+        1794427884197053620
+      ],
+      "name": "finalize/root-budget-before-install.json",
+      "path": "payload/finalize/root-budget-before-install.json",
+      "sha256": "d199512d4a61e4db3efeafe3b86fd4e432a0f606a2972a567134d9676ea17660"
+    },
+    {
+      "bytes": 647,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/stage-grub-sources.json",
+      "identity": [
+        2080,
+        7620025,
+        33188,
+        1,
+        647,
+        1794427884075769995,
+        1794427884075769995
+      ],
+      "name": "finalize/stage-grub-sources.json",
+      "path": "payload/finalize/stage-grub-sources.json",
+      "sha256": "14e4e583ae93af501dfbee260d2778ce686bd4a790f32cabcc7054278a96a7a0"
+    },
+    {
+      "bytes": 18899908,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/stage-protected-before.json",
+      "identity": [
+        2080,
+        7620028,
+        33188,
+        1,
+        18899908,
+        1794427884116000000,
+        1794427884116000000
+      ],
+      "name": "finalize/stage-protected-before.json",
+      "path": "payload/finalize/stage-protected-before.json",
+      "sha256": "3d66b0845cf5088d6f2e46cec22218f5bb91f88e6cc745edfefcfdc338211a5b"
+    },
+    {
+      "bytes": 1,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/installed-depends.log",
+      "identity": [
+        2080,
+        7619844,
+        33188,
+        1,
+        1,
+        1794425844781000000,
+        1794425844781000000
+      ],
+      "name": "offroot/installed-depends.log",
+      "path": "payload/offroot/installed-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 7,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/installed-sig_hashalgo.log",
+      "identity": [
+        2080,
+        7619843,
+        33188,
+        1,
+        7,
+        1794425844756000000,
+        1794425844756000000
+      ],
+      "name": "offroot/installed-sig_hashalgo.log",
+      "path": "payload/offroot/installed-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec"
+    },
+    {
+      "bytes": 60,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/installed-sig_key.log",
+      "identity": [
+        2080,
+        7619842,
+        33188,
+        1,
+        60,
+        1794425844734000000,
+        1794425844734000000
+      ],
+      "name": "offroot/installed-sig_key.log",
+      "path": "payload/offroot/installed-sig_key.log",
+      "sha256": "812d6c8ebe15c39f1ae965a767d35191c6f14c97bad34867e48a470f7881180a"
+    },
+    {
+      "bytes": 36,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/installed-signer.log",
+      "identity": [
+        2080,
+        7619818,
+        33188,
+        1,
+        36,
+        1794425844712000000,
+        1794425844712000000
+      ],
+      "name": "offroot/installed-signer.log",
+      "path": "payload/offroot/installed-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/installed-vermagic.log",
+      "identity": [
+        2080,
+        7619841,
+        33188,
+        1,
+        56,
+        1794425844688000000,
+        1794425844688000000
+      ],
+      "name": "offroot/installed-vermagic.log",
+      "path": "payload/offroot/installed-vermagic.log",
+      "sha256": "9cac3141708dfe202989cd7a9dad2e148ddf0f324432d8a2c0ac90fcb14184fc"
+    },
+    {
+      "bytes": 3858,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/modules-install.log",
+      "identity": [
+        2080,
+        7619815,
+        33188,
+        1,
+        3858,
+        1794425844544000000,
+        1794425844544000000
+      ],
+      "name": "offroot/modules-install.log",
+      "path": "payload/offroot/modules-install.log",
+      "sha256": "8934e818c19dfb2d269766ad0e3c2e9a219307dd730d0497c25b1b1bb5b320a0"
+    },
+    {
+      "bytes": 12881,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild8/kernel/fs/nls/nls_iso8859-1.ko",
+      "identity": [
+        2080,
+        7619830,
+        33188,
+        1,
+        12881,
+        1794425844510014308,
+        1794425844510014308
+      ],
+      "name": "offroot/nls-signed.ko",
+      "path": "payload/offroot/nls-signed.ko",
+      "sha256": "1dc7c24ed23d33f1c57d1e22617e05893c6fe5c0ce1bd8426b889c04cae8519f"
+    },
+    {
+      "bytes": 744426,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/result.json",
+      "identity": [
+        2080,
+        7619846,
+        33188,
+        1,
+        744426,
+        1794425858764000000,
+        1794425858767000000
+      ],
+      "name": "offroot/result.json",
+      "path": "payload/offroot/result.json",
+      "sha256": "345ea6f3a6543cafa7a76ec0c09e324bfd3fbd39b8a18f5df7f211e55d6ccd79"
+    },
+    {
+      "bytes": 19562,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-checks.py",
+      "identity": [
+        2080,
+        7208979,
+        33188,
+        1,
+        19562,
+        1794426241596525243,
+        1794426241596525243
+      ],
+      "name": "old-input/kdlock-kdrebuild8-checks.py",
+      "path": "payload/old-input/kdlock-kdrebuild8-checks.py",
+      "sha256": "1726d01a4794f82ca8cb1a92218a70dd59272fa2e5e8bdd27a266bd31d92a472"
+    },
+    {
+      "bytes": 35167,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-install.py",
+      "identity": [
+        2080,
+        7208978,
+        33188,
+        1,
+        35167,
+        1794426241561497008,
+        1794426241561497008
+      ],
+      "name": "old-input/kdlock-kdrebuild8-install.py",
+      "path": "payload/old-input/kdlock-kdrebuild8-install.py",
+      "sha256": "409f640efa69425ee8b8849c4f1897b9df83e4c1a7eccbea2b596ab7bb99a99b"
+    },
+    {
+      "bytes": 22818,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-postboot.py",
+      "identity": [
+        2080,
+        7208980,
+        33188,
+        1,
+        22818,
+        1794426241599701491,
+        1794426241599701491
+      ],
+      "name": "old-input/kdlock-kdrebuild8-postboot.py",
+      "path": "payload/old-input/kdlock-kdrebuild8-postboot.py",
+      "sha256": "269102a5f82f87f2e86ce0437bdd2766aac99248937907f60fa33ed964e675bb"
+    },
+    {
+      "bytes": 23263,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/recovery-install.json",
+      "identity": [
+        2080,
+        7208982,
+        33188,
+        1,
+        23263,
+        1794426828153744742,
+        1794426828153744742
+      ],
+      "name": "old-input/recovery-install.json",
+      "path": "payload/old-input/recovery-install.json",
+      "sha256": "bd66c2dbdd7e755fd5c4c2ea46b5a73b57e20ded54f24eeae0425804e4cf6e79"
+    },
+    {
+      "bytes": 23263,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/recovery-stage.json",
+      "identity": [
+        2080,
+        7208981,
+        33188,
+        1,
+        23263,
+        1794426365428646050,
+        1794426365428646050
+      ],
+      "name": "old-input/recovery-stage.json",
+      "path": "payload/old-input/recovery-stage.json",
+      "sha256": "f040f85e6e07c64bf06f5740ea308187a16c02177bf98a27549902f07c2c2485"
+    },
+    {
+      "bytes": 1008,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/candidate-entry.cfg",
+      "identity": [
+        2080,
+        7619871,
+        33188,
+        1,
+        1008,
+        1794426412985189115,
+        1794426412985189115
+      ],
+      "name": "old-install/candidate-entry.cfg",
+      "path": "payload/old-install/candidate-entry.cfg",
+      "sha256": "a1e1d2d0fa3c5bae829549d830a6591b1b2937fa1a56ee5ac21b47e74d91217e"
+    },
+    {
+      "bytes": 144,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-complete.json",
+      "identity": [
+        2080,
+        7619952,
+        33188,
+        1,
+        144,
+        1794426427423887823,
+        1794426427423887823
+      ],
+      "name": "old-install/check-complete.json",
+      "path": "payload/old-install/check-complete.json",
+      "sha256": "9bd3fcd4671643ab461846684d1093e4c8754ec35d0ad3b49e2a617b9a90fa9b"
+    },
+    {
+      "bytes": 535,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-efivarfs-result.json",
+      "identity": [
+        2080,
+        7619941,
+        33188,
+        1,
+        535,
+        1794426427159590403,
+        1794426427159590403
+      ],
+      "name": "old-install/check-dependencies-efivarfs-result.json",
+      "path": "payload/old-install/check-dependencies-efivarfs-result.json",
+      "sha256": "e59f0b6274934e7eb5d3c1286c00b9dff221404f8d9c1feefe0e93bcad43229e"
+    },
+    {
+      "bytes": 17,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-efivarfs.log",
+      "identity": [
+        2080,
+        7619940,
+        33188,
+        1,
+        17,
+        1794426427156000000,
+        1794426427156000000
+      ],
+      "name": "old-install/check-dependencies-efivarfs.log",
+      "path": "payload/old-install/check-dependencies-efivarfs.log",
+      "sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    {
+      "bytes": 527,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-ext4-result.json",
+      "identity": [
+        2080,
+        7619937,
+        33188,
+        1,
+        527,
+        1794426427137810576,
+        1794426427137810576
+      ],
+      "name": "old-install/check-dependencies-ext4-result.json",
+      "path": "payload/old-install/check-dependencies-ext4-result.json",
+      "sha256": "850285736adff066d8e23212f92314e87e6e3efcbe0dbf84e0b6139828fe668b"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-ext4.log",
+      "identity": [
+        2080,
+        7619936,
+        33188,
+        1,
+        13,
+        1794426427133000000,
+        1794426427133000000
+      ],
+      "name": "old-install/check-dependencies-ext4.log",
+      "path": "payload/old-install/check-dependencies-ext4.log",
+      "sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    {
+      "bytes": 545,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-nls_iso8859_1-result.json",
+      "identity": [
+        2080,
+        7619945,
+        33188,
+        1,
+        545,
+        1794426427182000000,
+        1794426427182000000
+      ],
+      "name": "old-install/check-dependencies-nls_iso8859_1-result.json",
+      "path": "payload/old-install/check-dependencies-nls_iso8859_1-result.json",
+      "sha256": "d0006986a616bb429b7f2b6f59244010294683cd47c4a966a52f086f9b67d788"
+    },
+    {
+      "bytes": 163,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-nls_iso8859_1.log",
+      "identity": [
+        2080,
+        7619944,
+        33188,
+        1,
+        163,
+        1794426427179000000,
+        1794426427179000000
+      ],
+      "name": "old-install/check-dependencies-nls_iso8859_1.log",
+      "path": "payload/old-install/check-dependencies-nls_iso8859_1.log",
+      "sha256": "4360bc2a22c0a208ffc1642e9b7a2bfb17f53cdf5faa9ef0c8009e73eb3b7084"
+    },
+    {
+      "bytes": 531,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-sd_mod-result.json",
+      "identity": [
+        2080,
+        7619935,
+        33188,
+        1,
+        531,
+        1794426427126349122,
+        1794426427126349122
+      ],
+      "name": "old-install/check-dependencies-sd_mod-result.json",
+      "path": "payload/old-install/check-dependencies-sd_mod-result.json",
+      "sha256": "c370907cc6592cd23035c00561b6b278a606ebca3e8a31de933620c2c5d6e403"
+    },
+    {
+      "bytes": 15,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-sd_mod.log",
+      "identity": [
+        2080,
+        7619934,
+        33188,
+        1,
+        15,
+        1794426427121000000,
+        1794426427121000000
+      ],
+      "name": "old-install/check-dependencies-sd_mod.log",
+      "path": "payload/old-install/check-dependencies-sd_mod.log",
+      "sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    {
+      "bytes": 528,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-vfat-result.json",
+      "identity": [
+        2080,
+        7619943,
+        33188,
+        1,
+        528,
+        1794426427171300554,
+        1794426427171300554
+      ],
+      "name": "old-install/check-dependencies-vfat-result.json",
+      "path": "payload/old-install/check-dependencies-vfat-result.json",
+      "sha256": "f1dce0f0ffd28daec56c85cd11db24444ea4e5614108fb3156f48e67cb35cbb7"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-vfat.log",
+      "identity": [
+        2080,
+        7619942,
+        33188,
+        1,
+        13,
+        1794426427166000000,
+        1794426427166000000
+      ],
+      "name": "old-install/check-dependencies-vfat.log",
+      "path": "payload/old-install/check-dependencies-vfat.log",
+      "sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    {
+      "bytes": 539,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-virtio_net-result.json",
+      "identity": [
+        2080,
+        7619939,
+        33188,
+        1,
+        539,
+        1794426427148789815,
+        1794426427148789815
+      ],
+      "name": "old-install/check-dependencies-virtio_net-result.json",
+      "path": "payload/old-install/check-dependencies-virtio_net-result.json",
+      "sha256": "1f3f2eac9785c67838977d22a19018ee925af67d23ea6188522f07f5868fd638"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-virtio_net.log",
+      "identity": [
+        2080,
+        7619938,
+        33188,
+        1,
+        19,
+        1794426427145000000,
+        1794426427145000000
+      ],
+      "name": "old-install/check-dependencies-virtio_net.log",
+      "path": "payload/old-install/check-dependencies-virtio_net.log",
+      "sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    {
+      "bytes": 539,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-virtio_pci-result.json",
+      "identity": [
+        2080,
+        7619931,
+        33188,
+        1,
+        539,
+        1794426427103021852,
+        1794426427103021852
+      ],
+      "name": "old-install/check-dependencies-virtio_pci-result.json",
+      "path": "payload/old-install/check-dependencies-virtio_pci-result.json",
+      "sha256": "0fb5c2ee4e3d256d69aa4b4603a249afdad2b2c635bca304734dbd60300187c9"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-virtio_pci.log",
+      "identity": [
+        2080,
+        7619930,
+        33188,
+        1,
+        19,
+        1794426427099000000,
+        1794426427099000000
+      ],
+      "name": "old-install/check-dependencies-virtio_pci.log",
+      "path": "payload/old-install/check-dependencies-virtio_pci.log",
+      "sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    {
+      "bytes": 541,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-virtio_scsi-result.json",
+      "identity": [
+        2080,
+        7619933,
+        33188,
+        1,
+        541,
+        1794426427113802481,
+        1794426427113802481
+      ],
+      "name": "old-install/check-dependencies-virtio_scsi-result.json",
+      "path": "payload/old-install/check-dependencies-virtio_scsi-result.json",
+      "sha256": "8019d759c645d1aaf84e6a0cb6175d5a32a901e2fe22279fbf893541b8eb3f67"
+    },
+    {
+      "bytes": 20,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-virtio_scsi.log",
+      "identity": [
+        2080,
+        7619932,
+        33188,
+        1,
+        20,
+        1794426427110000000,
+        1794426427110000000
+      ],
+      "name": "old-install/check-dependencies-virtio_scsi.log",
+      "path": "payload/old-install/check-dependencies-virtio_scsi.log",
+      "sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    {
+      "bytes": 426,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-disk-usage-result.json",
+      "identity": [
+        2080,
+        7619951,
+        33188,
+        1,
+        426,
+        1794426427419607553,
+        1794426427419607553
+      ],
+      "name": "old-install/check-disk-usage-result.json",
+      "path": "payload/old-install/check-disk-usage-result.json",
+      "sha256": "16a95199a642dbf97ba6fbac63ada88e7ffce02b0467173f18de4f3250d1b66e"
+    },
+    {
+      "bytes": 267,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-disk-usage.log",
+      "identity": [
+        2080,
+        7619950,
+        33188,
+        1,
+        267,
+        1794426427415000000,
+        1794426427415000000
+      ],
+      "name": "old-install/check-disk-usage.log",
+      "path": "payload/old-install/check-disk-usage.log",
+      "sha256": "c49c1698fa029eb570fcdefb57bc60878c80814a281e6e19864c03c078e38300"
+    },
+    {
+      "bytes": 426,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-exact-build-id-result.json",
+      "identity": [
+        2080,
+        7619923,
+        33188,
+        1,
+        426,
+        1794426424786000000,
+        1794426424786000000
+      ],
+      "name": "old-install/check-exact-build-id-result.json",
+      "path": "payload/old-install/check-exact-build-id-result.json",
+      "sha256": "023aae3c4907a15c80750bfa65b9443b05d42b4a26fdb8d861a6f7ee7250cf64"
+    },
+    {
+      "bytes": 2120,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-exact-build-id.log",
+      "identity": [
+        2080,
+        7619922,
+        33188,
+        1,
+        2120,
+        1794426424781000000,
+        1794426424781000000
+      ],
+      "name": "old-install/check-exact-build-id.log",
+      "path": "payload/old-install/check-exact-build-id.log",
+      "sha256": "fa613c666e63c5c67e0c230c168a9aa9fc5fdd4697ff2fd85055a52ec48201f4"
+    },
+    {
+      "bytes": 608,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-identity-after-stage-result.json",
+      "identity": [
+        2080,
+        7619926,
+        33188,
+        1,
+        608,
+        1794426426964874089,
+        1794426426964874089
+      ],
+      "name": "old-install/check-identity-after-stage-result.json",
+      "path": "payload/old-install/check-identity-after-stage-result.json",
+      "sha256": "ac8916354b8ed03aba6f14d093d8f8f53a4714c03b410f09ad6101502f1135f7"
+    },
+    {
+      "bytes": 35018,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-identity-after-stage.json",
+      "identity": [
+        2080,
+        7619925,
+        33188,
+        1,
+        35018,
+        1794426426910000000,
+        1794426426910000000
+      ],
+      "name": "old-install/check-identity-after-stage.json",
+      "path": "payload/old-install/check-identity-after-stage.json",
+      "sha256": "e7aa7108fe90670e7c34632415b6481b2351a206178407a838f3a00a2f8718ea"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-identity-after-stage.log",
+      "identity": [
+        2080,
+        7619924,
+        33188,
+        1,
+        0,
+        1794426424792000000,
+        1794426424792000000
+      ],
+      "name": "old-install/check-identity-after-stage.log",
+      "path": "payload/old-install/check-identity-after-stage.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 573,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-idle-result.json",
+      "identity": [
+        2080,
+        7619921,
+        33188,
+        1,
+        573,
+        1794426422746318646,
+        1794426422746318646
+      ],
+      "name": "old-install/check-idle-result.json",
+      "path": "payload/old-install/check-idle-result.json",
+      "sha256": "f432488cc6beb913dc265b35328e5e143c9652234077bf62b998eb5c8642c52f"
+    },
+    {
+      "bytes": 7302,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-idle.json",
+      "identity": [
+        2080,
+        7619920,
+        33188,
+        1,
+        7302,
+        1794426422683225069,
+        1794426422683225069
+      ],
+      "name": "old-install/check-idle.json",
+      "path": "payload/old-install/check-idle.json",
+      "sha256": "31cdbcf2efb7919e098c3a401dc5d24798ef7874b1b34e4b21b2c1850b8ded16"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-idle.log",
+      "identity": [
+        2080,
+        7619919,
+        33188,
+        1,
+        0,
+        1794426422528000000,
+        1794426422528000000
+      ],
+      "name": "old-install/check-idle.log",
+      "path": "payload/old-install/check-idle.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 465,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-initrd-list-result.json",
+      "identity": [
+        2080,
+        7619947,
+        33188,
+        1,
+        465,
+        1794426427361639328,
+        1794426427361639328
+      ],
+      "name": "old-install/check-initrd-list-result.json",
+      "path": "payload/old-install/check-initrd-list-result.json",
+      "sha256": "92846469d87b8f0dee92ac5699b848fd6d32e0420460d4b77c4b9444bfcf77a7"
+    },
+    {
+      "bytes": 12627,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-initrd-list.log",
+      "identity": [
+        2080,
+        7619946,
+        33188,
+        1,
+        12627,
+        1794426427339000000,
+        1794426427339000000
+      ],
+      "name": "old-install/check-initrd-list.log",
+      "path": "payload/old-install/check-initrd-list.log",
+      "sha256": "7beaa9903f4006bbc7f93e855c22a5318e157d650e03db290ac90e45c8d2a5c1"
+    },
+    {
+      "bytes": 14895,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-journal.jsonl",
+      "identity": [
+        2080,
+        7619918,
+        33188,
+        1,
+        14895,
+        1794426427425000000,
+        1794426427425000000
+      ],
+      "name": "old-install/check-journal.jsonl",
+      "path": "payload/old-install/check-journal.jsonl",
+      "sha256": "170afaac98f83f22eb4d5fa80396fdcd04a4194ede6eb1511779ed646612edaa"
+    },
+    {
+      "bytes": 708,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-modules-stage-result.json",
+      "identity": [
+        2080,
+        7619929,
+        33188,
+        1,
+        708,
+        1794426427090160108,
+        1794426427090160108
+      ],
+      "name": "old-install/check-modules-stage-result.json",
+      "path": "payload/old-install/check-modules-stage-result.json",
+      "sha256": "9a7f72272319be6d1786f9a32b90c02a38d2443240d0e95f9cb66fa85d41baac"
+    },
+    {
+      "bytes": 841,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-modules-stage.json",
+      "identity": [
+        2080,
+        7619928,
+        33188,
+        1,
+        841,
+        1794426427045869752,
+        1794426427045869752
+      ],
+      "name": "old-install/check-modules-stage.json",
+      "path": "payload/old-install/check-modules-stage.json",
+      "sha256": "30174d93b7e38d52adbabe81be090905a332cf98b43cc34d2e7c1d8d3b8967a7"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-modules-stage.log",
+      "identity": [
+        2080,
+        7619927,
+        33188,
+        1,
+        0,
+        1794426426972000000,
+        1794426426972000000
+      ],
+      "name": "old-install/check-modules-stage.log",
+      "path": "payload/old-install/check-modules-stage.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 19562,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/checks.py",
+      "identity": [
+        2080,
+        7619853,
+        33188,
+        1,
+        19562,
+        1794426365553472275,
+        1794426365553472275
+      ],
+      "name": "old-install/checks.py",
+      "path": "payload/old-install/checks.py",
+      "sha256": "1726d01a4794f82ca8cb1a92218a70dd59272fa2e5e8bdd27a266bd31d92a472"
+    },
+    {
+      "bytes": 1171,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/configuration.json",
+      "identity": [
+        2080,
+        7619855,
+        33188,
+        1,
+        1171,
+        1794426365553738070,
+        1794426365553738070
+      ],
+      "name": "old-install/configuration.json",
+      "path": "payload/old-install/configuration.json",
+      "sha256": "13290c2a8f2c1a5e4ef06d9da839d8729244bbfc41c821e3dbddc7a21b3527ae"
+    },
+    {
+      "bytes": 35167,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/controller.py",
+      "identity": [
+        2080,
+        7619854,
+        33188,
+        1,
+        35167,
+        1794426365553589432,
+        1794426365553589432
+      ],
+      "name": "old-install/controller.py",
+      "path": "payload/old-install/controller.py",
+      "sha256": "409f640efa69425ee8b8849c4f1897b9df83e4c1a7eccbea2b596ab7bb99a99b"
+    },
+    {
+      "bytes": 9216,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/custom.cfg-before",
+      "identity": [
+        2080,
+        7619870,
+        33188,
+        1,
+        9216,
+        1794426412982586241,
+        1794426412982586241
+      ],
+      "name": "old-install/custom.cfg-before",
+      "path": "payload/old-install/custom.cfg-before",
+      "sha256": "10704ea47ac50dfef89b9a0f2a6870f668bbaf7bb4935254d14f4c2dea829255"
+    },
+    {
+      "bytes": 34308,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/grub.cfg-before",
+      "identity": [
+        2080,
+        7619869,
+        33188,
+        1,
+        34308,
+        1794426412982214718,
+        1794426412982214718
+      ],
+      "name": "old-install/grub.cfg-before",
+      "path": "payload/old-install/grub.cfg-before",
+      "sha256": "4cb0e54c275387c4e725b1dc3d6c69393ec98207a5ea71d1c736c227b5eb93be"
+    },
+    {
+      "bytes": 173,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/helper-hashes.json",
+      "identity": [
+        2080,
+        7619856,
+        33188,
+        1,
+        173,
+        1794426365557047507,
+        1794426365557047507
+      ],
+      "name": "old-install/helper-hashes.json",
+      "path": "payload/old-install/helper-hashes.json",
+      "sha256": "6c05a231cf900978f5a3921bbcbb9e6cb152fba302a4904a5f7d27be93b7295b"
+    },
+    {
+      "bytes": 35018,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/identity-pin.json",
+      "identity": [
+        2080,
+        7619877,
+        33188,
+        1,
+        35018,
+        1794426413015617847,
+        1794426413015617847
+      ],
+      "name": "old-install/identity-pin.json",
+      "path": "payload/old-install/identity-pin.json",
+      "sha256": "e7aa7108fe90670e7c34632415b6481b2351a206178407a838f3a00a2f8718ea"
+    },
+    {
+      "bytes": 472,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-candidate-menu-syntax-result.json",
+      "identity": [
+        2080,
+        7619970,
+        33188,
+        1,
+        472,
+        1794426831700000000,
+        1794426831700000000
+      ],
+      "name": "old-install/install-candidate-menu-syntax-result.json",
+      "path": "payload/old-install/install-candidate-menu-syntax-result.json",
+      "sha256": "01d2ff02a118a81469476986bfd57de7f32a32d86e544fc2d92b5463208bd34f"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-candidate-menu-syntax.log",
+      "identity": [
+        2080,
+        7619969,
+        33188,
+        1,
+        0,
+        1794426831696000000,
+        1794426831696000000
+      ],
+      "name": "old-install/install-candidate-menu-syntax.log",
+      "path": "payload/old-install/install-candidate-menu-syntax.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 428,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-efivarfs-result.json",
+      "identity": [
+        2080,
+        7619983,
+        33188,
+        1,
+        428,
+        1794426831775471884,
+        1794426831775471884
+      ],
+      "name": "old-install/install-dependencies-efivarfs-result.json",
+      "path": "payload/old-install/install-dependencies-efivarfs-result.json",
+      "sha256": "b6e4561d8fb3cf937e728eba68d91c9368cc575073d7cc5f1c2c4ae906d7ebdd"
+    },
+    {
+      "bytes": 17,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-efivarfs.log",
+      "identity": [
+        2080,
+        7619982,
+        33188,
+        1,
+        17,
+        1794426831771000000,
+        1794426831771000000
+      ],
+      "name": "old-install/install-dependencies-efivarfs.log",
+      "path": "payload/old-install/install-dependencies-efivarfs.log",
+      "sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    {
+      "bytes": 420,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-ext4-result.json",
+      "identity": [
+        2080,
+        7619979,
+        33188,
+        1,
+        420,
+        1794426831753188860,
+        1794426831753188860
+      ],
+      "name": "old-install/install-dependencies-ext4-result.json",
+      "path": "payload/old-install/install-dependencies-ext4-result.json",
+      "sha256": "d170b2620e3d79f365348cd12a8ece5221a38e15a4d3ef0b26189f686c0ceedb"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-ext4.log",
+      "identity": [
+        2080,
+        7619978,
+        33188,
+        1,
+        13,
+        1794426831749000000,
+        1794426831749000000
+      ],
+      "name": "old-install/install-dependencies-ext4.log",
+      "path": "payload/old-install/install-dependencies-ext4.log",
+      "sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    {
+      "bytes": 436,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-nls_iso8859_1-result.json",
+      "identity": [
+        2080,
+        7619987,
+        33188,
+        1,
+        436,
+        1794426831796801863,
+        1794426831796801863
+      ],
+      "name": "old-install/install-dependencies-nls_iso8859_1-result.json",
+      "path": "payload/old-install/install-dependencies-nls_iso8859_1-result.json",
+      "sha256": "321b82e96409ba543b3cd7ab8341649db8cecc9734bc5b545908dd335b1583bc"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-nls_iso8859_1.log",
+      "identity": [
+        2080,
+        7619986,
+        33188,
+        1,
+        72,
+        1794426831793000000,
+        1794426831793000000
+      ],
+      "name": "old-install/install-dependencies-nls_iso8859_1.log",
+      "path": "payload/old-install/install-dependencies-nls_iso8859_1.log",
+      "sha256": "e93050f76e68c95ff3c77ac22c06278ada0debd8b8faa6103530117c59007065"
+    },
+    {
+      "bytes": 424,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-sd_mod-result.json",
+      "identity": [
+        2080,
+        7619977,
+        33188,
+        1,
+        424,
+        1794426831742579582,
+        1794426831742579582
+      ],
+      "name": "old-install/install-dependencies-sd_mod-result.json",
+      "path": "payload/old-install/install-dependencies-sd_mod-result.json",
+      "sha256": "bf284477a3d00d3fc2e56a6c6399fe82cbb56b33c05a85c8e418baf02d6f53dd"
+    },
+    {
+      "bytes": 15,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-sd_mod.log",
+      "identity": [
+        2080,
+        7619976,
+        33188,
+        1,
+        15,
+        1794426831739000000,
+        1794426831739000000
+      ],
+      "name": "old-install/install-dependencies-sd_mod.log",
+      "path": "payload/old-install/install-dependencies-sd_mod.log",
+      "sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    {
+      "bytes": 420,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-vfat-result.json",
+      "identity": [
+        2080,
+        7619985,
+        33188,
+        1,
+        420,
+        1794426831786010041,
+        1794426831786010041
+      ],
+      "name": "old-install/install-dependencies-vfat-result.json",
+      "path": "payload/old-install/install-dependencies-vfat-result.json",
+      "sha256": "a0bf49fe263f7970d1a988323863eccb45a4faabd50595033a2518e87de8a3c6"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-vfat.log",
+      "identity": [
+        2080,
+        7619984,
+        33188,
+        1,
+        13,
+        1794426831782000000,
+        1794426831782000000
+      ],
+      "name": "old-install/install-dependencies-vfat.log",
+      "path": "payload/old-install/install-dependencies-vfat.log",
+      "sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    {
+      "bytes": 432,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-virtio_net-result.json",
+      "identity": [
+        2080,
+        7619981,
+        33188,
+        1,
+        432,
+        1794426831764090527,
+        1794426831764090527
+      ],
+      "name": "old-install/install-dependencies-virtio_net-result.json",
+      "path": "payload/old-install/install-dependencies-virtio_net-result.json",
+      "sha256": "98d7725cf9239eb9e588f8c4e8082666107ba6e70d3c9a0678e735b18b7838ca"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-virtio_net.log",
+      "identity": [
+        2080,
+        7619980,
+        33188,
+        1,
+        19,
+        1794426831760000000,
+        1794426831760000000
+      ],
+      "name": "old-install/install-dependencies-virtio_net.log",
+      "path": "payload/old-install/install-dependencies-virtio_net.log",
+      "sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    {
+      "bytes": 432,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-virtio_pci-result.json",
+      "identity": [
+        2080,
+        7619973,
+        33188,
+        1,
+        432,
+        1794426831718800486,
+        1794426831718800486
+      ],
+      "name": "old-install/install-dependencies-virtio_pci-result.json",
+      "path": "payload/old-install/install-dependencies-virtio_pci-result.json",
+      "sha256": "5ee955fe37f771f04da9775149ee735c2cf441307cfa6d1ab30c157c78db1551"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-virtio_pci.log",
+      "identity": [
+        2080,
+        7619972,
+        33188,
+        1,
+        19,
+        1794426831714000000,
+        1794426831714000000
+      ],
+      "name": "old-install/install-dependencies-virtio_pci.log",
+      "path": "payload/old-install/install-dependencies-virtio_pci.log",
+      "sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    {
+      "bytes": 435,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-virtio_scsi-result.json",
+      "identity": [
+        2080,
+        7619975,
+        33188,
+        1,
+        435,
+        1794426831730000000,
+        1794426831730000000
+      ],
+      "name": "old-install/install-dependencies-virtio_scsi-result.json",
+      "path": "payload/old-install/install-dependencies-virtio_scsi-result.json",
+      "sha256": "b3ec2a8cb28a777af801409de29ba2f031b8f1c6e512d8aaf82be64b70e0b841"
+    },
+    {
+      "bytes": 20,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-dependencies-virtio_scsi.log",
+      "identity": [
+        2080,
+        7619974,
+        33188,
+        1,
+        20,
+        1794426831726000000,
+        1794426831726000000
+      ],
+      "name": "old-install/install-dependencies-virtio_scsi.log",
+      "path": "payload/old-install/install-dependencies-virtio_scsi.log",
+      "sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    {
+      "bytes": 428,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-exact-build-id-result.json",
+      "identity": [
+        2080,
+        7619964,
+        33188,
+        1,
+        428,
+        1794426830547548637,
+        1794426830547548637
+      ],
+      "name": "old-install/install-exact-build-id-result.json",
+      "path": "payload/old-install/install-exact-build-id-result.json",
+      "sha256": "d2331e2fb71f5eadd8d13826b4b8db6e6ec54a17cb335fa6c67a2eab8ba8c3d5"
+    },
+    {
+      "bytes": 2120,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-exact-build-id.log",
+      "identity": [
+        2080,
+        7619963,
+        33188,
+        1,
+        2120,
+        1794426830542000000,
+        1794426830542000000
+      ],
+      "name": "old-install/install-exact-build-id.log",
+      "path": "payload/old-install/install-exact-build-id.log",
+      "sha256": "fa613c666e63c5c67e0c230c168a9aa9fc5fdd4697ff2fd85055a52ec48201f4"
+    },
+    {
+      "bytes": 246,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-failure.json",
+      "identity": [
+        2080,
+        7619995,
+        33188,
+        1,
+        246,
+        1794426849275614314,
+        1794426849275614314
+      ],
+      "name": "old-install/install-failure.json",
+      "path": "payload/old-install/install-failure.json",
+      "sha256": "83904a07c1a200e22d28c0f8a6102c241c0aa622ec1397f1193edd51e9655b1a"
+    },
+    {
+      "bytes": 800,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-grub-append.json",
+      "identity": [
+        2080,
+        7619971,
+        33188,
+        1,
+        800,
+        1794426831708000000,
+        1794426831708000000
+      ],
+      "name": "old-install/install-grub-append.json",
+      "path": "payload/old-install/install-grub-append.json",
+      "sha256": "98e11fae70a036673479d5776dc6384e22cf37912e210e69fa0c90dbdb1bab27"
+    },
+    {
+      "bytes": 598,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-grub-installed-result.json",
+      "identity": [
+        2080,
+        7619994,
+        33188,
+        1,
+        598,
+        1794426849271034994,
+        1794426849271034994
+      ],
+      "name": "old-install/install-grub-installed-result.json",
+      "path": "payload/old-install/install-grub-installed-result.json",
+      "sha256": "ef4601eed3250a110d6cb30572294682d0761b28baadb2a30b4874290ba96167"
+    },
+    {
+      "bytes": 603,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-grub-installed.log",
+      "identity": [
+        2080,
+        7619993,
+        33188,
+        1,
+        603,
+        1794426849233000000,
+        1794426849233000000
+      ],
+      "name": "old-install/install-grub-installed.log",
+      "path": "payload/old-install/install-grub-installed.log",
+      "sha256": "faf15322ccd34e636eb56d142a2238a7d93df75714ff572841bfb784d34dbfec"
+    },
+    {
+      "bytes": 577,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-idle-result.json",
+      "identity": [
+        2080,
+        7619962,
+        33188,
+        1,
+        577,
+        1794426828464179031,
+        1794426828464179031
+      ],
+      "name": "old-install/install-idle-result.json",
+      "path": "payload/old-install/install-idle-result.json",
+      "sha256": "5721900b3fae7851d6aad994f17788ba59cbaca1d0bca0a4a9dd2f77051b860b"
+    },
+    {
+      "bytes": 7303,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-idle.json",
+      "identity": [
+        2080,
+        7619961,
+        33188,
+        1,
+        7303,
+        1794426828399033340,
+        1794426828399033340
+      ],
+      "name": "old-install/install-idle.json",
+      "path": "payload/old-install/install-idle.json",
+      "sha256": "a556e1b24d84615860d00d48a87012c84f6422f0daf61bbc5c29b9dbe3fe5c1d"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-idle.log",
+      "identity": [
+        2080,
+        7619960,
+        33188,
+        1,
+        0,
+        1794426828246000000,
+        1794426828246000000
+      ],
+      "name": "old-install/install-idle.log",
+      "path": "payload/old-install/install-idle.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 388,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-initrd-list-result.json",
+      "identity": [
+        2080,
+        7619989,
+        33188,
+        1,
+        388,
+        1794426831976832521,
+        1794426831976832521
+      ],
+      "name": "old-install/install-initrd-list-result.json",
+      "path": "payload/old-install/install-initrd-list-result.json",
+      "sha256": "fde4856376bd9d61fc16836ac2c04438fa24f7542e618c243b17befeea03c707"
+    },
+    {
+      "bytes": 12627,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-initrd-list.log",
+      "identity": [
+        2080,
+        7619988,
+        33188,
+        1,
+        12627,
+        1794426831952000000,
+        1794426831952000000
+      ],
+      "name": "old-install/install-initrd-list.log",
+      "path": "payload/old-install/install-initrd-list.log",
+      "sha256": "7beaa9903f4006bbc7f93e855c22a5318e157d650e03db290ac90e45c8d2a5c1"
+    },
+    {
+      "bytes": 14752,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-journal.jsonl",
+      "identity": [
+        2080,
+        7619959,
+        33188,
+        1,
+        14752,
+        1794426849277000000,
+        1794426849277000000
+      ],
+      "name": "old-install/install-journal.jsonl",
+      "path": "payload/old-install/install-journal.jsonl",
+      "sha256": "f37038c75ff65f7908dd92b78668a24c0fd3635dbb30e8ce77dad8383882d345"
+    },
+    {
+      "bytes": 630,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-modules-installed-result.json",
+      "identity": [
+        2080,
+        7619968,
+        33188,
+        1,
+        630,
+        1794426831402846114,
+        1794426831402846114
+      ],
+      "name": "old-install/install-modules-installed-result.json",
+      "path": "payload/old-install/install-modules-installed-result.json",
+      "sha256": "599f4c85eb0f2560f82c70a1e5d17ac825edb6297aa355854298ecab38b6d99b"
+    },
+    {
+      "bytes": 659,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-modules-installed.json",
+      "identity": [
+        2080,
+        7619967,
+        33188,
+        1,
+        659,
+        1794426831359523829,
+        1794426831359523829
+      ],
+      "name": "old-install/install-modules-installed.json",
+      "path": "payload/old-install/install-modules-installed.json",
+      "sha256": "0c4d9a28b5c3ba38d250125d1dc14390825baab033a76b411868f9c377ed4ac1"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-modules-installed.log",
+      "identity": [
+        2080,
+        7619966,
+        33188,
+        1,
+        0,
+        1794426831285000000,
+        1794426831285000000
+      ],
+      "name": "old-install/install-modules-installed.log",
+      "path": "payload/old-install/install-modules-installed.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 751,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-protected-after-result.json",
+      "identity": [
+        2080,
+        7619992,
+        33188,
+        1,
+        751,
+        1794426849092784122,
+        1794426849092784122
+      ],
+      "name": "old-install/install-protected-after-result.json",
+      "path": "payload/old-install/install-protected-after-result.json",
+      "sha256": "3b28e23b278469ec1f4dc4f808ac7806c615702471bbd3909a248e85a50f678e"
+    },
+    {
+      "bytes": 47,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-protected-after.json",
+      "identity": [
+        2080,
+        7619991,
+        33188,
+        1,
+        47,
+        1794426848995538637,
+        1794426848995538637
+      ],
+      "name": "old-install/install-protected-after.json",
+      "path": "payload/old-install/install-protected-after.json",
+      "sha256": "85887066505cba1fbed2fec1ff7ab4469aff5575c0b9a2c140c1044c893aef67"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/install-protected-after.log",
+      "identity": [
+        2080,
+        7619990,
+        33188,
+        1,
+        0,
+        1794426831983000000,
+        1794426831983000000
+      ],
+      "name": "old-install/install-protected-after.log",
+      "path": "payload/old-install/install-protected-after.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 3481,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/limited-stage.json",
+      "identity": [
+        2080,
+        7619948,
+        33188,
+        1,
+        3481,
+        1794426427405621979,
+        1794426427405621979
+      ],
+      "name": "old-install/limited-stage.json",
+      "path": "payload/old-install/limited-stage.json",
+      "sha256": "0f6805ef4a6127f1066a37718dc3a6f14a28130f57c3c1a86124ec3f05bd19a7"
+    },
+    {
+      "bytes": 217,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/root-budget-before-install.json",
+      "identity": [
+        2080,
+        7619965,
+        33188,
+        1,
+        217,
+        1794426831243167926,
+        1794426831243167926
+      ],
+      "name": "old-install/root-budget-before-install.json",
+      "path": "payload/old-install/root-budget-before-install.json",
+      "sha256": "d199512d4a61e4db3efeafe3b86fd4e432a0f606a2972a567134d9676ea17660"
+    },
+    {
+      "bytes": 217,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/root-budget.json",
+      "identity": [
+        2080,
+        7619949,
+        33188,
+        1,
+        217,
+        1794426427410010106,
+        1794426427410010106
+      ],
+      "name": "old-install/root-budget.json",
+      "path": "payload/old-install/root-budget.json",
+      "sha256": "fd4fc177b8f25a5fb144e90e83fa2683c3288fd498966f656b718d0f7f04096e"
+    },
+    {
+      "bytes": 471,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-candidate-menu-syntax-result.json",
+      "identity": [
+        2080,
+        7619873,
+        33188,
+        1,
+        471,
+        1794426412995613000,
+        1794426412995613000
+      ],
+      "name": "old-install/stage-candidate-menu-syntax-result.json",
+      "path": "payload/old-install/stage-candidate-menu-syntax-result.json",
+      "sha256": "aa0245cd3bff294ce6171a3b78b2577955989d60b8b33a99534afd86a7f0c1a9"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-candidate-menu-syntax.log",
+      "identity": [
+        2080,
+        7619872,
+        33188,
+        1,
+        0,
+        1794426412991000000,
+        1794426412991000000
+      ],
+      "name": "old-install/stage-candidate-menu-syntax.log",
+      "path": "payload/old-install/stage-candidate-menu-syntax.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 202,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-closure.json",
+      "identity": [
+        2080,
+        7619909,
+        33188,
+        1,
+        202,
+        1794426422382316256,
+        1794426422382316256
+      ],
+      "name": "old-install/stage-closure.json",
+      "path": "payload/old-install/stage-closure.json",
+      "sha256": "1860b4e9c4d0679d5d52a398850788f6bdf952b76fe00491a87c4f55ec927ac2"
+    },
+    {
+      "bytes": 144,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-complete.json",
+      "identity": [
+        2080,
+        7619912,
+        33188,
+        1,
+        144,
+        1794426422396886152,
+        1794426422396886152
+      ],
+      "name": "old-install/stage-complete.json",
+      "path": "payload/old-install/stage-complete.json",
+      "sha256": "fedb5a315041a7503167df8d83f0c70960625a5922b14f25fa2847cb871a918c"
+    },
+    {
+      "bytes": 521,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-efivarfs-result.json",
+      "identity": [
+        2080,
+        7619889,
+        33188,
+        1,
+        521,
+        1794426413091611629,
+        1794426413091611629
+      ],
+      "name": "old-install/stage-dependencies-efivarfs-result.json",
+      "path": "payload/old-install/stage-dependencies-efivarfs-result.json",
+      "sha256": "31df06b202152ab723c9df059cdda9bb2c14c8f3e8d8925b9a721f53c235fb25"
+    },
+    {
+      "bytes": 17,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-efivarfs.log",
+      "identity": [
+        2080,
+        7619888,
+        33188,
+        1,
+        17,
+        1794426413088000000,
+        1794426413088000000
+      ],
+      "name": "old-install/stage-dependencies-efivarfs.log",
+      "path": "payload/old-install/stage-dependencies-efivarfs.log",
+      "sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    {
+      "bytes": 513,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-ext4-result.json",
+      "identity": [
+        2080,
+        7619885,
+        33188,
+        1,
+        513,
+        1794426413069266494,
+        1794426413069266494
+      ],
+      "name": "old-install/stage-dependencies-ext4-result.json",
+      "path": "payload/old-install/stage-dependencies-ext4-result.json",
+      "sha256": "f932c5e7faa6f18a9b7958ea6ddca07137018ac3b364e27f7c58dd40ff958d5d"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-ext4.log",
+      "identity": [
+        2080,
+        7619884,
+        33188,
+        1,
+        13,
+        1794426413065000000,
+        1794426413065000000
+      ],
+      "name": "old-install/stage-dependencies-ext4.log",
+      "path": "payload/old-install/stage-dependencies-ext4.log",
+      "sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    {
+      "bytes": 531,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-nls_iso8859_1-result.json",
+      "identity": [
+        2080,
+        7619893,
+        33188,
+        1,
+        531,
+        1794426413113878849,
+        1794426413113878849
+      ],
+      "name": "old-install/stage-dependencies-nls_iso8859_1-result.json",
+      "path": "payload/old-install/stage-dependencies-nls_iso8859_1-result.json",
+      "sha256": "ebe001ef95e911417cbe78d9b2546b2bd223da1304b3d5379dfaf4f4b0f70ee1"
+    },
+    {
+      "bytes": 149,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-nls_iso8859_1.log",
+      "identity": [
+        2080,
+        7619892,
+        33188,
+        1,
+        149,
+        1794426413110000000,
+        1794426413110000000
+      ],
+      "name": "old-install/stage-dependencies-nls_iso8859_1.log",
+      "path": "payload/old-install/stage-dependencies-nls_iso8859_1.log",
+      "sha256": "05d52cf554634733776a2981041d6d3f2016ca785c6b9b50065d5d8edf18474b"
+    },
+    {
+      "bytes": 517,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-sd_mod-result.json",
+      "identity": [
+        2080,
+        7619883,
+        33188,
+        1,
+        517,
+        1794426413058484769,
+        1794426413058484769
+      ],
+      "name": "old-install/stage-dependencies-sd_mod-result.json",
+      "path": "payload/old-install/stage-dependencies-sd_mod-result.json",
+      "sha256": "476f3ffa7eea73ba35bfd5e6706f66e353854d77c690b05919dfa00c871c0f93"
+    },
+    {
+      "bytes": 15,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-sd_mod.log",
+      "identity": [
+        2080,
+        7619882,
+        33188,
+        1,
+        15,
+        1794426413054000000,
+        1794426413054000000
+      ],
+      "name": "old-install/stage-dependencies-sd_mod.log",
+      "path": "payload/old-install/stage-dependencies-sd_mod.log",
+      "sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    {
+      "bytes": 514,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-vfat-result.json",
+      "identity": [
+        2080,
+        7619891,
+        33188,
+        1,
+        514,
+        1794426413103071541,
+        1794426413103071541
+      ],
+      "name": "old-install/stage-dependencies-vfat-result.json",
+      "path": "payload/old-install/stage-dependencies-vfat-result.json",
+      "sha256": "3bb58a05caafd279095a43466fa54db228b6a34e1fb8b49cf0bba3b4ef1d586c"
+    },
+    {
+      "bytes": 13,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-vfat.log",
+      "identity": [
+        2080,
+        7619890,
+        33188,
+        1,
+        13,
+        1794426413099000000,
+        1794426413099000000
+      ],
+      "name": "old-install/stage-dependencies-vfat.log",
+      "path": "payload/old-install/stage-dependencies-vfat.log",
+      "sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    {
+      "bytes": 525,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-virtio_net-result.json",
+      "identity": [
+        2080,
+        7619887,
+        33188,
+        1,
+        525,
+        1794426413080819779,
+        1794426413080819779
+      ],
+      "name": "old-install/stage-dependencies-virtio_net-result.json",
+      "path": "payload/old-install/stage-dependencies-virtio_net-result.json",
+      "sha256": "d592d0777ad0f8a862dffe6ab4462b64337bd82b47f564a3c1931e7f454c59c8"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-virtio_net.log",
+      "identity": [
+        2080,
+        7619886,
+        33188,
+        1,
+        19,
+        1794426413077000000,
+        1794426413077000000
+      ],
+      "name": "old-install/stage-dependencies-virtio_net.log",
+      "path": "payload/old-install/stage-dependencies-virtio_net.log",
+      "sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    {
+      "bytes": 525,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-virtio_pci-result.json",
+      "identity": [
+        2080,
+        7619879,
+        33188,
+        1,
+        525,
+        1794426413036245638,
+        1794426413036245638
+      ],
+      "name": "old-install/stage-dependencies-virtio_pci-result.json",
+      "path": "payload/old-install/stage-dependencies-virtio_pci-result.json",
+      "sha256": "cdbf7dbdd3639078b30099cbc42ce70344ca6639147ad4c78e05afc8bcb592b4"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-virtio_pci.log",
+      "identity": [
+        2080,
+        7619878,
+        33188,
+        1,
+        19,
+        1794426413030000000,
+        1794426413030000000
+      ],
+      "name": "old-install/stage-dependencies-virtio_pci.log",
+      "path": "payload/old-install/stage-dependencies-virtio_pci.log",
+      "sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    {
+      "bytes": 527,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-virtio_scsi-result.json",
+      "identity": [
+        2080,
+        7619881,
+        33188,
+        1,
+        527,
+        1794426413046984240,
+        1794426413046984240
+      ],
+      "name": "old-install/stage-dependencies-virtio_scsi-result.json",
+      "path": "payload/old-install/stage-dependencies-virtio_scsi-result.json",
+      "sha256": "7054580c1b317f29f57925d17a4a88c154183ff561e8dba35b24896e09a06df9"
+    },
+    {
+      "bytes": 20,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-virtio_scsi.log",
+      "identity": [
+        2080,
+        7619880,
+        33188,
+        1,
+        20,
+        1794426413043000000,
+        1794426413043000000
+      ],
+      "name": "old-install/stage-dependencies-virtio_scsi.log",
+      "path": "payload/old-install/stage-dependencies-virtio_scsi.log",
+      "sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    {
+      "bytes": 583,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-depmod-limited-result.json",
+      "identity": [
+        2080,
+        7619895,
+        33188,
+        1,
+        583,
+        1794426413156246257,
+        1794426413156246257
+      ],
+      "name": "old-install/stage-depmod-limited-result.json",
+      "path": "payload/old-install/stage-depmod-limited-result.json",
+      "sha256": "2355bbd2b88c2a33404a70f29a47618723693de5acf4b7927426644eec6d360d"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-depmod-limited.log",
+      "identity": [
+        2080,
+        7619894,
+        33188,
+        1,
+        0,
+        1794426413121000000,
+        1794426413121000000
+      ],
+      "name": "old-install/stage-depmod-limited.log",
+      "path": "payload/old-install/stage-depmod-limited.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 426,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-disk-usage-result.json",
+      "identity": [
+        2080,
+        7619911,
+        33188,
+        1,
+        426,
+        1794426422392436398,
+        1794426422392436398
+      ],
+      "name": "old-install/stage-disk-usage-result.json",
+      "path": "payload/old-install/stage-disk-usage-result.json",
+      "sha256": "4556a53ac3450e53d1f01aefebcf4cbe3bdad85d98568fa7af4ebfe3b339bb58"
+    },
+    {
+      "bytes": 267,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-disk-usage.log",
+      "identity": [
+        2080,
+        7619910,
+        33188,
+        1,
+        267,
+        1794426422388000000,
+        1794426422388000000
+      ],
+      "name": "old-install/stage-disk-usage.log",
+      "path": "payload/old-install/stage-disk-usage.log",
+      "sha256": "a2d2264ebc19b80cb9b2de82dc4064dcc921b48b45c457b2459b60c570685699"
+    },
+    {
+      "bytes": 426,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-exact-build-id-result.json",
+      "identity": [
+        2080,
+        7619862,
+        33188,
+        1,
+        426,
+        1794426367826054841,
+        1794426367826054841
+      ],
+      "name": "old-install/stage-exact-build-id-result.json",
+      "path": "payload/old-install/stage-exact-build-id-result.json",
+      "sha256": "0fae97ddd219727c71a5d3c80997939d26d68626cb5eeb546dccc5f77d4b086f"
+    },
+    {
+      "bytes": 2120,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-exact-build-id.log",
+      "identity": [
+        2080,
+        7619861,
+        33188,
+        1,
+        2120,
+        1794426367820000000,
+        1794426367820000000
+      ],
+      "name": "old-install/stage-exact-build-id.log",
+      "path": "payload/old-install/stage-exact-build-id.log",
+      "sha256": "fa613c666e63c5c67e0c230c168a9aa9fc5fdd4697ff2fd85055a52ec48201f4"
+    },
+    {
+      "bytes": 386,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-existing-grub-syntax-result.json",
+      "identity": [
+        2080,
+        7619875,
+        33188,
+        1,
+        386,
+        1794426413007376214,
+        1794426413007376214
+      ],
+      "name": "old-install/stage-existing-grub-syntax-result.json",
+      "path": "payload/old-install/stage-existing-grub-syntax-result.json",
+      "sha256": "698b4820308f475fb43cfbdcf793d107eaac41bffa65dec15ba3f764d5eb41d1"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-existing-grub-syntax.log",
+      "identity": [
+        2080,
+        7619874,
+        33188,
+        1,
+        0,
+        1794426413001000000,
+        1794426413001000000
+      ],
+      "name": "old-install/stage-existing-grub-syntax.log",
+      "path": "payload/old-install/stage-existing-grub-syntax.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 647,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-grub-sources.json",
+      "identity": [
+        2080,
+        7619876,
+        33188,
+        1,
+        647,
+        1794426413012267419,
+        1794426413012267419
+      ],
+      "name": "old-install/stage-grub-sources.json",
+      "path": "payload/old-install/stage-grub-sources.json",
+      "sha256": "14e4e583ae93af501dfbee260d2778ce686bd4a790f32cabcc7054278a96a7a0"
+    },
+    {
+      "bytes": 599,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-identity-before-result.json",
+      "identity": [
+        2080,
+        7619868,
+        33188,
+        1,
+        599,
+        1794426412975591535,
+        1794426412975591535
+      ],
+      "name": "old-install/stage-identity-before-result.json",
+      "path": "payload/old-install/stage-identity-before-result.json",
+      "sha256": "9589b8769c4e922d6d7108e63301a91428f1d4141c53c1383f16eac8a6b55b6d"
+    },
+    {
+      "bytes": 35018,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-identity-before.json",
+      "identity": [
+        2080,
+        7619867,
+        33188,
+        1,
+        35018,
+        1794426412937000000,
+        1794426412937000000
+      ],
+      "name": "old-install/stage-identity-before.json",
+      "path": "payload/old-install/stage-identity-before.json",
+      "sha256": "e7aa7108fe90670e7c34632415b6481b2351a206178407a838f3a00a2f8718ea"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-identity-before.log",
+      "identity": [
+        2080,
+        7619866,
+        33188,
+        1,
+        0,
+        1794426410802000000,
+        1794426410802000000
+      ],
+      "name": "old-install/stage-identity-before.log",
+      "path": "payload/old-install/stage-identity-before.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 574,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-idle-result.json",
+      "identity": [
+        2080,
+        7619860,
+        33188,
+        1,
+        574,
+        1794426365785944950,
+        1794426365785944950
+      ],
+      "name": "old-install/stage-idle-result.json",
+      "path": "payload/old-install/stage-idle-result.json",
+      "sha256": "ae31719cb267103c0c98ac22b8313bace0991411d072ac8fbb3b0806d88c9a8f"
+    },
+    {
+      "bytes": 7303,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-idle.json",
+      "identity": [
+        2080,
+        7619859,
+        33188,
+        1,
+        7303,
+        1794426365722137895,
+        1794426365722137895
+      ],
+      "name": "old-install/stage-idle.json",
+      "path": "payload/old-install/stage-idle.json",
+      "sha256": "ad9dc0f0bf7e4c13e57ab86dfc9ce270d9f3022a77cf4f9689b3882ac875c88e"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-idle.log",
+      "identity": [
+        2080,
+        7619858,
+        33188,
+        1,
+        0,
+        1794426365568000000,
+        1794426365568000000
+      ],
+      "name": "old-install/stage-idle.log",
+      "path": "payload/old-install/stage-idle.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1047,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-initramfs-off-root-result.json",
+      "identity": [
+        2080,
+        7619908,
+        33188,
+        1,
+        1047,
+        1794426422377471289,
+        1794426422377471289
+      ],
+      "name": "old-install/stage-initramfs-off-root-result.json",
+      "path": "payload/old-install/stage-initramfs-off-root-result.json",
+      "sha256": "2a5029ee2db6d51ad1569fb7420543b7c195c4a5a184de94088f40896885dfa1"
+    },
+    {
+      "bytes": 2650,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-initramfs-off-root.log",
+      "identity": [
+        2080,
+        7619907,
+        33188,
+        1,
+        2650,
+        1794426417880000000,
+        1794426417880000000
+      ],
+      "name": "old-install/stage-initramfs-off-root.log",
+      "path": "payload/old-install/stage-initramfs-off-root.log",
+      "sha256": "15a8f8591ea732b1364aee652b538d1accee8e9ea4c08ab35c2203427c4e9968"
+    },
+    {
+      "bytes": 18422,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-journal.jsonl",
+      "identity": [
+        2080,
+        7619857,
+        33188,
+        1,
+        18422,
+        1794426422398000000,
+        1794426422398000000
+      ],
+      "name": "old-install/stage-journal.jsonl",
+      "path": "payload/old-install/stage-journal.jsonl",
+      "sha256": "f07b8001752a42f28e36c2ec8578962cd21987b24a511d5f8e7c79093f516091"
+    },
+    {
+      "bytes": 599,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-protected-before-result.json",
+      "identity": [
+        2080,
+        7619865,
+        33188,
+        1,
+        599,
+        1794426410657334291,
+        1794426410657334291
+      ],
+      "name": "old-install/stage-protected-before-result.json",
+      "path": "payload/old-install/stage-protected-before-result.json",
+      "sha256": "12813bf355b586a5e06a638a867e9488e525f23de9e52fab22ec31f600eaa67b"
+    },
+    {
+      "bytes": 18899908,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-protected-before.json",
+      "identity": [
+        2080,
+        7619864,
+        33188,
+        1,
+        18899908,
+        1794426410586000000,
+        1794426410586000000
+      ],
+      "name": "old-install/stage-protected-before.json",
+      "path": "payload/old-install/stage-protected-before.json",
+      "sha256": "3d66b0845cf5088d6f2e46cec22218f5bb91f88e6cc745edfefcfdc338211a5b"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-protected-before.log",
+      "identity": [
+        2080,
+        7619863,
+        33188,
+        1,
+        0,
+        1794426367831000000,
+        1794426367831000000
+      ],
+      "name": "old-install/stage-protected-before.log",
+      "path": "payload/old-install/stage-protected-before.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 60064,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/boot-kernel-journal.txt",
+      "identity": [
+        2080,
+        7518198,
+        33188,
+        1,
+        60064,
+        1794428376795000000,
+        1794428376795000000
+      ],
+      "name": "postboot/boot-kernel-journal.txt",
+      "path": "payload/postboot/boot-kernel-journal.txt",
+      "sha256": "d3f55ed18c64dc8b71b27b9e2a8ea42e68199daa9fd43f77cd943d7f098e647e"
+    },
+    {
+      "bytes": 139,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/cmdline.txt",
+      "identity": [
+        2080,
+        7518195,
+        33188,
+        1,
+        139,
+        1794428376765841912,
+        1794428376765841912
+      ],
+      "name": "postboot/cmdline.txt",
+      "path": "payload/postboot/cmdline.txt",
+      "sha256": "c2bdd5c288bde0ebb510e8654bf91459efbf69d09e3acf9cf587f13b1f02bcf9"
+    },
+    {
+      "bytes": 111374,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/cpuinfo.txt",
+      "identity": [
+        2080,
+        7518197,
+        33188,
+        1,
+        111374,
+        1794428376771228753,
+        1794428376771228753
+      ],
+      "name": "postboot/cpuinfo.txt",
+      "path": "payload/postboot/cpuinfo.txt",
+      "sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921"
+    },
+    {
+      "bytes": 10224,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/custom.cfg",
+      "identity": [
+        2080,
+        7518208,
+        33188,
+        1,
+        10224,
+        1794428379260509303,
+        1794428379260509303
+      ],
+      "name": "postboot/custom.cfg",
+      "path": "payload/postboot/custom.cfg",
+      "sha256": "caae2caa937b2888237daeabf110fb70a5a6de6573f88bde1e91c40efec6a6fc"
+    },
+    {
+      "bytes": 50872,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/dmesg.txt",
+      "identity": [
+        2080,
+        7518199,
+        33188,
+        1,
+        50872,
+        1794428376821000000,
+        1794428376821000000
+      ],
+      "name": "postboot/dmesg.txt",
+      "path": "payload/postboot/dmesg.txt",
+      "sha256": "b1ef9f91af222e45b26c5438d352635846b19a0a0077592314782ae9cc027e86"
+    },
+    {
+      "bytes": 12,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/grub-environment.txt",
+      "identity": [
+        2080,
+        7518205,
+        33188,
+        1,
+        12,
+        1794428379244000000,
+        1794428379244000000
+      ],
+      "name": "postboot/grub-environment.txt",
+      "path": "payload/postboot/grub-environment.txt",
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "bytes": 34308,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/grub.cfg",
+      "identity": [
+        2080,
+        7518204,
+        33188,
+        1,
+        34308,
+        1794428379214012476,
+        1794428379214012476
+      ],
+      "name": "postboot/grub.cfg",
+      "path": "payload/postboot/grub.cfg",
+      "sha256": "4cb0e54c275387c4e725b1dc3d6c69393ec98207a5ea71d1c736c227b5eb93be"
+    },
+    {
+      "bytes": 709,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/gs-proof.json",
+      "identity": [
+        2080,
+        7518219,
+        33188,
+        1,
+        709,
+        1794428381414200769,
+        1794428381414200769
+      ],
+      "name": "postboot/gs-proof.json",
+      "path": "payload/postboot/gs-proof.json",
+      "sha256": "7b3480c16ac39def469c84d1a9cc349bcb15a591b655e752eb221c93e2b5a803"
+    },
+    {
+      "bytes": 659,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/installed-nls-receipt.json",
+      "identity": [
+        2080,
+        7518212,
+        33188,
+        1,
+        659,
+        1794428381312221520,
+        1794428381312221520
+      ],
+      "name": "postboot/installed-nls-receipt.json",
+      "path": "payload/postboot/installed-nls-receipt.json",
+      "sha256": "0c4d9a28b5c3ba38d250125d1dc14390825baab033a76b411868f9c377ed4ac1"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/installed-nls-vermagic.txt",
+      "identity": [
+        2080,
+        7518211,
+        33188,
+        1,
+        56,
+        1794428381306000000,
+        1794428381306000000
+      ],
+      "name": "postboot/installed-nls-vermagic.txt",
+      "path": "payload/postboot/installed-nls-vermagic.txt",
+      "sha256": "9cac3141708dfe202989cd7a9dad2e148ddf0f324432d8a2c0ac90fcb14184fc"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/modules.txt",
+      "identity": [
+        2080,
+        7518196,
+        33188,
+        1,
+        48,
+        1794428376768301540,
+        1794428376768301540
+      ],
+      "name": "postboot/modules.txt",
+      "path": "payload/postboot/modules.txt",
+      "sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132"
+    },
+    {
+      "bytes": 26,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/mount-boot-efi.txt",
+      "identity": [
+        2080,
+        7518214,
+        33188,
+        1,
+        26,
+        1794428381330000000,
+        1794428381330000000
+      ],
+      "name": "postboot/mount-boot-efi.txt",
+      "path": "payload/postboot/mount-boot-efi.txt",
+      "sha256": "e8c67255efc0448583a1645c3d315d417cba50c01bdbe0260a4333a3e261b48d"
+    },
+    {
+      "bytes": 33,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/mount-mnt-kdlock-builds.txt",
+      "identity": [
+        2080,
+        7518215,
+        33188,
+        1,
+        33,
+        1794428381340000000,
+        1794428381340000000
+      ],
+      "name": "postboot/mount-mnt-kdlock-builds.txt",
+      "path": "payload/postboot/mount-mnt-kdlock-builds.txt",
+      "sha256": "3bda93efc31be965b14352cd48863f2bd1b11d8ed632e0b280a8db1e107567ab"
+    },
+    {
+      "bytes": 34,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/mount-mnt-kdlock-builds2.txt",
+      "identity": [
+        2080,
+        7518216,
+        33188,
+        1,
+        34,
+        1794428381349000000,
+        1794428381349000000
+      ],
+      "name": "postboot/mount-mnt-kdlock-builds2.txt",
+      "path": "payload/postboot/mount-mnt-kdlock-builds2.txt",
+      "sha256": "c8a80456051a5abbc122afa9720b480e196e20082fa4511a3ce2a2c962f547ad"
+    },
+    {
+      "bytes": 17,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/mount-root.txt",
+      "identity": [
+        2080,
+        7518213,
+        33188,
+        1,
+        17,
+        1794428381321000000,
+        1794428381321000000
+      ],
+      "name": "postboot/mount-root.txt",
+      "path": "payload/postboot/mount-root.txt",
+      "sha256": "5684e9db57b2bdf63e8bd6e87299d59fc5d83f14f850816171b7a816006838cc"
+    },
+    {
+      "bytes": 1755,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/normal-recovery-boot-unchanged.json",
+      "identity": [
+        2080,
+        7518218,
+        33188,
+        1,
+        1755,
+        1794428381390579828,
+        1794428381390579828
+      ],
+      "name": "postboot/normal-recovery-boot-unchanged.json",
+      "path": "payload/postboot/normal-recovery-boot-unchanged.json",
+      "sha256": "bd69c37ddab08e68017249c2cd4618416de967e59aa8f7c158f26c15116f2c70"
+    },
+    {
+      "bytes": 232,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/prior-arm-complete.json",
+      "identity": [
+        2080,
+        7518206,
+        33188,
+        1,
+        232,
+        1794428379254486029,
+        1794428379254486029
+      ],
+      "name": "postboot/prior-arm-complete.json",
+      "path": "payload/postboot/prior-arm-complete.json",
+      "sha256": "56695c9e08c49df85e0aacf7d761f60699d80cb388818a6f352bea9620041e91"
+    },
+    {
+      "bytes": 545,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/prior-armed-grub.json",
+      "identity": [
+        2080,
+        7518207,
+        33188,
+        1,
+        545,
+        1794428379256890050,
+        1794428379256890050
+      ],
+      "name": "postboot/prior-armed-grub.json",
+      "path": "payload/postboot/prior-armed-grub.json",
+      "sha256": "36a246c5822a0607b1c54f3fc63e72858280f6dc41a3a87103580b4fc09fec96"
+    },
+    {
+      "bytes": 4712,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/prior-candidate-boot-unchanged.json",
+      "identity": [
+        2080,
+        7518210,
+        33188,
+        1,
+        4712,
+        1794428381229908432,
+        1794428381229908432
+      ],
+      "name": "postboot/prior-candidate-boot-unchanged.json",
+      "path": "payload/postboot/prior-candidate-boot-unchanged.json",
+      "sha256": "9f42d89ffff0cda6797b1ae5e1ab1ff84042f28c7211d300453d258ba364a3e9"
+    },
+    {
+      "bytes": 647,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/prior-menu-sources.json",
+      "identity": [
+        2080,
+        7518209,
+        33188,
+        1,
+        647,
+        1794428379264172203,
+        1794428379264172203
+      ],
+      "name": "postboot/prior-menu-sources.json",
+      "path": "payload/postboot/prior-menu-sources.json",
+      "sha256": "14e4e583ae93af501dfbee260d2778ce686bd4a790f32cabcc7054278a96a7a0"
+    },
+    {
+      "bytes": 163654,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/result.json",
+      "identity": [
+        2080,
+        7518220,
+        33188,
+        1,
+        163654,
+        1794428381419071815,
+        1794428381419071815
+      ],
+      "name": "postboot/result.json",
+      "path": "payload/postboot/result.json",
+      "sha256": "878c80315ed3f5ee9fd96388987a64cb7f0776ea01bc4eae044eca63ff2bb919"
+    },
+    {
+      "bytes": 476,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/running-kernel-notes.bin",
+      "identity": [
+        2080,
+        7518200,
+        33188,
+        1,
+        476,
+        1794428376831464319,
+        1794428376831464319
+      ],
+      "name": "postboot/running-kernel-notes.bin",
+      "path": "payload/postboot/running-kernel-notes.bin",
+      "sha256": "a1bdf024df8ed857c88220369524969116845732319dcd7758b72d4386a962e6"
+    },
+    {
+      "bytes": 7,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/ssh-service.txt",
+      "identity": [
+        2080,
+        7518217,
+        33188,
+        1,
+        7,
+        1794428381363000000,
+        1794428381363000000
+      ],
+      "name": "postboot/ssh-service.txt",
+      "path": "payload/postboot/ssh-service.txt",
+      "sha256": "45df5ad5e0ecfa54d3226343e0e6857337494ba6e32f189d1174070665d8c659"
+    },
+    {
+      "bytes": 120,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/uname.json",
+      "identity": [
+        2080,
+        7518194,
+        33188,
+        1,
+        120,
+        1794428376760980786,
+        1794428376760980786
+      ],
+      "name": "postboot/uname.json",
+      "path": "payload/postboot/uname.json",
+      "sha256": "e4b4b8ceb61a452e694588194ef675e9ec53d7c98ec7a7374011beaaa7eaa795"
+    },
+    {
+      "bytes": 2120,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/vmlinux-notes.txt",
+      "identity": [
+        2080,
+        7518201,
+        33188,
+        1,
+        2120,
+        1794428377992000000,
+        1794428377992000000
+      ],
+      "name": "postboot/vmlinux-notes.txt",
+      "path": "payload/postboot/vmlinux-notes.txt",
+      "sha256": "fa613c666e63c5c67e0c230c168a9aa9fc5fdd4697ff2fd85055a52ec48201f4"
+    },
+    {
+      "bytes": 5644,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/vmlinux-sections.txt",
+      "identity": [
+        2080,
+        7518203,
+        33188,
+        1,
+        5644,
+        1794428379205000000,
+        1794428379205000000
+      ],
+      "name": "postboot/vmlinux-sections.txt",
+      "path": "payload/postboot/vmlinux-sections.txt",
+      "sha256": "c6d054daa655f236d4473482356064191fbdca31addc0f8229de310aa0f14a89"
+    },
+    {
+      "bytes": 13079609,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/vmlinux-symbols.txt",
+      "identity": [
+        2080,
+        7518202,
+        33188,
+        1,
+        13079609,
+        1794428378453000000,
+        1794428378453000000
+      ],
+      "name": "postboot/vmlinux-symbols.txt",
+      "path": "payload/postboot/vmlinux-symbols.txt",
+      "sha256": "3ef80821de643d89218bcfadbfc7658c03018193af7fa28bee158e07d490992d"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "modprobe",
+    "-d",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/install-stage-kdrebuild8-api-01/limited",
+    "-S",
+    "7.0.0-38-kdrebuild8",
+    "--show-depends",
+    "nls_iso8859_1"
+  ],
+  "elapsed_seconds": 0.007013479000306688,
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-nls_iso8859_1.log",
+  "log_sha256": "4360bc2a22c0a208ffc1642e9b7a2bfb17f53cdf5faa9ef0c8009e73eb3b7084",
+  "pid": 136821,
+  "returncode": 0,
+  "timed_out": false
+}

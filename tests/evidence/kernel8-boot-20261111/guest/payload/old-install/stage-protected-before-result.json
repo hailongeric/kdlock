@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "python3",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/checks.py",
+    "protect",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-protected-before.json"
+  ],
+  "elapsed_seconds": 42.82613596699957,
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-protected-before.log",
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "pid": 132417,
+  "returncode": 0,
+  "timed_out": false
+}

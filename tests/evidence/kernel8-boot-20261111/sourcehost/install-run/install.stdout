@@ -1,0 +1,2 @@
+{"phase": "install", "event": "DISPATCHED", "pid": 137170, "driver": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-driver-install-01", "proof_sha256": "bd66c2dbdd7e755fd5c4c2ea46b5a73b57e20ded54f24eeae0425804e4cf6e79"}
+{"phase": "install", "event": "RETURNED", "returncode": 1, "driver": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-driver-install-01"}

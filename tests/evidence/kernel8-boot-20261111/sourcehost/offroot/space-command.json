@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "22",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "eric@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "import datetime,json,os; p='/home/eric/vm';s=os.statvfs(p);print(json.dumps({'path':p,'realpath':os.path.realpath(p),'utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'host_free_bytes':s.f_bavail*s.f_frsize,'total':s.f_blocks*s.f_frsize}))\n",
+  "timeout_seconds": 20
+}

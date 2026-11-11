@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "modprobe",
+    "-d",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/raw",
+    "-S",
+    "7.0.0-38-kdrebuild8",
+    "--show-depends",
+    "virtio_scsi"
+  ],
+  "elapsed_seconds": 0.006296758998360019,
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-dependencies-virtio_scsi.log",
+  "log_sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f",
+  "pid": 132429,
+  "returncode": 0,
+  "timed_out": false
+}

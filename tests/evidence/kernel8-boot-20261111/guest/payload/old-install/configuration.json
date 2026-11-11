@@ -1,0 +1,15 @@
+{
+  "final_build_receipt": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/full-01/result.json",
+  "final_build_receipt_sha256": "024f19157ed85228fc9dccde8009936b25def135b3f0cd1c77c6204c68e57ba5",
+  "final_identity": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/full-01/final-identity.json",
+  "final_identity_sha256": "febcb85c90aa7e406a0fcb47aa080252e6f7ba9e3625a266e4e540de01d781db",
+  "kernel_code_commit": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+  "linked_recipe": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/full-build.py",
+  "linked_recipe_sha256": "cf062063edb80334b09734db4461d4c4fcd66c486909c04a3ddac3afa115990e",
+  "offroot_receipt": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/result.json",
+  "offroot_receipt_sha256": "345ea6f3a6543cafa7a76ec0c09e324bfd3fbd39b8a18f5df7f211e55d6ccd79",
+  "recovery_receipt": "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/recovery-stage.json",
+  "recovery_receipt_sha256": "f040f85e6e07c64bf06f5740ea308187a16c02177bf98a27549902f07c2c2485",
+  "root_reserve_bytes": 1073741824,
+  "root_working_bytes": 268435456
+}

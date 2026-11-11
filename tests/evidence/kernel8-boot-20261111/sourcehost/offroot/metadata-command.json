@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "from pathlib import Path\nimport base64,hashlib,json\np=Path('/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/nls-stage-01/result.json');b=p.read_bytes();v=json.loads(b);assert v['status']=='OFFROOT_MODULE_STAGE_COMPLETE'\nprint(json.dumps({'path':str(p),'sha256':hashlib.sha256(b).hexdigest(),'base64':base64.b64encode(b).decode(),'stage':v['stage'],'identity_after':{k:x for k,x in v['identity_after'].items() if k!='modules'},'headroom_after':v['headroom_after']}))\n",
+  "timeout_seconds": 30
+}

@@ -1,0 +1,352 @@
+{
+  "bounds": {
+    "aggregate_bytes": 268435456,
+    "files": 10240,
+    "per_file_bytes": 67108864
+  },
+  "collection_sha256": "907fd81b885523af9cfe053a57ce554b066076755db3f9d0d98d742611c28fce",
+  "copies": {
+    "count": 442,
+    "gzip_files": 10,
+    "independent_readback_and_original_identity_recheck": true,
+    "raw_bytes": 58964881,
+    "source_host_counts": {
+      "install-finalize": 40,
+      "install-run": 67,
+      "offroot": 23,
+      "postboot-run": 11,
+      "reboot": 15
+    },
+    "stored_bytes": 14899949
+  },
+  "copy_index_sha256": "0e64d782bff278be911cc896fbf399aa81d20b13b6b2bf112c9f643e1efbf1d1",
+  "excluded_origins": [
+    {
+      "bytes": 54128640,
+      "origin": "/tmp/kdlock-kernel8-boot-collection-20261111-01/.collection/copy.tar",
+      "reason": "Duplicate transport tar. Every member is retained separately with verified original bytes.",
+      "sha256": "f6d38417e097d21d6731fb5d179080092c4a60c73eb584e18a65bfd17564a8b9"
+    }
+  ],
+  "guest_payload": {
+    "bytes": 53899614,
+    "count": 268,
+    "labels": {
+      "arm": 28,
+      "drivers": 35,
+      "exports": 1,
+      "finalize": 37,
+      "finalize-input": 6,
+      "offroot": 8,
+      "old-input": 5,
+      "old-install": 121,
+      "postboot": 27
+    }
+  },
+  "install": {
+    "arm_status": "ARMED_ONESHOT_VERIFIED",
+    "custom_cfg": {
+      "append_bytes": 1008,
+      "append_sha256": "a1e1d2d0fa3c5bae829549d830a6591b1b2937fa1a56ee5ac21b47e74d91217e",
+      "candidate_entry": "kdlock-kdrebuild8-api-01",
+      "custom_cfg_after_sha256": "caae2caa937b2888237daeabf110fb70a5a6de6573f88bde1e91c40efec6a6fc",
+      "custom_cfg_after_size": 10224,
+      "custom_cfg_before_sha256": "10704ea47ac50dfef89b9a0f2a6870f668bbaf7bb4935254d14f4c2dea829255",
+      "custom_cfg_before_size": 9216,
+      "custom_cfg_metadata": {
+        "device": 2049,
+        "gid": 0,
+        "inode": 87111,
+        "mode": 420,
+        "nlink": 1,
+        "uid": 0
+      },
+      "grub_cfg_sha256": "4cb0e54c275387c4e725b1dc3d6c69393ec98207a5ea71d1c736c227b5eb93be"
+    },
+    "finalization_budget": {
+      "boot_bytes": 28270592,
+      "initrd_bytes": 30887936,
+      "limited_namespace_bytes": 643072,
+      "needed": 1401978880,
+      "root_free": 12493389824,
+      "root_reserve_bytes": 1073741824,
+      "root_working_bytes": 268435456
+    },
+    "finalization_repeated_install_or_append": false,
+    "finalization_status": "INSTALLED_BYTES_VERIFIED",
+    "frozen_helpers": {
+      "checks.py": "1726d01a4794f82ca8cb1a92218a70dd59272fa2e5e8bdd27a266bd31d92a472",
+      "controller.py": "409f640efa69425ee8b8849c4f1897b9df83e4c1a7eccbea2b596ab7bb99a99b"
+    },
+    "limited_namespace": {
+      "closure": {
+        "efivarfs": {
+          "builtin": true,
+          "modules": []
+        },
+        "ext4": {
+          "builtin": true,
+          "modules": []
+        },
+        "nls_iso8859_1": {
+          "builtin": false,
+          "modules": [
+            "kernel/fs/nls/nls_iso8859-1.ko"
+          ]
+        },
+        "sd_mod": {
+          "builtin": true,
+          "modules": []
+        },
+        "vfat": {
+          "builtin": true,
+          "modules": []
+        },
+        "virtio_net": {
+          "builtin": true,
+          "modules": []
+        },
+        "virtio_pci": {
+          "builtin": true,
+          "modules": []
+        },
+        "virtio_scsi": {
+          "builtin": true,
+          "modules": []
+        }
+      },
+      "initrd": {
+        "sha256": "188febc028a662326553252d4973dd3869250434c9e4202d55e543242c9e58a2",
+        "size": 30886345
+      },
+      "namespace": [
+        {
+          "mode": 420,
+          "name": "config-7.0.0-38-kdrebuild8",
+          "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+          "size": 308548
+        },
+        {
+          "mode": 420,
+          "name": "kernel/fs/nls/nls_iso8859-1.ko",
+          "sha256": "1dc7c24ed23d33f1c57d1e22617e05893c6fe5c0ce1bd8426b889c04cae8519f",
+          "size": 12881
+        },
+        {
+          "mode": 420,
+          "name": "modules.alias",
+          "sha256": "a29f59569ef743ade2eada4d545211be2c5ba409842cb442c0548ecb51ec33bb",
+          "size": 45
+        },
+        {
+          "mode": 420,
+          "name": "modules.alias.bin",
+          "sha256": "87b6e280f77dbc7f4d6708f6d83aa23dac73185bc345bd7c98e5f619fc78ec37",
+          "size": 12
+        },
+        {
+          "mode": 420,
+          "name": "modules.builtin",
+          "sha256": "ef55d7bc5528d2c01f38fc0d8f6473c75e14ec62349898f6529be9bbac871366",
+          "size": 10431
+        },
+        {
+          "mode": 420,
+          "name": "modules.builtin.alias.bin",
+          "sha256": "ddb31bce0e7763fe0cc7cbefc665014f1dd72c7e85b7088b6cee400851ff126c",
+          "size": 73581
+        },
+        {
+          "mode": 420,
+          "name": "modules.builtin.bin",
+          "sha256": "90087995b50c4b592b3e709cd0f9a4cbabd053997a07138cedc1ccec8939eb92",
+          "size": 12411
+        },
+        {
+          "mode": 420,
+          "name": "modules.builtin.modinfo",
+          "sha256": "f173376892f5d1a020884e4c6062b51e7cf26718928e1225be5e4fb507c34d0c",
+          "size": 159067
+        },
+        {
+          "mode": 420,
+          "name": "modules.dep",
+          "sha256": "62d21ca6730bf75db1e59c0f67605aca65e9a11e6caf8eb4bdd6c050678c954c",
+          "size": 32
+        },
+        {
+          "mode": 420,
+          "name": "modules.dep.bin",
+          "sha256": "2f99e85829ba8e1bc9a73c8c3075d741a1a13cdf87a39f121fd8332ce6e5ecee",
+          "size": 71
+        },
+        {
+          "mode": 420,
+          "name": "modules.devname",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "mode": 420,
+          "name": "modules.order",
+          "sha256": "e4277eeafe648baf12efd6f38ff57fd7afab785f4b098c480984ad704f506d3f",
+          "size": 31
+        },
+        {
+          "mode": 420,
+          "name": "modules.softdep",
+          "sha256": "ac2de753255c506934be29e69261f1485f51ee9cf9c2bf467bcc0c4cf95f8713",
+          "size": 55
+        },
+        {
+          "mode": 420,
+          "name": "modules.symbols",
+          "sha256": "e1d07394350b0dc9be149c69080c47fb1faf4d88fabb900387b6016e6fff3976",
+          "size": 49
+        },
+        {
+          "mode": 420,
+          "name": "modules.symbols.bin",
+          "sha256": "87b6e280f77dbc7f4d6708f6d83aa23dac73185bc345bd7c98e5f619fc78ec37",
+          "size": 12
+        },
+        {
+          "mode": 420,
+          "name": "modules.weakdep",
+          "sha256": "a1fffe1059d8150b5d402b3f284f507025a8d4b5881810cb17b3fda8b8ab9304",
+          "size": 55
+        }
+      ]
+    },
+    "original_commands_rc0": 14,
+    "original_failure_preserved": true,
+    "original_menu_command_rc1": 1,
+    "protected_files_before_and_verified_after": 81990,
+    "root_budget_before_install": {
+      "boot_bytes": 28270592,
+      "initrd_bytes": 30887936,
+      "limited_namespace_bytes": 643072,
+      "needed": 1401978880,
+      "root_free": 12553252864,
+      "root_reserve_bytes": 1073741824,
+      "root_working_bytes": 268435456
+    }
+  },
+  "limits": [
+    "Boot and exact linked/running identity only. Separate fixture, native API, JIT, MM completion and performance evidence remain separate.",
+    "Postboot rehashes eight normal/recovery boot files and recorded prior candidate boot files. Full protected module contents were verified by the installer before arm.",
+    "No linked vmlinux, private key, vmlinuz or initrd binary is copied. The 12881-byte signed NLS module is one declared payload member."
+  ],
+  "phase_sha256": {
+    "arm/result.json": "7b4b9f6808fabd690797b8d1a6ce26e9dbd0995c5d3b76a3a445f6888f26cf8b",
+    "finalize-input/checks-menu.py": "2610bc0c19dafc9ccf87b56dd85802ac4f22d0dce2ac1b9ae6d0dd4c3cb8ecab",
+    "finalize-input/finalize-arm.py": "02de841b268a66d5321dc6d0be3bd907b17ac1349e1d52463e47ba6c363926f7",
+    "finalize-input/postboot.py": "7ba6bd53f6d281715f21dfdb11280cde751fc3bb6a471f5f33f40274c32146a7",
+    "finalize/result.json": "21980a9b699e13733f584efc9665e89aa2e37e233cfa24cc7ce0e4925bc0e5bc",
+    "offroot/result.json": "345ea6f3a6543cafa7a76ec0c09e324bfd3fbd39b8a18f5df7f211e55d6ccd79",
+    "old-install/check-complete.json": "9bd3fcd4671643ab461846684d1093e4c8754ec35d0ad3b49e2a617b9a90fa9b",
+    "old-install/install-failure.json": "83904a07c1a200e22d28c0f8a6102c241c0aa622ec1397f1193edd51e9655b1a",
+    "old-install/stage-complete.json": "fedb5a315041a7503167df8d83f0c70960625a5922b14f25fa2847cb871a918c",
+    "postboot/gs-proof.json": "7b3480c16ac39def469c84d1a9cc349bcb15a591b655e752eb221c93e2b5a803",
+    "postboot/result.json": "878c80315ed3f5ee9fd96388987a64cb7f0776ea01bc4eae044eca63ff2bb919"
+  },
+  "postboot": {
+    "artifacts": {
+      ".config": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "System.map": "5f29d44f58e215bf1b056cfb60c4bcc31c43aadcc406d6fba633587dcafefc9b",
+      "arch/x86/boot/bzImage": "6c6e7a1fe9deda428da52bbe7cd50338744c9e0e187bf2e970c12124d57d797d",
+      "vmlinux": "4441e45c27f9300a4cd19739c917458308581472604c3b75d8ffba9fec493be1"
+    },
+    "boot_id": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+    "build_id": "a33dd4d11d0f0c6649107507e685b6e86e716c1a",
+    "commands_rc0": 12,
+    "core_commit": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+    "grub": {
+      "configuration_sha256": "4cb0e54c275387c4e725b1dc3d6c69393ec98207a5ea71d1c736c227b5eb93be",
+      "custom_cfg_sha256": "caae2caa937b2888237daeabf110fb70a5a6de6573f88bde1e91c40efec6a6fc",
+      "environment": {
+        "next_entry": ""
+      },
+      "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+      "old_custom_prefix_preserved": true,
+      "old_custom_prefix_sha256": "10704ea47ac50dfef89b9a0f2a6870f668bbaf7bb4935254d14f4c2dea829255",
+      "one_shot_consumed": true,
+      "prior_next_entry": "kdlock-kdrebuild8-api-01"
+    },
+    "gs": {
+      "boot_id": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+      "build_id": "a33dd4d11d0f0c6649107507e685b6e86e716c1a",
+      "const_current_task": "0xffffffff84425018",
+      "current_task_gs_offset": "0xffffffff84425018",
+      "gs_symbol": "current_task",
+      "kaslr_disabled": true,
+      "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "kernel_elf_sha256": "4441e45c27f9300a4cd19739c917458308581472604c3b75d8ffba9fec493be1",
+      "kernel_release": "7.0.0-38-kdrebuild8",
+      "percpu_section_va": "0xffffffff8440d000",
+      "scope": "Exact linked/running kernel identity and full GS symbol input; fixture GS relocation and execution remain separate.",
+      "verified_for_running_kernel": true
+    },
+    "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n",
+    "nls": {
+      "count": 1,
+      "modules": [
+        {
+          "mode": 420,
+          "path": "/lib/modules/7.0.0-38-kdrebuild8/kernel/fs/nls/nls_iso8859-1.ko",
+          "sha256": "1dc7c24ed23d33f1c57d1e22617e05893c6fe5c0ce1bd8426b889c04cae8519f",
+          "sig_hashalgo": "sha512",
+          "sig_key": "01:B2:96:BB:D3:61:02:82:99:E7:55:3C:53:F4:0A:B8:2A:5D:C4:85",
+          "signer": "Build time autogenerated kernel key",
+          "size": 12881,
+          "vermagic": "7.0.0-38-kdrebuild8 SMP preempt mod_unload modversions"
+        }
+      ],
+      "root": "/lib/modules/7.0.0-38-kdrebuild8",
+      "signature_policy": "record vendor result; unsigned alone is not a new rejection",
+      "signed": 1,
+      "unsigned": 0
+    },
+    "normal_recovery": {
+      "boot_files_unchanged": 8,
+      "module_namespaces_present": true,
+      "stage_snapshot_sha256": "3d66b0845cf5088d6f2e46cec22218f5bb91f88e6cc745edfefcfdc338211a5b"
+    },
+    "outer_returncode": 0,
+    "outer_sha256": "971d9bf508fc2aeafc015576a56922c5569f6070c2efa2f35f5898e1f0db312f",
+    "phase": "POSTBOOT_IDENTITY_VERIFIED",
+    "prior_candidate_boot_files_rehashed": 24,
+    "release": "7.0.0-38-kdrebuild8",
+    "taint": 0,
+    "taint_saved_value": "0"
+  },
+  "prephase_wrapper_failure": {
+    "error": "SyntaxError: unterminated string literal before any installer phase",
+    "returncode": 1,
+    "stderr_sha256": "03d0e7a04e659a8e636fa9ad078a90df3890fe0daecadef7a63849cebf6a7ed0"
+  },
+  "reboot": {
+    "old_boot": "afb0c5cd-96b7-488b-bcb4-4a31cbb4e50e",
+    "ordinary_dispatches": 1,
+    "result_sha256": "754b19b8c8e2518e0135da467d074a221e97d547fcf58e15598f0dd2f1a6335f",
+    "returncode": 0
+  },
+  "remote_inventory": {
+    "all_payload_bytes_match_index_and_tar": true,
+    "all_three_commands_reaped_remote_complete_rc0": true,
+    "before_after_exact_file_directory_membership_and_identity": true
+  },
+  "schema": 1,
+  "scope": "Saved-file hash, metadata, archive and selected phase/protection audit. No VM or project execution.",
+  "source_collection": "/tmp/kdlock-kernel8-boot-collection-20261111-01",
+  "status": "OFFLINE_SAVED_RECEIPTS_VERIFIED",
+  "transport_archive": {
+    "bytes": 54128640,
+    "canonical_names_unique": true,
+    "exact_payload_hashes": true,
+    "origin": "/tmp/kdlock-kernel8-boot-collection-20261111-01/.collection/copy.tar",
+    "regular_members": 268,
+    "sha256": "f6d38417e097d21d6731fb5d179080092c4a60c73eb584e18a65bfd17564a8b9",
+    "trailing_padding_zero": true
+  }
+}

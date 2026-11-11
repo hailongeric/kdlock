@@ -1,0 +1,12 @@
+from pathlib import Path
+import hashlib,json,subprocess,time,sys
+p=Path('/tmp/kdlock-kernel8-install-finalize-20261111-01');phase=sys.argv[1];assert phase in ('finalize','arm');script=Path('/tmp/kdlock-kernel6-preflight-20261111-01/host-read.py').read_bytes();assert hashlib.sha256(script).hexdigest()=='05936f37e7ba3ae185b04c14ccfc87d3de74b429626329842ac1d10c585949b2'
+a=['ssh','-T','-p','22','-o','BatchMode=yes','-o','ConnectTimeout=10','eric@10.176.26.71','sudo','-n','python3','-B','-'];(p/(phase+'-recovery-command.json')).write_text(json.dumps({'argv':a,'stdin':'/tmp/kdlock-kernel6-preflight-20261111-01/host-read.py','timeout_seconds':60},indent=2)+'\n');start=time.time()
+with (p/(phase+'-recovery.json')).open('xb') as out,(p/(phase+'-recovery.stderr')).open('xb') as err:r=subprocess.run(a,input=script,stdout=out,stderr=err,timeout=60)
+(p/(phase+'-recovery-result.json')).write_text(json.dumps({'returncode':r.returncode,'elapsed_seconds':time.time()-start},indent=2)+'\n')
+if r.returncode:raise SystemExit(r.returncode)
+v=json.loads((p/(phase+'-recovery.json')).read_text());c=json.loads(Path('/tmp/kdlock-kernel8-affected-20261111-01/config.json').read_text());policy=c['recovery_policy'];assert all(v[k]==policy[k] for k in ('hostname','pid','exe'));assert len(v['images'])==3 and {x['path'] for x in v['images']}==set(policy['image_paths']) and all(x['path']==x['realpath'] and x['open_fds'] and x['host_available']>=policy['host_floor_bytes'] for x in v['images']);t={x['command']:x['output'] for x in v['hmp']};assert 'VM status: running' in t['info status'];assert any(policy['tag'] in s.split() for s in t['info snapshots'].split('List of snapshots present on all disks:',1)[1].split('List of partial',1)[0].splitlines())
+digest=hashlib.sha256((p/(phase+'-recovery.json')).read_bytes()).hexdigest();a=json.loads((p/(phase+'-argv-before-proofs.json')).read_text());a[a.index('--recovery-sha')+1]=digest;
+if phase=='arm':
+ r=(p/'finalized-result.json').read_bytes();assert json.loads(r)['status']=='INSTALLED_BYTES_VERIFIED';a[a.index('--finalized-sha')+1]=hashlib.sha256(r).hexdigest()
+(p/(phase+'-actual-argv.json')).write_text(json.dumps(a,indent=2)+'\n');print(json.dumps({'recovery_sha256':digest,'argv_sha256':hashlib.sha256((p/(phase+'-actual-argv.json')).read_bytes()).hexdigest(),'utc':v['utc'],'host_available_min':min(x['host_available'] for x in v['images'])}))

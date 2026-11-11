@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "from pathlib import Path\nimport base64,hashlib,json\np=Path('/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-finalize-01/result.json');b=p.read_bytes();assert len(b)<2097152;r=json.loads(b);assert r['status']=='INSTALLED_BYTES_VERIFIED';print(json.dumps({'path':str(p),'sha256':hashlib.sha256(b).hexdigest(),'data':base64.b64encode(b).decode(),'status':r['status'],'budget':r['budget'],'grub':r['installed']['grub']}))\n",
+  "timeout_seconds": 30
+}

@@ -1,0 +1,7 @@
+[
+  "/usr/bin/python3",
+  "-B",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-install.py",
+  "check",
+  "--controller-idle-recovery-confirmed"
+]

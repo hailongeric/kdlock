@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/postboot.py",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01",
+    "--timeout",
+    "120",
+    "--max-command-bytes",
+    "33554432",
+    "--max-notes-bytes",
+    "1048576"
+  ],
+  "helper_sha256": "7ba6bd53f6d281715f21dfdb11280cde751fc3bb6a471f5f33f40274c32146a7"
+}

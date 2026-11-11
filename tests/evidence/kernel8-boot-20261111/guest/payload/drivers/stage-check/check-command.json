@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-helpers-01/kdlock-kdrebuild8-install.py",
+    "check",
+    "--controller-idle-recovery-confirmed"
+  ],
+  "recovery_sha256": "f040f85e6e07c64bf06f5740ea308187a16c02177bf98a27549902f07c2c2485",
+  "started_unix": 1794426422.4360116
+}

@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "df",
+    "-B1",
+    "/",
+    "/boot",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01"
+  ],
+  "elapsed_seconds": 0.007377866000751965,
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/stage-disk-usage.log",
+  "log_sha256": "a2d2264ebc19b80cb9b2de82dc4064dcc921b48b45c457b2459b60c570685699",
+  "pid": 136800,
+  "returncode": 0,
+  "timed_out": false
+}

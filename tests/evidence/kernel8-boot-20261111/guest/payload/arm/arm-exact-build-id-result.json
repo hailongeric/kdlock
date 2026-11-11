@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "readelf",
+    "-n",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/vmlinux"
+  ],
+  "elapsed_seconds": 0.011977459002082469,
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-exact-build-id.log",
+  "log_sha256": "fa613c666e63c5c67e0c230c168a9aa9fc5fdd4697ff2fd85055a52ec48201f4",
+  "pid": 138235,
+  "returncode": 0,
+  "timed_out": false
+}

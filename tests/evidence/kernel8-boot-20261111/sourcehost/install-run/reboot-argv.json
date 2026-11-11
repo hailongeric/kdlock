@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "systemctl",
+    "reboot",
+    "--no-wall"
+  ],
+  "timeout_seconds": 30,
+  "ordinary_commands": 1,
+  "no_retry": true,
+  "requires_actual_arm_complete": true,
+  "reconnect_seconds": 240
+}

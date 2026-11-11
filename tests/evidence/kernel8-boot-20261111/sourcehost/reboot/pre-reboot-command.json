@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "from pathlib import Path\nimport base64,hashlib,json,os,subprocess\nb=Path('/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts');p=b/'arm-kdrebuild8-finalize-01/result.json';r=p.read_bytes();v=json.loads(r);assert v['status']=='ARMED_ONESHOT_VERIFIED' and v['finalized_sha256']=='21980a9b699e13733f584efc9665e89aa2e37e233cfa24cc7ce0e4925bc0e5bc'\nc=json.loads((b/'install-kdrebuild8-finalize-01/arm-complete.json').read_text());assert c['status']=='COMPLETE';a=json.loads((b/'install-kdrebuild8-finalize-01/arm-grub-after-arm.json').read_text());x=subprocess.run(['grub-editenv','list'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=10);assert x.returncode==0;env=dict(q.split('=',1) for q in x.stdout.decode().splitlines() if '=' in q);assert env==a['environment'] and env['next_entry']=='kdlock-kdrebuild8-api-01'\nassert hashlib.sha256(Path('/boot/grub/grub.cfg').read_bytes()).hexdigest()==a['grub_cfg_sha256']=='4cb0e54c275387c4e725b1dc3d6c69393ec98207a5ea71d1c736c227b5eb93be' and hashlib.sha256(Path('/boot/grub/custom.cfg').read_bytes()).hexdigest()==a['custom_cfg_sha256']=='caae2caa937b2888237daeabf110fb70a5a6de6573f88bde1e91c40efec6a6fc'\nboot=Path('/proc/sys/kernel/random/boot_id').read_text().strip();taint=Path('/proc/sys/kernel/tainted').read_text().strip();assert (boot,os.uname().release,taint)==('afb0c5cd-96b7-488b-bcb4-4a31cbb4e50e','7.0.0-38-kdlock1','0')\nprint(json.dumps({'status':v['status'],'arm_sha256':hashlib.sha256(r).hexdigest(),'arm_data':base64.b64encode(r).decode(),'grub':a,'old_boot':boot,'old_release':os.uname().release,'taint':taint}))\n",
+  "timeout_seconds": 30
+}

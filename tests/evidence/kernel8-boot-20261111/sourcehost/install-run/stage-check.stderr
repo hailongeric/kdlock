@@ -1,0 +1,4 @@
+  File "<stdin>", line 9
+    with (d/n).open('x') as f:json.dump(v,f,indent=2);f.write('
+                                                              ^
+SyntaxError: unterminated string literal (detected at line 9)

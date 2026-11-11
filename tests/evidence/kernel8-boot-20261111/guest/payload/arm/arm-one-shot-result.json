@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "grub-reboot",
+    "kdlock-kdrebuild8-api-01"
+  ],
+  "elapsed_seconds": 0.06824228299956303,
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/arm-kdrebuild8-finalize-01/arm-one-shot.log",
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "pid": 138262,
+  "returncode": 0,
+  "timed_out": false
+}

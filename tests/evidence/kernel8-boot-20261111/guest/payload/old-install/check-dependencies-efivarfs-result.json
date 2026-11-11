@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "modprobe",
+    "-d",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/install-stage-kdrebuild8-api-01/limited",
+    "-S",
+    "7.0.0-38-kdrebuild8",
+    "--show-depends",
+    "efivarfs"
+  ],
+  "elapsed_seconds": 0.006398726000043098,
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/check-dependencies-efivarfs.log",
+  "log_sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d",
+  "pid": 136819,
+  "returncode": 0,
+  "timed_out": false
+}

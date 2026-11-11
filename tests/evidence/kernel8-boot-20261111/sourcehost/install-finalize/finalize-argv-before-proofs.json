@@ -1,0 +1,11 @@
+[
+  "/usr/bin/python3",
+  "-B",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/finalize-arm.py",
+  "--phase",
+  "finalize",
+  "--recovery",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/recovery-finalize.json",
+  "--recovery-sha",
+  "REQUIRED_ACTUAL_FRESH_RAW_HMP_SHA256"
+]

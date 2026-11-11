@@ -1,0 +1,11 @@
+[
+  "/usr/bin/python3",
+  "-B",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/finalize-arm.py",
+  "--phase",
+  "finalize",
+  "--recovery",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/recovery-finalize.json",
+  "--recovery-sha",
+  "91a12eca46b1d2fe91c82d5f47a891cfdd5de19835488584be65e432064fbb23"
+]
