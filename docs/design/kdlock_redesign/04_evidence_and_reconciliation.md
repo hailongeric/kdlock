@@ -9,6 +9,10 @@ binding and native compatibility on one KD gate. They have independent source
 review but no build or behavioral receipt. The native API and real mmap/munmap
 fixtures, preserved failures/limits and pending recovery inspection are recorded
 in the [generic rwsem source checkpoint](../../../tests/evidence/generic-rwsem-source-20261111/README.md).
+The first kernel6 preparation refused an ambiguous native/RT installer context
+before any target application or compilation; its [failure and protected-input
+readback](../../../tests/evidence/kernel6-prepare-context-20261111/README.md) are
+retained, with the narrow reviewed fix at `3512f5dd`.
 Earlier kernel5 results below keep their original source/image scope.
 
 ## 1 Active authority and scope

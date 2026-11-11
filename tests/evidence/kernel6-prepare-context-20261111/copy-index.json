@@ -1,0 +1,150 @@
+{
+  "bytes": 95228,
+  "count": 9,
+  "files": [
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-01/receipts/focused-01/copy-normal-source.log",
+      "identity": [
+        2080,
+        3014747,
+        33188,
+        1,
+        0,
+        1794397366270000000,
+        1794397366270000000
+      ],
+      "name": "focused/copy-normal-source.log",
+      "path": "payload/focused/copy-normal-source.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 8411,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-01/receipts/focused-01/integration-inspect.log",
+      "identity": [
+        2080,
+        3057192,
+        33188,
+        1,
+        8411,
+        1794397383416000000,
+        1794397383416000000
+      ],
+      "name": "focused/integration-inspect.log",
+      "path": "payload/focused/integration-inspect.log",
+      "sha256": "d63f04dfc0657ce96b42b3830d4343111a33ab7a4c1b6c6d9f7ec54cc3d04a65"
+    },
+    {
+      "bytes": 140,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-01/receipts/focused-01/integration-plan.log",
+      "identity": [
+        2080,
+        3057194,
+        33188,
+        1,
+        140,
+        1794397383678000000,
+        1794397383678000000
+      ],
+      "name": "focused/integration-plan.log",
+      "path": "payload/focused/integration-plan.log",
+      "sha256": "2ac1d05a3d811a3bce95888d39490d0a2a93ddc6b009b433b96a083b1b8c23d4"
+    },
+    {
+      "bytes": 20059,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-01/receipts/focused-01/result.json",
+      "identity": [
+        2080,
+        3057196,
+        33188,
+        1,
+        20059,
+        1794397383872140860,
+        1794397383874000000
+      ],
+      "name": "focused/result.json",
+      "path": "payload/focused/result.json",
+      "sha256": "4a49370dc724efd887ad822ef7f68b624e9b739450d87d394e3c8b122e8f7055"
+    },
+    {
+      "bytes": 22578,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-01/prepare-focus.py",
+      "identity": [
+        2080,
+        3014740,
+        33188,
+        1,
+        22578,
+        1794397255511570773,
+        1794397255511570773
+      ],
+      "name": "inputs/controller.py",
+      "path": "payload/inputs/controller.py",
+      "sha256": "7f8200b5fa11c3fb2c9416507e68963398532c04e189e8b9803ba7b2a66a33b5"
+    },
+    {
+      "bytes": 7597,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-01/input-package.json",
+      "identity": [
+        2080,
+        3014739,
+        33188,
+        1,
+        7597,
+        1794397255508492169,
+        1794397255508492169
+      ],
+      "name": "inputs/package.json",
+      "path": "payload/inputs/package.json",
+      "sha256": "b9c1dc31a6fc361c19faeea504a10bf6ce5e1e71f4c1ba28bf4031921bdb7a98"
+    },
+    {
+      "bytes": 23263,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-01/recovery.json",
+      "identity": [
+        2080,
+        3014741,
+        33188,
+        1,
+        23263,
+        1794397255515636111,
+        1794397255515636111
+      ],
+      "name": "inputs/recovery.json",
+      "path": "payload/inputs/recovery.json",
+      "sha256": "db4eb886aed10e3fdf92ae3ce2f7b8f2a109cf5d09de3b4f283a2bf51217388a"
+    },
+    {
+      "bytes": 12292,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-01/source-state.json",
+      "identity": [
+        2080,
+        3014742,
+        33188,
+        1,
+        12292,
+        1794397255518716444,
+        1794397255518716444
+      ],
+      "name": "inputs/source-state.json",
+      "path": "payload/inputs/source-state.json",
+      "sha256": "c1a472ef1e469461328098794acec8233e833b434fe59e001dbbe4374276ad20"
+    },
+    {
+      "bytes": 888,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-01/receipts/staging-01/result.json",
+      "identity": [
+        2080,
+        3014745,
+        33188,
+        1,
+        888,
+        1794397255525032090,
+        1794397255525032090
+      ],
+      "name": "staging/result.json",
+      "path": "payload/staging/result.json",
+      "sha256": "7bb814411d01feb0fb7b2a516a98ef1de9a05813f2f9122afbc19a03a7b2f599"
+    }
+  ]
+}
