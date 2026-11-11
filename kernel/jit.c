@@ -824,6 +824,14 @@ static int release_grant(struct kd_jit_mutex_call *call,
 		if (result)
 			return result;
 		*action = kd_operation_is_atomic(operation) ? KD_MUTEX_UNLOCK_ATOMIC : KD_MUTEX_UNLOCK_SYNC;
+	} else if (grant->mode == KD_GRANT_MODE_RETAINED_READ) {
+		/* Matching retained up_read ends this writer episode. Close the
+		 * cohort and observe its physical ACK before terminal W handback,
+		 * including when this callback is the active physical owner.
+		 */
+		result = kd_mutex_source_release_sync(&call->node, state, action);
+		if (result)
+			return result;
 	} else {
 		result = kd_mutex_source_unlock(&call->node, state, active_batch, notifier, action);
 		if (result)
