@@ -31,6 +31,7 @@ class BoundaryKind(Enum):
     UNLOCK = "unlock"
     MODE_CHANGE = "mode_change"
     SPECIAL_INSTRUCTION = "special_instruction"
+    QUERY = "query"
 
 
 @dataclass(frozen=True)

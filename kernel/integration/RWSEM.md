@@ -165,9 +165,9 @@ An optional pure executor predicate is checked before each generated fragment.
 A refusal uses existing exact native handback at the current cursor and grant.
 The MM profile requires non-NULL matching current/origin mm identities. This is
 an additional restriction, not proof of hardware-current, per-CPU, scheduling,
-RCU, uaccess, fault-fixup or auxiliary-stack context equivalence. Query/assert
-helpers remain SPECIAL frontiers; neither entering JIT nor publishing an image
-proves that a meaningful MM body ran through generated code.
+RCU, uaccess, fault-fixup or auxiliary-stack context equivalence. Normal query/assert
+callable helpers remain SPECIAL frontiers; neither entering JIT nor
+publishing an image proves that a meaningful MM body ran through generated code.
 
 The optional metadata-only ABI2 MM profile cold-creates an immutable source
 provider, runtime and original owner state before binding. Its module opt-in
@@ -207,3 +207,33 @@ physical-owner records must be reaped before this queue-only detach can qualify;
 broader asynchronous owner-record retirement is not implemented. A task cannot
 exit with an executable source continuation or an outstanding physical duty.
 These ordering claims are source-reviewed invariants, not runtime evidence.
+
+## Typed physical query source lane (unbuilt)
+
+A later source change adds distinct `is_locked` and `is_write_locked` entries.
+The fresh v3 installer routes the existing inline rwsem query/assert branches
+through these source forms on source-enabled bindings, using one acquired
+binding pointer. It preserves the original WARN condition and unbound native
+body. `KDLOCK_RWSEM_CALLABLE` definitions and normal C query addresses retain
+their native route and SPECIAL classification. V2 applications and their frozen
+kernel7 receipts are not upgraded in place.
+
+Queries are explicit source operations, separate from acquisition, release and
+mode change. Appended operation kinds 16/17, runtime boundary 5 and IO detail 4
+leave earlier identifiers and the packet, IO and wire layouts unchanged. The
+current node's canonical S_W and a dedicated operation identity carry the exact
+CALL form. The driver reads the actual KD physical gate under its family guard,
+commits boolean EAX once and returns through the existing source-stack adapter.
+It creates no request, grant or credit and changes no owner or mode. Original
+tasks complete the same predicate locally without capture or stack lending.
+Observation 44 records the physical result and exact query kind independently
+of acquisition events.
+
+`is_write_locked` remains true during the selected retained-read tail because
+its physical WRITE grant is still held. A real/native downgrade creates READ
+and makes that predicate false. Neither query proves logical-task ownership or
+authorizes release. This extension supplies no MM helper model and no task,
+per-CPU, RCU or fault-context equivalence. Unsupported reached operations keep
+exact native handback. The query source and four additional boundary cases
+(total eight) have source review only; no compilation or execution result is
+recorded for this lane.

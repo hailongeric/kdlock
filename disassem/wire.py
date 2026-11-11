@@ -28,7 +28,9 @@ actual acknowledged record/incarnation rows. CLAIM_END request/reply
 SOURCE_EXPORT request has no fixed words/rows/blobs. Its reply fixed words are
 [epoch, configuration, load, GS, boundary_count, actual_slot, current_image_or_0],
 followed by region_count rows [start, byte_length, raw_bytes], boundary_count
-[site, kind] pairs and one version blob. The slot/base values are observations;
+[site, kind] pairs and one version blob. Boundary kinds append QUERY=5 after
+LOCK=1, UNLOCK=2, MODE_CHANGE=3 and SPECIAL=4 without changing this layout.
+The slot/base values are observations;
 BUILD_START must validate and retain the actual matching base separately.
 
 All normal replies and requests without rows have row_count zero. QUERY is

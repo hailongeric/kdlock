@@ -60,6 +60,15 @@ struct kd_mutex_entry *kd_linux_rwsem_prepare_up_write_current(struct kd_rwsem *
 struct kd_mutex_entry *kd_linux_rwsem_prepare_downgrade_write_current(struct kd_rwsem *lock);
 struct kd_source_prepare_result kd_linux_rwsem_prepare_down_write_killable_current(
 		struct kd_rwsem *lock);
+/* Query source entries retain the integer clobber contract; original-task
+ * preparation always completes the physical predicate locally.
+ */
+int kd_linux_rwsem_is_locked_entry_asm(struct kd_rwsem *lock,
+		unsigned long source_sp, unsigned long continuation_ip, unsigned long source_bp);
+int kd_linux_rwsem_is_write_locked_entry_asm(struct kd_rwsem *lock,
+		unsigned long source_sp, unsigned long continuation_ip, unsigned long source_bp);
+struct kd_source_prepare_result kd_linux_rwsem_prepare_is_locked_current(struct kd_rwsem *lock);
+struct kd_source_prepare_result kd_linux_rwsem_prepare_is_write_locked_current(struct kd_rwsem *lock);
 
 /* Read-only borrowed-source eligibility for the five generic Linux aliases.
  * Nonaliases leave private routes unchanged. The caller retains source/root and

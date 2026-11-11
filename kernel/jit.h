@@ -202,6 +202,7 @@ struct kd_jit_mutex_call {
 	char acquisition_identity;
 	char unlock_identity;
 	char mode_identity;
+	char query_identity;
 	char result_identity;
 };
 
@@ -263,6 +264,12 @@ int kd_jit_unlock_native(struct kd_jit_mutex_call *call,
 		struct kd_execution_binding *native_binding,
 		enum kd_operation_kind operation, const void *notifier,
 		enum kd_mutex_unlock_action *action);
+/* Physical query only on the current canonical state. No acquisition, credit,
+ * owner, queue or mode change is created. Exact 0/1 and CALL return are committed
+ * once through the same operation descriptor and source-stack adapter.
+ */
+int kd_jit_query(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *binding, int *value);
 int kd_jit_downgrade(struct kd_jit_mutex_call *call,
 		struct kd_execution_binding *binding, bool retained);
 int kd_jit_downgrade_native(struct kd_jit_mutex_call *call,

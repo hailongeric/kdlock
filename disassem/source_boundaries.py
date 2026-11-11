@@ -22,7 +22,7 @@ from .source_decode import DecodedInstruction, DecodedSource, SourceBytes, decod
 
 
 MASK64 = (1 << 64) - 1
-OPERATION_KINDS = frozenset((BoundaryKind.LOCK, BoundaryKind.UNLOCK, BoundaryKind.MODE_CHANGE))
+OPERATION_KINDS = frozenset((BoundaryKind.LOCK, BoundaryKind.UNLOCK, BoundaryKind.MODE_CHANGE, BoundaryKind.QUERY))
 
 
 class SourceEntryClass(Enum):

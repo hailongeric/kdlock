@@ -42,6 +42,8 @@ enum kd_observation_kind {
 	KD_OBS_NATIVE_DOWNGRADE, KD_OBS_NATIVE_CANCEL, KD_OBS_NATIVE_TRY_MISS,
 	/* Managed integer acquisition completed without a grant or body. */
 	KD_OBS_ACQUIRE_CANCELLED,
+	/* Result is physical 0/1; related is the explicit query operation kind. */
+	KD_OBS_QUERY_RESULT = 44,
 };
 
 #define KD_OBS_FLAG_ENQUEUED             (1UL << 0)

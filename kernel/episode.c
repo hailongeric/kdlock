@@ -839,6 +839,32 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			if (!ready)
 				return forward(frame, binding, image, -EOPNOTSUPP);
 		}
+		if (kd_operation_is_query(cached.kind)) {
+			unsigned long operation_ip = state->io.source_ip;
+			unsigned long object = state->regs.di;
+			int predicate;
+
+			result = kd_jit_prepare_operation(image, state, *binding,
+				&call->query_identity, cached_resolve, &cached, resources->config.stack);
+			if (result) {
+				if (!operation_declined(result, state, *binding))
+					return KD_MUTEX_OUTCOME_UNSET;
+				return forward(frame, binding, image, result);
+			}
+			frame->exit_pending = false;
+			observe_frame(frame, KD_OBS_JIT_OPERATION,
+				.image = (unsigned long)image, .ip = operation_ip,
+				.cursor = state->regs.ip, .object = object,
+				.phase = state->operation.phase, .result = cached.kind);
+			result = kd_jit_query(call, *binding, &predicate);
+			BUG_ON(result);
+			observe_frame(frame, KD_OBS_QUERY_RESULT,
+				.image = (unsigned long)image, .ip = operation_ip,
+				.cursor = state->regs.ip, .object = object,
+				.related = cached.kind, .phase = state->operation.phase,
+				.result = predicate);
+			continue;
+		}
 		if (kd_operation_is_lock(cached.kind)) {
 			struct kd_episode_frame *child;
 			struct kd_execution_binding *child_binding = *binding;

@@ -63,6 +63,7 @@
 #define KD_JIT_OP_LOCK 1
 #define KD_JIT_OP_UNLOCK 2
 #define KD_JIT_OP_MODE_CHANGE 3
+#define KD_JIT_OP_QUERY 4
 
 /* Detail identifies the recorded cause, not a newly selected resource cap. */
 #define KD_JIT_DETAIL_NONE 0
@@ -130,6 +131,7 @@ enum kd_jit_operation {
 	KD_JIT_OP_LOCK_CODE = KD_JIT_OP_LOCK,
 	KD_JIT_OP_UNLOCK_CODE = KD_JIT_OP_UNLOCK,
 	KD_JIT_OP_MODE_CHANGE_CODE = KD_JIT_OP_MODE_CHANGE,
+	KD_JIT_OP_QUERY_CODE = KD_JIT_OP_QUERY,
 };
 
 struct kd_jit_io {

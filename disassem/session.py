@@ -683,7 +683,8 @@ def source_export_from_frame(frame: SourceFrame, raw_reply: bytes) -> ExportedSo
     word(current_image)
     binding = EpochBinding(token(epoch), frame.version, token(configuration), token(load), gs_offset)
     kinds = {1: BoundaryKind.LOCK, 2: BoundaryKind.UNLOCK,
-             3: BoundaryKind.MODE_CHANGE, 4: BoundaryKind.SPECIAL_INSTRUCTION}
+             3: BoundaryKind.MODE_CHANGE, 4: BoundaryKind.SPECIAL_INSTRUCTION,
+             5: BoundaryKind.QUERY}
     if any(kind not in kinds for _site, kind in frame.boundaries):
         raise ValueError("exported source boundary has an unknown exact kind")
     snapshot = SourceSnapshot(frame.version.decode("utf-8", errors="strict"),

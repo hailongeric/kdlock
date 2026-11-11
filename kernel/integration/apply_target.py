@@ -20,6 +20,9 @@ separately established source package/revision and frozen kdlock snapshot. The
 package fingerprint covers its actual Kconfig/Kbuild and C/header/assembly inputs.
 No config value is changed. The actual vendor source must match each exact
 literal context below; old KD changes outside those contexts are preserved.
+The v3 recipe adds explicit typed physical-query routing. Apply it only to a
+fresh isolated tree. Historical v2 applications retain their original installer
+and receipts and are never upgraded in place by this script.
 """
 
 import argparse
@@ -33,7 +36,7 @@ import sys
 import uuid
 
 
-FORMAT = "kdlock.exact-target-integration.v2"
+FORMAT = "kdlock.exact-target-integration.v3"
 EDITED = (
     "include/linux/sched.h", "kernel/fork.c", "kernel/exit.c",
     "init/Kconfig", "kernel/Makefile",
@@ -109,7 +112,7 @@ SOURCE_INPUTS = ("Makefile",) + EDITED
 EDITS["include/linux/rwsem.h"] = (
     (b"#include <linux/cleanup.h>\n",
      b"#include <linux/cleanup.h>\n#ifdef CONFIG_KDLOCK_REBUILD\n"
-     b'#include "../../kernel/kdlock/include/kd_linux_rwsem.h"\n#endif\n'),
+     b'#include "../../kernel/kdlock/include/kd_linux_rwsem_query.h"\n#endif\n'),
     (b"context_lock_struct(rw_semaphore) {\n\tatomic_long_t count;\n",
      b"context_lock_struct(rw_semaphore) {\n#ifdef CONFIG_KDLOCK_REBUILD\n"
      b"\tstruct kd_linux_rwsem_binding *kd_binding;\n#endif\n\tatomic_long_t count;\n"),
@@ -120,22 +123,28 @@ EDITS["include/linux/rwsem.h"] = (
     (b"\t{ __RWSEM_COUNT_INIT(name),\t\t\t\t\\\n",
      b"\t{ __RWSEM_KD_INIT __RWSEM_COUNT_INIT(name),\t\t\\\n"),
     (b"\treturn atomic_long_read(&sem->count) != RWSEM_UNLOCKED_VALUE;\n",
-     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding))\n"
-     b"\t\treturn kd_linux_rwsem_is_locked(READ_ONCE(sem->kd_binding));\n#endif\n"
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n"
+     b"\tstruct kd_linux_rwsem_binding *binding = smp_load_acquire(&sem->kd_binding);\n\n"
+     b"\tif (binding)\n\t\treturn kd_linux_rwsem_source_is_locked(binding);\n#endif\n"
      b"\treturn atomic_long_read(&sem->count) != RWSEM_UNLOCKED_VALUE;\n"),
     (b"\tWARN_ON(atomic_long_read(&sem->count) == RWSEM_UNLOCKED_VALUE);\n",
-     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding)) {\n"
-     b"\t\tWARN_ON(!kd_linux_rwsem_is_locked(READ_ONCE(sem->kd_binding)));\n"
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n"
+     b"\tstruct kd_linux_rwsem_binding *binding = smp_load_acquire(&sem->kd_binding);\n\n"
+     b"\tif (binding) {\n"
+     b"\t\tWARN_ON(!kd_linux_rwsem_source_is_locked(binding));\n"
      b"\t\treturn;\n\t}\n#endif\n"
      b"\tWARN_ON(atomic_long_read(&sem->count) == RWSEM_UNLOCKED_VALUE);\n"),
     (b"\tWARN_ON(!(atomic_long_read(&sem->count) & RWSEM_WRITER_LOCKED));\n",
-     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding)) {\n"
-     b"\t\tWARN_ON(!kd_linux_rwsem_is_write_locked(READ_ONCE(sem->kd_binding)));\n"
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n"
+     b"\tstruct kd_linux_rwsem_binding *binding = smp_load_acquire(&sem->kd_binding);\n\n"
+     b"\tif (binding) {\n"
+     b"\t\tWARN_ON(!kd_linux_rwsem_source_is_write_locked(binding));\n"
      b"\t\treturn;\n\t}\n#endif\n"
      b"\tWARN_ON(!(atomic_long_read(&sem->count) & RWSEM_WRITER_LOCKED));\n"),
     (b"\treturn !list_empty(&sem->wait_list);\n",
-     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding))\n"
-     b"\t\treturn kd_linux_rwsem_is_contended(READ_ONCE(sem->kd_binding));\n#endif\n"
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n"
+     b"\tstruct kd_linux_rwsem_binding *binding = smp_load_acquire(&sem->kd_binding);\n\n"
+     b"\tif (binding)\n\t\treturn kd_linux_rwsem_is_contended(binding);\n#endif\n"
      b"\treturn !list_empty(&sem->wait_list);\n"),
     (b"# define down_read_non_owner(sem)\t\tdown_read(sem)\n"
      b"# define up_read_non_owner(sem)\t\t\tup_read(sem)\n",
@@ -211,7 +220,9 @@ EDITS["kernel/locking/rwsem.c"] = (
      b"\t__up_read(sem);\n}\nEXPORT_SYMBOL(up_read_non_owner);\n#endif\n\n"
      b"#ifdef CONFIG_DEBUG_LOCK_ALLOC\n"),
 )
-MARKERS["include/linux/rwsem.h"] = (b"kd_binding", b"KDLOCK_REBUILD")
+MARKERS["include/linux/rwsem.h"] = (
+    b"kd_binding", b"KDLOCK_REBUILD", b"kd_linux_rwsem_query.h", b"kd_linux_rwsem_source_is_",
+)
 MARKERS["kernel/locking/rwsem.c"] = (b"kd_binding", b"KDLOCK_RWSEM_CALLABLE")
 
 
@@ -251,7 +262,8 @@ def fingerprint(identity, hashes):
 
 
 def package_inputs(package):
-    required = ("Kconfig", "Kbuild", "kernel/lifecycle.c", "kernel/lifecycle.h")
+    required = ("Kconfig", "Kbuild", "kernel/lifecycle.c", "kernel/lifecycle.h",
+                "include/kd_linux_rwsem_query.h")
     for name in required:
         regular(package / name)
     names = {"Kconfig", "Kbuild"}

@@ -328,6 +328,7 @@ class _Emission:
             BoundaryKind.LOCK: "KD_JIT_OP_LOCK",
             BoundaryKind.UNLOCK: "KD_JIT_OP_UNLOCK",
             BoundaryKind.MODE_CHANGE: "KD_JIT_OP_MODE_CHANGE",
+            BoundaryKind.QUERY: "KD_JIT_OP_QUERY",
             BoundaryKind.SPECIAL_INSTRUCTION: "KD_JIT_DETAIL_NONE",
         }[kind]
         exit_kind = "KD_JIT_EXIT_SPECIAL_FRONTIER" if kind is BoundaryKind.SPECIAL_INSTRUCTION else "KD_JIT_EXIT_LOCK_OPERATION"

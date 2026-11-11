@@ -78,6 +78,7 @@ _DETAIL_NAMES = MappingProxyType({
     "KD_JIT_OP_LOCK": 1,
     "KD_JIT_OP_UNLOCK": 2,
     "KD_JIT_OP_MODE_CHANGE": 3,
+    "KD_JIT_OP_QUERY": 4,
 })
 
 

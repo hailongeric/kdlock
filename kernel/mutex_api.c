@@ -75,6 +75,8 @@ static const struct rw_entry rw_entries[] = {
 	{ KD_OPERATION_RWSEM_DOWNGRADE_WRITE, (unsigned long)kd_linux_rwsem_downgrade_write_entry_asm },
 	{ KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE, (unsigned long)kd_rwsem_down_write_killable_entry_asm },
 	{ KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE, (unsigned long)kd_linux_rwsem_down_write_killable_entry_asm },
+	{ KD_OPERATION_RWSEM_IS_LOCKED, (unsigned long)kd_linux_rwsem_is_locked_entry_asm },
+	{ KD_OPERATION_RWSEM_IS_WRITE_LOCKED, (unsigned long)kd_linux_rwsem_is_write_locked_entry_asm },
 	{ KD_OPERATION_RWLOCK_READ_LOCK, (unsigned long)kd_rwlock_read_lock_entry_asm },
 	{ KD_OPERATION_RWLOCK_READ_UNLOCK, (unsigned long)kd_rwlock_read_unlock_entry_asm },
 	{ KD_OPERATION_RWLOCK_WRITE_LOCK, (unsigned long)kd_rwlock_write_lock_entry_asm },

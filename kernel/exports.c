@@ -29,6 +29,8 @@ EXPORT_SYMBOL_GPL(kd_linux_rwsem_up_write_entry_asm);
 EXPORT_SYMBOL_GPL(kd_linux_rwsem_downgrade_write_entry_asm);
 EXPORT_SYMBOL_GPL(kd_rwsem_down_write_killable_entry_asm);
 EXPORT_SYMBOL_GPL(kd_linux_rwsem_down_write_killable_entry_asm);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_is_locked_entry_asm);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_is_write_locked_entry_asm);
 EXPORT_SYMBOL_GPL(kd_rwlock_init);
 EXPORT_SYMBOL_GPL(kd_rwlock_read_lock_entry_asm);
 EXPORT_SYMBOL_GPL(kd_rwlock_read_unlock_entry_asm);

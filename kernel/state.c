@@ -148,7 +148,7 @@ int kd_operation_begin(struct kd_thread_state *state,
 		return -EPERM;
 	if (!identity || !target ||
 	    (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind) &&
-	     !kd_operation_is_mode_change(kind)) ||
+	     !kd_operation_is_mode_change(kind) && !kd_operation_is_query(kind)) ||
 	    (form != KD_OPERATION_NEW_CALL && form != KD_OPERATION_EXISTING_CALL &&
 	     form != KD_OPERATION_EXISTING_FRAME &&
 	     form != KD_OPERATION_CAPTURED_CONTINUATION))

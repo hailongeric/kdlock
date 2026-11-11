@@ -50,7 +50,7 @@ NAMES = ("SLOT_RESERVE", "SLOT_FREE", "ENQUEUE", "SELECT_LOCAL", "SELECT_PROXY",
          "READ_ACQUIRE", "READ_RELEASE", "WRITE_DOWNGRADE_REAL", "WRITE_DOWNGRADE_RETAINED",
          "NATIVE_MODE", "NATIVE_READ_ACQUIRE", "NATIVE_READ_RELEASE", "NATIVE_WRITE_ACQUIRE",
          "NATIVE_WRITE_RELEASE", "NATIVE_DOWNGRADE", "NATIVE_CANCEL", "NATIVE_TRY_MISS",
-         "ACQUIRE_CANCELLED")
+         "ACQUIRE_CANCELLED", "QUERY_RESULT")
 KINDS = {name: index + 1 for index, name in enumerate(NAMES)}
 HOST_BOUNDS = ("input_bytes", "stdio_bytes", "json_line_bytes", "command_bytes", "event_bytes",
                "wire_log_bytes", "archive_bytes", "source_regions", "source_boundaries", "source_bytes",

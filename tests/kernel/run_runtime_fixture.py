@@ -94,7 +94,7 @@ def scan_operation_calls(exported, objdump, directory, timeout):
 
     boundaries = {site.site: site.boundary for site in exported.snapshot.sites}
     api = {site.site: site.boundary for site in exported.snapshot.sites
-           if site.boundary in (BoundaryKind.LOCK, BoundaryKind.UNLOCK, BoundaryKind.MODE_CHANGE)}
+           if site.boundary in (BoundaryKind.LOCK, BoundaryKind.UNLOCK, BoundaryKind.MODE_CHANGE, BoundaryKind.QUERY)}
     calls, lock_roots, indirect = [], [], []
     prefixes = {"cs", "ds", "es", "fs", "gs", "ss", "data16", "addr32",
                 "bnd", "notrack", "rep", "repe", "repz", "repne", "repnz"}

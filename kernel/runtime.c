@@ -391,12 +391,13 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 		    config->boundaries[index].kind != KD_JIT_RUNTIME_SPECIAL)
 			return -EINVAL;
 		if (config->boundaries[index].kind < KD_JIT_RUNTIME_LOCK ||
-		    config->boundaries[index].kind > KD_JIT_RUNTIME_SPECIAL)
+		    config->boundaries[index].kind > KD_JIT_RUNTIME_QUERY)
 			return -EINVAL;
 
 		if ((kd_operation_is_lock(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_LOCK) ||
 		    (kd_operation_is_unlock(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_UNLOCK) ||
-		    (kd_operation_is_mode_change(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_MODE_CHANGE))
+		    (kd_operation_is_mode_change(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_MODE_CHANGE) ||
+		    (kd_operation_is_query(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_QUERY))
 			return -EINVAL;
 		for (other = 0; other < index; ++other)
 			if (config->boundaries[other].site == config->boundaries[index].site)
@@ -573,6 +574,8 @@ static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input
 		{ (unsigned long)kd_linux_rwsem_down_write_entry_asm, KD_JIT_RUNTIME_LOCK },
 		{ (unsigned long)kd_linux_rwsem_up_write_entry_asm, KD_JIT_RUNTIME_UNLOCK },
 		{ (unsigned long)kd_linux_rwsem_downgrade_write_entry_asm, KD_JIT_RUNTIME_MODE_CHANGE },
+		{ (unsigned long)kd_linux_rwsem_is_locked_entry_asm, KD_JIT_RUNTIME_QUERY },
+		{ (unsigned long)kd_linux_rwsem_is_write_locked_entry_asm, KD_JIT_RUNTIME_QUERY },
 		{ (unsigned long)kd_rwsem_down_write_killable_entry_asm, KD_JIT_RUNTIME_LOCK },
 		{ (unsigned long)kd_linux_rwsem_down_write_killable_entry_asm, KD_JIT_RUNTIME_LOCK },
 		{ (unsigned long)kd_rwlock_read_lock_entry_asm, KD_JIT_RUNTIME_LOCK },

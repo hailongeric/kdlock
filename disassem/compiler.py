@@ -111,7 +111,7 @@ class ObservedTarget:
     """One source-versioned, ordinary indirect source/target observation.
 
     The caller must have classified this as an ordinary target rather than a
-    source lock/unlock/mode operation. Observations cannot authorize crossing a
+    source lock/unlock/mode/query operation. Observations cannot authorize crossing a
     source-operation boundary or rewrite a mutable decoded operand. Unknown
     targets still require runtime classification before source CALL effects;
     this record implements neither that bridge nor runtime feedback retention.

@@ -39,6 +39,14 @@ context and reached-frontier limits. The optional MM profile remains disabled
 by default and unvalidated. Kernel6's native MM and private JIT receipts retain
 their recorded earlier source scope.
 
+A subsequent unbuilt generic query source lane appends physical locked and
+write-locked predicates as explicit typed operations. It preserves native C
+query frontiers, assertion behavior, existing identifiers/layouts, and every
+grant/queue/mode obligation. The fresh v3 installer keeps kernel7's v2 source
+and receipts separate. Source review and eight proposed boundary cases are not
+query runtime evidence. Meaningful MM protected completion and task/context
+limits remain distinct from any returned generated prefix.
+
 ## 1 Active authority and scope
 
 Use the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins).

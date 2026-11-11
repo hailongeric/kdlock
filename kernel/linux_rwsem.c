@@ -160,6 +160,24 @@ struct kd_source_prepare_result kd_linux_rwsem_prepare_down_write_killable_curre
 	};
 }
 
+/* Original-task queries use their actual C CALL/RET and return a physical
+ * predicate. They create no source request or grant and never lend a stack.
+ * A borrowed typed query is serviced by the current node/S_W driver instead.
+ */
+struct kd_source_prepare_result kd_linux_rwsem_prepare_is_locked_current(struct kd_rwsem *lock)
+{
+	return (struct kd_source_prepare_result) {
+		.entry = NULL, .result = kd_rw_native_is_locked(lock ? &lock->core : NULL),
+	};
+}
+
+struct kd_source_prepare_result kd_linux_rwsem_prepare_is_write_locked_current(struct kd_rwsem *lock)
+{
+	return (struct kd_source_prepare_result) {
+		.entry = NULL, .result = kd_rw_native_is_write_locked(lock ? &lock->core : NULL),
+	};
+}
+
 struct kd_mutex_entry *kd_linux_rwsem_prepare_up_read_current(struct kd_rwsem *lock)
 {
 	if (managed_grant(lock, true))
@@ -380,6 +398,8 @@ static const unsigned long native_targets[] = {
 	(unsigned long)kd_linux_rwsem_prepare_down_write_killable_current,
 	(unsigned long)kd_rwsem_prepare_down_write_killable_current,
 	(unsigned long)kd_linux_rwsem_bind_killable_source,
+	(unsigned long)kd_linux_rwsem_prepare_is_locked_current,
+	(unsigned long)kd_linux_rwsem_prepare_is_write_locked_current,
 #if defined(CONFIG_DEBUG_RWSEMS) || defined(CONFIG_DETECT_HUNG_TASK_BLOCKER)
 	(unsigned long)rwsem_owner, (unsigned long)is_rwsem_reader_owned,
 #endif

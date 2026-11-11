@@ -13,6 +13,7 @@ enum kd_jit_runtime_boundary_kind {
 	KD_JIT_RUNTIME_UNLOCK = 2,
 	KD_JIT_RUNTIME_MODE_CHANGE = 3,
 	KD_JIT_RUNTIME_SPECIAL = 4,
+	KD_JIT_RUNTIME_QUERY = 5,
 };
 struct kd_jit_runtime_boundary {
 	unsigned long site;

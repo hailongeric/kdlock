@@ -215,3 +215,13 @@ execution. Publication, JIT entry, returned fragment, actual MM-body coverage,
 syscall completion and final retirement are separate findings. Query/assert
 SPECIAL frontiers and other reached boundaries can stop generated execution
 early; a returned prefix does not establish meaningful MM-body delegation.
+
+The subsequent unbuilt v3 source recipe adds explicit typed physical rwsem
+queries for the existing inline assertions. Normal callable helpers remain
+SPECIAL. This is a generic lock API service, with no MM body or helper model.
+Its source must receive a fresh kernel/build/GS receipt; kernel7's frozen
+integer/cancellation image does not include it. Meaningful protected completion
+requires generated UP_WRITE and episode completion for mmap, or the same
+retained grant's downgrade/read tail/UP_READ physical ACK followed by its selected
+post-UP_READ handback for munmap. Current prefix evidence checks do not by
+themselves establish those outcomes.

@@ -10,6 +10,7 @@
 #include <asm/msr-index.h>
 
 #include "jit.h"
+#include "rw_native.h"
 
 static bool image_valid(const struct kd_jit_image *image)
 {
@@ -226,13 +227,19 @@ int kd_jit_prepare_operation(const struct kd_jit_image *image,
 	if (kind == KD_OPERATION_NONE)
 		return -ENOENT;
 	if (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind) &&
-	    !kd_operation_is_mode_change(kind))
+	    !kd_operation_is_mode_change(kind) && !kd_operation_is_query(kind))
 		return -EOPNOTSUPP;
-	if (state->io.kind == KD_JIT_EXIT_LOCK_OPERATION &&
-	    ((state->io.detail == KD_JIT_OP_LOCK && !kd_operation_is_lock(kind)) ||
-	     (state->io.detail == KD_JIT_OP_UNLOCK && !kd_operation_is_unlock(kind)) ||
-	     (state->io.detail == KD_JIT_OP_MODE_CHANGE && !kd_operation_is_mode_change(kind))))
-		return -EOPNOTSUPP;
+	if (state->io.kind == KD_JIT_EXIT_LOCK_OPERATION) {
+		unsigned long expected = kd_operation_is_lock(kind) ? KD_JIT_OP_LOCK :
+			kd_operation_is_unlock(kind) ? KD_JIT_OP_UNLOCK :
+			kd_operation_is_mode_change(kind) ? KD_JIT_OP_MODE_CHANGE : KD_JIT_OP_QUERY;
+
+		/* A declared boundary has exactly one operation category. Coverage
+		 * misses use their separate cause detail and the resolved target.
+		 */
+		if (state->io.detail != expected)
+			return -EOPNOTSUPP;
+	}
 	result = kd_operation_begin(state, binding, identity, kind, form,
 				    state->io.source_ip, target, return_ip);
 	if (result)
@@ -966,6 +973,44 @@ int kd_jit_unlock_native(struct kd_jit_mutex_call *call,
 	}
 	/* The actual native source CALL/RET and registers remain untouched. */
 	return release_grant(call, native_binding, operation, active, notifier, action);
+}
+
+int kd_jit_query(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *binding, int *value)
+{
+	struct kd_thread_state *state;
+	struct kd_rwsem *lock;
+	enum kd_operation_kind kind;
+	int result, predicate;
+
+	if (!call || !value)
+		return -EINVAL;
+	state = call->node.state;
+	if (!kd_state_is_jit_current(state, binding))
+		return -EPERM;
+	kind = state->operation.kind;
+	if (state->operation.identity != &call->query_identity ||
+	    !kd_operation_is_query(kind) || call->driver->family != KD_LOCK_FAMILY_RWSEM)
+		return -ESTALE;
+	lock = (struct kd_rwsem *)state->regs.di;
+	if (!lock)
+		return -EINVAL;
+	result = kd_operation_enter(state, binding, &call->query_identity);
+	if (result)
+		return result;
+	/* The native primitive reads the physical gate under its own guard.
+	 * Retained READ still has a physical writer; no logical-owner inference
+	 * or grant lookup can replace either predicate.
+	 */
+	predicate = kind == KD_OPERATION_RWSEM_IS_LOCKED ?
+		kd_rw_native_is_locked(&lock->core) : kd_rw_native_is_write_locked(&lock->core);
+	result = kd_operation_complete_int_result(state, binding, &call->query_identity, predicate);
+	if (result)
+		return result;
+	result = kd_operation_return(state, binding, &call->query_identity, call->driver->stack);
+	if (!result)
+		*value = predicate;
+	return result;
 }
 
 static int downgrade_grant(struct kd_jit_mutex_call *call,
