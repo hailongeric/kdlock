@@ -83,8 +83,9 @@ def scan_operation_calls(exported, objdump, directory, timeout):
     """Generic actual-byte CALL records, checked by the pinned source decoder.
 
     GNU disassembly supplies instruction starts even when a prefix before the
-    first lock is outside the pinned decoder. Every selected CALL is decoded at
-    its ACTUAL source address and its target/length must agree. No opcode search,
+    first lock is outside the pinned decoder. Explicit printed prefixes remain
+    part of the same instruction bytes and address. Every selected CALL is decoded
+    at its ACTUAL source address and its target/length must agree. No opcode search,
     guessed wrapper length or application-specific lowering is used.
     """
     from disassem.compiler import SourceSite, SourceSnapshot
@@ -95,6 +96,9 @@ def scan_operation_calls(exported, objdump, directory, timeout):
     api = {site.site: site.boundary for site in exported.snapshot.sites
            if site.boundary in (BoundaryKind.LOCK, BoundaryKind.UNLOCK, BoundaryKind.MODE_CHANGE)}
     calls, lock_roots, indirect = [], [], []
+    prefixes = {"cs", "ds", "es", "fs", "gs", "ss", "data16", "addr32",
+                "bnd", "notrack", "rep", "repe", "repz", "repne", "repnz"}
+    rex_prefix = re.compile(r"rex(?:\.[WRXB]+)?")
     line_pattern = re.compile(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2}\s+)+)\s*(\S+)(?:\s+(.*))?$")
     for index, region in enumerate(exported.snapshot.regions):
         binary = directory / f"source-{index}.bin"
@@ -104,7 +108,15 @@ def scan_operation_calls(exported, objdump, directory, timeout):
         (directory / f"source-{index}.disassembly.txt").write_bytes(listing)
         for line in listing.decode("ascii", errors="strict").splitlines():
             match = line_pattern.match(line)
-            if not match or match[3] not in ("call", "callq"):
+            if not match:
+                continue
+            words = [match[3], *(match[4].split() if match[4] else ())]
+            # GNU may print an ordinary CALL as "cs cs cs call *%rax".
+            # Skip only explicit prefix tokens, then require the CALL mnemonic;
+            # a prefixed non-control instruction remains outside this scanner.
+            while words and (words[0] in prefixes or rex_prefix.fullmatch(words[0])):
+                words.pop(0)
+            if not words or words[0] not in ("call", "callq"):
                 continue
             site = int(match[1], 16)
             raw = bytes.fromhex(match[2])
@@ -113,7 +125,9 @@ def scan_operation_calls(exported, objdump, directory, timeout):
             decoded = decode_source({site: SourceBytes(exported.snapshot.window(site))})
             record = decoded.instructions.get(site)
             node = decoded.graph.get(site)
-            if record is None or not isinstance(node, SourceCall) or record.raw != raw:
+            if (record is None or record.name.upper() != "CALL" or
+                    not isinstance(node, SourceCall) or record.raw != raw or
+                    node.return_site != record.next_site):
                 raise ValueError(f"actual CALL has no matching pinned decode at {site:#x}")
             item = {"site": site, "length": record.length, "target": node.target,
                     "indirect": node.indirect, "raw_hex": record.raw.hex()}
@@ -168,6 +182,7 @@ def main(*, spin=False, family=None):
     parser.add_argument("--deadline", type=float, default=120.0)
     if readers:
         parser.add_argument("--runtime-block-visits", type=int, required=True)
+        parser.add_argument("--reader-learning-passes", type=int, required=True)
     if family == "rwsem":
         parser.add_argument("--coordination-spins", type=int, required=True)
     if atomic:
@@ -177,6 +192,8 @@ def main(*, spin=False, family=None):
     elif readers:
         parser.add_argument("--holder-timeout-ms", type=int, required=True)
     args = parser.parse_args()
+    if readers and not 0 < args.reader_learning_passes <= ((1 << 32) - 9) // 6:
+        raise ValueError("reader learning requires an explicit finite scene pass capacity")
     if readers and not 0 < args.holder_timeout_ms < 1 << 32:
         raise ValueError("reader fixture requires an explicit finite holder wait")
     if readers and not 0 < args.runtime_block_visits < 1 << 64:
@@ -273,7 +290,8 @@ def main(*, spin=False, family=None):
                                    "controller_cpu": args.controller_cpu,
                                    "holder_timeout_ms": args.holder_timeout_ms}
     if readers:
-        results["reader_bounds"] = {"runtime_block_visits": args.runtime_block_visits,
+        results["reader_bounds"] = {"learning_passes": args.reader_learning_passes,
+                                    "runtime_block_visits": args.runtime_block_visits,
                                     "holder_timeout_ms": args.holder_timeout_ms}
         if family == "rwsem":
             results["reader_bounds"]["coordination_spins"] = args.coordination_spins
@@ -888,6 +906,8 @@ def main(*, spin=False, family=None):
                       f"step_size={step_size}", f"dependency_page_limit={args.dependency_page_limit}",
                       f"total_source_byte_limit={args.total_source_byte_limit}",
                       f"event_capacity={args.event_capacity}", f"source_version={version}"]
+        if readers:
+            parameters.append(f"reader_learning_passes={args.reader_learning_passes}")
         if builtin_bytes is not None:
             parameters.extend((f"builtin_source_start={args.builtin_source_start}",
                                f"builtin_source_size={args.builtin_source_size}"))
@@ -939,14 +959,21 @@ def main(*, spin=False, family=None):
             "sites": [{"site": s.site, "boundary": s.boundary.value if s.boundary else None} for s in snapshot.sites],
             "slot": exported.slot_identity, "old": exported.expected_old_image_identity,
         }, indent=2, sort_keys=True) + "\n")
-        coordinator = LearningCoordinator(exported.epoch, snapshot, LearningLimits(4096, 32, 16, 16, 16))
-        producers = ProducerCatalog(16, ())
+        image_capacity = 6 + (3 if atomic else 6) * args.reader_learning_passes if readers else 16
+        cycle_capacity = image_capacity + 2 if readers else 32
+        if readers:
+            results["reader_bounds"].update(image_capacity=image_capacity, cycle_capacity=cycle_capacity)
+        coordinator = LearningCoordinator(exported.epoch, snapshot,
+            LearningLimits(4096, cycle_capacity, image_capacity, image_capacity, image_capacity))
+        producers = ProducerCatalog(image_capacity, ())
         old = exported.expected_old_image_identity
         cycle_number = 0
 
         def compiler_cycle(force=False, run_pending_probe=False, claim_only=False):
             nonlocal old, cycle_number
             cycle_number += 1
+            if cycle_number > cycle_capacity:
+                raise AssertionError("explicit compiler cycle capacity exhausted before dispatch")
             cycle = args.output / f"cycle-{cycle_number}"
             cycle.mkdir()
             builder = GNUImageBuilder(Toolchain(
@@ -994,7 +1021,12 @@ def main(*, spin=False, family=None):
             body_case(("contended-local", "nested", "out-of-order")[number], mode, args.workers, args.iterations)
             compiler_cycle(run_pending_probe=number == 0)
         if reader_checks is not None:
-            reader_checks.training(compiler_cycle)
+            reader_checks.training(compiler_cycle, lambda: old, lambda: coordinator.facts())
+        # Prefix learning retains deliberate checkpoint facts without ACK.
+        # Fixed-image completion must add no fact to that exact baseline.
+        warm_retained = reader_checks.intentional_keys(coordinator.facts()) if reader_checks else set()
+        if readers and set(coordinator.pending_keys()) != warm_retained:
+            raise AssertionError("controlled learning left an uncovered ordinary or unexpected fact")
         # The final candidate is now fixed. No image replacement or pending
         # probe is permitted in these completion checks.
         fixed_image = old
@@ -1009,11 +1041,18 @@ def main(*, spin=False, family=None):
         results["warm_completion"] = warm_proofs
         if reader_checks is not None:
             reader_checks.warm(fixed_image)
-        # A final consumer claim must be empty after the fixed-image passes.
+        # The actual claim must equal its retained intentional baseline.
+        # Other families still require the original completely empty claim.
         empty_cycle = compiler_cycle(claim_only=True)
-        if empty_cycle.claim.records or empty_cycle.publication is not None or old != fixed_image:
+        if ({fact.key for fact in empty_cycle.claim.records} != warm_retained
+                or empty_cycle.publication is not None or old != fixed_image):
             raise AssertionError("warm completion generated misses or replaced its fixed image")
-        results["warm_claim_empty"] = True
+        results["warm_claim_empty"] = not empty_cycle.claim.records
+        results["warm_claim_no_new_facts"] = True
+        if readers:
+            results["warm_retained_intentional_keys"] = [{"record": key.record_identity.hex(),
+                "incarnation": key.incarnation} for key in sorted(warm_retained,
+                    key=lambda key: (key.record_identity, key.incarnation))]
         validate_warm_plain(event_rows[warm_start:warm_plain_end], fixed_image)
         if atomic:
             results["spin_miss_handback"] = scene_case(3, fixed_image)

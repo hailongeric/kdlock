@@ -17,6 +17,8 @@ class ReaderCases:
         self.calls = ()
         self.proofs = []
         self.misses = []
+        self.learning = []
+        results["reader_learning"] = self.learning
         results["reader_family"] = family
         # Keep completed checks in an actual failure receipt too. Appending a
         # diagnostic never changes the top-level failed/incomplete disposition.
@@ -156,20 +158,116 @@ class ReaderCases:
         if not self.atomic:
             self.native_scene(1)
         begin = len(self.observations())
+        self.body_case("native-read-read", 5, 1, 1)
+        pairs = self.credits(self.rows(begin))
+        if len(pairs) != 2:
+            raise AssertionError("native distinct-object reads lost an exact credit")
+        self.proofs.append({"name": "native-read-read", "credits": pairs})
+        begin = len(self.observations())
         self.body_case("native-repeated-read", 8, 1, 1)
         pairs = self.credits(self.rows(begin))
         if len(pairs) != 2 or pairs[0]["acquire"]["acquisition"] == pairs[1]["acquire"]["acquisition"]:
             raise AssertionError("repeated real reads did not retain two distinct acquisitions")
         self.proofs.append({"name": "native-repeated-read", "credits": pairs})
 
-    def training(self, compiler_cycle):
-        modes = [5, 6, 7, 8] + ([] if self.atomic else [9, 11])
-        for mode in modes:
-            self.body_case(f"learn-reader-{mode}", mode, 1 if mode == 8 else self.args.workers,
-                           1 if mode == 8 else self.args.iterations)
-            compiler_cycle()
+    @staticmethod
+    def exit_key(row):
+        return (row["image"], row["result"], row["flags"], row["ip"],
+                row["related"], row["cursor"], row["phase"])
 
-    def source_scene(self, mode, image):
+    @staticmethod
+    def fact_exit_key(fact):
+        value = fact.exit
+        return (int.from_bytes(fact.image_identity, "little"), value.kind, value.detail,
+                value.source_ip, value.target, value.cursor, value.phase)
+
+    def training(self, compiler_cycle, current_image, fact_states):
+        modes = (6, 7, 12) if self.atomic else (6, 7, 9, 11, 12, 10)
+        # Each pass must expose a new ordinary target or finish the selected
+        # path. The caller supplies the scene bound and provisions every pass;
+        # actual decoded CALL sites provide a second finite bound.
+        limit = min(self.args.reader_learning_passes, len(self.calls) + 1)
+        self.results["reader_learning_bound"] = {"caller_passes": self.args.reader_learning_passes,
+            "decoded_call_sites": len(self.calls), "passes_per_mode": limit, "modes": list(modes)}
+        for mode in modes:
+            for attempt in range(1, limit + 1):
+                image = current_image()
+                prior_keys = {state.recorded.fact.key for state in fact_states()}
+                proof, rows, final = self.source_scene(mode, image, learning=True)
+                coverage = [row for row in rows if self.has(row, "JIT_EXIT") and row["result"] == 3]
+                unexpected = [row for row in rows if self.has(row, "JIT_EXIT") and row["result"] not in (1, 3)]
+                if unexpected:
+                    raise AssertionError("controlled reader learning reached a non-coverage frontier")
+                checkpoint = int(final["rw_miss_target"], 16) if mode in (10, 12) else None
+                intended = [row for row in coverage if row["state"] == proof["state"]
+                            and row["related"] == checkpoint and row["phase"] == 2]
+                entry = {"mode": mode, "attempt": attempt, "image": image, "proof": proof,
+                         "coverage_exits": coverage, "intentional_exits": intended}
+                self.learning.append(entry)
+                if not coverage:
+                    if checkpoint is not None:
+                        raise AssertionError("reader learning did not reach its deliberate native checkpoint")
+                    self.validate_source_scene(proof, rows, final)
+                    entry["status"] = "ordinary_path_completed"
+                    break
+                # Copy the actual claim and cumulative publication before any
+                # further source invocation. Nonobservations remain pending.
+                result = compiler_cycle()
+                fresh = [state for state in fact_states() if state.recorded.fact.key not in prior_keys]
+                remaining = list(fresh)
+                matched = []
+                for exited in coverage:
+                    state = next((state for state in remaining
+                                  if self.fact_exit_key(state.recorded.fact) == self.exit_key(exited)), None)
+                    if state is None:
+                        raise AssertionError("controlled exit lacks its exact newly recorded fact")
+                    remaining.remove(state)
+                    matched.append((exited, state))
+                if remaining:
+                    raise AssertionError("controlled claim contains an unobserved new exit")
+                ordinary = []
+                for exited, state in matched:
+                    observation = state.recorded.feedback.observation
+                    if observation is None:
+                        if exited not in intended:
+                            raise AssertionError("controlled reader learning reached an unexpected nonobservation")
+                        continue
+                    kind = ("indirect_call_target" if observation.kind.value == "call"
+                            else "indirect_jump_target")
+                    old = state.recorded.fact.producer
+                    if (observation.target in old.emitted_sites and any(transfer.source == observation.site
+                            and transfer.target == observation.target and transfer.kind == kind
+                            for transfer in old.transfers)):
+                        raise AssertionError("controlled miss repeated an already emitted ordinary edge")
+                    ordinary.append((state, observation))
+                if intended:
+                    if len(intended) != 1 or any(row["state"] == proof["state"] and row not in intended
+                                                 for row in coverage):
+                        raise AssertionError("reader prefix handed back before its intended checkpoint")
+                    self.validate_source_scene(proof, rows, final)
+                if ordinary:
+                    if result.candidate is None or result.publication is None or result.acknowledgment is None:
+                        raise AssertionError("new ordinary scene facts lack actual publication and ACK")
+                    acknowledged = set(result.acknowledgment.keys)
+                    emitted = result.candidate.artifact.receipt.emitted_observations
+                    if any(state.recorded.fact.key not in acknowledged or observation not in emitted
+                           for state, observation in ordinary):
+                        raise AssertionError("scene publication did not cover and ACK its reached ordinary miss")
+                    if current_image() == image:
+                        raise AssertionError("controlled learning did not advance its actual published image")
+                    entry.update(status="ordinary_targets_published", next_image=current_image(),
+                        acknowledged=[{"record": state.recorded.fact.record_identity.hex(),
+                                       "incarnation": state.recorded.fact.incarnation}
+                                      for state, _ in ordinary])
+                    continue
+                if len(intended) != len(coverage) or len(intended) != 1:
+                    raise AssertionError("reader prefix did not end at its one exact native checkpoint")
+                entry["status"] = "deliberate_checkpoint_reached"
+                break
+            else:
+                raise AssertionError("explicit controlled reader learning pass bound exhausted")
+
+    def source_scene(self, mode, image, learning=False):
         begin = len(self.observations())
         self.control(f"scene {mode}")
         _, first = self.wait(lambda value: int(value["ready"], 16) == 31, f"reader{mode}-ready")
@@ -199,7 +297,12 @@ class ReaderCases:
                 and row["object"] == object_b for row in self.rows(begin)), "read-write-B-enqueue")
             self.control("release 1")
         elif mode == 11:
-            self.wait(lambda value: int(value["child"], 16) != 0, "downgrade-B-child")
+            if learning:
+                object_b = int(first["object_b"], 16)
+                self.wait(lambda value: any(self.has(row, "ENQUEUE") and row["origin"] == tasks[4]
+                    and row["object"] == object_b for row in self.rows(begin)), "learning-downgrade-B-request")
+            else:
+                self.wait(lambda value: int(value["child"], 16) != 0, "downgrade-B-child")
             self.control("release 1")
         raw, final = self.wait(lambda value: int(value["finished"]) == 5, f"reader{mode}-done")
         self.clean(final, 5)
@@ -225,10 +328,22 @@ class ReaderCases:
         child = next((row for row in rows if mode == 11 and self.has(row, "ENQUEUE")
                       and row["state"] == state and row["origin"] == tasks[4]
                       and row["task"] == tasks[2]), None)
-        if writer is None or (mode == 11 and child is None):
+        if writer is None or (not learning and mode == 11 and child is None):
             raise AssertionError("reader case lost its actual writer request lifetime")
+        if learning:
+            requests = [row for row in rows if self.has(row, "ENQUEUE") and row["state"] == state
+                        and row["origin"] == tasks[4]]
+            for request in requests:
+                self.retirement(rows, request, None, 1, image)
+            proof.update(writer=writer, child=child, writer_requests=requests)
+            return proof, rows, final
         self.retirement(rows, writer, child, 1, image)
         proof.update(writer=writer, child=child)
+        return self.validate_source_scene(proof, rows, final)
+
+    def validate_source_scene(self, proof, rows, final):
+        mode, image, state = proof["mode"], proof["fixed_image"], proof["state"]
+        tasks, entries, credits = proof["roles"], proof["entries"], proof["credits"]
         if mode == 6:
             shared = next((pair for pair in credits if pair["acquire"]["state"] == state
                            and pair["acquire"]["object"] == int(final["object_b"], 16)
@@ -332,16 +447,26 @@ class ReaderCases:
         if not self.atomic:
             self.source_scene(10, image)
 
-    def archived(self, states, archive):
-        keys = []
+    def intentional_keys(self, states):
+        # Prefix learning and final fixed-image checks can reach the same
+        # intentional source exit in several image lifetimes. Preserve every
+        # exact record/incarnation and its pending disposition independently.
+        groups = {}
         for miss in self.misses:
-            found = [state for state in states if state.recorded.fact.exit.source_ip == miss["ip"]
-                     and state.recorded.fact.exit.target == miss["related"]
-                     and state.recorded.fact.exit.kind == 3 and state.recorded.fact.exit.phase == 2]
-            if (len(found) != 1 or found[0].recorded.fact.key not in archive.settlement.keys
-                    or found[0].acknowledgment_identities):
-                raise AssertionError("deliberate reader miss was not exactly retained and SETTLED")
-            fact = found[0].recorded.fact
-            keys.append({"record": fact.record_identity.hex(), "incarnation": fact.incarnation})
+            groups.setdefault(self.exit_key(miss), []).append(miss)
+        keys = set()
+        for signature, misses in groups.items():
+            found = [state for state in states if self.fact_exit_key(state.recorded.fact) == signature]
+            if len(found) != len(misses) or any(state.acknowledgment_identities for state in found):
+                raise AssertionError("deliberate reader exits lost their exact unacknowledged records")
+            keys.update(state.recorded.fact.key for state in found)
+        return keys
+
+    def archived(self, states, archive):
+        keys = self.intentional_keys(states)
+        if not keys <= set(archive.settlement.keys):
+            raise AssertionError("deliberate reader exits were not exactly retained and SETTLED")
         self.results["reader_checks"] = self.proofs
-        self.results["reader_miss_archived"] = keys
+        self.results["reader_miss_archived"] = [{"record": key.record_identity.hex(),
+            "incarnation": key.incarnation} for key in sorted(keys,
+                key=lambda key: (key.record_identity, key.incarnation))]

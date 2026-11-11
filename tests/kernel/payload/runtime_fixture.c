@@ -37,6 +37,11 @@ static unsigned int holder_timeout_ms;
 module_param(holder_timeout_ms, uint, 0444);
 MODULE_PARM_DESC(holder_timeout_ms, "Explicit maximum holder gate wait in milliseconds");
 #endif
+#ifdef KD_FIXTURE_READERS
+static unsigned int reader_learning_passes;
+module_param(reader_learning_passes, uint, 0444);
+MODULE_PARM_DESC(reader_learning_passes, "Explicit controlled learning passes provisioned per reader scene");
+#endif
 #ifdef KD_FIXTURE_ATOMIC
 #define FIXTURE_SPIN_CPU_COUNT 5U
 #define FIXTURE_SPIN_MISS_MODE 3U
@@ -947,7 +952,7 @@ static int __init notrace fixture_init(void)
 		return -EINVAL;
 #endif
 #ifdef KD_FIXTURE_READERS
-	if (!holder_timeout_ms)
+	if (!holder_timeout_ms || !reader_learning_passes || reader_learning_passes > (~0U - 8) / 6)
 		return -EINVAL;
 #endif
 	if (!gs_verified || !immutable_text || !auxiliary_contract || !source_version ||
@@ -981,7 +986,26 @@ static int __init notrace fixture_init(void)
 	if (result)
 		goto event_cleanup;
 	config = (struct kd_jit_runtime_config) {
-		.source = provider, .feedback_capacity = 4096, .cycle_capacity = 32, .image_capacity = 16,
+		.source = provider, .feedback_capacity = 4096,
+#ifdef KD_FIXTURE_READERS
+		/* Four initial compiler cycles plus controlled scenes, final empty
+		 * claim and shutdown. No request-pool capacity or reuse rule changes.
+		 */
+		.image_capacity = 6 +
+#ifdef KD_FIXTURE_RWSEM
+			6 * reader_learning_passes,
+#else
+			3 * reader_learning_passes,
+#endif
+		.cycle_capacity = 8 +
+#ifdef KD_FIXTURE_RWSEM
+			6 * reader_learning_passes,
+#else
+			3 * reader_learning_passes,
+#endif
+#else
+		.cycle_capacity = 32, .image_capacity = 16,
+#endif
 		.claim_capacity = 4096,
 		.compiled = { .code_capacity = 128 * 1024,
 #ifdef KD_FIXTURE_READERS
