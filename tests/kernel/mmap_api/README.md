@@ -149,15 +149,20 @@ permanent SPECIAL pre-operation frontier and return to original native execution
 The helper retains exact decoded CALL bytes and prefixes, introduces no helper
 model or new backend, and establishes no runtime object-binding or lifetime proof.
 
-## Optional source profile (source only)
+## Optional source profile
 
-The new ABI2 profile is separate from the kernel6 ABI1 receipt. It has not been
-compiled or run. The provider's read-only `enable_jit_profile` module parameter
-defaults to false. Enabling it permits metadata setup; it establishes no MM JIT,
-full context or performance result. The selected object still uses one generic
-KD rwsem gate. Native MM bodies, surrounding data structures and syscall
-semantics are unchanged, and every workload effect comes through the common
-userspace `SYS_mmap`/`SYS_munmap` body.
+The ABI2 profile is separate from the kernel6 ABI1 receipt. Kernel8 linked from
+core `0d42063e`, and its five affected modules compiled and signed from snapshot
+`140aecc4`. Two runner syntax checks passed. A separate continuation at test
+source `4cc53e09` passed eight source-boundary and five linked GS checks. That
+test-only correction rebuilt no module. The VM remained on normal boot
+`afb0c5cd`, with no kernel8 boot, selected profile or generated MM execution in
+these receipts. The provider's read-only `enable_jit_profile` module parameter
+defaults to false. The selected object uses one generic KD rwsem gate. Native
+MM bodies, surrounding data structures and syscall semantics are unchanged, and
+every workload effect comes through the common userspace
+`SYS_mmap`/`SYS_munmap` body. [Kernel build](../../evidence/kernel8-build-20261111/README.md),
+[affected builds and checks](../../evidence/kernel8-affected-build-20261111/README.md)
 
 START_JIT accepts explicit source/dependency, version, configuration/load/GS and
 finite runtime/native capacities. It copies the region list and version once;
@@ -212,16 +217,36 @@ native status prefix still reports JIT observation unavailable. Its zero
 `jit_entries` is not an absence result. Join raw SLOT, GRANT, original state,
 physical executor, image and source records before reporting delegation or
 execution. Publication, JIT entry, returned fragment, actual MM-body coverage,
-syscall completion and final retirement are separate findings. Query/assert
-SPECIAL frontiers and other reached boundaries can stop generated execution
-early; a returned prefix does not establish meaningful MM-body delegation.
+syscall completion and final retirement are separate findings. Ordinary callable
+query helpers remain SPECIAL. Typed physical predicates have their own exact
+operation/return route. Other reached boundaries can still stop generated
+execution early, and a returned prefix does not establish meaningful MM-body
+delegation.
 
-The subsequent unbuilt v3 source recipe adds explicit typed physical rwsem
-queries for the existing inline assertions. Normal callable helpers remain
-SPECIAL. This is a generic lock API service, with no MM body or helper model.
-Its source must receive a fresh kernel/build/GS receipt; kernel7's frozen
-integer/cancellation image does not include it. Meaningful protected completion
-requires generated UP_WRITE and episode completion for mmap, or the same
-retained grant's downgrade/read tail/UP_READ physical ACK followed by its selected
-post-UP_READ handback for munmap. Current prefix evidence checks do not by
-themselves establish those outcomes.
+The v3 recipe compiled into kernel8 adds explicit typed physical rwsem queries
+for the existing inline assertions. This is a generic lock API service, with no
+MM body or helper model. Kernel7's frozen integer/cancellation image does not
+include it. Linked kernel8 identity and GS checks still require actual boot
+verification before live use. Meaningful protected completion requires generated
+UP_WRITE and current-JIT episode completion for mmap, or the same retained
+grant's downgrade/read tail/UP_READ physical ACK followed by its selected
+post-UP_READ handback for munmap. [Linked kernel8 evidence](../../evidence/kernel8-build-20261111/README.md)
+
+The new [completion reporter](completion.py) and runner integration remain
+source-only until their fresh VM syntax and focused checks run. The reporter
+uses bounded ELF64 symbol metadata only to attribute the two actual MM root
+CALL spans. Per-round frozen event prefixes retain positive and rejected
+request-incarnation candidates. A prior handback or non-typed miss prevents a
+completion claim. Every accepted query must return to its exact post-CALL entry.
+Physical ACK, release users, request slot and shared owner retirement are joined
+separately. The existing prefix verdict and cleanup workflow are unchanged.
+
+`meaningful_returned_mm_body` is promoted only when at least one mmap protected
+range and one retained-downgrade munmap protected range have complete witnesses,
+all requested syscall rounds pass their actual effects, and ordinary shutdown,
+archive/settlement, channel close, provider retirement and unload complete.
+`completion-round-*.json` and `protected-completion-final.json` retain the
+reporting details. These witnesses belong to passed real-syscall rounds. Current
+scalar records cannot identify a particular worker iteration/address or prove
+that an individual selected mmap returned success. They establish no complete
+C-function return or context equivalence.

@@ -204,7 +204,8 @@ def main():
     # Source inspection/Git remains on the source host. The VM consumes its
     # pinned export state and exact manifest, with no invented .git directory.
     repo_files = {name: row["sha256"] for name, row in source_manifest.items()}
-    required_repo_files = {"tests/kernel/mmap_api/runner.py", "tests/kernel/run_runtime_fixture.py"}
+    required_repo_files = {"tests/kernel/mmap_api/runner.py", "tests/kernel/mmap_api/completion.py",
+                           "tests/kernel/run_runtime_fixture.py"}
     required_repo_files.update(str(path.relative_to(paths["repo"])) for directory in ("disassem", "include")
                                for path in (paths["repo"] / directory).rglob("*") if path.is_file()
                                and path.suffix in (".py", ".h", ".S", ".inc"))
@@ -299,6 +300,7 @@ def main():
     sys.dont_write_bytecode = True
     sys.path[:0] = [str(paths["repo"]), str(paths["repo"] / "tests/kernel")]
     from run_runtime_fixture import scan_operation_calls
+    from mmap_api.completion import completion_report, read_function_spans
     from disassem.archive import ArchiveConfig, ShutdownSession
     from disassem.compiler import DiscoveryLimits
     from disassem.image_builder import BuildLimits, GNUImageBuilder, Toolchain
@@ -316,6 +318,7 @@ def main():
     wire.mkdir()
     transport = child = client = None
     sessions, event_rows, roots, reentries = [], [], set(), set()
+    completion_rounds, completion_spans, completion_error = [], None, None
     reentry_candidates_seen = set()
     event_prefix = b""
     command_number = signal_number = snapshot_number = 0
@@ -743,6 +746,22 @@ def main():
                  "configuration": exported.epoch.configuration_identity.hex(), "load": exported.epoch.load_identity.hex(),
                  "regions": [{"start": r.start, "length": len(r.data), "sha256": sha(r.data)} for r in snapshot.regions],
                  "calls": calls, "near_indirect_call_sites": indirect, "slot": exported.slot_identity})
+        try:
+            completion_spans = read_function_spans(paths["kernel_elf"])
+            result["completion_function_spans"] = completion_spans
+        except Exception as error:
+            # Reporting cannot add a workload or cleanup gate. Preserve an
+            # unavailable evidence result and continue the existing workflow.
+            completion_error = repr(error)
+
+        def completion_evidence():
+            if completion_error is not None:
+                return {"status": "unavailable", "error": completion_error, "counts": {"mmap": 0, "munmap_retained": 0}}
+            try:
+                return completion_report(event_rows, calls, completion_spans, completion_rounds,
+                    initial["native"]["gate_identity"], lambda site, length: snapshot.window(site)[:length])
+            except Exception as error:
+                return {"status": "unavailable", "error": repr(error), "counts": {"mmap": 0, "munmap_retained": 0}}
         coordinator = LearningCoordinator(exported.epoch, snapshot, LearningLimits(
             native["feedback_capacity"], native["cycle_capacity"], native["image_capacity"],
             native["image_capacity"], native["image_capacity"]))
@@ -799,12 +818,18 @@ def main():
 
         for number in range(1, workload["rounds"] + 1):
             entry_sites()
+            observe()
+            completion_begin, completion_image = len(event_rows), old
             advance(signal.SIGUSR2, "round-" + str(number))
             finished = phase("jit_round_complete")
             round_effects(finished, number)
             current_profile = profile(finished, 2, initial)
             result["rounds"].append(finished)
             observe()
+            completion_rounds.append({"round": number, "begin": completion_begin, "end": len(event_rows),
+                                      "image": completion_image, "effects_passed": True})
+            result["completion_rounds"] = completion_rounds
+            document(output / f"completion-round-{number:04d}.json", completion_evidence())
             # Client schema is checked before permitting another round below.
             fresh = discover_roots(calls, current_profile["native"]["gate_identity"])
             document(output / f"roots-{number:04d}.json", fresh)
@@ -835,7 +860,9 @@ def main():
                                          ("runner_config", result["config_sha256"])))))
         result["archive_sha256"] = archive.archive.identity.hex()
         result["settled_keys"] = len(archive.settlement.keys)
+        result["channel_shutdown_complete"] = True
         transport.close(); transport = None
+        result["channel_closed"] = True
         observe()
         # This fresh signal follows actual SHUTDOWN/archive/SETTLE/END+fdclose.
         advance(signal.SIGUSR1, "end-provider-after-host-closure")
@@ -877,6 +904,7 @@ def main():
         command([tools["rmmod"], module_name])
         if (Path("/sys/module") / module_name).exists() or Path("/dev/kd_mmap_api").exists():
             raise RuntimeError("ordinary provider unload did not complete")
+        result["provider_unloaded"] = True
         command([tools["dmesg"], "--raw"], "kernel-log-after")
         for key in file_names:
             if digest(paths[key]) != config["sha256"][key]:
@@ -888,6 +916,28 @@ def main():
         result["post_boot_id"] = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
         if result["post_boot_id"] != boot or result["post_taint"] not in (4096, 12288):
             raise AssertionError("boot changed or unexpected kernel taint occurred")
+        result["protected_completion"] = completion_evidence()
+        document(output / "protected-completion-final.json", result["protected_completion"])
+        counts = result["protected_completion"]["counts"]
+        completion_gates = {
+            "all_round_effects": len(result["rounds"]) == workload["rounds"] and final["all_rounds_pass"] is True,
+            "client_returned_zero": result["client_returncode"] == 0,
+            "original_owner_left": bool(owner_left["owner_left"] and not owner_left["storage_identity"]),
+            "provider_retired": retired["state"] == 5 and not any(retired[key] for key in
+                ("roles", "source_identity", "runtime_identity", "storage_identity")),
+            "native_gate_drained": bool(retired["native"]["pool_idle"] and not any(retired["native"][key] for key in
+                ("cleanup_required", "gate_locked", "gate_write_locked", "gate_contended", "count_overflow"))),
+            "shutdown_archive_settle_end": result["channel_shutdown_complete"],
+            "channel_closed": result["channel_closed"],
+            "provider_unloaded": result["provider_unloaded"],
+            "provider_devices_absent": not any(Path(name).exists() for name in
+                ("/dev/kd_mmap_api", "/dev/kd_mmap_api_events", "/dev/kd_mmap_jit")),
+        }
+        result["protected_completion_final_gates"] = completion_gates
+        complete = counts["mmap"] > 0 and counts["munmap_retained"] > 0 and all(completion_gates.values())
+        result["protected_mm_completion_observed"] = complete
+        if complete:
+            result["meaningful_returned_mm_body"] = "protected_ranges_completed_in_passed_syscall_rounds"
         result["status"] = ("syscall_and_borrowed_jit_prefix_pass" if result["borrowed_jit_prefix_observed"] else
                             "syscall_pass_with_dispatch_only" if result["borrowed_generated_entry_observed"] else
                             "syscall_pass_without_borrowed_jit_evidence")
