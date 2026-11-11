@@ -1,0 +1,243 @@
+{
+  "archive_main_commit_before": "6a4ba5a1734dfa5dc0b52e7fd5a6fda3d85b8196",
+  "archive_main_status_before": "",
+  "copied_bytes": 21115,
+  "copied_members": 2,
+  "existing_fixture_parameter_witness": {
+    "auxiliary_bytes_per_task": 65536,
+    "incremental_byte_cost_selected": false,
+    "new_layout_selected": false,
+    "path": "/tmp/kdlock-kernel8-managed-killable-20261111-01/limits-corrected.json",
+    "sha256": "23f2208dd9fe4f0d55df3cfe7955d10005a99b22995cb2b2e8f744b270a68cb8",
+    "slot_frame_pairs_per_task": 16
+  },
+  "note_source_main_commit": "3961172ec4c0d1844c3c20c07ddba8c2d33b6e9c",
+  "note_source_main_status": " M tests/kernel/rwsem_killable/README.md\n M tests/kernel/rwsem_killable/runner.py\n",
+  "original_note_sha256": "51f3e1ba02503e92d5ecc5659c3f4e222a0b88e5da75ca21aed5e1c191c681fd",
+  "original_source_index_sha256": "c852b5342ee49fc2be7e5267d2edbd0f6e213561f819d8a95af7d1e69249e30b",
+  "pinned_rcuht_pairs": 12,
+  "pinned_tclock_commit": "bbfb9f00a12af51dff6ca291cb9829a82960c2ef",
+  "pinned_tclock_git_status": "",
+  "scope": "Static source comparison. No runtime context admission, execution-policy selection, implementation, build, workload or performance result.",
+  "source_check_count": 41,
+  "source_files_copied": false,
+  "source_rows": [
+    {
+      "bytes": 35682,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/locks/komb.c",
+      "sha256": "fec2b362d7636cb01f5854774a60043f6558a8f18d9b6b6abe3358f154034ce7"
+    },
+    {
+      "bytes": 35682,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/locks/komb.c",
+      "sha256": "fec2b362d7636cb01f5854774a60043f6558a8f18d9b6b6abe3358f154034ce7"
+    },
+    {
+      "bytes": 4181,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/lib/combiner.c",
+      "sha256": "db340f4a4c99bc95d655902dfd73c102f8192a9e2821d6df065327a9accae986"
+    },
+    {
+      "bytes": 4181,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/lib/combiner.c",
+      "sha256": "db340f4a4c99bc95d655902dfd73c102f8192a9e2821d6df065327a9accae986"
+    },
+    {
+      "bytes": 4381,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/include/lib/combiner.h",
+      "sha256": "dc84cd6fe55e52667ce52111c88448e6df75a79e9d7b735d26c64ac39ceca04e"
+    },
+    {
+      "bytes": 4381,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/include/lib/combiner.h",
+      "sha256": "dc84cd6fe55e52667ce52111c88448e6df75a79e9d7b735d26c64ac39ceca04e"
+    },
+    {
+      "bytes": 1692,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/include/spinlock/komb.h",
+      "sha256": "5666f599e57ee68d5ce1330bd67eb63c2d6cb15324ad10f5a3bba2f8df0ac415"
+    },
+    {
+      "bytes": 1692,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/include/spinlock/komb.h",
+      "sha256": "5666f599e57ee68d5ce1330bd67eb63c2d6cb15324ad10f5a3bba2f8df0ac415"
+    },
+    {
+      "bytes": 22883,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/locks/komb_mutex.c",
+      "sha256": "d4ae402d81307100ee2c03745643f458d3b42eab13e6e57735eebbd22643dc26"
+    },
+    {
+      "bytes": 22883,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/locks/komb_mutex.c",
+      "sha256": "d4ae402d81307100ee2c03745643f458d3b42eab13e6e57735eebbd22643dc26"
+    },
+    {
+      "bytes": 2372,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/include/mutex/komb_mutex.h",
+      "sha256": "cb4fdcd87586e378be4448704816fc05ae4814871bd3e89c6edba4dcd1399329"
+    },
+    {
+      "bytes": 2372,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/include/mutex/komb_mutex.h",
+      "sha256": "cb4fdcd87586e378be4448704816fc05ae4814871bd3e89c6edba4dcd1399329"
+    },
+    {
+      "bytes": 21884,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/locks/komb_rwlock.c",
+      "sha256": "d1ec95ea8d025eccaf7111c0831fe206776209b51e2525a0205b878e32c8d472"
+    },
+    {
+      "bytes": 21884,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/locks/komb_rwlock.c",
+      "sha256": "d1ec95ea8d025eccaf7111c0831fe206776209b51e2525a0205b878e32c8d472"
+    },
+    {
+      "bytes": 2126,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/include/rwlock/komb_rwlock.h",
+      "sha256": "c35f2cbaeb04fff8518ac9f5f113a3ce18aa0800dd1e9c4bd55ee4e733295608"
+    },
+    {
+      "bytes": 2126,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/include/rwlock/komb_rwlock.h",
+      "sha256": "c35f2cbaeb04fff8518ac9f5f113a3ce18aa0800dd1e9c4bd55ee4e733295608"
+    },
+    {
+      "bytes": 34015,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/locks/komb_rwsem.c",
+      "sha256": "0a2e5ae38e47942c8eed6f772ebb7d1671531cd31d6b0cf77b18b45b448b84ef"
+    },
+    {
+      "bytes": 34015,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/locks/komb_rwsem.c",
+      "sha256": "0a2e5ae38e47942c8eed6f772ebb7d1671531cd31d6b0cf77b18b45b448b84ef"
+    },
+    {
+      "bytes": 4217,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/include/rwsem/komb_rwsem.h",
+      "sha256": "088dd53bb8a457d612276899c027bb28671b5873d415217e88ba7168ea68502b"
+    },
+    {
+      "bytes": 4217,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/include/rwsem/komb_rwsem.h",
+      "sha256": "088dd53bb8a457d612276899c027bb28671b5873d415217e88ba7168ea68502b"
+    },
+    {
+      "bytes": 13624,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/locks/aqs.c",
+      "sha256": "c505919f371204aeb9d21735e222077465ea90355e8b80e9ec312ad6c3e15582"
+    },
+    {
+      "bytes": 13624,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/locks/aqs.c",
+      "sha256": "c505919f371204aeb9d21735e222077465ea90355e8b80e9ec312ad6c3e15582"
+    },
+    {
+      "bytes": 7078,
+      "path": "/home/eric/vm/vm-shared/kdlock/tclock_backend/upstream/include/spinlock/aqs.h",
+      "sha256": "bf62af9eedc6b369cbbf86d6cf2eb6dc3f46d356d278b64e6cebaa5652cdb9ab"
+    },
+    {
+      "bytes": 7078,
+      "path": "/home/eric/TCLocks/src/kernel/rcuht/include/spinlock/aqs.h",
+      "sha256": "bf62af9eedc6b369cbbf86d6cf2eb6dc3f46d356d278b64e6cebaa5652cdb9ab"
+    },
+    {
+      "bytes": 4181,
+      "path": "/home/eric/TCLocks/src/kernel/linux-5.14.16/lib/combiner.c",
+      "sha256": "db340f4a4c99bc95d655902dfd73c102f8192a9e2821d6df065327a9accae986"
+    },
+    {
+      "bytes": 29029,
+      "path": "/home/eric/TCLocks/src/kernel/linux-5.14.16/kernel/locking/rwsem.c",
+      "sha256": "acd7ddca77d7bd0c5fcc8d740cbe273d58d6392984b51244f1976c4078f85359"
+    },
+    {
+      "bytes": 78494,
+      "path": "/home/eric/TCLocks/src/kernel/linux-5.14.16/kernel/fork.c",
+      "sha256": "b925cb38128b218fa3856db2c3520c826b372e233a7e1c93e707ae3bb691d633"
+    },
+    {
+      "bytes": 443,
+      "path": "/home/eric/TCLocks/src/kernel/linux-5.14.16/arch/x86/include/asm/current.h",
+      "sha256": "70097607468ec855cda3cc254d97b0b4f74a99bad64519984d3f2f3919094377"
+    },
+    {
+      "bytes": 1761,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/include/mutex_entry.S",
+      "sha256": "6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108"
+    },
+    {
+      "bytes": 3456,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/include/wrapper.S",
+      "sha256": "42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5"
+    },
+    {
+      "bytes": 2249,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/include/native_resume.S",
+      "sha256": "6c57676d9194a2f2090d602fdf55bba891add8b6f8d560472bfb4fd7bbf4b0dd"
+    },
+    {
+      "bytes": 7588,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/kernel/native_entry.c",
+      "sha256": "8d452d7c27a955dafe022af389ccf6b55520f8c69e23f35f9fd7c32f31708aa4"
+    },
+    {
+      "bytes": 15185,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/kernel/task_storage.c",
+      "sha256": "199712250db1dfad005a28de58a4114c35ff67bc98c1f9a17aa45ced2066fd9b"
+    },
+    {
+      "bytes": 9076,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/kernel/task_state.c",
+      "sha256": "5d607be623e60f0f27ca39331dfb39385284ed81e1e1fd758b3c465746f9dadb"
+    },
+    {
+      "bytes": 2336,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/kernel/source_stack.c",
+      "sha256": "81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302"
+    },
+    {
+      "bytes": 18972,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/kernel/state.c",
+      "sha256": "3260f35acf2886cfafdd1f3925c5dc1bbeb7961670019fcccde51dd7e8f3ed80"
+    },
+    {
+      "bytes": 8746,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/kernel/owner_progress.c",
+      "sha256": "8184208d878b467a7a269c2606029aa22cba64d4a45fd56026855b04171178d3"
+    },
+    {
+      "bytes": 14602,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/kernel/mutex_release.c",
+      "sha256": "2d9639fcf6688e0923b1fcc7f6475edff26957710984785212fe40dda5dcc7f8"
+    },
+    {
+      "bytes": 43646,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/kernel/episode.c",
+      "sha256": "a30d6f7403fa46444b4ea0bc9de2ea7c8f1b0e20cc3e5ddbfdc470c66752b614"
+    },
+    {
+      "bytes": 11404,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/disassem/backend/normal.py",
+      "sha256": "72d11aff60b4561485000397f59355ad78e6a958ca6daadd8fa4c00ca36ed864"
+    },
+    {
+      "bytes": 22080,
+      "path": "/home/eric/vm/vm-shared/kdlock-main/tests/kernel/mmap_api/payload/mmap_jit_profile.inc",
+      "sha256": "f35523a305972b1e5299d4a026ad7e47d8d75dce8fefa478897c96f7b482876d"
+    }
+  ],
+  "source_window_note": "The original index records the review-time main state at 3961172e with two K fixture WIP paths. None of those two paths is a source-index member. All 41 indexed source rows still match at archival commit 6a4ba5a1.",
+  "status": "SOURCE_ONLY_COMPARISON_VERIFIED",
+  "unperformed": [
+    "VM access",
+    "network access",
+    "project imports",
+    "AST parsing",
+    "builds",
+    "tests",
+    "staging",
+    "commit"
+  ]
+}
