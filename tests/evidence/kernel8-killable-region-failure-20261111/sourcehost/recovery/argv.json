@@ -1,0 +1,5 @@
+[
+  "/usr/bin/python3",
+  "-B",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-region-recovery-input-01/recover.py"
+]

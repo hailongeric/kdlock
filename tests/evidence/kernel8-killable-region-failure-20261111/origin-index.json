@@ -1,0 +1,2989 @@
+{
+  "count": 157,
+  "files": [
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/collection-helper.py.txt",
+      "raw_bytes": 18940,
+      "raw_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755555,
+        33204,
+        1,
+        18940,
+        1794432696996037810,
+        1794432696996037810
+      ],
+      "stored_bytes": 18940,
+      "stored_path": "collections/failure/.collection/collection-helper.py.txt",
+      "stored_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/copy-command.json",
+      "raw_bytes": 389,
+      "raw_sha256": "fcbc62332cdb185e521f2e3d3e65e73f25097877201f0ff60e15c19479bfbddd",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755565,
+        33204,
+        1,
+        389,
+        1794432697660060356,
+        1794432697660060356
+      ],
+      "stored_bytes": 389,
+      "stored_path": "collections/failure/.collection/copy-command.json",
+      "stored_sha256": "fcbc62332cdb185e521f2e3d3e65e73f25097877201f0ff60e15c19479bfbddd"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/copy-input.py.txt",
+      "raw_bytes": 25182,
+      "raw_sha256": "cad42e2881d070b70b0ff8ccad836d07b57b505a315cf53ef73db1fa930da98f",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755564,
+        33204,
+        1,
+        25182,
+        1794432697653060119,
+        1794432697653060119
+      ],
+      "stored_bytes": 25182,
+      "stored_path": "collections/failure/.collection/copy-input.py.txt",
+      "stored_sha256": "cad42e2881d070b70b0ff8ccad836d07b57b505a315cf53ef73db1fa930da98f"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/copy-result.json",
+      "raw_bytes": 754,
+      "raw_sha256": "4358af6600430131facde345211fa95dcf5932edf314a2a42613d9bc4e0cac1a",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755570,
+        33204,
+        1,
+        754,
+        1794432697966070746,
+        1794432697966070746
+      ],
+      "stored_bytes": 754,
+      "stored_path": "collections/failure/.collection/copy-result.json",
+      "stored_sha256": "4358af6600430131facde345211fa95dcf5932edf314a2a42613d9bc4e0cac1a"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/copy-stderr.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755569,
+        33204,
+        1,
+        0,
+        1794432697666060560,
+        1794432697666060560
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/failure/.collection/copy-stderr.log",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "gzip",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/copy.tar",
+      "raw_bytes": 747520,
+      "raw_sha256": "de7d1c87d167f1f702f51ff66370110d2c3535493779f07682b7103b7bf7bd7c",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755568,
+        33204,
+        1,
+        747520,
+        1794432697946070067,
+        1794432697946070067
+      ],
+      "stored_bytes": 95338,
+      "stored_path": "collections/failure/.collection/copy.tar.gz",
+      "stored_sha256": "b825173412f82b47ea858b17694d858443668700ff965d7accb86acd757c39bf"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-after-command.json",
+      "raw_bytes": 398,
+      "raw_sha256": "ba1977d6a28eff2046ce4f504835a7958cba29fb4cda76ac7667c641f9f61103",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755572,
+        33204,
+        1,
+        398,
+        1794432697989071527,
+        1794432697989071527
+      ],
+      "stored_bytes": 398,
+      "stored_path": "collections/failure/.collection/inventory-after-command.json",
+      "stored_sha256": "ba1977d6a28eff2046ce4f504835a7958cba29fb4cda76ac7667c641f9f61103"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-after-input.py.txt",
+      "raw_bytes": 4426,
+      "raw_sha256": "53e5f207cd40b672391c635ddcc9f61995b01134734a9473c81798940130edcd",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755571,
+        33204,
+        1,
+        4426,
+        1794432697982071289,
+        1794432697982071289
+      ],
+      "stored_bytes": 4426,
+      "stored_path": "collections/failure/.collection/inventory-after-input.py.txt",
+      "stored_sha256": "53e5f207cd40b672391c635ddcc9f61995b01134734a9473c81798940130edcd"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-after-result.json",
+      "raw_bytes": 763,
+      "raw_sha256": "59f4c6d6afc7a57021069b5b7fef9d982859e3a935c139a191980fb72132df50",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755575,
+        33204,
+        1,
+        763,
+        1794432698278081336,
+        1794432698278081336
+      ],
+      "stored_bytes": 763,
+      "stored_path": "collections/failure/.collection/inventory-after-result.json",
+      "stored_sha256": "59f4c6d6afc7a57021069b5b7fef9d982859e3a935c139a191980fb72132df50"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-after-stderr.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755574,
+        33204,
+        1,
+        0,
+        1794432698002071969,
+        1794432698002071969
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/failure/.collection/inventory-after-stderr.log",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-after.json",
+      "raw_bytes": 20101,
+      "raw_sha256": "7b7d220e719848499b96ece49e1350fd655ac27c9317654bc0a536abe70f1787",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755573,
+        33204,
+        1,
+        20101,
+        1794432698263080827,
+        1794432698263080827
+      ],
+      "stored_bytes": 20101,
+      "stored_path": "collections/failure/.collection/inventory-after.json",
+      "stored_sha256": "7b7d220e719848499b96ece49e1350fd655ac27c9317654bc0a536abe70f1787"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-before-command.json",
+      "raw_bytes": 400,
+      "raw_sha256": "9ca8c8611a0c5d41d6bcc98528160ebe4efe25e0b6e10cbdfc5c9e3b72c30f50",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755558,
+        33204,
+        1,
+        400,
+        1794432697017038522,
+        1794432697017038522
+      ],
+      "stored_bytes": 400,
+      "stored_path": "collections/failure/.collection/inventory-before-command.json",
+      "stored_sha256": "9ca8c8611a0c5d41d6bcc98528160ebe4efe25e0b6e10cbdfc5c9e3b72c30f50"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-before-input.py.txt",
+      "raw_bytes": 4426,
+      "raw_sha256": "53e5f207cd40b672391c635ddcc9f61995b01134734a9473c81798940130edcd",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755557,
+        33204,
+        1,
+        4426,
+        1794432697010038285,
+        1794432697010038285
+      ],
+      "stored_bytes": 4426,
+      "stored_path": "collections/failure/.collection/inventory-before-input.py.txt",
+      "stored_sha256": "53e5f207cd40b672391c635ddcc9f61995b01134734a9473c81798940130edcd"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-before-result.json",
+      "raw_bytes": 765,
+      "raw_sha256": "600b111bca7f589e49a7d1eb72d6c5598b7e19e89255743dbef61d685961673a",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755563,
+        33204,
+        1,
+        765,
+        1794432697642059745,
+        1794432697642059745
+      ],
+      "stored_bytes": 765,
+      "stored_path": "collections/failure/.collection/inventory-before-result.json",
+      "stored_sha256": "600b111bca7f589e49a7d1eb72d6c5598b7e19e89255743dbef61d685961673a"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-before-stderr.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755562,
+        33204,
+        1,
+        0,
+        1794432697024038760,
+        1794432697024038760
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/failure/.collection/inventory-before-stderr.log",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/inventory-before.json",
+      "raw_bytes": 20101,
+      "raw_sha256": "572e14d9b17426f5b23e7265e681dd539c8ac911e7957cacd6a208105ed62951",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755561,
+        33204,
+        1,
+        20101,
+        1794432697619058964,
+        1794432697619058964
+      ],
+      "stored_bytes": 20101,
+      "stored_path": "collections/failure/.collection/inventory-before.json",
+      "stored_sha256": "572e14d9b17426f5b23e7265e681dd539c8ac911e7957cacd6a208105ed62951"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/.collection/selection.json",
+      "raw_bytes": 1494,
+      "raw_sha256": "1d844ecd970e5cccc42edf86c52b895cec70403369a8cbe55b4d8927e7c1c5c9",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755556,
+        33204,
+        1,
+        1494,
+        1794432697003038047,
+        1794432697003038047
+      ],
+      "stored_bytes": 1494,
+      "stored_path": "collections/failure/.collection/selection.json",
+      "stored_sha256": "1d844ecd970e5cccc42edf86c52b895cec70403369a8cbe55b4d8927e7c1c5c9"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/collection.json",
+      "raw_bytes": 284,
+      "raw_sha256": "4b3ea44665e74ee491e5e22858fcc12f97ef4c9cd71b26847c849075855c036d",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755627,
+        33204,
+        1,
+        284,
+        1794432698831100105,
+        1794432698831100105
+      ],
+      "stored_bytes": 284,
+      "stored_path": "collections/failure/collection.json",
+      "stored_sha256": "4b3ea44665e74ee491e5e22858fcc12f97ef4c9cd71b26847c849075855c036d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/copy-index.json",
+      "raw_bytes": 20411,
+      "raw_sha256": "cec57ed49ba5a93e20b09f4a597187e7c8df0f52c1d38b4e921523dd4c840fdf",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755626,
+        33204,
+        1,
+        20411,
+        1794432698824099868,
+        1794432698824099868
+      ],
+      "stored_bytes": 20411,
+      "stored_path": "collections/failure/copy-index.json",
+      "stored_sha256": "cec57ed49ba5a93e20b09f4a597187e7c8df0f52c1d38b4e921523dd4c840fdf"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/controller/managed-killable.log",
+      "raw_bytes": 132,
+      "raw_sha256": "39dcc2698efa355ea3d53b24b3c083d51d772994f339dc467b1d4a160ef6d4ea",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755580,
+        33204,
+        1,
+        132,
+        1794432698290081743,
+        1794432698290081743
+      ],
+      "stored_bytes": 132,
+      "stored_path": "collections/failure/payload/controller/managed-killable.log",
+      "stored_sha256": "39dcc2698efa355ea3d53b24b3c083d51d772994f339dc467b1d4a160ef6d4ea"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/controller/result.json",
+      "raw_bytes": 113775,
+      "raw_sha256": "17634f4dbec9d680e885f11cedc6a2ea877b8581cd6d717fe181b2d7994a9f32",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755581,
+        33204,
+        1,
+        113775,
+        1794432698303082185,
+        1794432698303082185
+      ],
+      "stored_bytes": 113775,
+      "stored_path": "collections/failure/payload/controller/result.json",
+      "stored_sha256": "17634f4dbec9d680e885f11cedc6a2ea877b8581cd6d717fe181b2d7994a9f32"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/driver/command.json",
+      "raw_bytes": 445,
+      "raw_sha256": "db61ba2251cd7ae8809802a480d66d22408154c87a47d322e46d9de43c125f81",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755583,
+        33204,
+        1,
+        445,
+        1794432698318082694,
+        1794432698318082694
+      ],
+      "stored_bytes": 445,
+      "stored_path": "collections/failure/payload/driver/command.json",
+      "stored_sha256": "db61ba2251cd7ae8809802a480d66d22408154c87a47d322e46d9de43c125f81"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/driver/dispatch.json",
+      "raw_bytes": 18,
+      "raw_sha256": "b201a47e874cc704601afa8208fe821bf089d8b2389c8cc70ed02badde577065",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755584,
+        33204,
+        1,
+        18,
+        1794432698331083135,
+        1794432698331083135
+      ],
+      "stored_bytes": 18,
+      "stored_path": "collections/failure/payload/driver/dispatch.json",
+      "stored_sha256": "b201a47e874cc704601afa8208fe821bf089d8b2389c8cc70ed02badde577065"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/driver/return.json",
+      "raw_bytes": 62,
+      "raw_sha256": "bc00d6a9fb68e33f5d31c9199eb7e94f06afe43b07d0007d8e8b6197a121b92d",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755585,
+        33204,
+        1,
+        62,
+        1794432698344083576,
+        1794432698344083576
+      ],
+      "stored_bytes": 62,
+      "stored_path": "collections/failure/payload/driver/return.json",
+      "stored_sha256": "bc00d6a9fb68e33f5d31c9199eb7e94f06afe43b07d0007d8e8b6197a121b92d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/driver/stderr",
+      "raw_bytes": 521,
+      "raw_sha256": "f7d3e6bb3ef6a43ab8454cd26a8bf29dc70871f32acc1f44f99065189838c0fc",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755586,
+        33204,
+        1,
+        521,
+        1794432698357084017,
+        1794432698357084017
+      ],
+      "stored_bytes": 521,
+      "stored_path": "collections/failure/payload/driver/stderr",
+      "stored_sha256": "f7d3e6bb3ef6a43ab8454cd26a8bf29dc70871f32acc1f44f99065189838c0fc"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/driver/stdout",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755587,
+        33204,
+        1,
+        0,
+        1794432698370084459,
+        1794432698370084459
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/failure/payload/driver/stdout",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/input/controller.py",
+      "raw_bytes": 13308,
+      "raw_sha256": "cf94a18f917b31d240b53b484401f10fa860a56aefd5af013006721e59fd3dae",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755589,
+        33204,
+        1,
+        13308,
+        1794432698383084900,
+        1794432698383084900
+      ],
+      "stored_bytes": 13308,
+      "stored_path": "collections/failure/payload/input/controller.py",
+      "stored_sha256": "cf94a18f917b31d240b53b484401f10fa860a56aefd5af013006721e59fd3dae"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/input/limits.json",
+      "raw_bytes": 1112,
+      "raw_sha256": "23f2208dd9fe4f0d55df3cfe7955d10005a99b22995cb2b2e8f744b270a68cb8",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755590,
+        33204,
+        1,
+        1112,
+        1794432698397085375,
+        1794432698397085375
+      ],
+      "stored_bytes": 1112,
+      "stored_path": "collections/failure/payload/input/limits.json",
+      "stored_sha256": "23f2208dd9fe4f0d55df3cfe7955d10005a99b22995cb2b2e8f744b270a68cb8"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/input/recovery.json",
+      "raw_bytes": 23263,
+      "raw_sha256": "d0057045b797fccceb0a6817f23edc8d2c588d5337b4da9d741a10117a13bb08",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755591,
+        33204,
+        1,
+        23263,
+        1794432698410085816,
+        1794432698410085816
+      ],
+      "stored_bytes": 23263,
+      "stored_path": "collections/failure/payload/input/recovery.json",
+      "stored_sha256": "d0057045b797fccceb0a6817f23edc8d2c588d5337b4da9d741a10117a13bb08"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/identity.json",
+      "raw_bytes": 2606,
+      "raw_sha256": "a49d22a4f88294e75dde154bc6a21123bea3c171fc204212a83ac589bbd96c97",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755593,
+        33204,
+        1,
+        2606,
+        1794432698424086291,
+        1794432698424086291
+      ],
+      "stored_bytes": 2606,
+      "stored_path": "collections/failure/payload/runtime/identity.json",
+      "stored_sha256": "a49d22a4f88294e75dde154bc6a21123bea3c171fc204212a83ac589bbd96c97"
+    },
+    {
+      "encoding": "gzip",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/module.disassembly.txt",
+      "raw_bytes": 143896,
+      "raw_sha256": "054df51685bda43e1ace1dc2133da8abefe960feaf5efb80a705d649d915aa73",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755594,
+        33204,
+        1,
+        143896,
+        1794432698437086732,
+        1794432698437086732
+      ],
+      "stored_bytes": 25904,
+      "stored_path": "collections/failure/payload/runtime/module.disassembly.txt.gz",
+      "stored_sha256": "ca2fec96cc8425dc48e542c0d4e9cc245445284f338b708943f3cd16b7e9edb8"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/observations-failure.bin",
+      "raw_bytes": 7400,
+      "raw_sha256": "e439cbf021e994101c2efc81fb7ab7605465ac8a5a92feb20bf2f5ff72583f19",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755595,
+        33204,
+        1,
+        7400,
+        1794432698452087241,
+        1794432698452087241
+      ],
+      "stored_bytes": 7400,
+      "stored_path": "collections/failure/payload/runtime/observations-failure.bin",
+      "stored_sha256": "e439cbf021e994101c2efc81fb7ab7605465ac8a5a92feb20bf2f5ff72583f19"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/queued-exit-before-holder-release.bin",
+      "raw_bytes": 6120,
+      "raw_sha256": "6767a0f458dbb2b6843bf6fcabfc51a7d0a2896b1b5ed3d79135806d772cec2d",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755596,
+        33204,
+        1,
+        6120,
+        1794432698465087683,
+        1794432698465087683
+      ],
+      "stored_bytes": 6120,
+      "stored_path": "collections/failure/payload/runtime/queued-exit-before-holder-release.bin",
+      "stored_sha256": "6767a0f458dbb2b6843bf6fcabfc51a7d0a2896b1b5ed3d79135806d772cec2d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/queued-exit-before-holder-release.json",
+      "raw_bytes": 8207,
+      "raw_sha256": "3942d5f09407980d09251c07a02e0b0b6308365f42c33ff5a26cd1e07bd265e3",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755597,
+        33204,
+        1,
+        8207,
+        1794432698478088124,
+        1794432698478088124
+      ],
+      "stored_bytes": 8207,
+      "stored_path": "collections/failure/payload/runtime/queued-exit-before-holder-release.json",
+      "stored_sha256": "3942d5f09407980d09251c07a02e0b0b6308365f42c33ff5a26cd1e07bd265e3"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/reader-drain-cancel.json",
+      "raw_bytes": 7977,
+      "raw_sha256": "bd4a2691a0792db230999ad69074f4a286190c3d525c2ffd47db666c6cf484a9",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755598,
+        33204,
+        1,
+        7977,
+        1794432698491088565,
+        1794432698491088565
+      ],
+      "stored_bytes": 7977,
+      "stored_path": "collections/failure/payload/runtime/reader-drain-cancel.json",
+      "stored_sha256": "bd4a2691a0792db230999ad69074f4a286190c3d525c2ffd47db666c6cf484a9"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/ready-before-fatal-cancel.json",
+      "raw_bytes": 3769,
+      "raw_sha256": "63dca7a56e875d37308a0f63d83a09749631a5954cc6a03ab2e7d5f92bc93cbb",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755599,
+        33204,
+        1,
+        3769,
+        1794432698504089006,
+        1794432698504089006
+      ],
+      "stored_bytes": 3769,
+      "stored_path": "collections/failure/payload/runtime/ready-before-fatal-cancel.json",
+      "stored_sha256": "63dca7a56e875d37308a0f63d83a09749631a5954cc6a03ab2e7d5f92bc93cbb"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/result.json",
+      "raw_bytes": 52635,
+      "raw_sha256": "ffd70cfe0dbc43302a9e49d3bea79d1c5467f144db714e504bee1982452ecac7",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755600,
+        33204,
+        1,
+        52635,
+        1794432698516089414,
+        1794432698516089414
+      ],
+      "stored_bytes": 52635,
+      "stored_path": "collections/failure/payload/runtime/result.json",
+      "stored_sha256": "ffd70cfe0dbc43302a9e49d3bea79d1c5467f144db714e504bee1982452ecac7"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-0.bin",
+      "raw_bytes": 2,
+      "raw_sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755601,
+        33204,
+        1,
+        2,
+        1794432698530089889,
+        1794432698530089889
+      ],
+      "stored_bytes": 2,
+      "stored_path": "collections/failure/payload/runtime/source-0.bin",
+      "stored_sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-0.disassembly.txt",
+      "raw_bytes": 326,
+      "raw_sha256": "b3ed82c7b7e11a032d19f36f71f195140c230e3779f4e28c46761419f3032790",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755602,
+        33204,
+        1,
+        326,
+        1794432698542090296,
+        1794432698542090296
+      ],
+      "stored_bytes": 326,
+      "stored_path": "collections/failure/payload/runtime/source-0.disassembly.txt",
+      "stored_sha256": "b3ed82c7b7e11a032d19f36f71f195140c230e3779f4e28c46761419f3032790"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-1.bin",
+      "raw_bytes": 27,
+      "raw_sha256": "4eaa627fe980dc9b5f3ac664219934feaee3f780b55b2be83ab4284cd63d357f",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755603,
+        33204,
+        1,
+        27,
+        1794432698555090737,
+        1794432698555090737
+      ],
+      "stored_bytes": 27,
+      "stored_path": "collections/failure/payload/runtime/source-1.bin",
+      "stored_sha256": "4eaa627fe980dc9b5f3ac664219934feaee3f780b55b2be83ab4284cd63d357f"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-1.disassembly.txt",
+      "raw_bytes": 974,
+      "raw_sha256": "d80cef4b3a297f0c19842f071d4af0649389cd115832f8c13acad8170bed413c",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755604,
+        33204,
+        1,
+        974,
+        1794432698568091178,
+        1794432698568091178
+      ],
+      "stored_bytes": 974,
+      "stored_path": "collections/failure/payload/runtime/source-1.disassembly.txt",
+      "stored_sha256": "d80cef4b3a297f0c19842f071d4af0649389cd115832f8c13acad8170bed413c"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-2.bin",
+      "raw_bytes": 211,
+      "raw_sha256": "5072fb728bef8f67aebc2e2c06574491a7e1f38fc18e1d3351c4adda2fe4d34a",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755605,
+        33204,
+        1,
+        211,
+        1794432698580091586,
+        1794432698580091586
+      ],
+      "stored_bytes": 211,
+      "stored_path": "collections/failure/payload/runtime/source-2.bin",
+      "stored_sha256": "5072fb728bef8f67aebc2e2c06574491a7e1f38fc18e1d3351c4adda2fe4d34a"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-2.disassembly.txt",
+      "raw_bytes": 5623,
+      "raw_sha256": "2fd29200994060e50784b3edb5a764fa4188d7e40ef3ddbb2001be6578de6df2",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755606,
+        33204,
+        1,
+        5623,
+        1794432698593092027,
+        1794432698593092027
+      ],
+      "stored_bytes": 5623,
+      "stored_path": "collections/failure/payload/runtime/source-2.disassembly.txt",
+      "stored_sha256": "2fd29200994060e50784b3edb5a764fa4188d7e40ef3ddbb2001be6578de6df2"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-3.bin",
+      "raw_bytes": 205,
+      "raw_sha256": "1bba842166dcd11d4ecce950b6aa3bf143dcab07b541f7050a02ccbf6c1f800f",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755607,
+        33204,
+        1,
+        205,
+        1794432698606092468,
+        1794432698606092468
+      ],
+      "stored_bytes": 205,
+      "stored_path": "collections/failure/payload/runtime/source-3.bin",
+      "stored_sha256": "1bba842166dcd11d4ecce950b6aa3bf143dcab07b541f7050a02ccbf6c1f800f"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-3.disassembly.txt",
+      "raw_bytes": 5253,
+      "raw_sha256": "59957b781aa8fda5250c03ebdbdcbf7b78366d7d57e9f3de1d4ba9d4b2ce2ec4",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755608,
+        33204,
+        1,
+        5253,
+        1794432698619092910,
+        1794432698619092910
+      ],
+      "stored_bytes": 5253,
+      "stored_path": "collections/failure/payload/runtime/source-3.disassembly.txt",
+      "stored_sha256": "59957b781aa8fda5250c03ebdbdcbf7b78366d7d57e9f3de1d4ba9d4b2ce2ec4"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-4.bin",
+      "raw_bytes": 4096,
+      "raw_sha256": "9b51aecc254538314acbd3506f48abd8be9766383c0a3c8715761ed96da55656",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755609,
+        33204,
+        1,
+        4096,
+        1794432698632093351,
+        1794432698632093351
+      ],
+      "stored_bytes": 4096,
+      "stored_path": "collections/failure/payload/runtime/source-4.bin",
+      "stored_sha256": "9b51aecc254538314acbd3506f48abd8be9766383c0a3c8715761ed96da55656"
+    },
+    {
+      "encoding": "gzip",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-4.disassembly.txt",
+      "raw_bytes": 294903,
+      "raw_sha256": "3b016d5a3f89f91f6ef739cf5cf08cb7153137259bc8f1fa634c6c9190624316",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755610,
+        33204,
+        1,
+        294903,
+        1794432698645093792,
+        1794432698645093792
+      ],
+      "stored_bytes": 12469,
+      "stored_path": "collections/failure/payload/runtime/source-4.disassembly.txt.gz",
+      "stored_sha256": "67c096cba158454d18cf7f887979727e028e2f06f2c9cfee66897ca9ad06ea27"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-export.bin",
+      "raw_bytes": 5864,
+      "raw_sha256": "d7751fd6e99af063d21f29d8cc327578f45ea912c963b31e43cbc2058b996a89",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755611,
+        33204,
+        1,
+        5864,
+        1794432698660094301,
+        1794432698660094301
+      ],
+      "stored_bytes": 5864,
+      "stored_path": "collections/failure/payload/runtime/source-export.bin",
+      "stored_sha256": "d7751fd6e99af063d21f29d8cc327578f45ea912c963b31e43cbc2058b996a89"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/source-metadata.json",
+      "raw_bytes": 2293,
+      "raw_sha256": "3aa79275fef3109dfc8d41deae8475a9fcd112454a9e6cee1af444291307800b",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755612,
+        33204,
+        1,
+        2293,
+        1794432698674094776,
+        1794432698674094776
+      ],
+      "stored_bytes": 2293,
+      "stored_path": "collections/failure/payload/runtime/source-metadata.json",
+      "stored_sha256": "3aa79275fef3109dfc8d41deae8475a9fcd112454a9e6cee1af444291307800b"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000001/reply.bin",
+      "raw_bytes": 48,
+      "raw_sha256": "64f58d44a1f7be92f26abe823e9839a126656a63df1eb249ed6c2c9ccc75daf8",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755615,
+        33204,
+        1,
+        48,
+        1794432698687095217,
+        1794432698687095217
+      ],
+      "stored_bytes": 48,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000001/reply.bin",
+      "stored_sha256": "64f58d44a1f7be92f26abe823e9839a126656a63df1eb249ed6c2c9ccc75daf8"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000001/request.bin",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755616,
+        33204,
+        1,
+        0,
+        1794432698701095693,
+        1794432698701095693
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000001/request.bin",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000001/request.json",
+      "raw_bytes": 90,
+      "raw_sha256": "b61355c4289fe374e30908474ae6a364b9bca9c0ac485543890b834311491da2",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755617,
+        33204,
+        1,
+        90,
+        1794432698715096168,
+        1794432698715096168
+      ],
+      "stored_bytes": 90,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000001/request.json",
+      "stored_sha256": "b61355c4289fe374e30908474ae6a364b9bca9c0ac485543890b834311491da2"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000001/result.json",
+      "raw_bytes": 182,
+      "raw_sha256": "22032e46e4936028a25bfe8819d3065069b97a8fb07fad336d35d2dc3eb019fe",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755618,
+        33204,
+        1,
+        182,
+        1794432698728096609,
+        1794432698728096609
+      ],
+      "stored_bytes": 182,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000001/result.json",
+      "stored_sha256": "22032e46e4936028a25bfe8819d3065069b97a8fb07fad336d35d2dc3eb019fe"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000001/returned-envelope.bin",
+      "raw_bytes": 72,
+      "raw_sha256": "508af21983467aa2309e14463818f14889ccbd98f535a0a6f3b57bff3b5ef179",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755619,
+        33204,
+        1,
+        72,
+        1794432698742097084,
+        1794432698742097084
+      ],
+      "stored_bytes": 72,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000001/returned-envelope.bin",
+      "stored_sha256": "508af21983467aa2309e14463818f14889ccbd98f535a0a6f3b57bff3b5ef179"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000002/reply.bin",
+      "raw_bytes": 5864,
+      "raw_sha256": "d7751fd6e99af063d21f29d8cc327578f45ea912c963b31e43cbc2058b996a89",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755621,
+        33204,
+        1,
+        5864,
+        1794432698755097525,
+        1794432698755097525
+      ],
+      "stored_bytes": 5864,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000002/reply.bin",
+      "stored_sha256": "d7751fd6e99af063d21f29d8cc327578f45ea912c963b31e43cbc2058b996a89"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000002/request.bin",
+      "raw_bytes": 32,
+      "raw_sha256": "8820465cd3023f7864c0b641c7f65d2fd6d7dada86df40a627ebcd2f43bd6011",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755622,
+        33204,
+        1,
+        32,
+        1794432698769098001,
+        1794432698769098001
+      ],
+      "stored_bytes": 32,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000002/request.bin",
+      "stored_sha256": "8820465cd3023f7864c0b641c7f65d2fd6d7dada86df40a627ebcd2f43bd6011"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000002/request.json",
+      "raw_bytes": 91,
+      "raw_sha256": "32121ab6d6f8fc8a7a1c212beeb8f94367f72d82fd573d9bca014250da958222",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755623,
+        33204,
+        1,
+        91,
+        1794432698782098442,
+        1794432698782098442
+      ],
+      "stored_bytes": 91,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000002/request.json",
+      "stored_sha256": "32121ab6d6f8fc8a7a1c212beeb8f94367f72d82fd573d9bca014250da958222"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000002/result.json",
+      "raw_bytes": 185,
+      "raw_sha256": "ea2d07b32ef3b85223522b9d7a9d76fee4c5af64106636ef85e7ab961b1a810c",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755624,
+        33204,
+        1,
+        185,
+        1794432698796098917,
+        1794432698796098917
+      ],
+      "stored_bytes": 185,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000002/result.json",
+      "stored_sha256": "ea2d07b32ef3b85223522b9d7a9d76fee4c5af64106636ef85e7ab961b1a810c"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-01/payload/runtime/wire/attempt-00000002/returned-envelope.bin",
+      "raw_bytes": 72,
+      "raw_sha256": "fc69b52d3a0609ba3657eeb525e5d27a5567c3fb90841402ce8c4ebd35d962d6",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755625,
+        33204,
+        1,
+        72,
+        1794432698809099358,
+        1794432698809099358
+      ],
+      "stored_bytes": 72,
+      "stored_path": "collections/failure/payload/runtime/wire/attempt-00000002/returned-envelope.bin",
+      "stored_sha256": "fc69b52d3a0609ba3657eeb525e5d27a5567c3fb90841402ce8c4ebd35d962d6"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/collection-helper.py.txt",
+      "raw_bytes": 18940,
+      "raw_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755645,
+        33204,
+        1,
+        18940,
+        1794433344063697083,
+        1794433344063697083
+      ],
+      "stored_bytes": 18940,
+      "stored_path": "collections/recovery/.collection/collection-helper.py.txt",
+      "stored_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/copy-command.json",
+      "raw_bytes": 390,
+      "raw_sha256": "bed0ec06b322226ba26f873ebc20ef6d67800410e9c785b29ed1684b0c063b4a",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755655,
+        33204,
+        1,
+        390,
+        1794433344609712383,
+        1794433344609712383
+      ],
+      "stored_bytes": 390,
+      "stored_path": "collections/recovery/.collection/copy-command.json",
+      "stored_sha256": "bed0ec06b322226ba26f873ebc20ef6d67800410e9c785b29ed1684b0c063b4a"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/copy-input.py.txt",
+      "raw_bytes": 11178,
+      "raw_sha256": "b566f2c59f15d6834625984526fe56da26faeeb36619612c33fdcce6250a2dd8",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755654,
+        33204,
+        1,
+        11178,
+        1794433344601712159,
+        1794433344601712159
+      ],
+      "stored_bytes": 11178,
+      "stored_path": "collections/recovery/.collection/copy-input.py.txt",
+      "stored_sha256": "b566f2c59f15d6834625984526fe56da26faeeb36619612c33fdcce6250a2dd8"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/copy-result.json",
+      "raw_bytes": 755,
+      "raw_sha256": "f055e8110f852cd72214696e150916b615227414eb03b512060c5acf5fcb2f5d",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755661,
+        33204,
+        1,
+        755,
+        1794433344885720117,
+        1794433344885720117
+      ],
+      "stored_bytes": 755,
+      "stored_path": "collections/recovery/.collection/copy-result.json",
+      "stored_sha256": "f055e8110f852cd72214696e150916b615227414eb03b512060c5acf5fcb2f5d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/copy-stderr.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755660,
+        33204,
+        1,
+        0,
+        1794433344615712551,
+        1794433344615712551
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/recovery/.collection/copy-stderr.log",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/copy.tar",
+      "raw_bytes": 51200,
+      "raw_sha256": "977fd6d974a88255ff9c3ca27eae4a089a559421da8571a4ce2c46a2a4f330c8",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755656,
+        33204,
+        1,
+        51200,
+        1794433344863719500,
+        1794433344863719500
+      ],
+      "stored_bytes": 51200,
+      "stored_path": "collections/recovery/.collection/copy.tar",
+      "stored_sha256": "977fd6d974a88255ff9c3ca27eae4a089a559421da8571a4ce2c46a2a4f330c8"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-after-command.json",
+      "raw_bytes": 399,
+      "raw_sha256": "05d977e3534bd3fafea7eb8a62d1242027c9a07799b6a442fc74bf2d0da40a06",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755663,
+        33204,
+        1,
+        399,
+        1794433344901720565,
+        1794433344901720565
+      ],
+      "stored_bytes": 399,
+      "stored_path": "collections/recovery/.collection/inventory-after-command.json",
+      "stored_sha256": "05d977e3534bd3fafea7eb8a62d1242027c9a07799b6a442fc74bf2d0da40a06"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-after-input.py.txt",
+      "raw_bytes": 4310,
+      "raw_sha256": "32b66cb9d13843b981e8344f1374bf9e1f722dce9bbdc193e82598b0766a6435",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755662,
+        33204,
+        1,
+        4310,
+        1794433344894720369,
+        1794433344894720369
+      ],
+      "stored_bytes": 4310,
+      "stored_path": "collections/recovery/.collection/inventory-after-input.py.txt",
+      "stored_sha256": "32b66cb9d13843b981e8344f1374bf9e1f722dce9bbdc193e82598b0766a6435"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-after-result.json",
+      "raw_bytes": 763,
+      "raw_sha256": "1a9e5bd423f5f448ce0675b8188b2ef12fd34e90a9f6049b1ef2241f6e76fa36",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755999,
+        33204,
+        1,
+        763,
+        1794433345175728242,
+        1794433345175728242
+      ],
+      "stored_bytes": 763,
+      "stored_path": "collections/recovery/.collection/inventory-after-result.json",
+      "stored_sha256": "1a9e5bd423f5f448ce0675b8188b2ef12fd34e90a9f6049b1ef2241f6e76fa36"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-after-stderr.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755998,
+        33204,
+        1,
+        0,
+        1794433344907720733,
+        1794433344907720733
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/recovery/.collection/inventory-after-stderr.log",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-after.json",
+      "raw_bytes": 6695,
+      "raw_sha256": "c905298e0caba1c9bff2af0be8932e01ff8af9070bb74e6f7a3e339969741b5f",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755997,
+        33204,
+        1,
+        6695,
+        1794433345152727598,
+        1794433345152727598
+      ],
+      "stored_bytes": 6695,
+      "stored_path": "collections/recovery/.collection/inventory-after.json",
+      "stored_sha256": "c905298e0caba1c9bff2af0be8932e01ff8af9070bb74e6f7a3e339969741b5f"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-before-command.json",
+      "raw_bytes": 400,
+      "raw_sha256": "bba2331ee8b13151da28d0273809bb7a2137a2f244458bf578a981a152fc3a01",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755648,
+        33204,
+        1,
+        400,
+        1794433344084697672,
+        1794433344084697672
+      ],
+      "stored_bytes": 400,
+      "stored_path": "collections/recovery/.collection/inventory-before-command.json",
+      "stored_sha256": "bba2331ee8b13151da28d0273809bb7a2137a2f244458bf578a981a152fc3a01"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-before-input.py.txt",
+      "raw_bytes": 4310,
+      "raw_sha256": "32b66cb9d13843b981e8344f1374bf9e1f722dce9bbdc193e82598b0766a6435",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755647,
+        33204,
+        1,
+        4310,
+        1794433344077697476,
+        1794433344077697476
+      ],
+      "stored_bytes": 4310,
+      "stored_path": "collections/recovery/.collection/inventory-before-input.py.txt",
+      "stored_sha256": "32b66cb9d13843b981e8344f1374bf9e1f722dce9bbdc193e82598b0766a6435"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-before-result.json",
+      "raw_bytes": 764,
+      "raw_sha256": "1a38b14dbb640187931ea09889427f61f57823953f8f1efbbeeb10280c9150ff",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755653,
+        33204,
+        1,
+        764,
+        1794433344593711935,
+        1794433344593711935
+      ],
+      "stored_bytes": 764,
+      "stored_path": "collections/recovery/.collection/inventory-before-result.json",
+      "stored_sha256": "1a38b14dbb640187931ea09889427f61f57823953f8f1efbbeeb10280c9150ff"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-before-stderr.log",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755650,
+        33204,
+        1,
+        0,
+        1794433344091697868,
+        1794433344091697868
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/recovery/.collection/inventory-before-stderr.log",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/inventory-before.json",
+      "raw_bytes": 6696,
+      "raw_sha256": "ed80933fedeb62ca728702a9e11d2b1a1fd6439624ac4b652949193321bfe65d",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755649,
+        33204,
+        1,
+        6696,
+        1794433344570711290,
+        1794433344570711290
+      ],
+      "stored_bytes": 6696,
+      "stored_path": "collections/recovery/.collection/inventory-before.json",
+      "stored_sha256": "ed80933fedeb62ca728702a9e11d2b1a1fd6439624ac4b652949193321bfe65d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/.collection/selection.json",
+      "raw_bytes": 1294,
+      "raw_sha256": "174d357f97cb27e0fe11a47349fc13dcf1ff87054ac4b43928ef293e7664c61f",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26755646,
+        33204,
+        1,
+        1294,
+        1794433344070697280,
+        1794433344070697280
+      ],
+      "stored_bytes": 1294,
+      "stored_path": "collections/recovery/.collection/selection.json",
+      "stored_sha256": "174d357f97cb27e0fe11a47349fc13dcf1ff87054ac4b43928ef293e7664c61f"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/collection.json",
+      "raw_bytes": 283,
+      "raw_sha256": "996038f759947df456c30bdc53a769de661a0d497c0dd1b3c48d7a3459929bed",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756021,
+        33204,
+        1,
+        283,
+        1794433345369733677,
+        1794433345369733677
+      ],
+      "stored_bytes": 283,
+      "stored_path": "collections/recovery/collection.json",
+      "stored_sha256": "996038f759947df456c30bdc53a769de661a0d497c0dd1b3c48d7a3459929bed"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/copy-index.json",
+      "raw_bytes": 6330,
+      "raw_sha256": "fc071829bd21fc74c1cd928d471fc223134d28c3c0be871e34083bd780ac61b7",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756020,
+        33204,
+        1,
+        6330,
+        1794433345362733481,
+        1794433345362733481
+      ],
+      "stored_bytes": 6330,
+      "stored_path": "collections/recovery/copy-index.json",
+      "stored_sha256": "fc071829bd21fc74c1cd928d471fc223134d28c3c0be871e34083bd780ac61b7"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/driver/command.json",
+      "raw_bytes": 280,
+      "raw_sha256": "521366133c34af748a2c67a8748fd311d8ef6895c4b7eecd1c245fa585a1a2e3",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756005,
+        33204,
+        1,
+        280,
+        1794433345184728494,
+        1794433345184728494
+      ],
+      "stored_bytes": 280,
+      "stored_path": "collections/recovery/payload/driver/command.json",
+      "stored_sha256": "521366133c34af748a2c67a8748fd311d8ef6895c4b7eecd1c245fa585a1a2e3"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/driver/dispatch.json",
+      "raw_bytes": 18,
+      "raw_sha256": "cf575ce880be48af4d9ab68dd8c1d03962a8c6cc53f344a554cabff9ba370272",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756006,
+        33204,
+        1,
+        18,
+        1794433345197728858,
+        1794433345197728858
+      ],
+      "stored_bytes": 18,
+      "stored_path": "collections/recovery/payload/driver/dispatch.json",
+      "stored_sha256": "cf575ce880be48af4d9ab68dd8c1d03962a8c6cc53f344a554cabff9ba370272"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/driver/return.json",
+      "raw_bytes": 63,
+      "raw_sha256": "be3589f27bcb51dd02f16e1e4b35460bc72ea1661fae317fd5f0ce3fe7c3cc0b",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756007,
+        33204,
+        1,
+        63,
+        1794433345211729251,
+        1794433345211729251
+      ],
+      "stored_bytes": 63,
+      "stored_path": "collections/recovery/payload/driver/return.json",
+      "stored_sha256": "be3589f27bcb51dd02f16e1e4b35460bc72ea1661fae317fd5f0ce3fe7c3cc0b"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/driver/stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756008,
+        33204,
+        1,
+        0,
+        1794433345224729615,
+        1794433345224729615
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/recovery/payload/driver/stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/driver/stdout",
+      "raw_bytes": 156,
+      "raw_sha256": "ba708a635b018a782bc7fe3d6e65d36dbf84cd8993a61d99ca43985d28d9bb74",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756009,
+        33204,
+        1,
+        156,
+        1794433345238730007,
+        1794433345238730007
+      ],
+      "stored_bytes": 156,
+      "stored_path": "collections/recovery/payload/driver/stdout",
+      "stored_sha256": "ba708a635b018a782bc7fe3d6e65d36dbf84cd8993a61d99ca43985d28d9bb74"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/input/recover.py",
+      "raw_bytes": 10731,
+      "raw_sha256": "799183786e9980a67144718e9a48c3efd413975481d9d265c3e6a517b9ec0841",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756011,
+        33204,
+        1,
+        10731,
+        1794433345252730399,
+        1794433345252730399
+      ],
+      "stored_bytes": 10731,
+      "stored_path": "collections/recovery/payload/input/recover.py",
+      "stored_sha256": "799183786e9980a67144718e9a48c3efd413975481d9d265c3e6a517b9ec0841"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/runtime/after-retire.json",
+      "raw_bytes": 1751,
+      "raw_sha256": "51b29d309c358a6b57a900048e15589ffffc3e8bc2c0ef272b73618ca392fced",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756013,
+        33204,
+        1,
+        1751,
+        1794433345266730792,
+        1794433345266730792
+      ],
+      "stored_bytes": 1751,
+      "stored_path": "collections/recovery/payload/runtime/after-retire.json",
+      "stored_sha256": "51b29d309c358a6b57a900048e15589ffffc3e8bc2c0ef272b73618ca392fced"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/runtime/before.json",
+      "raw_bytes": 1751,
+      "raw_sha256": "3494c7ae674bbb44aca0d26ccb87ecfc43157cb08b3ac057cf131a33032c27ce",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756014,
+        33204,
+        1,
+        1751,
+        1794433345280731184,
+        1794433345280731184
+      ],
+      "stored_bytes": 1751,
+      "stored_path": "collections/recovery/payload/runtime/before.json",
+      "stored_sha256": "3494c7ae674bbb44aca0d26ccb87ecfc43157cb08b3ac057cf131a33032c27ce"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/runtime/query-envelope.bin",
+      "raw_bytes": 72,
+      "raw_sha256": "b9b37e19f8be201982aa8ad4517fe7735c04b5a333ed37903691f1594d231954",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756015,
+        33204,
+        1,
+        72,
+        1794433345294731576,
+        1794433345294731576
+      ],
+      "stored_bytes": 72,
+      "stored_path": "collections/recovery/payload/runtime/query-envelope.bin",
+      "stored_sha256": "b9b37e19f8be201982aa8ad4517fe7735c04b5a333ed37903691f1594d231954"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/runtime/query-reply.bin",
+      "raw_bytes": 5944,
+      "raw_sha256": "ca5a306fcb35e1d81f7c833bf181ce30f3f3999624748e6de4d10ef9b2612b4a",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756016,
+        33204,
+        1,
+        5944,
+        1794433345307731940,
+        1794433345307731940
+      ],
+      "stored_bytes": 5944,
+      "stored_path": "collections/recovery/payload/runtime/query-reply.bin",
+      "stored_sha256": "ca5a306fcb35e1d81f7c833bf181ce30f3f3999624748e6de4d10ef9b2612b4a"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/runtime/result.json",
+      "raw_bytes": 15264,
+      "raw_sha256": "793484d3b32ef8b62759659f7704f0d3323e5090cc0815395d171636d15b0092",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756017,
+        33204,
+        1,
+        15264,
+        1794433345321732333,
+        1794433345321732333
+      ],
+      "stored_bytes": 15264,
+      "stored_path": "collections/recovery/payload/runtime/result.json",
+      "stored_sha256": "793484d3b32ef8b62759659f7704f0d3323e5090cc0815395d171636d15b0092"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/runtime/rmmod.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756018,
+        33204,
+        1,
+        0,
+        1794433345335732725,
+        1794433345335732725
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/recovery/payload/runtime/rmmod.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-collection-20261111-01/payload/runtime/rmmod.stdout",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "guest_collection",
+      "source_identity": [
+        66306,
+        26756019,
+        33204,
+        1,
+        0,
+        1794433345349733117,
+        1794433345349733117
+      ],
+      "stored_bytes": 0,
+      "stored_path": "collections/recovery/payload/runtime/rmmod.stdout",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/actual-argv.json",
+      "raw_bytes": 328,
+      "raw_sha256": "397e34c89871bfd5c1e3d2facdb9ba0e25b87cd5d355b3d303724384406da7e6",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755047,
+        33204,
+        1,
+        328,
+        1794432463764601172,
+        1794432463764601172
+      ],
+      "stored_bytes": 328,
+      "stored_path": "sourcehost/failure/actual-argv.json",
+      "stored_sha256": "397e34c89871bfd5c1e3d2facdb9ba0e25b87cd5d355b3d303724384406da7e6"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/argv-before-recovery.json",
+      "raw_bytes": 283,
+      "raw_sha256": "36d2042a9e2228bc159dd075a9f13f86b4194f3b6ae230da677d9037e48497b7",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755065,
+        33204,
+        1,
+        283,
+        1794432201954411932,
+        1794432201954411932
+      ],
+      "stored_bytes": 283,
+      "stored_path": "sourcehost/failure/argv-before-recovery.json",
+      "stored_sha256": "36d2042a9e2228bc159dd075a9f13f86b4194f3b6ae230da677d9037e48497b7"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/collect.py",
+      "raw_bytes": 470,
+      "raw_sha256": "89f915011f86e35b9746351cc09c8ae746bf35d805470f9a559db5dc14dd7690",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755578,
+        33204,
+        1,
+        470,
+        1794432691418848130,
+        1794432691418848130
+      ],
+      "stored_bytes": 470,
+      "stored_path": "sourcehost/failure/collect.py",
+      "stored_sha256": "89f915011f86e35b9746351cc09c8ae746bf35d805470f9a559db5dc14dd7690"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/collection-argv.json",
+      "raw_bytes": 846,
+      "raw_sha256": "c19636996247aca6808cfb5c39f28350a25366406b8662824e52a8359c4c6342",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755577,
+        33204,
+        1,
+        846,
+        1794432691418848130,
+        1794432691418848130
+      ],
+      "stored_bytes": 846,
+      "stored_path": "sourcehost/failure/collection-argv.json",
+      "stored_sha256": "c19636996247aca6808cfb5c39f28350a25366406b8662824e52a8359c4c6342"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/collection-return.json",
+      "raw_bytes": 18,
+      "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755628,
+        33204,
+        1,
+        18,
+        1794432698891102141,
+        1794432698891102141
+      ],
+      "stored_bytes": 18,
+      "stored_path": "sourcehost/failure/collection-return.json",
+      "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/collection.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755552,
+        33204,
+        1,
+        0,
+        1794432696920035228,
+        1794432696920035228
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/failure/collection.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/collection.stdout",
+      "raw_bytes": 144,
+      "raw_sha256": "b81e9c1cfc3882ed8ac7c4cc47906b0b8c93a4fed848a7450e286962fa0613bb",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755551,
+        33204,
+        1,
+        144,
+        1794432698838100342,
+        1794432698838100342
+      ],
+      "stored_bytes": 144,
+      "stored_path": "sourcehost/failure/collection.stdout",
+      "stored_sha256": "b81e9c1cfc3882ed8ac7c4cc47906b0b8c93a4fed848a7450e286962fa0613bb"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/controller.py",
+      "raw_bytes": 13308,
+      "raw_sha256": "cf94a18f917b31d240b53b484401f10fa860a56aefd5af013006721e59fd3dae",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755037,
+        33204,
+        1,
+        13308,
+        1794432149319852153,
+        1794432149319852153
+      ],
+      "stored_bytes": 13308,
+      "stored_path": "sourcehost/failure/controller.py",
+      "stored_sha256": "cf94a18f917b31d240b53b484401f10fa860a56aefd5af013006721e59fd3dae"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read-command.json",
+      "raw_bytes": 295,
+      "raw_sha256": "16c6d27304dbc5ad1c397661f1b04c81812c387eb6d67567b9210b56cc1fd1c7",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755056,
+        33204,
+        1,
+        295,
+        1794432554528018574,
+        1794432554528018574
+      ],
+      "stored_bytes": 295,
+      "stored_path": "sourcehost/failure/first-read-command.json",
+      "stored_sha256": "16c6d27304dbc5ad1c397661f1b04c81812c387eb6d67567b9210b56cc1fd1c7"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read-index.json",
+      "raw_bytes": 1662,
+      "raw_sha256": "8432727defc4b0c195954c1b64e3da81f46122ebe213b658af607d71a4b12314",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755550,
+        33204,
+        1,
+        1662,
+        1794432554797028425,
+        1794432554797028425
+      ],
+      "stored_bytes": 1662,
+      "stored_path": "sourcehost/failure/first-read-index.json",
+      "stored_sha256": "8432727defc4b0c195954c1b64e3da81f46122ebe213b658af607d71a4b12314"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read-return.json",
+      "raw_bytes": 18,
+      "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755059,
+        33204,
+        1,
+        18,
+        1794432554794028315,
+        1794432554794028315
+      ],
+      "stored_bytes": 18,
+      "stored_path": "sourcehost/failure/first-read-return.json",
+      "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read-stdin.py",
+      "raw_bytes": 933,
+      "raw_sha256": "01c3bfb0e300f2f088100f4d3b30822df30fdc87c2752aa87d707f46df7836b3",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755559,
+        33204,
+        1,
+        933,
+        1794432549063818147,
+        1794432549063818147
+      ],
+      "stored_bytes": 933,
+      "stored_path": "sourcehost/failure/first-read-stdin.py",
+      "stored_sha256": "01c3bfb0e300f2f088100f4d3b30822df30fdc87c2752aa87d707f46df7836b3"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read.py",
+      "raw_bytes": 1348,
+      "raw_sha256": "54ea13c88e8bcb92a5970a9985d03d3830053d1592db85c9451d6a7ffad64ec1",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755560,
+        33204,
+        1,
+        1348,
+        1794432549063818147,
+        1794432549063818147
+      ],
+      "stored_bytes": 1348,
+      "stored_path": "sourcehost/failure/first-read.py",
+      "stored_sha256": "54ea13c88e8bcb92a5970a9985d03d3830053d1592db85c9451d6a7ffad64ec1"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755058,
+        33204,
+        1,
+        0,
+        1794432554528018574,
+        1794432554528018574
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/failure/first-read.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "gzip",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read.stdout",
+      "raw_bytes": 224306,
+      "raw_sha256": "257fff4dadf928461ff04dbf929cf86c9fa65ec7850583e641c3538e19c34886",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755057,
+        33204,
+        1,
+        224306,
+        1794432554769027400,
+        1794432554769027400
+      ],
+      "stored_bytes": 56768,
+      "stored_path": "sourcehost/failure/first-read.stdout.gz",
+      "stored_sha256": "82ce4b1ba3991f176442981e0a1e606391f7738f029eae04ccda07436a1e9dc9"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read/managed-killable-driver-01/stderr",
+      "raw_bytes": 521,
+      "raw_sha256": "f7d3e6bb3ef6a43ab8454cd26a8bf29dc70871f32acc1f44f99065189838c0fc",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755062,
+        33204,
+        1,
+        521,
+        1794432554795028351,
+        1794432554795028351
+      ],
+      "stored_bytes": 521,
+      "stored_path": "sourcehost/failure/first-read/managed-killable-driver-01/stderr",
+      "stored_sha256": "f7d3e6bb3ef6a43ab8454cd26a8bf29dc70871f32acc1f44f99065189838c0fc"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read/managed-killable-driver-01/stdout",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755063,
+        33204,
+        1,
+        0,
+        1794432554795028351,
+        1794432554795028351
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/failure/first-read/managed-killable-driver-01/stdout",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read/managed-killable-live-01/result.json",
+      "raw_bytes": 52635,
+      "raw_sha256": "ffd70cfe0dbc43302a9e49d3bea79d1c5467f144db714e504bee1982452ecac7",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755548,
+        33204,
+        1,
+        52635,
+        1794432554797028425,
+        1794432554797028425
+      ],
+      "stored_bytes": 52635,
+      "stored_path": "sourcehost/failure/first-read/managed-killable-live-01/result.json",
+      "stored_sha256": "ffd70cfe0dbc43302a9e49d3bea79d1c5467f144db714e504bee1982452ecac7"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read/managed-killable-receipts-01/managed-killable.log",
+      "raw_bytes": 132,
+      "raw_sha256": "39dcc2698efa355ea3d53b24b3c083d51d772994f339dc467b1d4a160ef6d4ea",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755546,
+        33204,
+        1,
+        132,
+        1794432554797028425,
+        1794432554797028425
+      ],
+      "stored_bytes": 132,
+      "stored_path": "sourcehost/failure/first-read/managed-killable-receipts-01/managed-killable.log",
+      "stored_sha256": "39dcc2698efa355ea3d53b24b3c083d51d772994f339dc467b1d4a160ef6d4ea"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/first-read/managed-killable-receipts-01/result.json",
+      "raw_bytes": 113775,
+      "raw_sha256": "17634f4dbec9d680e885f11cedc6a2ea877b8581cd6d717fe181b2d7994a9f32",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755545,
+        33204,
+        1,
+        113775,
+        1794432554796028388,
+        1794432554796028388
+      ],
+      "stored_bytes": 113775,
+      "stored_path": "sourcehost/failure/first-read/managed-killable-receipts-01/result.json",
+      "stored_sha256": "17634f4dbec9d680e885f11cedc6a2ea877b8581cd6d717fe181b2d7994a9f32"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/launch-command.json",
+      "raw_bytes": 293,
+      "raw_sha256": "564dea89de6f413c9bd53e3aba998ec762c32eaf4d483eb7e0eef88424b501e2",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755050,
+        33204,
+        1,
+        293,
+        1794432500091992216,
+        1794432500091992216
+      ],
+      "stored_bytes": 293,
+      "stored_path": "sourcehost/failure/launch-command.json",
+      "stored_sha256": "564dea89de6f413c9bd53e3aba998ec762c32eaf4d483eb7e0eef88424b501e2"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/launch-result.json",
+      "raw_bytes": 56,
+      "raw_sha256": "716de8417daf20e92efb20b806a8c0bddc42047ee2089008e8f0a86a79cb161f",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755053,
+        33204,
+        1,
+        56,
+        1794432506730242948,
+        1794432506730242948
+      ],
+      "stored_bytes": 56,
+      "stored_path": "sourcehost/failure/launch-result.json",
+      "stored_sha256": "716de8417daf20e92efb20b806a8c0bddc42047ee2089008e8f0a86a79cb161f"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/launch-stdin.py",
+      "raw_bytes": 32871,
+      "raw_sha256": "0b9303d28aeb2f800a22408ea26e31f277d8d3094b54d03ecaed05671a332916",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755566,
+        33204,
+        1,
+        32871,
+        1794432492193692522,
+        1794432492193692522
+      ],
+      "stored_bytes": 32871,
+      "stored_path": "sourcehost/failure/launch-stdin.py",
+      "stored_sha256": "0b9303d28aeb2f800a22408ea26e31f277d8d3094b54d03ecaed05671a332916"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/launch.py",
+      "raw_bytes": 754,
+      "raw_sha256": "fedf8dbfd6829c22685c1916016b18963097c043110f4988d6aa7d919e19c3cd",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755567,
+        33204,
+        1,
+        754,
+        1794432492193692522,
+        1794432492193692522
+      ],
+      "stored_bytes": 754,
+      "stored_path": "sourcehost/failure/launch.py",
+      "stored_sha256": "fedf8dbfd6829c22685c1916016b18963097c043110f4988d6aa7d919e19c3cd"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/launch.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755052,
+        33204,
+        1,
+        0,
+        1794432500091992216,
+        1794432500091992216
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/failure/launch.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/launch.stdout",
+      "raw_bytes": 76,
+      "raw_sha256": "5bef9bc7a8b5ca2bc8990a780d1bd39e0daad5093cffa8b9d7f95f33f113c901",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755051,
+        33204,
+        1,
+        76,
+        1794432506695241629,
+        1794432506695241629
+      ],
+      "stored_bytes": 76,
+      "stored_path": "sourcehost/failure/launch.stdout",
+      "stored_sha256": "5bef9bc7a8b5ca2bc8990a780d1bd39e0daad5093cffa8b9d7f95f33f113c901"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/limits-corrected.json",
+      "raw_bytes": 1112,
+      "raw_sha256": "23f2208dd9fe4f0d55df3cfe7955d10005a99b22995cb2b2e8f744b270a68cb8",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755035,
+        33204,
+        1,
+        1112,
+        1794431744328537471,
+        1794431744328537471
+      ],
+      "stored_bytes": 1112,
+      "stored_path": "sourcehost/failure/limits-corrected.json",
+      "stored_sha256": "23f2208dd9fe4f0d55df3cfe7955d10005a99b22995cb2b2e8f744b270a68cb8"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/limits-proposed.json",
+      "raw_bytes": 1108,
+      "raw_sha256": "70709d36119d29e966b0efb2fd26cba168b1fa62e7358a6d55db0da4bad65dfa",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755025,
+        33204,
+        1,
+        1108,
+        1794430925179924255,
+        1794430925179924255
+      ],
+      "stored_bytes": 1108,
+      "stored_path": "sourcehost/failure/limits-proposed.json",
+      "stored_sha256": "70709d36119d29e966b0efb2fd26cba168b1fa62e7358a6d55db0da4bad65dfa"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/recovery-command.json",
+      "raw_bytes": 301,
+      "raw_sha256": "899c7170e8f83a9d1e5c31d4dbaa5c3670b8111c73beff2d7e66dd8869b09eec",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755023,
+        33204,
+        1,
+        301,
+        1794432463497590825,
+        1794432463497590825
+      ],
+      "stored_bytes": 301,
+      "stored_path": "sourcehost/failure/recovery-command.json",
+      "stored_sha256": "899c7170e8f83a9d1e5c31d4dbaa5c3670b8111c73beff2d7e66dd8869b09eec"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/recovery-result.json",
+      "raw_bytes": 64,
+      "raw_sha256": "944c5a274f2892616d8c8771fd6ea4b631f661ec98c5c06f3b4cd866b2081a16",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755046,
+        33204,
+        1,
+        64,
+        1794432463763601133,
+        1794432463763601133
+      ],
+      "stored_bytes": 64,
+      "stored_path": "sourcehost/failure/recovery-result.json",
+      "stored_sha256": "944c5a274f2892616d8c8771fd6ea4b631f661ec98c5c06f3b4cd866b2081a16"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/recovery.json",
+      "raw_bytes": 23263,
+      "raw_sha256": "d0057045b797fccceb0a6817f23edc8d2c588d5337b4da9d741a10117a13bb08",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755044,
+        33204,
+        1,
+        23263,
+        1794432463727599738,
+        1794432463727599738
+      ],
+      "stored_bytes": 23263,
+      "stored_path": "sourcehost/failure/recovery.json",
+      "stored_sha256": "d0057045b797fccceb0a6817f23edc8d2c588d5337b4da9d741a10117a13bb08"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/recovery.py",
+      "raw_bytes": 1989,
+      "raw_sha256": "49b5199375d2846fbf95280eed92524e4c295c745e4077cafb67098e6da2c554",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755549,
+        33204,
+        1,
+        1989,
+        1794432458312389546,
+        1794432458312389546
+      ],
+      "stored_bytes": 1989,
+      "stored_path": "sourcehost/failure/recovery.py",
+      "stored_sha256": "49b5199375d2846fbf95280eed92524e4c295c745e4077cafb67098e6da2c554"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/recovery.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755045,
+        33204,
+        1,
+        0,
+        1794432463497590825,
+        1794432463497590825
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/failure/recovery.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/runner-argv-proposed.json",
+      "raw_bytes": 1211,
+      "raw_sha256": "41870b314ce8f661d7205066dbe9cf893c7630471a6088426bbd7578de4b4e3b",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755026,
+        33204,
+        1,
+        1211,
+        1794430925179924255,
+        1794430925179924255
+      ],
+      "stored_bytes": 1211,
+      "stored_path": "sourcehost/failure/runner-argv-proposed.json",
+      "stored_sha256": "41870b314ce8f661d7205066dbe9cf893c7630471a6088426bbd7578de4b4e3b"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/runner-argv.json",
+      "raw_bytes": 1211,
+      "raw_sha256": "36634ca621664a46cbd9b9c89d340e98ce8866da49a067933d5a5d9017398b7e",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755036,
+        33204,
+        1,
+        1211,
+        1794431744328537471,
+        1794431744328537471
+      ],
+      "stored_bytes": 1211,
+      "stored_path": "sourcehost/failure/runner-argv.json",
+      "stored_sha256": "36634ca621664a46cbd9b9c89d340e98ce8866da49a067933d5a5d9017398b7e"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/stage-command.json",
+      "raw_bytes": 290,
+      "raw_sha256": "a12c5de37d4ff744ed63ea2fbe7a14bce2c2b892cb27ed76a757df1145add9a4",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755019,
+        33204,
+        1,
+        290,
+        1794432415575703509,
+        1794432415575703509
+      ],
+      "stored_bytes": 290,
+      "stored_path": "sourcehost/failure/stage-command.json",
+      "stored_sha256": "a12c5de37d4ff744ed63ea2fbe7a14bce2c2b892cb27ed76a757df1145add9a4"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/stage-return.json",
+      "raw_bytes": 18,
+      "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755022,
+        33204,
+        1,
+        18,
+        1794432416493740251,
+        1794432416493740251
+      ],
+      "stored_bytes": 18,
+      "stored_path": "sourcehost/failure/stage-return.json",
+      "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/stage-stdin.py",
+      "raw_bytes": 20600,
+      "raw_sha256": "f0caceb9c77fa231e3eac2f065a88595500b7a4c16ba66708c00d2e3b7af214d",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755066,
+        33204,
+        1,
+        20600,
+        1794432201955411980,
+        1794432201955411980
+      ],
+      "stored_bytes": 20600,
+      "stored_path": "sourcehost/failure/stage-stdin.py",
+      "stored_sha256": "f0caceb9c77fa231e3eac2f065a88595500b7a4c16ba66708c00d2e3b7af214d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/stage.py",
+      "raw_bytes": 683,
+      "raw_sha256": "a0cc183c7ece1f9615f24c20a4bac5c7947fbd05b65df94d7504f75d95edc1d9",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755067,
+        33204,
+        1,
+        683,
+        1794432201955411980,
+        1794432201955411980
+      ],
+      "stored_bytes": 683,
+      "stored_path": "sourcehost/failure/stage.py",
+      "stored_sha256": "a0cc183c7ece1f9615f24c20a4bac5c7947fbd05b65df94d7504f75d95edc1d9"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/stage.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755021,
+        33204,
+        1,
+        0,
+        1794432415575703509,
+        1794432415575703509
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/failure/stage.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/stage.stdout",
+      "raw_bytes": 539,
+      "raw_sha256": "6c4687ef17b784826d1370457758e10eb84454eb2473c1adff1310defd9b8af6",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755020,
+        33204,
+        1,
+        539,
+        1794432416461738971,
+        1794432416461738971
+      ],
+      "stored_bytes": 539,
+      "stored_path": "sourcehost/failure/stage.stdout",
+      "stored_sha256": "6c4687ef17b784826d1370457758e10eb84454eb2473c1adff1310defd9b8af6"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/status-read-command.json",
+      "raw_bytes": 296,
+      "raw_sha256": "1325790023d61a70c597224e84f563ac917913f6c6205fc2916c9d338856f001",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755629,
+        33204,
+        1,
+        296,
+        1794432736260359181,
+        1794432736260359181
+      ],
+      "stored_bytes": 296,
+      "stored_path": "sourcehost/failure/status-read-command.json",
+      "stored_sha256": "1325790023d61a70c597224e84f563ac917913f6c6205fc2916c9d338856f001"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/status-read-return.json",
+      "raw_bytes": 18,
+      "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755632,
+        33204,
+        1,
+        18,
+        1794432736727374754,
+        1794432736727374754
+      ],
+      "stored_bytes": 18,
+      "stored_path": "sourcehost/failure/status-read-return.json",
+      "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/status-read-stdin.py",
+      "raw_bytes": 1849,
+      "raw_sha256": "606d32555f384d5ea6eb83801206d693bd3b343113c430c0f1a27c4440e36edb",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755651,
+        33204,
+        1,
+        1849,
+        1794432728205090038,
+        1794432728205090038
+      ],
+      "stored_bytes": 1849,
+      "stored_path": "sourcehost/failure/status-read-stdin.py",
+      "stored_sha256": "606d32555f384d5ea6eb83801206d693bd3b343113c430c0f1a27c4440e36edb"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/status-read.json",
+      "raw_bytes": 8385,
+      "raw_sha256": "23cb850fe892586fa365e813a6e7e791e45c54e2735ed4965b35a6cb3c7b7295",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755630,
+        33204,
+        1,
+        8385,
+        1794432736691373554,
+        1794432736691373554
+      ],
+      "stored_bytes": 8385,
+      "stored_path": "sourcehost/failure/status-read.json",
+      "stored_sha256": "23cb850fe892586fa365e813a6e7e791e45c54e2735ed4965b35a6cb3c7b7295"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/status-read.py",
+      "raw_bytes": 717,
+      "raw_sha256": "5970c1e8337eae5b353f889b27559a93c169843a4adf6e25f6fd303d398627b4",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755652,
+        33204,
+        1,
+        717,
+        1794432728205090038,
+        1794432728205090038
+      ],
+      "stored_bytes": 717,
+      "stored_path": "sourcehost/failure/status-read.py",
+      "stored_sha256": "5970c1e8337eae5b353f889b27559a93c169843a4adf6e25f6fd303d398627b4"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-managed-killable-20261111-01/status-read.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755631,
+        33204,
+        1,
+        0,
+        1794432736261359214,
+        1794432736261359214
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/failure/status-read.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/argv.json",
+      "raw_bytes": 144,
+      "raw_sha256": "e83375e97f3a88286493e9b02c2f3cd79e15826f48c7f4756278e7c4171fb63f",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755994,
+        33204,
+        1,
+        144,
+        1794433248127986417,
+        1794433248127986417
+      ],
+      "stored_bytes": 144,
+      "stored_path": "sourcehost/recovery/argv.json",
+      "stored_sha256": "e83375e97f3a88286493e9b02c2f3cd79e15826f48c7f4756278e7c4171fb63f"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/collect.py",
+      "raw_bytes": 478,
+      "raw_sha256": "d18a1cd4848319810656c7fc82719a00e4bebf46b292953eb3331f154887303a",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26756003,
+        33204,
+        1,
+        478,
+        1794433338903552425,
+        1794433338903552425
+      ],
+      "stored_bytes": 478,
+      "stored_path": "sourcehost/recovery/collect.py",
+      "stored_sha256": "d18a1cd4848319810656c7fc82719a00e4bebf46b292953eb3331f154887303a"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/collection-argv.json",
+      "raw_bytes": 743,
+      "raw_sha256": "2e4b9fd544eccc554fe279667912289fa90443b922fb491ba8d9ddf13e984e74",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26756002,
+        33204,
+        1,
+        743,
+        1794433338903552425,
+        1794433338903552425
+      ],
+      "stored_bytes": 743,
+      "stored_path": "sourcehost/recovery/collection-argv.json",
+      "stored_sha256": "2e4b9fd544eccc554fe279667912289fa90443b922fb491ba8d9ddf13e984e74"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/collection-return.json",
+      "raw_bytes": 18,
+      "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26756022,
+        33204,
+        1,
+        18,
+        1794433345406734714,
+        1794433345406734714
+      ],
+      "stored_bytes": 18,
+      "stored_path": "sourcehost/recovery/collection-return.json",
+      "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/collection.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755642,
+        33204,
+        1,
+        0,
+        1794433343987694954,
+        1794433343987694954
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/recovery/collection.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/collection.stdout",
+      "raw_bytes": 143,
+      "raw_sha256": "efd5bc0d44338989593d8a0cb6a515225fb4f3e4974c82fd2ca40f49b6e85dd1",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755641,
+        33204,
+        1,
+        143,
+        1794433345376733874,
+        1794433345376733874
+      ],
+      "stored_bytes": 143,
+      "stored_path": "sourcehost/recovery/collection.stdout",
+      "stored_sha256": "efd5bc0d44338989593d8a0cb6a515225fb4f3e4974c82fd2ca40f49b6e85dd1"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/identity-command.json",
+      "raw_bytes": 301,
+      "raw_sha256": "608fe226fae08934f11342775de0c25ff95d17c907708fc96a297c32eff3f8f4",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755633,
+        33204,
+        1,
+        301,
+        1794433021172351913,
+        1794433021172351913
+      ],
+      "stored_bytes": 301,
+      "stored_path": "sourcehost/recovery/identity-command.json",
+      "stored_sha256": "608fe226fae08934f11342775de0c25ff95d17c907708fc96a297c32eff3f8f4"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/identity-read.py",
+      "raw_bytes": 782,
+      "raw_sha256": "857d962e8fdeee22934872820f511130665434688361128e35522f0cfffbee1e",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755659,
+        33204,
+        1,
+        782,
+        1794433016487210902,
+        1794433016487210902
+      ],
+      "stored_bytes": 782,
+      "stored_path": "sourcehost/recovery/identity-read.py",
+      "stored_sha256": "857d962e8fdeee22934872820f511130665434688361128e35522f0cfffbee1e"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/identity-return.json",
+      "raw_bytes": 18,
+      "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755636,
+        33204,
+        1,
+        18,
+        1794433021789370470,
+        1794433021789370470
+      ],
+      "stored_bytes": 18,
+      "stored_path": "sourcehost/recovery/identity-return.json",
+      "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/identity-stdin.py",
+      "raw_bytes": 488,
+      "raw_sha256": "be7effacf2cc6a4707e53e6b1da57bc5b1fa3bd5244bb68757b61246fda57f16",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755658,
+        33204,
+        1,
+        488,
+        1794433016487210902,
+        1794433016487210902
+      ],
+      "stored_bytes": 488,
+      "stored_path": "sourcehost/recovery/identity-stdin.py",
+      "stored_sha256": "be7effacf2cc6a4707e53e6b1da57bc5b1fa3bd5244bb68757b61246fda57f16"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/identity.json",
+      "raw_bytes": 3611,
+      "raw_sha256": "447c8ac5d481ea19a34bf3d4a58c814988a592d6a66a173aa52241a00b687ad6",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755634,
+        33204,
+        1,
+        3611,
+        1794433021739368966,
+        1794433021739368966
+      ],
+      "stored_bytes": 3611,
+      "stored_path": "sourcehost/recovery/identity.json",
+      "stored_sha256": "447c8ac5d481ea19a34bf3d4a58c814988a592d6a66a173aa52241a00b687ad6"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/identity.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755635,
+        33204,
+        1,
+        0,
+        1794433021172351913,
+        1794433021172351913
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/recovery/identity.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/launch-command.json",
+      "raw_bytes": 300,
+      "raw_sha256": "24a7b4bd285cf999ad485be7c226978e5e866029eeab91626293dcdc66a3db28",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755637,
+        33204,
+        1,
+        300,
+        1794433290922201292,
+        1794433290922201292
+      ],
+      "stored_bytes": 300,
+      "stored_path": "sourcehost/recovery/launch-command.json",
+      "stored_sha256": "24a7b4bd285cf999ad485be7c226978e5e866029eeab91626293dcdc66a3db28"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/launch-result.json",
+      "raw_bytes": 57,
+      "raw_sha256": "736da3323c026cd8bc558fd5645470c024f880ee07495159f4f150423b5305b9",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755640,
+        33204,
+        1,
+        57,
+        1794433291790225834,
+        1794433291790225834
+      ],
+      "stored_bytes": 57,
+      "stored_path": "sourcehost/recovery/launch-result.json",
+      "stored_sha256": "736da3323c026cd8bc558fd5645470c024f880ee07495159f4f150423b5305b9"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/launch-stdin.py",
+      "raw_bytes": 15965,
+      "raw_sha256": "cf95c8005367b989b2648f34c364f46f1a88f84f9b6a0e06b55a0c610672dee1",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755995,
+        33204,
+        1,
+        15965,
+        1794433248127986417,
+        1794433248127986417
+      ],
+      "stored_bytes": 15965,
+      "stored_path": "sourcehost/recovery/launch-stdin.py",
+      "stored_sha256": "cf95c8005367b989b2648f34c364f46f1a88f84f9b6a0e06b55a0c610672dee1"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/launch.py",
+      "raw_bytes": 760,
+      "raw_sha256": "9325019789d71a979b8ce2a4bda9d813a3131aa204987e36b856a3eb96cfbdd8",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755996,
+        33204,
+        1,
+        760,
+        1794433248127986417,
+        1794433248127986417
+      ],
+      "stored_bytes": 760,
+      "stored_path": "sourcehost/recovery/launch.py",
+      "stored_sha256": "9325019789d71a979b8ce2a4bda9d813a3131aa204987e36b856a3eb96cfbdd8"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/launch.stderr",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755639,
+        33204,
+        1,
+        0,
+        1794433290922201292,
+        1794433290922201292
+      ],
+      "stored_bytes": 0,
+      "stored_path": "sourcehost/recovery/launch.stderr",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/launch.stdout",
+      "raw_bytes": 76,
+      "raw_sha256": "7c7efc5f1b3ba4eeeb10ba333404c68316e62e8e4c5392d9396f75e7fa672aa2",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755638,
+        33204,
+        1,
+        76,
+        1794433291762225042,
+        1794433291762225042
+      ],
+      "stored_bytes": 76,
+      "stored_path": "sourcehost/recovery/launch.stdout",
+      "stored_sha256": "7c7efc5f1b3ba4eeeb10ba333404c68316e62e8e4c5392d9396f75e7fa672aa2"
+    },
+    {
+      "encoding": "identity",
+      "origin": "/tmp/kdlock-kernel8-killable-region-recovery-20261111-01/recover.py",
+      "raw_bytes": 10731,
+      "raw_sha256": "799183786e9980a67144718e9a48c3efd413975481d9d265c3e6a517b9ec0841",
+      "role": "source_host",
+      "source_identity": [
+        66306,
+        26755990,
+        33204,
+        1,
+        10731,
+        1794433131991635950,
+        1794433131991635950
+      ],
+      "stored_bytes": 10731,
+      "stored_path": "sourcehost/recovery/recover.py",
+      "stored_sha256": "799183786e9980a67144718e9a48c3efd413975481d9d265c3e6a517b9ec0841"
+    }
+  ],
+  "schema": 1
+}

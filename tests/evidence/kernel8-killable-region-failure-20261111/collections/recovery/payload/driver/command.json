@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-region-recovery-input-01/recover.py"
+  ],
+  "helper_sha256": "799183786e9980a67144718e9a48c3efd413975481d9d265c3e6a517b9ec0841",
+  "vm_helper_ast": "PASS"
+}
