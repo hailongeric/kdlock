@@ -104,6 +104,32 @@ Bugs found by these runs and fixed:
   as frontiers, so any section with an indirect call was handed back. They are
   now recognized as `jmp *%reg` and handled as indirect branches.
 
+## 5a. Nano grid and the TCLock backend
+
+`bench/run_grid.py` runs the profiles of [PERF_PLAN.md](PERF_PLAN.md) task C,
+alternating the backends at every point; `bench/grid_summary.py` prints the
+medians with the execution-class shares. Results and the map from build
+number to source are in `bench/results/kdclaude/`.
+
+The original TCLock locks are a third backend when the bench is built with
+them (`/root/tcbuild.sh` in the VM):
+
+```
+/root/tcbuild.sh          # builds tclock_backend x4 (TCLOCK_NUMA=1) and kd_bench with KDB_TCLOCK=1
+rmmod kd_bench
+for f in spin/tclock_backend_km mutex/tclock_mutex_backend_km \
+         rwlock/tclock_rwlock_backend_km rwsem/tclock_rwsem_backend_km; do
+    insmod /root/tc/$f.ko; done
+insmod /root/kdbt/bench/kd_bench.ko
+python3 run_grid.py --backends native kd tclock --out grid.jsonl
+```
+
+The four TCLock modules build with objtool warnings from upstream's
+hand-written stack switch (`naked return`, `BP used as a scratch
+register`); they are unchanged upstream code. Correctness pass with all three
+backends (spin/mutex/rwlock/rwsem, c01/c16, 1%/20% writes, 1–32 workers): 288
+points exact.
+
 ## 6. Not tested yet
 
 * Nesting deeper than two levels, and the `KD_MAX_DEPTH` / `KD_MAX_ROOTS`

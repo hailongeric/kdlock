@@ -27,3 +27,15 @@ counter deltas (`kd_delta`) and the data-oracle result (`ok`).
 
 `bench/grid_summary.py FILE` prints kd/Native per profile and worker count
 with the execution-class shares.
+
+## Later rounds
+
+| Build | Bench | Files | Note |
+| --- | --- | --- | --- |
+| #11 | `63f8de2a` | `grid-20261111-r2/` (2 rounds, Native and kd) | |
+| #11 | `374164c9` (TCLock backend) | `grid-20261111-r3/` (2 rounds, Native, kd, TCLock) | **placement-affected**: the bench objects were not line-separated, and this build placed the kd spinlock differently; kd spin at 8/16 workers ran about 0.8 times its rate with the earlier bench build in a direct A/B (4.9 vs 4.0 Mops). Do not use for kd vs TCLock; superseded by the next round |
+
+From the commit after `374164c9` on, every lock object, the counter lines and
+the run flags of the bench sit in their own 128-byte block (`KDB_BLOCK`). An
+A/B of the two bench builds then agrees within run-to-run noise (kd spin n8
+4.71–4.87 vs 4.84–5.18; Native within 2%).

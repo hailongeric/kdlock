@@ -129,6 +129,29 @@ target); the nano bodies need none.
 * Keep each change separable and measured against the previous source on the
   same kernel. Report losses together with gains.
 
+Status 2026-11-11 (raw data and the build map:
+`bench/results/kdclaude/README.md`):
+
+* Round 1 (build #2, `9ba5a456`, one round) found three loss regions: mutex
+  from 7 workers up (0.4–0.5 of Native), rwsem with 20% writers at 3–8
+  workers (about 0.5), spin at 2–4 workers (0.6–0.8).
+* Counters added (`stop_*`, `no_spin`, `abandon`, `head_sleep`, `parked`,
+  `handoff`) located the causes; the fixes are in `63f8de2a` (DIFFERENCES
+  D9–D11): mutex convoy after handoff to a sleeping waiter; per-section
+  owner store and per-iteration owner polling on the queue's cache line;
+  rwsem readers sleeping in sequence behind the holder of `->m`; no pending
+  waiter in the spinlock.
+* Round 2 (build #11, `63f8de2a`, two rounds, median): kd is within 0.97 of
+  Native or above at every point except spin at 3–6 workers (0.66–0.96),
+  mutex c01 at 3–5 workers (about 0.82) and rwsem c16/1% writers at 4
+  workers (0.91). Large gains where delegation is full or readers no
+  longer sleep: mutex c16 1.5–2.0, rwsem 1.5–3.5, spin 1.1–1.46 from 7
+  workers up. Readers still never delegate.
+* TCLock is now a third backend of the nano bench (`KDB_TCLOCK`, the
+  original `tclock_backend` modules); round 3 compares all three.
+* Open: the 3–6 worker region of spin and mutex (short sessions: the queue
+  keeps draining), more rounds at the key points, fixed host frequency.
+
 ### Task D: API switch and micro/API stage
 
 * Apply `integration/kd_linux_map.h`: replace `arch_spinlock_t`,

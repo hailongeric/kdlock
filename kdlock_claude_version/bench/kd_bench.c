@@ -29,21 +29,31 @@ MODULE_LICENSE("GPL");
 
 #define MAX_LINES 16
 
+/*
+ * Every shared object of the bench sits in its own 128-byte block: a cache
+ * line plus the partner line the adjacent-line prefetcher fetches with it.
+ * Otherwise the rates depend on where the linker happens to put a lock
+ * relative to the counters, the run flags and the other backends' locks
+ * (measured: kd spin at 8 workers moved from about 4.9 to 4.0 Mops between
+ * two builds that differed only in such placement).
+ */
+#define KDB_BLOCK __aligned(128)
+
 struct kdb_line {
 	u64 v;
-} __aligned(64);
+} KDB_BLOCK;
 
 static struct kdb_line cnt[MAX_LINES];
-static unsigned int g_lines = 1;
+static unsigned int g_lines KDB_BLOCK = 1;
 
-static DEFINE_SPINLOCK(n_spin);
-static DEFINE_MUTEX(n_mutex);
-static DEFINE_RWLOCK(n_rwl);
-static DECLARE_RWSEM(n_rwsem);
-static struct kd_spinlock k_spin;
-static struct kd_mutex k_mutex;
-static struct kd_rwlock k_rwl;
-static struct kd_rwsem k_rwsem;
+static spinlock_t n_spin KDB_BLOCK = __SPIN_LOCK_UNLOCKED(n_spin);
+static struct mutex n_mutex KDB_BLOCK = __MUTEX_INITIALIZER(n_mutex);
+static rwlock_t n_rwl KDB_BLOCK = __RW_LOCK_UNLOCKED(n_rwl);
+static struct rw_semaphore n_rwsem KDB_BLOCK = __RWSEM_INITIALIZER(n_rwsem);
+static struct kd_spinlock k_spin KDB_BLOCK;
+static struct kd_mutex k_mutex KDB_BLOCK;
+static struct kd_rwlock k_rwl KDB_BLOCK;
+static struct kd_rwsem k_rwsem KDB_BLOCK;
 
 
 #define DEFINE_OPS(name, WLOCK, WUNLOCK, RLOCK, RUNLOCK)		\
@@ -106,10 +116,10 @@ int tc_mutex_workers_drain(void);
 int tc_rwsem_worker_register(void);
 int tc_rwsem_workers_drain(void);
 
-static arch_spinlock_t t_spin __aligned(64) = __ARCH_SPIN_LOCK_UNLOCKED;
-static struct komb_mutex t_mutex __aligned(64) = __KOMBMUTEX_INITIALIZER(t_mutex);
-static struct komb_rwlock t_rwl __aligned(64) = __KOMB_RWLOCK_UNLOCKED;
-static struct komb_rwsem t_rwsem __aligned(64) = __KOMB_RWSEM_INITIALIZER(t_rwsem);
+static arch_spinlock_t t_spin KDB_BLOCK = __ARCH_SPIN_LOCK_UNLOCKED;
+static struct komb_mutex t_mutex KDB_BLOCK = __KOMBMUTEX_INITIALIZER(t_mutex);
+static struct komb_rwlock t_rwl KDB_BLOCK = __KOMB_RWLOCK_UNLOCKED;
+static struct komb_rwsem t_rwsem KDB_BLOCK = __KOMB_RWSEM_INITIALIZER(t_rwsem);
 
 #define TC_SPIN_LOCK	do { preempt_disable(); komb_spin_lock(&t_spin); } while (0)
 #define TC_SPIN_UNLOCK	do { komb_spin_unlock(&t_spin); preempt_enable(); } while (0)
@@ -142,10 +152,10 @@ static void tc_reset(void)
 #define KDB_T_OUTER	2u
 
 static struct kdb_line ocnt;
-static DEFINE_SPINLOCK(n_spin2);
-static DEFINE_MUTEX(n_mutex2);
-static struct kd_spinlock k_spin2;
-static struct kd_mutex k_mutex2;
+static spinlock_t n_spin2 KDB_BLOCK = __SPIN_LOCK_UNLOCKED(n_spin2);
+static struct mutex n_mutex2 KDB_BLOCK = __MUTEX_INITIALIZER(n_mutex2);
+static struct kd_spinlock k_spin2 KDB_BLOCK;
+static struct kd_mutex k_mutex2 KDB_BLOCK;
 
 static noinline void kdb_touch(void)
 {
@@ -313,8 +323,9 @@ struct worker {
 	struct completion done;
 } ____cacheline_aligned;
 
-static atomic_t ready;
-static bool go, stop;
+/* Read by every worker on every iteration: kept apart from the locks. */
+static atomic_t ready KDB_BLOCK;
+static bool go KDB_BLOCK, stop KDB_BLOCK;
 
 static int worker_fn(void *arg)
 {
