@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Ordinary-mutex kernel mechanism evidence; no real-world API/performance claim. */
+/* Ordinary-lock kernel mechanism fixture. */
 #include <linux/completion.h>
 #include <linux/delay.h>
 #include <linux/err.h>
@@ -24,7 +24,53 @@
 #include "kernel/runtime.h"
 #include "kernel/observation.h"
 #include "kernel/task_state.h"
+#ifdef KD_FIXTURE_SPIN
+#include <linux/cpu.h>
+#include <linux/ktime.h>
+#include "include/kd_spin_api.h"
+
+static const struct kd_jit_runtime_boundary spin_boundaries[] = {
+	{ (unsigned long)kd_spin_lock_entry_asm, KD_JIT_RUNTIME_LOCK },
+	{ (unsigned long)kd_spin_unlock_entry_asm, KD_JIT_RUNTIME_UNLOCK },
+};
+
+typedef struct kd_spinlock fixture_lock_t;
+#define fixture_lock_init kd_spin_init
+#define fixture_lock_acquire kd_spin_lock
+#define fixture_lock_release kd_spin_unlock
+#define FIXTURE_NAME "kd_spin_runtime_fixture"
+#define FIXTURE_MAX_MODE 4U
+#define FIXTURE_SPIN_CPU_COUNT 5U
+#define FIXTURE_SPIN_MISS_MODE 3U
+#define FIXTURE_SPIN_NATIVE_MODE 4U
+
+static unsigned int spin_cpus[FIXTURE_SPIN_CPU_COUNT];
+static unsigned int spin_cpu_count;
+static unsigned int holder_timeout_ms;
+module_param_array(spin_cpus, uint, &spin_cpu_count, 0444);
+module_param(holder_timeout_ms, uint, 0444);
+MODULE_PARM_DESC(spin_cpus, "Distinct online CPUs for the five spin roles");
+MODULE_PARM_DESC(holder_timeout_ms, "Explicit maximum holder gate wait in milliseconds");
+
+static struct kd_mutex *fixture_queue(fixture_lock_t *lock)
+{
+	return &lock->queue;
+}
+#else
 #include "include/kd_mutex_api.h"
+
+typedef struct kd_mutex fixture_lock_t;
+#define fixture_lock_init kd_mutex_init
+#define fixture_lock_acquire kd_mutex_lock
+#define fixture_lock_release kd_mutex_unlock
+#define FIXTURE_NAME "kd_runtime_fixture"
+#define FIXTURE_MAX_MODE 2U
+
+static struct kd_mutex *fixture_queue(fixture_lock_t *lock)
+{
+	return lock;
+}
+#endif
 
 #define FIXTURE_MAX_WORKERS 8U
 #define FIXTURE_MAX_ITERATIONS 64U
@@ -78,6 +124,14 @@ struct fixture_worker {
 	unsigned int iterations;
 	unsigned int index;
 	unsigned int role;
+#ifdef KD_FIXTURE_SPIN
+	unsigned int cpu;
+	unsigned int ready_cpu;
+	unsigned int preempt_base;
+	unsigned long pin_checks;
+	unsigned long pin_errors;
+	unsigned long miss_checks;
+#endif
 	bool scene;
 	bool scene_ready;
 	int error;
@@ -96,8 +150,8 @@ struct fixture_control {
 	bool entered;
 };
 
-static struct kd_mutex lock_a[FIXTURE_MAX_ITERATIONS];
-static struct kd_mutex lock_b[FIXTURE_MAX_ITERATIONS];
+static fixture_lock_t lock_a[FIXTURE_MAX_ITERATIONS];
+static fixture_lock_t lock_b[FIXTURE_MAX_ITERATIONS];
 static unsigned long protected_a[FIXTURE_MAX_ITERATIONS];
 static unsigned long protected_b[FIXTURE_MAX_ITERATIONS];
 static unsigned long pointer_value[FIXTURE_MAX_ITERATIONS];
@@ -126,6 +180,28 @@ static struct {
 static int notrace worker_main(void *argument);
 static int notrace stop_workers(void);
 static bool notrace fixture_locks_clear(void);
+#ifdef KD_FIXTURE_SPIN
+/* These samples run on the native task outside the supplied JIT regions. */
+static void notrace fixture_spin_sample(struct fixture_worker *worker, unsigned int held)
+{
+	worker->pin_checks++;
+	if (current != worker->expected_task || raw_smp_processor_id() != worker->cpu ||
+	    irqs_disabled() || preempt_count() != worker->preempt_base + held * PREEMPT_OFFSET) {
+		worker->pin_errors++;
+		worker->error = -EUCLEAN;
+	}
+}
+#endif
+
+static void notrace fixture_wake_worker(struct fixture_worker *worker, unsigned int index)
+{
+#ifdef KD_FIXTURE_SPIN
+	worker->cpu = spin_cpus[index];
+	kthread_bind(worker->task, worker->cpu);
+#endif
+	wake_up_process(worker->task);
+}
+
 #include "runtime_fixture_observe.inc"
 
 void fixture_source_body(struct fixture_worker *worker);
@@ -142,37 +218,74 @@ noinline notrace __visible void fixture_source_step(struct fixture_worker *worke
 	worker->seen_pointer = &pointer_value[worker->index];
 }
 
-/* No case-specific runtime adapter, raw MCS use or extracted kernel body. All
- * cases execute the real ordinary pair. Mode 2 ends A's logical scope while B
- * remains open, exercising retained-owner deferral without reacquiring A.
- * The source operation CALL sites/root continuations are discovered from the
- * actual exported bytes; no instruction offsets are embedded in this fixture.
+#ifdef KD_FIXTURE_SPIN
+void fixture_spin_miss_checkpoint(struct fixture_worker *worker);
+
+/* A direct CALL outside the image source reaches this native target with A
+ * still held. Count that actual call and sample the original task's pin.
+ */
+noinline notrace __visible void fixture_spin_miss_checkpoint(struct fixture_worker *worker)
+{
+	worker->miss_checks++;
+	fixture_spin_sample(worker, 1);
+}
+
+static void notrace fixture_spin_native_body(struct fixture_worker *worker)
+{
+	unsigned int index = worker->index;
+
+	fixture_spin_sample(worker, 0);
+	fixture_lock_acquire(&lock_a[index]);
+	fixture_spin_sample(worker, 1);
+	fixture_lock_acquire(&lock_b[index]);
+	fixture_spin_sample(worker, 2);
+	protected_a[index]++;
+	protected_b[index]++;
+	worker->seen_before = current;
+	fixture_source_step(worker);
+	fixture_lock_release(&lock_a[index]);
+	fixture_spin_sample(worker, 1);
+	fixture_lock_release(&lock_b[index]);
+	fixture_spin_sample(worker, 0);
+}
+#endif
+
+/* Mode 2 closes A while B remains open. Source-operation CALL sites and
+ * continuations come from the actual exported bytes.
  */
 noinline notrace __visible void fixture_source_body(struct fixture_worker *worker)
 {
 	unsigned int spin, index = worker->index;
 
-	kd_mutex_lock(&lock_a[index]);
+	fixture_lock_acquire(&lock_a[index]);
 	WRITE_ONCE(protected_a[index], READ_ONCE(protected_a[index]) + 1);
 	worker->seen_before = current;
 	for (spin = 0; spin < FIXTURE_HOLD_ITERATIONS; ++spin)
 		barrier();
+#ifdef KD_FIXTURE_SPIN
+	if (worker->mode == FIXTURE_SPIN_MISS_MODE)
+		fixture_spin_miss_checkpoint(worker);
+#endif
 	READ_ONCE(step_entry)(worker);
-	if (worker->mode == 0) {
-		kd_mutex_unlock(&lock_a[index]);
+	if (worker->mode == 0
+#ifdef KD_FIXTURE_SPIN
+	    || worker->mode == FIXTURE_SPIN_MISS_MODE
+#endif
+	) {
+		fixture_lock_release(&lock_a[index]);
 		return;
 	}
-	kd_mutex_lock(&lock_b[index]);
+	fixture_lock_acquire(&lock_b[index]);
 	WRITE_ONCE(protected_b[index], READ_ONCE(protected_b[index]) + 1);
 	READ_ONCE(step_entry)(worker);
 	if (worker->mode == 2) {
-		kd_mutex_unlock(&lock_a[index]);
+		fixture_lock_release(&lock_a[index]);
 		WRITE_ONCE(protected_b[index], READ_ONCE(protected_b[index]) + 1);
 		READ_ONCE(step_entry)(worker);
-		kd_mutex_unlock(&lock_b[index]);
+		fixture_lock_release(&lock_b[index]);
 	} else {
-		kd_mutex_unlock(&lock_b[index]);
-		kd_mutex_unlock(&lock_a[index]);
+		fixture_lock_release(&lock_b[index]);
+		fixture_lock_release(&lock_a[index]);
 	}
 }
 
@@ -202,6 +315,13 @@ static int notrace worker_main(void *argument)
 	int result;
 
 	worker->expected_task = current;
+#ifdef KD_FIXTURE_SPIN
+	worker->ready_cpu = raw_smp_processor_id();
+	if (worker->ready_cpu != worker->cpu || irqs_disabled()) {
+		worker->error = -EUCLEAN;
+		goto ready_parked;
+	}
+#endif
 	preempt_disable();
 	rdmsrl(MSR_GS_BASE, origin_gs);
 	preempt_enable();
@@ -224,10 +344,19 @@ static int notrace worker_main(void *argument)
 		wait_for_completion(&scene_go[worker->role]);
 	for (iteration = 0; !READ_ONCE(abort_start) && iteration < worker->iterations && !kthread_should_stop(); ++iteration) {
 		worker->index = iteration;
+#ifdef KD_FIXTURE_SPIN
+		worker->preempt_base = preempt_count();
+		if (worker->mode == FIXTURE_SPIN_NATIVE_MODE)
+			fixture_spin_native_body(worker);
+		else
+#endif
 		if (worker->scene && worker->role != SCENE_CA && worker->role != SCENE_W)
 			scene_single(worker);
 		else
 			READ_ONCE(body_entry)(worker);
+#ifdef KD_FIXTURE_SPIN
+		fixture_spin_sample(worker, 0);
+#endif
 		worker->completed++;
 		if ((!worker->scene || worker->role == SCENE_CA || worker->role == SCENE_W) &&
 		    (worker->seen_before != worker->expected_task ||
@@ -297,8 +426,8 @@ static bool notrace fixture_locks_clear(void)
 	unsigned int index;
 
 	for (index = 0; index < FIXTURE_MAX_ITERATIONS; ++index)
-		if (READ_ONCE(lock_a[index].tail) || READ_ONCE(lock_a[index].owner) ||
-		    READ_ONCE(lock_b[index].tail) || READ_ONCE(lock_b[index].owner))
+		if (READ_ONCE(fixture_queue(&lock_a[index])->tail) || READ_ONCE(fixture_queue(&lock_a[index])->owner) ||
+		    READ_ONCE(fixture_queue(&lock_b[index])->tail) || READ_ONCE(fixture_queue(&lock_b[index])->owner))
 			return false;
 	return true;
 }
@@ -308,9 +437,13 @@ static int notrace start_workers(unsigned int mode, unsigned int count, unsigned
 	unsigned int index;
 	int result;
 
-	if (!runtime || worker_count || mode > 2 || !count || count > FIXTURE_MAX_WORKERS ||
-	    !iterations || iterations > FIXTURE_MAX_ITERATIONS)
+	if (!runtime || worker_count || mode > FIXTURE_MAX_MODE || !count ||
+	    count > FIXTURE_MAX_WORKERS || !iterations || iterations > FIXTURE_MAX_ITERATIONS)
 		return -EINVAL;
+#ifdef KD_FIXTURE_SPIN
+	if (count > spin_cpu_count || mode == FIXTURE_SPIN_MISS_MODE)
+		return -EINVAL;
+#endif
 	if (!fixture_locks_clear())
 		return -EBUSY;
 	for (index = 0; index < FIXTURE_MAX_ITERATIONS; ++index) {
@@ -328,7 +461,11 @@ static int notrace start_workers(unsigned int mode, unsigned int count, unsigned
 
 		/* This metadata contains no source packet and has no remaining users. */
 		*worker = (struct fixture_worker) { .mode = mode, .iterations = iterations };
+#ifdef KD_FIXTURE_SPIN
+		worker->task = kthread_create(worker_main, worker, "kd-fixture/%u", index);
+#else
 		worker->task = kthread_run(worker_main, worker, "kd-fixture/%u", index);
+#endif
 		if (IS_ERR(worker->task)) {
 			result = PTR_ERR(worker->task);
 			worker->task = NULL;
@@ -339,6 +476,9 @@ static int notrace start_workers(unsigned int mode, unsigned int count, unsigned
 		/* Workers park until joined even after a private setup error. */
 		get_task_struct(worker->task);
 		worker_count++;
+#ifdef KD_FIXTURE_SPIN
+		fixture_wake_worker(worker, index);
+#endif
 	}
 	return 0;
 }
@@ -414,6 +554,9 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 	unsigned long trace_flags, queued, held, child, events, overflow, ready = 0;
 	unsigned long completed = 0, calls = 0, errors = 0, core_errors = 0, origin_errors = 0;
 	unsigned long total_a = 0, total_b = 0;
+#ifdef KD_FIXTURE_SPIN
+	unsigned long pin_checks = 0, pin_errors = 0, miss_checks = 0;
+#endif
 	struct kd_task_root_context *self;
 	struct kd_execution_binding *binding = NULL;
 	bool own = false, native = false, managed = false;
@@ -441,6 +584,11 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 		core_errors += READ_ONCE(workers[index].core_errors);
 		origin_errors += READ_ONCE(workers[index].origin_errors);
 		errors += READ_ONCE(workers[index].error) != 0;
+#ifdef KD_FIXTURE_SPIN
+		pin_checks += READ_ONCE(workers[index].pin_checks);
+		pin_errors += READ_ONCE(workers[index].pin_errors);
+		miss_checks += READ_ONCE(workers[index].miss_checks);
+#endif
 	}
 	for (index = 0; index < FIXTURE_MAX_ITERATIONS; ++index) {
 		total_a += READ_ONCE(protected_a[index]);
@@ -462,7 +610,15 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 		(unsigned long)workers[0].task, (unsigned long)workers[1].task,
 		(unsigned long)workers[2].task, (unsigned long)workers[3].task,
 		(unsigned long)workers[4].task, workers[4].core_address, workers[4].regs_address,
-		(unsigned long)&lock_a[0], (unsigned long)&lock_b[0]);
+		(unsigned long)fixture_queue(&lock_a[0]), (unsigned long)fixture_queue(&lock_b[0]));
+#ifdef KD_FIXTURE_SPIN
+	length += scnprintf(buffer + length, sizeof(buffer) - length,
+		"pin_checks=%lu pin_errors=%lu miss_checks=%lu w_miss_checks=%lu miss_target=%px cpu0=%u cpu1=%u cpu2=%u cpu3=%u cpu4=%u\n",
+		pin_checks, pin_errors, miss_checks, READ_ONCE(workers[SCENE_W].miss_checks),
+		fixture_spin_miss_checkpoint, READ_ONCE(workers[0].ready_cpu),
+		READ_ONCE(workers[1].ready_cpu), READ_ONCE(workers[2].ready_cpu),
+		READ_ONCE(workers[3].ready_cpu), READ_ONCE(workers[4].ready_cpu));
+#endif
 	mutex_unlock(&control_mutex);
 	return simple_read_from_buffer(output, size, position, buffer, length);
 }
@@ -491,7 +647,7 @@ static ssize_t notrace control_write(struct file *file, const char __user *input
 		complete_all(&scene_go[mode]); result = 0;
 	} else if (sscanf(buffer, "release %u %n", &mode, &used) == 1 && used > 0 && !buffer[used] &&
 		 scene_active && (mode == SCENE_HA || mode == SCENE_HB)) {
-		complete_all(&scene_release[mode]); result = 0;
+		fixture_release_holder(mode); result = 0;
 	} else if (sysfs_streq(buffer, "enter"))
 		result = control_enter(control);
 	else if (sysfs_streq(buffer, "leave"))
@@ -522,7 +678,7 @@ static const struct file_operations control_operations = {
 	.read = control_read, .write = control_write, .llseek = default_llseek,
 };
 static struct miscdevice control_device = {
-	.minor = MISC_DYNAMIC_MINOR, .name = "kd_runtime_fixture_ctl",
+	.minor = MISC_DYNAMIC_MINOR, .name = FIXTURE_NAME "_ctl",
 	.fops = &control_operations, .mode = 0600,
 };
 
@@ -603,6 +759,20 @@ static int __init notrace fixture_init(void)
 	unsigned int index, region_count;
 	int result;
 
+#ifdef KD_FIXTURE_SPIN
+	BUILD_BUG_ON(SCENE_ROLES != FIXTURE_SPIN_CPU_COUNT);
+	if (!PREEMPT_OFFSET || spin_cpu_count != FIXTURE_SPIN_CPU_COUNT || !holder_timeout_ms)
+		return -EINVAL;
+	for (index = 0; index < spin_cpu_count; ++index) {
+		unsigned int prior;
+
+		if (spin_cpus[index] >= nr_cpu_ids || !cpu_online(spin_cpus[index]))
+			return -EINVAL;
+		for (prior = 0; prior < index; ++prior)
+			if (spin_cpus[index] == spin_cpus[prior])
+				return -EINVAL;
+	}
+#endif
 	if (!gs_verified || !immutable_text || !auxiliary_contract || !source_version ||
 	    !*source_version || strnlen(source_version, 257) > 256 ||
 	    !source_size || source_size > 65536 || !step_size || step_size > 65536)
@@ -642,14 +812,21 @@ static int __init notrace fixture_init(void)
 		/* Runtime exports its exact ordinary API entry addresses. The generic
 		 * host scanner annotates actual source CALL sites before publication.
 		 */
+#ifdef KD_FIXTURE_SPIN
+		.boundaries = spin_boundaries, .boundary_count = ARRAY_SIZE(spin_boundaries),
+#else
 		.boundaries = NULL, .boundary_count = 0,
-		.channel_name = "kd_runtime_fixture", .owner = THIS_MODULE, .frame_capacity = 2 * 1024 * 1024,
+#endif
+#ifdef KD_FIXTURE_SPIN
+		.atomic_spin = true,
+#endif
+		.channel_name = FIXTURE_NAME, .owner = THIS_MODULE, .frame_capacity = 2 * 1024 * 1024,
 		.request_capacity = FIXTURE_REQUESTS, .auxiliary_bytes = FIXTURE_AUXILIARY_BYTES,
 		.required_control_bytes = FIXTURE_CONTROL_BYTES, .proxy_limit = 16,
 	};
 	for (index = 0; index < FIXTURE_MAX_ITERATIONS; ++index) {
-		kd_mutex_init(&lock_a[index]);
-		kd_mutex_init(&lock_b[index]);
+		fixture_lock_init(&lock_a[index]);
+		fixture_lock_init(&lock_b[index]);
 	}
 	init_completion(&start_gate);
 	result = kd_jit_runtime_create(&config, &runtime);
@@ -699,4 +876,8 @@ static void __exit notrace fixture_exit(void)
 module_init(fixture_init);
 module_exit(fixture_exit);
 MODULE_LICENSE("GPL");
+#ifdef KD_FIXTURE_SPIN
+MODULE_DESCRIPTION("Ordinary kdlock spin runtime kernel mechanism fixture");
+#else
 MODULE_DESCRIPTION("Ordinary kdlock mutex runtime kernel mechanism fixture (unrun source)");
+#endif

@@ -11,7 +11,12 @@ static bool event_registered;
 
 enum fixture_scene_role { SCENE_HA, SCENE_HB, SCENE_CA, SCENE_CB, SCENE_W, SCENE_ROLES };
 static bool scene_active;
-static struct completion scene_go[SCENE_ROLES], scene_release[SCENE_ROLES];
+static struct completion scene_go[SCENE_ROLES];
+#ifdef KD_FIXTURE_SPIN
+static bool scene_release[SCENE_ROLES];
+#else
+static struct completion scene_release[SCENE_ROLES];
+#endif
 static unsigned long scene_queued, scene_held, scene_nodes[SCENE_ROLES], scene_child;
 
 static void notrace fixture_observe(void *unused, const struct kd_observation *event)
@@ -27,17 +32,17 @@ static void notrace fixture_observe(void *unused, const struct kd_observation *e
 		event_overflow++;
 	if (READ_ONCE(scene_active) && event->kind == KD_OBS_ENQUEUE) {
 		for (role = 0; role < SCENE_ROLES; ++role) {
-			struct kd_mutex *lock = role == SCENE_HB || role == SCENE_CB ? &lock_b[0] : &lock_a[0];
+			fixture_lock_t *lock = role == SCENE_HB || role == SCENE_CB ? &lock_b[0] : &lock_a[0];
 
 			if (event->task == (unsigned long)READ_ONCE(workers[role].task) &&
-			    event->origin == event->task && event->object == (unsigned long)lock) {
+			    event->origin == event->task && event->object == (unsigned long)fixture_queue(lock)) {
 				scene_nodes[role] = event->node;
 				scene_queued |= 1UL << role;
 			}
 		}
 		if (event->task == (unsigned long)READ_ONCE(workers[SCENE_CA].task) &&
 		    event->origin == (unsigned long)READ_ONCE(workers[SCENE_W].task) &&
-		    event->object == (unsigned long)&lock_b[0] && scene_nodes[SCENE_CB] &&
+		    event->object == (unsigned long)fixture_queue(&lock_b[0]) && scene_nodes[SCENE_CB] &&
 		    event->related == scene_nodes[SCENE_CB])
 			scene_child = event->node;
 	}
@@ -130,27 +135,62 @@ static const struct file_operations event_operations = {
 	.owner = THIS_MODULE, .read = events_read, .poll = events_poll, .llseek = default_llseek,
 };
 static struct miscdevice event_device = {
-	.minor = MISC_DYNAMIC_MINOR, .name = "kd_runtime_fixture_events",
+	.minor = MISC_DYNAMIC_MINOR, .name = FIXTURE_NAME "_events",
 	.fops = &event_operations, .mode = 0400,
 };
 
 /* Holders and candidate C_B execute ordinary native C outside the exported W
  * source regions. Their gates never enter the delegated source or core queue.
  */
+static void notrace fixture_release_holder(unsigned int role)
+{
+#ifdef KD_FIXTURE_SPIN
+	smp_store_release(&scene_release[role], true);
+#else
+	complete_all(&scene_release[role]);
+#endif
+}
+
+#ifdef KD_FIXTURE_SPIN
+static void notrace fixture_wait_holder(struct fixture_worker *worker)
+{
+	u64 started = ktime_get_mono_fast_ns();
+	u64 budget = (u64)holder_timeout_ms * NSEC_PER_MSEC;
+
+	while (!smp_load_acquire(&scene_release[worker->role])) {
+		if (ktime_get_mono_fast_ns() - started >= budget) {
+			worker->error = -ETIMEDOUT;
+			break;
+		}
+		cpu_relax();
+	}
+}
+#endif
+
 static void notrace scene_single(struct fixture_worker *worker)
 {
-	struct kd_mutex *lock = worker->role == SCENE_HA ? &lock_a[0] : &lock_b[0];
+	fixture_lock_t *lock = worker->role == SCENE_HA ? &lock_a[0] : &lock_b[0];
 	unsigned long flags;
 
-	kd_mutex_lock(lock);
+	fixture_lock_acquire(lock);
+#ifdef KD_FIXTURE_SPIN
+	fixture_spin_sample(worker, 1);
+#endif
 	if (worker->role == SCENE_HA || worker->role == SCENE_HB) {
 		raw_spin_lock_irqsave(&event_guard, flags);
 		scene_held |= 1UL << worker->role;
 		raw_spin_unlock_irqrestore(&event_guard, flags);
 		wake_up_all(&event_wait);
+#ifdef KD_FIXTURE_SPIN
+		fixture_wait_holder(worker);
+#else
 		wait_for_completion(&scene_release[worker->role]);
+#endif
 	}
-	kd_mutex_unlock(lock);
+	fixture_lock_release(lock);
+#ifdef KD_FIXTURE_SPIN
+	fixture_spin_sample(worker, 0);
+#endif
 }
 
 static bool notrace scene_finished(void)
@@ -168,14 +208,24 @@ static int notrace start_scene(unsigned int mode)
 	unsigned int index;
 	int result;
 
-	if (!runtime || worker_count || (mode != 1 && mode != 2) || !fixture_locks_clear())
+	if (!runtime || worker_count || mode < 1 ||
+#ifdef KD_FIXTURE_SPIN
+	    mode > FIXTURE_SPIN_MISS_MODE ||
+#else
+	    mode > 2 ||
+#endif
+	    !fixture_locks_clear())
 		return -EBUSY;
 	for (index = 0; index < FIXTURE_MAX_ITERATIONS; ++index) {
 		protected_a[index] = 0; protected_b[index] = 0; pointer_value[index] = 0;
 	}
 	for (index = 0; index < SCENE_ROLES; ++index) {
 		init_completion(&scene_go[index]);
+#ifdef KD_FIXTURE_SPIN
+		WRITE_ONCE(scene_release[index], false);
+#else
 		init_completion(&scene_release[index]);
+#endif
 		scene_nodes[index] = 0;
 	}
 	scene_queued = 0; scene_held = 0; scene_child = 0;
@@ -202,7 +252,7 @@ static int notrace start_scene(unsigned int mode)
 		}
 		get_task_struct(worker->task);
 		worker_count++;
-		wake_up_process(worker->task);
+		fixture_wake_worker(worker, index);
 	}
 	return 0;
 }

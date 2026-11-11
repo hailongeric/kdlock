@@ -109,8 +109,9 @@ def scan_operation_calls(exported, objdump, directory, timeout):
     return snapshot, tuple(sorted(set(lock_roots))), tuple(calls), tuple(indirect)
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+def main(*, spin=False):
+    description = "VM-only plain-spin mechanism checks" if spin else __doc__
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--module", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -128,12 +129,18 @@ def main():
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--iterations", type=int, default=32)
     parser.add_argument("--deadline", type=float, default=120.0)
+    if spin:
+        parser.add_argument("--spin-cpus", type=int, nargs=5, required=True)
+        parser.add_argument("--controller-cpu", type=int, required=True)
+        parser.add_argument("--holder-timeout-ms", type=int, required=True)
     args = parser.parse_args()
+    module_name = "kd_spin_runtime_fixture" if spin else "kd_runtime_fixture"
+    lock_kind, unlock_kind = (4, 5) if spin else (1, 2)
     if os.geteuid() != 0 or os.uname().machine != "x86_64":
         raise ValueError("fixture requires root in the designated x86_64 VM")
     if not os.uname().release.startswith("7.") or os.uname().release != args.expected_release:
         raise ValueError("actual kernel release differs from the explicit Linux 7 target")
-    if (not 2 <= args.workers <= 8 or not 1 <= args.iterations <= 64
+    if (not 2 <= args.workers <= (5 if spin else 8) or not 1 <= args.iterations <= 64
             or not math.isfinite(args.deadline) or args.deadline <= 0
             or not 0 <= args.gs_offset < 1 << 64
             or not 1 <= args.dependency_page_limit <= 4096 - 2
@@ -143,6 +150,12 @@ def main():
             or args.total_source_byte_limit + (2 + args.dependency_page_limit) * 16
                 + 32 + 7 * 8 + 64 * 16 + 8 + 256 > 2 * 1024 * 1024):
         raise ValueError("fixture worker/iteration/source/deadline extent is invalid")
+    if spin:
+        assigned = {*args.spin_cpus, args.controller_cpu}
+        if (len(assigned) != 6 or not assigned <= os.sched_getaffinity(0)
+                or not 0 < args.holder_timeout_ms < 1 << 32):
+            raise ValueError("spin fixture requires six distinct available CPUs and a finite holder wait")
+        os.sched_setaffinity(0, {args.controller_cpu})
     proof = json.loads(args.gs_proof_json.read_text())
     if (proof.get("verified_for_running_kernel") is not True
             or proof.get("kernel_release") != os.uname().release
@@ -161,7 +174,7 @@ def main():
     sys.path.insert(0, str(args.repo))
     from disassem.archive import ArchiveConfig, ShutdownSession
     from disassem.compiler import DiscoveryLimits
-    from disassem.feedback import ExitKind
+    from disassem.feedback import ExitKind, ExitPhase
     from disassem.image_builder import BuildLimits, GNUImageBuilder, Toolchain
     from disassem.learning import FactKey, LearningCoordinator, LearningLimits, MergeDisposition
     from disassem.lowering import CodegenLimits, EntryMetadata
@@ -187,6 +200,10 @@ def main():
                             "reserved_bytes": 0, "reservations": 0},
                "workers": args.workers, "iterations": args.iterations, "cases": [],
                "status": "incomplete", "returned_full_jit_body": "not_established"}
+    if spin:
+        results["spin_context"] = {"role_cpus": args.spin_cpus,
+                                   "controller_cpu": args.controller_cpu,
+                                   "holder_timeout_ms": args.holder_timeout_ms}
     (args.output / "identity.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
     module_listing = command([tools["objdump"], "-dr", str(args.module)], args.deadline)
     (args.output / "module.disassembly.txt").write_bytes(module_listing)
@@ -424,7 +441,11 @@ def main():
             time.sleep(0.02)
         expected = workers * iterations
         expected_b = 0 if mode == 0 else expected * (2 if mode == 2 else 1)
-        expected_calls = expected * (mode + 1)
+        expected_calls = expected if spin and mode == 4 else expected * (mode + 1)
+        if spin:
+            check_spin_status(values, workers)
+            if mode == 4 and int(values["pin_checks"]) != 6 * expected:
+                raise AssertionError("native spin nesting pin checkpoints did not all execute")
         if (int(values["completed"]) != expected or int(values["calls"]) != expected_calls
                 or int(values["a"]) != expected or int(values["b"]) != expected_b
                 or int(values["errors"]) or int(values["origin_errors"]) or int(values["core_errors"])
@@ -437,6 +458,11 @@ def main():
                                  "actual_call_effects": int(values["calls"]),
                                  "native_body_completion": True})
         control_command("stop")
+
+    def check_spin_status(values, workers):
+        if (int(values["pin_errors"]) or
+                [int(values[f"cpu{index}"]) for index in range(workers)] != args.spin_cpus[:workers]):
+            raise AssertionError("native spin pin depth, IRQ state or assigned CPU differs")
 
     def wait_scene(predicate, label):
         deadline = time.monotonic() + args.deadline
@@ -458,7 +484,7 @@ def main():
     def typed_unlock(row, target, image):
         record = next((call for call in calls if call["site"] == row["ip"]
                        and call.get("operation") == "unlock"), None)
-        return (has(row, "JIT_OPERATION") and row["result"] == 2 and row["related"] == target
+        return (has(row, "JIT_OPERATION") and row["result"] == unlock_kind and row["related"] == target
                 and row["image"] == image and record is not None
                 and row["cursor"] == record["site"] + record["length"])
 
@@ -479,9 +505,11 @@ def main():
         exits = [row for row in interval if has(row, "JIT_EXIT")]
         if not exits or any(row["result"] != 1 or row["image"] != image for row in exits):
             raise AssertionError("protected episode reached a miss/refusal/resource/special exit")
-        if not any(has(row, "JIT_ENTER") and row["image"] == image
-                   and row["task"] != row["origin"] for row in interval):
-            raise AssertionError("native-only completion supplies no generated execution proof")
+        entries = [row for row in interval if has(row, "JIT_ENTER")]
+        if not any(row["image"] == image and row["task"] != row["origin"] for row in entries):
+            raise AssertionError("protected completion lacks a foreign generated entry")
+        if spin and any(not row["flags"] & (1 << 12) for row in entries):
+            raise AssertionError("spin JIT entered without an observed physical pin and IRQ-on task context")
         if not any(typed_unlock(row, node, image) for row in interval):
             raise AssertionError("episode completion lacks its exact JIT-handled source unlock")
         return done
@@ -502,8 +530,8 @@ def main():
             protected_completion([row for row in rows if prepare["index"] <= row["index"] <= stop],
                                  selection["node"], image)
 
-    def validate_retirement(rows, root, child, mode):
-        for request in (root, child):
+    def validate_retirement(rows, root, child, mode, image=None):
+        for request in ((root, child) if child is not None else (root,)):
             grant = next((row for row in rows if has(row, "GRANT")
                           and row["node"] == request["node"] and row["acquisition"] == request["acquisition"]), None)
             if grant is None or not grant["related"] or not grant["owner"]:
@@ -543,12 +571,29 @@ def main():
                                   and row["task"] == owner_task and row["phase"] == 3), None)
             if (not all((bound, handled, stopped, begin, physical, source_drop, retired, free, ready, owner_retired))
                     or not bound["index"] < handled["index"] < begin["index"] < physical["index"]
-                    or not stopped["index"] < begin["index"]
+                    or not stopped["index"] < (owner_retired["index"] if spin else begin["index"])
                     or not physical["index"] < source_drop["index"] < retired["index"]
                     or not retired["index"] <= ready["index"] < free["index"]
                     or not physical["index"] < owner_retired["index"]):
                 raise AssertionError("physical callback/control/last-user retirement proof is incomplete")
-            if request is root and mode == 2:
+            if spin and request is root and mode == 2:
+                requested = next((row for row in release_rows if has(row, "RELEASE_REQUEST")
+                                  and row["phase"] == 1 and row["result"] == 3
+                                  and row["task"] != owner_task), None)
+                accepted = next((row for row in rows if typed_unlock(row, root["node"], image)
+                                 and row["node"] == child["node"] and row["phase"] == 3
+                                 and requested and row["task"] == requested["task"]), None)
+                resumed = next((row for row in rows if has(row, "JIT_ENTER")
+                                and row["node"] == child["node"] and accepted
+                                and row["task"] == accepted["task"] and row["image"] == image
+                                and row["cursor"] == accepted["cursor"]
+                                and row["index"] > accepted["index"] and row["flags"] & (1 << 12)), None)
+                if (not all((requested, accepted, resumed))
+                        or not requested["index"] < handled["index"] < physical["index"] < accepted["index"]
+                        or any(has(row, name) for row in release_rows
+                               for name in ("RELEASE_DEFER", "RELEASE_UNWIND", "RELEASE_NOTIFY_DONE"))):
+                    raise AssertionError("spin outer unlock continued before its original owner's physical ACK")
+            if request is root and mode == 2 and not spin:
                 requested = next((row for row in release_rows if has(row, "RELEASE_REQUEST")
                                   and row["result"] == 2 and row["phase"] == 1 and row["return_user"]), None)
                 deferred = next((row for row in release_rows if has(row, "RELEASE_DEFER")
@@ -565,11 +610,60 @@ def main():
                         or not returned["index"] < retired["index"]):
                     raise AssertionError("deferred outer request/unwind/exact notifier-return tokens differ")
 
+    def validate_spin_suffix(rows, root, final, tasks, image):
+        candidate = next(row for row in rows if has(row, "ENQUEUE")
+                         and row["task"] == tasks[2] and row["origin"] == tasks[2])
+        if (root["related"] != candidate["node"] or root["state"] != int(final["w_core"], 16)
+                or not int(final["w_regs"], 16) or int(final["w_miss_checks"]) != 1
+                or int(final["miss_checks"]) != 1):
+            raise AssertionError("spin native suffix lost its exact queue, source identity or one checkpoint")
+        native_unlock = next((row for row in rows if has(row, "NATIVE_UNLOCK")
+                              and row["node"] == root["node"] and row["task"] == tasks[4]
+                              and row["state"] == root["state"] and row["phase"] == 3), None)
+        if native_unlock is None:
+            raise AssertionError("native spin suffix lacks the original task's synchronous source unlock")
+        proof = {"root": root["node"], "state": root["state"], "roles": tasks,
+                 "native_unlock": native_unlock, "native_checkpoint_calls": 1}
+        if not image:
+            if any(has(row, "JIT_ENTER") or has(row, "SELECT_PROXY") for row in rows):
+                raise AssertionError("no-image spin case unexpectedly selected generated execution")
+        else:
+            target = int(final["miss_target"], 16)
+            call = next((call for call in calls if call["target"] == target and not call["indirect"]), None)
+            if call is None:
+                raise AssertionError("native checkpoint has no actual decoded direct CALL")
+            selected = next((row for row in rows if has(row, "SELECT_PROXY")
+                             and row["node"] == root["node"] and row["task"] == tasks[2]
+                             and row["related"] == candidate["node"]), None)
+            entered = next((row for row in rows if has(row, "JIT_ENTER") and row["node"] == root["node"]
+                            and row["image"] == image and row["task"] == tasks[2]
+                            and row["flags"] & (1 << 12)), None)
+            exited = next((row for row in rows if has(row, "JIT_EXIT") and row["node"] == root["node"]
+                           and row["image"] == image and row["ip"] == call["site"]
+                           and row["related"] == target and row["cursor"] == target
+                           and row["result"] == int(ExitKind.COVERAGE_MISS)
+                           and row["phase"] == int(ExitPhase.CALL_STAGED)), None)
+            forwarded = next((row for row in rows if has(row, "FORWARD") and row["node"] == root["node"]
+                              and row["ip"] == call["site"] and row["related"] == target
+                              and row["cursor"] == target and row["phase"] == int(ExitPhase.CALL_STAGED)
+                              and row["flags"] == int(ExitKind.COVERAGE_MISS)), None)
+            if (not all((selected, entered, exited, forwarded))
+                    or not selected["index"] < entered["index"] < exited["index"]
+                    or not exited["index"] < forwarded["index"] < native_unlock["index"]
+                    or any(has(row, "EPISODE_DONE") and row["node"] == root["node"] for row in rows)):
+                raise AssertionError("spin miss lacks exact once-staged CALL and original native continuation")
+            proof.update(selection=selected, entered=entered, exited=exited, forwarded=forwarded,
+                         call=call, fixed_image=image)
+        validate_retirement(rows, root, None, 3)
+        return proof
+
     def scene_case(mode, image):
         begin = len(observations())
         control_command(f"scene {mode}")
         _, first = wait_scene(lambda value: int(value["ready"], 16) == 31, f"scene{mode}-ready")
         tasks = [int(first[f"role{index}"], 16) for index in range(5)]
+        if spin:
+            check_spin_status(first, 5)
         control_command("go 0"); control_command("go 1")
         wait_scene(lambda value: int(value["held"], 16) & 3 == 3, f"scene{mode}-holders")
         control_command("go 2")
@@ -578,18 +672,33 @@ def main():
         wait_scene(lambda value: int(value["queued"], 16) & 16, f"scene{mode}-W")
         control_command("go 3")
         wait_scene(lambda value: int(value["queued"], 16) & 8, f"scene{mode}-CB")
-        control_command("release 0")
-        wait_scene(lambda value: int(value["child"], 16) != 0, f"scene{mode}-child")
-        control_command("release 1")
+        if spin and mode == 3:
+            control_command("release 1")
+            control_command("release 0")
+        else:
+            control_command("release 0")
+            wait_scene(lambda value: int(value["child"], 16) != 0, f"scene{mode}-child")
+            control_command("release 1")
         raw, final = wait_scene(lambda value: int(value["finished"]) == 5, f"scene{mode}-done")
-        if (int(final["completed"]) != 5 or int(final["calls"]) != mode + 2
-                or int(final["a"]) != 2 or int(final["b"]) != (2 if mode == 2 else 1)
+        if spin:
+            check_spin_status(final, 5)
+        expected_calls = 2 if spin and mode == 3 else mode + 2
+        expected_b = 0 if spin and mode == 3 else (2 if mode == 2 else 1)
+        if (int(final["completed"]) != 5 or int(final["calls"]) != expected_calls
+                or int(final["a"]) != 2 or int(final["b"]) != expected_b
                 or any(int(final[key]) for key in ("errors", "core_errors", "origin_errors"))
                 or int(final["locks_clear"]) != 1):
             raise AssertionError("five ordinary role effects or physical cleanup differ")
         rows = observations()[begin:]
         root = next(row for row in rows if has(row, "ENQUEUE") and row["task"] == tasks[4]
                     and row["origin"] == tasks[4])
+        if spin and mode == 3:
+            proof = validate_spin_suffix(rows, root, final, tasks, image)
+            proof.update(name="spin-native-contended" if not image else "spin-miss-native-suffix",
+                         mode=mode, start=begin, end=len(event_rows), raw_status=raw)
+            results["cases"].append(proof)
+            control_command("stop")
+            return proof
         child = next(row for row in rows if has(row, "ENQUEUE") and row["task"] == tasks[2]
                      and row["origin"] == tasks[4] and row["node"] != root["node"])
         ca = next(row for row in rows if has(row, "ENQUEUE") and row["task"] == tasks[2]
@@ -601,17 +710,28 @@ def main():
                 or not int(final["w_regs"], 16) or root["acquisition"] == child["acquisition"]):
             raise AssertionError("actual common-MCS queue or one-state/distinct-acquisition relation differs")
         for request, executor, head in ((root, tasks[2], ca), (child, tasks[3], cb)):
-            if not any(has(row, "SELECT_LOCAL") and row["node"] == head["node"]
+            if not spin and not any(has(row, "SELECT_LOCAL") and row["node"] == head["node"]
                        and row["task"] == executor and row["owner_task"] == executor for row in rows):
                 raise AssertionError("candidate did not become the ordinary physical MCS head")
             if not any(has(row, "SELECT_PROXY") and row["node"] == request["node"]
                        and row["task"] == executor and row["owner_task"] == executor
                        and row["related"] == head["node"] for row in rows):
                 raise AssertionError("ordinary optional arbitration did not select the required physical executor")
+        if spin:
+            for request, candidate in ((root, ca), (child, cb)):
+                selected = next(row for row in rows if has(row, "SELECT_PROXY") and row["node"] == request["node"])
+                requeued = next((row for row in rows if has(row, "ENQUEUE") and row["node"] == candidate["node"]
+                                 and row["acquisition"] == candidate["acquisition"]
+                                 and row["index"] > selected["index"] and row["phase"] == 2), None)
+                local = next((row for row in rows if has(row, "SELECT_LOCAL") and row["node"] == candidate["node"]
+                              and row["acquisition"] == candidate["acquisition"]
+                              and requeued and row["index"] > requeued["index"]), None)
+                if requeued is None or local is None:
+                    raise AssertionError("spin executor did not rejoin once and complete its own local request")
         prepare = next(row for row in rows if has(row, "FRAME_PREPARE") and row["node"] == child["node"])
         if prepare["parent"] != root["node"] or prepare["state"] != root["state"]:
             raise AssertionError("child is not the exact same-state recursive request")
-        lock_b = next((row for row in rows if has(row, "JIT_OPERATION") and row["result"] == 1
+        lock_b = next((row for row in rows if has(row, "JIT_OPERATION") and row["result"] == lock_kind
                        and row["node"] == root["node"] and row["related"] == child["node"]
                        and row["task"] == tasks[2] and row["image"] == image
                        and row["object"] == int(final["object_b"], 16)), None)
@@ -621,7 +741,7 @@ def main():
                         and row["task"] == tasks[3] and row["image"] == image), None)
         if not all((lock_b, enter_a, enter_b)) or not enter_a["index"] < lock_b["index"] < child["index"] < enter_b["index"]:
             raise AssertionError("no actual CA source-to-child operation and CB generated entry chain")
-        child_done = protected_completion(rows, child["node"], image, tasks[3], 5 if mode == 2 else 3)
+        child_done = protected_completion(rows, child["node"], image, tasks[3], 5 if mode == 2 and not spin else 3)
         returned = next((row for row in rows if has(row, "CHILD_RETURN") and row["node"] == root["node"]
                          and row["related"] == child["node"] and row["task"] == tasks[2]
                          and row["result"] == child_done["result"] and row["flags"] & 1024
@@ -642,11 +762,11 @@ def main():
                 raise AssertionError("parent resumed neither the exact returned binding nor its current cursor")
         elif root_done["related"] != returned["return_user"] or root_done["cursor"] != returned["cursor"]:
             raise AssertionError("out-of-order root completion revived an old binding or cursor")
-        if mode == 2:
+        if mode == 2 and not spin:
             if not any(typed_unlock(row, root["node"], image) and row["task"] == tasks[3]
                        and row["node"] == child["node"] and row["phase"] == 2 for row in rows):
                 raise AssertionError("outer logical unlock was not deferred from the actual inner executor")
-        validate_retirement(rows, root, child, mode)
+        validate_retirement(rows, root, child, mode, image)
         proof = {"name": f"warm-recursive-{mode}", "mode": mode, "start": begin,
                  "end": len(event_rows), "roles": tasks, "state": root["state"],
                  "root": root["node"], "child": child["node"], "raw_status": raw,
@@ -670,17 +790,24 @@ def main():
         return workflow.result
 
     try:
-        command([tools["insmod"], str(args.module), f"gs_offset={args.gs_offset}", "gs_verified=1",
-                 "immutable_text=1", "auxiliary_contract=1", f"source_size={body_size}",
-                 f"step_size={step_size}", f"dependency_page_limit={args.dependency_page_limit}",
-                 f"total_source_byte_limit={args.total_source_byte_limit}",
-                 f"event_capacity={args.event_capacity}", f"source_version={version}"], args.deadline)
-        control = os.open("/dev/kd_runtime_fixture_ctl", os.O_RDWR | os.O_CLOEXEC)
-        event_fd = os.open("/dev/kd_runtime_fixture_events", os.O_RDONLY | os.O_CLOEXEC)
+        parameters = [f"gs_offset={args.gs_offset}", "gs_verified=1",
+                      "immutable_text=1", "auxiliary_contract=1", f"source_size={body_size}",
+                      f"step_size={step_size}", f"dependency_page_limit={args.dependency_page_limit}",
+                      f"total_source_byte_limit={args.total_source_byte_limit}",
+                      f"event_capacity={args.event_capacity}", f"source_version={version}"]
+        if spin:
+            parameters.extend(("spin_cpus=" + ",".join(map(str, args.spin_cpus)),
+                               f"holder_timeout_ms={args.holder_timeout_ms}"))
+        command([tools["insmod"], str(args.module), *parameters], args.deadline)
+        control = os.open(f"/dev/{module_name}_ctl", os.O_RDWR | os.O_CLOEXEC)
+        event_fd = os.open(f"/dev/{module_name}_events", os.O_RDONLY | os.O_CLOEXEC)
         managed_fork_case()
         body_case("native-local", 0, 1, args.iterations)
+        if spin:
+            body_case("spin-native-nesting", 4, 1, args.iterations)
+            scene_case(3, 0)
         limits = WireLimits(2 * 1024 * 1024, 4096, 256, 256, 512 * 1024)
-        transport = RecordedTransport.open("/dev/kd_runtime_fixture", limits, 4 * 1024 * 1024 + 48)
+        transport = RecordedTransport.open(f"/dev/{module_name}", limits, 4 * 1024 * 1024 + 48)
         exported = drive(SourceExportSession(transport, SourceExportLimits(
             2 + args.dependency_page_limit, 64, args.total_source_byte_limit)))
         snapshot, roots, calls, indirect = scan_operation_calls(exported, tools["objdump"], args.output, args.deadline)
@@ -774,6 +901,9 @@ def main():
             raise AssertionError("warm completion generated misses or replaced its fixed image")
         results["warm_claim_empty"] = True
         validate_warm_plain(event_rows[warm_start:warm_plain_end], fixed_image)
+        if spin:
+            results["spin_miss_handback"] = scene_case(3, fixed_image)
+            save_observations("observations-after-miss")
         states = coordinator.facts()
         successful_exits = tuple(state for state in states if state.recorded.fact.entry_result == 0
                                  and state.recorded.fact.exit.kind == int(ExitKind.COVERAGE_MISS))
@@ -834,6 +964,17 @@ def main():
         results["managed_fork_exit"]["shutdown_native_holds_drained"] = True
         results["archive_sha256"] = archive.archive.identity.hex()
         results["settled_keys"] = len(archive.settlement.keys)
+        if spin:
+            miss = results["spin_miss_handback"]["exited"]
+            retained = [state for state in coordinator.facts()
+                        if state.recorded.fact.exit.source_ip == miss["ip"]
+                        and state.recorded.fact.exit.target == miss["related"]
+                        and state.recorded.fact.exit.phase == int(ExitPhase.CALL_STAGED)
+                        and state.recorded.fact.exit.kind == int(ExitKind.COVERAGE_MISS)]
+            if (len(retained) != 1 or retained[0].recorded.fact.key not in archive.settlement.keys
+                    or retained[0].acknowledgment_identities):
+                raise AssertionError("the exact native-suffix miss was not retained and settled in the archive")
+            results["spin_miss_archived"] = exact_key(retained[0])
         transport.close()
         transport = None
         control_command("destroy")
@@ -842,10 +983,11 @@ def main():
         event_fd = -1
         os.close(control)
         control = -1
-        command([tools["rmmod"], "kd_runtime_fixture"], args.deadline)
+        command([tools["rmmod"], module_name], args.deadline)
         results["returned_full_jit_body"] = "protected_episode_completed"
         results["full_c_function_jit_return"] = "outside_protected_episode_scope"
-        results["status"] = "protected_jit_recursive_mechanism_pass"
+        results["status"] = ("protected_spin_jit_recursive_mechanism_pass" if spin
+                             else "protected_jit_recursive_mechanism_pass")
         (args.output / "result.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
         return 0
     except BaseException as error:
