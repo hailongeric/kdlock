@@ -21,7 +21,12 @@ enum { KDB_SPIN, KDB_MUTEX, KDB_RWLOCK, KDB_RWSEM,
 	 * difference between outer sections run and the outer counter.
 	 */
 	KDB_NEST_SPIN, KDB_NEST_MUTEX, KDB_MIX };
-enum { KDB_NATIVE, KDB_KD };
+/*
+ * KDB_TCLOCK: the original TCLock locks from tclock_backend/ (komb_*),
+ * present only in a module built with KDB_TCLOCK=1, for the four base
+ * families. Otherwise runs with it fail with EOPNOTSUPP.
+ */
+enum { KDB_NATIVE, KDB_KD, KDB_TCLOCK };
 
 /*
  * One timed run. Layout is mirrored in bench/run_nano.py (RUN_FMT).

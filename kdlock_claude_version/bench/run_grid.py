@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0
-"""Run the nano grid, alternating Native and kd at every point.
+"""Run the nano grid, alternating the backends at every point.
 
-For each profile and worker count, the Native run and the kd run follow each
-other (order alternates per round), so slow drift of the host affects both
-alike. Every result line carries the identity needed to compare it: kernel
+For each profile and worker count, the runs of all selected backends (Native,
+kd, and with --backends also the original TCLock) follow each other, in an
+order that rotates per round and point, so slow drift of the host affects
+them alike. Every result line carries the identity needed to compare it: kernel
 release and build, source commit, profile, workers, round, backend and, for
 kd, the execution-class counter deltas. Start the translator daemon first;
 it does not affect the native locks.
 
   run_grid.py --out grid.jsonl --rounds 1
   run_grid.py --profiles mutex_c01 rwsem_c16_w20 --workers 1 8 32 --rounds 3
+  run_grid.py --backends native kd tclock --out grid3.jsonl   # TCLock bench build
 """
 
 import argparse
@@ -66,6 +68,8 @@ def main():
     ap.add_argument("--warmup-ms", type=int, default=500)
     ap.add_argument("--dev", default="/dev/kdbench")
     ap.add_argument("--commit", help="source commit, when git cannot run here")
+    ap.add_argument("--backends", nargs="+", default=["native", "kd"],
+                    choices=list(run_nano.BACKEND))
     args = ap.parse_args()
 
     ident = identity()
@@ -78,7 +82,8 @@ def main():
             for name in args.profiles:
                 family, lines, wpct, post = PROFILES[name]
                 for n in args.workers:
-                    order = ("native", "kd") if (rnd + n) % 2 == 0 else ("kd", "native")
+                    k = (rnd + n) % len(args.backends)
+                    order = args.backends[k:] + args.backends[:k]
                     for backend in order:
                         a = argparse.Namespace(family=family, backend=backend, lines=lines,
                                                write_pct=wpct, post=post, first_cpu=0)

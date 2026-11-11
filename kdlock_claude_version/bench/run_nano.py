@@ -29,7 +29,7 @@ RUN_FMT = IN_FMT + OUT_FMT[1:]
 FAMILY = {"spin": 0, "mutex": 1, "rwlock": 2, "rwsem": 3,
           # test bodies (nesting, handback); see kd_bench_uapi.h
           "nest_spin": 4, "nest_mutex": 5, "mix": 6}
-BACKEND = {"native": 0, "kd": 1}
+BACKEND = {"native": 0, "kd": 1, "tclock": 2}
 # _IOWR('B', 1, struct kdb_run)
 IOC = (3 << 30) | (struct.calcsize(RUN_FMT) << 16) | (ord("B") << 8) | 1
 STATS = "/sys/kernel/debug/kdlock_stats"

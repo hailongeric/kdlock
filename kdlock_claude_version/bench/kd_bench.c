@@ -86,6 +86,54 @@ DEFINE_OPS(krwl, kd_write_lock(&k_rwl), kd_write_unlock(&k_rwl),
 DEFINE_OPS(krwsem, kd_down_write(&k_rwsem), kd_up_write(&k_rwsem),
 	   kd_down_read(&k_rwsem), kd_up_read(&k_rwsem))
 
+#ifdef KDB_WITH_TCLOCK
+/*
+ * Original TCLock (tclock_backend/, upstream rs3lab/TCLocks RCUHT locks).
+ * The calls follow the existing direct adapters in
+ * workload_modules/rwlock_bench: spin and rwlock callers disable
+ * preemption themselves; the rwlock pair restores interrupts after the
+ * unlock because the original inline return paths can leave them off;
+ * mutex and rwsem workers register their fixed CPU before the first lock
+ * call, and the registrations are drained after all workers exited.
+ */
+#include "mutex/komb_mutex.h"
+#include "rwlock/komb_rwlock.h"
+#include "rwsem/komb_rwsem.h"
+void komb_spin_lock(struct qspinlock *lock);
+void komb_spin_unlock(struct qspinlock *lock);
+int tc_mutex_worker_register(void);
+int tc_mutex_workers_drain(void);
+int tc_rwsem_worker_register(void);
+int tc_rwsem_workers_drain(void);
+
+static arch_spinlock_t t_spin __aligned(64) = __ARCH_SPIN_LOCK_UNLOCKED;
+static struct komb_mutex t_mutex __aligned(64) = __KOMBMUTEX_INITIALIZER(t_mutex);
+static struct komb_rwlock t_rwl __aligned(64) = __KOMB_RWLOCK_UNLOCKED;
+static struct komb_rwsem t_rwsem __aligned(64) = __KOMB_RWSEM_INITIALIZER(t_rwsem);
+
+#define TC_SPIN_LOCK	do { preempt_disable(); komb_spin_lock(&t_spin); } while (0)
+#define TC_SPIN_UNLOCK	do { komb_spin_unlock(&t_spin); preempt_enable(); } while (0)
+#define TC_WLOCK	do { preempt_disable(); komb_write_lock(&t_rwl); } while (0)
+#define TC_WUNLOCK	do { komb_write_unlock(&t_rwl); local_irq_enable(); preempt_enable(); } while (0)
+#define TC_RLOCK	do { preempt_disable(); komb_read_lock(&t_rwl); } while (0)
+#define TC_RUNLOCK	do { komb_read_unlock(&t_rwl); local_irq_enable(); preempt_enable(); } while (0)
+
+DEFINE_OPS(tspin, TC_SPIN_LOCK, TC_SPIN_UNLOCK, TC_SPIN_LOCK, TC_SPIN_UNLOCK)
+DEFINE_OPS(tmutex, komb_mutex_lock(&t_mutex), komb_mutex_unlock(&t_mutex),
+	   komb_mutex_lock(&t_mutex), komb_mutex_unlock(&t_mutex))
+DEFINE_OPS(trwl, TC_WLOCK, TC_WUNLOCK, TC_RLOCK, TC_RUNLOCK)
+DEFINE_OPS(trwsem, komb_rwsem_down_write(&t_rwsem), komb_rwsem_up_write(&t_rwsem),
+	   komb_rwsem_down_read(&t_rwsem), komb_rwsem_up_read(&t_rwsem))
+
+static void tc_reset(void)
+{
+	t_spin = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;
+	komb_mutex_init(&t_mutex);
+	t_rwl = (struct komb_rwlock)__KOMB_RWLOCK_UNLOCKED;
+	t_rwsem = (struct komb_rwsem)__KOMB_RWSEM_INITIALIZER(t_rwsem);
+}
+#endif
+
 /*
  * Test bodies. Each returns KDB_T_BAD if it saw a broken invariant and
  * KDB_T_OUTER if it incremented the outer counter (checked at the end).
@@ -223,9 +271,11 @@ struct ops {
 	void (*w)(void);
 	bool (*r)(void);
 	u32 (*t)(u32 r, u32 pct);	/* test bodies; w/r unused when set */
+	int (*reg)(void);		/* per-worker registration before the first lock */
+	int (*drain)(void);		/* after all workers exited */
 };
 
-static const struct ops op_table[2][7] = {
+static const struct ops op_table[3][7] = {
 	[KDB_NATIVE] = { { nspin_w, nspin_r }, { nmutex_w, nmutex_r },
 			 { nrwl_w, nrwl_r }, { nrwsem_w, nrwsem_r },
 			 { .t = nnest_spin_t }, { .t = nnest_mutex_t },
@@ -234,6 +284,14 @@ static const struct ops op_table[2][7] = {
 			 { krwl_w, krwl_r }, { krwsem_w, krwsem_r },
 			 { .t = knest_spin_t }, { .t = knest_mutex_t },
 			 { .t = kmix_t } },
+#ifdef KDB_WITH_TCLOCK
+	[KDB_TCLOCK] = { { tspin_w, tspin_r },
+			 { tmutex_w, tmutex_r, .reg = tc_mutex_worker_register,
+			   .drain = tc_mutex_workers_drain },
+			 { trwl_w, trwl_r },
+			 { trwsem_w, trwsem_r, .reg = tc_rwsem_worker_register,
+			   .drain = tc_rwsem_workers_drain } },
+#endif
 };
 
 /* Register-only work between operations; the asm keeps it from folding. */
@@ -251,6 +309,7 @@ struct worker {
 	const struct ops *ops;
 	unsigned int cpu, pct, post;
 	u64 ops_done, writes, bad, outer;
+	int reg_err;
 	struct completion done;
 } ____cacheline_aligned;
 
@@ -263,10 +322,12 @@ static int worker_fn(void *arg)
 	u64 rng = 0x9e3779b97f4a7c15ULL * (w->cpu + 1), sink = 0;
 	u64 n = 0;
 
+	if (w->ops->reg)
+		w->reg_err = w->ops->reg();
 	atomic_inc(&ready);
 	while (!smp_load_acquire(&go))
 		cpu_relax();
-	while (!READ_ONCE(stop)) {
+	while (!w->reg_err && !READ_ONCE(stop)) {
 		rng ^= rng << 13; rng ^= rng >> 7; rng ^= rng << 17;
 		if (w->ops->t) {
 			u32 f = w->ops->t((u32)(rng >> 32), w->pct);
@@ -310,19 +371,23 @@ static DEFINE_MUTEX(run_lock);
 
 static int do_run(struct kdb_run *r)
 {
+	const struct ops *ops;
 	struct worker *ws;
 	u64 before, outer;
 	ktime_t t0;
 	unsigned int i;
 	int ret = 0, started = 0;
 
-	if (r->family > KDB_MIX || r->backend > KDB_KD || r->lines < 1 ||
+	if (r->family > KDB_MIX || r->backend > KDB_TCLOCK || r->lines < 1 ||
 	    r->lines > MAX_LINES || !r->workers || r->workers > KDB_MAX_WORKERS ||
 	    r->first_cpu + r->workers > nr_cpu_ids || !r->ms)
 		return -EINVAL;
 	for (i = 0; i < r->workers; i++)
 		if (!cpu_online(r->first_cpu + i))
 			return -EINVAL;
+	ops = &op_table[r->backend][r->family];
+	if (!ops->w && !ops->t)
+		return -EOPNOTSUPP;
 	ws = kcalloc(r->workers, sizeof(*ws), GFP_KERNEL);
 	if (!ws)
 		return -ENOMEM;
@@ -341,6 +406,9 @@ static int do_run(struct kdb_run *r)
 	kd_mutex_init(&k_mutex);
 	kd_rwlock_init(&k_rwl);
 	kd_rwsem_init(&k_rwsem);
+#ifdef KDB_WITH_TCLOCK
+	tc_reset();
+#endif
 	atomic_set(&ready, 0);
 	WRITE_ONCE(stop, false);
 	smp_store_release(&go, false);
@@ -350,7 +418,7 @@ static int do_run(struct kdb_run *r)
 		struct worker *w = &ws[i];
 
 		w->cpu = r->first_cpu + i;
-		w->ops = &op_table[r->backend][r->family];
+		w->ops = ops;
 		w->pct = (r->family == KDB_SPIN || r->family == KDB_MUTEX ||
 			  r->family == KDB_MIX) ? 100 : r->write_pct;
 		w->post = r->post;
@@ -382,6 +450,20 @@ static int do_run(struct kdb_run *r)
 			continue;
 		wait_for_completion(&ws[i].done);
 		kthread_stop(ws[i].task);
+		if (ws[i].reg_err && !ret)
+			ret = ws[i].reg_err;
+	}
+	/*
+	 * Registrations are released only once every registered task has
+	 * exited, which follows kthread_stop() shortly; retry until then.
+	 */
+	if (ops->drain) {
+		int d, tries = 0;
+
+		while ((d = ops->drain()) == -EBUSY && ++tries < 1000)
+			msleep(1);
+		if (d && !ret)
+			ret = d;
 	}
 	if (ret)
 		goto out;

@@ -56,9 +56,9 @@ headings and on the other documents that summarize them; items marked
 | D6 | Handback | exact, custody of every live owner, owner list | exact; ownership transfer by lock-word value | same intent, less machinery, fewer checks |
 | D7 | Nested locks | not supported beyond one scoped path | general recursion (bounded) | superset; unvalidated |
 | D8 | What may delegate | rwsem: prepared writers only; mutex: not killable/interruptible | all writers; killable/interruptible too | more coverage; cancellation semantics differ |
-| D9 | Spinlock | qspinlock-style pending + MCS | MCS only | possible low-contention cost |
-| D10 | Mutex waiting | published waiters poll pinned | spin only while owner runs, then park | better under oversubscription; different handoff rules |
-| D11 | Rwsem | 320 B, phases, queued-reader admission, proxy downgrade | 40 B, count + mutex queue, readers sleep, downgrade always handed back | **likely slower for readers; MM downgrade not delegated** |
+| D9 | Spinlock | qspinlock-style pending + MCS | pending waiter only while no queue, then MCS | 4-worker point still below Native |
+| D10 | Mutex waiting | published waiters poll pinned | spin only while owner runs, then park; first parked waiter spins for its handoff | better under oversubscription; different handoff rules |
+| D11 | Rwsem | 320 B, phases, queued-reader admission, proxy downgrade | 40 B, count + mutex queue, readers spin (bounded) then sleep, downgrade always handed back | readers never delegate; **MM downgrade not delegated** |
 | D12 | Image/translator | Miasm backend, entries/generations, ABI-specific wrapper | capstone, byte copy, one image per site | simpler; some GPT gaps closed, some opened |
 | D13 | Exit set | manifest of native terminal calls incl. TLB, task-mm, user access, IRQ/BH | smaller frontier list | **TLB/mm helpers not yet handed back** |
 | D14 | API surface | mutex/rwsem non-owner, nested, timeout, owner helpers, MM adapter | core API only | gaps for stage 2/3 |
@@ -220,13 +220,19 @@ inner lock; roots stack; released bitmask; bounded depth).
 
 Docs: pending-bit fast contention path plus MCS (native-like).
 
-Here: the first contender goes straight to the MCS queue.
+Here (since `63f8de2a`): also a pending waiter, but only while no queue
+exists (`kd_spin_pending`). The pending bit sits in the queue word's flags
+byte, so the fast path stays closed while it is set. Pending becomes locked in
+one atomic step, a newcomer waits a bounded time for that handover rather
+than queueing, and the pending waiter joins the queue as soon as one forms.
+Under real contention every waiter is therefore in the queue and can be
+delegated.
 
-* **Effect:** with two CPUs the native pending path avoids touching per-CPU
-  nodes; here every contended acquire pays node setup and the stack switch to
-  publish the continuation (when an image exists). Expect a low-count cost
-  versus native; whether it is acceptable is a measurement question (the old
-  results already show adverse low-count points).
+* **Effect:** before the change, two contending CPUs formed a queue and
+  delegated one section per session (spin_c01 n2 at 0.59–0.62 of Native
+  in single rounds); with it, n2 delegates 0–3% and ran at 0.87/1.04 of
+  Native (c01/c08, build #11, two rounds). Four workers remain the weak point:
+  the queue keeps draining, so sessions are short (about four sections).
 
 ### D10. Mutex waiting and handoff
 
@@ -238,11 +244,21 @@ Here: spin only while the owner is running (`kd_mutex_can_spin`), withdraw and
 park otherwise; one `HANDOFF` flag; batch = 1024 including passed-over
 waiters; no separate scan budget.
 
+Since `63f8de2a`, as in the native mutex, the first parked waiter spins on the
+owner once it has been woken and has asked for `HANDOFF`, so a handoff
+normally goes to a running task. The recorded owner is the task that runs
+with the lock: the combiner during its session, and the origin from a
+handback onwards. Queued waiters check it every 64 iterations, not per
+section; it shares its cache line with the queue tail.
+
 * **Effect:** better behaviour when the owner is descheduled or tasks
   outnumber CPUs (the docs list oversubscription as unvalidated and
-  pinned polling as a problem). Cost: the `owner_on_cpu` check is a read of
-  another task's state on every spin iteration; the handoff rule is simpler
-  than the documented cohort handling, so tail behaviour will differ.
+  pinned polling as a problem). The handoff rule is simpler than the
+  documented cohort handling, so tail behaviour will differ.
+* **Measured failure of the earlier rule** (grid round 1): a handoff to a
+  sleeping waiter made every queued spinner see an off-CPU owner, abandon and
+  park; that convoy held mutex at 0.4–0.5 of Native from 8 workers up. The
+  counters (`no_spin`, `abandon`, `parked`, `handoff`) show it directly.
 
 ### D11. Rwsem
 
@@ -254,14 +270,18 @@ downgrade keeps the retained writer through the read tail.
 
 Here: a reader that finds a writer present or waiting undoes its increment and
 **sleeps on the queue mutex** (`kd_mutex_sleep`), then registers and waits for
-the active writer to leave. There is no spinning admission stage. Downgrade is
-one atomic, and inside a delegated section it is always handed back.
+the active writer to leave. Since `63f8de2a`, before that, the reader spins up
+to `KD_RWSEM_SPIN` iterations for the writer bits to clear (every spinning
+reader polls the count; there is no head-only queue). Downgrade is one
+atomic, and inside a delegated section it is always handed back.
 
-* **Effect (performance):** at mixed read/write ratios with many workers,
-  every reader that meets a writer pays a schedule round trip. This is the
-  first thing to expect as a weak point against TCLock/native in the rwsem
-  nano profiles. **Hypothesis for the first optimization:** add a bounded
-  spinning admission stage for readers (head-only polling, as the docs found).
+* **Effect (performance):** without the spin, each reader that met a writer
+  slept behind the holder of `->m`, which itself slept on the count: one
+  wakeup per reader in sequence. rwsem w20 was flat at about 0.88 Mops from
+  4 to 12 workers (0.5 of Native). With the spin, the same points ran at
+  1.6–1.8 of Native in a single round, with per-worker progress near
+  Native's. Readers still never delegate, and the per-reader polling is not
+  head-only; both remain open.
 * **Effect (MM):** `mmap_write_downgrade` is used on common paths (munmap with
   downgrade); a delegated section that reaches it is handed back, so those
   sections lose delegation at that point. Not a correctness issue.

@@ -2,9 +2,10 @@
 /*
  * kdlock spinlock.
  *
- * The lock is the queue word itself: FIFO MCS queue, no pending bit. The
- * delegable acquire entries live in kd_entry.S; this file has their slow
- * paths, the raw (never delegated) acquires, trylock and release.
+ * The lock is the queue word itself: FIFO MCS queue plus, while no queue
+ * exists, one pending waiter (kd_spin_pending()). The delegable acquire
+ * entries live in kd_entry.S; this file has their slow paths, the raw
+ * (never delegated) acquires, trylock and release.
  *
  * Release is a plain byte store for every owner. A waiter whose section
  * was handed back simply owns the lock and releases it like anyone else;

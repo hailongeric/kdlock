@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0
-"""Summarize run_grid.py output: kd vs Native per profile and worker count.
+"""Summarize run_grid.py output: kd vs Native (and TCLock) per profile and worker count.
 
 Rates are medians over rounds (one round gives no variance claim; the
 number of rounds is printed). For kd the execution class is shown as shares
@@ -40,14 +40,18 @@ def main():
     profiles = sorted({p for p, _, _ in pts})
     if args.profiles:
         profiles = [p for p in profiles if p in args.profiles]
+    has_tc = any(b == "tclock" for _, _, b in pts)
     for prof in profiles:
         print("\n%s" % prof)
         print("  %3s %8s %8s %6s %3s  %6s %6s %6s %6s" %
-              ("n", "native", "kd", "kd/nat", "rds", "deleg", "handbk", "plain", "fail"))
+              ("n", "native", "kd", "kd/nat", "rds", "deleg", "handbk", "plain", "fail") +
+              ("  %8s %6s" % ("tclock", "kd/tc") if has_tc else ""))
         for n in sorted({w for p, w, _ in pts if p == prof}):
             nat = [d for d in pts.get((prof, n, "native"), ()) if d["ok"]]
             kd = [d for d in pts.get((prof, n, "kd"), ()) if d["ok"]]
-            fails = sum(not d["ok"] for b in ("native", "kd") for d in pts.get((prof, n, b), ()))
+            tc = [d for d in pts.get((prof, n, "tclock"), ()) if d["ok"]]
+            fails = sum(not d["ok"] for b in ("native", "kd", "tclock")
+                        for d in pts.get((prof, n, b), ()))
             if not nat or not kd:
                 print("  %3d  missing (fail=%d)" % (n, fails))
                 continue
@@ -58,10 +62,17 @@ def main():
             def share(key):
                 return sum(d["kd_delta"].get(key, 0) for d in kd) / ops
 
-            print("  %3d %8.3f %8.3f %6.2f %3d  %5.0f%% %5.1f%% %5.0f%% %6d" %
-                  (n, mn, mk, mk / mn if mn else 0, min(len(nat), len(kd)),
-                   100 * share("delegated"), 100 * share("handback"),
-                   100 * share("plain"), fails))
+            line = ("  %3d %8.3f %8.3f %6.2f %3d  %5.0f%% %5.1f%% %5.0f%% %6d" %
+                    (n, mn, mk, mk / mn if mn else 0, min(len(nat), len(kd)),
+                     100 * share("delegated"), 100 * share("handback"),
+                     100 * share("plain"), fails))
+            if has_tc:
+                if tc:
+                    mt = statistics.median(d["mops"] for d in tc)
+                    line += "  %8.3f %6.2f" % (mt, mk / mt if mt else 0)
+                else:
+                    line += "  %8s %6s" % ("-", "-")
+            print(line)
     return 0
 
 
