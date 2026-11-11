@@ -1,0 +1,21 @@
+{
+  "archive_bytes": 1075200,
+  "archive_sha256": "9c25aef5dba96b8f7a9b860178732aa05e435ad3b883ca8516403ee2382fb979",
+  "commit": "0a07f67876a81c9b341670107bfef39b66a99f9e",
+  "core_commit": "2d0ad60b0bc46929f3070aefa364e710c0a81115",
+  "files": 103,
+  "paths": [
+    "AGENTS.md",
+    "README.md",
+    "Kbuild",
+    "Kconfig",
+    "disassem",
+    "include",
+    "kernel",
+    "tests/kernel"
+  ],
+  "scope": "Exact committed source archive only. No project import, compilation, test, source execution, guest transfer or VM change.",
+  "source_bytes": 986684,
+  "source_worktree_status_after": "## main\n M docs/design/kdlock_redesign/01_lock_protocol.md\n M docs/design/kdlock_redesign/03_implementation_plan.md\n",
+  "source_worktree_status_before": "## main\n M docs/design/kdlock_redesign/01_lock_protocol.md\n M docs/design/kdlock_redesign/03_implementation_plan.md\n"
+}

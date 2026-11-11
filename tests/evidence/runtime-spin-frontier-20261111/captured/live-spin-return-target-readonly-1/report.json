@@ -1,0 +1,109 @@
+{
+  "target": "0xffffffff8271be20",
+  "system_map": [
+    "ffffffff8271bd20 T entry_untrain_ret",
+    "ffffffff8271bd40 T __pfx_call_depth_return_thunk",
+    "ffffffff8271bd50 T call_depth_return_thunk",
+    "ffffffff8271be20 T its_return_thunk",
+    "ffffffff8271be30 T __pi___x86_return_thunk",
+    "ffffffff8271be30 T __x86_return_thunk",
+    "ffffffff8271be40 T __SCT__tp_func_initcall_level",
+    "ffffffff8271be40 T __static_call_text_start"
+  ],
+  "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdrebuild4 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+  "boot_id": "84e4ba94-b616-4b65-9efe-820921f36c16",
+  "taint": "12288",
+  "mitigations": {
+    "spectre_v2": "Mitigation: Enhanced / Automatic IBRS; IBPB: conditional; PBRSB-eIBRS: SW sequence; BHI: SW loop, KVM: SW loop\n",
+    "retbleed": "Not affected\n",
+    "spec_rstack_overflow": "Not affected\n"
+  },
+  "config_lines": [
+    "CONFIG_CPU_MITIGATIONS=y",
+    "CONFIG_MITIGATION_PAGE_TABLE_ISOLATION=y",
+    "CONFIG_MITIGATION_RETPOLINE=y",
+    "CONFIG_MITIGATION_RETHUNK=y",
+    "CONFIG_MITIGATION_UNRET_ENTRY=y",
+    "CONFIG_MITIGATION_CALL_DEPTH_TRACKING=y",
+    "CONFIG_MITIGATION_IBPB_ENTRY=y",
+    "CONFIG_MITIGATION_IBRS_ENTRY=y",
+    "CONFIG_MITIGATION_SRSO=y",
+    "CONFIG_MITIGATION_SLS=y",
+    "# CONFIG_MITIGATION_GDS is not set",
+    "CONFIG_MITIGATION_RFDS=y",
+    "CONFIG_MITIGATION_SPECTRE_BHI=y",
+    "CONFIG_MITIGATION_MDS=y",
+    "CONFIG_MITIGATION_TAA=y",
+    "CONFIG_MITIGATION_MMIO_STALE_DATA=y",
+    "CONFIG_MITIGATION_L1TF=y",
+    "CONFIG_MITIGATION_RETBLEED=y",
+    "CONFIG_MITIGATION_SPECTRE_V1=y",
+    "CONFIG_MITIGATION_SPECTRE_V2=y",
+    "CONFIG_MITIGATION_SRBDS=y",
+    "CONFIG_MITIGATION_SSB=y",
+    "CONFIG_MITIGATION_ITS=y",
+    "CONFIG_MITIGATION_TSA=y",
+    "CONFIG_MITIGATION_VMSCAPE=y",
+    "CONFIG_ARCH_CONFIGURES_CPU_MITIGATIONS=y",
+    "CONFIG_RESET_ATTACK_MITIGATION=y"
+  ],
+  "target-disassembly": {
+    "returncode": 0,
+    "argv": [
+      "objdump",
+      "-d",
+      "--start-address=0xffffffff8271be20",
+      "--stop-address=0xffffffff8271bea0",
+      "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux"
+    ]
+  },
+  "target-bytes": {
+    "returncode": 0,
+    "argv": [
+      "objdump",
+      "-s",
+      "--start-address=0xffffffff8271be20",
+      "--stop-address=0xffffffff8271be60",
+      "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux"
+    ]
+  },
+  "symbol_sizes": [
+    "ffffffff83110a38 r __crc___x86_return_thunk",
+    "ffffffff83178c22 r __kstrtab___x86_return_thunk",
+    "ffffffff831624c7 r __kstrtabns___x86_return_thunk",
+    "ffffffff830e3ed0 r __ksymtab___x86_return_thunk",
+    "ffffffff8271be30 0000000000000006 T __pi___x86_return_thunk",
+    "ffffffff8271be30 0000000000000006 T __x86_return_thunk"
+  ],
+  "module_return_relocation_lines": [
+    "\t\t\t52: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t9b: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\tdf: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t120: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t15c: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t321: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t3cc: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t5a1: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t5b4: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t7d8: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t8e3: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t1121: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t1706: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t1713: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t1775: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t17b7: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t183e: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t1895: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t18c2: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    "\t\t\t18ea: R_X86_64_PLT32\t__x86_return_thunk-0x4"
+  ],
+  "stored_hashes": {
+    "System.map-target.txt": "a2c4f0a12dcb5686e5926e4f8f5e0f6e91d3db8cef8af1af733cb0239bf93355",
+    "target-disassembly.stdout": "366ead37708ce1d631e0284263d56c5ecf1d220ab6a8c7c10da4b805c5744193",
+    "target-disassembly.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "target-bytes.stdout": "50210bceb822d30a7383b59668498f71e1478965dd292caef1fb80161c7a99db",
+    "target-bytes.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "symbol-sizes.txt": "4f561126189f967475f8ad24c67a20b45a908d5145cab1d065e12fc846d5c2ee",
+    "source-metadata.json": "ac36369e0fd6ecbf3a3cecbea6d02753db9e72d323442150c6433ca94ae003aa"
+  }
+}

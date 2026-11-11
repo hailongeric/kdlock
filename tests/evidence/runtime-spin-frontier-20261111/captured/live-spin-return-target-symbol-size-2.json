@@ -1,0 +1,25 @@
+{
+  "nm": [
+    "ffffffff8271be20 0000000000000002 T its_return_thunk"
+  ],
+  "readelf": [
+    "206001: ffffffff8271be20     2 NOTYPE  GLOBAL DEFAULT    1 its_return_thunk"
+  ],
+  "source_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source/arch/x86/lib/retpoline.S",
+  "source_sha256": "bb05871d53b37719296fde657d656bc0e5a8ee86fa9d2db54593654ab8645228",
+  "source_excerpts": [
+    {
+      "line": 433,
+      "text": "\n#ifdef CONFIG_MITIGATION_ITS\n\n.align 64, 0xcc\n.skip 32, 0xcc\nSYM_CODE_START(its_return_thunk)\n\tUNWIND_HINT_FUNC\n\tANNOTATE_NOENDBR\n\tANNOTATE_UNRET_SAFE\n\tret\n\tint3\nSYM_CODE_END(its_return_thunk)\nEXPORT_SYMBOL(its_return_thunk)\n\n#endif /* CONFIG_MITIGATION_ITS */\n"
+    },
+    {
+      "line": 439,
+      "text": "\tUNWIND_HINT_FUNC\n\tANNOTATE_NOENDBR\n\tANNOTATE_UNRET_SAFE\n\tret\n\tint3\nSYM_CODE_END(its_return_thunk)\nEXPORT_SYMBOL(its_return_thunk)\n\n#endif /* CONFIG_MITIGATION_ITS */\n\n/*\n * This function name is magical and is used by -mfunction-return=thunk-extern\n * for the compiler to generate JMPs to it.\n *\n * This code is only used during kernel boot or module init.  All\n * 'JMP __x86_return_thunk' sites are changed to something else by"
+    },
+    {
+      "line": 440,
+      "text": "\tANNOTATE_NOENDBR\n\tANNOTATE_UNRET_SAFE\n\tret\n\tint3\nSYM_CODE_END(its_return_thunk)\nEXPORT_SYMBOL(its_return_thunk)\n\n#endif /* CONFIG_MITIGATION_ITS */\n\n/*\n * This function name is magical and is used by -mfunction-return=thunk-extern\n * for the compiler to generate JMPs to it.\n *\n * This code is only used during kernel boot or module init.  All\n * 'JMP __x86_return_thunk' sites are changed to something else by\n * apply_returns()."
+    }
+  ],
+  "boot_id": "84e4ba94-b616-4b65-9efe-820921f36c16"
+}

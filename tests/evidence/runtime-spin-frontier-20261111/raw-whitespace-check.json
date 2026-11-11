@@ -1,0 +1,13 @@
+{
+  "diagnostics": 198,
+  "files": {
+    "captured/live-spin-controller/dmesg-before.txt": 13,
+    "captured/live-spin-output/module.disassembly.txt": 170,
+    "captured/live-spin-readonly-diag-1/dmesg.txt": 13,
+    "captured/live-spin-readonly-diag-1/status.txt": 1,
+    "captured/live-spin-return-target-readonly-1/target-disassembly.stdout": 1
+  },
+  "raw_report_sha256": "b1e902342386b1e96e4c253ff016332333cd3cd4464a35f6510e654cf1ffc531",
+  "returncode": 2,
+  "scope": "Whitespace diagnostics from five exact raw captures. Maintained prose and source are checked separately."
+}

@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/input/tests/kernel/spin/run_spin_runtime_fixture.py", line 12, in <module>
+    raise SystemExit(main(spin=True))
+                     ~~~~^^^^^^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/input/tests/kernel/run_runtime_fixture.py", line 895, in main
+    warm_proofs.append(scene_case(mode, fixed_image))
+                       ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/input/tests/kernel/run_runtime_fixture.py", line 680, in scene_case
+    wait_scene(lambda value: int(value["child"], 16) != 0, f"scene{mode}-child")
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/input/tests/kernel/run_runtime_fixture.py", line 478, in wait_scene
+    raise TimeoutError("scene ordering/completion deadline; no drain or selection inferred")
+TimeoutError: scene ordering/completion deadline; no drain or selection inferred

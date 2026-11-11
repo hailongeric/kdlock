@@ -1,0 +1,78 @@
+
+/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+ffffffff8271be20 <its_return_thunk>:
+ffffffff8271be20:	c3                   	ret
+ffffffff8271be21:	cc                   	int3
+ffffffff8271be22:	0f 1f 00             	nopl   (%rax)
+ffffffff8271be25:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
+ffffffff8271be2c:	00 00 00 00 
+
+ffffffff8271be30 <__pi___x86_return_thunk>:
+ffffffff8271be30:	c3                   	ret
+ffffffff8271be31:	90                   	nop
+ffffffff8271be32:	90                   	nop
+ffffffff8271be33:	90                   	nop
+ffffffff8271be34:	90                   	nop
+ffffffff8271be35:	cc                   	int3
+ffffffff8271be36:	cc                   	int3
+ffffffff8271be37:	cc                   	int3
+ffffffff8271be38:	cc                   	int3
+ffffffff8271be39:	cc                   	int3
+ffffffff8271be3a:	cc                   	int3
+ffffffff8271be3b:	cc                   	int3
+ffffffff8271be3c:	cc                   	int3
+ffffffff8271be3d:	cc                   	int3
+ffffffff8271be3e:	cc                   	int3
+ffffffff8271be3f:	cc                   	int3
+
+ffffffff8271be40 <__SCT__tp_func_initcall_level>:
+ffffffff8271be40:	e9 cb 01 c2 fe       	jmp    ffffffff8133c010 <__traceiter_initcall_level>
+ffffffff8271be45:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be48 <__SCT__tp_func_initcall_start>:
+ffffffff8271be48:	e9 43 02 c2 fe       	jmp    ffffffff8133c090 <__traceiter_initcall_start>
+ffffffff8271be4d:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be50 <__SCT__tp_func_initcall_finish>:
+ffffffff8271be50:	e9 bb 02 c2 fe       	jmp    ffffffff8133c110 <__traceiter_initcall_finish>
+ffffffff8271be55:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be58 <__SCT__tp_func_emulate_vsyscall>:
+ffffffff8271be58:	e9 63 c2 c2 fe       	jmp    ffffffff813480c0 <__traceiter_emulate_vsyscall>
+ffffffff8271be5d:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be60 <__SCT__x86_pmu_handle_irq>:
+ffffffff8271be60:	e9 cb ff ff ff       	jmp    ffffffff8271be30 <__pi___x86_return_thunk>
+ffffffff8271be65:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be68 <__SCT__x86_pmu_disable_all>:
+ffffffff8271be68:	e9 c3 ff ff ff       	jmp    ffffffff8271be30 <__pi___x86_return_thunk>
+ffffffff8271be6d:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be70 <__SCT__x86_pmu_enable_all>:
+ffffffff8271be70:	e9 bb ff ff ff       	jmp    ffffffff8271be30 <__pi___x86_return_thunk>
+ffffffff8271be75:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be78 <__SCT__x86_pmu_enable>:
+ffffffff8271be78:	e9 b3 ff ff ff       	jmp    ffffffff8271be30 <__pi___x86_return_thunk>
+ffffffff8271be7d:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be80 <__SCT__x86_pmu_disable>:
+ffffffff8271be80:	e9 ab ff ff ff       	jmp    ffffffff8271be30 <__pi___x86_return_thunk>
+ffffffff8271be85:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be88 <__SCT__x86_pmu_assign>:
+ffffffff8271be88:	e9 a3 ff ff ff       	jmp    ffffffff8271be30 <__pi___x86_return_thunk>
+ffffffff8271be8d:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be90 <__SCT__x86_pmu_add>:
+ffffffff8271be90:	e9 9b ff ff ff       	jmp    ffffffff8271be30 <__pi___x86_return_thunk>
+ffffffff8271be95:	0f b9 cc             	ud1    %esp,%ecx
+
+ffffffff8271be98 <__SCT__x86_pmu_del>:
+ffffffff8271be98:	e9 93 ff ff ff       	jmp    ffffffff8271be30 <__pi___x86_return_thunk>
+ffffffff8271be9d:	0f b9 cc             	ud1    %esp,%ecx

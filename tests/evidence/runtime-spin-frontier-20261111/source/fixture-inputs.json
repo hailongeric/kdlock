@@ -1,0 +1,35 @@
+{
+  "core_git_head": "2d0ad60b0bc46929f3070aefa364e710c0a81115",
+  "files": {
+    "tests/kernel/payload/Kbuild": {
+      "bytes": 335,
+      "sha256": "f3985b9360ea4469c19d7d4f49ea65d0e690ce73a644ded3c31b6198dbec7e55"
+    },
+    "tests/kernel/payload/runtime_fixture.c": {
+      "bytes": 31468,
+      "sha256": "cfbe9115bde3ea1b0f7718cf7c5b12eff92d71829bec2ef483d6d4312fd76fdd"
+    },
+    "tests/kernel/payload/runtime_fixture_observe.inc": {
+      "bytes": 8044,
+      "sha256": "00246e4df7fb56009ce3f3f2f7cf5b8443bb2e85ae0d5d011b52507f63346e1d"
+    },
+    "tests/kernel/run_runtime_fixture.py": {
+      "bytes": 63793,
+      "sha256": "a41b6116b895b76fbdb3d32ac0b94187e1dcba8468b0a1cbb428f9027b1cff41"
+    },
+    "tests/kernel/spin/payload/Kbuild": {
+      "bytes": 369,
+      "sha256": "be3c11359d6cf6ee1c294171f6f778268242f4f757044a1a24281cb2a42e6187"
+    },
+    "tests/kernel/spin/payload/spin_runtime_fixture.c": {
+      "bytes": 108,
+      "sha256": "e70f93a44a46435bce5200c5497f17215234afb888301958b68b6c1eb5461fb0"
+    },
+    "tests/kernel/spin/run_spin_runtime_fixture.py": {
+      "bytes": 293,
+      "sha256": "203034a6b44c2fc6355763d0367b581aa84eed629d4c8ad813216387a7c1a017"
+    }
+  },
+  "scope": "Both separate fixture modules and shared runner/private include. Invocation bounds are supplied separately. No behavioral evidence.",
+  "source_git_head": "0a07f67876a81c9b341670107bfef39b66a99f9e"
+}

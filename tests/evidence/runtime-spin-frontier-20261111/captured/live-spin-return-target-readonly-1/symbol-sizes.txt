@@ -1,0 +1,6 @@
+ffffffff83110a38 r __crc___x86_return_thunk
+ffffffff83178c22 r __kstrtab___x86_return_thunk
+ffffffff831624c7 r __kstrtabns___x86_return_thunk
+ffffffff830e3ed0 r __ksymtab___x86_return_thunk
+ffffffff8271be30 0000000000000006 T __pi___x86_return_thunk
+ffffffff8271be30 0000000000000006 T __x86_return_thunk

@@ -1,0 +1,8 @@
+ffffffff8271bd20 T entry_untrain_ret
+ffffffff8271bd40 T __pfx_call_depth_return_thunk
+ffffffff8271bd50 T call_depth_return_thunk
+ffffffff8271be20 T its_return_thunk
+ffffffff8271be30 T __pi___x86_return_thunk
+ffffffff8271be30 T __x86_return_thunk
+ffffffff8271be40 T __SCT__tp_func_initcall_level
+ffffffff8271be40 T __static_call_text_start
