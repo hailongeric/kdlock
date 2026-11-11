@@ -1,0 +1,382 @@
+{
+  "archive": {
+    "bytes": 218365,
+    "exact_keys": [
+      [
+        "00f8bc05010011ff",
+        "d401b008010011ff",
+        1
+      ],
+      [
+        "00f8bc05010011ff",
+        "c402b008010011ff",
+        1
+      ]
+    ],
+    "settle_reply_sha256": "a6fda46a36aebe8ebe46e1770ca85af228a0e519879502d4a8ee7ba548250c73",
+    "settled_keys": [
+      [
+        "00f8bc05010011ff",
+        "d401b008010011ff",
+        1
+      ],
+      [
+        "00f8bc05010011ff",
+        "c402b008010011ff",
+        1
+      ]
+    ],
+    "sha256": "fc2220a597868184cb5731251f8a33b7869f6c541bbb6c7f0802846440782d1e",
+    "unacknowledged": true
+  },
+  "ast_receipt_sha256": "3fc26667154f5232125e0e02ea40e11084a39fd475e5a44367d30514bc7d2de0",
+  "cancellation_ordering": [
+    {
+      "actual_waitpid": null,
+      "cancelled": 27,
+      "name": "reader-drain-cancel",
+      "retire_ready": 28,
+      "slot_free": 29
+    },
+    {
+      "actual_waitpid": {
+        "events_before_observation": 38,
+        "observed_at": 11597.124260994,
+        "pid": 16281,
+        "role": 3,
+        "wait_status": 9
+      },
+      "cancelled": 37,
+      "name": "queued-exit-before-holder-release",
+      "retire_ready": 41,
+      "slot_free": 42
+    },
+    {
+      "actual_waitpid": {
+        "events_before_observation": 168,
+        "observed_at": 11597.879783276,
+        "pid": 16307,
+        "role": 3,
+        "wait_status": 9
+      },
+      "cancelled": 165,
+      "name": "origin-signal-wakes-foreign-c",
+      "retire_ready": 166,
+      "slot_free": 167
+    },
+    {
+      "actual_waitpid": null,
+      "cancelled": 216,
+      "name": "candidate-cancel-drains-current-w",
+      "retire_ready": 217,
+      "slot_free": 235
+    }
+  ],
+  "cases": [
+    "ready-before-fatal-cancel",
+    "reader-drain-cancel",
+    "queued-exit-before-holder-release",
+    "learning-0",
+    "learning-1",
+    "origin-signal-wakes-foreign-c",
+    "candidate-cancel-drains-current-w"
+  ],
+  "children": {
+    "all_exit_ack_returned_reaped": true,
+    "count": 19,
+    "normal_wait_status_zero": 13,
+    "sigkill_wait_status_nine": 6
+  },
+  "cleanup_predecessor_sha256": "40872340905c520739493208ba84323e3f16b6aed40e7119cefc08bf8f5fd1f0",
+  "collection": {
+    "copy_index_sha256": "6fd35fdc4e43acd5ce12fe2c01a1ae2ccacbc300539aa639cbbbb1bc7a1e5a01",
+    "payload_bytes": 2093451,
+    "payload_files": 179,
+    "transport": {
+      "bytes": 2252800,
+      "members": 179,
+      "regular_unique_exact_members": true,
+      "sha256": "4c70bf05c4241972638d2a6e5a15f430b32f5a7bf7b7344b73376d7e841a5ea2",
+      "zero_trailing_padding": true
+    }
+  },
+  "copied_trees": [
+    {
+      "bytes": 4761887,
+      "files": 198,
+      "source": "/tmp/kdlock-kernel8-managed-killable-collection-20261111-04"
+    },
+    {
+      "bytes": 154162,
+      "files": 33,
+      "source": "/tmp/kdlock-kernel8-managed-killable-20261111-04"
+    },
+    {
+      "bytes": 1751784,
+      "files": 4,
+      "source": "/tmp/kdlock-kernel8-fixture-source-5c14b483-01"
+    }
+  ],
+  "copy_summary": {
+    "duplicate_transport_tars_omitted": 0,
+    "files": 242,
+    "gzip_files": 18,
+    "raw_bytes": 7026686,
+    "stored_bytes": 1815840
+  },
+  "cycles": [
+    {
+      "acknowledged": 0,
+      "image": 18379471558773299512,
+      "number": 1,
+      "published": true
+    },
+    {
+      "acknowledged": 1,
+      "image": 18379471558773289272,
+      "number": 2,
+      "published": true
+    },
+    {
+      "acknowledged": 0,
+      "image": 18379471558773289272,
+      "number": 3,
+      "published": false
+    },
+    {
+      "acknowledged": 0,
+      "image": 18379471558773289272,
+      "number": 4,
+      "published": false
+    }
+  ],
+  "events": {
+    "embedded_event_dictionary_matches": 134,
+    "header": [
+      1,
+      20,
+      131072,
+      241,
+      0
+    ],
+    "sha256": "4308a0de2912c07480e1ac0a842c6f49e6ee6a98bda63a9c59fb14875c4f5343"
+  },
+  "fixed_claim_no_new_facts": false,
+  "fixed_claim_no_new_ordinary_learning": true,
+  "format": "kdlock.k04-closed-byte-audit.v1",
+  "identity_after": {
+    "activity": [],
+    "identity": {
+      "boot": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+      "release": "7.0.0-38-kdrebuild8",
+      "taint": 4096
+    },
+    "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n"
+  },
+  "independent_peer_audit_sha256": "bbb8c131b373d5d23360c585b6246157a701dbbf4c958806360e21e279fd0208",
+  "kernel_core_git_head": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+  "module_sha256": "74bec2fad7f75b1e5ea4d5ffbd4a4d699d99f3ca2413145ef4801479498e36b8",
+  "native_frontiers": [
+    {
+      "call_site": 18446744072635856102,
+      "key": [
+        "00f8bc05010011ff",
+        "d401b008010011ff",
+        1
+      ],
+      "name": "learning-1",
+      "reserve_frame_grant_enter_exit_forward": [
+        102,
+        103,
+        112,
+        113,
+        114,
+        115
+      ],
+      "slot_free": 145,
+      "target": 18446744072635855616
+    },
+    {
+      "call_site": 18446744072635856102,
+      "key": [
+        "00f8bc05010011ff",
+        "c402b008010011ff",
+        1
+      ],
+      "name": "candidate-cancel-drains-current-w",
+      "reserve_frame_grant_enter_exit_forward": [
+        191,
+        192,
+        204,
+        205,
+        206,
+        207
+      ],
+      "slot_free": 236,
+      "target": 18446744072635855616
+    }
+  ],
+  "native_target_outside_exported_regions": true,
+  "normal_retirement_and_unload": true,
+  "object_paths": [
+    "collection/payload/runtime/cycle-1/build/image.o",
+    "collection/payload/runtime/cycle-2/build/image.o"
+  ],
+  "outer_sha256": "d7b47fa9e366f666d577b906189e5ca806da2ac769692de380884d89c325f488",
+  "reached_call_bytes": "2e2e2effd0",
+  "retirement_ordered_acquisitions": 7,
+  "runtime_sha256": "d50378c6e084a41eca1da70e23f9d76b7df80048175e85f6fba6ce57cb7bb062",
+  "scope": "Standard-library sourcehost byte/archive inspection only. No project imports, tests, builds or VM operations.",
+  "source": {
+    "core_files": 78,
+    "state": {
+      "files": 143,
+      "git_status": "",
+      "source_git_head": "5c14b483ca16b3bba8f3dd40a00f16a6efefc12c",
+      "transfer_bytes": 1612508
+    },
+    "transport": {
+      "bytes": 1730560,
+      "members": 143,
+      "regular_unique_exact_members": true,
+      "sha256": "35e9d05d6a4b88a3d3bffe95ad1f6674388486ff6e06d4be210aece753512989",
+      "zero_trailing_padding": true
+    }
+  },
+  "source_git_head": "5c14b483ca16b3bba8f3dd40a00f16a6efefc12c",
+  "stage_and_elf_text_matches": 2,
+  "wire": [
+    {
+      "attempt": 1,
+      "operation": 0,
+      "sequence": 0,
+      "status": 0
+    },
+    {
+      "attempt": 2,
+      "operation": 8,
+      "sequence": 1,
+      "status": 0
+    },
+    {
+      "attempt": 3,
+      "operation": 1,
+      "sequence": 2,
+      "status": 0
+    },
+    {
+      "attempt": 4,
+      "operation": 2,
+      "sequence": 3,
+      "status": 0
+    },
+    {
+      "attempt": 5,
+      "operation": 3,
+      "sequence": 4,
+      "status": 0
+    },
+    {
+      "attempt": 6,
+      "operation": 4,
+      "sequence": 5,
+      "status": 0
+    },
+    {
+      "attempt": 7,
+      "operation": 5,
+      "sequence": 6,
+      "status": 0
+    },
+    {
+      "attempt": 8,
+      "operation": 6,
+      "sequence": 7,
+      "status": 0
+    },
+    {
+      "attempt": 9,
+      "operation": 1,
+      "sequence": 8,
+      "status": 0
+    },
+    {
+      "attempt": 10,
+      "operation": 2,
+      "sequence": 9,
+      "status": 0
+    },
+    {
+      "attempt": 11,
+      "operation": 3,
+      "sequence": 10,
+      "status": 0
+    },
+    {
+      "attempt": 12,
+      "operation": 4,
+      "sequence": 11,
+      "status": 0
+    },
+    {
+      "attempt": 13,
+      "operation": 5,
+      "sequence": 12,
+      "status": 0
+    },
+    {
+      "attempt": 14,
+      "operation": 6,
+      "sequence": 13,
+      "status": 0
+    },
+    {
+      "attempt": 15,
+      "operation": 1,
+      "sequence": 14,
+      "status": 0
+    },
+    {
+      "attempt": 16,
+      "operation": 6,
+      "sequence": 15,
+      "status": 0
+    },
+    {
+      "attempt": 17,
+      "operation": 1,
+      "sequence": 16,
+      "status": 0
+    },
+    {
+      "attempt": 18,
+      "operation": 6,
+      "sequence": 17,
+      "status": 0
+    },
+    {
+      "attempt": 19,
+      "operation": 9,
+      "sequence": 18,
+      "status": 0
+    },
+    {
+      "attempt": 20,
+      "operation": 10,
+      "sequence": 19,
+      "status": 0
+    },
+    {
+      "attempt": 21,
+      "operation": 11,
+      "sequence": 20,
+      "status": 0
+    },
+    {
+      "attempt": 22,
+      "operation": 6,
+      "sequence": 21,
+      "status": 0
+    }
+  ]
+}

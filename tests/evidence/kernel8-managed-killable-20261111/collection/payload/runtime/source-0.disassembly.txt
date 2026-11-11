@@ -1,0 +1,9 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-live-04/source-0.bin:     file format binary
+
+
+Disassembly of section .data:
+
+ffffffff8276eee0 <.data>:
+ffffffff8276eee0:	c3                                              	ret
+ffffffff8276eee1:	cc                                              	int3

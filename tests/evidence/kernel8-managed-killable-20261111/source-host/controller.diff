@@ -1,0 +1,273 @@
+--- /tmp/kdlock-kernel8-managed-killable-20261111-03/controller.py
++++ /tmp/kdlock-kernel8-managed-killable-20261111-04/controller.py
+@@ -7,15 +7,16 @@
+ from pathlib import Path
+ import runpy
+ import subprocess
++import struct
+ import time
+ 
+ BASE = Path('/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01')
+ KERNEL = Path('/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01')
+-INPUT = BASE/'managed-killable-input-03'
+-OUT = BASE/'managed-killable-receipts-03'
+-LIVE = BASE/'managed-killable-live-03'
+-HOST = BASE/'host-checks-6a4ba5a1-01'
+-SOURCE = '6a4ba5a1734dfa5dc0b52e7fd5a6fda3d85b8196'
++INPUT = BASE/'managed-killable-input-04'
++OUT = BASE/'managed-killable-receipts-04'
++LIVE = BASE/'managed-killable-live-04'
++HOST = BASE/'host-checks-5c14b483-01'
++SOURCE = '5c14b483ca16b3bba8f3dd40a00f16a6efefc12c'
+ COMPILED = '140aecc4f83a6b6ae6f20245234e8a63504f9210'
+ CORE = '0d42063ead37dc8fc1631fa56c8348890ede9c5f'
+ PYTHON = Path('/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3')
+@@ -60,6 +61,152 @@
+     return current
+ 
+ 
++def verify_exact_frontier_archive(value, bounds):
++    """Join distinct reservations to the durable archive and actual SETTLE bytes."""
++    def read(path, limit):
++        need(path.is_file() and not path.is_symlink() and 0 < path.stat().st_size <= limit,
++             'missing or oversized exact record: ' + str(path))
++        data=path.read_bytes();need(len(data)<=limit,'record exceeded its read bound')
++        return data
++
++    def identity(value):
++        need(type(value) is str and len(value)==16 and value==bytes.fromhex(value).hex()
++             and any(bytes.fromhex(value)), 'exact nonzero eight-byte identity required')
++        return value
++
++    def plain_identity(value):
++        need(type(value) is dict and set(value)=={'bytes_hex'}, 'archive bytes schema differs')
++        return identity(value['bytes_hex'])
++
++    def key(row):
++        need(type(row['incarnation']) is int and row['incarnation']>0, 'exact incarnation required')
++        return identity(row['epoch']),identity(row['record']),row['incarnation']
++
++    def key_set(rows):
++        need(type(rows) is list and len(rows)<=bounds['claim_capacity'], 'finite exact key list required')
++        values=[key(row) for row in rows]
++        need(len(values)==len(set(values)), 'distinct exact reservations were duplicated')
++        return set(values)
++
++    def archive_key(row):
++        need(row['type']=='disassem.learning.FactKey', 'archive FactKey schema differs')
++        fields=row['fields']
++        return key({'epoch':plain_identity(fields['epoch_identity']),
++                    'record':plain_identity(fields['record_identity']),'incarnation':fields['incarnation']})
++
++    pending=key_set(value['fixed_pending_keys']);baseline=key_set(value['fixed_pending_baseline'])
++    frontier_rows=[row['fact'] for row in value['native_frontiers']]
++    expected=key_set(frontier_rows)
++    need(bool(baseline) and baseline<=pending and pending==expected==key_set(value['native_frontier_archive_keys'])
++         and value['pending_before_shutdown']==value['settled_keys']==len(pending)
++         and type(value['fixed_claim_no_new_facts']) is bool
++         and value['fixed_claim_no_new_facts']==(pending==baseline),
++         'literal new-fact truth or exact frontier reservation sets differ')
++    archive_path=LIVE/'shutdown-archive.json';archive_data=read(archive_path,bounds['archive_bytes'])
++    archive_sha=hashlib.sha256(archive_data).hexdigest()
++    need(archive_sha==value['archive_sha256'], 'durable archive SHA differs from runner result')
++    archive=json.loads(archive_data)
++    need(archive['format']=='kdlock.feedback-archive' and archive['format_version']==1
++         and archive['learning_closed'] is True, 'ordinary shutdown archive is not closed')
++    epoch=plain_identity(archive['epoch']['fields']['identity'])
++    need(all(row[0]==epoch for row in pending) and archive['claim']['epoch']==archive['epoch'],
++         'archive epoch differs from the exact pending keys')
++    archive_keys=[archive_key(row) for row in archive['claim']['keys']]
++    fact_keys=[archive_key(row['key']) for row in archive['facts']]
++    need(len(archive_keys)==len(set(archive_keys))==len(pending) and set(archive_keys)==pending
++         and len(fact_keys)==len(set(fact_keys))==len(pending) and set(fact_keys)==pending
++         and all(row['acknowledgment_identities']==[] for row in archive['facts']),
++         'archive claim/facts do not retain every distinct unACKed frontier key')
++    pending_records={(row[1],row[2]) for row in pending}
++    result_facts=[row for row in value['facts'] if (row['record'],row['incarnation']) in pending_records]
++    need(len(result_facts)==len(pending) and all(row['acknowledged'] is False for row in result_facts),
++         'pending frontier acquired a coverage ACK in the final result')
++
++    def word(token):
++        return int.from_bytes(bytes.fromhex(token),'little')
++
++    def frame(data, operation, fixed_count, row_words, blob_limits=()):
++        need(len(data)>=32, 'truncated ordinary frame')
++        abi,op,total,count=struct.unpack_from('<4Q',data)
++        need((abi,op,total)==(1,operation,len(data)) and count<=bounds['claim_capacity']
++             and (row_words or count==0), 'ordinary frame identity/count differs')
++        offset=32
++        def words(count):
++            nonlocal offset
++            need(offset+count*8<=len(data), 'truncated ordinary frame words')
++            row=struct.unpack_from('<'+str(count)+'Q',data,offset);offset+=count*8
++            return row
++        fixed=words(fixed_count);rows=[words(row_words) for _ in range(count)];blobs=[]
++        for limit in blob_limits:
++            length,=words(1);need(length<=limit and offset+length<=len(data),'ordinary frame blob exceeds bound')
++            blobs.append(data[offset:offset+length]);offset+=length
++        need(offset==len(data),'ordinary frame has unconsumed bytes')
++        return fixed,rows,blobs
++
++    attempts=value['wire']['attempts']
++    need(type(attempts) is int and 4<=attempts<=6*bounds['cycle_capacity']+8,
++         'finite actual wire attempt count required')
++    exchanges=[]
++    for number,operation in zip(range(attempts-3,attempts+1),(9,10,11,6)):
++        directory=LIVE/'wire'/f'attempt-{number:08d}'
++        meta=json.loads(read(directory/'result.json',4096))
++        request_meta=json.loads(read(directory/'request.json',4096))
++        request=read(directory/'request.bin',bounds['frame_capacity'])
++        reply=read(directory/'reply.bin',bounds['frame_capacity'])
++        envelope=read(directory/'returned-envelope.bin',72)
++        need(len(envelope)==72,'returned envelope extent differs')
++        returned=struct.unpack('<9Q',envelope)
++        need(meta['operation']==operation and type(meta['sequence']) is int and meta['sequence']>0
++             and meta['completed_response'] is True and meta['status']==0
++             and meta['returned_sequence']==meta['sequence']
++             and meta['request_bytes']==len(request) and meta['reply_bytes']==len(reply)
++             and meta['output_capacity']==bounds['frame_capacity']
++             and request_meta=={k:meta[k] for k in ('operation','sequence','request_bytes','output_capacity')}
++             and returned[:3]==(1,operation,meta['sequence']) and returned[4]==len(request)
++             and returned[6:]==(meta['output_capacity'],len(reply),0),
++             'actual successful shutdown/archive/settlement/end exchange differs')
++        exchanges.append({'sequence':meta['sequence'],'request':request,'reply':reply,
++                          'directory':str(directory)})
++    need(all(exchanges[i+1]['sequence']==exchanges[i]['sequence']+1 for i in range(3)),
++         'actual final ordinary protocol sequence is not contiguous')
++    shutdown,claim,settle,end=exchanges
++    need(frame(shutdown['request'],9,0,0)==((),[],[])
++         and frame(shutdown['reply'],9,1,0)==((word(epoch),),[],[]),
++         'actual source shutdown differs from archived epoch')
++    claim_id=word(plain_identity(archive['claim']['identity']))
++    holder_id=word(plain_identity(archive['claim']['holder']))
++    need(frame(claim['request'],10,3,0)==((word(epoch),holder_id,bounds['claim_capacity']),[],[])
++         and archive['raw_claim']=={'bytes_hex':claim['reply'].hex()},
++         'durable raw archive claim differs from actual reply')
++    fixed,claim_rows,blobs=frame(claim['reply'],10,3,12,(bounds['wire_version_bytes'],))
++    expected_rows={(word(row['record']),row['incarnation'],word(identity(row['producer'])),
++                    word(identity(row['image'])),3,10,item['call']['site'],item['forward']['related'],
++                    item['call']['site'],1,0,0)
++                   for item,row in zip(value['native_frontiers'],frontier_rows)}
++    need(fixed==(claim_id,holder_id,word(epoch)) and len(claim_rows)==len(expected_rows)==len(pending)
++         and set(claim_rows)==expected_rows
++         and blobs==[bytes.fromhex(archive['epoch']['fields']['version']['bytes_hex'])],
++         'actual archive claim lacks the exact distinct native frontier reservations')
++    fixed,settle_rows,blobs=frame(settle['request'],11,2,2,(32,))
++    expected_pairs={(word(record),incarnation) for _,record,incarnation in pending}
++    need(fixed==(claim_id,holder_id) and len(settle_rows)==len(expected_pairs)
++         and set(settle_rows)==expected_pairs and blobs==[bytes.fromhex(archive_sha)],
++         'actual SETTLE request differs from the exact durable archive keys/SHA')
++    fixed,settled_rows,blobs=frame(settle['reply'],11,3,2)
++    need(fixed[0]!=0 and fixed[1:]==(claim_id,holder_id) and len(settled_rows)==len(expected_pairs)
++         and set(settled_rows)==expected_pairs,
++         'actual SETTLE reply differs from the exact expected frontier keys')
++    need(frame(end['request'],6,2,0)==frame(end['reply'],6,2,0)==((claim_id,holder_id),[],[]),
++         'ordinary final archive claim_end did not match')
++    return {'archive_sha256':archive_sha,'expected_frontier_keys':[list(row) for row in sorted(pending)],
++            'actual_archive_keys':[list(row) for row in sorted(archive_keys)],
++            'actual_settled_keys':[[epoch,struct.pack('<Q',record).hex(),incarnation]
++                                   for record,incarnation in sorted(settled_rows)],
++            'fixed_claim_no_new_facts':value['fixed_claim_no_new_facts'],
++            'shutdown_archive_settle_end_sequences':[row['sequence'] for row in exchanges],
++            'settle_reply_sha256':hashlib.sha256(settle['reply']).hexdigest()}
++
++
+ def main():
+     global ns, record
+     parser = argparse.ArgumentParser(description=__doc__)
+@@ -78,23 +225,24 @@
+               'LD_PRELOAD','LD_LIBRARY_PATH','GCC_EXEC_PREFIX','COMPILER_PATH','LIBRARY_PATH','CPATH','C_INCLUDE_PATH')),
+          'inherited execution override refused')
+     host_path,checked=ns['checked_json'](HOST/'receipts/result.json',args.host_checks_sha256)
+-    need(checked['status']=='HOST_GROUPED_EXIT_AST_COMPLETE' and checked['source_git_head']==SOURCE and
+-         checked['checks']=={'grouped_killable_runner_ast':1} and len(checked['commands'])==1 and
+-         checked['commands'][0]['label']=='grouped-killable-runner-ast' and checked['commands'][0]['returncode']==0 and
+-         checked['cleanup_sha256']=='285c6d6954e164db5f968118e6814d6c2a2e97787bb2eb014a38afc014b9dd6c' and
++    need(checked['status']=='HOST_FRONTIER_RESERVATION_AST_COMPLETE' and checked['source_git_head']==SOURCE and
++         checked['checks']=={'frontier_reservation_killable_runner_ast':1} and len(checked['commands'])==1 and
++         checked['commands'][0]['label']=='frontier-reservation-killable-runner-ast' and checked['commands'][0]['returncode']==0 and
++         checked['cleanup_sha256']=='40872340905c520739493208ba84323e3f16b6aed40e7119cefc08bf8f5fd1f0' and
+          checked['prior_named_source_sha256']=='ad66e175dfb83ea6b3a8b23ce0782d1a4cfdeebfc3004a0367b2e79d3b17a808',
+          'actual changed-runner AST1 and separate prior named3 proof must complete first')
+-    ast_log=host_path.parent/'grouped-killable-runner-ast.log'
++    ast_log=host_path.parent/'frontier-reservation-killable-runner-ast.log'
+     need(digest(ast_log)==checked['commands'][0]['log_sha256'] and
+-         ast_log.read_text().strip()=='GROUPED_KILLABLE_RUNNER_AST_COMPLETE 1',
++         ast_log.read_text().strip()=='FRONTIER_RESERVATION_KILLABLE_RUNNER_AST_COMPLETE 1',
+          'actual single AST log differs')
+-    cleanup_path,cleanup=ns['checked_json'](BASE/'recovery-killable-cycle-01/result.json',
+-         '285c6d6954e164db5f968118e6814d6c2a2e97787bb2eb014a38afc014b9dd6c')
++    cleanup_path,cleanup=ns['checked_json'](BASE/'recovery-killable-final-01/result.json',
++         '40872340905c520739493208ba84323e3f16b6aed40e7119cefc08bf8f5fd1f0')
+     need(cleanup['status']=='ORDINARY_CLEANUP_COMPLETE' and cleanup['original_failure_preserved'] is True and
+-         cleanup['phase1_sha256']=='bc55fb499055250590bf9bbbdb3a325e19ca0a087ca9e231ec883bb584672d82' and
++         cleanup['original_failure_sha256']=='56dcf7cfa9e75645d0ab56cb61809550639119ee0701db84af05c34da302005a' and
++         cleanup['archive']['claim_keys']==cleanup['archive']['settled_keys']==2 and
+          cleanup['retired_status']['retired']==1 and cleanup['retired_status']['native_scopes']==0 and
+          cleanup['retired_status']['pool_idle']==1,
+-         'actual K02 phase2 cleanup must complete before fresh K03')
++         'actual K03 cleanup must complete before fresh K04')
+     before=idle(native)
+     need(before['identity']==cleanup['identity_after']==checked['identity_after']['identity']==
+          {'boot':'e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0','release':'7.0.0-38-kdrebuild8','taint':4096},
+@@ -106,12 +254,12 @@
+                             ('/usr/sbin/rmmod','6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7'),
+                             ('/usr/bin/dmesg','889b3947799e06c354b611f2759364b92e65e6ad596166e05bf62525f72468ce')):
+         need(digest(Path(alias).resolve(strict=True))==expected, 'actual tool differs: ' + alias)
+-    manifest=BASE/'host-support-6a4ba5a1-input-01/source-sha256.json'
+-    state=BASE/'host-support-6a4ba5a1-input-01/source-state.json'
+-    need(digest(manifest)=='3974c1ffb59ef6116b317f02fd4a7befb795ac381a31e960f56b5519675df35a' and
+-         digest(state)=='7e17b8073e71112a250bc69b4efe41b70b19651e2c271078588d48911c8dcca5', 'clean143 identities differ')
++    manifest=BASE/'host-support-5c14b483-input-01/source-sha256.json'
++    state=BASE/'host-support-5c14b483-input-01/source-state.json'
++    need(digest(manifest)=='6a14d26236343e37ae43a30c6e441783f979299b426c0a7b9fbbca9154f09645' and
++         digest(state)=='95e3a54def7e87c595164b80ea329751f571a95ae64bf3dae821e1eacc4263cb', 'clean143 identities differ')
+     files=json.loads(manifest.read_text());ns['source_files'](HOST/'input',files)
+-    need(len(files)==143 and json.loads(state.read_text())=={'files':143,'git_status':'','source_git_head':SOURCE,'transfer_bytes':1601496},
++    need(len(files)==143 and json.loads(state.read_text())=={'files':143,'git_status':'','source_git_head':SOURCE,'transfer_bytes':1612508},
+          'exact143 source snapshot required')
+     need(digest(MODULE)==MODULE_SHA and digest(INPUT/'limits.json')==LIMITS_SHA, 'actual module/caller limits differ')
+     bounds=json.loads((INPUT/'limits.json').read_text())
+@@ -133,7 +281,7 @@
+     need(ns['available']('/')>=1024**3 and ns['available'](BASE)>=4*1024**3, 'root/data floors')
+     OUT.mkdir(mode=0o700);g['out']=OUT
+     record={'status':'PREPARED','source_git_head':SOURCE,'compiled_module_source_git_head':COMPILED,'kernel_core_git_head':CORE,
+-            'cleanup_receipt':str(cleanup_path),'cleanup_sha256':'285c6d6954e164db5f968118e6814d6c2a2e97787bb2eb014a38afc014b9dd6c',
++            'cleanup_receipt':str(cleanup_path),'cleanup_sha256':'40872340905c520739493208ba84323e3f16b6aed40e7119cefc08bf8f5fd1f0',
+             'identity_before':before,'host_checks_receipt':str(host_path),'host_checks_sha256':args.host_checks_sha256,
+             'module_sha256':MODULE_SHA,'limits_sha256':LIMITS_SHA,'limits':bounds,'recovery':recovery,
+             'core_pins_before':pins,'boot_before':ns['boot_files'](),'commands':[],
+@@ -175,26 +323,29 @@
+               'origin-signal-wakes-foreign-c','candidate-cancel-drains-current-w'}
+     names=[row['name'] for row in value['cases']]
+     need(value['status']=='managed_killable_mechanism_pass' and value['module_sha256']==MODULE_SHA and
+-         value['bounds']==bounds and value['fixed_claim_no_new_facts'] is True and required<=set(names) and
++         value['bounds']==bounds and value['fixed_claim_no_new_ordinary_learning'] is True and
++         value['fixed_claim_only_expected_native_frontiers'] is True and value['fixed_image_unchanged'] is True and
++         value['fixed_snapshot_unchanged'] is True and value['fixed_claim_published'] is False and required<=set(names) and
+          len(names)==len(set(names)) and 1<=sum(n.startswith('learning-') for n in names)<=bounds['learning_passes'] and
+          value['final']['retired']==1 and value['final']['native_scopes']==0 and value['final']['pool_idle']==1,
+          'actual bounded scene/retirement result incomplete')
+     for path in ('result.json','observations-final.bin','observations-final.json','shutdown-archive.json','source-export.bin'):
+         need((LIVE/path).is_file() and (LIVE/path).stat().st_size>0, 'missing actual record: '+path)
++    frontier_proof=verify_exact_frontier_archive(value,bounds)
+     after=idle(native)
+     need(after['identity']['boot']==before['identity']['boot'] and after['identity']['release']==before['identity']['release'] and
+          after['identity']['taint']==before['identity']['taint'], 'unexpected final boot/release/taint')
+     ns['source_files'](HOST/'input',files)
+     need(digest(MODULE)==MODULE_SHA and digest(INPUT/'limits.json')==LIMITS_SHA and
+-         digest(manifest)=='3974c1ffb59ef6116b317f02fd4a7befb795ac381a31e960f56b5519675df35a' and
+-         digest(state)=='7e17b8073e71112a250bc69b4efe41b70b19651e2c271078588d48911c8dcca5' and
++         digest(manifest)=='6a14d26236343e37ae43a30c6e441783f979299b426c0a7b9fbbca9154f09645' and
++         digest(state)=='95e3a54def7e87c595164b80ea329751f571a95ae64bf3dae821e1eacc4263cb' and
+          ns['pins'](build,pins) and ns['protected'](focused)==built['protected_after'] and
+          ns['source_pins'](focused,source)==built['source_after'] and ns['boot_files']()==record['boot_before'],
+          'immutable runtime inputs or protected outputs changed')
+     record.update(status='MANAGED_KILLABLE_COMPLETE',identity_after=after,runner_result=str(LIVE/'result.json'),
+                   runner_result_sha256=digest(LIVE/'result.json'),case_names=names,
+                   event_bytes=(LIVE/'observations-final.bin').stat().st_size,
+-                  event_sha256=digest(LIVE/'observations-final.bin'),archive_sha256=digest(LIVE/'shutdown-archive.json'))
++                  event_sha256=digest(LIVE/'observations-final.bin'),archive_sha256=digest(LIVE/'shutdown-archive.json'),frontier_archive_settlement=frontier_proof)
+     ns['atomic_json']('result.json',record);print(json.dumps({'status':record['status'],'receipt':str(OUT/'result.json')}))
+ 
+ 
