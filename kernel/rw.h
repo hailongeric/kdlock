@@ -7,6 +7,24 @@
 #include "mutex.h"
 
 struct kd_execution_binding;
+struct kd_rw_native_pool;
+
+enum kd_rw_read_kind {
+	KD_RW_READ_NONE,
+	KD_RW_READ_MANAGED,
+	KD_RW_READ_NATIVE,
+	KD_RW_READ_NON_OWNER,
+};
+
+/* Exact active credits in actual acquisition order, under the family guard.
+ * The containing credit owns lifetime; this index adds no packet/reference.
+ */
+struct kd_rw_read_link {
+	struct list_head link;
+	struct task_struct *logical_owner;
+	enum kd_rw_read_kind kind;
+	const void *credit;
+};
 
 /* Writer queue ownership and concurrent reader credits are separate duties. */
 struct kd_rw {
@@ -14,8 +32,11 @@ struct kd_rw {
 	raw_spinlock_t guard;
 	wait_queue_head_t changed;
 	unsigned long readers;
+	struct list_head active_reads;
 	bool writer_pending;
 	struct kd_mutex_batch *writer;
+	/* Optional cold physical-local compatibility; same reader/writer gate. */
+	struct kd_rw_native_pool *native_pool;
 };
 
 struct kd_rwsem { struct kd_rw core; };
@@ -25,7 +46,8 @@ struct kd_rwlock { struct kd_rw core; };
 	.queue = KD_MUTEX_INITIALIZER, \
 	.guard = __RAW_SPIN_LOCK_UNLOCKED((_name).guard), \
 	.changed = __WAIT_QUEUE_HEAD_INITIALIZER((_name).changed), \
-	.readers = 0, .writer_pending = false, .writer = NULL }
+	.active_reads = LIST_HEAD_INIT((_name).active_reads), \
+	.readers = 0, .writer_pending = false, .writer = NULL, .native_pool = NULL }
 #define KD_RWSEM_INITIALIZER(_name) { .core = KD_RW_INITIALIZER((_name).core) }
 #define KD_RWLOCK_INITIALIZER(_name) { .core = KD_RW_INITIALIZER((_name).core) }
 
@@ -37,6 +59,7 @@ struct kd_rwlock { struct kd_rw core; };
  * only this credit/control storage is needed by later completion checks.
  */
 struct kd_rw_read_credit {
+	struct kd_rw_read_link active_read;
 	raw_spinlock_t guard;
 	struct kd_rw *lock;
 	struct kd_thread_state *state;
@@ -55,6 +78,11 @@ struct kd_rw_wait_ops {
 void kd_rwsem_init(struct kd_rwsem *lock);
 void kd_rwlock_init(struct kd_rwlock *lock);
 void kd_rw_read_credit_init(struct kd_rw_read_credit *credit);
+/* Returned identity is borrowed: the logical caller must retain its grant
+ * throughout dispatch. Nonowner-transfer credits do not select owned release.
+ */
+enum kd_rw_read_kind kd_rw_last_owned_read(struct kd_rw *lock,
+		struct task_struct *logical_task, const void **credit);
 int kd_rw_read_acquire(struct kd_rw *lock, struct kd_rw_read_credit *credit,
 		struct kd_thread_state *state, struct kd_execution_binding *binding,
 		const void *acquisition, const void *user, bool atomic_wait,

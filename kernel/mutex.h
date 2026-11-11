@@ -11,6 +11,7 @@ struct kd_mutex_batch;
 struct task_struct;
 struct kd_rw;
 struct kd_rw_read_credit;
+struct kd_rw_native_record;
 
 /* Private source-rebuilt object layout; no old binary/layout compatibility. */
 struct kd_mutex {
@@ -108,6 +109,10 @@ struct kd_mutex_ops {
  * thread core pointer and caller-owned node/context must still exist.
  */
 struct kd_mutex_node {
+	/* Physical-local queue entry only: never a source offer or fake S_W.
+	 * Managed constructors always set this NULL and retain canonical state.
+	 */
+	struct kd_rw_native_record *native_local;
 	struct kd_mutex_node *next;
 	atomic_t selection;
 	int turn;
@@ -171,6 +176,15 @@ struct kd_mutex_batch {
 };
 
 void kd_mutex_init(struct kd_mutex *lock);
+/* Private physical-local rwsem hooks. Native controls retain these source-less
+ * entries through handoff/cancel cleanup; none enters source bind/combining.
+ */
+int kd_mutex_native_node_init(struct kd_mutex_node *node,
+		struct kd_rw_native_record *record);
+int kd_mutex_native_enqueue(struct kd_mutex *lock, struct kd_mutex_node *node,
+		bool try_only);
+int kd_mutex_native_start(struct kd_mutex_node *node, struct kd_mutex_batch *batch);
+int kd_mutex_native_finish(struct kd_mutex_node *node, struct kd_mutex_batch *batch);
 /* Private fresh storage only; this cannot reset an unreaped owner context. */
 void kd_mutex_batch_init(struct kd_mutex_batch *batch);
 int kd_mutex_node_init(struct kd_mutex_node *node,

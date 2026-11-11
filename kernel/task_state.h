@@ -27,6 +27,8 @@ struct kd_task_root_context {
 	struct task_struct *task;
 	/* Physical owners stay with this task even when their source moves. */
 	struct kd_owner_progress owners;
+	/* Exact owned native compatibility grants, no source-state backing. */
+	struct list_head native_grants;
 	/* Own native-entry configuration, never an active borrowed S_W. */
 	struct kd_episode_resources *mutex_resources;
 	unsigned long mutex_control_bytes;

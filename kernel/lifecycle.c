@@ -152,6 +152,8 @@ int kd_task_lifecycle_exit_current(void)
 	    native->kind != KD_EXECUTION_NATIVE)
 		return -EPERM;
 	root->source_closing = true;
+	if (!list_empty(&root->native_grants))
+		return -EDEADLK;
 	if (root->core.exit_image || root->core.exit_use || root->core.exit_holder ||
 	    (root->core.operation.phase != KD_OPERATION_IDLE &&
 	     root->core.operation.phase != KD_OPERATION_RESUMABLE))

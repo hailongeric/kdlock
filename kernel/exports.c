@@ -7,6 +7,8 @@
 #include "source_provider.h"
 #include "task_storage.h"
 #include "lifecycle.h"
+#include "rw_native.h"
+#include "../include/kd_linux_rwsem.h"
 
 EXPORT_SYMBOL_GPL(kd_mutex_init);
 EXPORT_SYMBOL_GPL(kd_mutex_lock_entry_asm);
@@ -37,3 +39,14 @@ EXPORT_SYMBOL_GPL(kd_jit_runtime_destroy);
 EXPORT_SYMBOL_GPL(kd_task_storage_root);
 EXPORT_SYMBOL_GPL(kd_task_lifecycle_start_current);
 EXPORT_SYMBOL_GPL(kd_task_lifecycle_exit_current);
+
+/* Cold generic primitive binding and exact caller-provided native storage. */
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_bind);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_unbind);
+EXPORT_SYMBOL_GPL(kd_rw_native_pool_init);
+EXPORT_SYMBOL_GPL(kd_rw_native_pool_idle);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_is_locked);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_is_write_locked);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_is_contended);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_source_ready);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_source_release);

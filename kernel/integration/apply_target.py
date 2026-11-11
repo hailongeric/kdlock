@@ -14,7 +14,7 @@ There is no fuzz, duplicate installation, automatic rollback or partial resume.
 An interrupted application must be reviewed from its retained receipt; never run
 again over unknown partial changes. verify checks an earlier complete receipt.
 
-The source fingerprint covers Makefile plus the FIVE edited kernel files, not
+The source fingerprint covers Makefile plus the SEVEN edited kernel files, not
 an authenticated whole-kernel provenance proof. Identity labels name the caller's
 separately established source package/revision and frozen kdlock snapshot. The
 package fingerprint covers its actual Kconfig/Kbuild and C/header/assembly inputs.
@@ -33,7 +33,7 @@ import sys
 import uuid
 
 
-FORMAT = "kdlock.exact-target-integration.v1"
+FORMAT = "kdlock.exact-target-integration.v2"
 EDITED = (
     "include/linux/sched.h", "kernel/fork.c", "kernel/exit.c",
     "init/Kconfig", "kernel/Makefile",
@@ -100,6 +100,113 @@ MARKERS = {
     "init/Kconfig": (b"kernel/kdlock/Kconfig", b"KDLOCK_REBUILD"),
     "kernel/Makefile": (b"CONFIG_KDLOCK_REBUILD", b"kdlock/"),
 }
+
+
+# The optional binding is part of the rebuilt primitive, not an MM protocol.
+# Native bodies and mmap wrapper trace/sequence ordering are untouched.
+EDITED += ("include/linux/rwsem.h", "kernel/locking/rwsem.c")
+SOURCE_INPUTS = ("Makefile",) + EDITED
+EDITS["include/linux/rwsem.h"] = (
+    (b"#include <linux/cleanup.h>\n",
+     b"#include <linux/cleanup.h>\n#ifdef CONFIG_KDLOCK_REBUILD\n"
+     b'#include "../../kernel/kdlock/include/kd_linux_rwsem.h"\n#endif\n'),
+    (b"context_lock_struct(rw_semaphore) {\n\tatomic_long_t count;\n",
+     b"context_lock_struct(rw_semaphore) {\n#ifdef CONFIG_KDLOCK_REBUILD\n"
+     b"\tstruct kd_linux_rwsem_binding *kd_binding;\n#endif\n\tatomic_long_t count;\n"),
+    (b"#define __RWSEM_COUNT_INIT(name)\t.count = ATOMIC_LONG_INIT(RWSEM_UNLOCKED_VALUE)\n",
+     b"#define __RWSEM_COUNT_INIT(name)\t.count = ATOMIC_LONG_INIT(RWSEM_UNLOCKED_VALUE)\n"
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n#define __RWSEM_KD_INIT .kd_binding = NULL,\n"
+     b"#else\n#define __RWSEM_KD_INIT\n#endif\n"),
+    (b"\t{ __RWSEM_COUNT_INIT(name),\t\t\t\t\\\n",
+     b"\t{ __RWSEM_KD_INIT __RWSEM_COUNT_INIT(name),\t\t\\\n"),
+    (b"\treturn atomic_long_read(&sem->count) != RWSEM_UNLOCKED_VALUE;\n",
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding))\n"
+     b"\t\treturn kd_linux_rwsem_is_locked(READ_ONCE(sem->kd_binding));\n#endif\n"
+     b"\treturn atomic_long_read(&sem->count) != RWSEM_UNLOCKED_VALUE;\n"),
+    (b"\tWARN_ON(atomic_long_read(&sem->count) == RWSEM_UNLOCKED_VALUE);\n",
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding)) {\n"
+     b"\t\tWARN_ON(!kd_linux_rwsem_is_locked(READ_ONCE(sem->kd_binding)));\n"
+     b"\t\treturn;\n\t}\n#endif\n"
+     b"\tWARN_ON(atomic_long_read(&sem->count) == RWSEM_UNLOCKED_VALUE);\n"),
+    (b"\tWARN_ON(!(atomic_long_read(&sem->count) & RWSEM_WRITER_LOCKED));\n",
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding)) {\n"
+     b"\t\tWARN_ON(!kd_linux_rwsem_is_write_locked(READ_ONCE(sem->kd_binding)));\n"
+     b"\t\treturn;\n\t}\n#endif\n"
+     b"\tWARN_ON(!(atomic_long_read(&sem->count) & RWSEM_WRITER_LOCKED));\n"),
+    (b"\treturn !list_empty(&sem->wait_list);\n",
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding))\n"
+     b"\t\treturn kd_linux_rwsem_is_contended(READ_ONCE(sem->kd_binding));\n#endif\n"
+     b"\treturn !list_empty(&sem->wait_list);\n"),
+    (b"# define down_read_non_owner(sem)\t\tdown_read(sem)\n"
+     b"# define up_read_non_owner(sem)\t\t\tup_read(sem)\n",
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n"
+     b"extern void down_read_non_owner(struct rw_semaphore *sem) __acquires_shared(sem);\n"
+     b"extern void up_read_non_owner(struct rw_semaphore *sem) __releases_shared(sem);\n"
+     b"#else\n# define down_read_non_owner(sem)\t\tdown_read(sem)\n"
+     b"# define up_read_non_owner(sem)\t\t\tup_read(sem)\n#endif\n"),
+    (b"#endif /* _LINUX_RWSEM_H */\n",
+     b"#if defined(CONFIG_KDLOCK_REBUILD) && !defined(KDLOCK_RWSEM_CALLABLE)\n"
+     b'#include "../../kernel/kdlock/include/kd_linux_rwsem_source.h"\n#endif\n\n'
+     b"#endif /* _LINUX_RWSEM_H */\n"),
+)
+
+
+def rwsem_dispatch(name, result_type="void"):
+    # All definitions retain their native implementation after this early route.
+    prefix = ((b"void __sched " if name in ("down_read", "down_write") else
+               b"int __sched " if name in ("down_read_interruptible", "down_read_killable", "down_write_killable") else
+               result_type.encode("ascii") + b" ") + name.encode("ascii") +
+              b"(struct rw_semaphore *sem)\n{\n")
+    call = b"kd_linux_rwsem_" + name.encode("ascii") + b"(binding)"
+    body = (b"\tstruct kd_linux_rwsem_binding *binding = READ_ONCE(sem->kd_binding);\n\n"
+            b"\tif (binding) {\n")
+    if result_type == "void":
+        body += b"\t\t" + call + b";\n\t\treturn;\n"
+    else:
+        body += b"\t\treturn " + call + b";\n"
+    return prefix, prefix + b"#ifdef CONFIG_KDLOCK_REBUILD\n" + body + b"\t}\n#endif\n"
+
+
+EDITS["kernel/locking/rwsem.c"] = (
+    (b"#include <linux/types.h>\n",
+     b"/* Ordinary source aliases are disabled only for real callable definitions. */\n"
+     b"#define KDLOCK_RWSEM_CALLABLE\n#include <linux/types.h>\n"),
+    (b"\tatomic_long_set(&sem->count, RWSEM_UNLOCKED_VALUE);\n",
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tWRITE_ONCE(sem->kd_binding, NULL);\n#endif\n"
+     b"\tatomic_long_set(&sem->count, RWSEM_UNLOCKED_VALUE);\n"),
+    (b"struct task_struct *rwsem_owner(struct rw_semaphore *sem)\n{\n",
+     b"struct task_struct *rwsem_owner(struct rw_semaphore *sem)\n{\n"
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding))\n"
+     b"\t\treturn kd_linux_rwsem_owner(READ_ONCE(sem->kd_binding));\n#endif\n"),
+    (b"bool is_rwsem_reader_owned(struct rw_semaphore *sem)\n{\n",
+     b"bool is_rwsem_reader_owned(struct rw_semaphore *sem)\n{\n"
+     b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding))\n"
+     b"\t\treturn kd_linux_rwsem_is_reader_owned(READ_ONCE(sem->kd_binding));\n#endif\n"),
+) + tuple(rwsem_dispatch(name, kind) for name, kind in (
+    ("down_read", "void"), ("down_read_interruptible", "int"),
+    ("down_read_killable", "int"), ("down_read_trylock", "int"),
+    ("down_write", "void"), ("down_write_killable", "int"),
+    ("down_write_trylock", "int"), ("up_read", "void"),
+    ("up_write", "void"), ("downgrade_write", "void"),
+    ("down_read_non_owner", "void"), ("up_read_non_owner", "void"),
+)) + (
+    # With lockdep off Linux normally aliases nonowner APIs. Rebuilt objects
+    # need real symbols so cross-task credits retain their declared identity.
+    (b"EXPORT_SYMBOL(downgrade_write);\n\n#ifdef CONFIG_DEBUG_LOCK_ALLOC\n",
+     b"EXPORT_SYMBOL(downgrade_write);\n\n"
+     b"#if defined(CONFIG_KDLOCK_REBUILD) && !defined(CONFIG_DEBUG_LOCK_ALLOC)\n"
+     b"void down_read_non_owner(struct rw_semaphore *sem)\n{\n"
+     b"\tstruct kd_linux_rwsem_binding *binding = READ_ONCE(sem->kd_binding);\n\n"
+     b"\tif (binding) {\n\t\tkd_linux_rwsem_down_read_non_owner(binding);\n\t\treturn;\n\t}\n"
+     b"\tmight_sleep();\n\t__down_read(sem);\n}\nEXPORT_SYMBOL(down_read_non_owner);\n\n"
+     b"void up_read_non_owner(struct rw_semaphore *sem)\n{\n"
+     b"\tstruct kd_linux_rwsem_binding *binding = READ_ONCE(sem->kd_binding);\n\n"
+     b"\tif (binding) {\n\t\tkd_linux_rwsem_up_read_non_owner(binding);\n\t\treturn;\n\t}\n"
+     b"\t__up_read(sem);\n}\nEXPORT_SYMBOL(up_read_non_owner);\n#endif\n\n"
+     b"#ifdef CONFIG_DEBUG_LOCK_ALLOC\n"),
+)
+MARKERS["include/linux/rwsem.h"] = (b"kd_binding", b"KDLOCK_REBUILD")
+MARKERS["kernel/locking/rwsem.c"] = (b"kd_binding", b"KDLOCK_RWSEM_CALLABLE")
 
 
 def sha(data):

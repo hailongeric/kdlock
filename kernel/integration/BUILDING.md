@@ -15,7 +15,11 @@ It does not validate a specific source/configuration incarnation or select any
 additional API, debug or context policy.
 
 This flag packages source; it performs no automatic mutex aliasing or deployment
-configuration. Managed task allocation/fork/exit, source provider, executable
+configuration. Generic rwsem layout and API routing are described in
+[RWSEM.md](RWSEM.md); explicit cold selection chooses a KD object, with no
+parallel native backing for a selected semaphore. The v2 exact installer also
+edits `include/linux/rwsem.h` and `kernel/locking/rwsem.c`; its seven-file
+fingerprint remains a scoped identity, not whole-kernel authentication. Managed task allocation/fork/exit, source provider, executable
 loading/publication and compiler transport now have source in the package. The
 flag alone does not create or configure those components. The exact kernel tree
 and configured build output are absent from this repository. At source checkpoint

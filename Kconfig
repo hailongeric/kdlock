@@ -12,6 +12,7 @@ config KDLOCK_REBUILD
 
 	  All admitted source dependencies must remain immutable through their
 	  actual native, generated and feedback users. This option supplies no
-	  automatic Linux mutex aliases or additional API/context lane, and
-	  enabling it establishes no build, execution or performance evidence.
+	  automatic Linux mutex selection. Generic rwsem bindings remain explicit;
+	  unselected objects keep native behavior. Enabling this option alone
+	  establishes no build, execution or performance evidence.
 	  See kernel/integration/BUILDING.md in the kdlock package.

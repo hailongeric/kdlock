@@ -557,8 +557,11 @@ static unsigned int local_service_limit(struct kd_episode_resources *resources,
 {
 	struct kd_thread_state *state = resources->pool->state;
 	struct kd_source_grant *grant;
+	struct kd_task_root_context *physical = kd_task_root_context_current();
 
 	BUG_ON(!kd_state_is_current(state, binding));
+	if (physical && !list_empty(&physical->native_grants))
+		return 0;
 	/* Do not start unrelated inner source batching before the new local
 	 * head's grant while this source still holds another logical grant.
 	 * Remote selection and the unified MCS queue remain unchanged.

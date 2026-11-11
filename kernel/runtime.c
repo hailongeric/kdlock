@@ -12,6 +12,7 @@
 #include "mutex_api.h"
 #include "episode.h"
 #include "lifecycle.h"
+#include "../include/kd_linux_rwsem.h"
 
 struct runtime_cycle {
 	struct kd_jit_control_storage storage;
@@ -247,6 +248,8 @@ static enum kd_jit_feedback_target_class classify_target(void *context, unsigned
 	const struct kd_jit_source_description *source = &runtime->config.source->epoch.description;
 	unsigned int index;
 
+	if (kd_linux_rwsem_is_native_target(target))
+		return KD_JIT_FEEDBACK_UNCLASSIFIED;
 	if (resolve_operation(NULL, target) != KD_OPERATION_NONE)
 		return KD_JIT_FEEDBACK_SOURCE_API;
 	for (index = 0; index < runtime->config.boundary_count; ++index)
@@ -382,6 +385,9 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 	for (index = 0; index < config->boundary_count; ++index) {
 		enum kd_operation_kind kind = resolve_operation(NULL, config->boundaries[index].site);
 
+		if (kd_linux_rwsem_is_native_target(config->boundaries[index].site) &&
+		    config->boundaries[index].kind != KD_JIT_RUNTIME_SPECIAL)
+			return -EINVAL;
 		if (config->boundaries[index].kind < KD_JIT_RUNTIME_LOCK ||
 		    config->boundaries[index].kind > KD_JIT_RUNTIME_SPECIAL)
 			return -EINVAL;
@@ -520,6 +526,23 @@ static void rt_blob(struct rt_writer *writer, const void *data, size_t length)
 	writer->used += length;
 }
 
+/* Deduplicate exact normal-ABI frontiers against caller metadata and earlier
+ * addresses. Native entry points remain SPECIAL even inside retained text.
+ */
+static bool append_native_boundary(struct kd_jit_runtime *runtime,
+		const unsigned long *targets, unsigned int index)
+{
+	unsigned int other;
+
+	for (other = 0; other < index; ++other)
+		if (targets[other] == targets[index])
+			return false;
+	for (other = 0; other < runtime->config.boundary_count; ++other)
+		if (runtime->config.boundaries[other].site == targets[index])
+			return false;
+	return true;
+}
+
 static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input, u64 rows,
 		void *output, size_t capacity, size_t *length)
 {
@@ -545,6 +568,8 @@ static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input
 	bool append[ARRAY_SIZE(entries)] = {};
 	unsigned int index, other;
 	unsigned int boundaries = runtime->config.boundary_count;
+	unsigned int native_count;
+	const unsigned long *native_targets = kd_linux_rwsem_native_targets(&native_count);
 
 	if (rows || input->left) return -EINVAL;
 	/* Public family APIs are pre-operation cuts even when the provider only
@@ -563,6 +588,10 @@ static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input
 		if (append[index] && check_add_overflow(boundaries, 1U, &boundaries))
 			return -EOVERFLOW;
 	}
+	for (index = 0; index < native_count; ++index)
+		if (append_native_boundary(runtime, native_targets, index) &&
+		    check_add_overflow(boundaries, 1U, &boundaries))
+			return -EOVERFLOW;
 	for (index = 0; index < source->region_count; ++index)
 		if (!rt_add(&total, 16) || !rt_add(&total, source->regions[index].length)) return -EOVERFLOW;
 	if (!rt_add(&total, (size_t)boundaries * 16) ||
@@ -592,6 +621,11 @@ static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input
 		if (append[index]) {
 			rt_put(&writer, entries[index].site);
 			rt_put(&writer, entries[index].kind);
+		}
+	for (index = 0; index < native_count; ++index)
+		if (append_native_boundary(runtime, native_targets, index)) {
+			rt_put(&writer, native_targets[index]);
+			rt_put(&writer, KD_JIT_RUNTIME_SPECIAL);
 		}
 	rt_blob(&writer, source->version, source->version_length);
 	rt_finish(&writer, length);

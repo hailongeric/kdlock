@@ -33,6 +33,11 @@ contains managed fork/failure/exit hooks implemented by
 [lifecycle.c](../lifecycle.c). Exact target application has its own receipt under
 [the build guide](BUILDING.md); the template itself remains unapplied evidence.
 
+Generic source-rebuilt Linux rwsem binding and native compatibility have their
+own [integration guide](RWSEM.md). Their physical-local records add no S_W or
+register packet. Exact owned native grants retain an attached task root until
+release; nonowner credits have independent object/pool lifetimes.
+
 ## Private setup before ordinary source admission
 
 The caller provisions the header, one request pool and its slot array, an equally

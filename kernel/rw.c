@@ -17,8 +17,10 @@ static void rw_init(struct kd_rw *lock)
 	raw_spin_lock_init(&lock->guard);
 	init_waitqueue_head(&lock->changed);
 	lock->readers = 0;
+	INIT_LIST_HEAD(&lock->active_reads);
 	lock->writer_pending = false;
 	lock->writer = NULL;
+	lock->native_pool = NULL;
 }
 
 void kd_rwsem_init(struct kd_rwsem *lock) { rw_init(&lock->core); }
@@ -26,6 +28,10 @@ void kd_rwlock_init(struct kd_rwlock *lock) { rw_init(&lock->core); }
 
 void kd_rw_read_credit_init(struct kd_rw_read_credit *credit)
 {
+	INIT_LIST_HEAD(&credit->active_read.link);
+	credit->active_read.logical_owner = NULL;
+	credit->active_read.kind = KD_RW_READ_MANAGED;
+	credit->active_read.credit = credit;
 	raw_spin_lock_init(&credit->guard);
 	credit->lock = NULL;
 	credit->state = NULL;
@@ -54,6 +60,7 @@ static int prepare_credit(struct kd_rw *lock, struct kd_rw_read_credit *credit,
 		return -EALREADY;
 	credit->lock = lock;
 	credit->state = state;
+	credit->active_read.logical_owner = state->origin;
 	credit->acquisition = acquisition;
 	credit->user = user;
 	credit->atomic_wait = atomic_wait;
@@ -134,6 +141,7 @@ int kd_rw_read_acquire(struct kd_rw *lock, struct kd_rw_read_credit *credit,
 			lock->readers++;
 			raw_spin_lock(&credit->guard);
 			credit->active = true;
+			list_add_tail(&credit->active_read.link, &lock->active_reads);
 			raw_spin_unlock(&credit->guard);
 			kd_observe(KD_OBS_READ_ACQUIRE, .state = (unsigned long)state,
 				.origin = (unsigned long)state->origin,
@@ -189,6 +197,7 @@ int kd_rw_read_release(struct kd_rw_read_credit *credit,
 		result = -ESTALE;
 	else {
 		lock->readers--;
+		list_del_init(&credit->active_read.link);
 		credit->active = false;
 		credit->released = true;
 		kd_observe(KD_OBS_READ_RELEASE, .state = (unsigned long)state,
@@ -287,6 +296,7 @@ void kd_rw_writer_exit(struct kd_rw *lock, struct kd_mutex_batch *batch,
 		/* No zero-protection interval: credit exists before writer exit. */
 		lock->readers = 1;
 		conversion->active = true;
+		list_add_tail(&conversion->active_read.link, &lock->active_reads);
 		raw_spin_unlock(&conversion->guard);
 	}
 	lock->writer = NULL;
@@ -360,4 +370,30 @@ int kd_rw_write_downgrade(struct kd_mutex_node *node,
 		return result;
 	}
 	return kd_rw_read_credit_check(credit, state, acquisition, user, true);
+}
+
+/* The caller's own grant retains the returned control. No lookup creates a
+ * lifetime hold or authorizes releasing an unrelated or nonowner credit.
+ */
+enum kd_rw_read_kind kd_rw_last_owned_read(struct kd_rw *lock,
+		struct task_struct *logical_task, const void **credit)
+{
+	struct kd_rw_read_link *entry;
+	enum kd_rw_read_kind kind = KD_RW_READ_NONE;
+
+	if (credit)
+		*credit = NULL;
+	if (!lock || !logical_task || !credit)
+		return kind;
+	raw_spin_lock(&lock->guard);
+	list_for_each_entry_reverse(entry, &lock->active_reads, link) {
+		if (entry->kind != KD_RW_READ_NON_OWNER &&
+		    entry->logical_owner == logical_task) {
+			kind = entry->kind;
+			*credit = entry->credit;
+			break;
+		}
+	}
+	raw_spin_unlock(&lock->guard);
+	return kind;
 }

@@ -14,6 +14,7 @@ void kd_task_root_context_init(struct kd_task_root_context *context)
 	/* Private constructor only; the canonical regs are captured, not cleared. */
 	context->task = NULL;
 	kd_owner_progress_init(&context->owners, NULL);
+	INIT_LIST_HEAD(&context->native_grants);
 	context->mutex_resources = NULL;
 	context->mutex_control_bytes = 0;
 	context->native_spin_depth = 0;
@@ -117,7 +118,8 @@ int kd_task_root_detach_unpublished(struct kd_task_root_context *context,
 	    !context->attached || context->task != child)
 		return -EINVAL;
 	state = &context->core;
-	if (context->aux_entry || !list_empty(&context->owners.batches) ||
+	if (context->aux_entry || !list_empty(&context->native_grants) ||
+	    !list_empty(&context->owners.batches) ||
 	    state->origin != child || !state->requests ||
 	    !kd_request_pool_empty(state->requests) || !list_empty(&state->grants) ||
 	    state->exit_image || state->exit_use || state->exit_holder ||
@@ -178,7 +180,8 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 	if (native_binding->state != state || native_binding->task != current ||
 	    native_binding->kind != KD_EXECUTION_NATIVE)
 		return -EPERM;
-	if (state->exit_image || state->exit_use || state->exit_holder ||
+	if (!list_empty(&context->native_grants) ||
+	    state->exit_image || state->exit_use || state->exit_holder ||
 	    !list_empty(&state->grants) ||
 	    (state->operation.phase != KD_OPERATION_IDLE &&
 	     state->operation.phase != KD_OPERATION_RESUMABLE))

@@ -10,6 +10,8 @@ asflags-y += -I$(src)/include
 kdlock_rebuild-y := \
 	kernel/mutex.o \
 	kernel/rw.o \
+	kernel/rw_native.o \
+	kernel/linux_rwsem.o \
 	kernel/mutex_release.o \
 	kernel/state.o \
 	kernel/task_state.o \
