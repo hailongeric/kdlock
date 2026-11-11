@@ -1,0 +1,37 @@
+{
+  "bytes": 511880,
+  "collected_unix": 1794407840.9611714,
+  "count": 2,
+  "directories": {},
+  "files": {
+    "controller-result.json": {
+      "bytes": 67022,
+      "identity": [
+        2064,
+        8528569,
+        33188,
+        1,
+        67022,
+        1794407742132000000,
+        1794407742132000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-private-fixtures-80c272e5-01/live-rwsem-receipts-01/result.json",
+      "sha256": "3fa71f817e7720e0f1611dbb72745955a86f01cbe7af98d68640e57c7264a9d9"
+    },
+    "runner-result.json": {
+      "bytes": 444858,
+      "identity": [
+        2064,
+        8528566,
+        33188,
+        1,
+        444858,
+        1794407741253000000,
+        1794407741253000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-private-fixtures-80c272e5-01/live-rwsem-01/result.json",
+      "sha256": "8877480651410de345f97c9733056735e607e8e23a9e8e82f0dfd30d090427cd"
+    }
+  },
+  "visited_paths": 0
+}

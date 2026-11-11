@@ -12,8 +12,10 @@ The [kernel6 boot](../../../tests/evidence/kernel6-boot-20261111/README.md) and
 [twelve-case native API and real mmap/munmap checks](../../../tests/evidence/kernel6-native-api-mm-20261111/README.md)
 passed on that exact image. The real syscall lane selects one KD gate with
 `source_calls=false`; it supplies native grant, downgrade and retirement
-evidence, with JIT observation unavailable. Private generated execution remains
-a separate result. The [source checkpoint](../../../tests/evidence/generic-rwsem-source-20261111/README.md)
+evidence, with JIT observation unavailable. The same kernel6 image also passed
+[GS5 and the private rwsem/mutex regressions](../../../tests/evidence/kernel6-private-regressions-20261111/README.md).
+Those receipts establish their bounded generated mechanisms separately from
+real syscalls and the full acceptance matrix. The [source checkpoint](../../../tests/evidence/generic-rwsem-source-20261111/README.md)
 retains its original failures, limits and then-pending recovery inspection.
 The first kernel6 preparation refused an ambiguous native/RT installer context
 before any target application or compilation; its [failure and protected-input

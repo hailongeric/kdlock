@@ -115,3 +115,9 @@ releases and 513 real downgrades; 1,544 read grants plus those downgrades match
 ordinary unload of both modules. These counts include setup and cleanup and
 are not syscall-count equivalents or performance measurements. Per-gate JIT
 observation was unavailable.
+
+The same image also passed [GS5 and the private rwsem/mutex regressions](../../tests/evidence/kernel6-private-regressions-20261111/README.md).
+They retain the original backend and GS lowering, fixed-image continuation,
+retained-writer handback and exact physical release/retirement checks. These
+private mechanism results remain separate from the original-task native MM
+run, broader context/progress obligations and the full acceptance matrix.

@@ -1,0 +1,79 @@
+{
+  "archive_sha256": "5e47557227801e3917d4a7beadff3e8f283c744f18e0f3a1c8161a2c0fc05cb2",
+  "boot_id": "4400eea1-c8fc-40e1-b6b7-f7a99ecc1364",
+  "compiler_cycles": 16,
+  "controller_sha256": "3fa71f817e7720e0f1611dbb72745955a86f01cbe7af98d68640e57c7264a9d9",
+  "covered_acknowledged_keys": 14,
+  "deliberate_miss_rows": 4,
+  "final_taint": 12288,
+  "full_C_function_return": "outside_protected_episode_scope",
+  "host_visible_pending_before_shutdown": 2,
+  "kernelrelease": "7.0.0-38-kdrebuild6",
+  "managed_holds_drained": true,
+  "miss_after_retained_downgrade": {
+    "miss": 7107,
+    "native_accepted": 7124,
+    "physical": 7117,
+    "retained": 7105
+  },
+  "module_sha256": "4a593f13e405cffa2a4f9a1016fb6a8f1d57b90bc2a52f673ae8fbac4511723b",
+  "nested_ancestor_physical_end": 6920,
+  "ordinary_unloaded": true,
+  "overflow": 0,
+  "publications": 13,
+  "records": 7147,
+  "retained_downgrade_rows": {
+    "11": {
+      "accepted": 6879,
+      "forwarded": 6880,
+      "physical": 6877,
+      "physical_begin": 6875,
+      "requested": 6873,
+      "retained": 6866
+    },
+    "9": {
+      "accepted": 6775,
+      "forwarded": 6777,
+      "physical": 6774,
+      "physical_begin": 6772,
+      "requested": 6770,
+      "retained": 6766
+    }
+  },
+  "runner_sha256": "8877480651410de345f97c9733056735e607e8e23a9e8e82f0dfd30d090427cd",
+  "scope_limit": "The binary observation buffer, exact wire bytes and durable archive content are not in this two-file summary. Their independent byte/event verification awaits the complete collection. Unprotected C epilogue, general contexts/progress/performance remain outside this fixture.",
+  "settled_keys": 4,
+  "shared_B_release_accept_resume": [
+    6553,
+    6554,
+    6558
+  ],
+  "shutdown_tail_all_zero": true,
+  "shutdown_tail_operations": [
+    9,
+    10,
+    11,
+    6
+  ],
+  "source_kind": "Actual saved controller and structured runner results only",
+  "status": "SUMMARY_RECEIPTS_CONSISTENT_RAW_ARTIFACT_REVIEW_PENDING",
+  "warm_baseline_keys": 2,
+  "warm_empty": false,
+  "warm_image": "0xff110001141d1538",
+  "warm_no_new_facts": true,
+  "warm_recursive": [
+    {
+      "child_done": 6289,
+      "child_return": 6311,
+      "mode": 1,
+      "root_done": 6319
+    },
+    {
+      "child_done": 6425,
+      "child_return": 6435,
+      "mode": 2,
+      "root_done": 6440
+    }
+  ],
+  "wire_attempts": 90
+}

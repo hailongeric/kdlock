@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "22",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "eric@10.176.26.71",
+    "sudo -n python3 -"
+  ]
+}

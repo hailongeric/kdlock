@@ -1,0 +1,280 @@
+{
+  "dependency_page_count": 2,
+  "limits": {
+    "dependency_pages": 16,
+    "total_source_bytes": 131072
+  },
+  "old": 0,
+  "region_count": 4,
+  "regions": [
+    {
+      "length": 2,
+      "start": 18446744071603298016
+    },
+    {
+      "length": 116,
+      "start": 18446744072635854864
+    },
+    {
+      "length": 3318,
+      "start": 18446744072635861536
+    },
+    {
+      "length": 4096,
+      "start": 18446744072635879424
+    }
+  ],
+  "sites": [
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584054976
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584055136
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584055264
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584055328
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584056496
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584056944
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584057072
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584057280
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584057488
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088272
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088320
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088368
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088432
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088496
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088560
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088624
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088672
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088736
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088800
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088848
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088912
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584088960
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584089008
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584089488
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584089552
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584089696
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584089856
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071584090016
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744071584210000
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744071584210064
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744071584210128
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744071584210192
+    },
+    {
+      "boundary": "mode_change",
+      "site": 18446744071584210256
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071603262688
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071603262928
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071603263216
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071603265520
+    },
+    {
+      "boundary": "special_instruction",
+      "site": 18446744071603265680
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635861627
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635861778
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635861889
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635861922
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635862078
+    },
+    {
+      "boundary": "mode_change",
+      "site": 18446744072635862189
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635862380
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635862472
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635862526
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635862600
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635862654
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635862728
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635862825
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635862899
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635863020
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635863074
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635863195
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635863316
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635863381
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635863458
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635863525
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635863622
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635863792
+    },
+    {
+      "boundary": "mode_change",
+      "site": 18446744072635863889
+    }
+  ],
+  "slot": 18379471558907690256,
+  "source_bytes": 7532,
+  "version": "fixture-4a593f13e405cffa2a4f9a1016fb6a8f1d57b90bc2a52f673ae8fbac4511723b-a05068b9dfddd7ac6fc842b44ae97e29816a43c9c5870be188b9fe71ea5b759d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+}

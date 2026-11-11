@@ -1,0 +1,52 @@
+{
+  "builtin_source": {
+    "bytes_sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c",
+    "elf_sha256": "a05068b9dfddd7ac6fc842b44ae97e29816a43c9c5870be188b9fe71ea5b759d",
+    "length": 2,
+    "start": 18446744071603298016
+  },
+  "cases": [],
+  "event_capacity": 65536,
+  "evidence": "kernel-mechanism",
+  "family": "rwsem",
+  "gs_proof": {
+    "boot_id": "4400eea1-c8fc-40e1-b6b7-f7a99ecc1364",
+    "build_id": "5ed6cd8cffed6960ce901261dfab3bb019a0442d",
+    "const_current_task": "0xffffffff84416018",
+    "current_task_gs_offset": "0xffffffff84416018",
+    "gs_symbol": "current_task",
+    "kaslr_disabled": true,
+    "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "kernel_elf_sha256": "a05068b9dfddd7ac6fc842b44ae97e29816a43c9c5870be188b9fe71ea5b759d",
+    "kernel_release": "7.0.0-38-kdrebuild6",
+    "percpu_section_va": "0xffffffff843fe000",
+    "scope": "Exact linked/running kernel identity and full GS symbol input; fixture GS relocation and execution remain separate.",
+    "verified_for_running_kernel": true
+  },
+  "iterations": 8,
+  "kernel_release": "7.0.0-38-kdrebuild6",
+  "module_sha256": "4a593f13e405cffa2a4f9a1016fb6a8f1d57b90bc2a52f673ae8fbac4511723b",
+  "module_sizes": {
+    "body": 3318,
+    "callee": 116
+  },
+  "reader_bounds": {
+    "coordination_spins": 1000000,
+    "holder_timeout_ms": 20000,
+    "learning_passes": 16,
+    "runtime_block_visits": 16000000
+  },
+  "returned_full_jit_body": "not_established",
+  "source_limits": {
+    "dependency_pages": 16,
+    "total_source_bytes": 131072
+  },
+  "source_version": "fixture-4a593f13e405cffa2a4f9a1016fb6a8f1d57b90bc2a52f673ae8fbac4511723b-a05068b9dfddd7ac6fc842b44ae97e29816a43c9c5870be188b9fe71ea5b759d-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "status": "incomplete",
+  "wire_log": {
+    "byte_limit": 268435456,
+    "reservations": 0,
+    "reserved_bytes": 0
+  },
+  "workers": 4
+}
