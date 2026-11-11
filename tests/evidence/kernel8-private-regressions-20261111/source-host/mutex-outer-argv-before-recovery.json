@@ -1,0 +1,11 @@
+[
+  "/usr/bin/python3",
+  "-B",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/private-mutex-input-01/controller.py",
+  "--family",
+  "mutex",
+  "--predecessor-sha256",
+  "ae4cbdf311f2177bc9aa9ee47c36654dea14556858690961bd97a423a125c97d",
+  "--recovery-sha256",
+  "FRESH_ACTUAL_RECOVERY_SHA256"
+]

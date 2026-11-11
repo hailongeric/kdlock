@@ -1,0 +1,25 @@
+--- 625834-private
++++ independent-cleanup-predecessor
+@@ -47,12 +47,19 @@
+     need(not any(k in os.environ for k in ('PYTHONPATH','PYTHONHOME','PYTHONSTARTUP','PYTHONOPTIMIZE','LD_PRELOAD',
+               'LD_LIBRARY_PATH','GCC_EXEC_PREFIX','COMPILER_PATH','LIBRARY_PATH','CPATH','C_INCLUDE_PATH')),
+          'inherited execution override refused')
+-    predecessor=BASE/('managed-killable-receipts-01' if family=='rwsem' else 'private-rwsem-receipts-01')/'result.json'
++    predecessor=BASE/('recovery-killable-cycle-01' if family=='rwsem' else 'private-rwsem-receipts-01')/'result.json'
+     pp,prior=ns['checked_json'](predecessor,args.predecessor_sha256)
+-    need(prior['status']==('MANAGED_KILLABLE_COMPLETE' if family=='rwsem' else 'PRIVATE_RWSEM_COMPLETE'),
++    need(prior['status']==('ORDINARY_CLEANUP_COMPLETE' if family=='rwsem' else 'PRIVATE_RWSEM_COMPLETE'),
+          'prior exact family has not completed/drained/unloaded')
++    if family=='rwsem':
++        need(args.predecessor_sha256=='285c6d6954e164db5f968118e6814d6c2a2e97787bb2eb014a38afc014b9dd6c' and
++             prior['original_failure_preserved'] is True,'exact ordinary K cleanup proof differs')
++        np,native_prior=ns['checked_json'](BASE/'native-api-mm-live-01/result.json',
++             '5b1397d4b8832228ae3d95d3d0105884a98a084260fe1d5a5e464ce1fcece89e')
++        need(native_prior['status']=='NATIVE_API_AND_MM_COMPLETE','actual completed native predecessor required')
++    prior_identity=prior['identity_after'] if family=='rwsem' else prior['identity_after']['identity']
+     before=native['idle']()
+-    need(before['identity']==prior['identity_after']['identity']==
++    need(before['identity']==prior_identity==
+          {'boot':'e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0','release':'7.0.0-38-kdrebuild8','taint':4096},
+          'exact same-boot predecessor identity differs; no fresh-boot claim')
+     need(native['running_notes']()[1]=='a33dd4d11d0f0c6649107507e685b6e86e716c1a','running Build ID differs')

@@ -1,0 +1,8 @@
+# Plain-spin mechanism fixture built separately against the selected kernel.
+obj-m += kd_spin_runtime_fixture.o
+kd_spin_runtime_fixture-y := spin_runtime_fixture.o
+ccflags-y += -I$(src)/../../../..
+KASAN_SANITIZE_spin_runtime_fixture.o := n
+KCSAN_SANITIZE_spin_runtime_fixture.o := n
+KCOV_INSTRUMENT_spin_runtime_fixture.o := n
+GCOV_PROFILE_spin_runtime_fixture.o := n

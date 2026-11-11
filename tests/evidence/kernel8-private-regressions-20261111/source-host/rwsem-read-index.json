@@ -1,0 +1,22 @@
+{
+  "private-rwsem-receipts-01/result.json": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/private-rwsem-receipts-01/result.json",
+    "bytes": 116179,
+    "sha256": "ae4cbdf311f2177bc9aa9ee47c36654dea14556858690961bd97a423a125c97d"
+  },
+  "private-rwsem-query-01/result.json": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/private-rwsem-query-01/result.json",
+    "bytes": 676000,
+    "sha256": "85986a27df332dfa7f7e13678cd5afcadfc91542d4f754cfa39ecae723eff029"
+  },
+  "private-rwsem-driver-01/stdout": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/private-rwsem-driver-01/stdout",
+    "bytes": 150,
+    "sha256": "b3e8d36e9bf9a7d2b82999a1cd2e770e3acf369b7f1cee18ed5e064edecca0b4"
+  },
+  "private-rwsem-driver-01/stderr": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/private-rwsem-driver-01/stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
