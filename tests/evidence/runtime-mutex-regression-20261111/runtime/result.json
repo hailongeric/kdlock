@@ -1,0 +1,1610 @@
+{
+  "actual_call_records": [
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e86e8fdcc1",
+      "site": 18446744072635854941,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "lock",
+      "raw_hex": "e82e9750c1",
+      "site": 18446744072635855085,
+      "target": 18446744071584172064
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8d03e0000",
+      "site": 18446744072635855179,
+      "target": 18446744072635871264
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "lock",
+      "raw_hex": "e8979650c1",
+      "site": 18446744072635855236,
+      "target": 18446744071584172064
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8563e0000",
+      "site": 18446744072635855304,
+      "target": 18446744072635871267
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e86c9650c1",
+      "site": 18446744072635855343,
+      "target": 18446744071584172128
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e84b9650c1",
+      "site": 18446744072635855376,
+      "target": 18446744071584172128
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e8019650c1",
+      "site": 18446744072635855450,
+      "target": 18446744071584172128
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8863d0000",
+      "site": 18446744072635855515,
+      "target": 18446744072635871270
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "operation": "unlock",
+      "raw_hex": "e8a09550c1",
+      "site": 18446744072635855547,
+      "target": 18446744071584172128
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8cc8cdcc1",
+      "site": 18446744072635855615,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8b78cdcc1",
+      "site": 18446744072635855636,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8a28cdcc1",
+      "site": 18446744072635855657,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e88d8cdcc1",
+      "site": 18446744072635855678,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8788cdcc1",
+      "site": 18446744072635855699,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8648cdcc1",
+      "site": 18446744072635855719,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e84f8cdcc1",
+      "site": 18446744072635855740,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e83a8cdcc1",
+      "site": 18446744072635855761,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8258cdcc1",
+      "site": 18446744072635855782,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8118cdcc1",
+      "site": 18446744072635855802,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8fd8bdcc1",
+      "site": 18446744072635855822,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8e88bdcc1",
+      "site": 18446744072635855843,
+      "target": 18446744071593344976
+    },
+    {
+      "indirect": false,
+      "length": 5,
+      "raw_hex": "e8d48bdcc1",
+      "site": 18446744072635855863,
+      "target": 18446744071593344976
+    }
+  ],
+  "actual_dependency_page_count": 2,
+  "actual_source_bytes": 5079,
+  "actual_source_region_count": 4,
+  "actual_source_regions": [
+    {
+      "length": 2,
+      "start": 18446744071603076640
+    },
+    {
+      "length": 116,
+      "start": 18446744072635854864
+    },
+    {
+      "length": 865,
+      "start": 18446744072635855008
+    },
+    {
+      "length": 4096,
+      "start": 18446744072635871232
+    }
+  ],
+  "archive_sha256": "c46f19e0e4a804cf1e5a5ff7a5a84627db17cab019aa32a51f8921809299d7ea",
+  "builtin_source": {
+    "bytes_sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c",
+    "elf_sha256": "310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5",
+    "export_matches_elf": true,
+    "length": 2,
+    "start": 18446744071603076640
+  },
+  "cases": [
+    {
+      "actual_call_effects": 8,
+      "expected_call_effects": 8,
+      "iterations": 8,
+      "mode": 0,
+      "name": "native-local",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=1 finished=1 iterations=8 completed=8 calls=8 a=8 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=1 queued=0 held=0 child=0 events=152 overflow=0 role0=ff11000350103180 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "values": {
+        "a": "8",
+        "b": "0",
+        "calls": "8",
+        "child": "0",
+        "completed": "8",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "152",
+        "evidence": "kernel-mechanism",
+        "finished": "1",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "object_a": "ffffffffc0607180",
+        "object_b": "ffffffffc0606d80",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "1",
+        "role0": "ff11000350103180",
+        "role1": "0",
+        "role2": "0",
+        "role3": "0",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3784",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc000b0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc000b010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "1"
+      },
+      "workers": 1
+    },
+    {
+      "actual_call_effects": 32,
+      "expected_call_effects": 32,
+      "iterations": 8,
+      "mode": 0,
+      "name": "contended-local",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=4 finished=4 iterations=8 completed=32 calls=32 a=32 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=764 overflow=0 role0=ff11000348a58000 role1=ff11000353dab180 role2=ff110003501b3180 role3=ff11000344848000 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "values": {
+        "a": "32",
+        "b": "0",
+        "calls": "32",
+        "child": "0",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "764",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "object_a": "ffffffffc0607180",
+        "object_b": "ffffffffc0606d80",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff11000348a58000",
+        "role1": "ff11000353dab180",
+        "role2": "ff110003501b3180",
+        "role3": "ff11000344848000",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3784",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc000b0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc000b010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 32,
+      "expected_call_effects": 32,
+      "iterations": 4,
+      "mode": 1,
+      "name": "jit-while-pending",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=4 finished=4 iterations=4 completed=16 calls=32 a=16 b=16 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=1376 overflow=0 role0=ff110003471d3180 role1=ff1100034719b180 role2=ff1100034d580000 role3=ff11000345023180 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "values": {
+        "a": "16",
+        "b": "16",
+        "calls": "32",
+        "child": "0",
+        "completed": "16",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "1376",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "4",
+        "locks_clear": "1",
+        "mode": "1",
+        "object_a": "ffffffffc0607180",
+        "object_b": "ffffffffc0606d80",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff110003471d3180",
+        "role1": "ff1100034719b180",
+        "role2": "ff1100034d580000",
+        "role3": "ff11000345023180",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3784",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc000b0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc000b010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 64,
+      "expected_call_effects": 64,
+      "iterations": 8,
+      "mode": 1,
+      "name": "nested",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=4 finished=4 iterations=8 completed=32 calls=64 a=32 b=32 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=2610 overflow=0 role0=ff11000345bc0000 role1=ff110003501b0000 role2=ff110003503fb180 role3=ff11000353c88000 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "values": {
+        "a": "32",
+        "b": "32",
+        "calls": "64",
+        "child": "0",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "2610",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "1",
+        "object_a": "ffffffffc0607180",
+        "object_b": "ffffffffc0606d80",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff11000345bc0000",
+        "role1": "ff110003501b0000",
+        "role2": "ff110003503fb180",
+        "role3": "ff11000353c88000",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3784",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc000b0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc000b010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 96,
+      "expected_call_effects": 96,
+      "iterations": 8,
+      "mode": 2,
+      "name": "out-of-order",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=2 workers=4 finished=4 iterations=8 completed=32 calls=96 a=32 b=64 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=3848 overflow=0 role0=ff110003501b3180 role1=ff1100034717b180 role2=ff110003488a3180 role3=ff110003506a0000 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "values": {
+        "a": "32",
+        "b": "64",
+        "calls": "96",
+        "child": "0",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "3848",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "2",
+        "object_a": "ffffffffc0607180",
+        "object_b": "ffffffffc0606d80",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff110003501b3180",
+        "role1": "ff1100034717b180",
+        "role2": "ff110003488a3180",
+        "role3": "ff110003506a0000",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3784",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc000b0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc000b010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "actual_call_effects": 32,
+      "expected_call_effects": 32,
+      "iterations": 8,
+      "mode": 0,
+      "name": "warm-plain",
+      "native_body_completion": true,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=4 finished=4 iterations=8 completed=32 calls=32 a=32 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=f queued=0 held=0 child=0 events=4454 overflow=0 role0=ff110003471d3180 role1=ff11000348a58000 role2=ff11000350103180 role3=ff11000344853180 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "values": {
+        "a": "32",
+        "b": "0",
+        "calls": "32",
+        "child": "0",
+        "completed": "32",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "4454",
+        "evidence": "kernel-mechanism",
+        "finished": "4",
+        "held": "0",
+        "iterations": "8",
+        "locks_clear": "1",
+        "mode": "0",
+        "object_a": "ffffffffc0607180",
+        "object_b": "ffffffffc0606d80",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "f",
+        "role0": "ff110003471d3180",
+        "role1": "ff11000348a58000",
+        "role2": "ff11000350103180",
+        "role3": "ff11000344853180",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "0000000000000000",
+        "self_core": "0000000000000000",
+        "self_managed": "0",
+        "self_native": "0",
+        "self_own": "0",
+        "self_pid": "3784",
+        "self_regs": "0000000000000000",
+        "self_root": "0000000000000000",
+        "source_size": "865",
+        "source_start": "ffffffffc000b0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc000b010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "4"
+      },
+      "workers": 4
+    },
+    {
+      "child": 18379471570323637440,
+      "child_completion": {
+        "acquisition": 18379471570323637937,
+        "cursor": 18446744072635855348,
+        "flags": 1536,
+        "image": 0,
+        "index": 4522,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471570323637440,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569008128,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 18379471570323636328,
+        "phase": 0,
+        "related": 18379471570323637864,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568426223616,
+        "task": 18379471568506696064
+      },
+      "child_return": {
+        "acquisition": 18379471570323636825,
+        "cursor": 18446744072635855348,
+        "flags": 1024,
+        "image": 0,
+        "index": 4536,
+        "ip": 0,
+        "kind": 26,
+        "node": 18379471570323636328,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569008128,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471570323637440,
+        "result": 3,
+        "return_user": 18379471570323637896,
+        "source_user": 18379471570323636752,
+        "state": 18379471568426223616,
+        "task": 18379471568508105088
+      },
+      "end": 4571,
+      "fixed_image": 18379471568569571640,
+      "mode": 1,
+      "name": "warm-recursive-1",
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=5 finished=5 iterations=1 completed=5 calls=3 a=2 b=1 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=1 ready=1f queued=1f held=3 child=ff110003bc8804c0 events=4571 overflow=0 role0=ff1100034719b180 role1=ff11000353dab180 role2=ff11000350513180 role3=ff110003503bb180 role4=ff11000353f28000 w_core=ff1100034b6fc800 w_regs=ff1100034b6fc800 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "roles": [
+        18379471568353472896,
+        18379471568567447936,
+        18379471568508105088,
+        18379471568506696064,
+        18379471568569008128
+      ],
+      "root": 18379471570323636328,
+      "root_completion": {
+        "acquisition": 18379471570323636825,
+        "cursor": 18446744072635855381,
+        "flags": 1536,
+        "image": 0,
+        "index": 4544,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471570323636328,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569008128,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471570323637896,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568426223616,
+        "task": 18379471568508105088
+      },
+      "start": 4454,
+      "state": 18379471568426223616
+    },
+    {
+      "child": 18379471570323637440,
+      "child_completion": {
+        "acquisition": 18379471570323637937,
+        "cursor": 18446744072635855552,
+        "flags": 1536,
+        "image": 0,
+        "index": 4644,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471570323637440,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569020800,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 18379471570323636328,
+        "phase": 0,
+        "related": 18379471570323637864,
+        "result": 5,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568426223616,
+        "task": 18379471568330568064
+      },
+      "child_return": {
+        "acquisition": 18379471570323636825,
+        "cursor": 18446744072635855552,
+        "flags": 1024,
+        "image": 0,
+        "index": 4661,
+        "ip": 0,
+        "kind": 26,
+        "node": 18379471570323636328,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569020800,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471570323637440,
+        "result": 5,
+        "return_user": 18379471570323637896,
+        "source_user": 18379471570323636752,
+        "state": 18379471568426223616,
+        "task": 18379471568506663296
+      },
+      "end": 4691,
+      "fixed_image": 18379471568569571640,
+      "mode": 2,
+      "name": "warm-recursive-2",
+      "raw_status": "evidence=kernel-mechanism mode=2 workers=5 finished=5 iterations=1 completed=5 calls=4 a=2 b=2 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=1 ready=1f queued=1f held=3 child=ff110003bc8804c0 events=4691 overflow=0 role0=ff1100034a2d3180 role1=ff11000350128000 role2=ff110003503b3180 role3=ff11000345bc3180 role4=ff11000353f2b180 w_core=ff1100034b6fc800 w_regs=ff1100034b6fc800 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "roles": [
+        18379471568405082496,
+        18379471568503996416,
+        18379471568506663296,
+        18379471568330568064,
+        18379471568569020800
+      ],
+      "root": 18379471570323636328,
+      "root_completion": {
+        "acquisition": 18379471570323636825,
+        "cursor": 18446744072635855552,
+        "flags": 1536,
+        "image": 0,
+        "index": 4664,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471570323636328,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569020800,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471570323637896,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568426223616,
+        "task": 18379471568506663296
+      },
+      "start": 4571,
+      "state": 18379471568426223616
+    }
+  ],
+  "compiler_cycles": [
+    {
+      "acknowledged_keys": 0,
+      "claim_rows": 0,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 2,
+      "claim_rows": 2,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 4,
+      "claim_rows": 4,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 2,
+      "claim_rows": 2,
+      "published": true
+    },
+    {
+      "acknowledged_keys": 0,
+      "claim_rows": 0,
+      "published": false
+    }
+  ],
+  "compiler_thunk_symbols": [
+    "__x86_indirect_thunk_rax",
+    "__x86_return_thunk"
+  ],
+  "event_capacity": 65536,
+  "evidence": "kernel-mechanism",
+  "full_c_function_jit_return": "outside_protected_episode_scope",
+  "generated_exit_records": [
+    {
+      "acknowledged": [
+        "d0055a57030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0048fb53030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072635854864,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072635871264,
+        "target": 18446744072635854864
+      },
+      "image": "3811fb53030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0048fb53030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072635871264,
+        "source_version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072635854864
+      },
+      "producer": "0010fb53030011ff",
+      "published": [
+        "68055a57030011ff"
+      ],
+      "record": "e4002044030011ff",
+      "source_region": {
+        "index": 3,
+        "offset": 32,
+        "start": 18446744072635871232
+      }
+    },
+    {
+      "acknowledged": [
+        "d0055a57030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0048fb53030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072635854864,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072635871264,
+        "target": 18446744072635854864
+      },
+      "image": "3811fb53030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0048fb53030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072635871264,
+        "source_version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072635854864
+      },
+      "producer": "0010fb53030011ff",
+      "published": [
+        "68055a57030011ff"
+      ],
+      "record": "d4012044030011ff",
+      "source_region": {
+        "index": 3,
+        "offset": 32,
+        "start": 18446744072635871232
+      }
+    },
+    {
+      "acknowledged": [
+        "68095a57030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0068fb53030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072635854864,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072635871264,
+        "target": 18446744072635854864
+      },
+      "image": "3811fb53030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0068fb53030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072635871264,
+        "source_version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072635854864
+      },
+      "producer": "0010fb53030011ff",
+      "published": [
+        "00095a57030011ff"
+      ],
+      "record": "c4022044030011ff",
+      "source_region": {
+        "index": 3,
+        "offset": 32,
+        "start": 18446744072635871232
+      }
+    },
+    {
+      "acknowledged": [
+        "68095a57030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0068fb53030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072635854864,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072635871264,
+        "target": 18446744072635854864
+      },
+      "image": "3811fb53030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0068fb53030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072635871264,
+        "source_version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072635854864
+      },
+      "producer": "0010fb53030011ff",
+      "published": [
+        "00095a57030011ff"
+      ],
+      "record": "b4032044030011ff",
+      "source_region": {
+        "index": 3,
+        "offset": 32,
+        "start": 18446744072635871232
+      }
+    },
+    {
+      "acknowledged": [
+        "68095a57030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0068fb53030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072635854864,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072635871267,
+        "target": 18446744072635854864
+      },
+      "image": "3849fb53030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0068fb53030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072635871267,
+        "source_version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072635854864
+      },
+      "producer": "0048fb53030011ff",
+      "published": [
+        "00095a57030011ff"
+      ],
+      "record": "a4042044030011ff",
+      "source_region": {
+        "index": 3,
+        "offset": 35,
+        "start": 18446744072635871232
+      }
+    },
+    {
+      "acknowledged": [
+        "68095a57030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0068fb53030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072635854864,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072635871267,
+        "target": 18446744072635854864
+      },
+      "image": "3849fb53030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0068fb53030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072635871267,
+        "source_version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072635854864
+      },
+      "producer": "0048fb53030011ff",
+      "published": [
+        "00095a57030011ff"
+      ],
+      "record": "94052044030011ff",
+      "source_region": {
+        "index": 3,
+        "offset": 35,
+        "start": 18446744072635871232
+      }
+    },
+    {
+      "acknowledged": [
+        "000d5a57030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0018fb53030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072635854864,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072635871270,
+        "target": 18446744072635854864
+      },
+      "image": "3869fb53030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0018fb53030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072635871270,
+        "source_version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072635854864
+      },
+      "producer": "0068fb53030011ff",
+      "published": [
+        "980c5a57030011ff"
+      ],
+      "record": "84062044030011ff",
+      "source_region": {
+        "index": 3,
+        "offset": 38,
+        "start": 18446744072635871232
+      }
+    },
+    {
+      "acknowledged": [
+        "000d5a57030011ff"
+      ],
+      "classification": "ordinary",
+      "disposition": "ordinary_indirect_compiler_input",
+      "emitted_candidates": [
+        "0018fb53030011ff"
+      ],
+      "entry_result": 0,
+      "exit": {
+        "cursor": 18446744072635854864,
+        "detail": 10,
+        "kind": 3,
+        "phase": 4,
+        "source_ip": 18446744072635871270,
+        "target": 18446744072635854864
+      },
+      "image": "3869fb53030011ff",
+      "incarnation": 1,
+      "input_candidates": [
+        "0018fb53030011ff"
+      ],
+      "matching_source_call": null,
+      "merge": "ordinary_observation_in_cumulative_input",
+      "ordinary_observation": {
+        "kind": "jump",
+        "source_ip": 18446744072635871270,
+        "source_version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+        "target": 18446744072635854864
+      },
+      "producer": "0068fb53030011ff",
+      "published": [
+        "980c5a57030011ff"
+      ],
+      "record": "74072044030011ff",
+      "source_region": {
+        "index": 3,
+        "offset": 38,
+        "start": 18446744072635871232
+      }
+    }
+  ],
+  "generated_exit_seen": true,
+  "gs_proof": {
+    "boot_id": "1b3b298f-051b-42ea-a53b-429c16f4e114",
+    "build_id": "f3caad92c0cdc5f955a2410f3ec3ec0e5ccad053",
+    "const_current_task": "0xffffffff8440f018",
+    "current_task_gs_offset": "0xffffffff8440f018",
+    "gs_symbol": "current_task",
+    "kaslr_disabled": true,
+    "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "kernel_elf_sha256": "310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5",
+    "kernel_release": "7.0.0-38-kdrebuild4",
+    "percpu_section_va": "0xffffffff843f7000",
+    "scope": "Exact linked/running kernel identity and full GS symbol input; fixture GS relocation and execution remain separate.",
+    "verified_for_running_kernel": true
+  },
+  "iterations": 8,
+  "kernel_release": "7.0.0-38-kdrebuild4",
+  "managed_fork_exit": {
+    "child_pid": 3789,
+    "child_record": {
+      "pid": 3789,
+      "raw_status": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3789 self_root=ff11000353f99400 self_core=ff11000353f99400 self_regs=ff11000353f99400 self_binding=ff11000353f99558 self_own=1 self_native=1 self_managed=1 scene=0 ready=0 queued=0 held=0 child=0 events=0 overflow=0 role0=0 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "values": {
+        "a": "0",
+        "b": "0",
+        "calls": "0",
+        "child": "0",
+        "completed": "0",
+        "core_errors": "0",
+        "errors": "0",
+        "events": "0",
+        "evidence": "kernel-mechanism",
+        "finished": "0",
+        "held": "0",
+        "iterations": "0",
+        "locks_clear": "1",
+        "mode": "0",
+        "object_a": "ffffffffc0607180",
+        "object_b": "ffffffffc0606d80",
+        "origin_errors": "0",
+        "overflow": "0",
+        "queued": "0",
+        "ready": "0",
+        "role0": "0",
+        "role1": "0",
+        "role2": "0",
+        "role3": "0",
+        "role4": "0",
+        "runtime": "1",
+        "scene": "0",
+        "self_binding": "ff11000353f99558",
+        "self_core": "ff11000353f99400",
+        "self_managed": "1",
+        "self_native": "1",
+        "self_own": "1",
+        "self_pid": "3789",
+        "self_regs": "ff11000353f99400",
+        "self_root": "ff11000353f99400",
+        "source_size": "865",
+        "source_start": "ffffffffc000b0a0",
+        "step_size": "116",
+        "step_start": "ffffffffc000b010",
+        "w_core": "0",
+        "w_regs": "0",
+        "workers": "0"
+      }
+    },
+    "packet_contents_copied": false,
+    "parent_after": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=ff1100010d38bc00 self_core=ff1100010d38bc00 self_regs=ff1100010d38bc00 self_binding=ff1100010d38bd58 self_own=1 self_native=1 self_managed=1 scene=0 ready=0 queued=0 held=0 child=0 events=0 overflow=0 role0=0 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+    "parent_before": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=ff1100010d38bc00 self_core=ff1100010d38bc00 self_regs=ff1100010d38bc00 self_binding=ff1100010d38bd58 self_own=1 self_native=1 self_managed=1 scene=0 ready=0 queued=0 held=0 child=0 events=0 overflow=0 role0=0 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+    "parent_detached": "evidence=kernel-mechanism mode=0 workers=0 finished=0 iterations=0 completed=0 calls=0 a=0 b=0 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=0 ready=0 queued=0 held=0 child=0 events=0 overflow=0 role0=0 role1=0 role2=0 role3=0 role4=0 w_core=0 w_regs=0 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+    "shutdown_native_holds_drained": true,
+    "status": "child_exited_parent_detached",
+    "wait_status": 0
+  },
+  "module_sha256": "bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515",
+  "module_sizes": {
+    "body": 865,
+    "callee": 116
+  },
+  "near_indirect_call_sites": [],
+  "observation_overflow": 0,
+  "observation_records": 4691,
+  "ordinary_indirect_kernel_learning": "acknowledged",
+  "ordinary_indirect_learning": {
+    "acknowledged": [
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "e4002044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "d4012044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "c4022044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "b4032044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "a4042044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "94052044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "84062044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "74072044030011ff"
+      }
+    ],
+    "candidate_inputs": [
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "e4002044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "d4012044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "c4022044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "b4032044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "a4042044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "94052044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "84062044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "74072044030011ff"
+      }
+    ],
+    "emitted": [
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "e4002044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "d4012044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "c4022044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "b4032044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "a4042044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "94052044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "84062044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "74072044030011ff"
+      }
+    ],
+    "merged": [
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "e4002044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "d4012044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "c4022044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "b4032044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "a4042044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "94052044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "84062044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "74072044030011ff"
+      }
+    ],
+    "observed": [
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "e4002044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "d4012044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "c4022044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "b4032044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "a4042044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "94052044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "84062044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "74072044030011ff"
+      }
+    ],
+    "published_inputs": [
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "e4002044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "d4012044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "c4022044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "b4032044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "a4042044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "94052044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "84062044030011ff"
+      },
+      {
+        "epoch": "c0181f52030011ff",
+        "incarnation": 1,
+        "record": "74072044030011ff"
+      }
+    ]
+  },
+  "pending_before_shutdown": 0,
+  "returned_full_jit_body": "protected_episode_completed",
+  "root_entry": 18446744072635855090,
+  "settled_keys": 0,
+  "source_limits": {
+    "dependency_pages": 4,
+    "total_source_bytes": 262144
+  },
+  "source_version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "status": "protected_jit_recursive_mechanism_pass",
+  "typed_generated_exit_records": 8,
+  "warm_claim_empty": true,
+  "warm_completion": [
+    {
+      "end": 4454,
+      "name": "warm-plain",
+      "start": 3848
+    },
+    {
+      "child": 18379471570323637440,
+      "child_completion": {
+        "acquisition": 18379471570323637937,
+        "cursor": 18446744072635855348,
+        "flags": 1536,
+        "image": 0,
+        "index": 4522,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471570323637440,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569008128,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 18379471570323636328,
+        "phase": 0,
+        "related": 18379471570323637864,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568426223616,
+        "task": 18379471568506696064
+      },
+      "child_return": {
+        "acquisition": 18379471570323636825,
+        "cursor": 18446744072635855348,
+        "flags": 1024,
+        "image": 0,
+        "index": 4536,
+        "ip": 0,
+        "kind": 26,
+        "node": 18379471570323636328,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569008128,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471570323637440,
+        "result": 3,
+        "return_user": 18379471570323637896,
+        "source_user": 18379471570323636752,
+        "state": 18379471568426223616,
+        "task": 18379471568508105088
+      },
+      "end": 4571,
+      "fixed_image": 18379471568569571640,
+      "mode": 1,
+      "name": "warm-recursive-1",
+      "raw_status": "evidence=kernel-mechanism mode=1 workers=5 finished=5 iterations=1 completed=5 calls=3 a=2 b=1 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=1 ready=1f queued=1f held=3 child=ff110003bc8804c0 events=4571 overflow=0 role0=ff1100034719b180 role1=ff11000353dab180 role2=ff11000350513180 role3=ff110003503bb180 role4=ff11000353f28000 w_core=ff1100034b6fc800 w_regs=ff1100034b6fc800 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "roles": [
+        18379471568353472896,
+        18379471568567447936,
+        18379471568508105088,
+        18379471568506696064,
+        18379471568569008128
+      ],
+      "root": 18379471570323636328,
+      "root_completion": {
+        "acquisition": 18379471570323636825,
+        "cursor": 18446744072635855381,
+        "flags": 1536,
+        "image": 0,
+        "index": 4544,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471570323636328,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569008128,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471570323637896,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568426223616,
+        "task": 18379471568508105088
+      },
+      "start": 4454,
+      "state": 18379471568426223616
+    },
+    {
+      "child": 18379471570323637440,
+      "child_completion": {
+        "acquisition": 18379471570323637937,
+        "cursor": 18446744072635855552,
+        "flags": 1536,
+        "image": 0,
+        "index": 4644,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471570323637440,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569020800,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 18379471570323636328,
+        "phase": 0,
+        "related": 18379471570323637864,
+        "result": 5,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568426223616,
+        "task": 18379471568330568064
+      },
+      "child_return": {
+        "acquisition": 18379471570323636825,
+        "cursor": 18446744072635855552,
+        "flags": 1024,
+        "image": 0,
+        "index": 4661,
+        "ip": 0,
+        "kind": 26,
+        "node": 18379471570323636328,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569020800,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471570323637440,
+        "result": 5,
+        "return_user": 18379471570323637896,
+        "source_user": 18379471570323636752,
+        "state": 18379471568426223616,
+        "task": 18379471568506663296
+      },
+      "end": 4691,
+      "fixed_image": 18379471568569571640,
+      "mode": 2,
+      "name": "warm-recursive-2",
+      "raw_status": "evidence=kernel-mechanism mode=2 workers=5 finished=5 iterations=1 completed=5 calls=4 a=2 b=2 errors=0 core_errors=0 origin_errors=0 source_start=ffffffffc000b0a0 source_size=865 step_start=ffffffffc000b010 step_size=116 locks_clear=1 runtime=1 self_pid=3784 self_root=0000000000000000 self_core=0000000000000000 self_regs=0000000000000000 self_binding=0000000000000000 self_own=0 self_native=0 self_managed=0 scene=1 ready=1f queued=1f held=3 child=ff110003bc8804c0 events=4691 overflow=0 role0=ff1100034a2d3180 role1=ff11000350128000 role2=ff110003503b3180 role3=ff11000345bc3180 role4=ff11000353f2b180 w_core=ff1100034b6fc800 w_regs=ff1100034b6fc800 object_a=ffffffffc0607180 object_b=ffffffffc0606d80\n",
+      "roles": [
+        18379471568405082496,
+        18379471568503996416,
+        18379471568506663296,
+        18379471568330568064,
+        18379471568569020800
+      ],
+      "root": 18379471570323636328,
+      "root_completion": {
+        "acquisition": 18379471570323636825,
+        "cursor": 18446744072635855552,
+        "flags": 1536,
+        "image": 0,
+        "index": 4664,
+        "ip": 0,
+        "kind": 27,
+        "node": 18379471570323636328,
+        "notifier": 0,
+        "object": 0,
+        "origin": 18379471568569020800,
+        "owner": 0,
+        "owner_task": 0,
+        "parent": 0,
+        "phase": 0,
+        "related": 18379471570323637896,
+        "result": 3,
+        "return_user": 0,
+        "source_user": 0,
+        "state": 18379471568426223616,
+        "task": 18379471568506663296
+      },
+      "start": 4571,
+      "state": 18379471568426223616
+    }
+  ],
+  "warm_image_identity": 18379471568569571640,
+  "wire_log": {
+    "byte_limit": 134217728,
+    "reservations": 32,
+    "reserved_bytes": 70330157
+  },
+  "workers": 4
+}

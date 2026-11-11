@@ -1,0 +1,66 @@
+There are 57 section headers, starting at offset 0x1e4fa230:
+
+Section Headers:
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .text             PROGBITS        ffffffff81000000 200000 1725278 00  AX  0   0 4096
+  [ 2] .rodata           PROGBITS        ffffffff82800000 1a00000 8dde86 00  WA  0   0 4096
+  [ 3] .pci_fixup        PROGBITS        ffffffff830dde90 22dde90 004240 00   A  0   0 16
+  [ 4] .tracedata        PROGBITS        ffffffff830e20d0 22e20d0 000078 00   A  0   0  1
+  [ 5] __ksymtab         PROGBITS        ffffffff830e2148 22e2148 013758 00   A  0   0  4
+  [ 6] __ksymtab_gpl     PROGBITS        ffffffff830f58a0 22f58a0 01a7c0 00   A  0   0  4
+  [ 7] __kcrctab         PROGBITS        ffffffff83110060 2310060 0067c8 00   A  0   0  4
+  [ 8] __kcrctab_gpl     PROGBITS        ffffffff83116828 2316828 008d40 00   A  0   0  4
+  [ 9] __ksymtab_strings PROGBITS        ffffffff8311f568 231f568 059707 01 AMS  0   0  1
+  [10] __init_rodata     PROGBITS        ffffffff83178c80 2378c80 0002f0 00   A  0   0 32
+  [11] __param           PROGBITS        ffffffff83178f70 2378f70 004510 00   A  0   0  8
+  [12] __modver          PROGBITS        ffffffff8317d480 237d480 0004c8 00   A  0   0  8
+  [13] __ex_table        PROGBITS        ffffffff8317d950 237d950 002418 0c  AM  0   0  4
+  [14] .notes            NOTE            ffffffff8317fd68 237fd68 0001dc 00   A  0   0  4
+  [15] .BTF              PROGBITS        ffffffff83180000 2380000 6920f1 00   A  0   0  1
+  [16] .BTF_ids          PROGBITS        ffffffff83813000 2a13000 001450 00   A  0   0  1
+  [17] .data             PROGBITS        ffffffff83a00000 2c00000 4da980 00 WAX  0   0 8192
+  [18] __bug_table       PROGBITS        ffffffff83eda980 30da980 037300 00  WA  0   0  1
+  [19] .init.text        PROGBITS        ffffffff83f12000 3112000 0c0e35 00  AX  0   0 32
+  [20] .altinstr_aux     PROGBITS        ffffffff83fd2e35 31d2e35 0041cb 00  AX  0   0  1
+  [21] .init.data        PROGBITS        ffffffff83fd8000 31d8000 202048 00  WA  0   0 8192
+  [22] .x86_cpu_dev.init PROGBITS        ffffffff841da048 33da048 000028 00   A  0   0  8
+  [23] .retpoline_sites  PROGBITS        ffffffff841da070 33da070 00c434 04   A  0   0  1
+  [24] .return_sites     PROGBITS        ffffffff841e64a8 33e64a8 06385c 04   A  0   0  1
+  [25] .call_sites       PROGBITS        ffffffff84249d08 3449d08 17b590 04   A  0   0  1
+  [26] .altinstructions  PROGBITS        ffffffff843c5298 35c5298 023a2c 0e  AM  0   0  1
+  [27] .altinstr_replacement PROGBITS        ffffffff843e8cc4 35e8cc4 009722 00  AX  0   0  1
+  [28] .apicdrivers      PROGBITS        ffffffff843f23e8 35f23e8 000040 00  WA  0   0  8
+  [29] .exit.text        PROGBITS        ffffffff843f2430 35f2430 0041b3 00  AX  0   0 16
+  [30] .data..percpu     PROGBITS        ffffffff843f7000 35f7000 037000 00  WA  0   0 4096
+  [31] runtime_shift_d_hash_shift PROGBITS        ffffffff8442e000 362e000 000014 00   A  0   0  1
+  [32] runtime_ptr_dentry_hashtable PROGBITS        ffffffff8442e018 362e018 000014 00   A  0   0  1
+  [33] runtime_ptr___dentry_cache PROGBITS        ffffffff8442e030 362e030 000014 00   A  0   0  1
+  [34] runtime_ptr___names_cache PROGBITS        ffffffff8442e048 362e048 000014 00   A  0   0  1
+  [35] runtime_ptr_USER_PTR_MAX PROGBITS        ffffffff8442e060 362e060 000280 00   A  0   0  1
+  [36] .smp_locks        PROGBITS        ffffffff8442f000 362f000 00e000 00   A  0   0  4
+  [37] .data_nosave      PROGBITS        ffffffff8443d000 363d000 001000 00  WA  0   0  4
+  [38] .bss              NOBITS          ffffffff8443e000 363e000 5c2000 00  WA  0   0 4096
+  [39] .brk              NOBITS          ffffffff84a00000 363e000 030000 00  WA  0   0  1
+  [40] .init.scratch     PROGBITS        ffffffff84c00000 3e00000 400000 00  WA  0   0 32
+  [41] .debug_aranges    PROGBITS        0000000000000000 4200000 03f560 00      0   0 16
+  [42] .debug_info       PROGBITS        0000000000000000 423f560 12dc0503 00      0   0  1
+  [43] .debug_abbrev     PROGBITS        0000000000000000 16fffa63 890734 00      0   0  1
+  [44] .debug_line       PROGBITS        0000000000000000 17890197 210db84 00      0   0  1
+  [45] .debug_frame      PROGBITS        0000000000000000 1999dd20 41d0c8 00      0   0  8
+  [46] .debug_str        PROGBITS        0000000000000000 19dbade8 713c76 01  MS  0   0  1
+  [47] .debug_addr       PROGBITS        0000000000000000 1a4cea5e 009150 00      0   0  1
+  [48] .debug_line_str   PROGBITS        0000000000000000 1a4d7bae 059671 01  MS  0   0  1
+  [49] .debug_loclists   PROGBITS        0000000000000000 1a53121f 2d1129e 00      0   0  1
+  [50] .debug_names      PROGBITS        0000000000000000 1d2424c0 04e550 00      0   0  4
+  [51] .debug_rnglists   PROGBITS        0000000000000000 1d290a10 6319d4 00      0   0  1
+  [52] .debug_str_offsets PROGBITS        0000000000000000 1d8c23e4 00efb4 00      0   0  1
+  [53] .comment          PROGBITS        0000000000000000 1d8d1398 000070 01  MS  0   0  1
+  [54] .symtab           SYMTAB          0000000000000000 1d8d1408 691680 18     55 203095  8
+  [55] .strtab           STRTAB          0000000000000000 1df62a88 5974c5 00      0   0  1
+  [56] .shstrtab         STRTAB          0000000000000000 1e4f9f4d 0002dc 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  D (mbind), l (large), p (processor specific)

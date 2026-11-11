@@ -1,0 +1,21 @@
+{
+  "archive_bytes": 1085440,
+  "archive_sha256": "6f814ac1b18c8750c248a8ba4bd2f8d1ecadd1e8a9f1e5fad2e5ba53e288bece",
+  "commit": "db7d7d6e38e1341e24b643553bd83633616d4ea7",
+  "core_commit": "2d0ad60b0bc46929f3070aefa364e710c0a81115",
+  "files": 103,
+  "paths": [
+    "AGENTS.md",
+    "README.md",
+    "Kbuild",
+    "Kconfig",
+    "disassem",
+    "include",
+    "kernel",
+    "tests/kernel"
+  ],
+  "scope": "Exact committed source archive only. No project import, compilation, test, source execution, guest transfer or VM change.",
+  "source_bytes": 991432,
+  "source_worktree_status_after": "## main\n",
+  "source_worktree_status_before": "## main\n"
+}

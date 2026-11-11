@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "grub-reboot",
+    "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild4-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+  ],
+  "elapsed_seconds": 0.06813601199974073,
+  "returncode": 0,
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "timed_out": false
+}

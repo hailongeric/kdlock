@@ -1,0 +1,118 @@
+{
+  "scope": "Source-host-only preparation. No guest/HMP command or new execution evidence.",
+  "files": [
+    {
+      "path": "/tmp/kdlock-kernel4-spin-recover.py",
+      "bytes": 18586,
+      "sha256": "3b871de184760d60695d8263673d99d77bc213a53918af5471a2e1ca99772835"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-spin-recover-observer.py",
+      "bytes": 3601,
+      "sha256": "bfbf93863ed8bdf2bf90fb585e0b494a9ac4c1b663a5611d059405d789d53bcf"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-spin-recovery-approval-rejection.json",
+      "bytes": 873,
+      "sha256": "541ee800fa23f7e9f43d00741122a1342e6239a996f8bdd89e11229b59b36dfa"
+    },
+    {
+      "path": "/tmp/kdlock-main-kernel4-fixture-with-span.py",
+      "bytes": 22692,
+      "sha256": "9222700aea00b61681ca94baee0a8948aa657abeabb6609916992effeb2f0197"
+    },
+    {
+      "path": "/tmp/kdlock-kdrebuild4-repeat-db7.py",
+      "bytes": 18292,
+      "sha256": "2cf37e857a00fd5d944058d8df9509e2bf66af41210db498518918dece80cec0"
+    },
+    {
+      "path": "/tmp/kdlock-kdrebuild4-repeat-db7-review.json",
+      "bytes": 659,
+      "sha256": "07ca30d9ddbd129f91f5e606fe1dc3cb579958623cd46a27e157541b7a271aeb"
+    },
+    {
+      "path": "/tmp/kdlock-kdrebuild4-repeat-db7-plan.md",
+      "bytes": 3697,
+      "sha256": "922ebbfb98103c42a42ac9da0b9335557d95243576e98cc91fb467c3e758a9d1"
+    },
+    {
+      "path": "/tmp/kdlock-kdrebuild4-repeat-db7-reboot.py",
+      "bytes": 2214,
+      "sha256": "0956e05c760d80569b5dd55e37fb28b60bf8cfe98e825d3b8b596bfc5677177f"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-db7-hmp-read.py",
+      "bytes": 994,
+      "sha256": "05094cecbf35a0566567b9ebe35066b3a5825226aaa0225b7647257919e908b0"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-db7-hmp-20261111-01.json",
+      "bytes": 4572,
+      "sha256": "d860e6cbd5657582b7437a13777c2f3951fc9226667b7662afbb2c7634ecea7a"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-db7-reboot-dispatch.json",
+      "bytes": 385,
+      "sha256": "fbf940f1daf174caa6f252fb1e3e9ca987ddca68a8c9d5efe47f99d2fdcf36bf"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-db7-reconnect.py",
+      "bytes": 1694,
+      "sha256": "cfaf04fee6cbf2a4fec57570a9400c4639d8c4a74c9fe1d7301781311ae0671b"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-db7-reconnect-20261111-01.json",
+      "bytes": 954,
+      "sha256": "698e06e60843b3173517e82bd5fa7ba34f5850bbd2bdc0b4ad677b8ab2760e17"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-db7-reconnect-attempts.jsonl",
+      "bytes": 639,
+      "sha256": "cc1637cc9950242de1cd5dc5323c906b8081077261e0e6b7a9edac11a565e2aa"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-db7-persist-result.json",
+      "bytes": 1916,
+      "sha256": "f3d234a944d5f3a3f5279b879d7e87536c59ed323de2f208d7e92202a61b70b9"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-db7-final-summary-note.json",
+      "bytes": 735,
+      "sha256": "b07cd263f58e96226d0401071bc5a1eff603554626b3cb70b357a66cf70cc430"
+    },
+    {
+      "path": "/tmp/kdlock-kernel4-postproof-observer-note.json",
+      "bytes": 1550,
+      "sha256": "0d8b9d22c10c17bf2532d1152a67997299aa613ed17c71bb5ed1b3adeb542064"
+    },
+    {
+      "path": "/tmp/kdlock-main-return-normal-after-kdrebuild4-db7.py",
+      "bytes": 18173,
+      "sha256": "42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce"
+    },
+    {
+      "path": "/tmp/kdlock-db7-ops-evidence-plan.md",
+      "bytes": 6506,
+      "sha256": "7a22e38ca0afbb55cfee3055da5d3d011f4273c63539dc1bb98a55db5485ec32"
+    }
+  ],
+  "actual_bindings": {
+    "recovery_result": "d5b188ce454de29a730dd8871d1926c121bca8d79c1be04a7fa099726b116524",
+    "recovery_observer": "172eedfe8c6d4ac131f1e6a63467b90c3851fdd94b3d50a67e101bd94e937262",
+    "recovery_archive": "21328862c8fb47dd8ad4b7842c5b766e169c6a027aee964a458d9b78b66a678d",
+    "module_build_result": "cb79249bfbb6f883935b93dbeef33045a4714deecdc2da5082163830987399af",
+    "spin_module": "79521d2ec8f87b5750c7ac2dc7f4e4fff2959d39928d30db1736985569642e1f",
+    "mutex_module": "bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515",
+    "fresh_postboot_result": "73fc01fbee3837d406fbf2ed1741b3bef85721440db3d44c369037c3ecce82db",
+    "fresh_gs_proof": "a51191f8f080af052a3efb9f89b4d51d1c834b730772c07d84030165656a960d",
+    "final_idle": "b7942a9fa8b1a6bce5c4f164fd677db21dc5a06338c27630c2ddda4065d23745"
+  },
+  "copy_limits": {
+    "regular_files": 512,
+    "single_file_bytes": 33554432,
+    "total_origin_bytes": 134217728,
+    "inventory_timeout_seconds": 60,
+    "copy_timeout_seconds": 120
+  }
+}

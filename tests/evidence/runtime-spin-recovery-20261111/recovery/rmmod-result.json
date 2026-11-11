@@ -1,0 +1,7 @@
+{
+  "argv": [
+    "/usr/sbin/rmmod",
+    "kd_spin_runtime_fixture"
+  ],
+  "returncode": 0
+}

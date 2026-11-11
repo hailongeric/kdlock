@@ -1,0 +1,8 @@
+{
+  "returncode": 0,
+  "stdout": "Persisted exact reboot wrapper and VM AST PASS\n",
+  "started_unix": 1794368063.2904694,
+  "finished_unix": 1794368064.1873043,
+  "helper_sha256": "0956e05c760d80569b5dd55e37fb28b60bf8cfe98e825d3b8b596bfc5677177f",
+  "remote_helper": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-reboot.py"
+}

@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "systemctl",
+    "reboot"
+  ],
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "",
+  "unix": 1794368062.448868,
+  "elapsed_seconds": 0.007070302963256836
+}

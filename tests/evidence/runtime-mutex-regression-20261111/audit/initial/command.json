@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "python3",
+    "/tmp/kdlock-saved-runtime-audit.py",
+    "--runtime",
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-mutex-output",
+    "--controller-result",
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-mutex-controller/result.json",
+    "--profile",
+    "mutex",
+    "--output",
+    "/tmp/kdlock-kernel4-db7-saved-audit-20261111-01/mutex/proof",
+    "--max-file-bytes",
+    "67108864",
+    "--max-events",
+    "65536",
+    "--max-facts",
+    "4096",
+    "--max-wire-attempts",
+    "64"
+  ],
+  "auditor_sha256": "a0ad2c4d9c090c6aff5dcec3ecab9439197acb9854eee9ed707b9a050440d857",
+  "cwd": "/home/eric/vm/vm-shared/kdlock-main",
+  "scope": "saved scalar records only, no project imports or guest operations",
+  "timeout_seconds": 60
+}

@@ -1,0 +1,41 @@
+--- /tmp/kdlock-kernel4-db7-saved-audit-20261111-01/audit.py	2026-11-11 11:46:55.394465500 +0800
++++ /tmp/kdlock-kernel4-db7-saved-audit-20261111-02/audit.py	2026-11-11 11:50:27.570268977 +0800
+@@ -64,6 +64,7 @@
+         self.lock_kind, self.unlock_kind = (4, 5) if self.spin else (1, 2)
+         self.result = self.json(self.root / "result.json")
+         controller = self.json(args.controller_result)
++        self.controller = controller
+         expected = "protected_spin_jit_recursive_mechanism_pass" if self.spin else "protected_jit_recursive_mechanism_pass"
+         check(controller["returncode"] == 0 and self.result["status"] == expected,
+               "actual returned controller and runner completion disagree")
+@@ -582,9 +583,19 @@
+             plain_proofs.append(self.completion(lifetime, selected["node"], selected["task"], 3))
+         check(plain_proofs, "warm plain generated completion is absent")
+         native = self.native_miss() if self.spin else None
+-        post = self.json(self.root / "poststate.json")
+-        check(post["module_present"] is False and not post["devices"] and not post["active_rows"],
+-              "saved poststate still has fixture or build activity")
++        # The controller captures its own post-run idle snapshot. The separately
++        # retained poststate follows both runs and has its actual collector schema.
++        post = self.json(self.args.poststate)
++        idle, identity = self.controller["after_idle"], self.controller["after_identity"]
++        fixtures = {"kd_runtime_fixture", "kd_spin_runtime_fixture"}
++        for snapshot in (idle, post):
++            modules = {line.split()[0] for line in snapshot["modules"].splitlines() if line.split()}
++            check(not modules.intersection(fixtures) and not snapshot["devices"],
++                  "saved post-run snapshot still has a fixture or its devices")
++        check(not post["unexpected"], "saved final poststate has unexpected task activity")
++        check(post["boot_id"] == identity["boot_id"] and post["release"] == identity["release"]
++              and int(post["taint"]) == identity["taint"],
++              "saved final poststate and controller execution identity differ")
+         return {"status": "SAVED_RUNTIME_RELATIONS_VERIFIED", "profile": self.args.profile,
+                 "scope": "Protected source lock/unlock episodes, exact saved return and physical-release records",
+                 "producer_detail_contract": "The live adapter checks exact EmittedExit fields. This saved-output audit checks the recorded ABI detail domain, source transfer and cursor.",
+@@ -608,6 +619,7 @@
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--runtime", type=Path, required=True)
+     parser.add_argument("--controller-result", type=Path, required=True)
++    parser.add_argument("--poststate", type=Path, required=True)
+     parser.add_argument("--profile", choices=("mutex", "spin"), required=True)
+     parser.add_argument("--output", type=Path, required=True)
+     parser.add_argument("--max-file-bytes", type=int, required=True)

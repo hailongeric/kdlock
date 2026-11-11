@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "readelf",
+    "-n",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux"
+  ],
+  "elapsed_seconds": 0.005517838999821834,
+  "returncode": 0,
+  "sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf",
+  "timed_out": false
+}

@@ -1,0 +1,6 @@
+{
+  "command": "stop",
+  "dispatches": 1,
+  "errno": 110,
+  "error": "[Errno 110] Connection timed out"
+}

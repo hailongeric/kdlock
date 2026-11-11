@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-helpers-01/kdlock-kernel4-spin-recover.py",
+    "--max-file-bytes",
+    "8388608",
+    "--max-history-bytes",
+    "33554432",
+    "--max-archive-bytes",
+    "67108864"
+  ],
+  "helper_sha256": "3b871de184760d60695d8263673d99d77bc213a53918af5471a2e1ca99772835",
+  "observer_seconds": 300.0,
+  "policy": "One ordinary attempt. Observer expiration retains child and never establishes drain.",
+  "unix": 1794367154.236592
+}

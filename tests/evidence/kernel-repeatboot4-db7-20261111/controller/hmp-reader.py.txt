@@ -1,0 +1,24 @@
+import json, os, socket, time
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.settimeout(5)
+s.connect('/tmp/qemu-monitor.sock')
+def prompt():
+    data = bytearray()
+    while b'(qemu) ' not in data:
+        block = s.recv(65536)
+        if not block:
+            raise RuntimeError('monitor closed before prompt')
+        data.extend(block)
+        if len(data) > 1048576:
+            raise RuntimeError('monitor response exceeds bound')
+    return bytes(data).decode(errors='replace')
+v = os.statvfs('/home/eric/vm')
+report = {'unix': time.time(), 'host_free_bytes': v.f_bavail * v.f_frsize,
+          'serial_path': '/tmp/qemu-serial.log',
+          'serial_size_before': os.stat('/tmp/qemu-serial.log').st_size,
+          'greeting': prompt(), 'commands': []}
+for command in ('info status', 'info snapshots', 'info block'):
+    s.sendall((command + '\n').encode())
+    report['commands'].append({'command': command, 'output': prompt()})
+s.close()
+print(json.dumps(report, indent=2))

@@ -1,0 +1,70 @@
+{
+  "phase": "NORMAL_IDENTITY_VERIFIED",
+  "utc": "2026-11-11T03:53:54.781553+00:00",
+  "actual": {
+    "release": "7.0.0-38-kdlock1",
+    "machine": "x86_64",
+    "boot": "eefccc16-4d98-4834-b551-45767e83e442",
+    "taint": 0
+  },
+  "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+  "grub": {
+    "configuration_sha256": "9797117f0ac48ebd8122a39b38716c3f7dd5c86c59ced0ead048389ae086f9a1",
+    "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "environment": {
+      "next_entry": ""
+    }
+  },
+  "protected_boot_files": [
+    {
+      "mode": 420,
+      "path": "/boot/System.map-6.1.159-kdclobber2",
+      "sha256": "e52ed9012806d5370eea13dd74c545ebf7419635df0665386caa0943a3790995",
+      "size": 5133645
+    },
+    {
+      "mode": 420,
+      "path": "/boot/System.map-7.0.0-38-kdlock1",
+      "sha256": "1b06d9aee8db0dcb36480985a83ef1d48cba19ef2f1be9abb82955bed7b53159",
+      "size": 10530773
+    },
+    {
+      "mode": 420,
+      "path": "/boot/config-6.1.159-kdclobber2",
+      "sha256": "e1dd628c6f2315c77debd559cf6df1f299814b0b4ba47d5964cfb5bde4dd4ccd",
+      "size": 264462
+    },
+    {
+      "mode": 420,
+      "path": "/boot/config-7.0.0-38-kdlock1",
+      "sha256": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+      "size": 308540
+    },
+    {
+      "mode": 420,
+      "path": "/boot/initrd.img-6.1.159-kdclobber2",
+      "sha256": "ff77ff8919ca9608d187825f7c43bee87b811fe253a6d53a37ba10681dd69064",
+      "size": 78240626
+    },
+    {
+      "mode": 420,
+      "path": "/boot/initrd.img-7.0.0-38-kdlock1",
+      "sha256": "a13aaa736d57c6d9a52e8acea99ee6de42379882f000cbbff857a05de68e0769",
+      "size": 103189900
+    },
+    {
+      "mode": 420,
+      "path": "/boot/vmlinuz-6.1.159-kdclobber2",
+      "sha256": "3221e8ee72eb947d06ed7b2a2ab3bae348d6edd798cdd55ae439c040227ad19d",
+      "size": 12468736
+    },
+    {
+      "mode": 420,
+      "path": "/boot/vmlinuz-7.0.0-38-kdlock1",
+      "sha256": "8530a19fcca7b3ef65c39aa35ad2e8a46904ded34d124afb2e4f4285f9631d71",
+      "size": 17109504
+    }
+  ],
+  "pre_reboot_sha256": "a0bd165fdb99db10b626044e62e51dcdc908c7103ec3a7800ebe85c62929da4b",
+  "scope": "Read-only fresh normal boot, eight protected boot files and idle proof; no build/test/module operation."
+}

@@ -1,0 +1,12 @@
+{
+  "unix": 1794369149.5878208,
+  "available_bytes": {
+    "/": 1212256256,
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f": 14260482048,
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts": 8577712128
+  },
+  "host_free_bytes": 8823042048,
+  "hmp_sha256": "e5d42a96bc98de2ecb52052d396a12f5fb27d39032442663e553a15f3c056f61",
+  "helper_sha256": "42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce",
+  "vm_syntax": "PASS"
+}

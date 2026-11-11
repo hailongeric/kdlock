@@ -1,0 +1,42 @@
+{
+  "scope": "Preserved existing text bytes. No raw whitespace was changed. Authored README checked separately.",
+  "files": [
+    {
+      "path": "recovery/dmesg-after.txt",
+      "trailing_whitespace_lines": [
+        8,
+        37,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        133,
+        134,
+        211
+      ]
+    },
+    {
+      "path": "recovery/dmesg-before.txt",
+      "trailing_whitespace_lines": [
+        8,
+        37,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        133,
+        134,
+        211
+      ]
+    }
+  ],
+  "line_count": 26
+}

@@ -1,0 +1,186 @@
+{
+  "copies": [
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 483,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7-gates.json",
+      "origin_sha256": "f7afe2b9e59fce95793a480fbf799c737d474a44f4847c397dd3860877eb4b5c",
+      "path": "prepared/return-normal-db7-gates.json",
+      "storage_bytes": 483,
+      "storage_sha256": "f7afe2b9e59fce95793a480fbf799c737d474a44f4847c397dd3860877eb4b5c"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1515,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7-pins.json",
+      "origin_sha256": "24c70b2c547203fc32d5ad358b97707121409b1587752c2d56e72d9f1452ccb6",
+      "path": "prepared/return-normal-db7-pins.json",
+      "storage_bytes": 1515,
+      "storage_sha256": "24c70b2c547203fc32d5ad358b97707121409b1587752c2d56e72d9f1452ccb6"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 4573,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7-recovery.json",
+      "origin_sha256": "e5d42a96bc98de2ecb52052d396a12f5fb27d39032442663e553a15f3c056f61",
+      "path": "prepared/return-normal-db7-recovery.json",
+      "storage_bytes": 4573,
+      "storage_sha256": "e5d42a96bc98de2ecb52052d396a12f5fb27d39032442663e553a15f3c056f61"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 18173,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7.py",
+      "origin_sha256": "42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce",
+      "path": "prepared/return-normal-db7.py",
+      "storage_bytes": 18173,
+      "storage_sha256": "42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 38690,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild4-db7-01/post-normal/result.json",
+      "origin_sha256": "1c6d3b8cd1ca7b1e84ea88bd4603acf06e1a215914ce6fdfee4991d6c1574625",
+      "path": "return/post-normal/result.json",
+      "storage_bytes": 38690,
+      "storage_sha256": "1c6d3b8cd1ca7b1e84ea88bd4603acf06e1a215914ce6fdfee4991d6c1574625"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 476,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild4-db7-01/post-normal/running-kernel-notes.bin",
+      "origin_sha256": "ff3f5318675db0cd606e636ef3a5b57272622ee4113ed9822328d64003aa54fe",
+      "path": "return/post-normal/running-kernel-notes.bin",
+      "storage_bytes": 476,
+      "storage_sha256": "ff3f5318675db0cd606e636ef3a5b57272622ee4113ed9822328d64003aa54fe"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 41679,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild4-db7-01/pre-reboot.json",
+      "origin_sha256": "a0bd165fdb99db10b626044e62e51dcdc908c7103ec3a7800ebe85c62929da4b",
+      "path": "return/pre-reboot.json",
+      "storage_bytes": 41679,
+      "storage_sha256": "a0bd165fdb99db10b626044e62e51dcdc908c7103ec3a7800ebe85c62929da4b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 41776,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild4-db7-01/reboot-result.json",
+      "origin_sha256": "51a233843b2b7e17b1bce8e123fb1369ec135a0295bc380c75f482d55a60d0f2",
+      "path": "return/reboot-result.json",
+      "storage_bytes": 41776,
+      "storage_sha256": "51a233843b2b7e17b1bce8e123fb1369ec135a0295bc380c75f482d55a60d0f2"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1515,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-return-actual-argv.json",
+      "origin_sha256": "24c70b2c547203fc32d5ad358b97707121409b1587752c2d56e72d9f1452ccb6",
+      "path": "controller/actual-argv.json",
+      "storage_bytes": 1515,
+      "storage_sha256": "24c70b2c547203fc32d5ad358b97707121409b1587752c2d56e72d9f1452ccb6"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 9612,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-collect-db7-return.py",
+      "origin_sha256": "437ecb2c0b989f081926d98b844ce3cf6685fbd82be1370aa9a49f2c55e0f883",
+      "path": "controller/collector.py.txt",
+      "storage_bytes": 9612,
+      "storage_sha256": "437ecb2c0b989f081926d98b844ce3cf6685fbd82be1370aa9a49f2c55e0f883"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 994,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-hmp-read.py",
+      "origin_sha256": "05094cecbf35a0566567b9ebe35066b3a5825226aaa0225b7647257919e908b0",
+      "path": "controller/hmp-reader.py.txt",
+      "storage_bytes": 994,
+      "storage_sha256": "05094cecbf35a0566567b9ebe35066b3a5825226aaa0225b7647257919e908b0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2357,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-post-normal-stdout.json",
+      "origin_sha256": "3b72613e904a52798465db5f3b513684828b09f2e42c37ee38a2e25f31464b1d",
+      "path": "controller/post-normal-stdout.json",
+      "storage_bytes": 2357,
+      "storage_sha256": "3b72613e904a52798465db5f3b513684828b09f2e42c37ee38a2e25f31464b1d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1975,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-return-prepare-result.json",
+      "origin_sha256": "fd562eff756c76d0de1abeeaf2d4356bc097c9aa7fe2b20e2ecc40330deb6312",
+      "path": "controller/prepare-result.json",
+      "storage_bytes": 1975,
+      "storage_sha256": "fd562eff756c76d0de1abeeaf2d4356bc097c9aa7fe2b20e2ecc40330deb6312"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 779,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-return-reconnect-attempts.jsonl",
+      "origin_sha256": "e73a2e7fa1aa3e0348ea38667ceec21a87aca25444bffd3046e8ccd278f19c84",
+      "path": "controller/reconnect-attempts.jsonl",
+      "storage_bytes": 779,
+      "storage_sha256": "e73a2e7fa1aa3e0348ea38667ceec21a87aca25444bffd3046e8ccd278f19c84"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1707,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-return-reconnect.py",
+      "origin_sha256": "07ecb7ea02671c69ad81f431bddeefef122c2c763e79fcd27da0dc28cc6b0bb3",
+      "path": "controller/reconnect-helper.py.txt",
+      "storage_bytes": 1707,
+      "storage_sha256": "07ecb7ea02671c69ad81f431bddeefef122c2c763e79fcd27da0dc28cc6b0bb3"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1097,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-return-reconnect-20261111-01.json",
+      "origin_sha256": "7fd41200d1bf61554df3923a21c92fb8daf38c9ad839a7018ecc37ee6013aecb",
+      "path": "controller/reconnect.json",
+      "storage_bytes": 1097,
+      "storage_sha256": "7fd41200d1bf61554df3923a21c92fb8daf38c9ad839a7018ecc37ee6013aecb"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 4573,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-return-recovery-20261111-01.json",
+      "origin_sha256": "e5d42a96bc98de2ecb52052d396a12f5fb27d39032442663e553a15f3c056f61",
+      "path": "controller/recovery.json",
+      "storage_bytes": 4573,
+      "storage_sha256": "e5d42a96bc98de2ecb52052d396a12f5fb27d39032442663e553a15f3c056f61"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 18173,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-main-return-normal-after-kdrebuild4-db7.py",
+      "origin_sha256": "42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce",
+      "path": "controller/return-helper.py.txt",
+      "storage_bytes": 18173,
+      "storage_sha256": "42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce"
+    }
+  ],
+  "guest_bytes": 147365,
+  "guest_files": 8
+}

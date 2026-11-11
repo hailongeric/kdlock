@@ -1,0 +1,46 @@
+
+/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/live-mutex-output/source-1.bin:     file format binary
+
+
+Disassembly of section .data:
+
+ffffffffc000b010 <.data>:
+ffffffffc000b010:	65 48 8b 15 00 40 40 c4                         	mov    %gs:-0x3bbfc000(%rip),%rdx        # 0xffffffff8440f018
+ffffffffc000b018:	48 83 47 40 01                                  	addq   $0x1,0x40(%rdi)
+ffffffffc000b01d:	48 89 57 18                                     	mov    %rdx,0x18(%rdi)
+ffffffffc000b021:	8b 57 68                                        	mov    0x68(%rdi),%edx
+ffffffffc000b024:	48 83 fa 41                                     	cmp    $0x41,%rdx
+ffffffffc000b028:	73 19                                           	jae    0xffffffffc000b043
+ffffffffc000b02a:	48 8d 14 d5 80 67 60 c0                         	lea    -0x3f9f9880(,%rdx,8),%rdx
+ffffffffc000b032:	48 89 57 20                                     	mov    %rdx,0x20(%rdi)
+ffffffffc000b036:	31 c0                                           	xor    %eax,%eax
+ffffffffc000b038:	31 d2                                           	xor    %edx,%edx
+ffffffffc000b03a:	31 f6                                           	xor    %esi,%esi
+ffffffffc000b03c:	31 ff                                           	xor    %edi,%edi
+ffffffffc000b03e:	c3                                              	ret
+ffffffffc000b03f:	cc                                              	int3
+ffffffffc000b040:	cc                                              	int3
+ffffffffc000b041:	cc                                              	int3
+ffffffffc000b042:	cc                                              	int3
+ffffffffc000b043:	55                                              	push   %rbp
+ffffffffc000b044:	48 89 d6                                        	mov    %rdx,%rsi
+ffffffffc000b047:	48 89 e5                                        	mov    %rsp,%rbp
+ffffffffc000b04a:	48 83 ec 10                                     	sub    $0x10,%rsp
+ffffffffc000b04e:	48 89 7d f0                                     	mov    %rdi,-0x10(%rbp)
+ffffffffc000b052:	48 c7 c7 20 7e 60 c0                            	mov    $0xffffffffc0607e20,%rdi
+ffffffffc000b059:	48 89 55 f8                                     	mov    %rdx,-0x8(%rbp)
+ffffffffc000b05d:	e8 6e 8f dc c1                                  	call   0xffffffff81dd3fd0
+ffffffffc000b062:	48 8b 55 f8                                     	mov    -0x8(%rbp),%rdx
+ffffffffc000b066:	48 8b 45 f0                                     	mov    -0x10(%rbp),%rax
+ffffffffc000b06a:	48 8d 14 d5 80 67 60 c0                         	lea    -0x3f9f9880(,%rdx,8),%rdx
+ffffffffc000b072:	48 89 50 20                                     	mov    %rdx,0x20(%rax)
+ffffffffc000b076:	c9                                              	leave
+ffffffffc000b077:	31 c0                                           	xor    %eax,%eax
+ffffffffc000b079:	31 d2                                           	xor    %edx,%edx
+ffffffffc000b07b:	31 f6                                           	xor    %esi,%esi
+ffffffffc000b07d:	31 ff                                           	xor    %edi,%edi
+ffffffffc000b07f:	c3                                              	ret
+ffffffffc000b080:	cc                                              	int3
+ffffffffc000b081:	cc                                              	int3
+ffffffffc000b082:	cc                                              	int3
+ffffffffc000b083:	cc                                              	int3

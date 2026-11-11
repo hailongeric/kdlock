@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "python3",
+    "/tmp/kdlock-saved-runtime-audit-poststate.py",
+    "--runtime",
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output",
+    "--controller-result",
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-controller/result.json",
+    "--poststate",
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/combined-live-poststate.json",
+    "--profile",
+    "spin",
+    "--output",
+    "/tmp/kdlock-kernel4-db7-saved-audit-20261111-02/spin/proof",
+    "--max-file-bytes",
+    "67108864",
+    "--max-events",
+    "65536",
+    "--max-facts",
+    "4096",
+    "--max-wire-attempts",
+    "64"
+  ],
+  "auditor_sha256": "3fea6dabce58ea7ea3a97bb3dee74e64d0cd68a9c5fd3896084a62d2391d0bed",
+  "cwd": "/home/eric/vm/vm-shared/kdlock-main",
+  "scope": "saved scalar records only, no project imports or guest operations",
+  "timeout_seconds": 60
+}

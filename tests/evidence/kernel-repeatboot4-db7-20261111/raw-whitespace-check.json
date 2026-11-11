@@ -1,0 +1,88 @@
+{
+  "scope": "Preserved existing text bytes. No raw whitespace was changed. Authored README checked separately.",
+  "files": [
+    {
+      "path": "postboot/boot-kernel-journal.txt",
+      "trailing_whitespace_lines": [
+        8,
+        37,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        133,
+        134,
+        211
+      ]
+    },
+    {
+      "path": "postboot/dmesg.txt",
+      "trailing_whitespace_lines": [
+        8,
+        37,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        133,
+        134,
+        211
+      ]
+    },
+    {
+      "path": "postboot/vmlinux-notes.txt",
+      "trailing_whitespace_lines": [
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        31,
+        33,
+        35,
+        37,
+        39
+      ]
+    },
+    {
+      "path": "repeat/elf-build-id.log",
+      "trailing_whitespace_lines": [
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        31,
+        33,
+        35,
+        37,
+        39
+      ]
+    }
+  ],
+  "line_count": 62
+}

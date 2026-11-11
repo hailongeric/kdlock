@@ -1,0 +1,24 @@
+{
+  "actual_helper": {
+    "controller_result": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/postboot-controller-result.json",
+    "elapsed_seconds": 4.023799097999998,
+    "returncode": 0,
+    "saved_phase": "POSTBOOT_IDENTITY_VERIFIED",
+    "saved_result_sha256": "9d9c7203ef44ab2e92c2d99b9a15663f4a38f8fa000b433c2a900825ee209e31",
+    "stdout_sha256": "bc899951e6b3beb6214d68400f1a868f3e9c5b8fdc5e7bd2a0aa0074b98d849b"
+  },
+  "error": {
+    "cause": "The saved proof uname field is a list.",
+    "expression": "proof['uname']['release']",
+    "location": "Inline outer summary observer, <stdin> line 28.",
+    "text": "list indices must be integers or slices, not str",
+    "type": "TypeError"
+  },
+  "followup": "Read-only reads of the existing result and GS files confirmed their exact scalar fields/hashes. The helper was not rerun.",
+  "format": "kdlock.controller-transcript-note",
+  "later_scalar_display": "A read-only display additionally labelled root st_dev as root_free. Capacity reporting uses the subsequent actual df -B1 output (root available 1213038592), not that display.",
+  "ordering": "The helper returned zero and its saved success phase and controller result existed before the summary display failed.",
+  "origin": "Source-host tool transcript, chunk 0ce1e6. No separate raw outer-observer artifact was saved.",
+  "outer_returncode": 1,
+  "scope": "This is a transcript-derived operational note. It does not replace raw helper, installation, boot or runtime receipts."
+}

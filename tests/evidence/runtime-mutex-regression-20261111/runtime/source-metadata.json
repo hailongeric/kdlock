@@ -1,0 +1,64 @@
+{
+  "dependency_page_count": 2,
+  "limits": {
+    "dependency_pages": 4,
+    "total_source_bytes": 262144
+  },
+  "old": 0,
+  "region_count": 4,
+  "regions": [
+    {
+      "length": 2,
+      "start": 18446744071603076640
+    },
+    {
+      "length": 116,
+      "start": 18446744072635854864
+    },
+    {
+      "length": 865,
+      "start": 18446744072635855008
+    },
+    {
+      "length": 4096,
+      "start": 18446744072635871232
+    }
+  ],
+  "sites": [
+    {
+      "boundary": "lock",
+      "site": 18446744071584172064
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744071584172128
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635855085
+    },
+    {
+      "boundary": "lock",
+      "site": 18446744072635855236
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635855343
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635855376
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635855450
+    },
+    {
+      "boundary": "unlock",
+      "site": 18446744072635855547
+    }
+  ],
+  "slot": 18379471568612889864,
+  "source_bytes": 5079,
+  "version": "fixture-bdbfb2111e64d13a8b8416c2b43b91851c227346fdbe3c7fc6e06253a9ac0515-310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5-31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+}

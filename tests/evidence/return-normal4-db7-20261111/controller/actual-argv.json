@@ -1,0 +1,30 @@
+{
+  "status": "PREPARED_NOT_EXECUTED",
+  "helper_sha256": "42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce",
+  "argv": [
+    "python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7.py",
+    "reboot",
+    "--spin-controller",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/live-spin-controller/result.json",
+    "--spin-controller-sha256",
+    "73cf1ba076ef647c4b892f7d87c278801e57266ba96f64512556cdbbd694187a",
+    "--mutex-controller",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/live-mutex-controller/result.json",
+    "--mutex-controller-sha256",
+    "ddb890b46f205656322749ac3574984258c9e9e076dd4f821404b7157c68f185"
+  ],
+  "post_normal_argv": [
+    "python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7.py",
+    "post-normal"
+  ],
+  "hmp_sha256": "e5d42a96bc98de2ecb52052d396a12f5fb27d39032442663e553a15f3c056f61",
+  "actual_saved_audit_proofs": {
+    "spin": "55e4775c8245096fa9dd3febaea8b48ace9e188d31f7eb0fbdfb34e41a7959d3",
+    "mutex": "d0a34affb1bc8ad1a4db5dc8449cab6946b0e7618f72b989da6c75c5f5a59923"
+  },
+  "postboot_sha256": "73fc01fbee3837d406fbf2ed1741b3bef85721440db3d44c369037c3ecce82db",
+  "expected_old_boot": "1b3b298f-051b-42ea-a53b-429c16f4e114",
+  "fresh_output": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild4-db7-01"
+}

@@ -1,0 +1,11 @@
+{
+  "acknowledged": 8,
+  "events": 4691,
+  "plain_positive": 2,
+  "profile": "mutex",
+  "proof_sha256": "d0a34affb1bc8ad1a4db5dc8449cab6946b0e7618f72b989da6c75c5f5a59923",
+  "recursive_cases": 2,
+  "settled": 0,
+  "status": "SAVED_RUNTIME_RELATIONS_VERIFIED",
+  "wire_attempts": 32
+}

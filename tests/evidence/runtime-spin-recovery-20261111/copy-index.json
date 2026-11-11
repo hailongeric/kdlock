@@ -1,0 +1,576 @@
+{
+  "copies": [
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3601,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-helpers-01/kdlock-kernel4-spin-recover-observer.py",
+      "origin_sha256": "bfbf93863ed8bdf2bf90fb585e0b494a9ac4c1b663a5611d059405d789d53bcf",
+      "path": "helpers/kdlock-kernel4-spin-recover-observer.py",
+      "storage_bytes": 3601,
+      "storage_sha256": "bfbf93863ed8bdf2bf90fb585e0b494a9ac4c1b663a5611d059405d789d53bcf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 18586,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-helpers-01/kdlock-kernel4-spin-recover.py",
+      "origin_sha256": "3b871de184760d60695d8263673d99d77bc213a53918af5471a2e1ca99772835",
+      "path": "helpers/kdlock-kernel4-spin-recover.py",
+      "storage_bytes": 18586,
+      "storage_sha256": "3b871de184760d60695d8263673d99d77bc213a53918af5471a2e1ca99772835"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 485,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-helpers-01/preflight.json",
+      "origin_sha256": "e45d58f63ccf325683ebf3e3518d2c3cccf9930d447fbc36d8de474abf9200dc",
+      "path": "helpers/preflight.json",
+      "storage_bytes": 485,
+      "storage_sha256": "e45d58f63ccf325683ebf3e3518d2c3cccf9930d447fbc36d8de474abf9200dc"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 46,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-controller-01/child.json",
+      "origin_sha256": "94acc86b498939405547d3e3d624cd328b6d0f4cc1089d162e6f7e0106f2b028",
+      "path": "observer/child.json",
+      "storage_bytes": 46,
+      "storage_sha256": "94acc86b498939405547d3e3d624cd328b6d0f4cc1089d162e6f7e0106f2b028"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 599,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-controller-01/command.json",
+      "origin_sha256": "378a07ce57dadc62e0bd03e37844fa0131b2d74c7d279dcf655e9ed1f5ed8a92",
+      "path": "observer/command.json",
+      "storage_bytes": 599,
+      "storage_sha256": "378a07ce57dadc62e0bd03e37844fa0131b2d74c7d279dcf655e9ed1f5ed8a92"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 163,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-controller-01/result.json",
+      "origin_sha256": "172eedfe8c6d4ac131f1e6a63467b90c3851fdd94b3d50a67e101bd94e937262",
+      "path": "observer/result.json",
+      "storage_bytes": 163,
+      "storage_sha256": "172eedfe8c6d4ac131f1e6a63467b90c3851fdd94b3d50a67e101bd94e937262"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3185,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-controller-01/stdout.log",
+      "origin_sha256": "6b5d527e6a60f47b97490abb6263eef40e7a0b3ed63009db03be390bfc790935",
+      "path": "observer/stdout.log",
+      "storage_bytes": 3185,
+      "storage_sha256": "6b5d527e6a60f47b97490abb6263eef40e7a0b3ed63009db03be390bfc790935"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 28988,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/activity-after.json",
+      "origin_sha256": "182e565eac408776747680713bb4a8574398a14a752103911e40bcecfbfdc6dc",
+      "path": "recovery/activity-after.json",
+      "storage_bytes": 28988,
+      "storage_sha256": "182e565eac408776747680713bb4a8574398a14a752103911e40bcecfbfdc6dc"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 63919,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/dmesg-after.txt",
+      "origin_sha256": "810bb028f06e8b9599f6bb8ce5c0ed1608c0cb1a9314bf52e1a90d0f274c0298",
+      "path": "recovery/dmesg-after.txt",
+      "storage_bytes": 63919,
+      "storage_sha256": "810bb028f06e8b9599f6bb8ce5c0ed1608c0cb1a9314bf52e1a90d0f274c0298"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 63919,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/dmesg-before.txt",
+      "origin_sha256": "810bb028f06e8b9599f6bb8ce5c0ed1608c0cb1a9314bf52e1a90d0f274c0298",
+      "path": "recovery/dmesg-before.txt",
+      "storage_bytes": 63919,
+      "storage_sha256": "810bb028f06e8b9599f6bb8ce5c0ed1608c0cb1a9314bf52e1a90d0f274c0298"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 552,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/durable-archive-receipt.json",
+      "origin_sha256": "9e8cf0fea7d97224f5eedebbb0dc44562f8e7d3453aaaa8b2344035f0f974e37",
+      "path": "recovery/durable-archive-receipt.json",
+      "storage_bytes": 552,
+      "storage_sha256": "9e8cf0fea7d97224f5eedebbb0dc44562f8e7d3453aaaa8b2344035f0f974e37"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 735,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/fixture-after-destroy.txt",
+      "origin_sha256": "881e02367d0a241f02c69be8ad2363c7c4791d420e52354449bfed8fbee969a3",
+      "path": "recovery/fixture-after-destroy.txt",
+      "storage_bytes": 735,
+      "storage_sha256": "881e02367d0a241f02c69be8ad2363c7c4791d420e52354449bfed8fbee969a3"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 735,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/fixture-after-stop.txt",
+      "origin_sha256": "c0940eacf9522abd04e325f49bca2e91585c14dc198bf285f3933a03f14c0e0f",
+      "path": "recovery/fixture-after-stop.txt",
+      "storage_bytes": 735,
+      "storage_sha256": "c0940eacf9522abd04e325f49bca2e91585c14dc198bf285f3933a03f14c0e0f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 735,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/fixture-before-destroy.txt",
+      "origin_sha256": "c0940eacf9522abd04e325f49bca2e91585c14dc198bf285f3933a03f14c0e0f",
+      "path": "recovery/fixture-before-destroy.txt",
+      "storage_bytes": 735,
+      "storage_sha256": "c0940eacf9522abd04e325f49bca2e91585c14dc198bf285f3933a03f14c0e0f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 812,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/fixture-before-stop.txt",
+      "origin_sha256": "80d6700d5429b4ebad20ee402cb2d73b7fbd1a069ab2c88479e553010a111f4e",
+      "path": "recovery/fixture-before-stop.txt",
+      "storage_bytes": 812,
+      "storage_sha256": "80d6700d5429b4ebad20ee402cb2d73b7fbd1a069ab2c88479e553010a111f4e"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2092,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/journal.jsonl",
+      "origin_sha256": "c7c8efd694555dce7bb6983dfae6dfbd79d46fae6b42ee7ec5614be49cce8a25",
+      "path": "recovery/journal.jsonl",
+      "storage_bytes": 2092,
+      "storage_sha256": "c7c8efd694555dce7bb6983dfae6dfbd79d46fae6b42ee7ec5614be49cce8a25"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 48,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/modules-after.txt",
+      "origin_sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132",
+      "path": "recovery/modules-after.txt",
+      "storage_bytes": 48,
+      "storage_sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 106,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/ordinary-stop-result.json",
+      "origin_sha256": "f368a4b84e4d8bc95880b8c1abcfac8ed59bfc7ff61991481bcead5879c8d3dc",
+      "path": "recovery/ordinary-stop-result.json",
+      "storage_bytes": 106,
+      "storage_sha256": "f368a4b84e4d8bc95880b8c1abcfac8ed59bfc7ff61991481bcead5879c8d3dc"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 228,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/query-binding.json",
+      "origin_sha256": "7b28ce8f5414f80224617b911887b1252df06a56529783875b6d942eee544e59",
+      "path": "recovery/query-binding.json",
+      "storage_bytes": 228,
+      "storage_sha256": "7b28ce8f5414f80224617b911887b1252df06a56529783875b6d942eee544e59"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1651,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/result.json",
+      "origin_sha256": "d5b188ce454de29a730dd8871d1926c121bca8d79c1be04a7fa099726b116524",
+      "path": "recovery/result.json",
+      "storage_bytes": 1651,
+      "storage_sha256": "d5b188ce454de29a730dd8871d1926c121bca8d79c1be04a7fa099726b116524"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 92,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/rmmod-result.json",
+      "origin_sha256": "5330632ab1720ff1043930163858b531ea4e588772d3c022c68ee5a5d9a1a3f3",
+      "path": "recovery/rmmod-result.json",
+      "storage_bytes": 92,
+      "storage_sha256": "5330632ab1720ff1043930163858b531ea4e588772d3c022c68ee5a5d9a1a3f3"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/rmmod.stderr",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "recovery/rmmod.stderr",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/rmmod.stdout",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "recovery/rmmod.stdout",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "gzip lossless",
+      "origin_bytes": 8824917,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/shutdown-raw-archive.json",
+      "origin_sha256": "21328862c8fb47dd8ad4b7842c5b766e169c6a027aee964a458d9b78b66a678d",
+      "path": "recovery/shutdown-raw-archive.json.gz",
+      "storage_bytes": 465934,
+      "storage_sha256": "85670a48c8985037bf23f919f750155df1d02b18076ad268b35e577c318d38b6"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/tasks-after-stop.json",
+      "origin_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "path": "recovery/tasks-after-stop.json",
+      "storage_bytes": 3,
+      "storage_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1266,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/tasks-before-stop.json",
+      "origin_sha256": "de22f98f6e1baaa792886790413b00db57666f4d7fb9677d28ecf0ab1b711336",
+      "path": "recovery/tasks-before-stop.json",
+      "storage_bytes": 1266,
+      "storage_sha256": "de22f98f6e1baaa792886790413b00db57666f4d7fb9677d28ecf0ab1b711336"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 144,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-00/reply.bin",
+      "origin_sha256": "cf61b3b55201d74055064c2c381e0489a165737f416948a809f7c58c94209bcc",
+      "path": "recovery/wire-00/reply.bin",
+      "storage_bytes": 144,
+      "storage_sha256": "cf61b3b55201d74055064c2c381e0489a165737f416948a809f7c58c94209bcc"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-00/request.bin",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "recovery/wire-00/request.bin",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 38,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-00/request.json",
+      "origin_sha256": "e4ec4cb90248c096db32a90faa7cc9691ce88bbdbf1e6c3c4acedfd2ba40f729",
+      "path": "recovery/wire-00/request.json",
+      "storage_bytes": 38,
+      "storage_sha256": "e4ec4cb90248c096db32a90faa7cc9691ce88bbdbf1e6c3c4acedfd2ba40f729"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 75,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-00/result.json",
+      "origin_sha256": "9729ea1c0874340f94cd5f1bba09fbddd4fd415d10236d9122eb51abc533e9f5",
+      "path": "recovery/wire-00/result.json",
+      "storage_bytes": 75,
+      "storage_sha256": "9729ea1c0874340f94cd5f1bba09fbddd4fd415d10236d9122eb51abc533e9f5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 72,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-00/returned-envelope.bin",
+      "origin_sha256": "7e92d5eac1faa1a7a871c240711e6ad8651867112dabdd2c2260b2374ffe1982",
+      "path": "recovery/wire-00/returned-envelope.bin",
+      "storage_bytes": 72,
+      "storage_sha256": "7e92d5eac1faa1a7a871c240711e6ad8651867112dabdd2c2260b2374ffe1982"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 40,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-22/reply.bin",
+      "origin_sha256": "f7a155e65eff36b19b9397c2dcb3db296dd6f8b33da27bdec10dc4033a8be9d4",
+      "path": "recovery/wire-22/reply.bin",
+      "storage_bytes": 40,
+      "storage_sha256": "f7a155e65eff36b19b9397c2dcb3db296dd6f8b33da27bdec10dc4033a8be9d4"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 32,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-22/request.bin",
+      "origin_sha256": "bad33eb94ee55a7729de94b24e3f610dd27152857d28d9608acb0090ef926ea5",
+      "path": "recovery/wire-22/request.bin",
+      "storage_bytes": 32,
+      "storage_sha256": "bad33eb94ee55a7729de94b24e3f610dd27152857d28d9608acb0090ef926ea5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 39,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-22/request.json",
+      "origin_sha256": "95668b9966a00f7f077ceb6169c028b1e9c417718d5aacc8314d7ac65835d695",
+      "path": "recovery/wire-22/request.json",
+      "storage_bytes": 39,
+      "storage_sha256": "95668b9966a00f7f077ceb6169c028b1e9c417718d5aacc8314d7ac65835d695"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 75,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-22/result.json",
+      "origin_sha256": "ccb887425ce468ab87a2e40561ff8b43b83d3b6c7fd4a9091a5a1ee5bdefe994",
+      "path": "recovery/wire-22/result.json",
+      "storage_bytes": 75,
+      "storage_sha256": "ccb887425ce468ab87a2e40561ff8b43b83d3b6c7fd4a9091a5a1ee5bdefe994"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 72,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-22/returned-envelope.bin",
+      "origin_sha256": "af4bc58babdd5d4ad3b302576d35d355a67dc9c30f8a5aa6394cebc907f9ce52",
+      "path": "recovery/wire-22/returned-envelope.bin",
+      "storage_bytes": 72,
+      "storage_sha256": "af4bc58babdd5d4ad3b302576d35d355a67dc9c30f8a5aa6394cebc907f9ce52"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 746,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-23/reply.bin",
+      "origin_sha256": "1a0f8516260f183fc11f3dba5578be4d7d7b2be4048b887252de3cef3a528f9e",
+      "path": "recovery/wire-23/reply.bin",
+      "storage_bytes": 746,
+      "storage_sha256": "1a0f8516260f183fc11f3dba5578be4d7d7b2be4048b887252de3cef3a528f9e"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 56,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-23/request.bin",
+      "origin_sha256": "47f6e95819f688052e62ba54ef261c831543689536199aa16cb73751aa683352",
+      "path": "recovery/wire-23/request.bin",
+      "storage_bytes": 56,
+      "storage_sha256": "47f6e95819f688052e62ba54ef261c831543689536199aa16cb73751aa683352"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 40,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-23/request.json",
+      "origin_sha256": "f2714fd892e3dc96527eae5f595166dcdc569c8fac1fed2e780a03447edb6a4c",
+      "path": "recovery/wire-23/request.json",
+      "storage_bytes": 40,
+      "storage_sha256": "f2714fd892e3dc96527eae5f595166dcdc569c8fac1fed2e780a03447edb6a4c"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 77,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-23/result.json",
+      "origin_sha256": "7986fe7bc016c4b74a879e78fd0507da16320456d304c7d7215f0debde47623a",
+      "path": "recovery/wire-23/result.json",
+      "storage_bytes": 77,
+      "storage_sha256": "7986fe7bc016c4b74a879e78fd0507da16320456d304c7d7215f0debde47623a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 72,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-23/returned-envelope.bin",
+      "origin_sha256": "1b8aa9db6b59bcfa436b2198dc727c9fca7bbdbfce8b91b60ee76932264e02d6",
+      "path": "recovery/wire-23/returned-envelope.bin",
+      "storage_bytes": 72,
+      "storage_sha256": "1b8aa9db6b59bcfa436b2198dc727c9fca7bbdbfce8b91b60ee76932264e02d6"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 136,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-24/reply.bin",
+      "origin_sha256": "60425d0bef4178feab4b3db4871241ccf71ca25432d620e50a02d928376b2dfc",
+      "path": "recovery/wire-24/reply.bin",
+      "storage_bytes": 136,
+      "storage_sha256": "60425d0bef4178feab4b3db4871241ccf71ca25432d620e50a02d928376b2dfc"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 168,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-24/request.bin",
+      "origin_sha256": "34f591bc466e8b86cf5631aec95046531d612a2f432ff334293169eb6c2668df",
+      "path": "recovery/wire-24/request.bin",
+      "storage_bytes": 168,
+      "storage_sha256": "34f591bc466e8b86cf5631aec95046531d612a2f432ff334293169eb6c2668df"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 40,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-24/request.json",
+      "origin_sha256": "1b444c7de51e2742c75ca4a6d7270e4abf40edb802fde208fc41f2ba8cb1a4e5",
+      "path": "recovery/wire-24/request.json",
+      "storage_bytes": 40,
+      "storage_sha256": "1b444c7de51e2742c75ca4a6d7270e4abf40edb802fde208fc41f2ba8cb1a4e5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 77,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-24/result.json",
+      "origin_sha256": "c0755989d1b058e5afc6775e888d6e1442cac5a93b9d733cea0de50170064d87",
+      "path": "recovery/wire-24/result.json",
+      "storage_bytes": 77,
+      "storage_sha256": "c0755989d1b058e5afc6775e888d6e1442cac5a93b9d733cea0de50170064d87"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 72,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-24/returned-envelope.bin",
+      "origin_sha256": "e82ce08cfa068f9dcca3f581c4bb4fe45882a971749c298f51f329746d309cd1",
+      "path": "recovery/wire-24/returned-envelope.bin",
+      "storage_bytes": 72,
+      "storage_sha256": "e82ce08cfa068f9dcca3f581c4bb4fe45882a971749c298f51f329746d309cd1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 48,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-25/reply.bin",
+      "origin_sha256": "7e78ce28e6f151419f5495c1d906e7e98aa706ceece63767889bfaa7a7414451",
+      "path": "recovery/wire-25/reply.bin",
+      "storage_bytes": 48,
+      "storage_sha256": "7e78ce28e6f151419f5495c1d906e7e98aa706ceece63767889bfaa7a7414451"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 48,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-25/request.bin",
+      "origin_sha256": "7e78ce28e6f151419f5495c1d906e7e98aa706ceece63767889bfaa7a7414451",
+      "path": "recovery/wire-25/request.bin",
+      "storage_bytes": 48,
+      "storage_sha256": "7e78ce28e6f151419f5495c1d906e7e98aa706ceece63767889bfaa7a7414451"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 39,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-25/request.json",
+      "origin_sha256": "bb180cf1e618cbd03a42a840a8ff15b5d43a93d7885c23f90a5d5c5a05f50452",
+      "path": "recovery/wire-25/request.json",
+      "storage_bytes": 39,
+      "storage_sha256": "bb180cf1e618cbd03a42a840a8ff15b5d43a93d7885c23f90a5d5c5a05f50452"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 75,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-25/result.json",
+      "origin_sha256": "01c219091b862334562223088b96d2fbc95d140ebd91229c662f2eb08ca7327c",
+      "path": "recovery/wire-25/result.json",
+      "storage_bytes": 75,
+      "storage_sha256": "01c219091b862334562223088b96d2fbc95d140ebd91229c662f2eb08ca7327c"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 72,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/wire-25/returned-envelope.bin",
+      "origin_sha256": "f71275ec5180c93c539a05d95a1b5a6e22017ee37b19d48c16ba66d3f9063c4a",
+      "path": "recovery/wire-25/returned-envelope.bin",
+      "storage_bytes": 72,
+      "storage_sha256": "f71275ec5180c93c539a05d95a1b5a6e22017ee37b19d48c16ba66d3f9063c4a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 6506,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-db7-ops-evidence-plan.md",
+      "origin_sha256": "7a22e38ca0afbb55cfee3055da5d3d011f4273c63539dc1bb98a55db5485ec32",
+      "path": "controller/collection-plan.md",
+      "storage_bytes": 6506,
+      "storage_sha256": "7a22e38ca0afbb55cfee3055da5d3d011f4273c63539dc1bb98a55db5485ec32"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12939,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-collect-db7-ops.py",
+      "origin_sha256": "1624726ee3f576cc5705502ab920a8c7b3280285c84b2a8caec6d1db9507431d",
+      "path": "controller/collector.py.txt",
+      "storage_bytes": 12939,
+      "storage_sha256": "1624726ee3f576cc5705502ab920a8c7b3280285c84b2a8caec6d1db9507431d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 873,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-spin-recovery-approval-rejection.json",
+      "origin_sha256": "541ee800fa23f7e9f43d00741122a1342e6239a996f8bdd89e11229b59b36dfa",
+      "path": "controller/initial-dispatch-rejection-note.json",
+      "storage_bytes": 873,
+      "storage_sha256": "541ee800fa23f7e9f43d00741122a1342e6239a996f8bdd89e11229b59b36dfa"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3601,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-spin-recover-observer.py",
+      "origin_sha256": "bfbf93863ed8bdf2bf90fb585e0b494a9ac4c1b663a5611d059405d789d53bcf",
+      "path": "controller/observer-helper.py.txt",
+      "storage_bytes": 3601,
+      "storage_sha256": "bfbf93863ed8bdf2bf90fb585e0b494a9ac4c1b663a5611d059405d789d53bcf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 4542,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-db7-ops-evidence-pins.json",
+      "origin_sha256": "c7bdb29f6b82f3a06e68205eadc148465073390966112681d55bdf9b322cc6f7",
+      "path": "controller/prepared-pins.json",
+      "storage_bytes": 4542,
+      "storage_sha256": "c7bdb29f6b82f3a06e68205eadc148465073390966112681d55bdf9b322cc6f7"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 18586,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-spin-recover.py",
+      "origin_sha256": "3b871de184760d60695d8263673d99d77bc213a53918af5471a2e1ca99772835",
+      "path": "controller/recovery-helper.py.txt",
+      "storage_bytes": 18586,
+      "storage_sha256": "3b871de184760d60695d8263673d99d77bc213a53918af5471a2e1ca99772835"
+    }
+  ],
+  "guest_bytes": 9019816,
+  "guest_files": 51
+}

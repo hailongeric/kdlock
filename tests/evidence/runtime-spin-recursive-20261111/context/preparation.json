@@ -1,0 +1,14 @@
+{
+  "source_files": 103,
+  "package_files": 67,
+  "helper_ast": "PASS",
+  "hashes": {
+    "kdlock-main-db7d7d6e-kernel4.tar": "6f814ac1b18c8750c248a8ba4bd2f8d1ecadd1e8a9f1e5fad2e5ba53e288bece",
+    "kdlock-main-db7d7d6e-kernel4-state.json": "ab208b7d01a513f0532e02f18079771409698cc6d95cb679d278afceaac7cd89",
+    "kdlock-main-db7d7d6e-kernel4-manifest.json": "69b92e10de4a5ff20d3a262116f024d56c0c8d08b39aae103a4f80b9fe39c53a",
+    "kdlock-main-db7d7d6e-kernel4-build-inputs.json": "6f38d71575f6fdb17de0e6090ca2ebb37f0203a4329f3c9ad12847f6e5c9a198",
+    "kdlock-main-db7d7d6e-kernel4-fixture-inputs.json": "965c9df755e9542d141b1798dfb37f4f8df598e87f90244a1b7437b98e9fc47d",
+    "kdlock-main-kernel4-fixture-with-span.py": "9222700aea00b61681ca94baee0a8948aa657abeabb6609916992effeb2f0197",
+    "kdlock-main-prepare-kernel4-fixture.py": "041598614dae9d92cd52c56ac677a9553445fdf18183ce51821a05d15e2380c6"
+  }
+}

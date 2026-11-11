@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "grub-editenv",
+    "/boot/grub/grubenv",
+    "list"
+  ],
+  "elapsed_seconds": 0.01921134499980326,
+  "returncode": 0,
+  "sha256": "c4f6efb725e4560984ed7e3c81b4fbcfaf1e2634292ef5aca2f7a6bd5a3d9fc5",
+  "timed_out": false
+}

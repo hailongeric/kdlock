@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "make",
+    "-C",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source",
+    "O=/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build",
+    "M=/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/input/tests/kernel/payload",
+    "MO=/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/module-build/mutex",
+    "KERNELRELEASE=7.0.0-38-kdrebuild4",
+    "-j8",
+    "V=1",
+    "modules"
+  ],
+  "environment": {
+    "LANG": "C",
+    "LC_ALL": "C"
+  },
+  "observer_seconds": 300.0,
+  "utc": "2026-11-11T03:26:03.401002+00:00"
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "controller_transcript_summary",
+  "actual_first_summary_returncode": 1,
+  "exception": "AssertionError",
+  "cause": "The inline final-idle summary compared saved result[tainted] string 0 to integer 0. The persisted postboot helper had already returned zero and saved POSTBOOT_IDENTITY_VERIFIED.",
+  "failure_artifact_boundary": "The SSH/tool stdout and error exist in the controller transcript. No separate raw VM failure file was created before this assertion.",
+  "followup_read_confirmed": {
+    "phase": "POSTBOOT_IDENTITY_VERIFIED",
+    "boot_id": "1b3b298f-051b-42ea-a53b-429c16f4e114",
+    "saved_tainted": "0",
+    "saved_tainted_type": "str",
+    "current_taint": "0"
+  },
+  "postboot_helper_reexecuted": false
+}

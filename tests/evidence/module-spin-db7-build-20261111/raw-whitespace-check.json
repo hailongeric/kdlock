@@ -1,0 +1,60 @@
+{
+  "scope": "Preserved existing text bytes. No raw whitespace was changed. Authored README checked separately.",
+  "files": [
+    {
+      "path": "module-build-receipts/mutex/modinfo.txt",
+      "trailing_whitespace_lines": [
+        5,
+        8
+      ]
+    },
+    {
+      "path": "module-build-receipts/mutex/stdout.log",
+      "trailing_whitespace_lines": [
+        12,
+        17,
+        33
+      ]
+    },
+    {
+      "path": "module-build-receipts/spin/modinfo.txt",
+      "trailing_whitespace_lines": [
+        5,
+        8
+      ]
+    },
+    {
+      "path": "module-build-receipts/spin/stdout.log",
+      "trailing_whitespace_lines": [
+        12,
+        17,
+        34
+      ]
+    },
+    {
+      "path": "normal-command-files/mutex/.Module.symvers.cmd",
+      "trailing_whitespace_lines": [
+        1
+      ]
+    },
+    {
+      "path": "normal-command-files/mutex/.runtime_fixture.o.cmd",
+      "trailing_whitespace_lines": [
+        1
+      ]
+    },
+    {
+      "path": "normal-command-files/spin/.Module.symvers.cmd",
+      "trailing_whitespace_lines": [
+        1
+      ]
+    },
+    {
+      "path": "normal-command-files/spin/.spin_runtime_fixture.o.cmd",
+      "trailing_whitespace_lines": [
+        1
+      ]
+    }
+  ],
+  "line_count": 14
+}

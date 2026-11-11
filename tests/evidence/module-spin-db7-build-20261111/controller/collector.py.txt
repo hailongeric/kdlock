@@ -1,0 +1,214 @@
+#!/usr/bin/env python3
+"""Copy only exact saved operation receipts after the live window is closed."""
+import argparse
+import gzip
+import hashlib
+import io
+import json
+import os
+from pathlib import Path, PurePosixPath
+import subprocess
+import tarfile
+import time
+
+REPO = Path('/home/eric/vm/vm-shared/kdlock-main')
+BASE = '/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts'
+OLD = '/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f'
+NEW = '/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f'
+SSH = ['ssh', '-p', '2222', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', 'root@10.176.26.71']
+MAX_FILE = 32 * 1024**2
+MAX_TOTAL = 128 * 1024**2
+
+
+def sha(value):
+    return hashlib.sha256(value).hexdigest()
+
+
+def write(path, value):
+    with path.open('xb') as stream:
+        stream.write(value)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def document(path, value):
+    write(path, (json.dumps(value, indent=2, sort_keys=True) + '\n').encode())
+
+
+def selection(mode):
+    common_host = {'controller/collection-plan.md': '/tmp/kdlock-db7-ops-evidence-plan.md',
+                   'controller/prepared-pins.json': '/tmp/kdlock-db7-ops-evidence-pins.json',
+                   'controller/collector.py.txt': __file__}
+    if mode == 'recovery':
+        return 'runtime-spin-recovery-20261111', {
+            'trees': {'recovery': OLD+'/recovery-spin-approved-01',
+                      'observer': OLD+'/recovery-spin-controller-01',
+                      'helpers': OLD+'/recovery-spin-helpers-01'}, 'files': {},
+            'pins': {OLD+'/recovery-spin-approved-01/result.json': 'd5b188ce454de29a730dd8871d1926c121bca8d79c1be04a7fa099726b116524',
+                     OLD+'/recovery-spin-controller-01/result.json': '172eedfe8c6d4ac131f1e6a63467b90c3851fdd94b3d50a67e101bd94e937262',
+                     OLD+'/recovery-spin-approved-01/shutdown-raw-archive.json': '21328862c8fb47dd8ad4b7842c5b766e169c6a027aee964a458d9b78b66a678d'}}, {
+            **common_host,
+            'controller/recovery-helper.py.txt': '/tmp/kdlock-kernel4-spin-recover.py',
+            'controller/observer-helper.py.txt': '/tmp/kdlock-kernel4-spin-recover-observer.py',
+            'controller/initial-dispatch-rejection-note.json': '/tmp/kdlock-kernel4-spin-recovery-approval-rejection.json'}
+    if mode == 'modules':
+        files = {'source/controller.py.txt': NEW+'/kdlock-main-kernel4-fixture-with-span.py',
+                 'source/state.json': NEW+'/kdlock-main-db7d7d6e-kernel4-state.json',
+                 'source/manifest.json': NEW+'/kdlock-main-db7d7d6e-kernel4-manifest.json',
+                 'source/package.json': NEW+'/actual-kernel4-build-inputs.json',
+                 'source/six-kernel-pins.json': NEW+'/actual-kernel4-six-kernel-pins.json'}
+        for path in ('tests/kernel/payload/Kbuild', 'tests/kernel/payload/runtime_fixture.c',
+                     'tests/kernel/payload/runtime_fixture_observe.inc', 'tests/kernel/run_runtime_fixture.py',
+                     'tests/kernel/spin/payload/Kbuild', 'tests/kernel/spin/payload/spin_runtime_fixture.c',
+                     'tests/kernel/spin/run_spin_runtime_fixture.py'):
+            files['source/fixture/'+path] = NEW+'/input/'+path
+        return 'module-spin-db7-build-20261111', {
+            'trees': {'module-build-receipts': NEW+'/module-build-receipts'}, 'files': files,
+            'command_roots': {'spin': NEW+'/module-build/spin', 'mutex': NEW+'/module-build/mutex'},
+            'module_result': NEW+'/module-build-receipts/result.json',
+            'pins': {NEW+'/module-build-receipts/result.json': 'cb79249bfbb6f883935b93dbeef33045a4714deecdc2da5082163830987399af'}}, common_host
+    if mode == 'repeat':
+        files = {}
+        for name in ('repeat-db7.py', 'repeat-db7-review.json', 'repeat-db7-hmp-20261111-01.json',
+                     'repeat-db7-plan.md', 'repeat-db7-reboot.py'):
+            files['persisted/'+name] = BASE+'/overlay-kdrebuild4-spin-01/'+name
+        host = {**common_host}
+        for name, path in (
+            ('repeat-helper.py.txt', '/tmp/kdlock-kdrebuild4-repeat-db7.py'),
+            ('review.json', '/tmp/kdlock-kdrebuild4-repeat-db7-review.json'),
+            ('repeat-plan.md', '/tmp/kdlock-kdrebuild4-repeat-db7-plan.md'),
+            ('reboot-helper.py.txt', '/tmp/kdlock-kdrebuild4-repeat-db7-reboot.py'),
+            ('hmp-reader.py.txt', '/tmp/kdlock-kernel4-db7-hmp-read.py'),
+            ('hmp.json', '/tmp/kdlock-kernel4-db7-hmp-20261111-01.json'),
+            ('persist-result.json', '/tmp/kdlock-kernel4-db7-persist-result.json'),
+            ('reboot-dispatch.json', '/tmp/kdlock-kernel4-db7-reboot-dispatch.json'),
+            ('reconnect-helper.py.txt', '/tmp/kdlock-kernel4-db7-reconnect.py'),
+            ('reconnect.json', '/tmp/kdlock-kernel4-db7-reconnect-20261111-01.json'),
+            ('reconnect-attempts.jsonl', '/tmp/kdlock-kernel4-db7-reconnect-attempts.jsonl'),
+            ('repeat-summary-assertion-note.json', '/tmp/kdlock-kernel4-db7-final-summary-note.json'),
+            ('historical-install-summary-typeerror-note.json', '/tmp/kdlock-kernel4-postproof-observer-note.json')):
+            host['controller/'+name] = path
+        return 'kernel-repeatboot4-db7-20261111', {
+            'trees': {'repeat': BASE+'/repeat-kdrebuild4-db7-20261111-01',
+                      'postboot': BASE+'/postboot-kdrebuild4-db7-20261111-01'}, 'files': files,
+            'pins': {BASE+'/postboot-kdrebuild4-db7-20261111-01/result.json': '73fc01fbee3837d406fbf2ed1741b3bef85721440db3d44c369037c3ecce82db',
+                     BASE+'/postboot-kdrebuild4-db7-20261111-01/gs-proof.json': 'a51191f8f080af052a3efb9f89b4d51d1c834b730772c07d84030165656a960d',
+                     BASE+'/repeat-kdrebuild4-db7-20261111-01/operations-window-closed.json': 'b7942a9fa8b1a6bce5c4f164fd677db21dc5a06338c27630c2ddda4065d23745'}}, host
+    raise ValueError(mode)
+
+
+INVENTORY = r'''import hashlib,json,pathlib,stat,time
+config=json.loads(CONFIG)
+def identity(value):
+ return (value.st_dev,value.st_ino,value.st_size,value.st_mtime_ns,value.st_ctime_ns)
+def inspect(path):
+ path=pathlib.Path(path);before=path.lstat()
+ assert path.resolve(strict=True)==path and stat.S_ISREG(before.st_mode)
+ assert before.st_size<=33554432
+ h=hashlib.sha256()
+ with path.open('rb') as f:
+  for b in iter(lambda:f.read(1048576),b''):h.update(b)
+ assert identity(before)==identity(path.lstat())
+ return dict(path=str(path),bytes=before.st_size,sha256=h.hexdigest(),identity=identity(before))
+selected=dict(config['files'])
+for label,name in config['trees'].items():
+ root=pathlib.Path(name);assert root.resolve(strict=True)==root and root.is_dir()
+ for path in root.rglob('*'):
+  assert not path.is_symlink()
+  if path.is_dir():continue
+  key=label+'/'+path.relative_to(root).as_posix();assert key not in selected
+  selected[key]=str(path)
+for variant,name in config.get('command_roots',{}).items():
+ root=pathlib.Path(name);assert root.resolve(strict=True)==root and root.is_dir()
+ for path in root.rglob('*.cmd'):
+  key='normal-command-files/'+variant+'/'+path.relative_to(root).as_posix();assert key not in selected
+  selected[key]=str(path)
+assert 0<len(selected)<=512
+rows={key:inspect(path) for key,path in sorted(selected.items())}
+assert sum(row['bytes'] for row in rows.values())<=134217728
+by_path={row['path']:row for row in rows.values()}
+for path,expected in config['pins'].items():assert by_path[path]['sha256']==expected
+modules={}
+if 'module_result' in config:
+ result=json.loads(pathlib.Path(config['module_result']).read_bytes())
+ assert result['status']=='COMPLETE' and result['returncode']==0
+ for variant,row in result['module_builds'].items():
+  actual=inspect(row['module']);assert actual['sha256']==row['module_sha256'] and actual['bytes']==row['module_bytes']
+  modules[variant]=actual
+print(json.dumps(dict(files=rows,count=len(rows),bytes=sum(row['bytes'] for row in rows.values()),module_identities=modules,collected_unix=time.time(),scope='Read-only exact saved receipt/source files; not a new live-state observation.')))
+'''
+COPY = r'''import hashlib,io,json,pathlib,stat,sys,tarfile
+rows=json.loads(ROWS)
+with tarfile.open(fileobj=sys.stdout.buffer,mode='w|') as archive:
+ for name,row in sorted(rows.items()):
+  path=pathlib.Path(row['path']);before=path.lstat()
+  identity=lambda s:[s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_ctime_ns]
+  assert path.resolve(strict=True)==path and stat.S_ISREG(before.st_mode) and identity(before)==row['identity']
+  data=path.read_bytes();assert len(data)==row['bytes'] and hashlib.sha256(data).hexdigest()==row['sha256']
+  assert identity(path.lstat())==row['identity']
+  member=tarfile.TarInfo(name);member.size=len(data);member.mode=0o644
+  archive.addfile(member,io.BytesIO(data))
+'''
+
+
+def remote(code, seconds, maximum):
+    argv = SSH + ['timeout '+str(seconds)+'s python3 -']
+    start = time.time()
+    result = subprocess.run(argv, input=code.encode(), stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, timeout=seconds+10)
+    record = {'argv': argv, 'script_sha256': sha(code.encode()), 'returncode': result.returncode,
+              'started_unix': start, 'finished_unix': time.time(),
+              'stdout_bytes': len(result.stdout), 'stdout_sha256': sha(result.stdout),
+              'stderr': result.stderr.decode(errors='replace')}
+    if result.returncode or len(result.stdout)>maximum or len(result.stderr)>16*1024**2:
+        raise RuntimeError(record)
+    return result.stdout, record
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('mode', choices=('recovery','modules','repeat'))
+    mode = parser.parse_args().mode
+    leaf, config, host = selection(mode)
+    output = REPO/'tests/evidence'/leaf
+    output.mkdir(exist_ok=False)
+    try:
+        raw, inventory = remote(INVENTORY.replace('CONFIG',repr(json.dumps(config))),60,4*1024**2)
+        index = json.loads(raw)
+        document(output/'remote-index.json',index)
+        payload, copied = remote(COPY.replace('ROWS',repr(json.dumps(index['files']))),120,MAX_TOTAL+2*1024**2)
+        contents={}
+        with tarfile.open(fileobj=io.BytesIO(payload)) as archive:
+            for member in archive:
+                parts=PurePosixPath(member.name).parts
+                if not member.isfile() or member.name.startswith('/') or '..' in parts or member.name not in index['files'] or member.name in contents:
+                    raise RuntimeError('unexpected copy member')
+                row=index['files'][member.name]
+                if member.size!=row['bytes'] or member.size>MAX_FILE:
+                    raise RuntimeError('copy member size differs')
+                value=archive.extractfile(member).read(MAX_FILE+1)
+                if len(value)!=row['bytes'] or sha(value)!=row['sha256']:
+                    raise RuntimeError('copied file hash differs')
+                contents[member.name]=value
+        if set(contents)!=set(index['files']):raise RuntimeError('copy membership differs')
+        rows=[]
+        for name,data in sorted(contents.items()):
+            compress=len(data)>131072
+            stored=gzip.compress(data,compresslevel=9,mtime=0) if compress else data
+            local=name+'.gz' if compress else name
+            path=output/local;path.parent.mkdir(parents=True,exist_ok=True);write(path,stored)
+            if (gzip.decompress(path.read_bytes()) if compress else path.read_bytes())!=data:
+                raise RuntimeError('stored bytes differ')
+            rows.append(dict(path=local,origin_kind='guest saved file',origin_path=index['files'][name]['path'],origin_bytes=len(data),origin_sha256=sha(data),storage_bytes=len(stored),storage_sha256=sha(stored),encoding='gzip lossless' if compress else 'exact bytes'))
+        for name,source in sorted(host.items()):
+            data=Path(source).read_bytes();path=output/name;path.parent.mkdir(parents=True,exist_ok=True);write(path,data)
+            rows.append(dict(path=name,origin_kind='source-host file',origin_path=source,origin_bytes=len(data),origin_sha256=sha(data),storage_bytes=len(data),storage_sha256=sha(data),encoding='exact bytes'))
+        document(output/'copy-index.json',dict(copies=rows,guest_files=index['count'],guest_bytes=index['bytes']))
+        document(output/'collection.json',dict(commands=[inventory,copied],tar_bytes=len(payload),tar_sha256=sha(payload),scope='Saved receipt/source reads only. No guest writes, live-state/process probes, protocol, builds, tests, module, GRUB, reboot or HMP commands.'))
+        print(json.dumps(dict(output=str(output),guest_files=index['count'],guest_bytes=index['bytes'],retained_copies=len(rows)),indent=2))
+    except BaseException as error:
+        document(output/'collection-failure.json',dict(error=repr(error),no_automatic_retry=True))
+        raise
+
+if __name__=='__main__':
+    main()

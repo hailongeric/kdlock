@@ -1,0 +1,12 @@
+{
+  "core_commit": "2d0ad60b0bc46929f3070aefa364e710c0a81115",
+  "initial_auditor_sha256": "a0ad2c4d9c090c6aff5dcec3ecab9439197acb9854eee9ed707b9a050440d857",
+  "original_guest_index_sha256": "0fd2b7b9288bafdb3668df9bcf500f69ab5bf154355361a9134a68bf38cf8b49",
+  "original_verified_guest_bytes": 26092327,
+  "original_verified_guest_files": 508,
+  "profile": "mutex",
+  "scope": "Copies and static hashes only. The saved audit return codes describe prior source-host byte inspections. No new project import, test, guest/HMP action or runtime execution occurs here.",
+  "source_collection": "/tmp/kdlock-kernel4-db7-live-collection-20261111-01",
+  "source_commit": "db7d7d6e38e1341e24b643553bd83633616d4ea7",
+  "verified_auditor_sha256": "3fea6dabce58ea7ea3a97bb3dee74e64d0cd68a9c5fd3896084a62d2391d0bed"
+}

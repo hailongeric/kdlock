@@ -1,0 +1,9 @@
+
+/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/live-mutex-output/source-0.bin:     file format binary
+
+
+Disassembly of section .data:
+
+ffffffff8271be20 <.data>:
+ffffffff8271be20:	c3                                              	ret
+ffffffff8271be21:	cc                                              	int3

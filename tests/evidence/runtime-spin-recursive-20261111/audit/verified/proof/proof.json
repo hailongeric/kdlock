@@ -1,0 +1,1334 @@
+{
+  "control": {
+    "acknowledged_keys": [
+      [
+        18379471558788776164,
+        1
+      ],
+      [
+        18379471558788776404,
+        1
+      ],
+      [
+        18379471558788776644,
+        1
+      ],
+      [
+        18379471558788776884,
+        1
+      ]
+    ],
+    "archive_sha256": "a4762e7621299fdd615a12af19934f41971c0ea4c726d34731d412d157daacd1",
+    "attempts": [
+      {
+        "directory": "attempt-00000001",
+        "operation": 0,
+        "sequence": 0,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000002",
+        "operation": 8,
+        "sequence": 1,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000003",
+        "operation": 1,
+        "sequence": 2,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000004",
+        "operation": 2,
+        "sequence": 3,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000005",
+        "operation": 3,
+        "sequence": 4,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000006",
+        "operation": 4,
+        "sequence": 5,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000007",
+        "operation": 5,
+        "sequence": 6,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000008",
+        "operation": 6,
+        "sequence": 7,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000009",
+        "operation": 1,
+        "sequence": 8,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000010",
+        "operation": 2,
+        "sequence": 9,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000011",
+        "operation": 3,
+        "sequence": 10,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000012",
+        "operation": 4,
+        "sequence": 11,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000013",
+        "operation": 5,
+        "sequence": 12,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000014",
+        "operation": 6,
+        "sequence": 13,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000015",
+        "operation": 1,
+        "sequence": 14,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000016",
+        "operation": 2,
+        "sequence": 15,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000017",
+        "operation": 3,
+        "sequence": 16,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000018",
+        "operation": 4,
+        "sequence": 17,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000019",
+        "operation": 5,
+        "sequence": 18,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000020",
+        "operation": 6,
+        "sequence": 19,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000021",
+        "operation": 1,
+        "sequence": 20,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000022",
+        "operation": 2,
+        "sequence": 21,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000023",
+        "operation": 3,
+        "sequence": 22,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000024",
+        "operation": 4,
+        "sequence": 23,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000025",
+        "operation": 5,
+        "sequence": 24,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000026",
+        "operation": 6,
+        "sequence": 25,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000027",
+        "operation": 1,
+        "sequence": 26,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000028",
+        "operation": 6,
+        "sequence": 27,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000029",
+        "operation": 9,
+        "sequence": 28,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000030",
+        "operation": 10,
+        "sequence": 29,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000031",
+        "operation": 11,
+        "sequence": 30,
+        "status": 0
+      },
+      {
+        "directory": "attempt-00000032",
+        "operation": 6,
+        "sequence": 31,
+        "status": 0
+      }
+    ],
+    "fact_count": 5,
+    "publications": [
+      {
+        "ack": 18379471558740214328,
+        "expected_ack": [],
+        "included": [],
+        "receipt": [
+          18379471558740214224,
+          18379471558740213760,
+          4097,
+          18379471558903875848,
+          18379471558740214032,
+          18379471558740213760,
+          0,
+          18379471558688710968,
+          0,
+          18379471558671470144,
+          18379471558688711088,
+          18379471558688711040,
+          18379471558688710656,
+          18379471558688710656
+        ]
+      },
+      {
+        "ack": 18379471558740215248,
+        "expected_ack": [
+          [
+            18379471558788776164,
+            1
+          ]
+        ],
+        "included": [
+          [
+            18379471558788776164,
+            1
+          ]
+        ],
+        "receipt": [
+          18379471558740215144,
+          18379471558740214680,
+          4098,
+          18379471558903875848,
+          18379471558740214952,
+          18379471558740214680,
+          18379471558688710968,
+          18379471558688721208,
+          18379471558688710968,
+          18379471558671470144,
+          18379471558688721328,
+          18379471558688721280,
+          18379471558688720896,
+          18379471558688720896
+        ]
+      },
+      {
+        "ack": 18379471558740216168,
+        "expected_ack": [
+          [
+            18379471558788776404,
+            1
+          ],
+          [
+            18379471558788776644,
+            1
+          ]
+        ],
+        "included": [
+          [
+            18379471558788776404,
+            1
+          ],
+          [
+            18379471558788776644,
+            1
+          ]
+        ],
+        "receipt": [
+          18379471558740216064,
+          18379471558740215600,
+          4099,
+          18379471558903875848,
+          18379471558740215872,
+          18379471558740215600,
+          18379471558688721208,
+          18379471558688729400,
+          18379471558688721208,
+          18379471558671470144,
+          18379471558688729520,
+          18379471558688729472,
+          18379471558688729088,
+          18379471558688729088
+        ]
+      },
+      {
+        "ack": 18379471558740217088,
+        "expected_ack": [
+          [
+            18379471558788776884,
+            1
+          ]
+        ],
+        "included": [
+          [
+            18379471558788776884,
+            1
+          ]
+        ],
+        "receipt": [
+          18379471558740216984,
+          18379471558740216520,
+          4100,
+          18379471558903875848,
+          18379471558740216792,
+          18379471558740216520,
+          18379471558688729400,
+          18379471558688708920,
+          18379471558688729400,
+          18379471558671470144,
+          18379471558688709040,
+          18379471558688708992,
+          18379471558688708608,
+          18379471558688708608
+        ]
+      }
+    ],
+    "settled_keys": [
+      [
+        18379471558788777124,
+        1
+      ]
+    ]
+  },
+  "fixed_image": 18379471558688708920,
+  "header": {
+    "abi": 1,
+    "capacity": 65536,
+    "count": 5190,
+    "overflow": 0,
+    "words": 20
+  },
+  "inputs": {
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/combined-live-poststate.json": {
+      "bytes": 39638,
+      "sha256": "6d53cdc9e08f54917e7f3ff2ba081dd8f1fce73233aab92bb39cb489af4f4dbf"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-controller/result.json": {
+      "bytes": 71718,
+      "sha256": "73cf1ba076ef647c4b892f7d87c278801e57266ba96f64512556cdbbd694187a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/observations-final.bin": {
+      "bytes": 830440,
+      "sha256": "2720286cfc784d45b499566f276f9b519c3c8c98eef564b94358bed73d968b79"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/observations-final.json": {
+      "bytes": 2911869,
+      "sha256": "9cab2afb5792b7f3c76035ffce81945e854b1716341f3daa0b7406d9d4bcbe2f"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/result.json": {
+      "bytes": 61916,
+      "sha256": "6ec5fef44f48a96b2e7883fe59a13f80382441f44cddf92a260bbdb79322db88"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/shutdown-archive.json": {
+      "bytes": 447348,
+      "sha256": "a4762e7621299fdd615a12af19934f41971c0ea4c726d34731d412d157daacd1"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/source-0.bin": {
+      "bytes": 2,
+      "sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/source-1.bin": {
+      "bytes": 116,
+      "sha256": "285879549cdca637a3b100fa0a7586e54b9c92a29ec4deb4f48a26472fafa2f9"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/source-2.bin": {
+      "bytes": 901,
+      "sha256": "1b7e4e53c89accc92b05dede290b42d22261d9d94e6d3bd617103d458eb5e816"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/source-3.bin": {
+      "bytes": 4096,
+      "sha256": "024a812834575a0bbee3f40caf07670794c11572beec9c8454d24b2c4723a8dc"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/source-export.bin": {
+      "bytes": 5541,
+      "sha256": "7a9a7aba71c45878e19fb4d8a67b5664ca7df58b40ccae59135710234473d8dc"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/source-metadata.json": {
+      "bytes": 1487,
+      "sha256": "6cf6bbbc8a51f438cbc802964aec7cfc13edc4343f9ade7bf99f53f51bb4f24d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000001/reply.bin": {
+      "bytes": 48,
+      "sha256": "64f58d44a1f7be92f26abe823e9839a126656a63df1eb249ed6c2c9ccc75daf8"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000001/request.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000001/request.json": {
+      "bytes": 90,
+      "sha256": "a74b499fe36857aa54809859b474e30a74ddff2eab88db5f6b835d3e20403f68"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000001/result.json": {
+      "bytes": 182,
+      "sha256": "45bcea1df28c7d7b951e74872eed3084a5a3b75470205c321f5ea9042f0b1f2d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000001/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "be1dce631d19f469bd1209a7247a18f6c590959ae18c062a049ed7f4ef104f1d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000002/reply.bin": {
+      "bytes": 5541,
+      "sha256": "7a9a7aba71c45878e19fb4d8a67b5664ca7df58b40ccae59135710234473d8dc"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000002/request.bin": {
+      "bytes": 32,
+      "sha256": "8820465cd3023f7864c0b641c7f65d2fd6d7dada86df40a627ebcd2f43bd6011"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000002/request.json": {
+      "bytes": 91,
+      "sha256": "32121ab6d6f8fc8a7a1c212beeb8f94367f72d82fd573d9bca014250da958222"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000002/result.json": {
+      "bytes": 185,
+      "sha256": "8434793758ca080a55180af14555c6e42c5a3c7f9610a0f5b1b0a0261de4d1f6"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000002/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "454e820d4a9c70e14dfb19393bf7f5f361c71f385001dbf0fe48509443e558f2"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000003/reply.bin": {
+      "bytes": 266,
+      "sha256": "700906de139bac2eea5b7e67ccfb5dfd9633b945dcad503be714ea9532dda71f"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000003/request.bin": {
+      "bytes": 56,
+      "sha256": "dbb590caeea03586bc0d17e409f3ab5fb505d52cfdbf9a9c1bae0e4833f0324c"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000003/request.json": {
+      "bytes": 91,
+      "sha256": "6e215ff2b422863ce4640ba69340f5d33138972077381d1df97762163845bd78"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000003/result.json": {
+      "bytes": 184,
+      "sha256": "500bcba88f94f5af8de55f0f6af692c2d494a9587ce488fc01fef9f64508706b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000003/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "b1401901f91cfb807c114742a62a4b80695f669081c2e17da1d6cd4d90e4567a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000004/reply.bin": {
+      "bytes": 227,
+      "sha256": "77fc376343ba208efba99efdeab930f9ca72ebeb547e435255904e8fe32a42a9"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000004/request.bin": {
+      "bytes": 72,
+      "sha256": "ee5aa6d78481bad4fcef684ee1592e2d5d452604f7d281388b29544a688ada33"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000004/request.json": {
+      "bytes": 91,
+      "sha256": "2ea05114bd30bb8eb797b8e28b1a7729bee084e8f5abc758e394fbd77edd4c82"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000004/result.json": {
+      "bytes": 184,
+      "sha256": "8392bfe7d32f894232c809f595cfa5094b90c7fe49ccf5f59cc249336c26b06d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000004/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "6c73fd75f5d827dbae079fd478e767771d8ae8cfc9c1ac2a9dd699b887661aa5"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000005/reply.bin": {
+      "bytes": 40,
+      "sha256": "1bd409240475bff717dadcb65ee0242c397d98e4a8d08215953381e0e341b677"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000005/request.bin": {
+      "bytes": 206855,
+      "sha256": "628d3b5115b2c6302c3f76d553a10c5b76ef48e682f06a815fb0eaede2a285da"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000005/request.json": {
+      "bytes": 95,
+      "sha256": "1f9bf6c7c9478963e13d1a4c686c56e3df9adfb30b74d9042c9f9a5d8bfeb2cd"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000005/result.json": {
+      "bytes": 187,
+      "sha256": "6b9fba1445240ab32ae98d766895d6824efca802905b402f6a70a43ef12facd0"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000005/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "341a95ad7a61e496f3bda00c23651f2f9fdc3bada87bf93664761aa349e90c40"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000006/reply.bin": {
+      "bytes": 144,
+      "sha256": "dd37f76bf33bdd3a47d3e917327128d7999e87d7699a87e0183399b13fa645c9"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000006/request.bin": {
+      "bytes": 56,
+      "sha256": "5b3f072af5b57fee64ff262dd8877e0407624e6dc177dc78fbfb31d77c53740b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000006/request.json": {
+      "bytes": 91,
+      "sha256": "d7bb09be3e349aeb56fb712a228998146e838fd483148287f671a6a6f073f8d9"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000006/result.json": {
+      "bytes": 184,
+      "sha256": "84dbc0d445962afc7f0476206334f171940ba9ac1057000dc1698c6de45dcd48"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000006/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "8fbb7f1c6f7632018b601477954f087a4dba54c73fefea12bd0a140347107022"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000007/reply.bin": {
+      "bytes": 72,
+      "sha256": "2326c6e50ebbd089069b7e5e298a744c44e20f88a7739ea09e8b191e2554a709"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000007/request.bin": {
+      "bytes": 40,
+      "sha256": "2c4e71f4d38f2653bb251b7fda41a7c5ee58a8f1eeb1868c76b5d1079564bb88"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000007/request.json": {
+      "bytes": 91,
+      "sha256": "1f3a88735c5baf002fb1fccc1e71258f6109f05ab57f90d99de2f0a4e20d212b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000007/result.json": {
+      "bytes": 183,
+      "sha256": "9f036592f9ff2af5b3b90a158e14394ba9af9a4330c1378ad3a34f6a88a9f1b8"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000007/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "4f1ebe2991e23a742784fda0379970177805544a3f03a044e81782c4f37a3bd3"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000008/reply.bin": {
+      "bytes": 48,
+      "sha256": "b8ab644396d14acd1e96e92b18fea48542f0a61b6477fee55b2675ca861f8a08"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000008/request.bin": {
+      "bytes": 48,
+      "sha256": "b8ab644396d14acd1e96e92b18fea48542f0a61b6477fee55b2675ca861f8a08"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000008/request.json": {
+      "bytes": 91,
+      "sha256": "8000b0581c776fe7baf7f4c07be4fa63e05bba6aff5c32b71bb743e330e2247f"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000008/result.json": {
+      "bytes": 183,
+      "sha256": "d513fb532f1029a9f5e658e37035aac212f41c31e2621e9ad6b54dde6f5ad377"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000008/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "9666c075c48e1654d45b7da70692933333a4cab6d63b09af479b825f6f93a09b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000009/reply.bin": {
+      "bytes": 362,
+      "sha256": "cc91c3a31cda81a1c752c934445239911eebefcac6525e5127138bee9e341e1a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000009/request.bin": {
+      "bytes": 56,
+      "sha256": "61ef761a495c5b3c3d7bb97f62dddd5a978e0ee7e1a01d8fbaa76cd2b25e4a94"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000009/request.json": {
+      "bytes": 91,
+      "sha256": "cf146e5287ef66231d5abf17ebcc4ffdaa11a10f39c2fce3ffc1282a87ffdfb8"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000009/result.json": {
+      "bytes": 184,
+      "sha256": "60173b3d64fefc3ed866f4d0896aa45af37de49718a8bfebd5575482d7e4de1d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000009/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "4a0f310f5711919914a5f4a8dfc96d5fb8fd39d812ce2659892393211d4f245a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000010/reply.bin": {
+      "bytes": 227,
+      "sha256": "fc26eaa01b71a1db3ba1332fe86d721f9d6ee09cc2f6df8b7ae583366e8064a5"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000010/request.bin": {
+      "bytes": 72,
+      "sha256": "1aae01f152bc8193f75d9ff6e1748b9527a85fe101abc9e2e71e0ea5ac07b72c"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000010/request.json": {
+      "bytes": 91,
+      "sha256": "5a2c8b02e5f5b61c7c64e0e0b284a5c75a532cca127e7fcda3fc72c050b3c191"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000010/result.json": {
+      "bytes": 184,
+      "sha256": "8229519324fb0699032035eac81096733c48447d7c976a54e54b83d401517818"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000010/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "5fa3ed9e81401227e26c727f208ff8a1294bf9f16c926a7f48645eba31d1c0fc"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000011/reply.bin": {
+      "bytes": 40,
+      "sha256": "4e10984c66f7826a82396e3d8022a9b8f533846e996e762a32606265fb4856c3"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000011/request.bin": {
+      "bytes": 258406,
+      "sha256": "6b3cfd70f516ca90347ac0ab821f28c3ea980128d0fbf902b37c82ba8f6d428a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000011/request.json": {
+      "bytes": 96,
+      "sha256": "6185f6351d300700378f803a51011e941562c0bd3d2b6a107c20d3a5f774a826"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000011/result.json": {
+      "bytes": 189,
+      "sha256": "aec62bbf1e955117653131ca58d7b3a99e3433857c8445f0db38d1524823cf13"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000011/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "4d9c68fcbbb23d142bb0b1434d80d63eb3b84133bbb3f101185a039eac12dac7"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000012/reply.bin": {
+      "bytes": 160,
+      "sha256": "bff4f6815bf86db2cc7495e0c7a178bbef34bcaceaf96213ec18a3ad3f4e22f7"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000012/request.bin": {
+      "bytes": 72,
+      "sha256": "d04badb1dfde0f480e8c444716f83dab25f17d510c970292167b4dc5d821606b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000012/request.json": {
+      "bytes": 92,
+      "sha256": "efa9807e31260945684bc917ec859902059cb11a199591ed032813be4e16dac9"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000012/result.json": {
+      "bytes": 186,
+      "sha256": "f4c458362ba2fb745f6f47240ab9bb179002419f18097dc98469ed78b26a2029"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000012/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "92c83e3b0656a5b9d643b1c4d724a1b9aa0d27cab584871b3dc9e0865a78e199"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000013/reply.bin": {
+      "bytes": 88,
+      "sha256": "5ab84798537a86fb463bd2f7059031d661e629352e35f7c34717d515c7b0449f"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000013/request.bin": {
+      "bytes": 40,
+      "sha256": "e0602ae8c27391a0ad004321baffc1a527ad4ec8e0babbe6454461336b72941b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000013/request.json": {
+      "bytes": 92,
+      "sha256": "55fb7e2f01fd529accc8c5dd94170dc3c0ea75a2d73e6e7affb7bf390260721b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000013/result.json": {
+      "bytes": 185,
+      "sha256": "cf56d9345d351af36ef66559af0da9bbc37585c850ad299e30b5c7af5954f4d3"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000013/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "ea6b6ed771d27aa693bbf4c029ee8d2519845b7a09ebfd2cb4f98d8222854f11"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000014/reply.bin": {
+      "bytes": 48,
+      "sha256": "540e27d9bee7a21aafb44bcfe41f9e008cfc66f3a728d5540bd0b57a8723731c"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000014/request.bin": {
+      "bytes": 48,
+      "sha256": "540e27d9bee7a21aafb44bcfe41f9e008cfc66f3a728d5540bd0b57a8723731c"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000014/request.json": {
+      "bytes": 92,
+      "sha256": "1d5338a3cb98302865cb3a324cbc221ba16096b4a77b3fe419f5abed4c1624ac"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000014/result.json": {
+      "bytes": 185,
+      "sha256": "ec5777ae56472fb2632edc696e38c417d42b26e1d43c7cafe6ae7b6788c934cb"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000014/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "be0e5980d53cca158fd7710e6372dcd2010fd63cb87f7cbf8a760e90d97ebf0b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000015/reply.bin": {
+      "bytes": 458,
+      "sha256": "af31f41953c9900a5f9869a75cb995f213131bdc6228de12766e9d60c7bfce71"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000015/request.bin": {
+      "bytes": 56,
+      "sha256": "dd6d0e6a2d67d348ee0d1b210d1efd42421921e202fe425ab9eab8f90d34c616"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000015/request.json": {
+      "bytes": 92,
+      "sha256": "0404e444c3a82102839f90416a318a16336a234ebf1de9ab2ddcc3a7e921810c"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000015/result.json": {
+      "bytes": 186,
+      "sha256": "6de07c9fdb2c102265b48410ae6f9cfceab2e18ca86e9ed1aa6db0bc90b1290a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000015/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "59486a07e7ac2029fe649435086e17c71844492a75ecb53970384b54b3237e5d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000016/reply.bin": {
+      "bytes": 227,
+      "sha256": "2c41aa03d90af118cbb7ca12110f76cd820aae96fa24d5acc125fc6159cc4c8d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000016/request.bin": {
+      "bytes": 72,
+      "sha256": "31d558e61836d11984f362ffcea04fe2b3d51dc10368c0f7bc55f3793bdb3d2a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000016/request.json": {
+      "bytes": 92,
+      "sha256": "24115362874f6fab0adc7f6c56f72e9d718c3bcd7155158fdf7f039e60ee0931"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000016/result.json": {
+      "bytes": 186,
+      "sha256": "36dcd9e9a1d65fb7d588eedc57b7ba4db7eeb1378a419b3c8f49dc329ba483a1"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000016/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "e1ae0aafa825f3bddf2f119478e53fa2ffbfe5fccb1c466cccd27a7a29760393"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000017/reply.bin": {
+      "bytes": 40,
+      "sha256": "80df507348e9a705f99b44b96ae39cf49ed5d3a9c6f857e457eb96662fe94ebc"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000017/request.bin": {
+      "bytes": 275569,
+      "sha256": "e481d03ee9b912a00af5ebb45e04804e047187cce63b9de020dd31ae5bb3b9ac"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000017/request.json": {
+      "bytes": 96,
+      "sha256": "b9ade022c731c426e3dd92c0cb02a459a5832c82e5eed2ca5c881b3fc6468236"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000017/result.json": {
+      "bytes": 189,
+      "sha256": "c5ebd93190cbdfac7e2519fa0a96048285bb491c0fc2b855cabc6e40ae504e2d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000017/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "03e0ebaecca93eec732e8ef6e806042c49d98e801c7b4ac70c2c3e44ffd30853"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000018/reply.bin": {
+      "bytes": 176,
+      "sha256": "fe88467cbd27430d0721915929fb867c5cd81a8f42843903fca8a09519cc44dd"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000018/request.bin": {
+      "bytes": 88,
+      "sha256": "d61f4a20c7976137176ea7a2df6ee657342a7ae0d11d1d950bd3ffdbfcf3abac"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000018/request.json": {
+      "bytes": 92,
+      "sha256": "3666d0ced46f691c470341829ecfd8569495f79f32bd7f32e356de6ed5efa1b1"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000018/result.json": {
+      "bytes": 186,
+      "sha256": "9ebc7c21af3ab95503ebcc19a6c9a6f030a8bc17309697a1ccee1388e0140a06"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000018/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "fde370867207c2227eed1de1f3ebc8e6ea168b82c3d18eeeeed2cacdf018ae65"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000019/reply.bin": {
+      "bytes": 104,
+      "sha256": "c82a0acb0da3845963a8498e6869498ee8a9f6cbfd08c66e02dc048982991532"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000019/request.bin": {
+      "bytes": 40,
+      "sha256": "62e428930f985152e8dd28c1caebd40b6bee6393db8336f593e4dcd3236396ee"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000019/request.json": {
+      "bytes": 92,
+      "sha256": "64c8a38128b41da7726858c6a3abdd43df93ff451e9bdb1f7bb3c9a00c753d3e"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000019/result.json": {
+      "bytes": 186,
+      "sha256": "2f49e1b617a21ff788ea60f38479b7d457559fc1a352a394d6f567152beb9d4a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000019/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "cab9b90e493fb42abef0b60b0c7dbb9992b077f6107888ec432303ee8fd7929e"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000020/reply.bin": {
+      "bytes": 48,
+      "sha256": "814dadb42735c64cd1e9fbac6ae4cac3a26b8c37e6d3feae7b5837038075f084"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000020/request.bin": {
+      "bytes": 48,
+      "sha256": "814dadb42735c64cd1e9fbac6ae4cac3a26b8c37e6d3feae7b5837038075f084"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000020/request.json": {
+      "bytes": 92,
+      "sha256": "4490f000817b6f87b2c8dd56a6f4496f899df3a4efd83e7bc1502307159c54ce"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000020/result.json": {
+      "bytes": 185,
+      "sha256": "77f555970002d62b933d281282b52b60d1fd400972ef16fd7d88f12126d553ed"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000020/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "822df00e63c6aafae56e1c955c7582f6ea1fda74f0bf277aa42df2138144025a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000021/reply.bin": {
+      "bytes": 362,
+      "sha256": "0f73cba128f6c1f17d047a441aebaa6a9674dbc4c538bef09ab03c4e853abbd1"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000021/request.bin": {
+      "bytes": 56,
+      "sha256": "ac00dd84b7c0b00a2d0a05a39133d9c0f32c23bcdde2f4bf5b9db1c0fd1c159c"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000021/request.json": {
+      "bytes": 92,
+      "sha256": "0b7697d4e20f939ea934e95f3db48bfd85a4424006fe93315ce27c1c78ca8df7"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000021/result.json": {
+      "bytes": 186,
+      "sha256": "39c5d19673bc8a38292917bef8364677f8f56101bd20ffacd7e1487a530ab39d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000021/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "29ebbfc4f903b165c72d98f2438791865a5f71fb669d0602359441429aa286dd"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000022/reply.bin": {
+      "bytes": 227,
+      "sha256": "d4e192f8d8cc975ec46faff93bff2a3956cf2d93b9e2f2d429aa50c26b7fa63c"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000022/request.bin": {
+      "bytes": 72,
+      "sha256": "006eada5a5bcb1906b88f77c1e3c1175099be68346fa8a569ea48c38d16488b6"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000022/request.json": {
+      "bytes": 92,
+      "sha256": "2d56074c13b6f1083acbad231e195871dbbfb701e41d389b9b8b11d550f56da8"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000022/result.json": {
+      "bytes": 186,
+      "sha256": "de320d6cdb3c0808eecba52570e65d13f0bceb53b4a81357e874ff636d607801"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000022/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "6d6e379235f2cafe15fc34f1e13c9e9ca9d71ecb195ca7e4361c3b879f677a58"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000023/reply.bin": {
+      "bytes": 40,
+      "sha256": "3221f3d83410792c91fdc49ffb0b8032741bf340f7de2742cc6288a8d73afe86"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000023/request.bin": {
+      "bytes": 283621,
+      "sha256": "c42637370afde05a2298800cf4f6cd74f48a5722f31298f54923a293863525e5"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000023/request.json": {
+      "bytes": 96,
+      "sha256": "1f25e16156be4c751796f3ee2c9473325cd2d591f9600b6ba937b4cd49465f6b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000023/result.json": {
+      "bytes": 189,
+      "sha256": "25554ad19c4f803114dff2a338771aa348172a026f2492927ac939b3803752dd"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000023/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "2113ebf1562f4d8c1b4343e88419bc075d4936a6d7bf8803da021810e3720074"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000024/reply.bin": {
+      "bytes": 160,
+      "sha256": "c49378facc7cfc8fd0f79b399bc28fb0dd7f76ab897f26968cc471414ddbdd2a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000024/request.bin": {
+      "bytes": 72,
+      "sha256": "b4af72e7c4010b9d30d355d81314f39e4092d7b43485d0517777c79709078fa7"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000024/request.json": {
+      "bytes": 92,
+      "sha256": "2a3acf2c46ef1ba90e4a126017d7b399643058e9a0d4029e34af6c110a4df7fd"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000024/result.json": {
+      "bytes": 186,
+      "sha256": "36588c62f664f6bd617cbfd919220cae555e34059169b876bbb7feb91db24751"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000024/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "88c2f95040109b10dee47f900fee53c6e51a7b0e4cc390b844b35c6d41d5da00"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000025/reply.bin": {
+      "bytes": 88,
+      "sha256": "f6c36e39d8149d2b82cb8ecc466a586182b9e8c8e9d24be14b39b7314eb66817"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000025/request.bin": {
+      "bytes": 40,
+      "sha256": "3717669c4a6571a71120cc163968004af55fcba06e94a3060b03ae4ab1178317"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000025/request.json": {
+      "bytes": 92,
+      "sha256": "09a56fff4926bd5e27762ce775ca34fe4efd1a5b9a20fe412e1acdcb932b17d0"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000025/result.json": {
+      "bytes": 185,
+      "sha256": "e41cd55422719332072abbaa7d6217f73e6b0c016c28bba4cae3c4dd664cac5f"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000025/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "aff9f5ab3e5ae77e0f1262901da612df7d63d23e078c0e655981197d07e4a0d5"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000026/reply.bin": {
+      "bytes": 48,
+      "sha256": "1f03c5f031674573052514b5feb990730e653bcf337262f70f08be2788ec1bfc"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000026/request.bin": {
+      "bytes": 48,
+      "sha256": "1f03c5f031674573052514b5feb990730e653bcf337262f70f08be2788ec1bfc"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000026/request.json": {
+      "bytes": 92,
+      "sha256": "602ac8952ade0b872571f8175fe211ac2db23005c56a17276ce1006048e160f0"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000026/result.json": {
+      "bytes": 185,
+      "sha256": "d6b87f314d259b9a0e58cb14ee626c4ee43002388e9112f9bd050b192ff04ac8"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000026/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "40cbe95e311cfac8591619ded302a40efa789de22df1587e52cebe74083f34c1"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000027/reply.bin": {
+      "bytes": 266,
+      "sha256": "6178013a8df46de0c3e0488a09e815befd648fb06c12aa898f01615b6989a863"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000027/request.bin": {
+      "bytes": 56,
+      "sha256": "6af8a80ce561a92fe53f248367f614ef7400c334cd88bcb9719eb8e569992e9d"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000027/request.json": {
+      "bytes": 92,
+      "sha256": "7ab325d11516d3757680902b2f1a69d34795dbe9ee9c702611cc7b0381d5bc29"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000027/result.json": {
+      "bytes": 186,
+      "sha256": "fa25fbefce39ebf4b128f796edeffd659730e74b109a4d9df716ba517f4173aa"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000027/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "eaec2b612f82b8135143f5becc1aa9600c71b3f616159acc8c1b998f7973d79b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000028/reply.bin": {
+      "bytes": 48,
+      "sha256": "716a5c6ba12c22c4a8ae479db7fd4f13c2fac3eda9db613f2949dcfb10d928bd"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000028/request.bin": {
+      "bytes": 48,
+      "sha256": "716a5c6ba12c22c4a8ae479db7fd4f13c2fac3eda9db613f2949dcfb10d928bd"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000028/request.json": {
+      "bytes": 92,
+      "sha256": "ca61ab68ab735794832dda4753d4ce06db142e1574ee470641615c538e35550b"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000028/result.json": {
+      "bytes": 185,
+      "sha256": "9beeb4582797237c19c5964160b7fd3969eaa0b8f1ddf0e5d062c3d6833ba2de"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000028/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "9c419791b52d3dde70e43185371786c1e266faa63c892b226056bbf863f77316"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000029/reply.bin": {
+      "bytes": 40,
+      "sha256": "6e40d9946de6983b86e76d561baf20b9a20fdadb6a2fc5e9fa48a4a7560e988e"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000029/request.bin": {
+      "bytes": 32,
+      "sha256": "bad33eb94ee55a7729de94b24e3f610dd27152857d28d9608acb0090ef926ea5"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000029/request.json": {
+      "bytes": 92,
+      "sha256": "188921961d4c19be509ff2dbc6d6d5321d37bbf515ad3665d6c0e8e8ccd50270"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000029/result.json": {
+      "bytes": 185,
+      "sha256": "bbca5f39bba604c2749553cd81b0857a4101ffb9c098a071ba08d22efb1f1383"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000029/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "970f1a86af2524b6d1bf502dad4d83873eb27968a0f2463f8e3548ee5f2c878f"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000030/reply.bin": {
+      "bytes": 362,
+      "sha256": "d77e83d91b95f05f43afc7df280b75240d28773e959fa39a06ff4bab6949de68"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000030/request.bin": {
+      "bytes": 56,
+      "sha256": "bd48d3aa2e1279e0c8546f4d5abab7d2e91e41f587104827dbc7126e35d653c3"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000030/request.json": {
+      "bytes": 93,
+      "sha256": "d711711bb6efacc7cb983f4f261988f00e9b8d4bf19d1ee0b29241b09453c52c"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000030/result.json": {
+      "bytes": 187,
+      "sha256": "027cc1a180c992dc61c5587801328f9998f80ee9ca710327e0fd833df4ab1358"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000030/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "61ab8a8def6881c8e14ba9208572af8ec34e5cfc1e30341ece343078252295d6"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000031/reply.bin": {
+      "bytes": 72,
+      "sha256": "97cbc779344b0497fff132ee4d5aac1cec6dccc34e70150e4445150d0ea83353"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000031/request.bin": {
+      "bytes": 104,
+      "sha256": "95dce15434da2d8c8eca66b3c5b837c03b64c48d67cb5fe9d5c469fc30b021d4"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000031/request.json": {
+      "bytes": 94,
+      "sha256": "8a9612ed22208129347b3f9940a890f25fee3810c3f0e88ba156a115aa20e4b9"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000031/result.json": {
+      "bytes": 187,
+      "sha256": "45c7af398744c3fa79019f382dbc8d9f92750b7851488b637bfa4e5987d2fd37"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000031/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "cb6170fa3146a70eaa30397be979d510908ddd5b9ce86c95bab4e998aa581198"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000032/reply.bin": {
+      "bytes": 48,
+      "sha256": "55b9e01a3d32eb6e865a8872d96c7c0b1bb093eca43b25c1192d4a891b821172"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000032/request.bin": {
+      "bytes": 48,
+      "sha256": "55b9e01a3d32eb6e865a8872d96c7c0b1bb093eca43b25c1192d4a891b821172"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000032/request.json": {
+      "bytes": 92,
+      "sha256": "e7b0d6fca0377ef3c12983b4634ac3051e38a20fa394a8072b18696905e74a7a"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000032/result.json": {
+      "bytes": 185,
+      "sha256": "545f4bb978c0e03e9343e369296070bf135d315469fb198f9490d68277b5bcd3"
+    },
+    "/tmp/kdlock-kernel4-db7-live-collection-20261111-01/live-spin-output/wire/attempt-00000032/returned-envelope.bin": {
+      "bytes": 72,
+      "sha256": "fb21bc1707cf7ba76a50fa4d09f571eb3190dfa07134fc3649ae22ef773ce652"
+    }
+  },
+  "native_miss": {
+    "entered": 5153,
+    "exited": 5158,
+    "forwarded": 5159,
+    "identities": {
+      "acquisition": 18379471559230227033,
+      "executor": 18379471568379019264,
+      "node": 18379471559230226536,
+      "origin": 18379471568510759296,
+      "state": 18379471558780233728
+    },
+    "native_checkpoint_calls": 1,
+    "native_nesting_samples": 48,
+    "native_unlock": 5167,
+    "release": {
+      "bind": 5140,
+      "control_stopped": 5160,
+      "free": 5176,
+      "grant": 5141,
+      "handled": 5163,
+      "members": [
+        5140,
+        5141,
+        5162,
+        5163,
+        5169,
+        5170,
+        5172
+      ],
+      "owner_retired": 5171,
+      "physical_begin": 5164,
+      "physical_end": 5166,
+      "ready": 5172,
+      "request": 5162,
+      "retired": 5170,
+      "source_drop": 5169
+    },
+    "selected": 5136
+  },
+  "plain": [
+    {
+      "done": 4401,
+      "entries": [
+        4264
+      ],
+      "exits": [
+        4390
+      ],
+      "frame": 4236,
+      "unlocks": [
+        4396
+      ]
+    }
+  ],
+  "poststate": {
+    "boot_id": "1b3b298f-051b-42ea-a53b-429c16f4e114",
+    "devices": [],
+    "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n",
+    "processes": "    PID    PPID PSR STAT COMMAND         COMMAND\n      1       0   6 Ss   systemd         /sbin/init nokaslr\n      2       0  32 S    kthreadd        [kthreadd]\n      3       2   0 S    pool_workqueue_ [pool_workqueue_release]\n      4       2   0 I<   kworker/R-rcu_g [kworker/R-rcu_gp]\n      5       2   0 I<   kworker/R-sync_ [kworker/R-sync_wq]\n      6       2   0 I<   kworker/R-kvfre [kworker/R-kvfree_rcu_reclaim]\n      7       2   0 I<   kworker/R-slub_ [kworker/R-slub_flushwq]\n      8       2   0 I<   kworker/R-netns [kworker/R-netns]\n      9       2   0 I    kworker/0:0-eve [kworker/0:0-events]\n     10       2   0 I<   kworker/0:0H-ev [kworker/0:0H-events_highpri]\n     12       2   0 I    kworker/u256:0- [kworker/u256:0-ipv6_addrconf]\n     13       2   0 I<   kworker/R-mm_pe [kworker/R-mm_percpu_wq]\n     14       2   0 S    ksoftirqd/0     [ksoftirqd/0]\n     15       2   4 S<   pr/ttyS0        [pr/ttyS0]\n     16       2  20 I    rcu_preempt     [rcu_preempt]\n     17       2   6 S    rcu_exp_par_gp_ [rcu_exp_par_gp_kthread_worker/1]\n     18       2  50 S    rcu_exp_gp_kthr [rcu_exp_gp_kthread_worker]\n     19       2   0 S    migration/0     [migration/0]\n     20       2   0 S    kprobe-optimize [kprobe-optimizer]\n     21       2   0 S    idle_inject/0   [idle_inject/0]\n     22       2   0 S    cpuhp/0         [cpuhp/0]\n     23       2   1 S    cpuhp/1         [cpuhp/1]\n     24       2   1 S    idle_inject/1   [idle_inject/1]\n     25       2   1 S    migration/1     [migration/1]\n     26       2   1 S    ksoftirqd/1     [ksoftirqd/1]\n     28       2   1 I<   kworker/1:0H-ev [kworker/1:0H-events_highpri]\n     29       2   2 S    cpuhp/2         [cpuhp/2]\n     30       2   2 S    idle_inject/2   [idle_inject/2]\n     31       2   2 S    migration/2     [migration/2]\n     32       2   2 S    ksoftirqd/2     [ksoftirqd/2]\n     34       2   2 I<   kworker/2:0H-ev [kworker/2:0H-events_highpri]\n     35       2   3 S    cpuhp/3         [cpuhp/3]\n     36       2   3 S    idle_inject/3   [idle_inject/3]\n     37       2   3 S    migration/3     [migration/3]\n     38       2   3 S    ksoftirqd/3     [ksoftirqd/3]\n     39       2   3 I    kworker/3:0-eve [kworker/3:0-events]\n     40       2   3 I<   kworker/3:0H-ev [kworker/3:0H-events_highpri]\n     41       2   4 S    cpuhp/4         [cpuhp/4]\n     42       2   4 S    idle_inject/4   [idle_inject/4]\n     43       2   4 S    migration/4     [migration/4]\n     44       2   4 S    ksoftirqd/4     [ksoftirqd/4]\n     45       2   4 I    kworker/4:0-eve [kworker/4:0-events]\n     46       2   4 I<   kworker/4:0H-ev [kworker/4:0H-events_highpri]\n     47       2   5 S    cpuhp/5         [cpuhp/5]\n     48       2   5 S    idle_inject/5   [idle_inject/5]\n     49       2   5 S    migration/5     [migration/5]\n     50       2   5 S    ksoftirqd/5     [ksoftirqd/5]\n     51       2   5 I    kworker/5:0-eve [kworker/5:0-events]\n     52       2   5 I<   kworker/5:0H-ev [kworker/5:0H-events_highpri]\n     53       2   6 S    cpuhp/6         [cpuhp/6]\n     54       2   6 S    idle_inject/6   [idle_inject/6]\n     55       2   6 S    migration/6     [migration/6]\n     56       2   6 S    ksoftirqd/6     [ksoftirqd/6]\n     57       2   6 I    kworker/6:0-cgr [kworker/6:0-cgroup_release]\n     58       2   6 I<   kworker/6:0H-ev [kworker/6:0H-events_highpri]\n     59       2   7 S    cpuhp/7         [cpuhp/7]\n     60       2   7 S    idle_inject/7   [idle_inject/7]\n     61       2   7 S    migration/7     [migration/7]\n     62       2   7 S    ksoftirqd/7     [ksoftirqd/7]\n     63       2   7 I    kworker/7:0-eve [kworker/7:0-events]\n     64       2   7 I<   kworker/7:0H-ev [kworker/7:0H-events_highpri]\n     65       2   8 S    cpuhp/8         [cpuhp/8]\n     66       2   8 S    idle_inject/8   [idle_inject/8]\n     67       2   8 S    migration/8     [migration/8]\n     68       2   8 S    ksoftirqd/8     [ksoftirqd/8]\n     69       2   8 I    kworker/8:0-eve [kworker/8:0-events]\n     70       2   8 I<   kworker/8:0H-ev [kworker/8:0H-events_highpri]\n     71       2   9 S    cpuhp/9         [cpuhp/9]\n     72       2   9 S    idle_inject/9   [idle_inject/9]\n     73       2   9 S    migration/9     [migration/9]\n     74       2   9 S    ksoftirqd/9     [ksoftirqd/9]\n     75       2   9 I    kworker/9:0-eve [kworker/9:0-events]\n     76       2   9 I<   kworker/9:0H-ev [kworker/9:0H-events_highpri]\n     77       2  10 S    cpuhp/10        [cpuhp/10]\n     78       2  10 S    idle_inject/10  [idle_inject/10]\n     79       2  10 S    migration/10    [migration/10]\n     80       2  10 S    ksoftirqd/10    [ksoftirqd/10]\n     81       2  10 I    kworker/10:0-rc [kworker/10:0-rcu_gp]\n     82       2  10 I<   kworker/10:0H-e [kworker/10:0H-events_highpri]\n     83       2  11 S    cpuhp/11        [cpuhp/11]\n     84       2  11 S    idle_inject/11  [idle_inject/11]\n     85       2  11 S    migration/11    [migration/11]\n     86       2  11 S    ksoftirqd/11    [ksoftirqd/11]\n     87       2  11 I    kworker/11:0-rc [kworker/11:0-rcu_gp]\n     88       2  11 I<   kworker/11:0H-e [kworker/11:0H-events_highpri]\n     89       2  12 S    cpuhp/12        [cpuhp/12]\n     90       2  12 S    idle_inject/12  [idle_inject/12]\n     91       2  12 S    migration/12    [migration/12]\n     92       2  12 S    ksoftirqd/12    [ksoftirqd/12]\n     93       2  12 I    kworker/12:0-ev [kworker/12:0-events]\n     94       2  12 I<   kworker/12:0H-e [kworker/12:0H-events_highpri]\n     95       2  13 S    cpuhp/13        [cpuhp/13]\n     96       2  13 S    idle_inject/13  [idle_inject/13]\n     97       2  13 S    migration/13    [migration/13]\n     98       2  13 S    ksoftirqd/13    [ksoftirqd/13]\n     99       2  13 I    kworker/13:0-ev [kworker/13:0-events]\n    100       2  13 I<   kworker/13:0H-e [kworker/13:0H-events_highpri]\n    101       2  14 S    cpuhp/14        [cpuhp/14]\n    102       2  14 S    idle_inject/14  [idle_inject/14]\n    103       2  14 S    migration/14    [migration/14]\n    104       2  14 S    ksoftirqd/14    [ksoftirqd/14]\n    105       2  14 I    kworker/14:0-in [kworker/14:0-inode_switch_wbs]\n    106       2  14 I<   kworker/14:0H-e [kworker/14:0H-events_highpri]\n    107       2  15 S    cpuhp/15        [cpuhp/15]\n    108       2  15 S    idle_inject/15  [idle_inject/15]\n    109       2  15 S    migration/15    [migration/15]\n    110       2  15 S    ksoftirqd/15    [ksoftirqd/15]\n    111       2  15 I    kworker/15:0-mm [kworker/15:0-mm_percpu_wq]\n    112       2  15 I<   kworker/15:0H-k [kworker/15:0H-kblockd]\n    113       2  16 S    cpuhp/16        [cpuhp/16]\n    114       2  16 S    idle_inject/16  [idle_inject/16]\n    115       2  16 S    migration/16    [migration/16]\n    116       2  16 S    ksoftirqd/16    [ksoftirqd/16]\n    117       2  16 I    kworker/16:0-ev [kworker/16:0-events]\n    118       2  16 I<   kworker/16:0H-e [kworker/16:0H-events_highpri]\n    119       2  17 S    rcu_exp_par_gp_ [rcu_exp_par_gp_kthread_worker/2]\n    120       2  17 S    cpuhp/17        [cpuhp/17]\n    121       2  17 S    idle_inject/17  [idle_inject/17]\n    122       2  17 S    migration/17    [migration/17]\n    123       2  17 S    ksoftirqd/17    [ksoftirqd/17]\n    124       2  17 I    kworker/17:0-ev [kworker/17:0-events]\n    125       2  17 I<   kworker/17:0H-e [kworker/17:0H-events_highpri]\n    126       2  18 S    cpuhp/18        [cpuhp/18]\n    127       2  18 S    idle_inject/18  [idle_inject/18]\n    128       2  18 S    migration/18    [migration/18]\n    129       2  18 S    ksoftirqd/18    [ksoftirqd/18]\n    130       2  18 I    kworker/18:0-ev [kworker/18:0-events]\n    131       2  18 I<   kworker/18:0H-e [kworker/18:0H-events_highpri]\n    132       2  19 S    cpuhp/19        [cpuhp/19]\n    133       2  19 S    idle_inject/19  [idle_inject/19]\n    134       2  19 S    migration/19    [migration/19]\n    135       2  19 S    ksoftirqd/19    [ksoftirqd/19]\n    136       2  19 I    kworker/19:0-cg [kworker/19:0-cgroup_free]\n    137       2  19 I<   kworker/19:0H-e [kworker/19:0H-events_highpri]\n    138       2  20 S    cpuhp/20        [cpuhp/20]\n    139       2  20 S    idle_inject/20  [idle_inject/20]\n    140       2  20 S    migration/20    [migration/20]\n    141       2  20 S    ksoftirqd/20    [ksoftirqd/20]\n    142       2  20 I    kworker/20:0-mm [kworker/20:0-mm_percpu_wq]\n    143       2  20 I<   kworker/20:0H-e [kworker/20:0H-events_highpri]\n    144       2  21 S    cpuhp/21        [cpuhp/21]\n    145       2  21 S    idle_inject/21  [idle_inject/21]\n    146       2  21 S    migration/21    [migration/21]\n    147       2  21 S    ksoftirqd/21    [ksoftirqd/21]\n    148       2  21 I    kworker/21:0-cg [kworker/21:0-cgroup_free]\n    149       2  21 I<   kworker/21:0H-e [kworker/21:0H-events_highpri]\n    150       2  22 S    cpuhp/22        [cpuhp/22]\n    151       2  22 S    idle_inject/22  [idle_inject/22]\n    152       2  22 S    migration/22    [migration/22]\n    153       2  22 S    ksoftirqd/22    [ksoftirqd/22]\n    154       2  22 I    kworker/22:0-ev [kworker/22:0-events]\n    155       2  22 I<   kworker/22:0H-e [kworker/22:0H-events_highpri]\n    156       2  23 S    cpuhp/23        [cpuhp/23]\n    157       2  23 S    idle_inject/23  [idle_inject/23]\n    158       2  23 S    migration/23    [migration/23]\n    159       2  23 S    ksoftirqd/23    [ksoftirqd/23]\n    160       2  23 I    kworker/23:0-ev [kworker/23:0-events]\n    161       2  23 I<   kworker/23:0H-e [kworker/23:0H-events_highpri]\n    162       2  24 S    cpuhp/24        [cpuhp/24]\n    163       2  24 S    idle_inject/24  [idle_inject/24]\n    164       2  24 S    migration/24    [migration/24]\n    165       2  24 S    ksoftirqd/24    [ksoftirqd/24]\n    166       2  24 I    kworker/24:0-mm [kworker/24:0-mm_percpu_wq]\n    167       2  24 I<   kworker/24:0H-e [kworker/24:0H-events_highpri]\n    168       2  25 S    cpuhp/25        [cpuhp/25]\n    169       2  25 S    idle_inject/25  [idle_inject/25]\n    170       2  25 S    migration/25    [migration/25]\n    171       2  25 S    ksoftirqd/25    [ksoftirqd/25]\n    172       2  25 I    kworker/25:0-ev [kworker/25:0-events]\n    173       2  25 I<   kworker/25:0H-e [kworker/25:0H-events_highpri]\n    174       2  26 S    cpuhp/26        [cpuhp/26]\n    175       2  26 S    idle_inject/26  [idle_inject/26]\n    176       2  26 S    migration/26    [migration/26]\n    177       2  26 S    ksoftirqd/26    [ksoftirqd/26]\n    178       2  26 I    kworker/26:0-cg [kworker/26:0-cgroup_release]\n    179       2  26 I<   kworker/26:0H-e [kworker/26:0H-events_highpri]\n    180       2  27 S    cpuhp/27        [cpuhp/27]\n    181       2  27 S    idle_inject/27  [idle_inject/27]\n    182       2  27 S    migration/27    [migration/27]\n    183       2  27 S    ksoftirqd/27    [ksoftirqd/27]\n    184       2  27 I    kworker/27:0-ev [kworker/27:0-events]\n    185       2  27 I<   kworker/27:0H-e [kworker/27:0H-events_highpri]\n    186       2  28 S    cpuhp/28        [cpuhp/28]\n    187       2  28 S    idle_inject/28  [idle_inject/28]\n    188       2  28 S    migration/28    [migration/28]\n    189       2  28 S    ksoftirqd/28    [ksoftirqd/28]\n    190       2  28 I    kworker/28:0-cg [kworker/28:0-cgroup_release]\n    191       2  28 I<   kworker/28:0H-e [kworker/28:0H-events_highpri]\n    192       2  29 S    cpuhp/29        [cpuhp/29]\n    193       2  29 S    idle_inject/29  [idle_inject/29]\n    194       2  29 S    migration/29    [migration/29]\n    195       2  29 S    ksoftirqd/29    [ksoftirqd/29]\n    197       2  29 I<   kworker/29:0H-e [kworker/29:0H-events_highpri]\n    198       2  30 S    cpuhp/30        [cpuhp/30]\n    199       2  30 S    idle_inject/30  [idle_inject/30]\n    200       2  30 S    migration/30    [migration/30]\n    201       2  30 S    ksoftirqd/30    [ksoftirqd/30]\n    202       2  30 I    kworker/30:0-mm [kworker/30:0-mm_percpu_wq]\n    203       2  30 I<   kworker/30:0H-e [kworker/30:0H-events_highpri]\n    204       2  31 S    cpuhp/31        [cpuhp/31]\n    205       2  31 S    idle_inject/31  [idle_inject/31]\n    206       2  31 S    migration/31    [migration/31]\n    207       2  31 S    ksoftirqd/31    [ksoftirqd/31]\n    209       2  31 I<   kworker/31:0H-e [kworker/31:0H-events_highpri]\n    210       2  32 S    cpuhp/32        [cpuhp/32]\n    211       2  32 S    idle_inject/32  [idle_inject/32]\n    212       2  32 S    migration/32    [migration/32]\n    213       2  32 S    ksoftirqd/32    [ksoftirqd/32]\n    214       2  32 I    kworker/32:0-ev [kworker/32:0-events]\n    215       2  32 I<   kworker/32:0H-e [kworker/32:0H-events_highpri]\n    216       2  33 S    rcu_exp_par_gp_ [rcu_exp_par_gp_kthread_worker/3]\n    217       2  33 S    cpuhp/33        [cpuhp/33]\n    218       2  33 S    idle_inject/33  [idle_inject/33]\n    219       2  33 S    migration/33    [migration/33]\n    220       2  33 S    ksoftirqd/33    [ksoftirqd/33]\n    221       2  33 I    kworker/33:0-in [kworker/33:0-inode_switch_wbs]\n    222       2  33 I<   kworker/33:0H-e [kworker/33:0H-events_highpri]\n    223       2  34 S    cpuhp/34        [cpuhp/34]\n    224       2  34 S    idle_inject/34  [idle_inject/34]\n    225       2  34 S    migration/34    [migration/34]\n    226       2  34 S    ksoftirqd/34    [ksoftirqd/34]\n    227       2  34 I    kworker/34:0-ev [kworker/34:0-events]\n    228       2  34 I<   kworker/34:0H-e [kworker/34:0H-events_highpri]\n    229       2  35 S    cpuhp/35        [cpuhp/35]\n    230       2  35 S    idle_inject/35  [idle_inject/35]\n    231       2  35 S    migration/35    [migration/35]\n    232       2  35 S    ksoftirqd/35    [ksoftirqd/35]\n    233       2  35 I    kworker/35:0-ev [kworker/35:0-events]\n    234       2  35 I<   kworker/35:0H-e [kworker/35:0H-events_highpri]\n    235       2  36 S    cpuhp/36        [cpuhp/36]\n    236       2  36 S    idle_inject/36  [idle_inject/36]\n    237       2  36 S    migration/36    [migration/36]\n    238       2  36 S    ksoftirqd/36    [ksoftirqd/36]\n    239       2  36 I    kworker/36:0-cg [kworker/36:0-cgroup_release]\n    240       2  36 I<   kworker/36:0H-e [kworker/36:0H-events_highpri]\n    241       2  37 S    cpuhp/37        [cpuhp/37]\n    242       2  37 S    idle_inject/37  [idle_inject/37]\n    243       2  37 S    migration/37    [migration/37]\n    244       2  37 S    ksoftirqd/37    [ksoftirqd/37]\n    245       2  37 I    kworker/37:0-ev [kworker/37:0-events]\n    246       2  37 I<   kworker/37:0H-e [kworker/37:0H-events_highpri]\n    247       2  38 S    cpuhp/38        [cpuhp/38]\n    248       2  38 S    idle_inject/38  [idle_inject/38]\n    249       2  38 S    migration/38    [migration/38]\n    250       2  38 S    ksoftirqd/38    [ksoftirqd/38]\n    251       2  38 I    kworker/38:0-ev [kworker/38:0-events]\n    252       2  38 I<   kworker/38:0H-e [kworker/38:0H-events_highpri]\n    253       2  39 S    cpuhp/39        [cpuhp/39]\n    254       2  39 S    idle_inject/39  [idle_inject/39]\n    255       2  39 S    migration/39    [migration/39]\n    256       2  39 S    ksoftirqd/39    [ksoftirqd/39]\n    258       2  39 I<   kworker/39:0H-e [kworker/39:0H-events_highpri]\n    259       2  40 S    cpuhp/40        [cpuhp/40]\n    260       2  40 S    idle_inject/40  [idle_inject/40]\n    261       2  40 S    migration/40    [migration/40]\n    262       2  40 S    ksoftirqd/40    [ksoftirqd/40]\n    263       2  40 I    kworker/40:0-cg [kworker/40:0-cgroup_release]\n    264       2  40 I<   kworker/40:0H-e [kworker/40:0H-events_highpri]\n    265       2  41 S    cpuhp/41        [cpuhp/41]\n    266       2  41 S    idle_inject/41  [idle_inject/41]\n    267       2  41 S    migration/41    [migration/41]\n    268       2  41 S    ksoftirqd/41    [ksoftirqd/41]\n    270       2  41 I<   kworker/41:0H-e [kworker/41:0H-events_highpri]\n    271       2  42 S    cpuhp/42        [cpuhp/42]\n    272       2  42 S    idle_inject/42  [idle_inject/42]\n    273       2  42 S    migration/42    [migration/42]\n    274       2  42 S    ksoftirqd/42    [ksoftirqd/42]\n    275       2  42 I    kworker/42:0-ev [kworker/42:0-events]\n    276       2  42 I<   kworker/42:0H-e [kworker/42:0H-events_highpri]\n    277       2  43 S    cpuhp/43        [cpuhp/43]\n    278       2  43 S    idle_inject/43  [idle_inject/43]\n    279       2  43 S    migration/43    [migration/43]\n    280       2  43 S    ksoftirqd/43    [ksoftirqd/43]\n    282       2  43 I<   kworker/43:0H-e [kworker/43:0H-events_highpri]\n    283       2  44 S    cpuhp/44        [cpuhp/44]\n    284       2  44 S    idle_inject/44  [idle_inject/44]\n    285       2  44 S    migration/44    [migration/44]\n    286       2  44 S    ksoftirqd/44    [ksoftirqd/44]\n    288       2  44 I<   kworker/44:0H-e [kworker/44:0H-events_highpri]\n    289       2  45 S    cpuhp/45        [cpuhp/45]\n    290       2  45 S    idle_inject/45  [idle_inject/45]\n    291       2  45 S    migration/45    [migration/45]\n    292       2  45 S    ksoftirqd/45    [ksoftirqd/45]\n    294       2  45 I<   kworker/45:0H-e [kworker/45:0H-events_highpri]\n    295       2  46 S    cpuhp/46        [cpuhp/46]\n    296       2  46 S    idle_inject/46  [idle_inject/46]\n    297       2  46 S    migration/46    [migration/46]\n    298       2  46 S    ksoftirqd/46    [ksoftirqd/46]\n    300       2  46 I<   kworker/46:0H-e [kworker/46:0H-events_highpri]\n    301       2  47 S    cpuhp/47        [cpuhp/47]\n    302       2  47 S    idle_inject/47  [idle_inject/47]\n    303       2  47 S    migration/47    [migration/47]\n    304       2  47 S    ksoftirqd/47    [ksoftirqd/47]\n    305       2  47 I    kworker/47:0-mm [kworker/47:0-mm_percpu_wq]\n    306       2  47 I<   kworker/47:0H-e [kworker/47:0H-events_highpri]\n    307       2  48 S    cpuhp/48        [cpuhp/48]\n    308       2  48 S    idle_inject/48  [idle_inject/48]\n    309       2  48 S    migration/48    [migration/48]\n    310       2  48 S    ksoftirqd/48    [ksoftirqd/48]\n    311       2  48 I    kworker/48:0-mm [kworker/48:0-mm_percpu_wq]\n    312       2  48 I<   kworker/48:0H-e [kworker/48:0H-events_highpri]\n    313       2   0 S    rcu_exp_par_gp_ [rcu_exp_par_gp_kthread_worker/4]\n    314       2  49 S    cpuhp/49        [cpuhp/49]\n    315       2  49 S    idle_inject/49  [idle_inject/49]\n    316       2  49 S    migration/49    [migration/49]\n    317       2  49 S    ksoftirqd/49    [ksoftirqd/49]\n    318       2  49 I    kworker/49:0-ev [kworker/49:0-events]\n    319       2  49 I<   kworker/49:0H-e [kworker/49:0H-events_highpri]\n    320       2  50 S    cpuhp/50        [cpuhp/50]\n    321       2  50 S    idle_inject/50  [idle_inject/50]\n    322       2  50 S    migration/50    [migration/50]\n    323       2  50 S    ksoftirqd/50    [ksoftirqd/50]\n    324       2  50 I    kworker/50:0-ev [kworker/50:0-events]\n    325       2  50 I<   kworker/50:0H-e [kworker/50:0H-events_highpri]\n    326       2  51 S    cpuhp/51        [cpuhp/51]\n    327       2  51 S    idle_inject/51  [idle_inject/51]\n    328       2  51 S    migration/51    [migration/51]\n    329       2  51 S    ksoftirqd/51    [ksoftirqd/51]\n    331       2  51 I<   kworker/51:0H-e [kworker/51:0H-events_highpri]\n    332       2  52 S    cpuhp/52        [cpuhp/52]\n    333       2  52 S    idle_inject/52  [idle_inject/52]\n    334       2  52 S    migration/52    [migration/52]\n    335       2  52 S    ksoftirqd/52    [ksoftirqd/52]\n    336       2  52 I    kworker/52:0-mm [kworker/52:0-mm_percpu_wq]\n    337       2  52 I<   kworker/52:0H-e [kworker/52:0H-events_highpri]\n    338       2  53 S    cpuhp/53        [cpuhp/53]\n    339       2  53 S    idle_inject/53  [idle_inject/53]\n    340       2  53 S    migration/53    [migration/53]\n    341       2  53 S    ksoftirqd/53    [ksoftirqd/53]\n    342       2  53 I    kworker/53:0-mm [kworker/53:0-mm_percpu_wq]\n    343       2  53 I<   kworker/53:0H-e [kworker/53:0H-events_highpri]\n    344       2  54 S    cpuhp/54        [cpuhp/54]\n    345       2  54 S    idle_inject/54  [idle_inject/54]\n    346       2  54 S    migration/54    [migration/54]\n    347       2  54 S    ksoftirqd/54    [ksoftirqd/54]\n    349       2  54 I<   kworker/54:0H-e [kworker/54:0H-events_highpri]\n    350       2  55 S    cpuhp/55        [cpuhp/55]\n    351       2  55 S    idle_inject/55  [idle_inject/55]\n    352       2  55 S    migration/55    [migration/55]\n    353       2  55 S    ksoftirqd/55    [ksoftirqd/55]\n    354       2  55 I    kworker/55:0-ev [kworker/55:0-events]\n    355       2  55 I<   kworker/55:0H-e [kworker/55:0H-events_highpri]\n    356       2  56 S    cpuhp/56        [cpuhp/56]\n    357       2  56 S    idle_inject/56  [idle_inject/56]\n    358       2  56 S    migration/56    [migration/56]\n    359       2  56 S    ksoftirqd/56    [ksoftirqd/56]\n    360       2  56 I    kworker/56:0-cg [kworker/56:0-cgroup_release]\n    361       2  56 I<   kworker/56:0H-e [kworker/56:0H-events_highpri]\n    362       2  57 S    cpuhp/57        [cpuhp/57]\n    363       2  57 S    idle_inject/57  [idle_inject/57]\n    364       2  57 S    migration/57    [migration/57]\n    365       2  57 S    ksoftirqd/57    [ksoftirqd/57]\n    366       2  57 I    kworker/57:0-ev [kworker/57:0-events]\n    367       2  57 I<   kworker/57:0H-e [kworker/57:0H-events_highpri]\n    368       2  58 S    cpuhp/58        [cpuhp/58]\n    369       2  58 S    idle_inject/58  [idle_inject/58]\n    370       2  58 S    migration/58    [migration/58]\n    371       2  58 S    ksoftirqd/58    [ksoftirqd/58]\n    372       2  58 I    kworker/58:0-mm [kworker/58:0-mm_percpu_wq]\n    373       2  58 I<   kworker/58:0H-e [kworker/58:0H-events_highpri]\n    374       2  59 S    cpuhp/59        [cpuhp/59]\n    375       2  59 S    idle_inject/59  [idle_inject/59]\n    376       2  59 S    migration/59    [migration/59]\n    377       2  59 S    ksoftirqd/59    [ksoftirqd/59]\n    378       2  59 I    kworker/59:0-ev [kworker/59:0-events]\n    379       2  59 I<   kworker/59:0H-e [kworker/59:0H-events_highpri]\n    380       2  60 S    cpuhp/60        [cpuhp/60]\n    381       2  60 S    idle_inject/60  [idle_inject/60]\n    382       2  60 S    migration/60    [migration/60]\n    383       2  60 S    ksoftirqd/60    [ksoftirqd/60]\n    384       2  60 I    kworker/60:0-ev [kworker/60:0-events]\n    385       2  60 I<   kworker/60:0H-e [kworker/60:0H-events_highpri]\n    386       2  61 S    cpuhp/61        [cpuhp/61]\n    387       2  61 S    idle_inject/61  [idle_inject/61]\n    388       2  61 S    migration/61    [migration/61]\n    389       2  61 S    ksoftirqd/61    [ksoftirqd/61]\n    390       2  61 I    kworker/61:0-ev [kworker/61:0-events]\n    391       2  61 I<   kworker/61:0H-e [kworker/61:0H-events_highpri]\n    392       2  62 S    cpuhp/62        [cpuhp/62]\n    393       2  62 S    idle_inject/62  [idle_inject/62]\n    394       2  62 S    migration/62    [migration/62]\n    395       2  62 S    ksoftirqd/62    [ksoftirqd/62]\n    396       2  62 I    kworker/62:0-ev [kworker/62:0-events]\n    397       2  62 I<   kworker/62:0H-e [kworker/62:0H-events_highpri]\n    398       2  63 S    cpuhp/63        [cpuhp/63]\n    399       2  63 S    idle_inject/63  [idle_inject/63]\n    400       2  63 S    migration/63    [migration/63]\n    401       2  63 S    ksoftirqd/63    [ksoftirqd/63]\n    402       2  63 I    kworker/63:0-ev [kworker/63:0-events]\n    403       2  63 I<   kworker/63:0H-e [kworker/63:0H-events_highpri]\n    404       2   8 I    kworker/u257:0- [kworker/u257:0-events_power_efficient]\n    405       2  38 I    kworker/u258:0- [kworker/u258:0-flush-8:0]\n    406       2   6 S    kdevtmpfs       [kdevtmpfs]\n    407       2   6 I<   kworker/R-inet_ [kworker/R-inet_frag_wq]\n    408       2   7 I    rcu_tasks_kthre [rcu_tasks_kthread]\n    409       2   8 I    rcu_tasks_rude_ [rcu_tasks_rude_kthread]\n    410       2  63 S    kauditd         [kauditd]\n    411       2   9 S    khungtaskd      [khungtaskd]\n    413       2  32 S    oom_reaper      [oom_reaper]\n    414       2   1 I    kworker/u257:2- [kworker/u257:2-events_unbound]\n    415       2  32 I<   kworker/R-write [kworker/R-writeback]\n    416       2  12 S    kcompactd0      [kcompactd0]\n    417       2  41 S    kcompactd1      [kcompactd1]\n    419       2  33 SN   ksmd            [ksmd]\n    420       2  33 SN   khugepaged      [khugepaged]\n    421       2  33 I<   kworker/R-kbloc [kworker/R-kblockd]\n    422       2  33 I<   kworker/R-blkcg [kworker/R-blkcg_punt_bio]\n    423       2  33 I<   kworker/R-kinte [kworker/R-kintegrityd]\n    424       2   1 S    irq/9-acpi      [irq/9-acpi]\n    426       2   2 I    kworker/2:1-eve [kworker/2:1-events]\n    427       2   4 I<   kworker/R-tpm_d [kworker/R-tpm_dev_wq]\n    428       2  11 I<   kworker/R-ata_s [kworker/R-ata_sff]\n    429       2  12 I<   kworker/R-md_bi [kworker/R-md_bitmap]\n    430       2  13 I<   kworker/R-md_ll [kworker/R-md_llbitmap_io]\n    431       2  14 I<   kworker/R-md_ll [kworker/R-md_llbitmap_unplug]\n    432       2  16 I<   kworker/R-edac- [kworker/R-edac-poller]\n    433       2  17 I<   kworker/R-devfr [kworker/R-devfreq_wq]\n    434       2  18 S    watchdogd       [watchdogd]\n    435       2  49 I    kworker/49:1-ev [kworker/49:1-events]\n    436       2  49 I<   kworker/R-quota [kworker/R-quota_events_unbound]\n    437       2   3 S    kswapd0         [kswapd0]\n    438       2  63 S    kswapd1         [kswapd1]\n    439       2  63 S    ecryptfs-kthrea [ecryptfs-kthread]\n    440       2  63 I<   kworker/R-kthro [kworker/R-kthrotld]\n    441       2  29 I<   kworker/R-acpi_ [kworker/R-acpi_thermal_pm]\n    442       2   6 S    scsi_eh_0       [scsi_eh_0]\n    443       2   7 I<   kworker/R-scsi_ [kworker/R-scsi_tmf_0]\n    444       2  63 S    scsi_eh_1       [scsi_eh_1]\n    445       2  63 I<   kworker/R-scsi_ [kworker/R-scsi_tmf_1]\n    446       2  63 S    scsi_eh_2       [scsi_eh_2]\n    447       2  63 I<   kworker/R-scsi_ [kworker/R-scsi_tmf_2]\n    448       2  29 I    kworker/u257:3- [kworker/u257:3-ext4-rsv-conversion]\n    450       2   6 I    kworker/u257:5- [kworker/u257:5-kvfree_rcu_reclaim]\n    452       2  10 I    kworker/10:1-ev [kworker/10:1-events]\n    453       2   0 I    kworker/0:2-cgr [kworker/0:2-cgroup_bpf_destroy]\n    454       2  32 I<   kworker/R-mld   [kworker/R-mld]\n    455       2  32 I<   kworker/R-ipv6_ [kworker/R-ipv6_addrconf]\n    456       2  11 I    kworker/11:1-ev [kworker/11:1-events]\n    457       2  32 I    kworker/u256:1- [kworker/u256:1-ipv6_addrconf]\n    458       2  32 I<   kworker/R-kstrp [kworker/R-kstrp]\n    459       2   5 I    kworker/5:1-cgr [kworker/5:1-cgroup_offline]\n    460       2   6 I    kworker/6:1-eve [kworker/6:1-events]\n    461       2   1 I    kworker/1:1-eve [kworker/1:1-events]\n    462       2   7 I    kworker/7:1-eve [kworker/7:1-events]\n    463       2  12 I    kworker/12:1-ev [kworker/12:1-events]\n    464       2  16 I    kworker/16:1-ev [kworker/16:1-events]\n    465       2  21 I    kworker/21:1-mm [kworker/21:1-mm_percpu_wq]\n    466       2  25 I    kworker/25:1-ev [kworker/25:1-events]\n    467       2  29 I    kworker/29:1-ev [kworker/29:1-events]\n    468       2  33 I    kworker/33:1-ev [kworker/33:1-events]\n    469       2  38 I    kworker/38:1-ev [kworker/38:1-events]\n    470       2  42 I    kworker/42:1-ev [kworker/42:1-events]\n    471       2  50 I    kworker/50:1-ev [kworker/50:1-events]\n    472       2  55 I    kworker/55:1-mm [kworker/55:1-mm_percpu_wq]\n    473       2  60 I    kworker/60:1-mm [kworker/60:1-mm_percpu_wq]\n    474       2   4 I    kworker/4:1-cgr [kworker/4:1-cgroup_free]\n    475       2   8 I    kworker/8:1-eve [kworker/8:1-events]\n    476       2  14 I    kworker/14:1-ev [kworker/14:1-events]\n    478       2  27 I    kworker/27:1-cg [kworker/27:1-cgroup_free]\n    479       2  32 I    kworker/32:1-ev [kworker/32:1-events]\n    480       2  35 I    kworker/35:1-mm [kworker/35:1-mm_percpu_wq]\n    481       2  40 I    kworker/40:1-cg [kworker/40:1-cgroup_free]\n    482       2  45 I    kworker/45:1-mm [kworker/45:1-mm_percpu_wq]\n    483       2  51 I    kworker/51:1-cg [kworker/51:1-cgroup_release]\n    484       2  57 I    kworker/57:1-mm [kworker/57:1-mm_percpu_wq]\n    485       2  61 I    kworker/61:1-mm [kworker/61:1-mm_percpu_wq]\n    486       2  62 I    kworker/62:1-mm [kworker/62:1-mm_percpu_wq]\n    488       2   9 I<   kworker/u259:0  [kworker/u259:0]\n    489       2  13 I<   kworker/u260:0  [kworker/u260:0]\n    490       2  15 I<   kworker/u261:0  [kworker/u261:0]\n    501       2  21 I<   kworker/R-charg [kworker/R-charger_manager]\n    502       2   0 I<   kworker/0:1H-kb [kworker/0:1H-kblockd]\n    519       2  17 I    kworker/17:1-ev [kworker/17:1-events]\n    520       2  18 I    kworker/18:1-ev [kworker/18:1-events]\n    537       2  63 I<   kworker/63:1H-k [kworker/63:1H-kblockd]\n    540       2  62 I<   kworker/62:1H-k [kworker/62:1H-kblockd]\n    557       2  23 I    kworker/23:1-cg [kworker/23:1-cgroup_release]\n    583       2  22 I    kworker/22:1-cg [kworker/22:1-cgroup_free]\n    682       2  27 I<   kworker/27:1H   [kworker/27:1H]\n    683       2  28 I<   kworker/28:1H-k [kworker/28:1H-kblockd]\n    685       2  12 I<   kworker/12:1H-k [kworker/12:1H-kblockd]\n    686       2  14 I<   kworker/14:1H   [kworker/14:1H]\n    687       2  31 I<   kworker/31:1H-k [kworker/31:1H-kblockd]\n    693       2  33 I<   kworker/33:1H-k [kworker/33:1H-kblockd]\n    700       2  57 I<   kworker/57:1H   [kworker/57:1H]\n    703       2  59 I<   kworker/59:1H-k [kworker/59:1H-kblockd]\n    705       2  32 I<   kworker/32:1H-k [kworker/32:1H-kblockd]\n    710       2  34 I<   kworker/34:1H-k [kworker/34:1H-kblockd]\n    712       2  37 I<   kworker/37:1H-k [kworker/37:1H-kblockd]\n    714       2  38 I<   kworker/38:1H-k [kworker/38:1H-kblockd]\n    716       2  41 I<   kworker/41:1H-k [kworker/41:1H-kblockd]\n    722       2  34 I    kworker/34:1-ev [kworker/34:1-events]\n    725       2   3 I<   kworker/3:1H-kb [kworker/3:1H-kblockd]\n    727       2  63 I    kworker/63:1-ev [kworker/63:1-events]\n    728       2  59 I    kworker/59:1-mm [kworker/59:1-mm_percpu_wq]\n    732       2  43 I<   kworker/43:1H-k [kworker/43:1H-kblockd]\n    733       2  37 I    kworker/37:1-ev [kworker/37:1-events]\n    737       2  44 I<   kworker/44:1H-k [kworker/44:1H-kblockd]\n    743       2   9 I    kworker/9:1-cgr [kworker/9:1-cgroup_bpf_destroy]\n    744       2  41 I    kworker/41:1-cg [kworker/41:1-cgroup_free]\n    745       2  43 I    kworker/43:1-ev [kworker/43:1-events]\n    746       2  15 I    kworker/15:1-ev [kworker/15:1-events]\n    747       2  13 I    kworker/13:1-cg [kworker/13:1-cgroup_free]\n    748       2  20 I    kworker/20:1-ev [kworker/20:1-events]\n    749       2  31 I    kworker/31:1-ev [kworker/31:1-events]\n    750       2  28 I    kworker/28:1-ev [kworker/28:1-events]\n    751       2  26 I    kworker/26:1-cg [kworker/26:1-cgroup_release]\n    752       2  24 I    kworker/24:1-cg [kworker/24:1-cgroup_free]\n    753       2  36 I    kworker/36:1-ev [kworker/36:1-events]\n    754       2  39 I    kworker/39:1-ev [kworker/39:1-events]\n    755       2  44 I    kworker/44:1-ev [kworker/44:1-events]\n    756       2  46 I    kworker/46:1-ev [kworker/46:1-events]\n    757       2  30 I    kworker/30:1-ev [kworker/30:1-events]\n    758       2  54 I    kworker/54:1-mm [kworker/54:1-mm_percpu_wq]\n    759       2  47 I    kworker/47:1-ev [kworker/47:1-events]\n    760       2  53 I    kworker/53:1-mm [kworker/53:1-mm_percpu_wq]\n    761       2  48 I    kworker/48:1-ev [kworker/48:1-events]\n    762       2  52 I    kworker/52:1-mm [kworker/52:1-mm_percpu_wq]\n    763       2  58 I    kworker/58:1-mm [kworker/58:1-mm_percpu_wq]\n    764       2  56 I    kworker/56:1-mm [kworker/56:1-mm_percpu_wq]\n    786       2   1 I<   kworker/1:1H-kb [kworker/1:1H-kblockd]\n    793       2   7 I<   kworker/7:1H-kb [kworker/7:1H-kblockd]\n    818       2  21 I<   kworker/21:1H-k [kworker/21:1H-kblockd]\n    824       2   9 I<   kworker/9:1H-kb [kworker/9:1H-kblockd]\n    833       2  13 I<   kworker/13:1H-k [kworker/13:1H-kblockd]\n    837       2  15 I<   kworker/15:1H-e [kworker/15:1H-events_highpri]\n    839       2  23 I<   kworker/23:1H-k [kworker/23:1H-kblockd]\n    840       2  34 S    jbd2/sda1-8     [jbd2/sda1-8]\n    841       2  29 I<   kworker/R-ext4- [kworker/R-ext4-rsv-conversion]\n    868       2  25 I<   kworker/25:1H-k [kworker/25:1H-kblockd]\n    869       2   8 I<   kworker/8:1H-kb [kworker/8:1H-kblockd]\n    870       2  22 I<   kworker/22:1H-k [kworker/22:1H-kblockd]\n    871       2   5 I<   kworker/5:1H-kb [kworker/5:1H-kblockd]\n    872       2  42 I<   kworker/42:1H-k [kworker/42:1H-kblockd]\n    873       2  11 I<   kworker/11:1H-k [kworker/11:1H-kblockd]\n    874       2  40 I<   kworker/40:1H-k [kworker/40:1H-kblockd]\n    875       2  20 I<   kworker/20:1H-k [kworker/20:1H-kblockd]\n    876       2  18 I<   kworker/18:1H-k [kworker/18:1H-kblockd]\n    877       2  17 I<   kworker/17:1H-k [kworker/17:1H-kblockd]\n    878       2  24 I<   kworker/24:1H-k [kworker/24:1H-kblockd]\n    879       2   2 I<   kworker/2:1H-kb [kworker/2:1H-kblockd]\n    880       2  39 I<   kworker/39:1H-k [kworker/39:1H-kblockd]\n    881       2  29 I<   kworker/29:1H-k [kworker/29:1H-kblockd]\n    882       2  16 I<   kworker/16:1H-k [kworker/16:1H-kblockd]\n    883       2  30 I<   kworker/30:1H-k [kworker/30:1H-kblockd]\n    884       2  26 I<   kworker/26:1H   [kworker/26:1H]\n    885       2  19 I<   kworker/19:1H-k [kworker/19:1H-kblockd]\n    886       2   4 I<   kworker/4:1H-kb [kworker/4:1H-kblockd]\n    888       2   6 I<   kworker/6:1H    [kworker/6:1H]\n    889       2  10 I<   kworker/10:1H-k [kworker/10:1H-kblockd]\n    929       2  53 I<   kworker/53:1H-k [kworker/53:1H-kblockd]\n    930       2  61 I<   kworker/61:1H-k [kworker/61:1H-kblockd]\n    941       2  35 I<   kworker/35:1H-k [kworker/35:1H-kblockd]\n    942       2   9 S    psimon          [psimon]\n    948       1   5 S<s  systemd-journal /usr/lib/systemd/systemd-journald\n    971       2  36 I<   kworker/36:1H-k [kworker/36:1H-kblockd]\n    992       2   3 I    kworker/3:3-cgr [kworker/3:3-cgroup_free]\n   1005       1  51 Ssl  systemd-timesyn /usr/lib/systemd/systemd-timesyncd\n   1013       1  44 Ss   systemd-resolve /usr/lib/systemd/systemd-resolved\n   1017       1  49 Ss   systemd-udevd   /usr/lib/systemd/systemd-udevd\n   1044       2  39 S    psimon          [psimon]\n   1209       2  46 I<   kworker/46:1H-k [kworker/46:1H-kblockd]\n   1211       2  47 I<   kworker/47:1H-k [kworker/47:1H-kblockd]\n   1216       2  49 I<   kworker/49:1H   [kworker/49:1H]\n   1217       2  55 I<   kworker/55:1H-k [kworker/55:1H-kblockd]\n   1218       2  56 I<   kworker/56:1H-k [kworker/56:1H-kblockd]\n   1219       2  58 I<   kworker/58:1H-k [kworker/58:1H-kblockd]\n   1220       2  52 I<   kworker/52:1H-k [kworker/52:1H-kblockd]\n   1221       2  45 I<   kworker/45:1H-k [kworker/45:1H-kblockd]\n   1222       2  48 I<   kworker/48:1H-k [kworker/48:1H-kblockd]\n   1223       2  54 I<   kworker/54:1H-k [kworker/54:1H-kblockd]\n   1224       2  51 I<   kworker/51:1H   [kworker/51:1H]\n   1225       2  60 I<   kworker/60:1H-k [kworker/60:1H-kblockd]\n   1228       2  50 I<   kworker/50:1H   [kworker/50:1H]\n   1318       2  19 I    kworker/19:2-ev [kworker/19:2-events]\n   1324       2  52 S    jbd2/sdb-8      [jbd2/sdb-8]\n   1325       2  54 I<   kworker/R-ext4- [kworker/R-ext4-rsv-conversion]\n   1328       2  55 S    jbd2/sdc-8      [jbd2/sdc-8]\n   1329       2  56 I<   kworker/R-ext4- [kworker/R-ext4-rsv-conversion]\n   1337       2   2 I    kworker/2:2     [kworker/2:2]\n   1345       2  36 I    kworker/u258:3- [kworker/u258:3-events_unbound]\n   1558       1  40 Ss   systemd-network /usr/lib/systemd/systemd-networkd\n   1582       1  25 Ss   dbus-daemon     @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only\n   1593       1   9 Ssl  snapd           /usr/lib/snapd/snapd\n   1595       1  26 Ss   systemd-logind  /usr/lib/systemd/systemd-logind\n   1634       1  42 Ssl  rsyslogd        /usr/sbin/rsyslogd -n -iNONE\n   1638       1  30 Ssl  unattended-upgr /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal\n   1639       2  40 I    kworker/40:2-ev [kworker/40:2-events]\n   1640       2  39 I    kworker/39:2-cg [kworker/39:2-cgroup_free]\n   1731       2  45 I    kworker/45:2-ev [kworker/45:2-events]\n   1843       1  45 Ss   cron            /usr/sbin/cron -f -P\n   1852       1  30 Ss+  agetty          /usr/sbin/agetty --noreset --noclear --issue-file=/etc/issue:/etc/issue.d:/run/issue.d:/usr/lib/issue.d --keep-baud 115200,57600,38400,9600 - vt220\n   1856       1  26 Ss+  agetty          /usr/sbin/agetty --noreset --noclear --issue-file=/etc/issue:/etc/issue.d:/run/issue.d:/usr/lib/issue.d - linux\n   1857       2  41 I    kworker/41:2-ev [kworker/41:2-events]\n   1884       1  21 Ss   sshd            sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups\n   2098       2  54 I    kworker/54:2    [kworker/54:2]\n   2102       2  46 I    kworker/46:2-cg [kworker/46:2-cgroup_free]\n   2109       2  23 I    kworker/23:2    [kworker/23:2]\n   2249       2  52 I    kworker/u258:4- [kworker/u258:4-ext4-rsv-conversion]\n   2281       2  44 I    kworker/44:2    [kworker/44:2]\n   2282       2  43 I    kworker/43:2-cg [kworker/43:2-cgroup_free]\n   2446       2  51 I    kworker/51:2-ev [kworker/51:2-events]\n   2598       2  31 I    kworker/31:2-cg [kworker/31:2-cgroup_free]\n   2739       2   4 I    kworker/4:2     [kworker/4:2]\n   2752       2   1 I    kworker/1:2     [kworker/1:2]\n   2912       2  29 I    kworker/29:2    [kworker/29:2]\n   3080       2  27 I    kworker/27:2-cg [kworker/27:2-cgroup_release]\n   3081       2  27 I    kworker/27:3-ev [kworker/27:3-events]\n   3290       2   5 I    kworker/5:2-cgr [kworker/5:2-cgroup_free]\n   3310       2  36 I    kworker/36:2-cg [kworker/36:2-cgroup_free]\n   3459       2  21 I    kworker/21:2    [kworker/21:2]\n   3464       2   0 I    kworker/0:1     [kworker/0:1]\n   3643       2  26 I    kworker/26:2-ev [kworker/26:2-events]\n   3645       2  28 I    kworker/28:2-cg [kworker/28:2-cgroup_free]\n   3849       2  45 I    kworker/45:0    [kworker/45:0]\n   3857       2   3 I    kworker/3:1     [kworker/3:1]\n   3870       2   6 I    kworker/6:2     [kworker/6:2]\n   3871    1884  22 Ss   sshd-session    sshd-session: root [priv]\n   3876       1   9 Ss   systemd         /usr/lib/systemd/systemd --user\n   3877       2   5 I    kworker/5:3-mm_ [kworker/5:3-mm_percpu_wq]\n   3879    3876  10 S    (sd-pam)        (sd-pam)\n   3884       2  33 S    psimon          [psimon]\n   4014    3871   5 S    sshd-session    sshd-session: root@notty\n   4015    4014   7 Ss   python3         python3 -\n   4016    4015   8 R    ps              ps -eo pid,ppid,psr,stat,comm,args\n",
+    "release": "7.0.0-38-kdrebuild4",
+    "taint": "12288",
+    "unexpected": []
+  },
+  "producer_detail_contract": "The live adapter checks exact EmittedExit fields. This saved-output audit checks the recorded ABI detail domain, source transfer and cursor.",
+  "profile": "spin",
+  "recursive": [
+    {
+      "child": {
+        "done": 4905,
+        "entries": [
+          4896
+        ],
+        "exits": [
+          4897
+        ],
+        "frame": 4879,
+        "unlocks": [
+          4903
+        ]
+      },
+      "child_enqueue": 4881,
+      "child_release": {
+        "bind": 4889,
+        "control_stopped": 4906,
+        "free": 4949,
+        "grant": 4891,
+        "handled": 4899,
+        "members": [
+          4889,
+          4891,
+          4898,
+          4899,
+          4904,
+          4939,
+          4942
+        ],
+        "owner_retired": 4940,
+        "physical_begin": 4900,
+        "physical_end": 4902,
+        "ready": 4942,
+        "request": 4898,
+        "retired": 4939,
+        "source_drop": 4904
+      },
+      "identities": {
+        "C_A": 18379471568427168128,
+        "C_B": 18379471568310186368,
+        "child": 18379471559230227648,
+        "child_acquisition": 18379471559230228145,
+        "origin": 18379471568510169472,
+        "root": 18379471559230226536,
+        "root_acquisition": 18379471559230227033,
+        "state": 18379471558780233728
+      },
+      "lock": 4880,
+      "mode": 1,
+      "outer_unlock": null,
+      "parent": {
+        "done": 4932,
+        "entries": [
+          4876,
+          4896,
+          4914
+        ],
+        "exits": [
+          4877,
+          4897,
+          4916
+        ],
+        "frame": 4857,
+        "unlocks": [
+          4927
+        ]
+      },
+      "parent_reentry": 4914,
+      "returned": 4909,
+      "root_enqueue": 4858,
+      "root_release": {
+        "bind": 4870,
+        "control_stopped": 4933,
+        "free": 4952,
+        "grant": 4871,
+        "handled": 4919,
+        "members": [
+          4870,
+          4871,
+          4911,
+          4918,
+          4919,
+          4930,
+          4941,
+          4944
+        ],
+        "owner_retired": 4943,
+        "physical_begin": 4920,
+        "physical_end": 4924,
+        "ready": 4944,
+        "request": 4918,
+        "retired": 4941,
+        "source_drop": 4930
+      },
+      "selections": [
+        {
+          "candidate": 4855,
+          "local": 4945,
+          "selection": 4869
+        },
+        {
+          "candidate": 4861,
+          "local": 4910,
+          "selection": 4888
+        }
+      ]
+    },
+    {
+      "child": {
+        "done": 5041,
+        "entries": [
+          5023,
+          5032
+        ],
+        "exits": [
+          5024,
+          5033
+        ],
+        "frame": 5006,
+        "unlocks": [
+          5039
+        ]
+      },
+      "child_enqueue": 5008,
+      "child_release": {
+        "bind": 5017,
+        "control_stopped": 5042,
+        "free": 5072,
+        "grant": 5018,
+        "handled": 5035,
+        "members": [
+          5017,
+          5018,
+          5034,
+          5035,
+          5040,
+          5055,
+          5058
+        ],
+        "owner_retired": 5056,
+        "physical_begin": 5036,
+        "physical_end": 5038,
+        "ready": 5058,
+        "request": 5034,
+        "retired": 5055,
+        "source_drop": 5040
+      },
+      "identities": {
+        "C_A": 18379471568377610240,
+        "C_B": 18379471568353472896,
+        "child": 18379471559230227648,
+        "child_acquisition": 18379471559230228145,
+        "origin": 18379471568508137856,
+        "root": 18379471559230226536,
+        "root_acquisition": 18379471559230227033,
+        "state": 18379471558780233728
+      },
+      "lock": 5007,
+      "mode": 2,
+      "outer_unlock": 5030,
+      "parent": {
+        "done": 5050,
+        "entries": [
+          5002,
+          5023,
+          5032
+        ],
+        "exits": [
+          5004,
+          5024,
+          5033
+        ],
+        "frame": 4984,
+        "unlocks": [
+          5030
+        ]
+      },
+      "parent_reentry": null,
+      "returned": 5045,
+      "root_enqueue": 4985,
+      "root_release": {
+        "bind": 4996,
+        "control_stopped": 5052,
+        "free": 5075,
+        "grant": 4997,
+        "handled": 5026,
+        "members": [
+          4996,
+          4997,
+          5025,
+          5026,
+          5031,
+          5047,
+          5059,
+          5061
+        ],
+        "owner_retired": 5060,
+        "physical_begin": 5027,
+        "physical_end": 5029,
+        "ready": 5061,
+        "request": 5025,
+        "retired": 5059,
+        "source_drop": 5031
+      },
+      "selections": [
+        {
+          "candidate": 4982,
+          "local": 5062,
+          "selection": 4995
+        },
+        {
+          "candidate": 4988,
+          "local": 5046,
+          "selection": 5015
+        }
+      ]
+    }
+  ],
+  "scope": "Protected source lock/unlock episodes, exact saved return and physical-release records",
+  "status": "SAVED_RUNTIME_RELATIONS_VERIFIED",
+  "warm_plain_positive_lifetimes": 1
+}

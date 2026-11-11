@@ -1,0 +1,11 @@
+{
+  "module_build_result": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/module-build-receipts/result.json",
+  "module_build_result_sha256": "cb79249bfbb6f883935b93dbeef33045a4714deecdc2da5082163830987399af",
+  "hmp_result": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-hmp-20261111-01.json",
+  "hmp_result_sha256": "d860e6cbd5657582b7437a13777c2f3951fc9226667b7662afbb2c7634ecea7a",
+  "minimum_root_free_bytes": 1073741824,
+  "minimum_build_free_bytes": 4294967296,
+  "minimum_host_free_bytes": 4294967296,
+  "max_proof_age_seconds": 900,
+  "max_command_bytes": 33554432
+}

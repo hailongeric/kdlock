@@ -1,0 +1,22 @@
+{
+  "returncode": 0,
+  "stdout": "{\"path\": \"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7.py\", \"sha256\": \"2cf37e857a00fd5d944058d8df9509e2bf66af41210db498518918dece80cec0\", \"bytes\": 18292}\n{\"path\": \"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-review.json\", \"sha256\": \"07ca30d9ddbd129f91f5e606fe1dc3cb579958623cd46a27e157541b7a271aeb\", \"bytes\": 659}\n{\"path\": \"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-hmp-20261111-01.json\", \"sha256\": \"d860e6cbd5657582b7437a13777c2f3951fc9226667b7662afbb2c7634ecea7a\", \"bytes\": 4572}\n{\"path\": \"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-plan.md\", \"sha256\": \"922ebbfb98103c42a42ac9da0b9335557d95243576e98cc91fb467c3e758a9d1\", \"bytes\": 3697}\nActual VM helper AST parse PASS\n",
+  "files": [
+    {
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7.py",
+      "sha256": "2cf37e857a00fd5d944058d8df9509e2bf66af41210db498518918dece80cec0"
+    },
+    {
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-review.json",
+      "sha256": "07ca30d9ddbd129f91f5e606fe1dc3cb579958623cd46a27e157541b7a271aeb"
+    },
+    {
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-hmp-20261111-01.json",
+      "sha256": "d860e6cbd5657582b7437a13777c2f3951fc9226667b7662afbb2c7634ecea7a"
+    },
+    {
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-plan.md",
+      "sha256": "922ebbfb98103c42a42ac9da0b9335557d95243576e98cc91fb467c3e758a9d1"
+    }
+  ]
+}

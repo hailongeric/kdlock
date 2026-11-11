@@ -1,0 +1,47 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "ssh",
+        "-p",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "root@10.176.26.71",
+        "timeout 60s python3 -"
+      ],
+      "finished_unix": 1794368948.0038831,
+      "returncode": 0,
+      "script_sha256": "cfead88240108a9f3d6ad0f199ac9a1a1b47a236638ea7ae94836f6bd4b1caa2",
+      "started_unix": 1794368947.1541286,
+      "stderr": "",
+      "stdout_bytes": 17087,
+      "stdout_sha256": "eb26f3d3a6cefa05c4744e00bc3b41a0a41c53814abe8ec0ee663f18fcc38a24"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-p",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "root@10.176.26.71",
+        "timeout 120s python3 -"
+      ],
+      "finished_unix": 1794368948.385362,
+      "returncode": 0,
+      "script_sha256": "47a2a7af3348b0129b1c3c29b57427184a27391e533c7ae45f4a6f002b3140c4",
+      "started_unix": 1794368948.0204186,
+      "stderr": "",
+      "stdout_bytes": 9072640,
+      "stdout_sha256": "1bc06f5f9f2d5e82de54541a4bd714470cd7008b31b951db53c13cc41d7988b7"
+    }
+  ],
+  "scope": "Saved receipt/source reads only. No guest writes, live-state/process probes, protocol, builds, tests, module, GRUB, reboot or HMP commands.",
+  "tar_bytes": 9072640,
+  "tar_sha256": "1bc06f5f9f2d5e82de54541a4bd714470cd7008b31b951db53c13cc41d7988b7"
+}

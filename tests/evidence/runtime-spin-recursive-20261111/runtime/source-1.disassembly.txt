@@ -1,0 +1,38 @@
+
+/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/live-spin-output/source-1.bin:     file format binary
+
+
+Disassembly of section .data:
+
+ffffffffc000b0b0 <.data>:
+ffffffffc000b0b0:	65 48 8b 15 60 3f 40 c4                         	mov    %gs:-0x3bbfc0a0(%rip),%rdx        # 0xffffffff8440f018
+ffffffffc000b0b8:	48 83 47 40 01                                  	addq   $0x1,0x40(%rdi)
+ffffffffc000b0bd:	48 89 57 18                                     	mov    %rdx,0x18(%rdi)
+ffffffffc000b0c1:	8b 57 68                                        	mov    0x68(%rdi),%edx
+ffffffffc000b0c4:	48 83 fa 41                                     	cmp    $0x41,%rdx
+ffffffffc000b0c8:	73 19                                           	jae    0xffffffffc000b0e3
+ffffffffc000b0ca:	48 8d 14 d5 20 68 60 c0                         	lea    -0x3f9f97e0(,%rdx,8),%rdx
+ffffffffc000b0d2:	48 89 57 20                                     	mov    %rdx,0x20(%rdi)
+ffffffffc000b0d6:	31 c0                                           	xor    %eax,%eax
+ffffffffc000b0d8:	31 d2                                           	xor    %edx,%edx
+ffffffffc000b0da:	31 f6                                           	xor    %esi,%esi
+ffffffffc000b0dc:	31 ff                                           	xor    %edi,%edi
+ffffffffc000b0de:	e9 3d 0d 71 c2                                  	jmp    0xffffffff8271be20
+ffffffffc000b0e3:	55                                              	push   %rbp
+ffffffffc000b0e4:	48 89 d6                                        	mov    %rdx,%rsi
+ffffffffc000b0e7:	48 89 e5                                        	mov    %rsp,%rbp
+ffffffffc000b0ea:	48 83 ec 10                                     	sub    $0x10,%rsp
+ffffffffc000b0ee:	48 89 7d f0                                     	mov    %rdi,-0x10(%rbp)
+ffffffffc000b0f2:	48 c7 c7 00 81 60 c0                            	mov    $0xffffffffc0608100,%rdi
+ffffffffc000b0f9:	48 89 55 f8                                     	mov    %rdx,-0x8(%rbp)
+ffffffffc000b0fd:	e8 ce 8e dc c1                                  	call   0xffffffff81dd3fd0
+ffffffffc000b102:	48 8b 55 f8                                     	mov    -0x8(%rbp),%rdx
+ffffffffc000b106:	48 8b 45 f0                                     	mov    -0x10(%rbp),%rax
+ffffffffc000b10a:	48 8d 14 d5 20 68 60 c0                         	lea    -0x3f9f97e0(,%rdx,8),%rdx
+ffffffffc000b112:	48 89 50 20                                     	mov    %rdx,0x20(%rax)
+ffffffffc000b116:	c9                                              	leave
+ffffffffc000b117:	31 c0                                           	xor    %eax,%eax
+ffffffffc000b119:	31 d2                                           	xor    %edx,%edx
+ffffffffc000b11b:	31 f6                                           	xor    %esi,%esi
+ffffffffc000b11d:	31 ff                                           	xor    %edi,%edi
+ffffffffc000b11f:	e9 fc 0c 71 c2                                  	jmp    0xffffffff8271be20

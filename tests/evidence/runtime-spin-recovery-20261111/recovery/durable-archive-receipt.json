@@ -1,0 +1,29 @@
+{
+  "bytes": 8824917,
+  "claim": 18379471558795890272,
+  "holder": 36865,
+  "keys": [
+    [
+      18379471558746833604,
+      1
+    ],
+    [
+      18379471558746833844,
+      1
+    ],
+    [
+      18379471558746834084,
+      1
+    ],
+    [
+      18379471558746834324,
+      1
+    ],
+    [
+      18379471558746834564,
+      1
+    ]
+  ],
+  "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/shutdown-raw-archive.json",
+  "sha256": "21328862c8fb47dd8ad4b7842c5b766e169c6a027aee964a458d9b78b66a678d"
+}

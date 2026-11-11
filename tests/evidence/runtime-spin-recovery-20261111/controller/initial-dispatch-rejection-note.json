@@ -1,0 +1,11 @@
+{
+  "guest_effects_dispatched": false,
+  "helper_sha256": "3b871de184760d60695d8263673d99d77bc213a53918af5471a2e1ca99772835",
+  "instruction": "Do not bypass this rejection through a workaround or indirect execution.",
+  "observer_sha256": "bfbf93863ed8bdf2bf90fb585e0b494a9ac4c1b663a5611d059405d789d53bcf",
+  "origin": "Source-host tool transcript of the rejected exec_command creation. No guest command was started.",
+  "phase": "DISPATCH_REJECTED_BEFORE_SSH",
+  "reason": "This remotely executes a root recovery that archives/settles live kernel state and unloads a module, with meaningful service and data-integrity impact; the transcript lacks trusted user authorization for this exact operation.",
+  "scope": "Approval-review rejection preserves the already-reviewed helper and actual preflight; it is not a recovery or drain result.",
+  "unix": 1794365727.5882556
+}

@@ -1,0 +1,12 @@
+{
+  "free_bytes": {
+    "/": 1212882944,
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-helpers-01": 14304202752
+  },
+  "phase": "ACTUAL_HELPER_AST_AND_INPUT_PINS_VERIFIED",
+  "pins": {
+    "kdlock-kernel4-spin-recover-observer.py": "bfbf93863ed8bdf2bf90fb585e0b494a9ac4c1b663a5611d059405d789d53bcf",
+    "kdlock-kernel4-spin-recover.py": "3b871de184760d60695d8263673d99d77bc213a53918af5471a2e1ca99772835"
+  },
+  "unix": 1794365580.8529706
+}

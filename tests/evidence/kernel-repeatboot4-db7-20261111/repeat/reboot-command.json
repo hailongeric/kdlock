@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "systemctl",
+    "reboot"
+  ],
+  "old_boot_id": "84e4ba94-b616-4b65-9efe-820921f36c16",
+  "arm_sha256": "1b45f5c0ed32056e12dc61472f9e219e8fedf5b290576816fa2d9f2195da43c2",
+  "review_sha256": "07ca30d9ddbd129f91f5e606fe1dc3cb579958623cd46a27e157541b7a271aeb",
+  "unix": 1794368062.441798,
+  "timeout_seconds": 30,
+  "ordinary_reboot_only": true
+}

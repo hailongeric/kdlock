@@ -1,0 +1,93 @@
+{"phase": "ORDINARY_STOP_PRECHECK"}
+{"phase": "ORDINARY_STOP_DISPATCHING"}
+{"phase": "ORDINARY_STOP_JOINED", "stop_errno": 110, "workers": 0}
+{"phase": "QUERY_EXACT_END21"}
+{"phase": "ACTUAL_END21_ADOPTED"}
+{"operation": 9, "phase": "COMMAND_DISPATCHING", "sequence": 22}
+{"operation": 9, "phase": "COMMAND_RETURNED_ZERO", "sequence": 22}
+{"phase": "ACTUAL_SOURCE_IMAGE_NATIVE_DRAIN_CONFIRMED"}
+{"operation": 10, "phase": "COMMAND_DISPATCHING", "sequence": 23}
+{"operation": 10, "phase": "COMMAND_RETURNED_ZERO", "sequence": 23}
+{"claim_rows": 5, "phase": "EXACT_RAW_ARCHIVE_WRITING"}
+{"archive": {"bytes": 8824917, "claim": 18379471558795890272, "holder": 36865, "keys": [[18379471558746833604, 1], [18379471558746833844, 1], [18379471558746834084, 1], [18379471558746834324, 1], [18379471558746834564, 1]], "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/shutdown-raw-archive.json", "sha256": "21328862c8fb47dd8ad4b7842c5b766e169c6a027aee964a458d9b78b66a678d"}, "phase": "EXACT_RAW_ARCHIVE_FSYNCED"}
+{"operation": 11, "phase": "COMMAND_DISPATCHING", "sequence": 24}
+{"operation": 11, "phase": "COMMAND_RETURNED_ZERO", "sequence": 24}
+{"operation": 6, "phase": "COMMAND_DISPATCHING", "sequence": 25}
+{"operation": 6, "phase": "COMMAND_RETURNED_ZERO", "sequence": 25}
+{"phase": "EXACT_ARCHIVE_SETTLEMENT_END_AND_CHANNEL_CLOSE_COMPLETE", "settled_rows": 5}
+{"phase": "ORDINARY_DESTROY_DISPATCHING"}
+{"phase": "ORDINARY_RMMOD_DISPATCHING"}
+{"phase": "ORDINARY_UNLOAD_VERIFIED"}
+{
+  "archive": {
+    "bytes": 8824917,
+    "claim": 18379471558795890272,
+    "holder": 36865,
+    "keys": [
+      [
+        18379471558746833604,
+        1
+      ],
+      [
+        18379471558746833844,
+        1
+      ],
+      [
+        18379471558746834084,
+        1
+      ],
+      [
+        18379471558746834324,
+        1
+      ],
+      [
+        18379471558746834564,
+        1
+      ]
+    ],
+    "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/shutdown-raw-archive.json",
+    "sha256": "21328862c8fb47dd8ad4b7842c5b766e169c6a027aee964a458d9b78b66a678d"
+  },
+  "claim_rows": 5,
+  "dmesg_unchanged": true,
+  "exchanges": [
+    {
+      "operation": 9,
+      "reply_bytes": 40,
+      "sequence": 22,
+      "status": 0
+    },
+    {
+      "operation": 10,
+      "reply_bytes": 746,
+      "sequence": 23,
+      "status": 0
+    },
+    {
+      "operation": 11,
+      "reply_bytes": 136,
+      "sequence": 24,
+      "status": 0
+    },
+    {
+      "operation": 6,
+      "reply_bytes": 48,
+      "sequence": 25,
+      "status": 0
+    }
+  ],
+  "finished_unix": 1794367155.0158136,
+  "new_dmesg_bytes": 0,
+  "operation": 6,
+  "original_controller_sha256": "dbf5a4407d65bc75a78c46110e52f346f738873e8fbf42ef26900184ed5d7703",
+  "original_history_bytes": 4384323,
+  "original_result_sha256": "9c89f7eade4ddb8b65d07403d10ab63856c396bbbeb43bfdc7e0fa239d2fd97b",
+  "phase": "ORDINARY_UNLOAD_VERIFIED",
+  "sequence": 25,
+  "settled_rows": 5,
+  "source_epoch": 18379471558687395584,
+  "started_unix": 1794367154.3386683,
+  "status": "EXACT_ORDINARY_RECOVERY_COMPLETE",
+  "stop_errno": 110,
+  "workers": 0
+}

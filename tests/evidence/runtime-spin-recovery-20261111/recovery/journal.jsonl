@@ -1,0 +1,20 @@
+{"phase": "ORDINARY_STOP_PRECHECK", "unix": 1794367154.6588395}
+{"phase": "ORDINARY_STOP_DISPATCHING", "unix": 1794367154.6989443}
+{"phase": "ORDINARY_STOP_JOINED", "stop_errno": 110, "unix": 1794367154.7230768, "workers": 0}
+{"phase": "QUERY_EXACT_END21", "unix": 1794367154.7248526}
+{"phase": "ACTUAL_END21_ADOPTED", "unix": 1794367154.7430754}
+{"operation": 9, "phase": "COMMAND_DISPATCHING", "sequence": 22, "unix": 1794367154.7447827}
+{"operation": 9, "phase": "COMMAND_RETURNED_ZERO", "sequence": 22, "unix": 1794367154.7700808}
+{"phase": "ACTUAL_SOURCE_IMAGE_NATIVE_DRAIN_CONFIRMED", "unix": 1794367154.771826}
+{"operation": 10, "phase": "COMMAND_DISPATCHING", "sequence": 23, "unix": 1794367154.7734551}
+{"operation": 10, "phase": "COMMAND_RETURNED_ZERO", "sequence": 23, "unix": 1794367154.7923577}
+{"claim_rows": 5, "phase": "EXACT_RAW_ARCHIVE_WRITING", "unix": 1794367154.794098}
+{"archive": {"bytes": 8824917, "claim": 18379471558795890272, "holder": 36865, "keys": [[18379471558746833604, 1], [18379471558746833844, 1], [18379471558746834084, 1], [18379471558746834324, 1], [18379471558746834564, 1]], "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/recovery-spin-approved-01/shutdown-raw-archive.json", "sha256": "21328862c8fb47dd8ad4b7842c5b766e169c6a027aee964a458d9b78b66a678d"}, "phase": "EXACT_RAW_ARCHIVE_FSYNCED", "unix": 1794367154.8664184}
+{"operation": 11, "phase": "COMMAND_DISPATCHING", "sequence": 24, "unix": 1794367154.8730261}
+{"operation": 11, "phase": "COMMAND_RETURNED_ZERO", "sequence": 24, "unix": 1794367154.8875902}
+{"operation": 6, "phase": "COMMAND_DISPATCHING", "sequence": 25, "unix": 1794367154.8893154}
+{"operation": 6, "phase": "COMMAND_RETURNED_ZERO", "sequence": 25, "unix": 1794367154.9032857}
+{"phase": "EXACT_ARCHIVE_SETTLEMENT_END_AND_CHANNEL_CLOSE_COMPLETE", "settled_rows": 5, "unix": 1794367154.9049492}
+{"phase": "ORDINARY_DESTROY_DISPATCHING", "unix": 1794367154.9091396}
+{"phase": "ORDINARY_RMMOD_DISPATCHING", "unix": 1794367154.9632223}
+{"phase": "ORDINARY_UNLOAD_VERIFIED", "unix": 1794367155.0140696}

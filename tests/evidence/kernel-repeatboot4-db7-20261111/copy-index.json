@@ -1,0 +1,866 @@
+{
+  "copies": [
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 4572,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-hmp-20261111-01.json",
+      "origin_sha256": "d860e6cbd5657582b7437a13777c2f3951fc9226667b7662afbb2c7634ecea7a",
+      "path": "persisted/repeat-db7-hmp-20261111-01.json",
+      "storage_bytes": 4572,
+      "storage_sha256": "d860e6cbd5657582b7437a13777c2f3951fc9226667b7662afbb2c7634ecea7a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3697,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-plan.md",
+      "origin_sha256": "922ebbfb98103c42a42ac9da0b9335557d95243576e98cc91fb467c3e758a9d1",
+      "path": "persisted/repeat-db7-plan.md",
+      "storage_bytes": 3697,
+      "storage_sha256": "922ebbfb98103c42a42ac9da0b9335557d95243576e98cc91fb467c3e758a9d1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2214,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-reboot.py",
+      "origin_sha256": "0956e05c760d80569b5dd55e37fb28b60bf8cfe98e825d3b8b596bfc5677177f",
+      "path": "persisted/repeat-db7-reboot.py",
+      "storage_bytes": 2214,
+      "storage_sha256": "0956e05c760d80569b5dd55e37fb28b60bf8cfe98e825d3b8b596bfc5677177f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 659,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7-review.json",
+      "origin_sha256": "07ca30d9ddbd129f91f5e606fe1dc3cb579958623cd46a27e157541b7a271aeb",
+      "path": "persisted/repeat-db7-review.json",
+      "storage_bytes": 659,
+      "storage_sha256": "07ca30d9ddbd129f91f5e606fe1dc3cb579958623cd46a27e157541b7a271aeb"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 18292,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/repeat-db7.py",
+      "origin_sha256": "2cf37e857a00fd5d944058d8df9509e2bf66af41210db498518918dece80cec0",
+      "path": "persisted/repeat-db7.py",
+      "storage_bytes": 18292,
+      "storage_sha256": "2cf37e857a00fd5d944058d8df9509e2bf66af41210db498518918dece80cec0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 58027,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/boot-kernel-journal.txt",
+      "origin_sha256": "d33ef9f48277119f4921f7b9c30949182194c029d7826c250b7c48b12d614d63",
+      "path": "postboot/boot-kernel-journal.txt",
+      "storage_bytes": 58027,
+      "storage_sha256": "d33ef9f48277119f4921f7b9c30949182194c029d7826c250b7c48b12d614d63"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 139,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/cmdline.txt",
+      "origin_sha256": "260f0a15cefe5bb46431f0537c042ab6b94624f9598f8c38ba9528ad3ec4831d",
+      "path": "postboot/cmdline.txt",
+      "storage_bytes": 139,
+      "storage_sha256": "260f0a15cefe5bb46431f0537c042ab6b94624f9598f8c38ba9528ad3ec4831d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 111374,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/cpuinfo.txt",
+      "origin_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921",
+      "path": "postboot/cpuinfo.txt",
+      "storage_bytes": 111374,
+      "storage_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 49015,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/dmesg.txt",
+      "origin_sha256": "8c11af04ba49308e1d9f7ec7825c29881776fb7d4729314ec37cd2d356c57784",
+      "path": "postboot/dmesg.txt",
+      "storage_bytes": 49015,
+      "storage_sha256": "8c11af04ba49308e1d9f7ec7825c29881776fb7d4729314ec37cd2d356c57784"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/grub-environment.txt",
+      "origin_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0",
+      "path": "postboot/grub-environment.txt",
+      "storage_bytes": 12,
+      "storage_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 32383,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/grub.cfg",
+      "origin_sha256": "9797117f0ac48ebd8122a39b38716c3f7dd5c86c59ced0ead048389ae086f9a1",
+      "path": "postboot/grub.cfg",
+      "storage_bytes": 32383,
+      "storage_sha256": "9797117f0ac48ebd8122a39b38716c3f7dd5c86c59ced0ead048389ae086f9a1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 709,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/gs-proof.json",
+      "origin_sha256": "a51191f8f080af052a3efb9f89b4d51d1c834b730772c07d84030165656a960d",
+      "path": "postboot/gs-proof.json",
+      "storage_bytes": 709,
+      "storage_sha256": "a51191f8f080af052a3efb9f89b4d51d1c834b730772c07d84030165656a960d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 48,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/modules.txt",
+      "origin_sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132",
+      "path": "postboot/modules.txt",
+      "storage_bytes": 48,
+      "storage_sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 26,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/mount-boot-efi.txt",
+      "origin_sha256": "e8c67255efc0448583a1645c3d315d417cba50c01bdbe0260a4333a3e261b48d",
+      "path": "postboot/mount-boot-efi.txt",
+      "storage_bytes": 26,
+      "storage_sha256": "e8c67255efc0448583a1645c3d315d417cba50c01bdbe0260a4333a3e261b48d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 33,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/mount-mnt-kdlock-builds.txt",
+      "origin_sha256": "3bda93efc31be965b14352cd48863f2bd1b11d8ed632e0b280a8db1e107567ab",
+      "path": "postboot/mount-mnt-kdlock-builds.txt",
+      "storage_bytes": 33,
+      "storage_sha256": "3bda93efc31be965b14352cd48863f2bd1b11d8ed632e0b280a8db1e107567ab"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 34,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/mount-mnt-kdlock-builds2.txt",
+      "origin_sha256": "c8a80456051a5abbc122afa9720b480e196e20082fa4511a3ce2a2c962f547ad",
+      "path": "postboot/mount-mnt-kdlock-builds2.txt",
+      "storage_bytes": 34,
+      "storage_sha256": "c8a80456051a5abbc122afa9720b480e196e20082fa4511a3ce2a2c962f547ad"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 17,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/mount-root.txt",
+      "origin_sha256": "5684e9db57b2bdf63e8bd6e87299d59fc5d83f14f850816171b7a816006838cc",
+      "path": "postboot/mount-root.txt",
+      "storage_bytes": 17,
+      "storage_sha256": "5684e9db57b2bdf63e8bd6e87299d59fc5d83f14f850816171b7a816006838cc"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1755,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/normal-recovery-boot-unchanged.json",
+      "origin_sha256": "e7ebcfb8468ac3965cddfad5563554c1881589ed49474018a5df6e850d1cf332",
+      "path": "postboot/normal-recovery-boot-unchanged.json",
+      "storage_bytes": 1755,
+      "storage_sha256": "e7ebcfb8468ac3965cddfad5563554c1881589ed49474018a5df6e850d1cf332"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 143,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/prior-arm-complete.json",
+      "origin_sha256": "752885ce1f30d8d9334e6f03eec7e5192fe0acd9bb90049f0add86429e7b36c8",
+      "path": "postboot/prior-arm-complete.json",
+      "storage_bytes": 143,
+      "storage_sha256": "752885ce1f30d8d9334e6f03eec7e5192fe0acd9bb90049f0add86429e7b36c8"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 570,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/prior-armed-grub.json",
+      "origin_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768",
+      "path": "postboot/prior-armed-grub.json",
+      "storage_bytes": 570,
+      "storage_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2427,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/prior-candidate-boot-unchanged.json",
+      "origin_sha256": "6f0f114959a2f0c9fe6c8b29b575b037f748723c018615146dd91bd1401a7a21",
+      "path": "postboot/prior-candidate-boot-unchanged.json",
+      "storage_bytes": 2427,
+      "storage_sha256": "6f0f114959a2f0c9fe6c8b29b575b037f748723c018615146dd91bd1401a7a21"
+    },
+    {
+      "encoding": "gzip lossless",
+      "origin_bytes": 163209,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/result.json",
+      "origin_sha256": "73fc01fbee3837d406fbf2ed1741b3bef85721440db3d44c369037c3ecce82db",
+      "path": "postboot/result.json.gz",
+      "storage_bytes": 4464,
+      "storage_sha256": "e2ab267b2b85627e566a0bcb8e2a0b23a7d47664bb542001134b38e3b7ee7be0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 476,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/running-kernel-notes.bin",
+      "origin_sha256": "86a2472732bdedf985a236086c8951cd2cd1ff88c232894edc22787cc8b95bae",
+      "path": "postboot/running-kernel-notes.bin",
+      "storage_bytes": 476,
+      "storage_sha256": "86a2472732bdedf985a236086c8951cd2cd1ff88c232894edc22787cc8b95bae"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 7,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/ssh-service.txt",
+      "origin_sha256": "45df5ad5e0ecfa54d3226343e0e6857337494ba6e32f189d1174070665d8c659",
+      "path": "postboot/ssh-service.txt",
+      "storage_bytes": 7,
+      "storage_sha256": "45df5ad5e0ecfa54d3226343e0e6857337494ba6e32f189d1174070665d8c659"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 120,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/uname.json",
+      "origin_sha256": "e1640a1fbc18dd3912dcad99e61508c91ab9e011ac13af182de17b847a9f4238",
+      "path": "postboot/uname.json",
+      "storage_bytes": 120,
+      "storage_sha256": "e1640a1fbc18dd3912dcad99e61508c91ab9e011ac13af182de17b847a9f4238"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2120,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/vmlinux-notes.txt",
+      "origin_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf",
+      "path": "postboot/vmlinux-notes.txt",
+      "storage_bytes": 2120,
+      "storage_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 5644,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/vmlinux-sections.txt",
+      "origin_sha256": "2acab6dc144a718056369b45c953207101970e5e7a8cd79b5568f78e4c847334",
+      "path": "postboot/vmlinux-sections.txt",
+      "storage_bytes": 5644,
+      "storage_sha256": "2acab6dc144a718056369b45c953207101970e5e7a8cd79b5568f78e4c847334"
+    },
+    {
+      "encoding": "gzip lossless",
+      "origin_bytes": 13022530,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01/vmlinux-symbols.txt",
+      "origin_sha256": "e827413b746ec17552a3793bdaec88eca3ddfdba94722151a9afbc9f9a2a104b",
+      "path": "postboot/vmlinux-symbols.txt.gz",
+      "storage_bytes": 2137273,
+      "storage_sha256": "ff94139f0042656d9d3370eac2ee69262cd06a17559ffd173b1449c750fd9786"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 240,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-after-environment-result.json",
+      "origin_sha256": "c0b0ba2428f9f159b486a43984089c3067c193ac15e151391f2a7718f8389a27",
+      "path": "repeat/arm-after-environment-result.json",
+      "storage_bytes": 240,
+      "storage_sha256": "c0b0ba2428f9f159b486a43984089c3067c193ac15e151391f2a7718f8389a27"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 141,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-after-environment.log",
+      "origin_sha256": "c4f6efb725e4560984ed7e3c81b4fbcfaf1e2634292ef5aca2f7a6bd5a3d9fc5",
+      "path": "repeat/arm-after-environment.log",
+      "storage_bytes": 141,
+      "storage_sha256": "c4f6efb725e4560984ed7e3c81b4fbcfaf1e2634292ef5aca2f7a6bd5a3d9fc5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 235,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-after-syntax-result.json",
+      "origin_sha256": "632eb152e3c7b12f9296cb7c71369e14a6eb5f90ef0fd3fa4445bff096ef1337",
+      "path": "repeat/arm-after-syntax-result.json",
+      "storage_bytes": 235,
+      "storage_sha256": "632eb152e3c7b12f9296cb7c71369e14a6eb5f90ef0fd3fa4445bff096ef1337"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-after-syntax.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "repeat/arm-after-syntax.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 570,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-after.json",
+      "origin_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768",
+      "path": "repeat/arm-after.json",
+      "storage_bytes": 570,
+      "storage_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 240,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-before-environment-result.json",
+      "origin_sha256": "4f8a0a1ea19f588010746aff1cb7d385fef16b82bd62426f2b9b9dd90ab33cbc",
+      "path": "repeat/arm-before-environment-result.json",
+      "storage_bytes": 240,
+      "storage_sha256": "4f8a0a1ea19f588010746aff1cb7d385fef16b82bd62426f2b9b9dd90ab33cbc"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-before-environment.log",
+      "origin_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0",
+      "path": "repeat/arm-before-environment.log",
+      "storage_bytes": 12,
+      "storage_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 233,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-before-syntax-result.json",
+      "origin_sha256": "8726d0a64059665c80dddbb423561a40099ed2216c6a1e8f92f2b09e108a1c5f",
+      "path": "repeat/arm-before-syntax-result.json",
+      "storage_bytes": 233,
+      "storage_sha256": "8726d0a64059665c80dddbb423561a40099ed2216c6a1e8f92f2b09e108a1c5f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-before-syntax.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "repeat/arm-before-syntax.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 441,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-before.json",
+      "origin_sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a",
+      "path": "repeat/arm-before.json",
+      "storage_bytes": 441,
+      "storage_sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 230,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-complete.json",
+      "origin_sha256": "1b45f5c0ed32056e12dc61472f9e219e8fedf5b290576816fa2d9f2195da43c2",
+      "path": "repeat/arm-complete.json",
+      "storage_bytes": 230,
+      "storage_sha256": "1b45f5c0ed32056e12dc61472f9e219e8fedf5b290576816fa2d9f2195da43c2"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 54104,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-idle.json",
+      "origin_sha256": "d3914dfa6f2150200e17fc01aeffc5802b71d25c0b39f5116fb2afd154ded380",
+      "path": "repeat/arm-idle.json",
+      "storage_bytes": 54104,
+      "storage_sha256": "d3914dfa6f2150200e17fc01aeffc5802b71d25c0b39f5116fb2afd154ded380"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 338,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-one-shot-result.json",
+      "origin_sha256": "86e7be51877a0b978702997eb34eabeab0a5e93a2eb36c1cf2a1f585e2416f5b",
+      "path": "repeat/arm-one-shot-result.json",
+      "storage_bytes": 338,
+      "storage_sha256": "86e7be51877a0b978702997eb34eabeab0a5e93a2eb36c1cf2a1f585e2416f5b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-one-shot.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "repeat/arm-one-shot.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 260,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-started.json",
+      "origin_sha256": "cef6f34221d909b0efd1330add9da7c82472a8458243ec96334c9ca55dd78cc1",
+      "path": "repeat/arm-started.json",
+      "storage_bytes": 260,
+      "storage_sha256": "cef6f34221d909b0efd1330add9da7c82472a8458243ec96334c9ca55dd78cc1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 195,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-sync-result.json",
+      "origin_sha256": "c620cc0c8bd4b496fa98bbed04cfac94f68b4ca5016854b6a7e14312ac0aac13",
+      "path": "repeat/arm-sync-result.json",
+      "storage_bytes": 195,
+      "storage_sha256": "c620cc0c8bd4b496fa98bbed04cfac94f68b4ca5016854b6a7e14312ac0aac13"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/arm-sync.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "repeat/arm-sync.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 285,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/elf-build-id-result.json",
+      "origin_sha256": "d3c5969b6fe0b463a921bfcdb16c4192eed637bf0f479daed981452c20500960",
+      "path": "repeat/elf-build-id-result.json",
+      "storage_bytes": 285,
+      "storage_sha256": "d3c5969b6fe0b463a921bfcdb16c4192eed637bf0f479daed981452c20500960"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2120,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/elf-build-id.log",
+      "origin_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf",
+      "path": "repeat/elf-build-id.log",
+      "storage_bytes": 2120,
+      "storage_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 6208,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/kernel-source67.json",
+      "origin_sha256": "6b2ccc0f1018a888d0ad1776aefdd9e3a4725232c8f44dd44f87eb7fb3fd986f",
+      "path": "repeat/kernel-source67.json",
+      "storage_bytes": 6208,
+      "storage_sha256": "6b2ccc0f1018a888d0ad1776aefdd9e3a4725232c8f44dd44f87eb7fb3fd986f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 34523,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/module-build-input.json",
+      "origin_sha256": "cb79249bfbb6f883935b93dbeef33045a4714deecdc2da5082163830987399af",
+      "path": "repeat/module-build-input.json",
+      "storage_bytes": 34523,
+      "storage_sha256": "cb79249bfbb6f883935b93dbeef33045a4714deecdc2da5082163830987399af"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 57258,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/operations-window-closed.json",
+      "origin_sha256": "b7942a9fa8b1a6bce5c4f164fd677db21dc5a06338c27630c2ddda4065d23745",
+      "path": "repeat/operations-window-closed.json",
+      "storage_bytes": 57258,
+      "storage_sha256": "b7942a9fa8b1a6bce5c4f164fd677db21dc5a06338c27630c2ddda4065d23745"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 235,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/postproof-complete.json",
+      "origin_sha256": "a10b809c5608ac625ec6f39451029e1267ed7fafdec1cd4d259573cb3ab74c16",
+      "path": "repeat/postproof-complete.json",
+      "storage_bytes": 235,
+      "storage_sha256": "a10b809c5608ac625ec6f39451029e1267ed7fafdec1cd4d259573cb3ab74c16"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 570,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/postproof-helper-result.json",
+      "origin_sha256": "a0b68ed517f452c92fbfb341bcd721da64c4219eb50a9ab1b07762828f47ae8f",
+      "path": "repeat/postproof-helper-result.json",
+      "storage_bytes": 570,
+      "storage_sha256": "a0b68ed517f452c92fbfb341bcd721da64c4219eb50a9ab1b07762828f47ae8f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 205,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/postproof-helper.log",
+      "origin_sha256": "988202a5e28177fe135b5bb1d756762cfabc9e764662c91f681f457520bc673b",
+      "path": "repeat/postproof-helper.log",
+      "storage_bytes": 205,
+      "storage_sha256": "988202a5e28177fe135b5bb1d756762cfabc9e764662c91f681f457520bc673b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 56189,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/postproof-idle.json",
+      "origin_sha256": "c877f3f262b1fa4acf509c088bf452d7a40adafd3c22b65009f3fab27cb722d8",
+      "path": "repeat/postproof-idle.json",
+      "storage_bytes": 56189,
+      "storage_sha256": "c877f3f262b1fa4acf509c088bf452d7a40adafd3c22b65009f3fab27cb722d8"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 260,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/postproof-started.json",
+      "origin_sha256": "d07046378577db3e79b45fd0c95a23cfd37ec3384ec04d8683d362790b18223b",
+      "path": "repeat/postproof-started.json",
+      "storage_bytes": 260,
+      "storage_sha256": "d07046378577db3e79b45fd0c95a23cfd37ec3384ec04d8683d362790b18223b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 236,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-complete.json",
+      "origin_sha256": "76765228dbc3f86b26a577b1ae3dee3090fce73cf6c4bbf9155e5b79ffe3ea3e",
+      "path": "repeat/preflight-complete.json",
+      "storage_bytes": 236,
+      "storage_sha256": "76765228dbc3f86b26a577b1ae3dee3090fce73cf6c4bbf9155e5b79ffe3ea3e"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 289,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-df-result.json",
+      "origin_sha256": "71a678269b61f970b84c51dd60496f2046ab38115af437eeba67d2cdb16ba398",
+      "path": "repeat/preflight-df-result.json",
+      "storage_bytes": 289,
+      "storage_sha256": "71a678269b61f970b84c51dd60496f2046ab38115af437eeba67d2cdb16ba398"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 263,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-df.log",
+      "origin_sha256": "7424ba0048592c75a51c0f2dc94f526495cfe241ca50fd85d935e682e7ab9442",
+      "path": "repeat/preflight-df.log",
+      "storage_bytes": 263,
+      "storage_sha256": "7424ba0048592c75a51c0f2dc94f526495cfe241ca50fd85d935e682e7ab9442"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 240,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-grub-environment-result.json",
+      "origin_sha256": "bf65fdb53d837ab1be6663aa918a7f66f2a1b4a38c35c641e57b01f86400e545",
+      "path": "repeat/preflight-grub-environment-result.json",
+      "storage_bytes": 240,
+      "storage_sha256": "bf65fdb53d837ab1be6663aa918a7f66f2a1b4a38c35c641e57b01f86400e545"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-grub-environment.log",
+      "origin_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0",
+      "path": "repeat/preflight-grub-environment.log",
+      "storage_bytes": 12,
+      "storage_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 235,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-grub-syntax-result.json",
+      "origin_sha256": "4b97e463844a41b2f13f37e8ca02e9f794e31e59d494f215773dc79c8b1cbe43",
+      "path": "repeat/preflight-grub-syntax-result.json",
+      "storage_bytes": 235,
+      "storage_sha256": "4b97e463844a41b2f13f37e8ca02e9f794e31e59d494f215773dc79c8b1cbe43"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-grub-syntax.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "repeat/preflight-grub-syntax.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 441,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-grub.json",
+      "origin_sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a",
+      "path": "repeat/preflight-grub.json",
+      "storage_bytes": 441,
+      "storage_sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 53783,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-idle.json",
+      "origin_sha256": "d77e6b28b83bd012d95be4343fce04c61c35eedcc3a6e1c3f3fdc4145c9a98d0",
+      "path": "repeat/preflight-idle.json",
+      "storage_bytes": 53783,
+      "storage_sha256": "d77e6b28b83bd012d95be4343fce04c61c35eedcc3a6e1c3f3fdc4145c9a98d0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 260,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/preflight-started.json",
+      "origin_sha256": "b4ef472d90e7ba426c1f8073493a2c708fc391c431143864a75686dd16055531",
+      "path": "repeat/preflight-started.json",
+      "storage_bytes": 260,
+      "storage_sha256": "b4ef472d90e7ba426c1f8073493a2c708fc391c431143864a75686dd16055531"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 163,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/prior-recovery-observer.json",
+      "origin_sha256": "172eedfe8c6d4ac131f1e6a63467b90c3851fdd94b3d50a67e101bd94e937262",
+      "path": "repeat/prior-recovery-observer.json",
+      "storage_bytes": 163,
+      "storage_sha256": "172eedfe8c6d4ac131f1e6a63467b90c3851fdd94b3d50a67e101bd94e937262"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1651,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/prior-recovery-result.json",
+      "origin_sha256": "d5b188ce454de29a730dd8871d1926c121bca8d79c1be04a7fa099726b116524",
+      "path": "repeat/prior-recovery-result.json",
+      "storage_bytes": 1651,
+      "storage_sha256": "d5b188ce454de29a730dd8871d1926c121bca8d79c1be04a7fa099726b116524"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 364,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/reboot-command.json",
+      "origin_sha256": "faba747657cea12ba1546380d1c66b8d7422c23ee5b58819817f2e4263e2845d",
+      "path": "repeat/reboot-command.json",
+      "storage_bytes": 364,
+      "storage_sha256": "faba747657cea12ba1546380d1c66b8d7422c23ee5b58819817f2e4263e2845d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 173,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/reboot-result.json",
+      "origin_sha256": "32edcfbb737cc8ada1ab0444ff49860fb63bd42426703a1b244eee75001aff7d",
+      "path": "repeat/reboot-result.json",
+      "storage_bytes": 173,
+      "storage_sha256": "32edcfbb737cc8ada1ab0444ff49860fb63bd42426703a1b244eee75001aff7d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1219,
+      "origin_kind": "guest saved file",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/repeat-kdrebuild4-db7-20261111-01/repeat-postboot-binding.json",
+      "origin_sha256": "e931d611e2efd30bcd9a227869c2e1d10c1fa1abe05e4731dcf7873ae1832269",
+      "path": "repeat/repeat-postboot-binding.json",
+      "storage_bytes": 1219,
+      "storage_sha256": "e931d611e2efd30bcd9a227869c2e1d10c1fa1abe05e4731dcf7873ae1832269"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 6506,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-db7-ops-evidence-plan.md",
+      "origin_sha256": "7a22e38ca0afbb55cfee3055da5d3d011f4273c63539dc1bb98a55db5485ec32",
+      "path": "controller/collection-plan.md",
+      "storage_bytes": 6506,
+      "storage_sha256": "7a22e38ca0afbb55cfee3055da5d3d011f4273c63539dc1bb98a55db5485ec32"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12939,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-collect-db7-ops.py",
+      "origin_sha256": "1624726ee3f576cc5705502ab920a8c7b3280285c84b2a8caec6d1db9507431d",
+      "path": "controller/collector.py.txt",
+      "storage_bytes": 12939,
+      "storage_sha256": "1624726ee3f576cc5705502ab920a8c7b3280285c84b2a8caec6d1db9507431d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1550,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-postproof-observer-note.json",
+      "origin_sha256": "0d8b9d22c10c17bf2532d1152a67997299aa613ed17c71bb5ed1b3adeb542064",
+      "path": "controller/historical-install-summary-typeerror-note.json",
+      "storage_bytes": 1550,
+      "storage_sha256": "0d8b9d22c10c17bf2532d1152a67997299aa613ed17c71bb5ed1b3adeb542064"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 994,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-hmp-read.py",
+      "origin_sha256": "05094cecbf35a0566567b9ebe35066b3a5825226aaa0225b7647257919e908b0",
+      "path": "controller/hmp-reader.py.txt",
+      "storage_bytes": 994,
+      "storage_sha256": "05094cecbf35a0566567b9ebe35066b3a5825226aaa0225b7647257919e908b0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 4572,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-hmp-20261111-01.json",
+      "origin_sha256": "d860e6cbd5657582b7437a13777c2f3951fc9226667b7662afbb2c7634ecea7a",
+      "path": "controller/hmp.json",
+      "storage_bytes": 4572,
+      "storage_sha256": "d860e6cbd5657582b7437a13777c2f3951fc9226667b7662afbb2c7634ecea7a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1916,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-persist-result.json",
+      "origin_sha256": "f3d234a944d5f3a3f5279b879d7e87536c59ed323de2f208d7e92202a61b70b9",
+      "path": "controller/persist-result.json",
+      "storage_bytes": 1916,
+      "storage_sha256": "f3d234a944d5f3a3f5279b879d7e87536c59ed323de2f208d7e92202a61b70b9"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 4542,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-db7-ops-evidence-pins.json",
+      "origin_sha256": "c7bdb29f6b82f3a06e68205eadc148465073390966112681d55bdf9b322cc6f7",
+      "path": "controller/prepared-pins.json",
+      "storage_bytes": 4542,
+      "storage_sha256": "c7bdb29f6b82f3a06e68205eadc148465073390966112681d55bdf9b322cc6f7"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 385,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-reboot-dispatch.json",
+      "origin_sha256": "fbf940f1daf174caa6f252fb1e3e9ca987ddca68a8c9d5efe47f99d2fdcf36bf",
+      "path": "controller/reboot-dispatch.json",
+      "storage_bytes": 385,
+      "storage_sha256": "fbf940f1daf174caa6f252fb1e3e9ca987ddca68a8c9d5efe47f99d2fdcf36bf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2214,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kdrebuild4-repeat-db7-reboot.py",
+      "origin_sha256": "0956e05c760d80569b5dd55e37fb28b60bf8cfe98e825d3b8b596bfc5677177f",
+      "path": "controller/reboot-helper.py.txt",
+      "storage_bytes": 2214,
+      "storage_sha256": "0956e05c760d80569b5dd55e37fb28b60bf8cfe98e825d3b8b596bfc5677177f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 639,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-reconnect-attempts.jsonl",
+      "origin_sha256": "cc1637cc9950242de1cd5dc5323c906b8081077261e0e6b7a9edac11a565e2aa",
+      "path": "controller/reconnect-attempts.jsonl",
+      "storage_bytes": 639,
+      "storage_sha256": "cc1637cc9950242de1cd5dc5323c906b8081077261e0e6b7a9edac11a565e2aa"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1694,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-reconnect.py",
+      "origin_sha256": "cfaf04fee6cbf2a4fec57570a9400c4639d8c4a74c9fe1d7301781311ae0671b",
+      "path": "controller/reconnect-helper.py.txt",
+      "storage_bytes": 1694,
+      "storage_sha256": "cfaf04fee6cbf2a4fec57570a9400c4639d8c4a74c9fe1d7301781311ae0671b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 954,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-reconnect-20261111-01.json",
+      "origin_sha256": "698e06e60843b3173517e82bd5fa7ba34f5850bbd2bdc0b4ad677b8ab2760e17",
+      "path": "controller/reconnect.json",
+      "storage_bytes": 954,
+      "storage_sha256": "698e06e60843b3173517e82bd5fa7ba34f5850bbd2bdc0b4ad677b8ab2760e17"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 18292,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kdrebuild4-repeat-db7.py",
+      "origin_sha256": "2cf37e857a00fd5d944058d8df9509e2bf66af41210db498518918dece80cec0",
+      "path": "controller/repeat-helper.py.txt",
+      "storage_bytes": 18292,
+      "storage_sha256": "2cf37e857a00fd5d944058d8df9509e2bf66af41210db498518918dece80cec0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3697,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kdrebuild4-repeat-db7-plan.md",
+      "origin_sha256": "922ebbfb98103c42a42ac9da0b9335557d95243576e98cc91fb467c3e758a9d1",
+      "path": "controller/repeat-plan.md",
+      "storage_bytes": 3697,
+      "storage_sha256": "922ebbfb98103c42a42ac9da0b9335557d95243576e98cc91fb467c3e758a9d1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 735,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kernel4-db7-final-summary-note.json",
+      "origin_sha256": "b07cd263f58e96226d0401071bc5a1eff603554626b3cb70b357a66cf70cc430",
+      "path": "controller/repeat-summary-assertion-note.json",
+      "storage_bytes": 735,
+      "storage_sha256": "b07cd263f58e96226d0401071bc5a1eff603554626b3cb70b357a66cf70cc430"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 659,
+      "origin_kind": "source-host file",
+      "origin_path": "/tmp/kdlock-kdrebuild4-repeat-db7-review.json",
+      "origin_sha256": "07ca30d9ddbd129f91f5e606fe1dc3cb579958623cd46a27e157541b7a271aeb",
+      "path": "controller/review.json",
+      "storage_bytes": 659,
+      "storage_sha256": "07ca30d9ddbd129f91f5e606fe1dc3cb579958623cd46a27e157541b7a271aeb"
+    }
+  ],
+  "guest_bytes": 13754673,
+  "guest_files": 70
+}

@@ -1,0 +1,19 @@
+{
+  "returncode": 0,
+  "stdout": "{\"path\": \"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7.py\", \"sha256\": \"42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce\"}\n{\"path\": \"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7-recovery.json\", \"sha256\": \"e5d42a96bc98de2ecb52052d396a12f5fb27d39032442663e553a15f3c056f61\"}\n{\"path\": \"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7-pins.json\", \"sha256\": \"24c70b2c547203fc32d5ad358b97707121409b1587752c2d56e72d9f1452ccb6\"}\n{\n  \"unix\": 1794369149.5878208,\n  \"available_bytes\": {\n    \"/\": 1212256256,\n    \"/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f\": 14260482048,\n    \"/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts\": 8577712128\n  },\n  \"host_free_bytes\": 8823042048,\n  \"hmp_sha256\": \"e5d42a96bc98de2ecb52052d396a12f5fb27d39032442663e553a15f3c056f61\",\n  \"helper_sha256\": \"42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce\",\n  \"vm_syntax\": \"PASS\"\n}\n",
+  "helper_sha256": "42fde322327293f3cfd9a2016ac8d07fb6d709a0775438ce8d1c61a1684a35ce",
+  "argv": [
+    "python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/return-normal-db7.py",
+    "reboot",
+    "--spin-controller",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/live-spin-controller/result.json",
+    "--spin-controller-sha256",
+    "73cf1ba076ef647c4b892f7d87c278801e57266ba96f64512556cdbbd694187a",
+    "--mutex-controller",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-db7d7d6e-01a1bc4f/live-mutex-controller/result.json",
+    "--mutex-controller-sha256",
+    "ddb890b46f205656322749ac3574984258c9e9e076dd4f821404b7157c68f185"
+  ],
+  "unix": 1794369151.061263
+}

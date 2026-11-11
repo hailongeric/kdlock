@@ -1,0 +1,11 @@
+{
+  "acknowledged": 4,
+  "events": 5190,
+  "plain_positive": 1,
+  "profile": "spin",
+  "proof_sha256": "55e4775c8245096fa9dd3febaea8b48ace9e188d31f7eb0fbdfb34e41a7959d3",
+  "recursive_cases": 2,
+  "settled": 1,
+  "status": "SAVED_RUNTIME_RELATIONS_VERIFIED",
+  "wire_attempts": 32
+}

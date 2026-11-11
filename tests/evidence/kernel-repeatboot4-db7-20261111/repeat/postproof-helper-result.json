@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-postboot.py",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-db7-20261111-01",
+    "--timeout",
+    "30",
+    "--max-command-bytes",
+    "33554432",
+    "--max-notes-bytes",
+    "65536"
+  ],
+  "elapsed_seconds": 4.480282291999998,
+  "returncode": 0,
+  "sha256": "988202a5e28177fe135b5bb1d756762cfabc9e764662c91f681f457520bc673b",
+  "timed_out": false
+}

@@ -1,0 +1,8 @@
+{
+  "module_load_performed": false,
+  "phase": "postproof",
+  "reboot_performed": false,
+  "review_sha256": "07ca30d9ddbd129f91f5e606fe1dc3cb579958623cd46a27e157541b7a271aeb",
+  "status": "COMPLETE",
+  "unix_time": 1794368108.395325
+}

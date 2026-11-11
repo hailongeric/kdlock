@@ -1,0 +1,29 @@
+{
+  "status": "NEW_KERNEL4_OBSERVED",
+  "elapsed_seconds": 0.674790620803833,
+  "old_boot_id": "84e4ba94-b616-4b65-9efe-820921f36c16",
+  "attempts": [
+    {
+      "unix": 1794368090.3917468,
+      "argv": [
+        "ssh",
+        "-p",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "root@10.176.26.71",
+        "python3 -c 'import json,os,pathlib;print(json.dumps(dict(boot_id=pathlib.Path(\"/proc/sys/kernel/random/boot_id\").read_text().strip(),release=os.uname().release,taint=pathlib.Path(\"/proc/sys/kernel/tainted\").read_text().strip())))'"
+      ],
+      "returncode": 0,
+      "stdout": "{\"boot_id\": \"1b3b298f-051b-42ea-a53b-429c16f4e114\", \"release\": \"7.0.0-38-kdrebuild4\", \"taint\": \"0\"}\n",
+      "stderr": "",
+      "identity": {
+        "boot_id": "1b3b298f-051b-42ea-a53b-429c16f4e114",
+        "release": "7.0.0-38-kdrebuild4",
+        "taint": "0"
+      }
+    }
+  ]
+}
