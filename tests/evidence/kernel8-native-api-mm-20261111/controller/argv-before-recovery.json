@@ -1,0 +1,13 @@
+[
+  "/usr/bin/python3",
+  "-B",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/native-api-input-01/controller.py",
+  "--config",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/native-api-input-01/config.json",
+  "--config-sha256",
+  "REQUIRED_ACTUAL_FINAL_CONFIG_SHA256",
+  "--output",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/native-api-mm-live-01",
+  "--seconds",
+  "300"
+]

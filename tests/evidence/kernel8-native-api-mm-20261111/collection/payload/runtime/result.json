@@ -1,0 +1,364 @@
+{
+  "between_fixtures": {
+    "activity": [],
+    "identity": {
+      "boot": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+      "release": "7.0.0-38-kdrebuild8",
+      "taint": 4096
+    },
+    "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n"
+  },
+  "client_returncode": 0,
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/dmesg"
+      ],
+      "elapsed_seconds": 0.009786605834960938,
+      "label": "dmesg-before",
+      "pid": 2960,
+      "proc_start": "2960 (dmesg) R 2959 2960 2960 0 -1 4194304 6 0 0 0 0 0 0 0 20 0 1 0 89519 503808 0 18446744073709551615 111033080385536 111033080419233 140721754927168 0 0 0 0 0 0 0 0 0 17 47 0 0 0 0 0 111033080438640 111033080445280 111034086658048 140721754930437 140721754930452 140721754930452 140721754931177 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.351071,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "91c1c550a476852ce489612774f64c98635cb9725ef7659172debffae19ac404"
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "name",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/signed/kd_rwsem_api_fixture.ko"
+      ],
+      "elapsed_seconds": 0.009243011474609375,
+      "label": "compatibility-modinfo",
+      "pid": 2961,
+      "proc_start": "2961 (modinfo) R 2959 2961 2961 0 -1 4194304 9 0 0 0 0 0 0 0 20 0 1 0 89521 602112 0 18446744073709551615 99637397053440 99637397164797 140735329991792 0 0 0 0 0 0 0 0 0 17 47 0 0 0 0 0 99637397203376 99637397209116 99637599174656 140735330000018 140735330000145 140735330000145 140735330000870 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.3661644,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "5ce1d52c64c6c6461a75309176076d8d9a1c98ae9da30dea1b374f8103396855"
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/signed/kd_rwsem_api_fixture.ko"
+      ],
+      "elapsed_seconds": 0.009466409683227539,
+      "label": "compatibility-vermagic",
+      "pid": 2962,
+      "proc_start": "2962 (modinfo) R 2959 2962 2962 0 -1 4194304 3 0 0 0 0 0 0 0 20 0 1 0 89522 593920 0 18446744073709551615 0 0 140731846286478 0 0 0 0 0 0 0 0 0 17 48 0 0 0 0 0 101069824973232 101069824978972 101070343958528 140731846286478 140731846286609 140731846286609 140731846287334 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.3814855,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "9cac3141708dfe202989cd7a9dad2e148ddf0f324432d8a2c0ac90fcb14184fc"
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "name",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/signed/kd_mmap_api_provider.ko"
+      ],
+      "elapsed_seconds": 0.010363578796386719,
+      "label": "provider-modinfo",
+      "pid": 2963,
+      "proc_start": "2963 (modinfo) R 2959 2963 2963 0 -1 4194304 4 0 0 0 0 0 0 0 20 0 1 0 89524 602112 0 18446744073709551615 98610620952576 98610621063933 140734773279936 0 0 0 0 0 0 0 0 0 17 47 0 0 0 0 0 98610621102512 98610621108252 98610806976512 140734773288082 140734773288209 140734773288209 140734773288934 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.3961759,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "73f2ebb855e89199caeda137030932d139b9bbbb889c117ec23307e010d0aecb"
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/signed/kd_mmap_api_provider.ko"
+      ],
+      "elapsed_seconds": 0.009756088256835938,
+      "label": "provider-vermagic",
+      "pid": 2964,
+      "proc_start": "2964 (modinfo) R 2959 2964 2964 0 -1 4194304 6 0 0 0 0 0 0 0 20 0 1 0 89525 602112 0 18446744073709551615 111228429975552 111228430086909 140734573898064 0 0 0 0 0 0 0 0 0 17 49 0 0 0 0 0 111228430125488 111228430131228 111229454696448 140734573898894 140734573899025 140734573899025 140734573899750 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.4117482,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "9cac3141708dfe202989cd7a9dad2e148ddf0f324432d8a2c0ac90fcb14184fc"
+    },
+    {
+      "argv": [
+        "/usr/sbin/insmod",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/signed/kd_rwsem_api_fixture.ko",
+        "native_capacity=3",
+        "wait_timeout_ms=2000"
+      ],
+      "elapsed_seconds": 0.11058235168457031,
+      "label": "compat-insmod",
+      "pid": 2965,
+      "proc_start": "2965 (insmod) R 2959 2965 2965 0 -1 4194304 3 0 0 0 0 0 0 0 20 0 1 0 89527 593920 0 18446744073709551615 0 0 140726709947509 0 0 0 0 0 0 0 0 0 17 47 0 0 0 0 0 0 0 0 140726709947509 140726709947666 140726709947666 140726709947666 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.4268103,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-B",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/native-api-mm-live-01/compat-driver.py",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/native-api-mm-live-01"
+      ],
+      "elapsed_seconds": 0.1097097396850586,
+      "label": "compat-run",
+      "pid": 2968,
+      "proc_start": "2968 (python3) R 2959 2968 2968 0 -1 4194304 3 0 0 0 0 0 0 0 20 0 1 0 89539 8372224 0 18446744073709551615 0 0 140722618596423 0 0 0 0 0 0 0 0 0 17 48 0 0 0 0 0 0 0 0 140722618596423 140722618596626 140722618596626 140722618596626 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.5458107,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/usr/sbin/rmmod",
+        "kd_rwsem_api_fixture"
+      ],
+      "elapsed_seconds": 0.11039471626281738,
+      "label": "compat-rmmod",
+      "pid": 2988,
+      "proc_start": "2988 (rmmod) R 2959 2988 2988 0 -1 4194304 4 0 0 0 0 0 0 0 20 0 1 0 89550 602112 0 18446744073709551615 105374644604928 105374644716285 140723103328848 0 0 0 0 0 0 0 0 0 17 47 0 0 0 0 0 105374644754864 105374644760604 105375523192832 140723103333614 140723103333651 140723103333651 140723103334376 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.6622927,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/usr/sbin/insmod",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/signed/kd_mmap_api_provider.ko"
+      ],
+      "elapsed_seconds": 0.11024713516235352,
+      "label": "provider-insmod",
+      "pid": 2990,
+      "proc_start": "2990 (insmod) R 2959 2990 2990 0 -1 4194304 8 0 0 0 0 0 0 0 20 0 1 0 89568 602112 0 18446744073709551615 100727517483008 100727517594365 140721139161472 0 0 0 0 0 0 0 0 0 17 48 0 0 0 0 0 100727517632944 100727517638684 100728454713344 140721139162268 140721139162386 140721139162386 140721139163111 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.8368278,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/mmap-userspace",
+        "--threads",
+        "4",
+        "--iterations",
+        "64",
+        "--deadline-ms",
+        "60000",
+        "--control-device",
+        "/dev/kd_mmap_api",
+        "--native-capacity",
+        "64",
+        "--quiescent-mm"
+      ],
+      "elapsed_seconds": 0.11020517349243164,
+      "label": "mmap-client",
+      "pid": 2991,
+      "proc_start": "2991 (mmap-userspace) R 2959 2991 2991 0 -1 4194304 4 0 0 0 0 0 0 0 20 0 1 0 89579 471040 0 18446744073709551615 108259128397824 108259128416545 140720983199568 0 0 0 0 0 0 0 0 0 17 50 0 0 0 0 0 108259128429712 108259128430608 108259535310848 140720983202819 140720983203022 140720983203022 140720983203747 0\n",
+      "returncode": 0,
+      "started_unix": 1794429136.9538164,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "7c34d123d52a0e2a4fa50eaff9439f549a60f681428ff41bbde111765faa5618"
+    },
+    {
+      "argv": [
+        "/usr/sbin/rmmod",
+        "kd_mmap_api_provider"
+      ],
+      "elapsed_seconds": 0.10992002487182617,
+      "label": "provider-rmmod",
+      "pid": 2996,
+      "proc_start": "2996 (rmmod) R 2959 2996 2996 0 -1 4194304 4 0 0 0 0 0 0 0 20 0 1 0 89592 602112 0 18446744073709551615 107653588447232 107653588558589 140730288283376 0 0 0 0 0 0 0 0 0 17 47 0 0 0 0 0 107653588597168 107653588602908 107654526775296 140730288286958 140730288286995 140730288286995 140730288287720 0\n",
+      "returncode": 0,
+      "started_unix": 1794429137.0752933,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/usr/bin/dmesg"
+      ],
+      "elapsed_seconds": 0.010574579238891602,
+      "label": "dmesg-after",
+      "pid": 2997,
+      "proc_start": "2997 (dmesg) R 2959 2997 2997 0 -1 4194304 4 0 0 0 0 0 0 0 20 0 1 0 89672 503808 0 18446744073709551615 94782116507648 94782116541345 140723683325568 0 0 0 0 0 0 0 0 0 17 47 0 0 0 0 0 94782116560752 94782116567392 94782901047296 140723683331333 140723683331348 140723683331348 140723683332073 0\n",
+      "returncode": 0,
+      "started_unix": 1794429137.8785126,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "0e3706afd0b8455cfe90eaaef433d66d46a293f58ddd2a13b3aa79978fda41b9"
+    }
+  ],
+  "compat_driver_returncode": 0,
+  "compatibility_pass": true,
+  "config_sha256": "02e4c180acb900fd7497937448defbf4bacbd876fd3bf3725dc8f738d61621d8",
+  "configuration": {
+    "binaries": {
+      "client": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/mmap-userspace",
+        "sha256": "bae90760f57f3930e1ff48443140eb096ea316c1fed00ae1840127f6985a4cd2"
+      },
+      "compatibility": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/signed/kd_rwsem_api_fixture.ko",
+        "sha256": "b135769208ad7b9eb547909d8aa341a6ab5ea6ad5234b5c67a0e108754a37962"
+      },
+      "provider": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/signed/kd_mmap_api_provider.ko",
+        "sha256": "ed4230e3524f8749aa1e11aebaf971b0f1fb7b716b994713f67895d50e831849"
+      }
+    },
+    "boot_id": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+    "build_id": "a33dd4d11d0f0c6649107507e685b6e86e716c1a",
+    "core_git_head": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+    "fixture_git_head": "140aecc4f83a6b6ae6f20245234e8a63504f9210",
+    "format": "kdlock.native-api-live.v1",
+    "gs_proof": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/gs-proof.json",
+      "sha256": "7b3480c16ac39def469c84d1a9cc349bcb15a591b655e752eb221c93e2b5a803"
+    },
+    "host_floor": 4294967296,
+    "kernel_files": {
+      ".config": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/.config",
+        "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+      },
+      "Module.symvers": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/Module.symvers",
+        "sha256": "ae12c954017277f2c9d87205f916167d8461955d957d3d1c99a30cd75ba2c43a"
+      },
+      "System.map": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/System.map",
+        "sha256": "5f29d44f58e215bf1b056cfb60c4bcc31c43aadcc406d6fba633587dcafefc9b"
+      },
+      "bzImage": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/arch/x86/boot/bzImage",
+        "sha256": "6c6e7a1fe9deda428da52bbe7cd50338744c9e0e187bf2e970c12124d57d797d"
+      },
+      "kernel.release": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/include/config/kernel.release",
+        "sha256": "ca9399ae5c95a79df0dc77678fe0ddae158044bd2652a13f2db916a379ada3a6"
+      },
+      "utsrelease.h": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/include/generated/utsrelease.h",
+        "sha256": "e758187fc20bdbe079468c93ef080886113918c19e4958ed22e4a92d6729a696"
+      },
+      "vmlinux": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/vmlinux",
+        "sha256": "4441e45c27f9300a4cd19739c917458308581472604c3b75d8ffba9fec493be1"
+      }
+    },
+    "object_contract": "all_selected_users_ordinary_irq_enabled_task_context_no_external_mm_observers",
+    "output_floor": 4294967296,
+    "postboot_result": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01/result.json",
+      "sha256": "878c80315ed3f5ee9fd96388987a64cb7f0776ea01bc4eae044eca63ff2bb919"
+    },
+    "postboot_return": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/native-api-input-01/postboot-return.json",
+      "sha256": "971d9bf508fc2aeafc015576a56922c5569f6070c2efa2f35f5898e1f0db312f"
+    },
+    "provenance": {
+      "client_compile": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/result.json",
+        "sha256": "2820a2952f5da8815e130d6d0fb62a5a7f912b48cf815ad4b533fd6b62e93432"
+      },
+      "client_prior_normal_baseline": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-continue-01/result.json",
+        "sha256": "4e92343c84336fba6ad01e70074999a63e60dff1c4ece157f8029e2291af64d0"
+      },
+      "initial_module_test_failure": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/receipts/result.json",
+        "sha256": "223392b879bd1aaad6ffc3e40f322706be8bd94039abd0a50c16afe238ffa37c"
+      },
+      "kernel_build": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/full-01/result.json",
+        "sha256": "024f19157ed85228fc9dccde8009936b25def135b3f0cd1c77c6204c68e57ba5"
+      },
+      "module_build_and_checks": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/basic-continue-01/result.json",
+        "sha256": "cb3871c710e7085c3c9ae4d2cc9e1dcd41b3e5c8d4c3ebb3fb8fbf309b6a3693"
+      },
+      "source_manifest": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/transport/source-sha256.json",
+        "sha256": "412247ad7422c1c1ee36c15ff4bff6e41a1cda1a9e5c6f88ebbe1754f6b2a4d1"
+      }
+    },
+    "recovery": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/native-api-input-01/recovery.json",
+      "sha256": "5b07ec9a9be766171a7792d1518e3a7ad5ab8203295a5766bcecdb4efd3a34f6"
+    },
+    "root_floor": 1073741824,
+    "source_files": {
+      "abi": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/input/tests/kernel/mmap_api/abi.h",
+        "sha256": "79eb6ef99d48fd07053061f66303b8afe25f8602ccc6af4370963cb3fba36ea4"
+      },
+      "client": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/input/tests/kernel/mmap_api/userspace.c",
+        "sha256": "03ced9a455fc6a7bd61a45af59c430bb6cc5c5e2d39a944f8507677edcea7f56"
+      },
+      "compatibility": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/input/tests/kernel/rwsem_api/payload/rwsem_api_fixture.c",
+        "sha256": "42648850979577360d88a2fd4066f48ea31e0ac46f29e5666de6ca0b6ac0f50a"
+      },
+      "provider": {
+        "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/input/tests/kernel/mmap_api/payload/provider.c",
+        "sha256": "ef02241e92a74f7f306ae8fcf3bf60fac4a2e52978337960215bcd1cfe92c858"
+      }
+    },
+    "tools": {
+      "dmesg": {
+        "path": "/usr/bin/dmesg",
+        "sha256": "889b3947799e06c354b611f2759364b92e65e6ad596166e05bf62525f72468ce"
+      },
+      "insmod": {
+        "path": "/usr/sbin/insmod",
+        "sha256": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7"
+      },
+      "modinfo": {
+        "path": "/usr/sbin/modinfo",
+        "sha256": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7"
+      },
+      "rmmod": {
+        "path": "/usr/sbin/rmmod",
+        "sha256": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7"
+      }
+    }
+  },
+  "identity_after": {
+    "activity": [],
+    "identity": {
+      "boot": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+      "release": "7.0.0-38-kdrebuild8",
+      "taint": 4096
+    },
+    "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n"
+  },
+  "identity_before": {
+    "activity": [],
+    "identity": {
+      "boot": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+      "release": "7.0.0-38-kdrebuild8",
+      "taint": 0
+    },
+    "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n"
+  },
+  "mmap_scope": "Original-task real syscalls and selected native-gate observations only.",
+  "recovery": {
+    "captured_unix": 1794429088.398266,
+    "sha256": "5b07ec9a9be766171a7792d1518e3a7ad5ab8203295a5766bcecdb4efd3a34f6"
+  },
+  "running_build_id_after": "a33dd4d11d0f0c6649107507e685b6e86e716c1a",
+  "scope": "Native-local ordinary APIs and actual syscalls. No JIT or performance claim.",
+  "status": "NATIVE_API_AND_MM_COMPLETE"
+}

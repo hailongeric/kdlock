@@ -1,0 +1,31 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "guest_argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/install-finalize-helpers-01/postboot.py",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-api-01",
+    "--timeout",
+    "120",
+    "--max-command-bytes",
+    "33554432",
+    "--max-notes-bytes",
+    "1048576"
+  ],
+  "stdin": "/tmp/kdlock-kernel8-postboot-run-20261111-01/stdin.py",
+  "timeout_seconds": 270
+}
