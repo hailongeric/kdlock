@@ -1,0 +1,17 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-live-03/source-1.bin:     file format binary
+
+
+Disassembly of section .data:
+
+ffffffffc000b010 <.data>:
+ffffffffc000b010:	48 8b 87 90 00 00 00                            	mov    0x90(%rdi),%rax
+ffffffffc000b017:	48 83 c0 01                                     	add    $0x1,%rax
+ffffffffc000b01b:	48 89 87 90 00 00 00                            	mov    %rax,0x90(%rdi)
+ffffffffc000b022:	31 c0                                           	xor    %eax,%eax
+ffffffffc000b024:	31 ff                                           	xor    %edi,%edi
+ffffffffc000b026:	c3                                              	ret
+ffffffffc000b027:	cc                                              	int3
+ffffffffc000b028:	cc                                              	int3
+ffffffffc000b029:	cc                                              	int3
+ffffffffc000b02a:	cc                                              	int3

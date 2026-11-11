@@ -1,0 +1,69 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-live-03/source-2.bin:     file format binary
+
+
+Disassembly of section .data:
+
+ffffffffc000b370 <.data>:
+ffffffffc000b370:	55                                              	push   %rbp
+ffffffffc000b371:	48 89 e5                                        	mov    %rsp,%rbp
+ffffffffc000b374:	41 57                                           	push   %r15
+ffffffffc000b376:	41 56                                           	push   %r14
+ffffffffc000b378:	41 55                                           	push   %r13
+ffffffffc000b37a:	41 54                                           	push   %r12
+ffffffffc000b37c:	53                                              	push   %rbx
+ffffffffc000b37d:	48 83 ec 10                                     	sub    $0x10,%rsp
+ffffffffc000b381:	48 89 7d d0                                     	mov    %rdi,-0x30(%rbp)
+ffffffffc000b385:	48 c7 c7 20 61 60 c0                            	mov    $0xffffffffc0606120,%rdi
+ffffffffc000b38c:	48 89 e6                                        	mov    %rsp,%rsi
+ffffffffc000b38f:	48 8d 15 08 00 00 00                            	lea    0x8(%rip),%rdx        # 0xffffffffc000b39e
+ffffffffc000b396:	48 89 e9                                        	mov    %rbp,%rcx
+ffffffffc000b399:	e8 f2 41 52 c1                                  	call   0xffffffff8152f590
+ffffffffc000b39e:	48 8b 5d d0                                     	mov    -0x30(%rbp),%rbx
+ffffffffc000b3a2:	89 45 cc                                        	mov    %eax,-0x34(%rbp)
+ffffffffc000b3a5:	89 43 7c                                        	mov    %eax,0x7c(%rbx)
+ffffffffc000b3a8:	85 c0                                           	test   %eax,%eax
+ffffffffc000b3aa:	75 5b                                           	jne    0xffffffffc000b407
+ffffffffc000b3ac:	65 48 8b 05 64 9c 41 c4                         	mov    %gs:-0x3bbe639c(%rip),%rax        # 0xffffffff84425018
+ffffffffc000b3b4:	48 89 df                                        	mov    %rbx,%rdi
+ffffffffc000b3b7:	48 89 83 b0 00 00 00                            	mov    %rax,0xb0(%rbx)
+ffffffffc000b3be:	48 8b 83 88 00 00 00                            	mov    0x88(%rbx),%rax
+ffffffffc000b3c5:	48 83 c0 01                                     	add    $0x1,%rax
+ffffffffc000b3c9:	48 89 83 88 00 00 00                            	mov    %rax,0x88(%rbx)
+ffffffffc000b3d0:	48 8b 05 91 ee 5f 00                            	mov    0x5fee91(%rip),%rax        # 0xffffffffc060a268
+ffffffffc000b3d7:	e8 44 2c 00 00                                  	call   0xffffffffc000e020
+ffffffffc000b3dc:	0f b6 5b 78                                     	movzbl 0x78(%rbx),%ebx
+ffffffffc000b3e0:	80 fb 01                                        	cmp    $0x1,%bl
+ffffffffc000b3e3:	0f 87 d5 12 00 00                               	ja     0xffffffffc000c6be
+ffffffffc000b3e9:	83 e3 01                                        	and    $0x1,%ebx
+ffffffffc000b3ec:	75 43                                           	jne    0xffffffffc000b431
+ffffffffc000b3ee:	48 c7 c7 20 61 60 c0                            	mov    $0xffffffffc0606120,%rdi
+ffffffffc000b3f5:	48 89 e6                                        	mov    %rsp,%rsi
+ffffffffc000b3f8:	48 8d 15 08 00 00 00                            	lea    0x8(%rip),%rdx        # 0xffffffffc000b407
+ffffffffc000b3ff:	48 89 e9                                        	mov    %rbp,%rcx
+ffffffffc000b402:	e8 c9 41 52 c1                                  	call   0xffffffff8152f5d0
+ffffffffc000b407:	8b 45 cc                                        	mov    -0x34(%rbp),%eax
+ffffffffc000b40a:	48 83 c4 10                                     	add    $0x10,%rsp
+ffffffffc000b40e:	5b                                              	pop    %rbx
+ffffffffc000b40f:	41 5c                                           	pop    %r12
+ffffffffc000b411:	41 5d                                           	pop    %r13
+ffffffffc000b413:	41 5e                                           	pop    %r14
+ffffffffc000b415:	41 5f                                           	pop    %r15
+ffffffffc000b417:	5d                                              	pop    %rbp
+ffffffffc000b418:	31 d2                                           	xor    %edx,%edx
+ffffffffc000b41a:	31 c9                                           	xor    %ecx,%ecx
+ffffffffc000b41c:	31 f6                                           	xor    %esi,%esi
+ffffffffc000b41e:	31 ff                                           	xor    %edi,%edi
+ffffffffc000b420:	45 31 c0                                        	xor    %r8d,%r8d
+ffffffffc000b423:	45 31 c9                                        	xor    %r9d,%r9d
+ffffffffc000b426:	45 31 d2                                        	xor    %r10d,%r10d
+ffffffffc000b429:	45 31 db                                        	xor    %r11d,%r11d
+ffffffffc000b42c:	c3                                              	ret
+ffffffffc000b42d:	cc                                              	int3
+ffffffffc000b42e:	cc                                              	int3
+ffffffffc000b42f:	cc                                              	int3
+ffffffffc000b430:	cc                                              	int3
+ffffffffc000b431:	48 8b 05 28 ee 5f 00                            	mov    0x5fee28(%rip),%rax        # 0xffffffffc060a260
+ffffffffc000b438:	48 8b 7d d0                                     	mov    -0x30(%rbp),%rdi
+ffffffffc000b43c:	2e 2e 2e ff d0                                  	cs cs cs call *%rax
+ffffffffc000b441:	eb ab                                           	jmp    0xffffffffc000b3ee

@@ -1,0 +1,35 @@
+{
+  "files": {
+    "managed-killable-driver-03/stderr": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-driver-03/stderr",
+      "bytes": 521,
+      "sha256": "7ab0483b3634dfa34245d9a5b78312adf9aaf8f596fabbb38a665a7c270d6543"
+    },
+    "managed-killable-driver-03/stdout": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-driver-03/stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "managed-killable-receipts-03/result.json": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-receipts-03/result.json",
+      "bytes": 113988,
+      "sha256": "fc1375e0653d88fec37b72242da86408151293034028fa7170e099c5bc873c62"
+    },
+    "managed-killable-receipts-03/managed-killable.log": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-receipts-03/managed-killable.log",
+      "bytes": 150,
+      "sha256": "10b63c73bd1b0f2dc611b0b36fa3dbfd42cfb5b7dc97368b9a3a0ba896d21b71"
+    },
+    "managed-killable-live-03/result.json": {
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-live-03/result.json",
+      "bytes": 205276,
+      "sha256": "56dcf7cfa9e75645d0ab56cb61809550639119ee0701db84af05c34da302005a"
+    }
+  },
+  "identity": {
+    "boot": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+    "release": "7.0.0-38-kdrebuild8",
+    "taint": "4096"
+  },
+  "modules": "kd_rwsem_killable_fixture 32768 5 - Live 0xffffffffc000b000 (O)\nnls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n"
+}

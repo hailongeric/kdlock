@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-input-03/controller.py",
+    "--host-checks-sha256",
+    "dbc8ef41af4edf517b02b9420587a9754734739468f201094422f1c2e0c37d9b",
+    "--recovery-sha256",
+    "a35afb7e6b8cc4ed5865a93e0868371fe068b92766ebf97b84c8c530bf9c5fd0"
+  ],
+  "helper_sha256": "67b84e0b6cc5419d1d63d3fd27717cfc0fa24732b8542c8a1d6f0d5d75d0ea61"
+}

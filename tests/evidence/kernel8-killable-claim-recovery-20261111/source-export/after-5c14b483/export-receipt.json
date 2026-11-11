@@ -1,0 +1,32 @@
+{
+  "changed_from_6a4ba5a1": [
+    "tests/kernel/rwsem_killable/README.md",
+    "tests/kernel/rwsem_killable/runner.py"
+  ],
+  "files": 143,
+  "format": "kdlock.regular-only-host-export.v1",
+  "git_status": "",
+  "kernel_core_git_head": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+  "kernel_package_files": 78,
+  "kernel_package_sha256": "c7d1afa19ab56c0fa8bf21f0232bf1c8199751407a44e918a4b8c5c133966da9",
+  "new_members": [],
+  "prior_manifest_sha256": "3974c1ffb59ef6116b317f02fd4a7befb795ac381a31e960f56b5519675df35a",
+  "prior_source_git_head": "6a4ba5a1734dfa5dc0b52e7fd5a6fda3d85b8196",
+  "scope": "Source-only checker correction: exact native-frontier reservations remain separate from ordinary learning. No test, module build, runtime or MM result is claimed.",
+  "source_git_head": "5c14b483ca16b3bba8f3dd40a00f16a6efefc12c",
+  "transfer_bytes": 1612508,
+  "transport": {
+    "source-sha256.json": {
+      "bytes": 19794,
+      "sha256": "6a14d26236343e37ae43a30c6e441783f979299b426c0a7b9fbbca9154f09645"
+    },
+    "source-state.json": {
+      "bytes": 133,
+      "sha256": "95e3a54def7e87c595164b80ea329751f571a95ae64bf3dae821e1eacc4263cb"
+    },
+    "source.tar": {
+      "bytes": 1730560,
+      "sha256": "35e9d05d6a4b88a3d3bffe95ad1f6674388486ff6e06d4be210aece753512989"
+    }
+  }
+}

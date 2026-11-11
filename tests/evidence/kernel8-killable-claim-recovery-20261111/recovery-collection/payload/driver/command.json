@@ -1,0 +1,8 @@
+{
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-final-recovery-input-01/recover.py"
+  ],
+  "helper_sha256": "00dbff6fd3dfe6606332cefe295560b3bd14a09fedb8736d1276c9d8115a3ceb"
+}
