@@ -18,8 +18,9 @@ rwsem downgrade retains the same physical writer through its logical read tail;
 matching `up_read` returns the exact continuation to W, including from a nested
 scope. A generated miss can return the exact native suffix with that writer
 still retained. An ordinary native downgrade creates a real read credit
-continuously. These new paths have source review only; build and behavioral
-validation are pending. The earlier spin/mutex receipts below remain separate.
+continuously. Core `1114b41e` passed all 31 object builds and the full kernel5
+build; all four family fixtures compiled. Behavioral validation is pending.
+The earlier spin/mutex receipts below remain separate.
 
 The [fixed-image recursive fixture](tests/evidence/runtime-recursive-20261110/README.md)
 returned `protected_jit_recursive_mechanism_pass` on kernel3. It records complete

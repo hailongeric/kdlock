@@ -30,7 +30,13 @@ For this redesign, all of the following terminate the current fragment before th
 - an encountered supported lock API variant, including indirect targets after resolution;
 - a supported mode-change operation such as downgrade, handled as an explicit lock operation.
 
-Mode changes remain explicit target lock operations under C10 and native API semantics. A candidate-specific typed proxy downgrade exempted from its release-unit cuts is E only; it does not select the target mode contract or weaken any source lock/unlock boundary. Unsupported API integration and a reached special-instruction frontier are distinct cases.
+C10 selects rwsem downgrade as an explicit MODE_CHANGE boundary. Delegated
+handling preserves the same acquisition and physical writer while changing its
+logical mode to RETAINED_READ. Native handling continuously establishes an actual
+READ credit before writer release. Both retain every source-operation boundary
+and exact CALL/RET phase. Rwlock has no selected downgrade. The previous
+candidate-specific boundary exemption remains historical evidence only.
+Unsupported API integration and a reached special frontier remain distinct.
 
 Lock code receives a typed operation descriptor, handles that source operation exactly once and records its exact phase/result and grant/context effects before choosing a supported route. For selected outer mutex unlocks, handling can record a deferred request and notify/unwind to the retained responsible combiner; it does not mean physical release. Ending generated execution does not imply returning to W immediately. The same physical combiner may continue through lock code into another fragment.
 
@@ -126,7 +132,16 @@ After **any successfully handled source acquisition, unlock or supported mode op
 
 Admission still validates that source execution is legal for the chosen physical task. After the last protected scope ends, an origin-local fragment can be eligible; arbitrary unprotected code does not thereby become eligible on a remote combiner. When coverage, capability, resource or context prevents admission, a correct terminal native suffix is the fallback. That fallback completes the application without demonstrating full JIT completion. No already-entered terminal suffix implicitly regains old JIT-resume rights.
 
-Reader placement is open C10. Under the conservative origin-local initial lane, C_A-local acquisition does not authorize W's read body on C_A; use a proved origin route or pre-effect restriction. A separately selected remote lane would need its own concurrency/mode/API/context and continuation evidence. This document enables neither that lane nor general context equivalence.
+C10 permits the current C_A proxy to acquire a real concurrent read credit and
+continue W through a separately admitted fragment. Ordinary inner B read release
+returns current S_W to its enclosing A proxy. The initial standalone read route
+stays on W. A retained rwsem read tail uses the original writer acquisition and
+ends only at its matching up_read. That operation closes the writer cohort and
+waits for physical ACK before returning the post-up_read continuation to W, propagating terminal ownership through nested
+ancestors while retaining their physical release duties. Exact native handback
+on a miss in the retained tail is permitted with that writer custody intact.
+These new source paths have compiled. Runtime validation is pending, with no
+context-equivalence or general progress result.
 
 ### 2.3 Selected RCU replacement and retained users
 
@@ -463,7 +478,10 @@ transports facts nor performs publication, persistence or kernel ACK.
 | PUSHFQ/POPFQ local simulation | One source word/SP change per instruction, mapped temporary preserved, physical-stack balance and AS01 clearly separate from proof |
 | W -> C_A -> C_B -> C_A/W | Same S_W/packet identity at every hop, refreshed resident state and one authorized sequence holder |
 | Same combiner serves W and V | Separate S_W/S_V; restore explicit current-node/parent-role routing and role without copying or merging origin packets |
-| Any handled acquisition/unlock/mode operation | Generic exact-phase route under remaining context and the selected stable-object contract; deferred acceptance is not physical-release or source-return evidence |
+| Any handled acquisition/unlock/mode operation | Generic exact-phase route under remaining context and selected custody. Every operation remains a pre-effect boundary with one source CALL/RET recipe |
+| Proxy rwsem downgrade then up_read | Same acquisition becomes RETAINED_READ with physical WRITE retained. Read-tail effects occur once. Matching up_read closes the writer cohort, waits for actual physical ACK and transfers its exact suffix to W with ancestor duties retained |
+| Ordinary inner shared B read release | Release the exact current read credit and return current S_W to enclosing A proxy, without forcing terminal W handback |
+| Native rwsem downgrade | Establish actual shared READ credit continuously before writer release, with native hardware CALL/RET and no stale cursor import |
 | Direction flag or compiler capacity stop | Precise capability/resource class and first-unexecuted cursor; no body-specific model or ordinary-learning claim |
 
 ## 7 Completion and exit attribution

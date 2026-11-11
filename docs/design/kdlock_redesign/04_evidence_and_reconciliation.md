@@ -26,7 +26,9 @@ local/proxy/origin-combiner transactions, MCS/request lifetimes and exact
 adapter/bridge details have source and scoped mutex observations. Broader
 correctness and progress proof remains open. C08 now selects
 preallocated miss-fact retention with continued admission as recorded below.
-C10 extensions remain separately scoped. Managed provisioning/lifecycle/provider
+C10 now selects ordinary rwsem/plain-rwlock read/write source and the rwsem
+mode routes below. These new additions have compiled. Runtime validation is pending. Other variants
+remain separately scoped. Managed provisioning/lifecycle/provider
 composition is now source-connected through `c6becf81`; deployment and exact
 target validation remain separate. C05 selects task-owned preallocated persistent requests for normal
 local/proxy selection. The supported workload guarantees availability
@@ -68,11 +70,30 @@ forced-local/defer option is superseded.
 | AS01: general flags/SIMD | Assume correct for this iteration, without extra general capture, virtualization, shadow state or blanket admission gate | An explicit assumption, not a general equivalence result |
 | PUSHFQ/POPFQ local exception | Temporary GPR and exactly one virtual-source push/pop, preserved live values and balanced physical-stack temporaries | Lowering source is present; covered POPFQ effects and runtime proof remain unrun |
 | Selected ordinary-mutex outer unlock | Exact source request and deferred marker, retained responsible outer combiner, notification/unwind and owner handling, normal batch then physical release | Extra waiting accepted; no generic native timing/progress parity. Initial mutex lock-object storage stays valid through actual physical release/final object access; owner/control/notifier last users and callback-code retention remain separate |
-| Target downgrade | C10 chooses mode semantics with native API behavior and generic operation boundaries | A prior retained-writer/read-label mechanism is not a target boundary exception or concurrency proof; the mutex deferral choice creates no downgrade exception |
+| Selected rwsem downgrade | Delegated WRITE becomes RETAINED_READ in the same acquisition with physical WRITE through up_read, then physical writer ACK before exact terminal continuation goes to W. Native downgrade continuously creates true READ credit | Every operation remains a boundary. Exact native miss suffix is permitted with retained custody. No rwlock downgrade. Compilation completed. Runtime validation is pending and historical candidate evidence proves none of these routes |
 
 ## 2 Evidence boundaries
 
 ### 2.1 Rebuild status
+
+C10 permits a current proxy to acquire a concurrent read grant and continue W.
+Ordinary inner B read release returns to its enclosing A proxy. The initial
+standalone reader path stays on W. A selected retained-writer rwsem read tail
+instead ends at matching up_read, waits for physical writer ACK and returns the
+exact post-operation continuation to W, including nested terminal propagation with ancestor physical
+duties retained. A miss during that tail may hand back current state while the
+same writer acquisition remains held. Ordinary native downgrade continuously
+creates an actual shared read credit before writer exclusion ends.
+
+The new source scope is sleepable IRQ-enabled task-context rwsem and plain
+IRQ-enabled task-context rwlock with physical preemption pins, within the same
+family. Repeated true read credits remain distinct and release finds the latest
+matching open family/object credit. Read acquisition under an already-held
+writer object is not a downgrade and is outside the distinct-object writer
+case. Mixed families, rwlock downgrade, signal/trylock, IRQ/BH/NMI and other
+configuration variants remain outside this addition. Compilation has completed
+for the selected source. Runtime validation remains pending.
+[Selected source scope](03_implementation_plan.md#26-rwsem-and-rwlock-extension).
 
 #### Current evidenced checkpoint
 
@@ -85,6 +106,13 @@ frontier. After renewed ordinary recovery, corrected fixture `db7d7d6e` records
 protected spin recursion and a separate mutex regression on fresh kernel4 boot
 `1b3b298f-051b-42ea-a53b-429c16f4e114`. The checkpoint retains each attempt's exact
 inputs, result and later operational return.
+
+The current reader/writer checkpoint at core `1114b41e` completed all 31 core
+units and the full kernel build with return 0, producing 6,901 modules in
+284.6 seconds. Separate rwsem, rwlock, spin and mutex fixture module builds
+returned 0, and six staged AST checks passed. Runtime validation has
+not begun. The build receipts are being collected. These compilation results
+establish no runtime or performance result.
 
 | Stage | Actual result and evidence boundary |
 | --- | --- |
@@ -111,6 +139,7 @@ inputs, result and later operational return.
 | Corrected protected spin recursion | The [spin receipt](../../../tests/evidence/runtime-spin-recursive-20261111/README.md) records controller and runner return 0, 5,190 events and zero overflow. Four source regions total 5,115 bytes. One warm plain proxy lifetime and both recursive scenes complete protected JIT episodes with one canonical S_W, distinct acquisitions and CA → CB → CA current-state return. Both child/root outcomes are DONE3. In mode 2, A's physical callback completes before accepted A unlock and the next B fragment. Four publications ACK 0/1/2/1 exact ordinary facts. A deliberate CALL_STAGED miss resumes native W with one checkpoint effect and matching pin checks, then its one pending fact is archived and SETTLED. All 32 wire exchanges return status 0 before ordinary destroy/unload. |
 | Mutex regression on kernel4 | The [mutex receipt](../../../tests/evidence/runtime-mutex-regression-20261111/README.md) records controller and runner return 0, 4,691 events and zero overflow. Four regions total 5,079 bytes. Two warm plain proxy lifetimes and both recursive scenes complete on one canonical S_W with distinct acquisitions. Mode 1 has child/root DONE3. Mode 2 has child UNWIND_PARENT5 and root DONE3, with responsible-owner deferred physical release and final retirement recorded separately. Four publications ACK 0/2/4/2 exact facts, all 32 wire exchanges return status 0, and pending/SETTLED counts are zero before ordinary destroy/unload. |
 | Independent saved-record audits | The first `a0ad2c4d` audit invocations returned 1 at a nonexistent per-runtime poststate path, after their earlier relation checks. Both failures are retained. Peer-reviewed schema correction `3fea6dab` reads the actual combined poststate and each controller's own idle/identity capture. Both corrected audits return 0 with `SAVED_RUNTIME_RELATIONS_VERIFIED`, retaining all event, physical, wire, fact and archive assertions in the [spin](../../../tests/evidence/runtime-spin-recursive-20261111/README.md) and [mutex](../../../tests/evidence/runtime-mutex-regression-20261111/README.md) receipts. |
+| Current rwsem/rwlock source additions | C10 selects current-proxy shared reads, ordinary inner read return, same-acquisition retained rwsem downgrade with exact native miss suffix and terminal up_read return to W, and native continuous downgrade. The typed state/JIT and reader/writer physical additions have compiled, with runtime validation pending. Existing mutex/spin receipts establish none of these new routes. [State](../../../kernel/state.h), [JIT bridge](../../../kernel/jit.c), [reader/writer core](../../../kernel/rw.c). |
 | Operational return after corrected kernel4 runs | The [normal-return receipt](../../../tests/evidence/return-normal4-db7-20261111/README.md) records one ordinary return with `NORMAL_IDENTITY_VERIFIED`, release `7.0.0-38-kdlock1`, boot `eefccc16-4d98-4834-b551-45767e83e442`, Build ID `b61c7bef25d2068f2a05ca3c31a5714c20c4aa62` and taint 0. |
 
 Kernel4's full-link log retains five handwritten-return diagnostics, one
@@ -532,11 +561,18 @@ last users and final-access-before-reuse separately from application return.
 ### 2.7 Newer proxy-downgrade and flags-stack evidence
 
 A previous experimental typed downgrade retained a physical writer gate while
-labelling its tail logically read-only. That narrow candidate does not select
-C10's target mode operation or prove native reader-admission/concurrency
-semantics. It creates no exception to every-source-lock/unlock fragment
-boundaries. Do not revive that mechanism by treating previous receipts as
-architecture.
+labelling its tail logically read-only and exempting a same-root path from its
+release-unit cuts. Those receipts remain historical E and prove no new main
+reader/mode route or general concurrency equivalence.
+
+The user has now separately selected the C10 delegated-rwsem route that retains
+physical WRITE in the same acquisition through its logical RETAINED_READ tail.
+Every reached downgrade and unlock still ends the fragment first. Exact native
+miss handback retains that acquisition, and matching up_read closes the writer cohort and receives physical ACK before
+terminal origin ownership, with ancestor duties retained. Native downgrade has a separate
+continuous conversion to actual shared READ credit. This current selection is
+not inherited from the older candidate or its boundary exemption. The new source
+paths have compiled and await runtime validation.
 
 Neither focused fixtures, source merges nor whole-root returns establish
 general flags/SIMD equivalence. AS01 remains an assumption. PUSHFQ/POPFQ local
@@ -562,11 +598,11 @@ own affected checks.
 | Semantic frame/grant/completion vocabulary read as mandatory allocations | Target one-core/users with proposed bounded calls/local ordering; fresh layouts are allowed and current reuse is optional; extra machinery needs a concrete lifetime/resource reason |
 | Shared `regs_ref` interpreted as proof of the physical split | Audit actual members/unions/pool stride: one regs backing in the thread core, direct referring users with no reserved duplicate packet; preserve required native saves and per-lock control |
 | MCS scheduling-node ownership interpreted as full request lifetime | Unified normal local/proxy requests retain every exact late user in task-owned persistent storage. Queue detachment/result alone does not permit reuse. Finite caller capacity covers concurrent nested and still-retained records under the supported-workload availability guarantee; no exhaustion fallback or handler is introduced |
-| "Local" interpreted only by physical caller | Root-local is W; nested-local can be C_A executing W. Reader placement is open C10; the origin-local initial proposal must not count C_A execution as W-local |
+| "Local" interpreted only by physical caller | Root-local is W. Nested-local can be C_A executing W, including a selected current-proxy concurrent read. Ordinary inner read return and retained-writer terminal up_read are distinct selected C10 routes |
 | Every-operation wording applied to lock implementation bookkeeping | Only source operations enter boundary/nesting dispatch. Internal queue/metadata locks retain physical obligations but create no W source grants |
 | Correct post-release native suffix treated as complete JIT support | Generic post-operation fragment admission is a design requirement; terminal suffix remains fallback with a distinct completion classification |
 | Observed mmap symptoms used to select a body-specific design | General family/API/mode, S_W, operation phase, source cursor/epoch and ABI contracts; no application-name dispatch or exceptions |
-| Reader and writer routes grouped under remote extensions | Reader concurrency/mode/API semantics are S; roadmap placement is E/P, not fixed user direction. Confirm target placement and prove any selected remote lane before enabling it |
+| Reader and writer routes grouped under remote extensions | Reader concurrency/mode/API semantics remain S. Earlier roadmap placement was E/P. The user now selects current-proxy shared reads and the distinct retained-writer rwsem return route within declared same-family contexts. Compilation completed. Runtime validation is pending |
 
 ### 3.1 Invariant coverage
 
@@ -585,9 +621,9 @@ own affected checks.
 
 The old decision topics remain covered: D01 through D09 and D12 map to C01/C05/C07/C10 and the family/context plan; D02/D10/D11/D21 map to C02/C03; D13/D14/D19/D22 map to C09/C10; D15/D18 map to C08; D16/D17/D20 map to C04/C06 and the mailbox/continuation contract.
 
-R23-R29 retain fixed core cardinality/direct references, generic continuation and exact attribution/lifetime duties. R27 now preserves reader semantics while making placement C10, correcting the earlier roadmap-derived mandate. R15 similarly distinguishes preferred local ownership from an absolute shared-index ban. C12 source rebuild, C03 retained-owner deferral/stable objects, C11 MCS queue and C04 retained KD physical-R11 mapping are selected. Private queue/claim, adapter/bridge and managed source orchestration are connected through c6becf81; full generated integration and lifetime/progress proof remain outstanding. None of these selections reopens the fixed one-core/original-JIT model. The mutex timing policy is the explicit limited exception to earlier immediate-release requirements.
+R23-R29 retain fixed core cardinality/direct references, generic continuation and exact attribution/lifetime duties. R27 preserves reader semantics under the now-selected current-proxy C10 route, superseding the earlier origin-local proposal while preserving its historical classification. R15 similarly distinguishes preferred local ownership from an absolute shared-index ban. C12 source rebuild, C03 retained-owner deferral/stable objects, C11 MCS queue and C04 retained KD physical-R11 mapping are selected. Private queue/claim, adapter/bridge and managed source orchestration are connected through c6becf81; full generated integration and lifetime/progress proof remain outstanding. None of these selections reopens the fixed one-core/original-JIT model. The mutex timing policy is the explicit limited exception to earlier immediate-release requirements.
 
-The acceptance register is T01 through T56. T01-T51 retain their audit identities and chosen-target scope. T52 adds special-path/bypass/shared-join behavior, T53 safe callee returns/caller fallthrough, T54 local temporary-GPR PUSHFQ/POPFQ effects under AS01, and T55 target downgrade versus the candidate-only exception. T56 preserves a deferred, unrun future original-backend mapping comparison without a speed/AS01 claim; it is not an active R11 optimization question or current-baseline implementation gate. These remain unrun acceptance specifications; private graph-helper checks and source/static review of compiler/C protocol code do not satisfy them. T15-T19, T25/T26, T41/T45/T48-T51 now attribute the selected deferred-release phases and lifetime limits rather than requiring early physical availability.
+The acceptance register is T01 through T56. T01-T51 retain their audit identities and chosen-target scope. T52 adds special-path/bypass/shared-join behavior, T53 safe callee returns/caller fallthrough, T54 local temporary-GPR PUSHFQ/POPFQ effects under AS01, and T55 the two selected rwsem downgrade routes with historical candidate evidence kept separate. T56 preserves a deferred, unrun future original-backend mapping comparison without a speed/AS01 claim; it is not an active R11 optimization question or current-baseline implementation gate. These remain unrun acceptance specifications; private graph-helper checks and source/static review of compiler/C protocol code do not satisfy them. T15-T19, T25/T26, T41/T45/T48-T51 now attribute the selected deferred-release phases and lifetime limits rather than requiring early physical availability.
 
 ### 3.2 Authority audit and correction register
 
@@ -598,7 +634,7 @@ N IDs identify this normative-origin audit, distinct from the historical v0.6 A0
 | N01 | Latest explicit target versus inherited architecture | F/S govern the target; source presence alone gives no mandate. Operational editing/testing rules remain in force | Overview authority rule; all five files |
 | N02 | "Existing S_W/storage" implied a complete current core or mandatory reuse | F requires one thread-owned core and direct second-level users; fresh physical layout is allowed, current packet sharing is E | C02, protocol section 3, P1/T48 |
 | N03 | Two-word args, 168 bytes/offsets, reserved registers, object size or entry offsets treated as fixed ABI | C04 explicitly retains KD physical R11 as canonical-packet base, not all old private offsets/layouts. C12 source rebuild is selected; complete target input/materialization/API contracts still need implementation/proof | C04/C12, JIT section 3, T12/T50 |
-| N04 | Roadmap local-reader lane promoted to fixed direction | Placement is P; concurrency/mode/API/context are S. Origin-local is conservative initial P, with no unselected remote support | C10, R27, support matrix/T27/T46 |
+| N04 | Roadmap local-reader lane promoted to fixed direction | The earlier origin-local restriction was P. The user now selects current-proxy concurrent reads and distinct ordinary-read versus retained-writer return paths. Exact context/concurrency/custody duties remain S and new source has compiled, with runtime validation pending | C10, R27, support matrix/T27/T46 |
 | N05 | Current hotness, waiter pinning/parking, owner words, pool sizes and family order | E/P mechanism/rollout choices, not target invariants; prove selected eligibility/context/capacity/progress | C01/C02/C05/C11, P1/P3/P7 |
 | N06 | OSQ plus delegation and separate links required everywhere | Conditional on a selected dual-membership backend. S requires every selection/cancel/progress/retirement duty; a merged/different protocol needs equivalent proof | C11, selected contexts/P1/T49 |
 | N07 | Exact authority equated with an inherited backend or implicit S_W grant transfer | C03 now selects retained responsible physical outer-combiner context for deferred mutex unlocks; the transferable proposal is superseded. Exact source/deferred/physical phases and owner checks remain required | C03, protocol section 5, T15/T51 |
@@ -606,13 +642,13 @@ N IDs identify this normative-origin audit, distinct from the historical v0.6 A0
 | N09 | Lease counters, completion subleases, session-only/image-count retention | E/P storage/reclamation choices. S is valid text/code/return/object lifetime through actual last use and nonstranding drain | C06/C09, JIT sections 2.3/5.3, T29/T30 |
 | N10 | Five CALL edges, compatibility depth, 32 ledger rows and other budgets | Five-edge discovery is the explicitly approved current default P, not immutable F. Other capacities/encoding and any change to the default require a deliberate P choice with bounded completion | C08/C05, JIT sections 1.2/5.2, T24/T44 |
 | N11 | One build/upload owner, fd staging, receipt encoding or daemon organization | E/candidate P solutions; S is candidate isolation, coherent publication, exact cumulative coverage acknowledgement and valid restart/reset | C08/C09, JIT section 5, T31-T37 |
-| N12 | Current signal/reader/downgrade/IRQ/debug exclusions read as permanent bans | E support limits and P initial scope/extension choices; no new route/configuration is claimed. Linux 7.0 x86_64 non-PREEMPT_RT remains fixed F | C01/C10, support matrix/P7 |
+| N12 | Current family/API exclusions read as permanent bans | C10 now selects ordinary rwsem/plain-rwlock read/write and two rwsem downgrade routes as source scope. The new paths have compiled. Runtime validation is pending. Other variants stay separately scoped. Linux 7.0 x86_64 non-PREEMPT_RT remains fixed F | C01/C10, support matrix/P7 |
 | N13 | Terminal native suffix read as only possible architecture | Terminal suffix is conservative P; no replay/exact state is F/S. Resumable service/reentry requires an explicit new contract, never automatic old-cursor revival | C04/C06/C10, JIT section 4.3 |
 | N14 | "Preserve current implementation first" made architectural | Declared API/context/lifetime duties and evidence classification remain; selected mutex deferral is an explicit limited timing policy, not native parity. Independent source rebuild/fresh layouts are selected | C01/C03/C12, P0-P8 |
 | N15 | Queue scheduling lifetime and persistent request/control lifetime conflated | C05 selects task-owned persistent request records for normal local/proxy selection. Finite explicit caller capacity includes concurrently live nested requests and every retained release/control/return/image/current-native user. The supported workload guarantees availability; exhaustion is documentation-only, with no handler/recovery/local fallback or new special assertion. Provisioning/reuse/lifecycle proof remains work; no deployment value or unbounded claim is supplied | C02/C05, selected storage/T48/T49 |
 | N16 | Deferred/unproved general flags/SIMD text could become a new gate | AS01 is the user's explicit assumed-correct iteration scope, not evidence; no separate general subsystem/shadow/gate, with local PUSHFQ/POPFQ simulation the exception | JIT section 3.5, C04, T54 |
 | N17 | Broad admission/frontier wording could reject a whole root | Ordinary trusted-source translation is target intent; recognized special instructions clip only affected paths. Keep safe alternatives/joins/returns and exact reached handback without replay | JIT section 1.3, T43/T52/T53 |
-| N18 | Experimental typed proxy downgrade could weaken target boundaries/native semantics | Retained writer/admission and same-root exception are E only; target mode handling/native equivalence remain separate decisions. Stable point/merge does not prove a consumed branch or general flags correctness | Section 2.7, C10, T55 |
+| N18 | Experimental typed proxy downgrade could weaken target boundaries/native semantics | Older candidate receipts and same-root boundary exemption remain E. The user separately selects retained physical WRITE through logical up_read for delegated rwsem, with every-operation cuts and exact terminal return. Native downgrade creates real READ credit. Compilation completed. Runtime validation is pending | Section 2.7, C10, T55 |
 | N19 | Reserved packet-base versus resident logical R11 treated as an active optimization choice | User selected retention of KD physical-R11 canonical-packet-base mapping. Optimization discussion/T56 are deferred, unrun future work; selection implies no measured gain or general equivalence evidence | JIT section 3.1.1, T56 |
 | N20 | Immediate outer physical release treated as unconditional | Latest user selection supersedes it only for ordinary-mutex out-of-order outer unlock: retain responsible combiner, defer/notify/unwind, handle and continue normal batch/release. Extra waiting is accepted without generic native timing/progress parity | Protocol section 5, P5, T15/T51 |
 | N21 | Retained context or source unlock marker treated as lock-object lifetime | Initial mutex lane now requires stable lock-object storage through actual physical release/final access. Caller establishes validity; owner/control allocations and exact source/return/notifier users can outlive release, and callback code stays through return. Availability-dependent handshakes retain stated progress limits | Protocol section 3.2/5, C03, T16/T17 |
@@ -635,8 +671,9 @@ Source comparisons do not prove the target's retention, stack/resource
 bounds, cache layout, native API behavior or progress. The explicit user-selected
 ordinary-mutex outer-unlock deferral is the limited accepted policy; comparison
 source alone selects no other shortcut, borrowed-stack engine or kernel target.
-The selection creates no spin/rwlock/rwsem/downgrade exception and proves no
-generic native release-timing/progress parity. The user also selected an MCS
+The mutex selection creates no deferral exception for other families and
+proves no generic native release-timing/progress parity. Selected rwsem retained
+downgrade has its independent C10 mode/custody contract above. The user also selected an MCS
 queue, whose optional local/proxy/origin-combiner arbitration and lifetimes must
 be implemented with the original UB JIT/KD GS lowering and one S_W. It does not
 mechanically select TCLock's complete native borrowed-stack protocol.

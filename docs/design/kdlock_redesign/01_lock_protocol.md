@@ -465,7 +465,7 @@ At any reached B acquisition, the JIT fragment has already ended with B pending.
 | Origin continuation | A validated transfer gives W the current unfinished continuation and correctly routed live grants |
 | Native from initial entry | Before delegated effects, decline an invocation whose later forward continuation cannot be supported |
 
-Routes apply only to explicitly selected/admitted lanes. C_A-local selection of W's reader is still remote execution relative to W. Under the proposed origin-local initial policy, use a proved origin route or pre-effect restriction. C10 may select another placement only with concurrency/mode/API/context and continuation proof; this section neither permanently excludes nor enables remote readers.
+Routes apply only to the selected family/context lanes. C10 permits C_A to acquire a real concurrent read credit for W and continue its current source. This is remote execution relative to W. An ordinary inner B read release returns current S_W to A's proxy through the normal child return. The initial standalone read path remains on W. None of these source additions has build or execution evidence yet.
 
 An unavailable B image does not prevent B acquisition. Use a supported local/native continuation, never a wait for compilation. Executing arbitrary source natively on C_A is not a generic recovery engine; native execution on a non-origin task requires its own proven context/continuation contract.
 
@@ -563,9 +563,30 @@ A backend route that separately promises actual release before source advancemen
 
 **S:** every acquisition has unique, actionable grant/release/mode authority and exact context/order effects. Moving S_W does not itself transfer that authority. The selected ordinary-mutex outer-unlock route retains its responsible physical owner and defers release through that owner's normal protocol. The prior explicitly transferable-grant proposal is superseded and unselected. An owner-sensitive backend still obeys its actual restrictions; a logical owner label supplies neither a release nor a lifetime proof.
 
-For rwsem/rwlock preserve required reader concurrency, write exclusion, mode/API results and release/progress semantics. If the backend uses reader tokens, writer reservations, drain gates or an embedded mutex, account for its actual composite duties; releasing one part does not prove availability. The target need not copy those structures. Read credit is custody, not automatic permission for remote execution. Placement is C10; origin-local is only the conservative initial proposal.
+For rwsem/rwlock preserve reader concurrency, write exclusion, exact credits,
+mode/API results and the selected release/context duties. The current proxy may
+acquire a shared credit and continue W after a reached read boundary. Every real
+read acquisition has its own credit and acquisition identity. Latest matching
+open family/object read credit receives up_read/read_unlock. A retained writer
+read tail is a separate mode, with the same original writer acquisition.
 
-Downgrade remains a separate target mode/lock-operation decision C10 with native API semantics and continuous write-to-read protection. Unlock/relock, indefinitely retaining write exclusion or merely relabelling it read mode is not generic equivalence. Target lock code handles the mode operation at its declared fragment boundary. The current test-specific proxy-downgrade exemption and retained writer gate are E only, recorded in [the newer receipt section](04_evidence_and_reconciliation.md#27-newer-proxy-downgrade-and-flags-stack-evidence); they neither override source-operation boundaries nor prove faithful native downgrade.
+C10 selects two rwsem downgrade routes at an explicit pre-operation boundary.
+A delegated WRITE becomes logical RETAINED_READ and keeps physical WRITE through
+matching up_read. Its read-tail effects execute once. An exact native miss suffix
+may carry the retained writer to W without changing the acquisition or replaying
+downgrade. Matching retained up_read closes its writer cohort and waits for exact physical
+ACK before transferring the post-operation continuation to W, even when that
+episode is nested. Ancestors
+retain their remaining physical duties and cannot resume old source snapshots.
+
+Ordinary native downgrade establishes an actual shared READ credit continuously
+before writer exclusion ends. Its later up_read releases that credit. It uses
+native hardware CALL/RET without importing an old canonical cursor. Ordinary
+inner shared-read release returns to the enclosing proxy instead of forcing
+terminal origin ownership. Rwlock has no downgrade. These selections establish
+source scope. Compilation has completed. Runtime evidence and native
+concurrency-equivalence remain pending for the retained-writer route.
+[Historical downgrade evidence](04_evidence_and_reconciliation.md#27-newer-proxy-downgrade-and-flags-stack-evidence).
 
 Trylock failure and interrupted acquisition create no successful grant. Temporary queue/reservation claims still need cleanup. Signalable APIs must observe W's intended signals/results rather than silently substituting C's signals.
 
@@ -626,6 +647,34 @@ RT/debug configurations. The source path uses the existing preallocated
 request capacity contract. Kernel execution, auxiliary stack bounds and
 progress beyond the scoped topology require separate evidence.
 
+### 6.2 Selected rwsem and rwlock source scope
+
+Ordinary rwsem operations run in sleepable task context with IRQs enabled.
+Plain rwlock operations use task context with IRQs enabled and physical
+preemption pins through open read/write grants and exact release handling.
+Reader execution and owner waits follow that physical context. Signalable,
+trylock, IRQ/BH/NMI, mixed-family and RT/debug variants retain their separate
+scope. Source context APIs expose physical numerical preemption depth, and the
+caller admits source valid under that context.
+
+The source implementation separates current-executor shared credits from MCS
+writer arbitration. A writer turn closes reader admission and drains actual
+credits before granting source write access. The ungranted candidate may serve
+a bounded writer cohort before rejoining for its own source. Cohort control
+outlives individual source callbacks. Normal active member completion and the
+cohort's later physical release remain distinct. A foreign/outer synchronous
+release closes further service and waits for actual physical ACK. This is a
+private implementation strategy. The new paths have compiled, with runtime
+validation pending.
+
+A logical grant records family, mode and physical custody independently.
+RETAINED_READ keeps the original writer control through up_read. A real READ
+credit has no fabricated exclusive owner and retains exact source, result and
+parent-return users through final retirement. The existing preallocated record
+availability assumption applies. Reader counts order exclusion and do not
+replace these exact users. Same-object acquisition under an open writer or
+retained writer is not downgrade and is outside the distinct-object case.
+
 ## 7 Ordering and retirement
 
 | Edge | Producer obligation before release publication | Consumer obligation after acquire observation |
@@ -682,6 +731,6 @@ These retain audit identities and cover v0.6 topics under the current F/S/P auth
 | R24 | Family selection, state transfer and cancellation preserve exact scoped identity and exclusive execution ordering, with incarnation/sequence checks where needed; stale nodes cannot regain continuation authority. |
 | R25 | The active-origin pointer resolves the served origin, not physical current. Exact source-operation context identifies nesting; internal bookkeeping never becomes W's source grant. |
 | R26 | General family/API/mode/source/ABI identities determine dispatch. Every successful source lock operation has a generic post-operation admission path; native suffix is fallback, not full JIT completion. |
-| R27 | Reader concurrency/mode/API/context semantics hold under C10's explicitly chosen placement; origin-local is an initial proposal and no unselected remote lane is authorized. |
+| R27 | C10 permits a current proxy to acquire a concurrent read credit and continue W. Ordinary inner read release returns to its enclosing proxy. Retained rwsem downgrade keeps the same writer acquisition through logical up_read, then transfers terminal origin ownership after exact physical writer ACK. Native downgrade creates a true shared credit continuously. Exact context/concurrency duties remain. |
 | R28 | Application, local, fragment, native-handback and whole-root completion evidence is distinct; attribution requires actual exit cursor/reason and ownership phase. |
 | R29 | Canonical-state and grant/read-credit custody can outlive nonresponsible executor/frame/node completion. A responsible outer-mutex owner context remains retained through its physical release duty; reuse/task exit waits for every retained last user. |
