@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/continuation-input-01/continue.py"
+  ],
+  "inputs": {
+    "continue.py": "1088a8660c3ec82288310da764fe393d1380cfca50e1196651f3cfe2c7b69797",
+    "mmap-runner-fixed.py": "c20114507195b4dbccdd2fbca504230400a8cc9be3c51182d76ea30eff3dfb31"
+  }
+}

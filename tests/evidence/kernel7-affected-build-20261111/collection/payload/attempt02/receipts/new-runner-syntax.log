@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import ast,pathlib,sys; files=sys.argv[1:]; assert len(files)==2; [ast.parse(pathlib.Path(p).read_bytes(),filename=p) for p in files]; print("AST_COMPLETE 2")
+                                                                       ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/ast.py", line 46, in parse
+    return compile(source, filename, mode, flags,
+                   _feature_version=feature_version, optimize=optimize)
+  File "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/mmap_api/runner.py", line 697
+    archive = drive(ShutdownSession(transport, coordinator, producers, ArchiveConfig(
+                   ^
+SyntaxError: '(' was never closed

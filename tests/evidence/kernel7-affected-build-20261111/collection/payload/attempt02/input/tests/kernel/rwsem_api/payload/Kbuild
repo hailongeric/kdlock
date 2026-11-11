@@ -1,0 +1,4 @@
+# Ordinary Linux rwsem compatibility fixture, separate source/output trees.
+obj-m += kd_rwsem_api_fixture.o
+kd_rwsem_api_fixture-y := rwsem_api_fixture.o
+ccflags-y += -I$(src)/../../../..

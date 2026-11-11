@@ -1,0 +1,5 @@
+# Decoder dependencies retained from the UB-derived compiler's pinned set.
+# No package installation, import check or runtime validation is implied.
+miasm==0.1.5
+future==1.0.0
+pyparsing==2.4.7

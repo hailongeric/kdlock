@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/transport/build.py",
+    "--config",
+    "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/transport/config.json",
+    "--config-sha",
+    "1fee23f8e59331a7f8f731accd5b0b2acdc552063bc7fd6ef5a53c3ec9a4a301"
+  ],
+  "config_sha256": "1fee23f8e59331a7f8f731accd5b0b2acdc552063bc7fd6ef5a53c3ec9a4a301",
+  "recovery_sha256": "6cf0ef0a14f5375006d73e681855393ce6a095f4d16164394adf36cbe05f885c"
+}

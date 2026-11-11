@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/build.py", line 555, in <module>
+    main()
+    ~~~~^^
+  File "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/build.py", line 518, in main
+    syntax_log = dispatch('new-runner-syntax', [str(tools['python']), '-c', syntax] + [str(inp / name) for name in RUNNERS],
+                          deadline, bounds['check_seconds'], root, bounds, cwd=inp)
+  File "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/build.py", line 341, in dispatch
+    require(child.returncode == 0, label + ' failed; original output retained')
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/build.py", line 48, in require
+    raise RuntimeError(message)
+RuntimeError: new-runner-syntax failed; original output retained

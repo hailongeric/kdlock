@@ -1,0 +1,3606 @@
+{
+  "bytes": 11693491,
+  "count": 225,
+  "files": [
+    {
+      "bytes": 505,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/driver-02/command.json",
+      "identity": [
+        2080,
+        7077899,
+        33188,
+        1,
+        505,
+        1794421741287286081,
+        1794421741287286081
+      ],
+      "name": "attempt02/driver/command.json",
+      "path": "payload/attempt02/driver/command.json",
+      "sha256": "5f24fc462c20b40b415222a688530d9fad630ada5702cc6543ab62ec8f686076"
+    },
+    {
+      "bytes": 49,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/driver-02/dispatch.json",
+      "identity": [
+        2080,
+        7077902,
+        33188,
+        1,
+        49,
+        1794421741290600988,
+        1794421741290600988
+      ],
+      "name": "attempt02/driver/dispatch.json",
+      "path": "payload/attempt02/driver/dispatch.json",
+      "sha256": "14e0c247eb60a94bf8bc181eaad872dd6606dce4d4e9b67c9e2e6be562576cc3"
+    },
+    {
+      "bytes": 63,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/driver-02/result.json",
+      "identity": [
+        2080,
+        7078213,
+        33188,
+        1,
+        63,
+        1794421763714637495,
+        1794421763714637495
+      ],
+      "name": "attempt02/driver/result.json",
+      "path": "payload/attempt02/driver/result.json",
+      "sha256": "b4f954e3d39ca658a546b01c0cdd38b40f731d398a8a5b9d224d311ecd15eb5f"
+    },
+    {
+      "bytes": 965,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/driver-02/stderr",
+      "identity": [
+        2080,
+        7077901,
+        33188,
+        1,
+        965,
+        1794421763662000000,
+        1794421763662000000
+      ],
+      "name": "attempt02/driver/stderr",
+      "path": "payload/attempt02/driver/stderr",
+      "sha256": "5debbe876f4067fafaf932bd4d7a71ad512742c78f4872d29b73cc79ec88f1ea"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/driver-02/stdout",
+      "identity": [
+        2080,
+        7077900,
+        33188,
+        1,
+        0,
+        1794421741289000000,
+        1794421741289000000
+      ],
+      "name": "attempt02/driver/stdout",
+      "path": "payload/attempt02/driver/stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1328,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/Kbuild",
+      "identity": [
+        2080,
+        7077908,
+        33188,
+        1,
+        1328,
+        1794421745281632345,
+        1794421745281632345
+      ],
+      "name": "attempt02/input/Kbuild",
+      "path": "payload/attempt02/input/Kbuild",
+      "sha256": "63e09601f83dff10da0a51c920d44a3dac1a685c060fa0e8670d930c0f250cb7"
+    },
+    {
+      "bytes": 942,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/Kconfig",
+      "identity": [
+        2080,
+        7077909,
+        33188,
+        1,
+        942,
+        1794421745284605237,
+        1794421745284605237
+      ],
+      "name": "attempt02/input/Kconfig",
+      "path": "payload/attempt02/input/Kconfig",
+      "sha256": "f57bcb6c2e27799559fa139630b6090b0371c62119298b62429b006e5c788c29"
+    },
+    {
+      "bytes": 18711,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/archive.py",
+      "identity": [
+        2080,
+        7077911,
+        33188,
+        1,
+        18711,
+        1794421745287344395,
+        1794421745287344395
+      ],
+      "name": "attempt02/input/disassem/archive.py",
+      "path": "payload/attempt02/input/disassem/archive.py",
+      "sha256": "0dff097683107c37b57cda8e8edeb05b4f70a52adb05ac9efe55f15981d677ea"
+    },
+    {
+      "bytes": 16131,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/artifact.py",
+      "identity": [
+        2080,
+        7077912,
+        33188,
+        1,
+        16131,
+        1794421745290076464,
+        1794421745290076464
+      ],
+      "name": "attempt02/input/disassem/artifact.py",
+      "path": "payload/attempt02/input/disassem/artifact.py",
+      "sha256": "09a5fe9cbbf44d04206f0a430b590a169c3bc1405105ba7d6f9aa4b1a0522815"
+    },
+    {
+      "bytes": 231,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/backend/__init__.py",
+      "identity": [
+        2080,
+        7077914,
+        33188,
+        1,
+        231,
+        1794421745293752678,
+        1794421745293752678
+      ],
+      "name": "attempt02/input/disassem/backend/__init__.py",
+      "path": "payload/attempt02/input/disassem/backend/__init__.py",
+      "sha256": "8a10f2d55cb13aaa224f43c9b527a6f91e24a79baa7b7c2bd03b9f1f4ac97ae7"
+    },
+    {
+      "bytes": 3729,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/backend/assist.py",
+      "identity": [
+        2080,
+        7077915,
+        33188,
+        1,
+        3729,
+        1794421745296349307,
+        1794421745296349307
+      ],
+      "name": "attempt02/input/disassem/backend/assist.py",
+      "path": "payload/attempt02/input/disassem/backend/assist.py",
+      "sha256": "4db555895df0c0c47daedb34bd2a88a4090ed1ab6b17e74428a2a6dd8faa1eda"
+    },
+    {
+      "bytes": 904,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/backend/compat.py",
+      "identity": [
+        2080,
+        7077916,
+        33188,
+        1,
+        904,
+        1794421745298936714,
+        1794421745298936714
+      ],
+      "name": "attempt02/input/disassem/backend/compat.py",
+      "path": "payload/attempt02/input/disassem/backend/compat.py",
+      "sha256": "9234e51b76c3f9b3688408b17d6501d69d2b8581d4d169ed83865dda9fcebe5d"
+    },
+    {
+      "bytes": 6749,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/backend/conflict.py",
+      "identity": [
+        2080,
+        7077917,
+        33188,
+        1,
+        6749,
+        1794421745301545646,
+        1794421745301545646
+      ],
+      "name": "attempt02/input/disassem/backend/conflict.py",
+      "path": "payload/attempt02/input/disassem/backend/conflict.py",
+      "sha256": "ac4f435b4008130e03a8910b9159b1009216f5cf47748986eb090219db8f695d"
+    },
+    {
+      "bytes": 514,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/backend/diagnostics.py",
+      "identity": [
+        2080,
+        7077918,
+        33188,
+        1,
+        514,
+        1794421745304113527,
+        1794421745304113527
+      ],
+      "name": "attempt02/input/disassem/backend/diagnostics.py",
+      "path": "payload/attempt02/input/disassem/backend/diagnostics.py",
+      "sha256": "adb0bde8d44dd287b8232272f31c1b746fbe0effdb670cd81c07143a38c19bcc"
+    },
+    {
+      "bytes": 412,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/backend/errors.py",
+      "identity": [
+        2080,
+        7077919,
+        33188,
+        1,
+        412,
+        1794421745306628036,
+        1794421745306628036
+      ],
+      "name": "attempt02/input/disassem/backend/errors.py",
+      "path": "payload/attempt02/input/disassem/backend/errors.py",
+      "sha256": "2df8c7e0313f907b7d89f8ef99154a8fc76fe10e88e789e532e579349c85c617"
+    },
+    {
+      "bytes": 13935,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/backend/instructions.py",
+      "identity": [
+        2080,
+        7077920,
+        33188,
+        1,
+        13935,
+        1794421745309267211,
+        1794421745309267211
+      ],
+      "name": "attempt02/input/disassem/backend/instructions.py",
+      "path": "payload/attempt02/input/disassem/backend/instructions.py",
+      "sha256": "78b70b7a883db410ea83add5ba94fb85685c159f82c6e959713a16bf9e64a6e1"
+    },
+    {
+      "bytes": 11404,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/backend/normal.py",
+      "identity": [
+        2080,
+        7077921,
+        33188,
+        1,
+        11404,
+        1794421745311853026,
+        1794421745311853026
+      ],
+      "name": "attempt02/input/disassem/backend/normal.py",
+      "path": "payload/attempt02/input/disassem/backend/normal.py",
+      "sha256": "72d11aff60b4561485000397f59355ad78e6a958ca6daadd8fa4c00ca36ed864"
+    },
+    {
+      "bytes": 25302,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/compiler.py",
+      "identity": [
+        2080,
+        7077922,
+        33188,
+        1,
+        25302,
+        1794421745315411835,
+        1794421745315411835
+      ],
+      "name": "attempt02/input/disassem/compiler.py",
+      "path": "payload/attempt02/input/disassem/compiler.py",
+      "sha256": "ddcc1f364620ca7413899db7e114fd8741ab379a3c5ad5ccd819be4d47f8368a"
+    },
+    {
+      "bytes": 3464,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/coverage.py",
+      "identity": [
+        2080,
+        7077923,
+        33188,
+        1,
+        3464,
+        1794421745319960464,
+        1794421745319960464
+      ],
+      "name": "attempt02/input/disassem/coverage.py",
+      "path": "payload/attempt02/input/disassem/coverage.py",
+      "sha256": "6bfb02fa269588b9ad531d10e9e2a2738ef3c3bf9c35821e12d097209a3451e9"
+    },
+    {
+      "bytes": 11273,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/feedback.py",
+      "identity": [
+        2080,
+        7077924,
+        33188,
+        1,
+        11273,
+        1794421745322557842,
+        1794421745322557842
+      ],
+      "name": "attempt02/input/disassem/feedback.py",
+      "path": "payload/attempt02/input/disassem/feedback.py",
+      "sha256": "4d68ebb58181006cb8b92c8fed78f20c76204ce0ca17202c9a7ccafca7c08cb4"
+    },
+    {
+      "bytes": 10679,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/fragment.py",
+      "identity": [
+        2080,
+        7077925,
+        33188,
+        1,
+        10679,
+        1794421745325136193,
+        1794421745325136193
+      ],
+      "name": "attempt02/input/disassem/fragment.py",
+      "path": "payload/attempt02/input/disassem/fragment.py",
+      "sha256": "b5f2787df43b94540f26c9b5156bb476415bdb0d0adfa7565dfbc087767da7cd"
+    },
+    {
+      "bytes": 17601,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/image_builder.py",
+      "identity": [
+        2080,
+        7077926,
+        33188,
+        1,
+        17601,
+        1794421745327760587,
+        1794421745327760587
+      ],
+      "name": "attempt02/input/disassem/image_builder.py",
+      "path": "payload/attempt02/input/disassem/image_builder.py",
+      "sha256": "30781d85aef41df36f6b6a1da3449e29871c4a181686f9dfcd3a962cbb1a02bf"
+    },
+    {
+      "bytes": 33737,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/learning.py",
+      "identity": [
+        2080,
+        7077927,
+        33188,
+        1,
+        33737,
+        1794421745331195124,
+        1794421745331195124
+      ],
+      "name": "attempt02/input/disassem/learning.py",
+      "path": "payload/attempt02/input/disassem/learning.py",
+      "sha256": "2f8b47caa933338e5c0134eb17a0ae4a051f6b24920504dce1d9eb85d24c4ef3"
+    },
+    {
+      "bytes": 28755,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/lowering.py",
+      "identity": [
+        2080,
+        7077928,
+        33188,
+        1,
+        28755,
+        1794421745333866133,
+        1794421745333866133
+      ],
+      "name": "attempt02/input/disassem/lowering.py",
+      "path": "payload/attempt02/input/disassem/lowering.py",
+      "sha256": "abd1ca8be29212916925f87c3205c84b6d68e32c702316632d6f743cbbad7328"
+    },
+    {
+      "bytes": 193,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/requirements.txt",
+      "identity": [
+        2080,
+        7077929,
+        33188,
+        1,
+        193,
+        1794421745337384592,
+        1794421745337384592
+      ],
+      "name": "attempt02/input/disassem/requirements.txt",
+      "path": "payload/attempt02/input/disassem/requirements.txt",
+      "sha256": "dbca917470f57958f724a2ba13c131eee7f19ca3d3c7f9c97fbaef09a1bfa8e5"
+    },
+    {
+      "bytes": 37215,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/session.py",
+      "identity": [
+        2080,
+        7077930,
+        33188,
+        1,
+        37215,
+        1794421745340005229,
+        1794421745340005229
+      ],
+      "name": "attempt02/input/disassem/session.py",
+      "path": "payload/attempt02/input/disassem/session.py",
+      "sha256": "adbab87a51b65b92915cfde6d42f89e39588a4f070ad03adfb949b3b7e13c0e5"
+    },
+    {
+      "bytes": 9015,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/source_boundaries.py",
+      "identity": [
+        2080,
+        7077931,
+        33188,
+        1,
+        9015,
+        1794421745343464834,
+        1794421745343464834
+      ],
+      "name": "attempt02/input/disassem/source_boundaries.py",
+      "path": "payload/attempt02/input/disassem/source_boundaries.py",
+      "sha256": "35f2a0f1071cb5230dee08f2315f3c2930381a397ae383af9f45a51227cede40"
+    },
+    {
+      "bytes": 9867,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/source_decode.py",
+      "identity": [
+        2080,
+        7077932,
+        33188,
+        1,
+        9867,
+        1794421745346026273,
+        1794421745346026273
+      ],
+      "name": "attempt02/input/disassem/source_decode.py",
+      "path": "payload/attempt02/input/disassem/source_decode.py",
+      "sha256": "c172f53a1e0851d75b0d5f10c31fd801aaf9faf5472ecc1b1892a71063605206"
+    },
+    {
+      "bytes": 11641,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/disassem/wire.py",
+      "identity": [
+        2080,
+        7077933,
+        33188,
+        1,
+        11641,
+        1794421745348631369,
+        1794421745348631369
+      ],
+      "name": "attempt02/input/disassem/wire.py",
+      "path": "payload/attempt02/input/disassem/wire.py",
+      "sha256": "ab9c6851df85392eeec500bac39ff9184ae4c6b6fade43bae30e39713cfeb31a"
+    },
+    {
+      "bytes": 1442,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/asm_head.h",
+      "identity": [
+        2080,
+        7077935,
+        33188,
+        1,
+        1442,
+        1794421745351254258,
+        1794421745351254258
+      ],
+      "name": "attempt02/input/include/asm_head.h",
+      "path": "payload/attempt02/input/include/asm_head.h",
+      "sha256": "dcae354686db004a515957fb73f6645d19f98bbb1fe3a07f1b73dfaff318455c"
+    },
+    {
+      "bytes": 1275,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/kd_control.h",
+      "identity": [
+        2080,
+        7077936,
+        33188,
+        1,
+        1275,
+        1794421745353848271,
+        1794421745353848271
+      ],
+      "name": "attempt02/input/include/kd_control.h",
+      "path": "payload/attempt02/input/include/kd_control.h",
+      "sha256": "403b7ef160f75b5f149abafd35da59bac89215a5f5e22c4138714d6b6dcbad6a"
+    },
+    {
+      "bytes": 3572,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/kd_linux_rwsem.h",
+      "identity": [
+        2080,
+        7077937,
+        33188,
+        1,
+        3572,
+        1794421745356554340,
+        1794421745356554340
+      ],
+      "name": "attempt02/input/include/kd_linux_rwsem.h",
+      "path": "payload/attempt02/input/include/kd_linux_rwsem.h",
+      "sha256": "3430bdaf9c7c4bbd1185b4be5c6e9ba8d4993ed04ff9263a78a7a0c85190b17f"
+    },
+    {
+      "bytes": 3478,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/kd_linux_rwsem_source.h",
+      "identity": [
+        2080,
+        7077938,
+        33188,
+        1,
+        3478,
+        1794421745359147454,
+        1794421745359147454
+      ],
+      "name": "attempt02/input/include/kd_linux_rwsem_source.h",
+      "path": "payload/attempt02/input/include/kd_linux_rwsem_source.h",
+      "sha256": "617fdca332a6fdf3ec26324e9c35318ae79ad5c81f390aa2efdcfab92fdd0397"
+    },
+    {
+      "bytes": 5857,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/kd_mutex.h",
+      "identity": [
+        2080,
+        7077939,
+        33188,
+        1,
+        5857,
+        1794421745361731511,
+        1794421745361731511
+      ],
+      "name": "attempt02/input/include/kd_mutex.h",
+      "path": "payload/attempt02/input/include/kd_mutex.h",
+      "sha256": "56b8541b70beb5c9b952d66b2eab8f89d57ea9e92bdec4617757fdf5eefdad3e"
+    },
+    {
+      "bytes": 3894,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/kd_mutex_api.h",
+      "identity": [
+        2080,
+        7077940,
+        33188,
+        1,
+        3894,
+        1794421745364301147,
+        1794421745364301147
+      ],
+      "name": "attempt02/input/include/kd_mutex_api.h",
+      "path": "payload/attempt02/input/include/kd_mutex_api.h",
+      "sha256": "24f6664232d16a6483b567a88e46182e9acec4e8abc062cea2a2091c09c80b62"
+    },
+    {
+      "bytes": 7890,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/kd_regs.h",
+      "identity": [
+        2080,
+        7077941,
+        33188,
+        1,
+        7890,
+        1794421745367771575,
+        1794421745367771575
+      ],
+      "name": "attempt02/input/include/kd_regs.h",
+      "path": "payload/attempt02/input/include/kd_regs.h",
+      "sha256": "72ee3d149d22570e960e536c6a8c2e1e1bae289b8a2c1c17bd2599e64aa4ca1a"
+    },
+    {
+      "bytes": 1626,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/kd_rwlock_api.h",
+      "identity": [
+        2080,
+        7077942,
+        33188,
+        1,
+        1626,
+        1794421745370331008,
+        1794421745370331008
+      ],
+      "name": "attempt02/input/include/kd_rwlock_api.h",
+      "path": "payload/attempt02/input/include/kd_rwlock_api.h",
+      "sha256": "971e0cd072fe48f15a1dd21c6b3c89e40acbe3d16bdbcc80efadc77db4d759b3"
+    },
+    {
+      "bytes": 2443,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/kd_rwsem_api.h",
+      "identity": [
+        2080,
+        7077943,
+        33188,
+        1,
+        2443,
+        1794421745372909134,
+        1794421745372909134
+      ],
+      "name": "attempt02/input/include/kd_rwsem_api.h",
+      "path": "payload/attempt02/input/include/kd_rwsem_api.h",
+      "sha256": "f771b0fcdfbf88b93be072dc471bdfd45a206b528c155d087f098608b5b0d2c9"
+    },
+    {
+      "bytes": 1144,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/kd_spin_api.h",
+      "identity": [
+        2080,
+        7077944,
+        33188,
+        1,
+        1144,
+        1794421745375427333,
+        1794421745375427333
+      ],
+      "name": "attempt02/input/include/kd_spin_api.h",
+      "path": "payload/attempt02/input/include/kd_spin_api.h",
+      "sha256": "bc34bd6327f35172d2671d11e98eab8a5e50b8aeb5508ad49dc095598a843908"
+    },
+    {
+      "bytes": 3606,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/mutex_api.S",
+      "identity": [
+        2080,
+        7077945,
+        33188,
+        1,
+        3606,
+        1794421745378023767,
+        1794421745378023767
+      ],
+      "name": "attempt02/input/include/mutex_api.S",
+      "path": "payload/attempt02/input/include/mutex_api.S",
+      "sha256": "4eb9eb11327fd8b8b680554cef80569893df8afe2144039412b283b029fcf47a"
+    },
+    {
+      "bytes": 1761,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/mutex_entry.S",
+      "identity": [
+        2080,
+        7077946,
+        33188,
+        1,
+        1761,
+        1794421745380603822,
+        1794421745380603822
+      ],
+      "name": "attempt02/input/include/mutex_entry.S",
+      "path": "payload/attempt02/input/include/mutex_entry.S",
+      "sha256": "6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108"
+    },
+    {
+      "bytes": 2249,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/native_resume.S",
+      "identity": [
+        2080,
+        7077947,
+        33188,
+        1,
+        2249,
+        1794421745383096532,
+        1794421745383096532
+      ],
+      "name": "attempt02/input/include/native_resume.S",
+      "path": "payload/attempt02/input/include/native_resume.S",
+      "sha256": "6c57676d9194a2f2090d602fdf55bba891add8b6f8d560472bfb4fd7bbf4b0dd"
+    },
+    {
+      "bytes": 3456,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/include/wrapper.S",
+      "identity": [
+        2080,
+        7077948,
+        33188,
+        1,
+        3456,
+        1794421745385698455,
+        1794421745385698455
+      ],
+      "name": "attempt02/input/include/wrapper.S",
+      "path": "payload/attempt02/input/include/wrapper.S",
+      "sha256": "42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5"
+    },
+    {
+      "bytes": 8787,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/channel.c",
+      "identity": [
+        2080,
+        7077950,
+        33188,
+        1,
+        8787,
+        1794421745388284911,
+        1794421745388284911
+      ],
+      "name": "attempt02/input/kernel/channel.c",
+      "path": "payload/attempt02/input/kernel/channel.c",
+      "sha256": "17803ac448b5f836c311457451106df047fc73e2dd5a3aa32b837159e3c69b03"
+    },
+    {
+      "bytes": 2012,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/channel.h",
+      "identity": [
+        2080,
+        7077951,
+        33188,
+        1,
+        2012,
+        1794421745390939270,
+        1794421745390939270
+      ],
+      "name": "attempt02/input/kernel/channel.h",
+      "path": "payload/attempt02/input/kernel/channel.h",
+      "sha256": "606ce81101fc1c53805dc22c870747b6faba3b931302fcf003a3b7bd2fd948f3"
+    },
+    {
+      "bytes": 14847,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/compiled_image.c",
+      "identity": [
+        2080,
+        7077952,
+        33188,
+        1,
+        14847,
+        1794421745393539833,
+        1794421745393539833
+      ],
+      "name": "attempt02/input/kernel/compiled_image.c",
+      "path": "payload/attempt02/input/kernel/compiled_image.c",
+      "sha256": "0ef92a96b335041523341c2918641cef0c7aa7c0cbfc32e5f3ccd0484db47f2d"
+    },
+    {
+      "bytes": 4244,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/compiled_image.h",
+      "identity": [
+        2080,
+        7077953,
+        33188,
+        1,
+        4244,
+        1794421745397039817,
+        1794421745397039817
+      ],
+      "name": "attempt02/input/kernel/compiled_image.h",
+      "path": "payload/attempt02/input/kernel/compiled_image.h",
+      "sha256": "ec54afc42d2aa32079c2c28de7af7ba7141abbdece9c0c1e36361ea6ad2b29c9"
+    },
+    {
+      "bytes": 27904,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/control.c",
+      "identity": [
+        2080,
+        7077954,
+        33188,
+        1,
+        27904,
+        1794421745399652795,
+        1794421745399652795
+      ],
+      "name": "attempt02/input/kernel/control.c",
+      "path": "payload/attempt02/input/kernel/control.c",
+      "sha256": "c50a6de92ef238f387e023473937c418c02314bd7353082db69915a7fb79853d"
+    },
+    {
+      "bytes": 7947,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/control.h",
+      "identity": [
+        2080,
+        7077955,
+        33188,
+        1,
+        7947,
+        1794421745402339534,
+        1794421745402339534
+      ],
+      "name": "attempt02/input/kernel/control.h",
+      "path": "payload/attempt02/input/kernel/control.h",
+      "sha256": "410021ca0e235e57e093b1056af2cb19d9d2199d679a3811efebaeef53002912"
+    },
+    {
+      "bytes": 42619,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/episode.c",
+      "identity": [
+        2080,
+        7077956,
+        33188,
+        1,
+        42619,
+        1794421745404968564,
+        1794421745404968564
+      ],
+      "name": "attempt02/input/kernel/episode.c",
+      "path": "payload/attempt02/input/kernel/episode.c",
+      "sha256": "1189a8644a2cf5e3a5359d2ec6ce5cc740c0b099b9ebb29ec9238d25ab0278b0"
+    },
+    {
+      "bytes": 6705,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/episode.h",
+      "identity": [
+        2080,
+        7077957,
+        33188,
+        1,
+        6705,
+        1794421745408450707,
+        1794421745408450707
+      ],
+      "name": "attempt02/input/kernel/episode.h",
+      "path": "payload/attempt02/input/kernel/episode.h",
+      "sha256": "08d8b633295412c2f38756dbcc0fd2c9a0c9f1a6fbba0026110ae966d99efe0e"
+    },
+    {
+      "bytes": 2617,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/exports.c",
+      "identity": [
+        2080,
+        7077958,
+        33188,
+        1,
+        2617,
+        1794421745411030068,
+        1794421745411030068
+      ],
+      "name": "attempt02/input/kernel/exports.c",
+      "path": "payload/attempt02/input/kernel/exports.c",
+      "sha256": "35bff572a69f6372fc7523ceae671fb2dbb34ba297cd4cbff288eead6dad382a"
+    },
+    {
+      "bytes": 16318,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/feedback.c",
+      "identity": [
+        2080,
+        7077959,
+        33188,
+        1,
+        16318,
+        1794421745413658195,
+        1794421745413658195
+      ],
+      "name": "attempt02/input/kernel/feedback.c",
+      "path": "payload/attempt02/input/kernel/feedback.c",
+      "sha256": "fb00418fd7443ff0cff4ab5af9d1a4ffe0fd691f29f0b17ae33d8baa653960f0"
+    },
+    {
+      "bytes": 9425,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/feedback.h",
+      "identity": [
+        2080,
+        7077960,
+        33188,
+        1,
+        9425,
+        1794421745416358158,
+        1794421745416358158
+      ],
+      "name": "attempt02/input/kernel/feedback.h",
+      "path": "payload/attempt02/input/kernel/feedback.h",
+      "sha256": "e65def1ab23fdc490a7ab0b18a2f1b8bc00f538c17e62e0f1cacbc6c809a0464"
+    },
+    {
+      "bytes": 13955,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/feedback_publish.c",
+      "identity": [
+        2080,
+        7077961,
+        33188,
+        1,
+        13955,
+        1794421745419983208,
+        1794421745419983208
+      ],
+      "name": "attempt02/input/kernel/feedback_publish.c",
+      "path": "payload/attempt02/input/kernel/feedback_publish.c",
+      "sha256": "eab297e4eb31259d1f0ca9b32be051c6604e2f80d5fe7a0c2fa7c89017c96104"
+    },
+    {
+      "bytes": 7927,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/feedback_publish.h",
+      "identity": [
+        2080,
+        7077962,
+        33188,
+        1,
+        7927,
+        1794421745422533273,
+        1794421745422533273
+      ],
+      "name": "attempt02/input/kernel/feedback_publish.h",
+      "path": "payload/attempt02/input/kernel/feedback_publish.h",
+      "sha256": "04c14ae7abb8346230fbe2f6eeadf79c57f91be4cf8204676b7e79a1153d4066"
+    },
+    {
+      "bytes": 10329,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/image.c",
+      "identity": [
+        2080,
+        7077963,
+        33188,
+        1,
+        10329,
+        1794421745425128011,
+        1794421745425128011
+      ],
+      "name": "attempt02/input/kernel/image.c",
+      "path": "payload/attempt02/input/kernel/image.c",
+      "sha256": "2045cb89d88175e9b73f7d3b247b72943fbcfa8eaaa3a2ffede0e670968e2bd3"
+    },
+    {
+      "bytes": 8070,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/image.h",
+      "identity": [
+        2080,
+        7077964,
+        33188,
+        1,
+        8070,
+        1794421745427735074,
+        1794421745427735074
+      ],
+      "name": "attempt02/input/kernel/image.h",
+      "path": "payload/attempt02/input/kernel/image.h",
+      "sha256": "49b080029f0abc3ea87e6230cbb925a22f8dbdea50242b42664ce47b135044e5"
+    },
+    {
+      "bytes": 1311,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/image_inputs.h",
+      "identity": [
+        2080,
+        7077965,
+        33188,
+        1,
+        1311,
+        1794421745430442384,
+        1794421745430442384
+      ],
+      "name": "attempt02/input/kernel/image_inputs.h",
+      "path": "payload/attempt02/input/kernel/image_inputs.h",
+      "sha256": "a56154b1717dfa494c767a87355128d92f9f710c9bc4ebdc0729a4ca3f8bdc40"
+    },
+    {
+      "bytes": 17392,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/image_owner.c",
+      "identity": [
+        2080,
+        7077966,
+        33188,
+        1,
+        17392,
+        1794421745433051822,
+        1794421745433051822
+      ],
+      "name": "attempt02/input/kernel/image_owner.c",
+      "path": "payload/attempt02/input/kernel/image_owner.c",
+      "sha256": "c647127502b78d6a3d0d29040d98bf97bc87e666f5418755a876ff0a6b14ff15"
+    },
+    {
+      "bytes": 9128,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/image_owner.h",
+      "identity": [
+        2080,
+        7077967,
+        33188,
+        1,
+        9128,
+        1794421745436450367,
+        1794421745436450367
+      ],
+      "name": "attempt02/input/kernel/image_owner.h",
+      "path": "payload/attempt02/input/kernel/image_owner.h",
+      "sha256": "0bdc71a22db182ee6ffc89834a30c28a348c1724c60ea6649ef53141380ffccb"
+    },
+    {
+      "bytes": 10897,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/integration/BUILDING.md",
+      "identity": [
+        2080,
+        7077969,
+        33188,
+        1,
+        10897,
+        1794421745439039534,
+        1794421745439039534
+      ],
+      "name": "attempt02/input/kernel/integration/BUILDING.md",
+      "path": "payload/attempt02/input/kernel/integration/BUILDING.md",
+      "sha256": "f6c282ff70b6219496b88479f8f5f0670df5ef818b7ee236350c341088edb675"
+    },
+    {
+      "bytes": 9210,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/integration/CONTROL.md",
+      "identity": [
+        2080,
+        7077970,
+        33188,
+        1,
+        9210,
+        1794421745441628786,
+        1794421745441628786
+      ],
+      "name": "attempt02/input/kernel/integration/CONTROL.md",
+      "path": "payload/attempt02/input/kernel/integration/CONTROL.md",
+      "sha256": "e91043bc2c7502ed0318b397ada15e37af1029db4d2f591aaa639529abbc34ae"
+    },
+    {
+      "bytes": 17011,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/integration/IMAGES.md",
+      "identity": [
+        2080,
+        7077971,
+        33188,
+        1,
+        17011,
+        1794421745444264710,
+        1794421745444264710
+      ],
+      "name": "attempt02/input/kernel/integration/IMAGES.md",
+      "path": "payload/attempt02/input/kernel/integration/IMAGES.md",
+      "sha256": "94a3ee669e29e680f3c09d491bf9e92bb9066e4be7cdaaacafab82d76de19f30"
+    },
+    {
+      "bytes": 18575,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/integration/README.md",
+      "identity": [
+        2080,
+        7077972,
+        33188,
+        1,
+        18575,
+        1794421745447780606,
+        1794421745447780606
+      ],
+      "name": "attempt02/input/kernel/integration/README.md",
+      "path": "payload/attempt02/input/kernel/integration/README.md",
+      "sha256": "92a5a9f154a92a29ba7e96ce274abb7c2417dedb28ee0f18d57527106d88367f"
+    },
+    {
+      "bytes": 13649,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/integration/RWSEM.md",
+      "identity": [
+        2080,
+        7077973,
+        33188,
+        1,
+        13649,
+        1794421745450366756,
+        1794421745450366756
+      ],
+      "name": "attempt02/input/kernel/integration/RWSEM.md",
+      "path": "payload/attempt02/input/kernel/integration/RWSEM.md",
+      "sha256": "18d1a6de62862f322aa9d126f4552826694d1738588e674399e4b29a46ef3a6a"
+    },
+    {
+      "bytes": 25729,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/integration/apply_target.py",
+      "identity": [
+        2080,
+        7077974,
+        33188,
+        1,
+        25729,
+        1794421745453050252,
+        1794421745453050252
+      ],
+      "name": "attempt02/input/kernel/integration/apply_target.py",
+      "path": "payload/attempt02/input/kernel/integration/apply_target.py",
+      "sha256": "ed9f1749a2056cf9fb184347faa3c49073b6b01286385548779e2aa9971b542a"
+    },
+    {
+      "bytes": 2629,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/integration/task_struct.patch",
+      "identity": [
+        2080,
+        7077975,
+        33188,
+        1,
+        2629,
+        1794421745456458886,
+        1794421745456458886
+      ],
+      "name": "attempt02/input/kernel/integration/task_struct.patch",
+      "path": "payload/attempt02/input/kernel/integration/task_struct.patch",
+      "sha256": "ce09f22277695687904b9d181b52e5429c05413a9768060d405152fb848eb4ec"
+    },
+    {
+      "bytes": 36979,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/jit.c",
+      "identity": [
+        2080,
+        7077976,
+        33188,
+        1,
+        36979,
+        1794421745459065669,
+        1794421745459065669
+      ],
+      "name": "attempt02/input/kernel/jit.c",
+      "path": "payload/attempt02/input/kernel/jit.c",
+      "sha256": "9537b5eb1df7fa2993aa6dab02ccc9ddf3eee2a7f6146263abeb23f63e00e8e1"
+    },
+    {
+      "bytes": 14635,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/jit.h",
+      "identity": [
+        2080,
+        7077977,
+        33188,
+        1,
+        14635,
+        1794421745461764729,
+        1794421745461764729
+      ],
+      "name": "attempt02/input/kernel/jit.h",
+      "path": "payload/attempt02/input/kernel/jit.h",
+      "sha256": "dac4dab1df84ce6d2e20d73a44e809962201172d8c9fe1d8435531e4391c4b00"
+    },
+    {
+      "bytes": 6906,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/lifecycle.c",
+      "identity": [
+        2080,
+        7077978,
+        33188,
+        1,
+        6906,
+        1794421745464336748,
+        1794421745464336748
+      ],
+      "name": "attempt02/input/kernel/lifecycle.c",
+      "path": "payload/attempt02/input/kernel/lifecycle.c",
+      "sha256": "ce27c3cdc0328e88d468883567c34bdcbd9cf3dd0e7504fabb587ca7ccae4b71"
+    },
+    {
+      "bytes": 3833,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/lifecycle.h",
+      "identity": [
+        2080,
+        7077979,
+        33188,
+        1,
+        3833,
+        1794421745467738228,
+        1794421745467738228
+      ],
+      "name": "attempt02/input/kernel/lifecycle.h",
+      "path": "payload/attempt02/input/kernel/lifecycle.h",
+      "sha256": "1ed47fe6fa11afa4bb68489dac42ed955d5c2af54f2591d89bd260aefb9d9f76"
+    },
+    {
+      "bytes": 14826,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/linux_rwsem.c",
+      "identity": [
+        2080,
+        7077980,
+        33188,
+        1,
+        14826,
+        1794421745470311746,
+        1794421745470311746
+      ],
+      "name": "attempt02/input/kernel/linux_rwsem.c",
+      "path": "payload/attempt02/input/kernel/linux_rwsem.c",
+      "sha256": "97816078fb7509fb1ed7c8e3c90c50580b853b007c1df2548191fbea05b98d96"
+    },
+    {
+      "bytes": 48600,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/mutex.c",
+      "identity": [
+        2080,
+        7077981,
+        33188,
+        1,
+        48600,
+        1794421745472988749,
+        1794421745472988749
+      ],
+      "name": "attempt02/input/kernel/mutex.c",
+      "path": "payload/attempt02/input/kernel/mutex.c",
+      "sha256": "949ed7175a6f68fc6e91ac3ef84742e4f631fc159809dab0bc23f342d81ecbc0"
+    },
+    {
+      "bytes": 14104,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/mutex.h",
+      "identity": [
+        2080,
+        7077982,
+        33188,
+        1,
+        14104,
+        1794421745476466804,
+        1794421745476466804
+      ],
+      "name": "attempt02/input/kernel/mutex.h",
+      "path": "payload/attempt02/input/kernel/mutex.h",
+      "sha256": "85df670f30b3e8598d5fdab44b86f4e4095b4a3287d064c6a28d1d4119264ade"
+    },
+    {
+      "bytes": 11096,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/mutex_api.c",
+      "identity": [
+        2080,
+        7077983,
+        33188,
+        1,
+        11096,
+        1794421745479037935,
+        1794421745479037935
+      ],
+      "name": "attempt02/input/kernel/mutex_api.c",
+      "path": "payload/attempt02/input/kernel/mutex_api.c",
+      "sha256": "d629ad7fa6e65af434f4a1ce36c740062ed22500363241701c0ef7c91c4e676e"
+    },
+    {
+      "bytes": 5184,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/mutex_api.h",
+      "identity": [
+        2080,
+        7077984,
+        33188,
+        1,
+        5184,
+        1794421745481611496,
+        1794421745481611496
+      ],
+      "name": "attempt02/input/kernel/mutex_api.h",
+      "path": "payload/attempt02/input/kernel/mutex_api.h",
+      "sha256": "3d6076e91645111da3acad70b453ae005859070d764baa81102607ca223c363f"
+    },
+    {
+      "bytes": 14602,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/mutex_release.c",
+      "identity": [
+        2080,
+        7077985,
+        33188,
+        1,
+        14602,
+        1794421745484267875,
+        1794421745484267875
+      ],
+      "name": "attempt02/input/kernel/mutex_release.c",
+      "path": "payload/attempt02/input/kernel/mutex_release.c",
+      "sha256": "2d9639fcf6688e0923b1fcc7f6475edff26957710984785212fe40dda5dcc7f8"
+    },
+    {
+      "bytes": 6267,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/mutex_release.h",
+      "identity": [
+        2080,
+        7077986,
+        33188,
+        1,
+        6267,
+        1794421745486828710,
+        1794421745486828710
+      ],
+      "name": "attempt02/input/kernel/mutex_release.h",
+      "path": "payload/attempt02/input/kernel/mutex_release.h",
+      "sha256": "a2805d3e5d1bdff89390c54f9ddf66ed02f5c470d07b5ee83ec51b9304a279ce"
+    },
+    {
+      "bytes": 7588,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/native_entry.c",
+      "identity": [
+        2080,
+        7077987,
+        33188,
+        1,
+        7588,
+        1794421745490246038,
+        1794421745490246038
+      ],
+      "name": "attempt02/input/kernel/native_entry.c",
+      "path": "payload/attempt02/input/kernel/native_entry.c",
+      "sha256": "8d452d7c27a955dafe022af389ccf6b55520f8c69e23f35f9fd7c32f31708aa4"
+    },
+    {
+      "bytes": 1991,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/native_entry.h",
+      "identity": [
+        2080,
+        7077988,
+        33188,
+        1,
+        1991,
+        1794421745492798916,
+        1794421745492798916
+      ],
+      "name": "attempt02/input/kernel/native_entry.h",
+      "path": "payload/attempt02/input/kernel/native_entry.h",
+      "sha256": "80d60672aaa65bb4cdf1884b5f25031571c1ab5e2d7f589cf2fce6524bb70c2e"
+    },
+    {
+      "bytes": 293,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/observation.c",
+      "identity": [
+        2080,
+        7077989,
+        33188,
+        1,
+        293,
+        1794421745495402338,
+        1794421745495402338
+      ],
+      "name": "attempt02/input/kernel/observation.c",
+      "path": "payload/attempt02/input/kernel/observation.c",
+      "sha256": "1d9a4ac626de10516682680904c958bd0af1539eae0828b4236b5e0bea2b2e3a"
+    },
+    {
+      "bytes": 4009,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/observation.h",
+      "identity": [
+        2080,
+        7077990,
+        33188,
+        1,
+        4009,
+        1794421745498026683,
+        1794421745498026683
+      ],
+      "name": "attempt02/input/kernel/observation.h",
+      "path": "payload/attempt02/input/kernel/observation.h",
+      "sha256": "ee8a30d1f3f29b5eca5d56859c3e874fe046805d15d5932df8558a90946972a1"
+    },
+    {
+      "bytes": 8746,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/owner_progress.c",
+      "identity": [
+        2080,
+        7077991,
+        33188,
+        1,
+        8746,
+        1794421745500625786,
+        1794421745500625786
+      ],
+      "name": "attempt02/input/kernel/owner_progress.c",
+      "path": "payload/attempt02/input/kernel/owner_progress.c",
+      "sha256": "8184208d878b467a7a269c2606029aa22cba64d4a45fd56026855b04171178d3"
+    },
+    {
+      "bytes": 4064,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/owner_progress.h",
+      "identity": [
+        2080,
+        7077992,
+        33188,
+        1,
+        4064,
+        1794421745503230959,
+        1794421745503230959
+      ],
+      "name": "attempt02/input/kernel/owner_progress.h",
+      "path": "payload/attempt02/input/kernel/owner_progress.h",
+      "sha256": "cc092ec0df8a74b6b993a6a3a7034ee713a896e0bf0f3a2ed32702692cea1052"
+    },
+    {
+      "bytes": 22701,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/request_pool.c",
+      "identity": [
+        2080,
+        7077993,
+        33188,
+        1,
+        22701,
+        1794421745505842219,
+        1794421745505842219
+      ],
+      "name": "attempt02/input/kernel/request_pool.c",
+      "path": "payload/attempt02/input/kernel/request_pool.c",
+      "sha256": "df30718bf96fcdb637ed6ff8b1459de5963e255069556001685dc1d5cf59ee4e"
+    },
+    {
+      "bytes": 10812,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/request_pool.h",
+      "identity": [
+        2080,
+        7077994,
+        33188,
+        1,
+        10812,
+        1794421745509265748,
+        1794421745509265748
+      ],
+      "name": "attempt02/input/kernel/request_pool.h",
+      "path": "payload/attempt02/input/kernel/request_pool.h",
+      "sha256": "1caf78b544d56e74d95d44d31a76ac35cd904791b752dbb0f9521ee4f8996c70"
+    },
+    {
+      "bytes": 34635,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/runtime.c",
+      "identity": [
+        2080,
+        7077995,
+        33188,
+        1,
+        34635,
+        1794421745511927912,
+        1794421745511927912
+      ],
+      "name": "attempt02/input/kernel/runtime.c",
+      "path": "payload/attempt02/input/kernel/runtime.c",
+      "sha256": "513bfcf6b526798aca7627a9e10e626a153eaa1f6fa5d8c728f46535644bc28c"
+    },
+    {
+      "bytes": 3843,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/runtime.h",
+      "identity": [
+        2080,
+        7077996,
+        33188,
+        1,
+        3843,
+        1794421745518518734,
+        1794421745518518734
+      ],
+      "name": "attempt02/input/kernel/runtime.h",
+      "path": "payload/attempt02/input/kernel/runtime.h",
+      "sha256": "061a1dabe203d32d3e06c21bd2028e7907ba7124f99ed4bd43a06baf202d9329"
+    },
+    {
+      "bytes": 15750,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/rw.c",
+      "identity": [
+        2080,
+        7077997,
+        33188,
+        1,
+        15750,
+        1794421745521136968,
+        1794421745521136968
+      ],
+      "name": "attempt02/input/kernel/rw.c",
+      "path": "payload/attempt02/input/kernel/rw.c",
+      "sha256": "1f17e4d0d7d4ded6d6b7d2bf123f7f36bda309f0643ccf1897320be6e49f6393"
+    },
+    {
+      "bytes": 5383,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/rw.h",
+      "identity": [
+        2080,
+        7077998,
+        33188,
+        1,
+        5383,
+        1794421745524550290,
+        1794421745524550290
+      ],
+      "name": "attempt02/input/kernel/rw.h",
+      "path": "payload/attempt02/input/kernel/rw.h",
+      "sha256": "58f0ba7bd8d62353f15a4690cd3d87ce2438cb6b9aed9c37cb9600994a1605a7"
+    },
+    {
+      "bytes": 18050,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/rw_native.c",
+      "identity": [
+        2080,
+        7077999,
+        33188,
+        1,
+        18050,
+        1794421745527136747,
+        1794421745527136747
+      ],
+      "name": "attempt02/input/kernel/rw_native.c",
+      "path": "payload/attempt02/input/kernel/rw_native.c",
+      "sha256": "1a5dc3349dfd7d831c481b4a4862835798fb1a5eb725704dcc91ae42cc49afd0"
+    },
+    {
+      "bytes": 3895,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/rw_native.h",
+      "identity": [
+        2080,
+        7078000,
+        33188,
+        1,
+        3895,
+        1794421745529730345,
+        1794421745529730345
+      ],
+      "name": "attempt02/input/kernel/rw_native.h",
+      "path": "payload/attempt02/input/kernel/rw_native.h",
+      "sha256": "5644c11916ee0861571d369dda7f50ec2f7da1a7367000827a65935d410dd01f"
+    },
+    {
+      "bytes": 6933,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/source_epoch.c",
+      "identity": [
+        2080,
+        7078001,
+        33188,
+        1,
+        6933,
+        1794421745532461762,
+        1794421745532461762
+      ],
+      "name": "attempt02/input/kernel/source_epoch.c",
+      "path": "payload/attempt02/input/kernel/source_epoch.c",
+      "sha256": "2ef40e9ad005caf758c31f9947bf0b49b67f7bf19eae3a0ec8684090ebe8ff12"
+    },
+    {
+      "bytes": 6567,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/source_epoch.h",
+      "identity": [
+        2080,
+        7078002,
+        33188,
+        1,
+        6567,
+        1794421745535150206,
+        1794421745535150206
+      ],
+      "name": "attempt02/input/kernel/source_epoch.h",
+      "path": "payload/attempt02/input/kernel/source_epoch.h",
+      "sha256": "f1838dbd76af0232cbee8909f85dbefe2972bd8bce8271faf909a98ec05fe0bb"
+    },
+    {
+      "bytes": 4789,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/source_provider.c",
+      "identity": [
+        2080,
+        7078003,
+        33188,
+        1,
+        4789,
+        1794421745537731923,
+        1794421745537731923
+      ],
+      "name": "attempt02/input/kernel/source_provider.c",
+      "path": "payload/attempt02/input/kernel/source_provider.c",
+      "sha256": "c242e5bd9a091461a2c6f9d5d8907102d8986c62897959629c04789f8f0aa49e"
+    },
+    {
+      "bytes": 3194,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/source_provider.h",
+      "identity": [
+        2080,
+        7078004,
+        33188,
+        1,
+        3194,
+        1794421745540303289,
+        1794421745540303289
+      ],
+      "name": "attempt02/input/kernel/source_provider.h",
+      "path": "payload/attempt02/input/kernel/source_provider.h",
+      "sha256": "0bde73385ec8620af476303299b559440d2da181797fb82a1d39a36a26c5f261"
+    },
+    {
+      "bytes": 2336,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/source_stack.c",
+      "identity": [
+        2080,
+        7078005,
+        33188,
+        1,
+        2336,
+        1794421745543762234,
+        1794421745543762234
+      ],
+      "name": "attempt02/input/kernel/source_stack.c",
+      "path": "payload/attempt02/input/kernel/source_stack.c",
+      "sha256": "81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302"
+    },
+    {
+      "bytes": 2031,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/source_stack.h",
+      "identity": [
+        2080,
+        7078006,
+        33188,
+        1,
+        2031,
+        1794421745546344434,
+        1794421745546344434
+      ],
+      "name": "attempt02/input/kernel/source_stack.h",
+      "path": "payload/attempt02/input/kernel/source_stack.h",
+      "sha256": "91458b0aa42309ebcf3c8b474bd2420f24574558e3362b1f993f21f0d7d4f16d"
+    },
+    {
+      "bytes": 18940,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/state.c",
+      "identity": [
+        2080,
+        7078007,
+        33188,
+        1,
+        18940,
+        1794421745548930337,
+        1794421745548930337
+      ],
+      "name": "attempt02/input/kernel/state.c",
+      "path": "payload/attempt02/input/kernel/state.c",
+      "sha256": "8689328f0ea82b2ca114a5569aa79b03abe2a8f74c598b0d42f0e645ff23c155"
+    },
+    {
+      "bytes": 12672,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/state.h",
+      "identity": [
+        2080,
+        7078008,
+        33188,
+        1,
+        12672,
+        1794421745551554683,
+        1794421745551554683
+      ],
+      "name": "attempt02/input/kernel/state.h",
+      "path": "payload/attempt02/input/kernel/state.h",
+      "sha256": "34f075387f41efd131e759d0eecbeabfe8b3dd7b616030ba8bea72c7a52699c3"
+    },
+    {
+      "bytes": 574,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/target.h",
+      "identity": [
+        2080,
+        7078009,
+        33188,
+        1,
+        574,
+        1794421745554149326,
+        1794421745554149326
+      ],
+      "name": "attempt02/input/kernel/target.h",
+      "path": "payload/attempt02/input/kernel/target.h",
+      "sha256": "37c98012e3bca9db2ff3bac401bfb3eefe2c63b0625cb96ec67774bd8e3a225f"
+    },
+    {
+      "bytes": 2724,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/task_progress.c",
+      "identity": [
+        2080,
+        7078010,
+        33188,
+        1,
+        2724,
+        1794421745556762809,
+        1794421745556762809
+      ],
+      "name": "attempt02/input/kernel/task_progress.c",
+      "path": "payload/attempt02/input/kernel/task_progress.c",
+      "sha256": "191d1cf54b30689fe7243e48bd7c3f6e6e34b63ccb3ff9bd2feff034ac307c9e"
+    },
+    {
+      "bytes": 2386,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/task_progress.h",
+      "identity": [
+        2080,
+        7078011,
+        33188,
+        1,
+        2386,
+        1794421745559326874,
+        1794421745559326874
+      ],
+      "name": "attempt02/input/kernel/task_progress.h",
+      "path": "payload/attempt02/input/kernel/task_progress.h",
+      "sha256": "e51bb0e84a9ce4aed2d575d59f09b3048b16bca4b0d8f8417711cd55635ad4c3"
+    },
+    {
+      "bytes": 6911,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/task_setup.c",
+      "identity": [
+        2080,
+        7078012,
+        33188,
+        1,
+        6911,
+        1794421745561928526,
+        1794421745561928526
+      ],
+      "name": "attempt02/input/kernel/task_setup.c",
+      "path": "payload/attempt02/input/kernel/task_setup.c",
+      "sha256": "a4a510f30b3dddeff1b9eb8d3f09f25bfd5b98529326aaa3628db7fc4160c30a"
+    },
+    {
+      "bytes": 4511,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/task_setup.h",
+      "identity": [
+        2080,
+        7078013,
+        33188,
+        1,
+        4511,
+        1794421745565359618,
+        1794421745565359618
+      ],
+      "name": "attempt02/input/kernel/task_setup.h",
+      "path": "payload/attempt02/input/kernel/task_setup.h",
+      "sha256": "bb1e830d13f49f6235dc0587a4828bb3ecf2307fa3a8901698c658399420f975"
+    },
+    {
+      "bytes": 9076,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/task_state.c",
+      "identity": [
+        2080,
+        7078014,
+        33188,
+        1,
+        9076,
+        1794421745567913870,
+        1794421745567913870
+      ],
+      "name": "attempt02/input/kernel/task_state.c",
+      "path": "payload/attempt02/input/kernel/task_state.c",
+      "sha256": "5d607be623e60f0f27ca39331dfb39385284ed81e1e1fd758b3c465746f9dadb"
+    },
+    {
+      "bytes": 7255,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/task_state.h",
+      "identity": [
+        2080,
+        7078015,
+        33188,
+        1,
+        7255,
+        1794421745570510520,
+        1794421745570510520
+      ],
+      "name": "attempt02/input/kernel/task_state.h",
+      "path": "payload/attempt02/input/kernel/task_state.h",
+      "sha256": "7ab09ad8febe6dc0660217f4f2d62cdf6ba83101fa8a12d10da3321e7e8007f3"
+    },
+    {
+      "bytes": 15185,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/task_storage.c",
+      "identity": [
+        2080,
+        7078016,
+        33188,
+        1,
+        15185,
+        1794421745573142966,
+        1794421745573142966
+      ],
+      "name": "attempt02/input/kernel/task_storage.c",
+      "path": "payload/attempt02/input/kernel/task_storage.c",
+      "sha256": "199712250db1dfad005a28de58a4114c35ff67bc98c1f9a17aa45ced2066fd9b"
+    },
+    {
+      "bytes": 7129,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/kernel/task_storage.h",
+      "identity": [
+        2080,
+        7078017,
+        33188,
+        1,
+        7129,
+        1794421745575745588,
+        1794421745575745588
+      ],
+      "name": "attempt02/input/kernel/task_storage.h",
+      "path": "payload/attempt02/input/kernel/task_storage.h",
+      "sha256": "14c062ac9cdfa83b557a28b885295982441bed5abd9b2d76d41593f31facee1f"
+    },
+    {
+      "bytes": 14140,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/mmap_api/README.md",
+      "identity": [
+        2080,
+        7078021,
+        33188,
+        1,
+        14140,
+        1794421745578440930,
+        1794421745578440930
+      ],
+      "name": "attempt02/input/tests/kernel/mmap_api/README.md",
+      "path": "payload/attempt02/input/tests/kernel/mmap_api/README.md",
+      "sha256": "d5416687566443165847510737245991a240729b889db914406f76f98ddee1e9"
+    },
+    {
+      "bytes": 6742,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/mmap_api/abi.h",
+      "identity": [
+        2080,
+        7078022,
+        33188,
+        1,
+        6742,
+        1794421745581868819,
+        1794421745581868819
+      ],
+      "name": "attempt02/input/tests/kernel/mmap_api/abi.h",
+      "path": "payload/attempt02/input/tests/kernel/mmap_api/abi.h",
+      "sha256": "79eb6ef99d48fd07053061f66303b8afe25f8602ccc6af4370963cb3fba36ea4"
+    },
+    {
+      "bytes": 182,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/mmap_api/payload/Kbuild",
+      "identity": [
+        2080,
+        7078024,
+        33188,
+        1,
+        182,
+        1794421745584489695,
+        1794421745584489695
+      ],
+      "name": "attempt02/input/tests/kernel/mmap_api/payload/Kbuild",
+      "path": "payload/attempt02/input/tests/kernel/mmap_api/payload/Kbuild",
+      "sha256": "3108e0d9b531252a0b9f4a86ae87cb88e9eb4ac8b96284568191057b278a96a1"
+    },
+    {
+      "bytes": 21906,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/mmap_api/payload/mmap_jit_profile.inc",
+      "identity": [
+        2080,
+        7078025,
+        33188,
+        1,
+        21906,
+        1794421745587073200,
+        1794421745587073200
+      ],
+      "name": "attempt02/input/tests/kernel/mmap_api/payload/mmap_jit_profile.inc",
+      "path": "payload/attempt02/input/tests/kernel/mmap_api/payload/mmap_jit_profile.inc",
+      "sha256": "b852bc06456c7d1d7ec88436d7a99aa2e4807c04ae54670f823f59934e592033"
+    },
+    {
+      "bytes": 12331,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/mmap_api/payload/provider.c",
+      "identity": [
+        2080,
+        7078026,
+        33188,
+        1,
+        12331,
+        1794421745589775079,
+        1794421745589775079
+      ],
+      "name": "attempt02/input/tests/kernel/mmap_api/payload/provider.c",
+      "path": "payload/attempt02/input/tests/kernel/mmap_api/payload/provider.c",
+      "sha256": "ef02241e92a74f7f306ae8fcf3bf60fac4a2e52978337960215bcd1cfe92c858"
+    },
+    {
+      "bytes": 51517,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/mmap_api/runner.py",
+      "identity": [
+        2080,
+        7078027,
+        33188,
+        1,
+        51517,
+        1794421745592408481,
+        1794421745592408481
+      ],
+      "name": "attempt02/input/tests/kernel/mmap_api/runner.py",
+      "path": "payload/attempt02/input/tests/kernel/mmap_api/runner.py",
+      "sha256": "cf9083e829021787b95a881f140e3b0cfca96b92da569e052ac9dfc258d45b3f"
+    },
+    {
+      "bytes": 24376,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/mmap_api/userspace.c",
+      "identity": [
+        2080,
+        7078028,
+        33188,
+        1,
+        24376,
+        1794421745595837711,
+        1794421745595837711
+      ],
+      "name": "attempt02/input/tests/kernel/mmap_api/userspace.c",
+      "path": "payload/attempt02/input/tests/kernel/mmap_api/userspace.c",
+      "sha256": "03ced9a455fc6a7bd61a45af59c430bb6cc5c5e2d39a944f8507677edcea7f56"
+    },
+    {
+      "bytes": 24715,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/mmap_api/userspace_jit.inc",
+      "identity": [
+        2080,
+        7078029,
+        33188,
+        1,
+        24715,
+        1794421745599271945,
+        1794421745599271945
+      ],
+      "name": "attempt02/input/tests/kernel/mmap_api/userspace_jit.inc",
+      "path": "payload/attempt02/input/tests/kernel/mmap_api/userspace_jit.inc",
+      "sha256": "38db99539884127974471535564530e6bd3dd1cf84b344ccc088574a0f69f471"
+    },
+    {
+      "bytes": 335,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/payload/Kbuild",
+      "identity": [
+        2080,
+        7078031,
+        33188,
+        1,
+        335,
+        1794421745601849889,
+        1794421745601849889
+      ],
+      "name": "attempt02/input/tests/kernel/payload/Kbuild",
+      "path": "payload/attempt02/input/tests/kernel/payload/Kbuild",
+      "sha256": "f3985b9360ea4469c19d7d4f49ea65d0e690ce73a644ded3c31b6198dbec7e55"
+    },
+    {
+      "bytes": 40001,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/payload/runtime_fixture.c",
+      "identity": [
+        2080,
+        7078032,
+        33188,
+        1,
+        40001,
+        1794421745604598076,
+        1794421745604598076
+      ],
+      "name": "attempt02/input/tests/kernel/payload/runtime_fixture.c",
+      "path": "payload/attempt02/input/tests/kernel/payload/runtime_fixture.c",
+      "sha256": "85944c66ac370ff604eebcd0df9c38b43827d0b3252293e860aa2e23bb29c9d3"
+    },
+    {
+      "bytes": 8631,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/payload/runtime_fixture_observe.inc",
+      "identity": [
+        2080,
+        7078033,
+        33188,
+        1,
+        8631,
+        1794421745612014318,
+        1794421745612014318
+      ],
+      "name": "attempt02/input/tests/kernel/payload/runtime_fixture_observe.inc",
+      "path": "payload/attempt02/input/tests/kernel/payload/runtime_fixture_observe.inc",
+      "sha256": "fcc01b878726a864f6d791942e834e7cf9f1d92dbf8df7db0fec8f9a5b318a25"
+    },
+    {
+      "bytes": 74504,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/run_runtime_fixture.py",
+      "identity": [
+        2080,
+        7078034,
+        33188,
+        1,
+        74504,
+        1794421745614698116,
+        1794421745614698116
+      ],
+      "name": "attempt02/input/tests/kernel/run_runtime_fixture.py",
+      "path": "payload/attempt02/input/tests/kernel/run_runtime_fixture.py",
+      "sha256": "18b3ffdde7a2515a7f3dcbdd1a935b0d50e80104666f4effcdd6c78250ef1ded"
+    },
+    {
+      "bytes": 353,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwlock/payload/Kbuild",
+      "identity": [
+        2080,
+        7078037,
+        33188,
+        1,
+        353,
+        1794421745618447088,
+        1794421745618447088
+      ],
+      "name": "attempt02/input/tests/kernel/rwlock/payload/Kbuild",
+      "path": "payload/attempt02/input/tests/kernel/rwlock/payload/Kbuild",
+      "sha256": "eb1b871242b2bc65631c3833a43d7b45cf272efd9da4dcb576dd69491161990b"
+    },
+    {
+      "bytes": 110,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwlock/payload/rwlock_runtime_fixture.c",
+      "identity": [
+        2080,
+        7078038,
+        33188,
+        1,
+        110,
+        1794421745621031492,
+        1794421745621031492
+      ],
+      "name": "attempt02/input/tests/kernel/rwlock/payload/rwlock_runtime_fixture.c",
+      "path": "payload/attempt02/input/tests/kernel/rwlock/payload/rwlock_runtime_fixture.c",
+      "sha256": "268e148524e4b748db84cf8932c5b646e6aa962f2c3455ab3d735604b27c3f6c"
+    },
+    {
+      "bytes": 301,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwlock/run_rwlock_runtime_fixture.py",
+      "identity": [
+        2080,
+        7078039,
+        33188,
+        1,
+        301,
+        1794421745623629607,
+        1794421745623629607
+      ],
+      "name": "attempt02/input/tests/kernel/rwlock/run_rwlock_runtime_fixture.py",
+      "path": "payload/attempt02/input/tests/kernel/rwlock/run_rwlock_runtime_fixture.py",
+      "sha256": "2a805bfe959ab3f011ce2660438d01bd705477bf8045a4e98fc82194bd932c99"
+    },
+    {
+      "bytes": 6028,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem/README.md",
+      "identity": [
+        2080,
+        7078041,
+        33188,
+        1,
+        6028,
+        1794421745626187212,
+        1794421745626187212
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem/README.md",
+      "path": "payload/attempt02/input/tests/kernel/rwsem/README.md",
+      "sha256": "e347453c7f2dda007925bad170ec3924d9c9ec18f841a7c3de91e9a62c7f338a"
+    },
+    {
+      "bytes": 47,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem/__init__.py",
+      "identity": [
+        2080,
+        7078042,
+        33188,
+        1,
+        47,
+        1794421745629651907,
+        1794421745629651907
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem/__init__.py",
+      "path": "payload/attempt02/input/tests/kernel/rwsem/__init__.py",
+      "sha256": "63f4edc0559a5e186005b2e0ee2a26652a8b5aa0a2a488565d0df4ec92e05a8c"
+    },
+    {
+      "bytes": 373,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem/payload/Kbuild",
+      "identity": [
+        2080,
+        7078044,
+        33188,
+        1,
+        373,
+        1794421745632276567,
+        1794421745632276567
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem/payload/Kbuild",
+      "path": "payload/attempt02/input/tests/kernel/rwsem/payload/Kbuild",
+      "sha256": "5d8c79de5903f340319b3421d54ebafaf4864985509cb5196f619598b8adb032"
+    },
+    {
+      "bytes": 8382,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem/payload/reader_cases.inc",
+      "identity": [
+        2080,
+        7078045,
+        33188,
+        1,
+        8382,
+        1794421745634870133,
+        1794421745634870133
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem/payload/reader_cases.inc",
+      "path": "payload/attempt02/input/tests/kernel/rwsem/payload/reader_cases.inc",
+      "sha256": "03f67a5a0853e0692d9719a963f2af2798514e66a94871fabe2bc04f08d2a109"
+    },
+    {
+      "bytes": 109,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem/payload/rwsem_runtime_fixture.c",
+      "identity": [
+        2080,
+        7078046,
+        33188,
+        1,
+        109,
+        1794421745637446614,
+        1794421745637446614
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem/payload/rwsem_runtime_fixture.c",
+      "path": "payload/attempt02/input/tests/kernel/rwsem/payload/rwsem_runtime_fixture.c",
+      "sha256": "3353075eaf1be12e1a0c0975efb48c7fc84781fda7dfbf6dfefe38aaf027193a"
+    },
+    {
+      "bytes": 30912,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem/reader_cases.py",
+      "identity": [
+        2080,
+        7078047,
+        33188,
+        1,
+        30912,
+        1794421745640058623,
+        1794421745640058623
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem/reader_cases.py",
+      "path": "payload/attempt02/input/tests/kernel/rwsem/reader_cases.py",
+      "sha256": "b6ba66d0661d951147ff152bed8e647fdab9d0e98349908fb1e8c5532f7aed31"
+    },
+    {
+      "bytes": 289,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem/run_rwsem_runtime_fixture.py",
+      "identity": [
+        2080,
+        7078048,
+        33188,
+        1,
+        289,
+        1794421745642617157,
+        1794421745642617157
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem/run_rwsem_runtime_fixture.py",
+      "path": "payload/attempt02/input/tests/kernel/rwsem/run_rwsem_runtime_fixture.py",
+      "sha256": "c7f14017e2b53bc85c89a3ca2924c6da4c39a814416c2ae39f1ce00ccae750b5"
+    },
+    {
+      "bytes": 4093,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem_api/README.md",
+      "identity": [
+        2080,
+        7078050,
+        33188,
+        1,
+        4093,
+        1794421745645960676,
+        1794421745645960676
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem_api/README.md",
+      "path": "payload/attempt02/input/tests/kernel/rwsem_api/README.md",
+      "sha256": "50226257520bc84fec66c652afe77db6eced10d9905779c29e8899b1037ff310"
+    },
+    {
+      "bytes": 188,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem_api/payload/Kbuild",
+      "identity": [
+        2080,
+        7078052,
+        33188,
+        1,
+        188,
+        1794421745648557814,
+        1794421745648557814
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem_api/payload/Kbuild",
+      "path": "payload/attempt02/input/tests/kernel/rwsem_api/payload/Kbuild",
+      "sha256": "b5f4d2a36dc403d198c764a0c93853b7cba418ee3051dff3e23a3b14aac87741"
+    },
+    {
+      "bytes": 22004,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem_api/payload/rwsem_api_fixture.c",
+      "identity": [
+        2080,
+        7078053,
+        33188,
+        1,
+        22004,
+        1794421745651156754,
+        1794421745651156754
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem_api/payload/rwsem_api_fixture.c",
+      "path": "payload/attempt02/input/tests/kernel/rwsem_api/payload/rwsem_api_fixture.c",
+      "sha256": "42648850979577360d88a2fd4066f48ea31e0ac46f29e5666de6ca0b6ac0f50a"
+    },
+    {
+      "bytes": 6827,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem_killable/README.md",
+      "identity": [
+        2080,
+        7078055,
+        33188,
+        1,
+        6827,
+        1794421745653746624,
+        1794421745653746624
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem_killable/README.md",
+      "path": "payload/attempt02/input/tests/kernel/rwsem_killable/README.md",
+      "sha256": "3530a8c6649dea31f3f3dca7a6e8943a07128044a9e2a0892b3ed9495b850d76"
+    },
+    {
+      "bytes": 311,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem_killable/payload/Kbuild",
+      "identity": [
+        2080,
+        7078057,
+        33188,
+        1,
+        311,
+        1794421745656341487,
+        1794421745656341487
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem_killable/payload/Kbuild",
+      "path": "payload/attempt02/input/tests/kernel/rwsem_killable/payload/Kbuild",
+      "sha256": "679334a73ae0d12df36034b84312ed26b5c20f4c8ec5be1f22efa0d1691386b2"
+    },
+    {
+      "bytes": 25790,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem_killable/payload/fixture.c",
+      "identity": [
+        2080,
+        7078058,
+        33188,
+        1,
+        25790,
+        1794421745658957937,
+        1794421745658957937
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem_killable/payload/fixture.c",
+      "path": "payload/attempt02/input/tests/kernel/rwsem_killable/payload/fixture.c",
+      "sha256": "ccd39fdff6c370830cb04896f4aa7f829dbae140606941fa1f1f17263100527a"
+    },
+    {
+      "bytes": 39518,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/rwsem_killable/runner.py",
+      "identity": [
+        2080,
+        7078059,
+        33188,
+        1,
+        39518,
+        1794421745662506230,
+        1794421745662506230
+      ],
+      "name": "attempt02/input/tests/kernel/rwsem_killable/runner.py",
+      "path": "payload/attempt02/input/tests/kernel/rwsem_killable/runner.py",
+      "sha256": "f3b0544cee53a2d61d875476da29e0f1ac2641021029a15bb3df64fddf69624b"
+    },
+    {
+      "bytes": 369,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/spin/payload/Kbuild",
+      "identity": [
+        2080,
+        7078062,
+        33188,
+        1,
+        369,
+        1794421745665208410,
+        1794421745665208410
+      ],
+      "name": "attempt02/input/tests/kernel/spin/payload/Kbuild",
+      "path": "payload/attempt02/input/tests/kernel/spin/payload/Kbuild",
+      "sha256": "be3c11359d6cf6ee1c294171f6f778268242f4f757044a1a24281cb2a42e6187"
+    },
+    {
+      "bytes": 108,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/spin/payload/spin_runtime_fixture.c",
+      "identity": [
+        2080,
+        7078063,
+        33188,
+        1,
+        108,
+        1794421745667832048,
+        1794421745667832048
+      ],
+      "name": "attempt02/input/tests/kernel/spin/payload/spin_runtime_fixture.c",
+      "path": "payload/attempt02/input/tests/kernel/spin/payload/spin_runtime_fixture.c",
+      "sha256": "e70f93a44a46435bce5200c5497f17215234afb888301958b68b6c1eb5461fb0"
+    },
+    {
+      "bytes": 293,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/kernel/spin/run_spin_runtime_fixture.py",
+      "identity": [
+        2080,
+        7078064,
+        33188,
+        1,
+        293,
+        1794421745670414890,
+        1794421745670414890
+      ],
+      "name": "attempt02/input/tests/kernel/spin/run_spin_runtime_fixture.py",
+      "path": "payload/attempt02/input/tests/kernel/spin/run_spin_runtime_fixture.py",
+      "sha256": "203034a6b44c2fc6355763d0367b581aa84eed629d4c8ad813216387a7c1a017"
+    },
+    {
+      "bytes": 7959,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/test_kernel_gs_rip.py",
+      "identity": [
+        2080,
+        7078065,
+        33188,
+        1,
+        7959,
+        1794421745672920664,
+        1794421745672920664
+      ],
+      "name": "attempt02/input/tests/test_kernel_gs_rip.py",
+      "path": "payload/attempt02/input/tests/test_kernel_gs_rip.py",
+      "sha256": "4a309b7c8053ece20ce58c1ac0d6cb9f8a658b331642c2af68e9e1fa9aed01e1"
+    },
+    {
+      "bytes": 3541,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/input/tests/test_source_boundaries.py",
+      "identity": [
+        2080,
+        7078066,
+        33188,
+        1,
+        3541,
+        1794421745676378767,
+        1794421745676378767
+      ],
+      "name": "attempt02/input/tests/test_source_boundaries.py",
+      "path": "payload/attempt02/input/tests/test_source_boundaries.py",
+      "sha256": "c9ba1513dd6a98f0d2b272c9468210710a7b6fb3003b3cea20a3d3c9f34a0252"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/client-build.log",
+      "identity": [
+        2080,
+        7078212,
+        33188,
+        1,
+        0,
+        1794421762557000000,
+        1794421762557000000
+      ],
+      "name": "attempt02/receipts/client-build.log",
+      "path": "payload/attempt02/receipts/client-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 17725,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/killable-build.log",
+      "identity": [
+        2080,
+        7078125,
+        33188,
+        1,
+        17725,
+        1794421754433000000,
+        1794421754433000000
+      ],
+      "name": "attempt02/receipts/killable-build.log",
+      "path": "payload/attempt02/receipts/killable-build.log",
+      "sha256": "f7b5aeea2c68adf48c8d24547b6bcb396c79865dd290f845ddf84e58bc44fefd"
+    },
+    {
+      "bytes": 1,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/killable-depends.log",
+      "identity": [
+        2080,
+        7078152,
+        33188,
+        1,
+        1,
+        1794421754935000000,
+        1794421754935000000
+      ],
+      "name": "attempt02/receipts/killable-depends.log",
+      "path": "payload/attempt02/receipts/killable-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 7,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/killable-sig_hashalgo.log",
+      "identity": [
+        2080,
+        7078151,
+        33188,
+        1,
+        7,
+        1794421754917000000,
+        1794421754917000000
+      ],
+      "name": "attempt02/receipts/killable-sig_hashalgo.log",
+      "path": "payload/attempt02/receipts/killable-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec"
+    },
+    {
+      "bytes": 60,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/killable-sig_key.log",
+      "identity": [
+        2080,
+        7078150,
+        33188,
+        1,
+        60,
+        1794421754900000000,
+        1794421754900000000
+      ],
+      "name": "attempt02/receipts/killable-sig_key.log",
+      "path": "payload/attempt02/receipts/killable-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/killable-sign.log",
+      "identity": [
+        2080,
+        7078147,
+        33188,
+        1,
+        0,
+        1794421754595000000,
+        1794421754595000000
+      ],
+      "name": "attempt02/receipts/killable-sign.log",
+      "path": "payload/attempt02/receipts/killable-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/killable-signer.log",
+      "identity": [
+        2080,
+        7078149,
+        33188,
+        1,
+        36,
+        1794421754886000000,
+        1794421754886000000
+      ],
+      "name": "attempt02/receipts/killable-signer.log",
+      "path": "payload/attempt02/receipts/killable-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/killable-vermagic.log",
+      "identity": [
+        2080,
+        7078127,
+        33188,
+        1,
+        56,
+        1794421754871000000,
+        1794421754871000000
+      ],
+      "name": "attempt02/receipts/killable-vermagic.log",
+      "path": "payload/attempt02/receipts/killable-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0"
+    },
+    {
+      "bytes": 17965,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mmap-build.log",
+      "identity": [
+        2080,
+        7078096,
+        33188,
+        1,
+        17965,
+        1794421751227000000,
+        1794421751227000000
+      ],
+      "name": "attempt02/receipts/mmap-build.log",
+      "path": "payload/attempt02/receipts/mmap-build.log",
+      "sha256": "ce38b2a77cd08c3ed71044c781853b9e7be43bf77237bb05f09324ffc02b47f9"
+    },
+    {
+      "bytes": 1,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mmap-depends.log",
+      "identity": [
+        2080,
+        7078123,
+        33188,
+        1,
+        1,
+        1794421751626000000,
+        1794421751626000000
+      ],
+      "name": "attempt02/receipts/mmap-depends.log",
+      "path": "payload/attempt02/receipts/mmap-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 7,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mmap-sig_hashalgo.log",
+      "identity": [
+        2080,
+        7078122,
+        33188,
+        1,
+        7,
+        1794421751610000000,
+        1794421751610000000
+      ],
+      "name": "attempt02/receipts/mmap-sig_hashalgo.log",
+      "path": "payload/attempt02/receipts/mmap-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec"
+    },
+    {
+      "bytes": 60,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mmap-sig_key.log",
+      "identity": [
+        2080,
+        7078121,
+        33188,
+        1,
+        60,
+        1794421751595000000,
+        1794421751595000000
+      ],
+      "name": "attempt02/receipts/mmap-sig_key.log",
+      "path": "payload/attempt02/receipts/mmap-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mmap-sign.log",
+      "identity": [
+        2080,
+        7078118,
+        33188,
+        1,
+        0,
+        1794421751288000000,
+        1794421751288000000
+      ],
+      "name": "attempt02/receipts/mmap-sign.log",
+      "path": "payload/attempt02/receipts/mmap-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mmap-signer.log",
+      "identity": [
+        2080,
+        7078120,
+        33188,
+        1,
+        36,
+        1794421751581000000,
+        1794421751581000000
+      ],
+      "name": "attempt02/receipts/mmap-signer.log",
+      "path": "payload/attempt02/receipts/mmap-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mmap-vermagic.log",
+      "identity": [
+        2080,
+        7078098,
+        33188,
+        1,
+        56,
+        1794421751565000000,
+        1794421751565000000
+      ],
+      "name": "attempt02/receipts/mmap-vermagic.log",
+      "path": "payload/attempt02/receipts/mmap-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0"
+    },
+    {
+      "bytes": 17709,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mutex-build.log",
+      "identity": [
+        2080,
+        7078183,
+        33188,
+        1,
+        17709,
+        1794421761467000000,
+        1794421761467000000
+      ],
+      "name": "attempt02/receipts/mutex-build.log",
+      "path": "payload/attempt02/receipts/mutex-build.log",
+      "sha256": "554b8a21a7bb34437866adc6063a6adbf88371f87f762a565acde26e89c6005d"
+    },
+    {
+      "bytes": 1,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mutex-depends.log",
+      "identity": [
+        2080,
+        7078210,
+        33188,
+        1,
+        1,
+        1794421761868000000,
+        1794421761868000000
+      ],
+      "name": "attempt02/receipts/mutex-depends.log",
+      "path": "payload/attempt02/receipts/mutex-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 7,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mutex-sig_hashalgo.log",
+      "identity": [
+        2080,
+        7078209,
+        33188,
+        1,
+        7,
+        1794421761852000000,
+        1794421761852000000
+      ],
+      "name": "attempt02/receipts/mutex-sig_hashalgo.log",
+      "path": "payload/attempt02/receipts/mutex-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec"
+    },
+    {
+      "bytes": 60,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mutex-sig_key.log",
+      "identity": [
+        2080,
+        7078208,
+        33188,
+        1,
+        60,
+        1794421761836000000,
+        1794421761836000000
+      ],
+      "name": "attempt02/receipts/mutex-sig_key.log",
+      "path": "payload/attempt02/receipts/mutex-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mutex-sign.log",
+      "identity": [
+        2080,
+        7078205,
+        33188,
+        1,
+        0,
+        1794421761522000000,
+        1794421761522000000
+      ],
+      "name": "attempt02/receipts/mutex-sign.log",
+      "path": "payload/attempt02/receipts/mutex-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mutex-signer.log",
+      "identity": [
+        2080,
+        7078207,
+        33188,
+        1,
+        36,
+        1794421761820000000,
+        1794421761820000000
+      ],
+      "name": "attempt02/receipts/mutex-signer.log",
+      "path": "payload/attempt02/receipts/mutex-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/mutex-vermagic.log",
+      "identity": [
+        2080,
+        7078185,
+        33188,
+        1,
+        56,
+        1794421761805000000,
+        1794421761805000000
+      ],
+      "name": "attempt02/receipts/mutex-vermagic.log",
+      "path": "payload/attempt02/receipts/mutex-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0"
+    },
+    {
+      "bytes": 17560,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/native-api-build.log",
+      "identity": [
+        2080,
+        7077906,
+        33188,
+        1,
+        17560,
+        1794421747889000000,
+        1794421747889000000
+      ],
+      "name": "attempt02/receipts/native-api-build.log",
+      "path": "payload/attempt02/receipts/native-api-build.log",
+      "sha256": "168bd8ec6690e7f607a3cf8d99db5dc6ca00b1da95c4d5c08765b78cba2cddcd"
+    },
+    {
+      "bytes": 1,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/native-api-depends.log",
+      "identity": [
+        2080,
+        7078094,
+        33188,
+        1,
+        1,
+        1794421748317000000,
+        1794421748317000000
+      ],
+      "name": "attempt02/receipts/native-api-depends.log",
+      "path": "payload/attempt02/receipts/native-api-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 7,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/native-api-sig_hashalgo.log",
+      "identity": [
+        2080,
+        7078093,
+        33188,
+        1,
+        7,
+        1794421748300000000,
+        1794421748300000000
+      ],
+      "name": "attempt02/receipts/native-api-sig_hashalgo.log",
+      "path": "payload/attempt02/receipts/native-api-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec"
+    },
+    {
+      "bytes": 60,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/native-api-sig_key.log",
+      "identity": [
+        2080,
+        7078092,
+        33188,
+        1,
+        60,
+        1794421748286000000,
+        1794421748286000000
+      ],
+      "name": "attempt02/receipts/native-api-sig_key.log",
+      "path": "payload/attempt02/receipts/native-api-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/native-api-sign.log",
+      "identity": [
+        2080,
+        7078089,
+        33188,
+        1,
+        0,
+        1794421747978000000,
+        1794421747978000000
+      ],
+      "name": "attempt02/receipts/native-api-sign.log",
+      "path": "payload/attempt02/receipts/native-api-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/native-api-signer.log",
+      "identity": [
+        2080,
+        7078091,
+        33188,
+        1,
+        36,
+        1794421748268000000,
+        1794421748268000000
+      ],
+      "name": "attempt02/receipts/native-api-signer.log",
+      "path": "payload/attempt02/receipts/native-api-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/native-api-vermagic.log",
+      "identity": [
+        2080,
+        7078069,
+        33188,
+        1,
+        56,
+        1794421748254000000,
+        1794421748254000000
+      ],
+      "name": "attempt02/receipts/native-api-vermagic.log",
+      "path": "payload/attempt02/receipts/native-api-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0"
+    },
+    {
+      "bytes": 804,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/new-runner-syntax.log",
+      "identity": [
+        2080,
+        7078214,
+        33188,
+        1,
+        804,
+        1794421763396000000,
+        1794421763396000000
+      ],
+      "name": "attempt02/receipts/new-runner-syntax.log",
+      "path": "payload/attempt02/receipts/new-runner-syntax.log",
+      "sha256": "e32fec1876076b74a8bae2bb9788f35b5dded7866f8cf59d007d6b7877c2b4b3"
+    },
+    {
+      "bytes": 173459,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/result.json",
+      "identity": [
+        2080,
+        7078215,
+        33188,
+        1,
+        173459,
+        1794421763596000000,
+        1794421763599000000
+      ],
+      "name": "attempt02/receipts/result.json",
+      "path": "payload/attempt02/receipts/result.json",
+      "sha256": "2820a2952f5da8815e130d6d0fb62a5a7f912b48cf815ad4b533fd6b62e93432"
+    },
+    {
+      "bytes": 18894,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/rwsem-build.log",
+      "identity": [
+        2080,
+        7078154,
+        33188,
+        1,
+        18894,
+        1794421758090000000,
+        1794421758090000000
+      ],
+      "name": "attempt02/receipts/rwsem-build.log",
+      "path": "payload/attempt02/receipts/rwsem-build.log",
+      "sha256": "00451ad0e0c471d5fb2ccd57d142509293347736ebafc7270707e77fd202e67d"
+    },
+    {
+      "bytes": 1,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/rwsem-depends.log",
+      "identity": [
+        2080,
+        7078181,
+        33188,
+        1,
+        1,
+        1794421758525000000,
+        1794421758525000000
+      ],
+      "name": "attempt02/receipts/rwsem-depends.log",
+      "path": "payload/attempt02/receipts/rwsem-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 7,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/rwsem-sig_hashalgo.log",
+      "identity": [
+        2080,
+        7078180,
+        33188,
+        1,
+        7,
+        1794421758510000000,
+        1794421758510000000
+      ],
+      "name": "attempt02/receipts/rwsem-sig_hashalgo.log",
+      "path": "payload/attempt02/receipts/rwsem-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec"
+    },
+    {
+      "bytes": 60,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/rwsem-sig_key.log",
+      "identity": [
+        2080,
+        7078179,
+        33188,
+        1,
+        60,
+        1794421758495000000,
+        1794421758495000000
+      ],
+      "name": "attempt02/receipts/rwsem-sig_key.log",
+      "path": "payload/attempt02/receipts/rwsem-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/rwsem-sign.log",
+      "identity": [
+        2080,
+        7078176,
+        33188,
+        1,
+        0,
+        1794421758183000000,
+        1794421758183000000
+      ],
+      "name": "attempt02/receipts/rwsem-sign.log",
+      "path": "payload/attempt02/receipts/rwsem-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/rwsem-signer.log",
+      "identity": [
+        2080,
+        7078178,
+        33188,
+        1,
+        36,
+        1794421758479000000,
+        1794421758479000000
+      ],
+      "name": "attempt02/receipts/rwsem-signer.log",
+      "path": "payload/attempt02/receipts/rwsem-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/receipts/rwsem-vermagic.log",
+      "identity": [
+        2080,
+        7078156,
+        33188,
+        1,
+        56,
+        1794421758458000000,
+        1794421758458000000
+      ],
+      "name": "attempt02/receipts/rwsem-vermagic.log",
+      "path": "payload/attempt02/receipts/rwsem-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0"
+    },
+    {
+      "bytes": 34842,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/build.py",
+      "identity": [
+        2080,
+        7077894,
+        33188,
+        1,
+        34842,
+        1794421679341031606,
+        1794421679341031606
+      ],
+      "name": "attempt02/transport/build.py",
+      "path": "payload/attempt02/transport/build.py",
+      "sha256": "cbeca599151d06306919c9fb9172670716b121d1851b45a1e0cb97194cea1ad2"
+    },
+    {
+      "bytes": 2849,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/config.json",
+      "identity": [
+        2080,
+        7077896,
+        33188,
+        1,
+        2849,
+        1794421741251261137,
+        1794421741251261137
+      ],
+      "name": "attempt02/transport/config.json",
+      "path": "payload/attempt02/transport/config.json",
+      "sha256": "6f6529656254c405cc20d962fd3c5631ecbb24d1d31cee2d7a60451fdddddadf"
+    },
+    {
+      "bytes": 23263,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/recovery.json",
+      "identity": [
+        2080,
+        7077897,
+        33188,
+        1,
+        23263,
+        1794421741284339074,
+        1794421741284339074
+      ],
+      "name": "attempt02/transport/recovery.json",
+      "path": "payload/attempt02/transport/recovery.json",
+      "sha256": "82dfcac0163af8660dd989689d4f94b57742e72e5694f6fa4a20a9a6d7e72db9"
+    },
+    {
+      "bytes": 24422,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/source-derivation.json",
+      "identity": [
+        2080,
+        7077895,
+        33188,
+        1,
+        24422,
+        1794421679343740463,
+        1794421679343740463
+      ],
+      "name": "attempt02/transport/source-derivation.json",
+      "path": "payload/attempt02/transport/source-derivation.json",
+      "sha256": "0f0e02a2fbb7170a7e1e7de3d0737ea587920c2da633ed490c544d20db2d76f0"
+    },
+    {
+      "bytes": 19194,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/source-sha256.json",
+      "identity": [
+        2080,
+        7077892,
+        33188,
+        1,
+        19194,
+        1794421679334336902,
+        1794421679334336902
+      ],
+      "name": "attempt02/transport/source-sha256.json",
+      "path": "payload/attempt02/transport/source-sha256.json",
+      "sha256": "8a048df5e4782bc061df70e855c596314f1e67bacf25d9d1a74596ea063cf5ec"
+    },
+    {
+      "bytes": 133,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/source-state.json",
+      "identity": [
+        2080,
+        7077893,
+        33188,
+        1,
+        133,
+        1794421679338404850,
+        1794421679338404850
+      ],
+      "name": "attempt02/transport/source-state.json",
+      "path": "payload/attempt02/transport/source-state.json",
+      "sha256": "80a6381a65bafaccbb6cb07c5920d680313bd1d58337c82d92dacc1c25d85b5a"
+    },
+    {
+      "bytes": 1751040,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/transport/source.tar",
+      "identity": [
+        2080,
+        7077891,
+        33188,
+        1,
+        1751040,
+        1794421679325303101,
+        1794421679325303101
+      ],
+      "name": "attempt02/transport/source.tar",
+      "path": "payload/attempt02/transport/source.tar",
+      "sha256": "c8e1d301c13ff39bd522fb52c3d168278ce82e2b320a244f6474f670bb6d2826"
+    },
+    {
+      "bytes": 43096,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/mmap-userspace",
+      "identity": [
+        2080,
+        7078211,
+        33261,
+        1,
+        43096,
+        1794421763164544861,
+        1794421763164563094
+      ],
+      "name": "binaries/client",
+      "path": "payload/binaries/client",
+      "sha256": "bae90760f57f3930e1ff48443140eb096ea316c1fed00ae1840127f6985a4cd2"
+    },
+    {
+      "bytes": 556161,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/signed/kd_rwsem_killable_fixture.ko",
+      "identity": [
+        2080,
+        7078148,
+        33188,
+        1,
+        556161,
+        1794421754607219804,
+        1794421754607219804
+      ],
+      "name": "binaries/killable-signed.ko",
+      "path": "payload/binaries/killable-signed.ko",
+      "sha256": "b9392b8b8291522a0a6f91cddcd933461a1fb0549184e8c2b081a436a90a7a95"
+    },
+    {
+      "bytes": 555440,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/killable-build/kd_rwsem_killable_fixture.ko",
+      "identity": [
+        2080,
+        7078142,
+        33188,
+        1,
+        555440,
+        1794421754426000000,
+        1794421754426000000
+      ],
+      "name": "binaries/killable-unsigned.ko",
+      "path": "payload/binaries/killable-unsigned.ko",
+      "sha256": "35e0b38f3a85e1bcde1595d2bf80f4dd794652481de3405d67a6a4e833771270"
+    },
+    {
+      "bytes": 602417,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/signed/kd_mmap_api_provider.ko",
+      "identity": [
+        2080,
+        7078119,
+        33188,
+        1,
+        602417,
+        1794421751300503116,
+        1794421751300503116
+      ],
+      "name": "binaries/mmap-signed.ko",
+      "path": "payload/binaries/mmap-signed.ko",
+      "sha256": "35f073b8c9635f7e34330d3b69c60e43afc03d77f854641345b3b3f1a442e645"
+    },
+    {
+      "bytes": 601696,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/mmap-build/kd_mmap_api_provider.ko",
+      "identity": [
+        2080,
+        7078113,
+        33188,
+        1,
+        601696,
+        1794421751221000000,
+        1794421751221000000
+      ],
+      "name": "binaries/mmap-unsigned.ko",
+      "path": "payload/binaries/mmap-unsigned.ko",
+      "sha256": "685abe66c063cec85dc9b57ff739d8b7faf74d50697829ab519204256a569b62"
+    },
+    {
+      "bytes": 591497,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/signed/kd_runtime_fixture.ko",
+      "identity": [
+        2080,
+        7078206,
+        33188,
+        1,
+        591497,
+        1794421761533933545,
+        1794421761533933545
+      ],
+      "name": "binaries/mutex-signed.ko",
+      "path": "payload/binaries/mutex-signed.ko",
+      "sha256": "0c2a39e5da75ef674e7ee743379069965b8f939d039c35bad76d967f1f6b201c"
+    },
+    {
+      "bytes": 590776,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/mutex-build/kd_runtime_fixture.ko",
+      "identity": [
+        2080,
+        7078200,
+        33188,
+        1,
+        590776,
+        1794421761460000000,
+        1794421761460000000
+      ],
+      "name": "binaries/mutex-unsigned.ko",
+      "path": "payload/binaries/mutex-unsigned.ko",
+      "sha256": "c0d57530abbf89655ede0457a2cdcface0128cf60d86e0b297c7597661f34d07"
+    },
+    {
+      "bytes": 608529,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/signed/kd_rwsem_api_fixture.ko",
+      "identity": [
+        2080,
+        7078090,
+        33188,
+        1,
+        608529,
+        1794421747990427522,
+        1794421747990427522
+      ],
+      "name": "binaries/native-api-signed.ko",
+      "path": "payload/binaries/native-api-signed.ko",
+      "sha256": "5af9433dd7ee176dca8e0b4c5cb01e1c2cf20eb782e7feca1bc40a06bfa90ea4"
+    },
+    {
+      "bytes": 607808,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/native-api-build/kd_rwsem_api_fixture.ko",
+      "identity": [
+        2080,
+        7078084,
+        33188,
+        1,
+        607808,
+        1794421747882000000,
+        1794421747882000000
+      ],
+      "name": "binaries/native-api-unsigned.ko",
+      "path": "payload/binaries/native-api-unsigned.ko",
+      "sha256": "c18ccbf885583800bb40765bb65b6621cffb4a81b05bdc449442c516143dbddc"
+    },
+    {
+      "bytes": 689617,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/signed/kd_rwsem_runtime_fixture.ko",
+      "identity": [
+        2080,
+        7078177,
+        33188,
+        1,
+        689617,
+        1794421758194807317,
+        1794421758194807317
+      ],
+      "name": "binaries/rwsem-signed.ko",
+      "path": "payload/binaries/rwsem-signed.ko",
+      "sha256": "3653652728891a83b8faa00b3f8757489d48a75b1f9ec54f7c1820577a39fc13"
+    },
+    {
+      "bytes": 688896,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/build-02/rwsem-build/kd_rwsem_runtime_fixture.ko",
+      "identity": [
+        2080,
+        7078171,
+        33188,
+        1,
+        688896,
+        1794421758083000000,
+        1794421758083000000
+      ],
+      "name": "binaries/rwsem-unsigned.ko",
+      "path": "payload/binaries/rwsem-unsigned.ko",
+      "sha256": "374bcbc7793604d4a7907d45ad9dc9dc379235a027775101295554e2e2059bb2"
+    },
+    {
+      "bytes": 347,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-driver-01/command.json",
+      "identity": [
+        2080,
+        7078220,
+        33188,
+        1,
+        347,
+        1794422473093929752,
+        1794422473093929752
+      ],
+      "name": "checks-driver/command.json",
+      "path": "payload/checks-driver/command.json",
+      "sha256": "8ff3b08aa7a5347860927b6852f9eafc531c21fde88ea49256a94416df255bc1"
+    },
+    {
+      "bytes": 49,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-driver-01/dispatch.json",
+      "identity": [
+        2080,
+        7078223,
+        33188,
+        1,
+        49,
+        1794422473098455703,
+        1794422473098455703
+      ],
+      "name": "checks-driver/dispatch.json",
+      "path": "payload/checks-driver/dispatch.json",
+      "sha256": "7fee9c0750e02811735c95d4c107aa5ad5afe69ec50991972ded86f8ef0a8367"
+    },
+    {
+      "bytes": 62,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-driver-01/result.json",
+      "identity": [
+        2080,
+        7078228,
+        33188,
+        1,
+        62,
+        1794422480433089236,
+        1794422480433089236
+      ],
+      "name": "checks-driver/result.json",
+      "path": "payload/checks-driver/result.json",
+      "sha256": "47b6b43f9e32335be3d6a98016620c37855a7c74d69817cc813b673a4cbb91af"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-driver-01/stderr",
+      "identity": [
+        2080,
+        7078222,
+        33188,
+        1,
+        0,
+        1794422473097000000,
+        1794422473097000000
+      ],
+      "name": "checks-driver/stderr",
+      "path": "payload/checks-driver/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 246,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-driver-01/stdout",
+      "identity": [
+        2080,
+        7078221,
+        33188,
+        1,
+        246,
+        1794422480403000000,
+        1794422480403000000
+      ],
+      "name": "checks-driver/stdout",
+      "path": "payload/checks-driver/stdout",
+      "sha256": "7a93b88db61e83682da56897f99633f7f6886f65d28e503ddf0943ae9b086f3f"
+    },
+    {
+      "bytes": 7847,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/continuation-input-01/continue.py",
+      "identity": [
+        2080,
+        7078217,
+        33188,
+        1,
+        7847,
+        1794422473057651274,
+        1794422473057651274
+      ],
+      "name": "checks-input/continue.py",
+      "path": "payload/checks-input/continue.py",
+      "sha256": "1088a8660c3ec82288310da764fe393d1380cfca50e1196651f3cfe2c7b69797"
+    },
+    {
+      "bytes": 51534,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/continuation-input-01/mmap-runner-fixed.py",
+      "identity": [
+        2080,
+        7078218,
+        33188,
+        1,
+        51534,
+        1794422473090746729,
+        1794422473090746729
+      ],
+      "name": "checks-input/mmap-runner-fixed.py",
+      "path": "payload/checks-input/mmap-runner-fixed.py",
+      "sha256": "c20114507195b4dbccdd2fbca504230400a8cc9be3c51182d76ea30eff3dfb31"
+    },
+    {
+      "bytes": 15,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-continue-01/corrected-runner-syntax.log",
+      "identity": [
+        2080,
+        7078225,
+        33188,
+        1,
+        15,
+        1794422476467000000,
+        1794422476467000000
+      ],
+      "name": "checks/corrected-runner-syntax.log",
+      "path": "payload/checks/corrected-runner-syntax.log",
+      "sha256": "112519aaed1b173ed9dcc2b26f17f8d86fe4cf74d7962f50062c5c09b529201a"
+    },
+    {
+      "bytes": 27223,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-continue-01/result.json",
+      "identity": [
+        2080,
+        7078229,
+        33188,
+        1,
+        27223,
+        1794422480393486055,
+        1794422480401000000
+      ],
+      "name": "checks/result.json",
+      "path": "payload/checks/result.json",
+      "sha256": "4e92343c84336fba6ad01e70074999a63e60dff1c4ece157f8029e2291af64d0"
+    },
+    {
+      "bytes": 789,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-continue-01/source-boundary-four.log",
+      "identity": [
+        2080,
+        7078226,
+        33188,
+        1,
+        789,
+        1794422476987000000,
+        1794422476987000000
+      ],
+      "name": "checks/source-boundary-four.log",
+      "path": "payload/checks/source-boundary-four.log",
+      "sha256": "59d325a68ecf83f263328530b3a59374dc158b78eae2da432f439210ededa890"
+    },
+    {
+      "bytes": 2675,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-02/basic-continue-01/unselected-syscalls.log",
+      "identity": [
+        2080,
+        7078227,
+        33188,
+        1,
+        2675,
+        1794422477203000000,
+        1794422477203000000
+      ],
+      "name": "checks/unselected-syscalls.log",
+      "path": "payload/checks/unselected-syscalls.log",
+      "sha256": "40068f843df8ae1bb6dcd0fe40e9d76d04d88e3411161115a55a51abbf6a3160"
+    },
+    {
+      "bytes": 1328,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/build-01/input/Kbuild",
+      "identity": [
+        2080,
+        6160403,
+        33188,
+        1,
+        1328,
+        1794421205624511797,
+        1794421205624511797
+      ],
+      "name": "failed-unpack/build-01/input/Kbuild",
+      "path": "payload/failed-unpack/build-01/input/Kbuild",
+      "sha256": "63e09601f83dff10da0a51c920d44a3dac1a685c060fa0e8670d930c0f250cb7"
+    },
+    {
+      "bytes": 942,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/build-01/input/Kconfig",
+      "identity": [
+        2080,
+        6160404,
+        33188,
+        1,
+        942,
+        1794421205628026013,
+        1794421205628026013
+      ],
+      "name": "failed-unpack/build-01/input/Kconfig",
+      "path": "payload/failed-unpack/build-01/input/Kconfig",
+      "sha256": "f57bcb6c2e27799559fa139630b6090b0371c62119298b62429b006e5c788c29"
+    },
+    {
+      "bytes": 146495,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/build-01/receipts/result.json",
+      "identity": [
+        2080,
+        6160405,
+        33188,
+        1,
+        146495,
+        1794421205631000000,
+        1794421205635000000
+      ],
+      "name": "failed-unpack/build-01/receipts/result.json",
+      "path": "payload/failed-unpack/build-01/receipts/result.json",
+      "sha256": "316e8243fb471e5f92a87d0bd6ff7566e7237c6a663b651d5cf2cb60635299f4"
+    },
+    {
+      "bytes": 505,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/driver-01/command.json",
+      "identity": [
+        2080,
+        6160394,
+        33188,
+        1,
+        505,
+        1794421201632095406,
+        1794421201632095406
+      ],
+      "name": "failed-unpack/driver-01/command.json",
+      "path": "payload/failed-unpack/driver-01/command.json",
+      "sha256": "6bd05c40d8525a024624c80cbf539753a8fe8ab2d7e916bb66a6380609b3e909"
+    },
+    {
+      "bytes": 49,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/driver-01/dispatch.json",
+      "identity": [
+        2080,
+        6160397,
+        33188,
+        1,
+        49,
+        1794421201635477893,
+        1794421201635477893
+      ],
+      "name": "failed-unpack/driver-01/dispatch.json",
+      "path": "payload/failed-unpack/driver-01/dispatch.json",
+      "sha256": "7df9cc6036449b1b31326ed21dc7998e8d2cfe8ee38be38a549bbd84b616237a"
+    },
+    {
+      "bytes": 62,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/driver-01/result.json",
+      "identity": [
+        2080,
+        6160401,
+        33188,
+        1,
+        62,
+        1794421205761938686,
+        1794421205761938686
+      ],
+      "name": "failed-unpack/driver-01/result.json",
+      "path": "payload/failed-unpack/driver-01/result.json",
+      "sha256": "b13d7e1a3279ad814b92e4bcd40a5bbefffcefeff01e9639119f3d87481bbd6f"
+    },
+    {
+      "bytes": 996,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/driver-01/stderr",
+      "identity": [
+        2080,
+        6160396,
+        33188,
+        1,
+        996,
+        1794421205699000000,
+        1794421205699000000
+      ],
+      "name": "failed-unpack/driver-01/stderr",
+      "path": "payload/failed-unpack/driver-01/stderr",
+      "sha256": "9d75950141d52c62b39122c115d5f310dbfaadb66d58ea621438d4a1d2b87fd4"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/driver-01/stdout",
+      "identity": [
+        2080,
+        6160395,
+        33188,
+        1,
+        0,
+        1794421201634000000,
+        1794421201634000000
+      ],
+      "name": "failed-unpack/driver-01/stdout",
+      "path": "payload/failed-unpack/driver-01/stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 34842,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/transport/build.py",
+      "identity": [
+        2080,
+        6160390,
+        33188,
+        1,
+        34842,
+        1794421086122451102,
+        1794421086122451102
+      ],
+      "name": "failed-unpack/transport/build.py",
+      "path": "payload/failed-unpack/transport/build.py",
+      "sha256": "cbeca599151d06306919c9fb9172670716b121d1851b45a1e0cb97194cea1ad2"
+    },
+    {
+      "bytes": 2849,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/transport/config.json",
+      "identity": [
+        2080,
+        6160391,
+        33188,
+        1,
+        2849,
+        1794421201593055757,
+        1794421201593055757
+      ],
+      "name": "failed-unpack/transport/config.json",
+      "path": "payload/failed-unpack/transport/config.json",
+      "sha256": "1fee23f8e59331a7f8f731accd5b0b2acdc552063bc7fd6ef5a53c3ec9a4a301"
+    },
+    {
+      "bytes": 23263,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/transport/recovery.json",
+      "identity": [
+        2080,
+        6160392,
+        33188,
+        1,
+        23263,
+        1794421201628839216,
+        1794421201628839216
+      ],
+      "name": "failed-unpack/transport/recovery.json",
+      "path": "payload/failed-unpack/transport/recovery.json",
+      "sha256": "6cf0ef0a14f5375006d73e681855393ce6a095f4d16164394adf36cbe05f885c"
+    },
+    {
+      "bytes": 19194,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/transport/source-sha256.json",
+      "identity": [
+        2080,
+        6160388,
+        33188,
+        1,
+        19194,
+        1794421086116863301,
+        1794421086116863301
+      ],
+      "name": "failed-unpack/transport/source-sha256.json",
+      "path": "payload/failed-unpack/transport/source-sha256.json",
+      "sha256": "8a048df5e4782bc061df70e855c596314f1e67bacf25d9d1a74596ea063cf5ec"
+    },
+    {
+      "bytes": 133,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/transport/source-state.json",
+      "identity": [
+        2080,
+        6160389,
+        33188,
+        1,
+        133,
+        1794421086119713773,
+        1794421086119713773
+      ],
+      "name": "failed-unpack/transport/source-state.json",
+      "path": "payload/failed-unpack/transport/source-state.json",
+      "sha256": "80a6381a65bafaccbb6cb07c5920d680313bd1d58337c82d92dacc1c25d85b5a"
+    },
+    {
+      "bytes": 1617920,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel7-fixtures-e01a89d9-01/transport/source.tar",
+      "identity": [
+        2080,
+        6160387,
+        33188,
+        1,
+        1617920,
+        1794421086107821397,
+        1794421086107821397
+      ],
+      "name": "failed-unpack/transport/source.tar",
+      "path": "payload/failed-unpack/transport/source.tar",
+      "sha256": "ee8303da4bfcada82ed305ad93b42e1f1a99e1274f9dba7dc2b1437a31f0d461"
+    }
+  ]
+}

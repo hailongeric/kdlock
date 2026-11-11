@@ -1,0 +1,3466 @@
+{
+  "bytes": 24106034,
+  "count": 247,
+  "files": [
+    {
+      "bytes": 18940,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/collection-helper.py.txt",
+      "path": "collection/.collection/collection-helper.py.txt",
+      "sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d",
+      "source_identity": [
+        66306,
+        26753161,
+        33204,
+        18940,
+        1794422711114699696,
+        1794422711114699696
+      ]
+    },
+    {
+      "bytes": 390,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/copy-command.json",
+      "path": "collection/.collection/copy-command.json",
+      "sha256": "4f3f7f5b1ff0aa14d52a15575a95c63d72bbbca9f594cfad145345e61477b247",
+      "source_identity": [
+        66306,
+        26753172,
+        33204,
+        390,
+        1794422712050716958,
+        1794422712050716958
+      ]
+    },
+    {
+      "bytes": 119718,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/copy-input.py.txt",
+      "path": "collection/.collection/copy-input.py.txt",
+      "sha256": "b0334cd9982e4811083565a52c9b3e2dea9401fd96441c1d73f220fa556048ef",
+      "source_identity": [
+        66306,
+        26753171,
+        33204,
+        119718,
+        1794422712043716829,
+        1794422712043716829
+      ]
+    },
+    {
+      "bytes": 758,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/copy-result.json",
+      "path": "collection/.collection/copy-result.json",
+      "sha256": "e301e2a3c6ddb2e6a8329165e01864ac435fa48f57f31e4a975a27e92ee64114",
+      "source_identity": [
+        66306,
+        26753181,
+        33204,
+        758,
+        1794422712700728945,
+        1794422712700728945
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/copy-stderr.log",
+      "path": "collection/.collection/copy-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753180,
+        33204,
+        0,
+        1794422712057717087,
+        1794422712057717087
+      ]
+    },
+    {
+      "bytes": 11878400,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/copy.tar",
+      "path": "collection/.collection/copy.tar",
+      "sha256": "fb77869634365f3ffc7636cb4caf07d3b52056cb2c3b0acf9d76526fdec3944e",
+      "source_identity": [
+        66306,
+        26753179,
+        33204,
+        11878400,
+        1794422712427723910,
+        1794422712427723910
+      ]
+    },
+    {
+      "bytes": 399,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-after-command.json",
+      "path": "collection/.collection/inventory-after-command.json",
+      "sha256": "bd9e1039f4e8da70d6bbc4047b538e301795ca039aed687f45c29e3ab733ea4e",
+      "source_identity": [
+        66306,
+        26753183,
+        33204,
+        399,
+        1794422712817731103,
+        1794422712817731103
+      ]
+    },
+    {
+      "bytes": 6898,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-after-input.py.txt",
+      "path": "collection/.collection/inventory-after-input.py.txt",
+      "sha256": "b523ca990c3037ecc21192e0d66235e12e9c95dfc3f5df3ddbd75fd15725d524",
+      "source_identity": [
+        66306,
+        26753182,
+        33204,
+        6898,
+        1794422712809730955,
+        1794422712809730955
+      ]
+    },
+    {
+      "bytes": 765,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-after-result.json",
+      "path": "collection/.collection/inventory-after-result.json",
+      "sha256": "4e55b5ed4debd916a27785c1d8f6b4762b41c4fd3e5c2609e59eabf11a3cab9d",
+      "source_identity": [
+        66306,
+        26753186,
+        33204,
+        765,
+        1794422713146737171,
+        1794422713146737171
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-after-stderr.log",
+      "path": "collection/.collection/inventory-after-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753185,
+        33204,
+        0,
+        1794422712823731214,
+        1794422712823731214
+      ]
+    },
+    {
+      "bytes": 109600,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-after.json",
+      "path": "collection/.collection/inventory-after.json",
+      "sha256": "069465201e91564d8489a83a3c1b4b886b0f28b5d56a02ddfe0dd591bc7f68a1",
+      "source_identity": [
+        66306,
+        26753184,
+        33204,
+        109600,
+        1794422713123736747,
+        1794422713123736747
+      ]
+    },
+    {
+      "bytes": 400,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-before-command.json",
+      "path": "collection/.collection/inventory-before-command.json",
+      "sha256": "011b09ed18f7af6feed323a736e7d09a5d64c16d1345a798a48663eddd7627e7",
+      "source_identity": [
+        66306,
+        26753165,
+        33204,
+        400,
+        1794422711134700065,
+        1794422711134700065
+      ]
+    },
+    {
+      "bytes": 6898,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-before-input.py.txt",
+      "path": "collection/.collection/inventory-before-input.py.txt",
+      "sha256": "b523ca990c3037ecc21192e0d66235e12e9c95dfc3f5df3ddbd75fd15725d524",
+      "source_identity": [
+        66306,
+        26753164,
+        33204,
+        6898,
+        1794422711127699936,
+        1794422711127699936
+      ]
+    },
+    {
+      "bytes": 766,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-before-result.json",
+      "path": "collection/.collection/inventory-before-result.json",
+      "sha256": "89569074e96df74fb23ad37aa5845417b6fe3678f59b08e70967e1f4342af4a8",
+      "source_identity": [
+        66306,
+        26753170,
+        33204,
+        766,
+        1794422712017716349,
+        1794422712017716349
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-before-stderr.log",
+      "path": "collection/.collection/inventory-before-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753167,
+        33204,
+        0,
+        1794422711141700194,
+        1794422711141700194
+      ]
+    },
+    {
+      "bytes": 109601,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/inventory-before.json",
+      "path": "collection/.collection/inventory-before.json",
+      "sha256": "98adae921f1320602feb3c407b3c2f92601d05f0272f5b27529f1c7a29f7e86d",
+      "source_identity": [
+        66306,
+        26753166,
+        33204,
+        109601,
+        1794422711994715925,
+        1794422711994715925
+      ]
+    },
+    {
+      "bytes": 5580,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/.collection/selection.json",
+      "path": "collection/.collection/selection.json",
+      "sha256": "30b32b4f79a653072b1d5f8f72852cd8090acc1cffc4c88c30fa3f0551c5072c",
+      "source_identity": [
+        66306,
+        26753163,
+        33204,
+        5580,
+        1794422711121699825,
+        1794422711121699825
+      ]
+    },
+    {
+      "bytes": 287,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/collection.json",
+      "path": "collection/collection.json",
+      "sha256": "3d568619f4b07570e3e531544d75301bdce8ecc3d7aadac628b449fa0cef8bbc",
+      "source_identity": [
+        66306,
+        26753449,
+        33204,
+        287,
+        1794422716346796193,
+        1794422716346796193
+      ]
+    },
+    {
+      "bytes": 116036,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/copy-index.json",
+      "path": "collection/copy-index.json",
+      "sha256": "7935b01cd8175e789ac038f28fc315e72d4731c526b26b35dae3ca4008d986d6",
+      "source_identity": [
+        66306,
+        26753448,
+        33204,
+        116036,
+        1794422716339796064,
+        1794422716339796064
+      ]
+    },
+    {
+      "bytes": 505,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/driver/command.json",
+      "path": "collection/payload/attempt02/driver/command.json",
+      "sha256": "5f24fc462c20b40b415222a688530d9fad630ada5702cc6543ab62ec8f686076",
+      "source_identity": [
+        66306,
+        26753190,
+        33204,
+        505,
+        1794422713215738443,
+        1794422713215738443
+      ]
+    },
+    {
+      "bytes": 49,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/driver/dispatch.json",
+      "path": "collection/payload/attempt02/driver/dispatch.json",
+      "sha256": "14e0c247eb60a94bf8bc181eaad872dd6606dce4d4e9b67c9e2e6be562576cc3",
+      "source_identity": [
+        66306,
+        26753191,
+        33204,
+        49,
+        1794422713228738683,
+        1794422713228738683
+      ]
+    },
+    {
+      "bytes": 63,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/driver/result.json",
+      "path": "collection/payload/attempt02/driver/result.json",
+      "sha256": "b4f954e3d39ca658a546b01c0cdd38b40f731d398a8a5b9d224d311ecd15eb5f",
+      "source_identity": [
+        66306,
+        26753192,
+        33204,
+        63,
+        1794422713241738923,
+        1794422713241738923
+      ]
+    },
+    {
+      "bytes": 965,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/driver/stderr",
+      "path": "collection/payload/attempt02/driver/stderr",
+      "sha256": "5debbe876f4067fafaf932bd4d7a71ad512742c78f4872d29b73cc79ec88f1ea",
+      "source_identity": [
+        66306,
+        26753193,
+        33204,
+        965,
+        1794422713254739163,
+        1794422713254739163
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/driver/stdout",
+      "path": "collection/payload/attempt02/driver/stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753194,
+        33204,
+        0,
+        1794422713267739402,
+        1794422713267739402
+      ]
+    },
+    {
+      "bytes": 1328,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/Kbuild",
+      "path": "collection/payload/attempt02/input/Kbuild",
+      "sha256": "63e09601f83dff10da0a51c920d44a3dac1a685c060fa0e8670d930c0f250cb7",
+      "source_identity": [
+        66306,
+        26753196,
+        33204,
+        1328,
+        1794422713280739642,
+        1794422713280739642
+      ]
+    },
+    {
+      "bytes": 942,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/Kconfig",
+      "path": "collection/payload/attempt02/input/Kconfig",
+      "sha256": "f57bcb6c2e27799559fa139630b6090b0371c62119298b62429b006e5c788c29",
+      "source_identity": [
+        66306,
+        26753197,
+        33204,
+        942,
+        1794422713293739882,
+        1794422713293739882
+      ]
+    },
+    {
+      "bytes": 18711,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/archive.py",
+      "path": "collection/payload/attempt02/input/disassem/archive.py",
+      "sha256": "0dff097683107c37b57cda8e8edeb05b4f70a52adb05ac9efe55f15981d677ea",
+      "source_identity": [
+        66306,
+        26753199,
+        33204,
+        18711,
+        1794422713306740122,
+        1794422713306740122
+      ]
+    },
+    {
+      "bytes": 16131,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/artifact.py",
+      "path": "collection/payload/attempt02/input/disassem/artifact.py",
+      "sha256": "09a5fe9cbbf44d04206f0a430b590a169c3bc1405105ba7d6f9aa4b1a0522815",
+      "source_identity": [
+        66306,
+        26753200,
+        33204,
+        16131,
+        1794422713320740380,
+        1794422713320740380
+      ]
+    },
+    {
+      "bytes": 231,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/backend/__init__.py",
+      "path": "collection/payload/attempt02/input/disassem/backend/__init__.py",
+      "sha256": "8a10f2d55cb13aaa224f43c9b527a6f91e24a79baa7b7c2bd03b9f1f4ac97ae7",
+      "source_identity": [
+        66306,
+        26753202,
+        33204,
+        231,
+        1794422713333740620,
+        1794422713333740620
+      ]
+    },
+    {
+      "bytes": 3729,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/backend/assist.py",
+      "path": "collection/payload/attempt02/input/disassem/backend/assist.py",
+      "sha256": "4db555895df0c0c47daedb34bd2a88a4090ed1ab6b17e74428a2a6dd8faa1eda",
+      "source_identity": [
+        66306,
+        26753203,
+        33204,
+        3729,
+        1794422713347740878,
+        1794422713347740878
+      ]
+    },
+    {
+      "bytes": 904,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/backend/compat.py",
+      "path": "collection/payload/attempt02/input/disassem/backend/compat.py",
+      "sha256": "9234e51b76c3f9b3688408b17d6501d69d2b8581d4d169ed83865dda9fcebe5d",
+      "source_identity": [
+        66306,
+        26753204,
+        33204,
+        904,
+        1794422713360741118,
+        1794422713360741118
+      ]
+    },
+    {
+      "bytes": 6749,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/backend/conflict.py",
+      "path": "collection/payload/attempt02/input/disassem/backend/conflict.py",
+      "sha256": "ac4f435b4008130e03a8910b9159b1009216f5cf47748986eb090219db8f695d",
+      "source_identity": [
+        66306,
+        26753205,
+        33204,
+        6749,
+        1794422713374741376,
+        1794422713374741376
+      ]
+    },
+    {
+      "bytes": 514,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/backend/diagnostics.py",
+      "path": "collection/payload/attempt02/input/disassem/backend/diagnostics.py",
+      "sha256": "adb0bde8d44dd287b8232272f31c1b746fbe0effdb670cd81c07143a38c19bcc",
+      "source_identity": [
+        66306,
+        26753206,
+        33204,
+        514,
+        1794422713387741616,
+        1794422713387741616
+      ]
+    },
+    {
+      "bytes": 412,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/backend/errors.py",
+      "path": "collection/payload/attempt02/input/disassem/backend/errors.py",
+      "sha256": "2df8c7e0313f907b7d89f8ef99154a8fc76fe10e88e789e532e579349c85c617",
+      "source_identity": [
+        66306,
+        26753207,
+        33204,
+        412,
+        1794422713401741874,
+        1794422713401741874
+      ]
+    },
+    {
+      "bytes": 13935,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/backend/instructions.py",
+      "path": "collection/payload/attempt02/input/disassem/backend/instructions.py",
+      "sha256": "78b70b7a883db410ea83add5ba94fb85685c159f82c6e959713a16bf9e64a6e1",
+      "source_identity": [
+        66306,
+        26753208,
+        33204,
+        13935,
+        1794422713414742113,
+        1794422713414742113
+      ]
+    },
+    {
+      "bytes": 11404,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/backend/normal.py",
+      "path": "collection/payload/attempt02/input/disassem/backend/normal.py",
+      "sha256": "72d11aff60b4561485000397f59355ad78e6a958ca6daadd8fa4c00ca36ed864",
+      "source_identity": [
+        66306,
+        26753209,
+        33204,
+        11404,
+        1794422713428742372,
+        1794422713428742372
+      ]
+    },
+    {
+      "bytes": 25302,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/compiler.py",
+      "path": "collection/payload/attempt02/input/disassem/compiler.py",
+      "sha256": "ddcc1f364620ca7413899db7e114fd8741ab379a3c5ad5ccd819be4d47f8368a",
+      "source_identity": [
+        66306,
+        26753210,
+        33204,
+        25302,
+        1794422713441742611,
+        1794422713441742611
+      ]
+    },
+    {
+      "bytes": 3464,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/coverage.py",
+      "path": "collection/payload/attempt02/input/disassem/coverage.py",
+      "sha256": "6bfb02fa269588b9ad531d10e9e2a2738ef3c3bf9c35821e12d097209a3451e9",
+      "source_identity": [
+        66306,
+        26753211,
+        33204,
+        3464,
+        1794422713454742851,
+        1794422713454742851
+      ]
+    },
+    {
+      "bytes": 11273,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/feedback.py",
+      "path": "collection/payload/attempt02/input/disassem/feedback.py",
+      "sha256": "4d68ebb58181006cb8b92c8fed78f20c76204ce0ca17202c9a7ccafca7c08cb4",
+      "source_identity": [
+        66306,
+        26753212,
+        33204,
+        11273,
+        1794422713467743091,
+        1794422713467743091
+      ]
+    },
+    {
+      "bytes": 10679,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/fragment.py",
+      "path": "collection/payload/attempt02/input/disassem/fragment.py",
+      "sha256": "b5f2787df43b94540f26c9b5156bb476415bdb0d0adfa7565dfbc087767da7cd",
+      "source_identity": [
+        66306,
+        26753213,
+        33204,
+        10679,
+        1794422713481743349,
+        1794422713481743349
+      ]
+    },
+    {
+      "bytes": 17601,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/image_builder.py",
+      "path": "collection/payload/attempt02/input/disassem/image_builder.py",
+      "sha256": "30781d85aef41df36f6b6a1da3449e29871c4a181686f9dfcd3a962cbb1a02bf",
+      "source_identity": [
+        66306,
+        26753214,
+        33204,
+        17601,
+        1794422713495743607,
+        1794422713495743607
+      ]
+    },
+    {
+      "bytes": 33737,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/learning.py",
+      "path": "collection/payload/attempt02/input/disassem/learning.py",
+      "sha256": "2f8b47caa933338e5c0134eb17a0ae4a051f6b24920504dce1d9eb85d24c4ef3",
+      "source_identity": [
+        66306,
+        26753215,
+        33204,
+        33737,
+        1794422713508743847,
+        1794422713508743847
+      ]
+    },
+    {
+      "bytes": 28755,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/lowering.py",
+      "path": "collection/payload/attempt02/input/disassem/lowering.py",
+      "sha256": "abd1ca8be29212916925f87c3205c84b6d68e32c702316632d6f743cbbad7328",
+      "source_identity": [
+        66306,
+        26753216,
+        33204,
+        28755,
+        1794422713522744105,
+        1794422713522744105
+      ]
+    },
+    {
+      "bytes": 193,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/requirements.txt",
+      "path": "collection/payload/attempt02/input/disassem/requirements.txt",
+      "sha256": "dbca917470f57958f724a2ba13c131eee7f19ca3d3c7f9c97fbaef09a1bfa8e5",
+      "source_identity": [
+        66306,
+        26753217,
+        33204,
+        193,
+        1794422713536744364,
+        1794422713536744364
+      ]
+    },
+    {
+      "bytes": 37215,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/session.py",
+      "path": "collection/payload/attempt02/input/disassem/session.py",
+      "sha256": "adbab87a51b65b92915cfde6d42f89e39588a4f070ad03adfb949b3b7e13c0e5",
+      "source_identity": [
+        66306,
+        26753218,
+        33204,
+        37215,
+        1794422713550744622,
+        1794422713550744622
+      ]
+    },
+    {
+      "bytes": 9015,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/source_boundaries.py",
+      "path": "collection/payload/attempt02/input/disassem/source_boundaries.py",
+      "sha256": "35f2a0f1071cb5230dee08f2315f3c2930381a397ae383af9f45a51227cede40",
+      "source_identity": [
+        66306,
+        26753219,
+        33204,
+        9015,
+        1794422713564744880,
+        1794422713564744880
+      ]
+    },
+    {
+      "bytes": 9867,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/source_decode.py",
+      "path": "collection/payload/attempt02/input/disassem/source_decode.py",
+      "sha256": "c172f53a1e0851d75b0d5f10c31fd801aaf9faf5472ecc1b1892a71063605206",
+      "source_identity": [
+        66306,
+        26753220,
+        33204,
+        9867,
+        1794422713577745120,
+        1794422713577745120
+      ]
+    },
+    {
+      "bytes": 11641,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/disassem/wire.py",
+      "path": "collection/payload/attempt02/input/disassem/wire.py",
+      "sha256": "ab9c6851df85392eeec500bac39ff9184ae4c6b6fade43bae30e39713cfeb31a",
+      "source_identity": [
+        66306,
+        26753221,
+        33204,
+        11641,
+        1794422713591745378,
+        1794422713591745378
+      ]
+    },
+    {
+      "bytes": 1442,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/asm_head.h",
+      "path": "collection/payload/attempt02/input/include/asm_head.h",
+      "sha256": "dcae354686db004a515957fb73f6645d19f98bbb1fe3a07f1b73dfaff318455c",
+      "source_identity": [
+        66306,
+        26753223,
+        33204,
+        1442,
+        1794422713605745636,
+        1794422713605745636
+      ]
+    },
+    {
+      "bytes": 1275,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/kd_control.h",
+      "path": "collection/payload/attempt02/input/include/kd_control.h",
+      "sha256": "403b7ef160f75b5f149abafd35da59bac89215a5f5e22c4138714d6b6dcbad6a",
+      "source_identity": [
+        66306,
+        26753224,
+        33204,
+        1275,
+        1794422713618745876,
+        1794422713618745876
+      ]
+    },
+    {
+      "bytes": 3572,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/kd_linux_rwsem.h",
+      "path": "collection/payload/attempt02/input/include/kd_linux_rwsem.h",
+      "sha256": "3430bdaf9c7c4bbd1185b4be5c6e9ba8d4993ed04ff9263a78a7a0c85190b17f",
+      "source_identity": [
+        66306,
+        26753225,
+        33204,
+        3572,
+        1794422713632746134,
+        1794422713632746134
+      ]
+    },
+    {
+      "bytes": 3478,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/kd_linux_rwsem_source.h",
+      "path": "collection/payload/attempt02/input/include/kd_linux_rwsem_source.h",
+      "sha256": "617fdca332a6fdf3ec26324e9c35318ae79ad5c81f390aa2efdcfab92fdd0397",
+      "source_identity": [
+        66306,
+        26753226,
+        33204,
+        3478,
+        1794422713645746374,
+        1794422713645746374
+      ]
+    },
+    {
+      "bytes": 5857,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/kd_mutex.h",
+      "path": "collection/payload/attempt02/input/include/kd_mutex.h",
+      "sha256": "56b8541b70beb5c9b952d66b2eab8f89d57ea9e92bdec4617757fdf5eefdad3e",
+      "source_identity": [
+        66306,
+        26753227,
+        33204,
+        5857,
+        1794422713658746614,
+        1794422713658746614
+      ]
+    },
+    {
+      "bytes": 3894,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/kd_mutex_api.h",
+      "path": "collection/payload/attempt02/input/include/kd_mutex_api.h",
+      "sha256": "24f6664232d16a6483b567a88e46182e9acec4e8abc062cea2a2091c09c80b62",
+      "source_identity": [
+        66306,
+        26753228,
+        33204,
+        3894,
+        1794422713672746872,
+        1794422713672746872
+      ]
+    },
+    {
+      "bytes": 7890,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/kd_regs.h",
+      "path": "collection/payload/attempt02/input/include/kd_regs.h",
+      "sha256": "72ee3d149d22570e960e536c6a8c2e1e1bae289b8a2c1c17bd2599e64aa4ca1a",
+      "source_identity": [
+        66306,
+        26753229,
+        33204,
+        7890,
+        1794422713685747112,
+        1794422713685747112
+      ]
+    },
+    {
+      "bytes": 1626,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/kd_rwlock_api.h",
+      "path": "collection/payload/attempt02/input/include/kd_rwlock_api.h",
+      "sha256": "971e0cd072fe48f15a1dd21c6b3c89e40acbe3d16bdbcc80efadc77db4d759b3",
+      "source_identity": [
+        66306,
+        26753230,
+        33204,
+        1626,
+        1794422713699747370,
+        1794422713699747370
+      ]
+    },
+    {
+      "bytes": 2443,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/kd_rwsem_api.h",
+      "path": "collection/payload/attempt02/input/include/kd_rwsem_api.h",
+      "sha256": "f771b0fcdfbf88b93be072dc471bdfd45a206b528c155d087f098608b5b0d2c9",
+      "source_identity": [
+        66306,
+        26753231,
+        33204,
+        2443,
+        1794422713712747610,
+        1794422713712747610
+      ]
+    },
+    {
+      "bytes": 1144,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/kd_spin_api.h",
+      "path": "collection/payload/attempt02/input/include/kd_spin_api.h",
+      "sha256": "bc34bd6327f35172d2671d11e98eab8a5e50b8aeb5508ad49dc095598a843908",
+      "source_identity": [
+        66306,
+        26753232,
+        33204,
+        1144,
+        1794422713725747849,
+        1794422713725747849
+      ]
+    },
+    {
+      "bytes": 3606,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/mutex_api.S",
+      "path": "collection/payload/attempt02/input/include/mutex_api.S",
+      "sha256": "4eb9eb11327fd8b8b680554cef80569893df8afe2144039412b283b029fcf47a",
+      "source_identity": [
+        66306,
+        26753233,
+        33204,
+        3606,
+        1794422713738748089,
+        1794422713738748089
+      ]
+    },
+    {
+      "bytes": 1761,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/mutex_entry.S",
+      "path": "collection/payload/attempt02/input/include/mutex_entry.S",
+      "sha256": "6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108",
+      "source_identity": [
+        66306,
+        26753234,
+        33204,
+        1761,
+        1794422713751748329,
+        1794422713751748329
+      ]
+    },
+    {
+      "bytes": 2249,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/native_resume.S",
+      "path": "collection/payload/attempt02/input/include/native_resume.S",
+      "sha256": "6c57676d9194a2f2090d602fdf55bba891add8b6f8d560472bfb4fd7bbf4b0dd",
+      "source_identity": [
+        66306,
+        26753235,
+        33204,
+        2249,
+        1794422713765748587,
+        1794422713765748587
+      ]
+    },
+    {
+      "bytes": 3456,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/include/wrapper.S",
+      "path": "collection/payload/attempt02/input/include/wrapper.S",
+      "sha256": "42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5",
+      "source_identity": [
+        66306,
+        26753236,
+        33204,
+        3456,
+        1794422713778748827,
+        1794422713778748827
+      ]
+    },
+    {
+      "bytes": 8787,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/channel.c",
+      "path": "collection/payload/attempt02/input/kernel/channel.c",
+      "sha256": "17803ac448b5f836c311457451106df047fc73e2dd5a3aa32b837159e3c69b03",
+      "source_identity": [
+        66306,
+        26753238,
+        33204,
+        8787,
+        1794422713791749067,
+        1794422713791749067
+      ]
+    },
+    {
+      "bytes": 2012,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/channel.h",
+      "path": "collection/payload/attempt02/input/kernel/channel.h",
+      "sha256": "606ce81101fc1c53805dc22c870747b6faba3b931302fcf003a3b7bd2fd948f3",
+      "source_identity": [
+        66306,
+        26753239,
+        33204,
+        2012,
+        1794422713805749325,
+        1794422713805749325
+      ]
+    },
+    {
+      "bytes": 14847,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/compiled_image.c",
+      "path": "collection/payload/attempt02/input/kernel/compiled_image.c",
+      "sha256": "0ef92a96b335041523341c2918641cef0c7aa7c0cbfc32e5f3ccd0484db47f2d",
+      "source_identity": [
+        66306,
+        26753240,
+        33204,
+        14847,
+        1794422713819749583,
+        1794422713819749583
+      ]
+    },
+    {
+      "bytes": 4244,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/compiled_image.h",
+      "path": "collection/payload/attempt02/input/kernel/compiled_image.h",
+      "sha256": "ec54afc42d2aa32079c2c28de7af7ba7141abbdece9c0c1e36361ea6ad2b29c9",
+      "source_identity": [
+        66306,
+        26753241,
+        33204,
+        4244,
+        1794422713832749823,
+        1794422713832749823
+      ]
+    },
+    {
+      "bytes": 27904,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/control.c",
+      "path": "collection/payload/attempt02/input/kernel/control.c",
+      "sha256": "c50a6de92ef238f387e023473937c418c02314bd7353082db69915a7fb79853d",
+      "source_identity": [
+        66306,
+        26753242,
+        33204,
+        27904,
+        1794422713845750063,
+        1794422713845750063
+      ]
+    },
+    {
+      "bytes": 7947,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/control.h",
+      "path": "collection/payload/attempt02/input/kernel/control.h",
+      "sha256": "410021ca0e235e57e093b1056af2cb19d9d2199d679a3811efebaeef53002912",
+      "source_identity": [
+        66306,
+        26753243,
+        33204,
+        7947,
+        1794422713859750321,
+        1794422713859750321
+      ]
+    },
+    {
+      "bytes": 42619,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/episode.c",
+      "path": "collection/payload/attempt02/input/kernel/episode.c",
+      "sha256": "1189a8644a2cf5e3a5359d2ec6ce5cc740c0b099b9ebb29ec9238d25ab0278b0",
+      "source_identity": [
+        66306,
+        26753244,
+        33204,
+        42619,
+        1794422713873750579,
+        1794422713873750579
+      ]
+    },
+    {
+      "bytes": 6705,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/episode.h",
+      "path": "collection/payload/attempt02/input/kernel/episode.h",
+      "sha256": "08d8b633295412c2f38756dbcc0fd2c9a0c9f1a6fbba0026110ae966d99efe0e",
+      "source_identity": [
+        66306,
+        26753245,
+        33204,
+        6705,
+        1794422713887750837,
+        1794422713887750837
+      ]
+    },
+    {
+      "bytes": 2617,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/exports.c",
+      "path": "collection/payload/attempt02/input/kernel/exports.c",
+      "sha256": "35bff572a69f6372fc7523ceae671fb2dbb34ba297cd4cbff288eead6dad382a",
+      "source_identity": [
+        66306,
+        26753246,
+        33204,
+        2617,
+        1794422713900751077,
+        1794422713900751077
+      ]
+    },
+    {
+      "bytes": 16318,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/feedback.c",
+      "path": "collection/payload/attempt02/input/kernel/feedback.c",
+      "sha256": "fb00418fd7443ff0cff4ab5af9d1a4ffe0fd691f29f0b17ae33d8baa653960f0",
+      "source_identity": [
+        66306,
+        26753247,
+        33204,
+        16318,
+        1794422713913751317,
+        1794422713913751317
+      ]
+    },
+    {
+      "bytes": 9425,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/feedback.h",
+      "path": "collection/payload/attempt02/input/kernel/feedback.h",
+      "sha256": "e65def1ab23fdc490a7ab0b18a2f1b8bc00f538c17e62e0f1cacbc6c809a0464",
+      "source_identity": [
+        66306,
+        26753248,
+        33204,
+        9425,
+        1794422713927751575,
+        1794422713927751575
+      ]
+    },
+    {
+      "bytes": 13955,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/feedback_publish.c",
+      "path": "collection/payload/attempt02/input/kernel/feedback_publish.c",
+      "sha256": "eab297e4eb31259d1f0ca9b32be051c6604e2f80d5fe7a0c2fa7c89017c96104",
+      "source_identity": [
+        66306,
+        26753249,
+        33204,
+        13955,
+        1794422713940751815,
+        1794422713940751815
+      ]
+    },
+    {
+      "bytes": 7927,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/feedback_publish.h",
+      "path": "collection/payload/attempt02/input/kernel/feedback_publish.h",
+      "sha256": "04c14ae7abb8346230fbe2f6eeadf79c57f91be4cf8204676b7e79a1153d4066",
+      "source_identity": [
+        66306,
+        26753250,
+        33204,
+        7927,
+        1794422713953752054,
+        1794422713953752054
+      ]
+    },
+    {
+      "bytes": 10329,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/image.c",
+      "path": "collection/payload/attempt02/input/kernel/image.c",
+      "sha256": "2045cb89d88175e9b73f7d3b247b72943fbcfa8eaaa3a2ffede0e670968e2bd3",
+      "source_identity": [
+        66306,
+        26753251,
+        33204,
+        10329,
+        1794422713967752313,
+        1794422713967752313
+      ]
+    },
+    {
+      "bytes": 8070,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/image.h",
+      "path": "collection/payload/attempt02/input/kernel/image.h",
+      "sha256": "49b080029f0abc3ea87e6230cbb925a22f8dbdea50242b42664ce47b135044e5",
+      "source_identity": [
+        66306,
+        26753252,
+        33204,
+        8070,
+        1794422713980752552,
+        1794422713980752552
+      ]
+    },
+    {
+      "bytes": 1311,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/image_inputs.h",
+      "path": "collection/payload/attempt02/input/kernel/image_inputs.h",
+      "sha256": "a56154b1717dfa494c767a87355128d92f9f710c9bc4ebdc0729a4ca3f8bdc40",
+      "source_identity": [
+        66306,
+        26753253,
+        33204,
+        1311,
+        1794422713994752811,
+        1794422713994752811
+      ]
+    },
+    {
+      "bytes": 17392,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/image_owner.c",
+      "path": "collection/payload/attempt02/input/kernel/image_owner.c",
+      "sha256": "c647127502b78d6a3d0d29040d98bf97bc87e666f5418755a876ff0a6b14ff15",
+      "source_identity": [
+        66306,
+        26753254,
+        33204,
+        17392,
+        1794422714008753069,
+        1794422714008753069
+      ]
+    },
+    {
+      "bytes": 9128,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/image_owner.h",
+      "path": "collection/payload/attempt02/input/kernel/image_owner.h",
+      "sha256": "0bdc71a22db182ee6ffc89834a30c28a348c1724c60ea6649ef53141380ffccb",
+      "source_identity": [
+        66306,
+        26753255,
+        33204,
+        9128,
+        1794422714022753327,
+        1794422714022753327
+      ]
+    },
+    {
+      "bytes": 10897,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/integration/BUILDING.md",
+      "path": "collection/payload/attempt02/input/kernel/integration/BUILDING.md",
+      "sha256": "f6c282ff70b6219496b88479f8f5f0670df5ef818b7ee236350c341088edb675",
+      "source_identity": [
+        66306,
+        26753257,
+        33204,
+        10897,
+        1794422714035753567,
+        1794422714035753567
+      ]
+    },
+    {
+      "bytes": 9210,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/integration/CONTROL.md",
+      "path": "collection/payload/attempt02/input/kernel/integration/CONTROL.md",
+      "sha256": "e91043bc2c7502ed0318b397ada15e37af1029db4d2f591aaa639529abbc34ae",
+      "source_identity": [
+        66306,
+        26753258,
+        33204,
+        9210,
+        1794422714049753825,
+        1794422714049753825
+      ]
+    },
+    {
+      "bytes": 17011,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/integration/IMAGES.md",
+      "path": "collection/payload/attempt02/input/kernel/integration/IMAGES.md",
+      "sha256": "94a3ee669e29e680f3c09d491bf9e92bb9066e4be7cdaaacafab82d76de19f30",
+      "source_identity": [
+        66306,
+        26753259,
+        33204,
+        17011,
+        1794422714062754065,
+        1794422714062754065
+      ]
+    },
+    {
+      "bytes": 18575,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/integration/README.md",
+      "path": "collection/payload/attempt02/input/kernel/integration/README.md",
+      "sha256": "92a5a9f154a92a29ba7e96ce274abb7c2417dedb28ee0f18d57527106d88367f",
+      "source_identity": [
+        66306,
+        26753260,
+        33204,
+        18575,
+        1794422714076754323,
+        1794422714076754323
+      ]
+    },
+    {
+      "bytes": 13649,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/integration/RWSEM.md",
+      "path": "collection/payload/attempt02/input/kernel/integration/RWSEM.md",
+      "sha256": "18d1a6de62862f322aa9d126f4552826694d1738588e674399e4b29a46ef3a6a",
+      "source_identity": [
+        66306,
+        26753261,
+        33204,
+        13649,
+        1794422714090754581,
+        1794422714090754581
+      ]
+    },
+    {
+      "bytes": 25729,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/integration/apply_target.py",
+      "path": "collection/payload/attempt02/input/kernel/integration/apply_target.py",
+      "sha256": "ed9f1749a2056cf9fb184347faa3c49073b6b01286385548779e2aa9971b542a",
+      "source_identity": [
+        66306,
+        26753262,
+        33204,
+        25729,
+        1794422714104754839,
+        1794422714104754839
+      ]
+    },
+    {
+      "bytes": 2629,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/integration/task_struct.patch",
+      "path": "collection/payload/attempt02/input/kernel/integration/task_struct.patch",
+      "sha256": "ce09f22277695687904b9d181b52e5429c05413a9768060d405152fb848eb4ec",
+      "source_identity": [
+        66306,
+        26753263,
+        33204,
+        2629,
+        1794422714117755079,
+        1794422714117755079
+      ]
+    },
+    {
+      "bytes": 36979,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/jit.c",
+      "path": "collection/payload/attempt02/input/kernel/jit.c",
+      "sha256": "9537b5eb1df7fa2993aa6dab02ccc9ddf3eee2a7f6146263abeb23f63e00e8e1",
+      "source_identity": [
+        66306,
+        26753264,
+        33204,
+        36979,
+        1794422714131755337,
+        1794422714131755337
+      ]
+    },
+    {
+      "bytes": 14635,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/jit.h",
+      "path": "collection/payload/attempt02/input/kernel/jit.h",
+      "sha256": "dac4dab1df84ce6d2e20d73a44e809962201172d8c9fe1d8435531e4391c4b00",
+      "source_identity": [
+        66306,
+        26753265,
+        33204,
+        14635,
+        1794422714145755596,
+        1794422714145755596
+      ]
+    },
+    {
+      "bytes": 6906,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/lifecycle.c",
+      "path": "collection/payload/attempt02/input/kernel/lifecycle.c",
+      "sha256": "ce27c3cdc0328e88d468883567c34bdcbd9cf3dd0e7504fabb587ca7ccae4b71",
+      "source_identity": [
+        66306,
+        26753266,
+        33204,
+        6906,
+        1794422714158755835,
+        1794422714158755835
+      ]
+    },
+    {
+      "bytes": 3833,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/lifecycle.h",
+      "path": "collection/payload/attempt02/input/kernel/lifecycle.h",
+      "sha256": "1ed47fe6fa11afa4bb68489dac42ed955d5c2af54f2591d89bd260aefb9d9f76",
+      "source_identity": [
+        66306,
+        26753267,
+        33204,
+        3833,
+        1794422714172756094,
+        1794422714172756094
+      ]
+    },
+    {
+      "bytes": 14826,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/linux_rwsem.c",
+      "path": "collection/payload/attempt02/input/kernel/linux_rwsem.c",
+      "sha256": "97816078fb7509fb1ed7c8e3c90c50580b853b007c1df2548191fbea05b98d96",
+      "source_identity": [
+        66306,
+        26753268,
+        33204,
+        14826,
+        1794422714186756352,
+        1794422714186756352
+      ]
+    },
+    {
+      "bytes": 48600,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/mutex.c",
+      "path": "collection/payload/attempt02/input/kernel/mutex.c",
+      "sha256": "949ed7175a6f68fc6e91ac3ef84742e4f631fc159809dab0bc23f342d81ecbc0",
+      "source_identity": [
+        66306,
+        26753269,
+        33204,
+        48600,
+        1794422714199756592,
+        1794422714199756592
+      ]
+    },
+    {
+      "bytes": 14104,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/mutex.h",
+      "path": "collection/payload/attempt02/input/kernel/mutex.h",
+      "sha256": "85df670f30b3e8598d5fdab44b86f4e4095b4a3287d064c6a28d1d4119264ade",
+      "source_identity": [
+        66306,
+        26753270,
+        33204,
+        14104,
+        1794422714213756850,
+        1794422714213756850
+      ]
+    },
+    {
+      "bytes": 11096,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/mutex_api.c",
+      "path": "collection/payload/attempt02/input/kernel/mutex_api.c",
+      "sha256": "d629ad7fa6e65af434f4a1ce36c740062ed22500363241701c0ef7c91c4e676e",
+      "source_identity": [
+        66306,
+        26753271,
+        33204,
+        11096,
+        1794422714226757090,
+        1794422714226757090
+      ]
+    },
+    {
+      "bytes": 5184,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/mutex_api.h",
+      "path": "collection/payload/attempt02/input/kernel/mutex_api.h",
+      "sha256": "3d6076e91645111da3acad70b453ae005859070d764baa81102607ca223c363f",
+      "source_identity": [
+        66306,
+        26753272,
+        33204,
+        5184,
+        1794422714239757329,
+        1794422714239757329
+      ]
+    },
+    {
+      "bytes": 14602,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/mutex_release.c",
+      "path": "collection/payload/attempt02/input/kernel/mutex_release.c",
+      "sha256": "2d9639fcf6688e0923b1fcc7f6475edff26957710984785212fe40dda5dcc7f8",
+      "source_identity": [
+        66306,
+        26753273,
+        33204,
+        14602,
+        1794422714252757569,
+        1794422714252757569
+      ]
+    },
+    {
+      "bytes": 6267,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/mutex_release.h",
+      "path": "collection/payload/attempt02/input/kernel/mutex_release.h",
+      "sha256": "a2805d3e5d1bdff89390c54f9ddf66ed02f5c470d07b5ee83ec51b9304a279ce",
+      "source_identity": [
+        66306,
+        26753274,
+        33204,
+        6267,
+        1794422714266757827,
+        1794422714266757827
+      ]
+    },
+    {
+      "bytes": 7588,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/native_entry.c",
+      "path": "collection/payload/attempt02/input/kernel/native_entry.c",
+      "sha256": "8d452d7c27a955dafe022af389ccf6b55520f8c69e23f35f9fd7c32f31708aa4",
+      "source_identity": [
+        66306,
+        26753275,
+        33204,
+        7588,
+        1794422714279758067,
+        1794422714279758067
+      ]
+    },
+    {
+      "bytes": 1991,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/native_entry.h",
+      "path": "collection/payload/attempt02/input/kernel/native_entry.h",
+      "sha256": "80d60672aaa65bb4cdf1884b5f25031571c1ab5e2d7f589cf2fce6524bb70c2e",
+      "source_identity": [
+        66306,
+        26753276,
+        33204,
+        1991,
+        1794422714292758307,
+        1794422714292758307
+      ]
+    },
+    {
+      "bytes": 293,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/observation.c",
+      "path": "collection/payload/attempt02/input/kernel/observation.c",
+      "sha256": "1d9a4ac626de10516682680904c958bd0af1539eae0828b4236b5e0bea2b2e3a",
+      "source_identity": [
+        66306,
+        26753277,
+        33204,
+        293,
+        1794422714306758565,
+        1794422714306758565
+      ]
+    },
+    {
+      "bytes": 4009,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/observation.h",
+      "path": "collection/payload/attempt02/input/kernel/observation.h",
+      "sha256": "ee8a30d1f3f29b5eca5d56859c3e874fe046805d15d5932df8558a90946972a1",
+      "source_identity": [
+        66306,
+        26753278,
+        33204,
+        4009,
+        1794422714319758805,
+        1794422714319758805
+      ]
+    },
+    {
+      "bytes": 8746,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/owner_progress.c",
+      "path": "collection/payload/attempt02/input/kernel/owner_progress.c",
+      "sha256": "8184208d878b467a7a269c2606029aa22cba64d4a45fd56026855b04171178d3",
+      "source_identity": [
+        66306,
+        26753279,
+        33204,
+        8746,
+        1794422714333759063,
+        1794422714333759063
+      ]
+    },
+    {
+      "bytes": 4064,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/owner_progress.h",
+      "path": "collection/payload/attempt02/input/kernel/owner_progress.h",
+      "sha256": "cc092ec0df8a74b6b993a6a3a7034ee713a896e0bf0f3a2ed32702692cea1052",
+      "source_identity": [
+        66306,
+        26753280,
+        33204,
+        4064,
+        1794422714346759303,
+        1794422714346759303
+      ]
+    },
+    {
+      "bytes": 22701,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/request_pool.c",
+      "path": "collection/payload/attempt02/input/kernel/request_pool.c",
+      "sha256": "df30718bf96fcdb637ed6ff8b1459de5963e255069556001685dc1d5cf59ee4e",
+      "source_identity": [
+        66306,
+        26753281,
+        33204,
+        22701,
+        1794422714359759543,
+        1794422714359759543
+      ]
+    },
+    {
+      "bytes": 10812,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/request_pool.h",
+      "path": "collection/payload/attempt02/input/kernel/request_pool.h",
+      "sha256": "1caf78b544d56e74d95d44d31a76ac35cd904791b752dbb0f9521ee4f8996c70",
+      "source_identity": [
+        66306,
+        26753282,
+        33204,
+        10812,
+        1794422714372759783,
+        1794422714372759783
+      ]
+    },
+    {
+      "bytes": 34635,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/runtime.c",
+      "path": "collection/payload/attempt02/input/kernel/runtime.c",
+      "sha256": "513bfcf6b526798aca7627a9e10e626a153eaa1f6fa5d8c728f46535644bc28c",
+      "source_identity": [
+        66306,
+        26753283,
+        33204,
+        34635,
+        1794422714386760041,
+        1794422714386760041
+      ]
+    },
+    {
+      "bytes": 3843,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/runtime.h",
+      "path": "collection/payload/attempt02/input/kernel/runtime.h",
+      "sha256": "061a1dabe203d32d3e06c21bd2028e7907ba7124f99ed4bd43a06baf202d9329",
+      "source_identity": [
+        66306,
+        26753284,
+        33204,
+        3843,
+        1794422714399760281,
+        1794422714399760281
+      ]
+    },
+    {
+      "bytes": 15750,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/rw.c",
+      "path": "collection/payload/attempt02/input/kernel/rw.c",
+      "sha256": "1f17e4d0d7d4ded6d6b7d2bf123f7f36bda309f0643ccf1897320be6e49f6393",
+      "source_identity": [
+        66306,
+        26753285,
+        33204,
+        15750,
+        1794422714413760539,
+        1794422714413760539
+      ]
+    },
+    {
+      "bytes": 5383,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/rw.h",
+      "path": "collection/payload/attempt02/input/kernel/rw.h",
+      "sha256": "58f0ba7bd8d62353f15a4690cd3d87ce2438cb6b9aed9c37cb9600994a1605a7",
+      "source_identity": [
+        66306,
+        26753286,
+        33204,
+        5383,
+        1794422714426760778,
+        1794422714426760778
+      ]
+    },
+    {
+      "bytes": 18050,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/rw_native.c",
+      "path": "collection/payload/attempt02/input/kernel/rw_native.c",
+      "sha256": "1a5dc3349dfd7d831c481b4a4862835798fb1a5eb725704dcc91ae42cc49afd0",
+      "source_identity": [
+        66306,
+        26753287,
+        33204,
+        18050,
+        1794422714439761018,
+        1794422714439761018
+      ]
+    },
+    {
+      "bytes": 3895,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/rw_native.h",
+      "path": "collection/payload/attempt02/input/kernel/rw_native.h",
+      "sha256": "5644c11916ee0861571d369dda7f50ec2f7da1a7367000827a65935d410dd01f",
+      "source_identity": [
+        66306,
+        26753288,
+        33204,
+        3895,
+        1794422714452761258,
+        1794422714452761258
+      ]
+    },
+    {
+      "bytes": 6933,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/source_epoch.c",
+      "path": "collection/payload/attempt02/input/kernel/source_epoch.c",
+      "sha256": "2ef40e9ad005caf758c31f9947bf0b49b67f7bf19eae3a0ec8684090ebe8ff12",
+      "source_identity": [
+        66306,
+        26753289,
+        33204,
+        6933,
+        1794422714466761516,
+        1794422714466761516
+      ]
+    },
+    {
+      "bytes": 6567,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/source_epoch.h",
+      "path": "collection/payload/attempt02/input/kernel/source_epoch.h",
+      "sha256": "f1838dbd76af0232cbee8909f85dbefe2972bd8bce8271faf909a98ec05fe0bb",
+      "source_identity": [
+        66306,
+        26753290,
+        33204,
+        6567,
+        1794422714479761756,
+        1794422714479761756
+      ]
+    },
+    {
+      "bytes": 4789,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/source_provider.c",
+      "path": "collection/payload/attempt02/input/kernel/source_provider.c",
+      "sha256": "c242e5bd9a091461a2c6f9d5d8907102d8986c62897959629c04789f8f0aa49e",
+      "source_identity": [
+        66306,
+        26753291,
+        33204,
+        4789,
+        1794422714492761996,
+        1794422714492761996
+      ]
+    },
+    {
+      "bytes": 3194,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/source_provider.h",
+      "path": "collection/payload/attempt02/input/kernel/source_provider.h",
+      "sha256": "0bde73385ec8620af476303299b559440d2da181797fb82a1d39a36a26c5f261",
+      "source_identity": [
+        66306,
+        26753292,
+        33204,
+        3194,
+        1794422714505762236,
+        1794422714505762236
+      ]
+    },
+    {
+      "bytes": 2336,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/source_stack.c",
+      "path": "collection/payload/attempt02/input/kernel/source_stack.c",
+      "sha256": "81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302",
+      "source_identity": [
+        66306,
+        26753293,
+        33204,
+        2336,
+        1794422714522762549,
+        1794422714522762549
+      ]
+    },
+    {
+      "bytes": 2031,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/source_stack.h",
+      "path": "collection/payload/attempt02/input/kernel/source_stack.h",
+      "sha256": "91458b0aa42309ebcf3c8b474bd2420f24574558e3362b1f993f21f0d7d4f16d",
+      "source_identity": [
+        66306,
+        26753294,
+        33204,
+        2031,
+        1794422714535762789,
+        1794422714535762789
+      ]
+    },
+    {
+      "bytes": 18940,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/state.c",
+      "path": "collection/payload/attempt02/input/kernel/state.c",
+      "sha256": "8689328f0ea82b2ca114a5569aa79b03abe2a8f74c598b0d42f0e645ff23c155",
+      "source_identity": [
+        66306,
+        26753295,
+        33204,
+        18940,
+        1794422714548763029,
+        1794422714548763029
+      ]
+    },
+    {
+      "bytes": 12672,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/state.h",
+      "path": "collection/payload/attempt02/input/kernel/state.h",
+      "sha256": "34f075387f41efd131e759d0eecbeabfe8b3dd7b616030ba8bea72c7a52699c3",
+      "source_identity": [
+        66306,
+        26753296,
+        33204,
+        12672,
+        1794422714562763287,
+        1794422714562763287
+      ]
+    },
+    {
+      "bytes": 574,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/target.h",
+      "path": "collection/payload/attempt02/input/kernel/target.h",
+      "sha256": "37c98012e3bca9db2ff3bac401bfb3eefe2c63b0625cb96ec67774bd8e3a225f",
+      "source_identity": [
+        66306,
+        26753297,
+        33204,
+        574,
+        1794422714575763527,
+        1794422714575763527
+      ]
+    },
+    {
+      "bytes": 2724,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/task_progress.c",
+      "path": "collection/payload/attempt02/input/kernel/task_progress.c",
+      "sha256": "191d1cf54b30689fe7243e48bd7c3f6e6e34b63ccb3ff9bd2feff034ac307c9e",
+      "source_identity": [
+        66306,
+        26753298,
+        33204,
+        2724,
+        1794422714588763767,
+        1794422714588763767
+      ]
+    },
+    {
+      "bytes": 2386,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/task_progress.h",
+      "path": "collection/payload/attempt02/input/kernel/task_progress.h",
+      "sha256": "e51bb0e84a9ce4aed2d575d59f09b3048b16bca4b0d8f8417711cd55635ad4c3",
+      "source_identity": [
+        66306,
+        26753299,
+        33204,
+        2386,
+        1794422714601764006,
+        1794422714601764006
+      ]
+    },
+    {
+      "bytes": 6911,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/task_setup.c",
+      "path": "collection/payload/attempt02/input/kernel/task_setup.c",
+      "sha256": "a4a510f30b3dddeff1b9eb8d3f09f25bfd5b98529326aaa3628db7fc4160c30a",
+      "source_identity": [
+        66306,
+        26753300,
+        33204,
+        6911,
+        1794422714614764246,
+        1794422714614764246
+      ]
+    },
+    {
+      "bytes": 4511,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/task_setup.h",
+      "path": "collection/payload/attempt02/input/kernel/task_setup.h",
+      "sha256": "bb1e830d13f49f6235dc0587a4828bb3ecf2307fa3a8901698c658399420f975",
+      "source_identity": [
+        66306,
+        26753301,
+        33204,
+        4511,
+        1794422714627764486,
+        1794422714627764486
+      ]
+    },
+    {
+      "bytes": 9076,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/task_state.c",
+      "path": "collection/payload/attempt02/input/kernel/task_state.c",
+      "sha256": "5d607be623e60f0f27ca39331dfb39385284ed81e1e1fd758b3c465746f9dadb",
+      "source_identity": [
+        66306,
+        26753302,
+        33204,
+        9076,
+        1794422714641764744,
+        1794422714641764744
+      ]
+    },
+    {
+      "bytes": 7255,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/task_state.h",
+      "path": "collection/payload/attempt02/input/kernel/task_state.h",
+      "sha256": "7ab09ad8febe6dc0660217f4f2d62cdf6ba83101fa8a12d10da3321e7e8007f3",
+      "source_identity": [
+        66306,
+        26753303,
+        33204,
+        7255,
+        1794422714659765076,
+        1794422714659765076
+      ]
+    },
+    {
+      "bytes": 15185,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/task_storage.c",
+      "path": "collection/payload/attempt02/input/kernel/task_storage.c",
+      "sha256": "199712250db1dfad005a28de58a4114c35ff67bc98c1f9a17aa45ced2066fd9b",
+      "source_identity": [
+        66306,
+        26753304,
+        33204,
+        15185,
+        1794422714673765334,
+        1794422714673765334
+      ]
+    },
+    {
+      "bytes": 7129,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/kernel/task_storage.h",
+      "path": "collection/payload/attempt02/input/kernel/task_storage.h",
+      "sha256": "14c062ac9cdfa83b557a28b885295982441bed5abd9b2d76d41593f31facee1f",
+      "source_identity": [
+        66306,
+        26753305,
+        33204,
+        7129,
+        1794422714686765574,
+        1794422714686765574
+      ]
+    },
+    {
+      "bytes": 14140,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/mmap_api/README.md",
+      "path": "collection/payload/attempt02/input/tests/kernel/mmap_api/README.md",
+      "sha256": "d5416687566443165847510737245991a240729b889db914406f76f98ddee1e9",
+      "source_identity": [
+        66306,
+        26753309,
+        33204,
+        14140,
+        1794422714700765832,
+        1794422714700765832
+      ]
+    },
+    {
+      "bytes": 6742,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/mmap_api/abi.h",
+      "path": "collection/payload/attempt02/input/tests/kernel/mmap_api/abi.h",
+      "sha256": "79eb6ef99d48fd07053061f66303b8afe25f8602ccc6af4370963cb3fba36ea4",
+      "source_identity": [
+        66306,
+        26753310,
+        33204,
+        6742,
+        1794422714713766072,
+        1794422714713766072
+      ]
+    },
+    {
+      "bytes": 182,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/mmap_api/payload/Kbuild",
+      "path": "collection/payload/attempt02/input/tests/kernel/mmap_api/payload/Kbuild",
+      "sha256": "3108e0d9b531252a0b9f4a86ae87cb88e9eb4ac8b96284568191057b278a96a1",
+      "source_identity": [
+        66306,
+        26753312,
+        33204,
+        182,
+        1794422714727766330,
+        1794422714727766330
+      ]
+    },
+    {
+      "bytes": 21906,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/mmap_api/payload/mmap_jit_profile.inc",
+      "path": "collection/payload/attempt02/input/tests/kernel/mmap_api/payload/mmap_jit_profile.inc",
+      "sha256": "b852bc06456c7d1d7ec88436d7a99aa2e4807c04ae54670f823f59934e592033",
+      "source_identity": [
+        66306,
+        26753313,
+        33204,
+        21906,
+        1794422714740766570,
+        1794422714740766570
+      ]
+    },
+    {
+      "bytes": 12331,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/mmap_api/payload/provider.c",
+      "path": "collection/payload/attempt02/input/tests/kernel/mmap_api/payload/provider.c",
+      "sha256": "ef02241e92a74f7f306ae8fcf3bf60fac4a2e52978337960215bcd1cfe92c858",
+      "source_identity": [
+        66306,
+        26753314,
+        33204,
+        12331,
+        1794422714753766810,
+        1794422714753766810
+      ]
+    },
+    {
+      "bytes": 51517,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/mmap_api/runner.py",
+      "path": "collection/payload/attempt02/input/tests/kernel/mmap_api/runner.py",
+      "sha256": "cf9083e829021787b95a881f140e3b0cfca96b92da569e052ac9dfc258d45b3f",
+      "source_identity": [
+        66306,
+        26753315,
+        33204,
+        51517,
+        1794422714767767068,
+        1794422714767767068
+      ]
+    },
+    {
+      "bytes": 24376,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/mmap_api/userspace.c",
+      "path": "collection/payload/attempt02/input/tests/kernel/mmap_api/userspace.c",
+      "sha256": "03ced9a455fc6a7bd61a45af59c430bb6cc5c5e2d39a944f8507677edcea7f56",
+      "source_identity": [
+        66306,
+        26753316,
+        33204,
+        24376,
+        1794422714781767326,
+        1794422714781767326
+      ]
+    },
+    {
+      "bytes": 24715,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/mmap_api/userspace_jit.inc",
+      "path": "collection/payload/attempt02/input/tests/kernel/mmap_api/userspace_jit.inc",
+      "sha256": "38db99539884127974471535564530e6bd3dd1cf84b344ccc088574a0f69f471",
+      "source_identity": [
+        66306,
+        26753317,
+        33204,
+        24715,
+        1794422714794767566,
+        1794422714794767566
+      ]
+    },
+    {
+      "bytes": 335,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/payload/Kbuild",
+      "path": "collection/payload/attempt02/input/tests/kernel/payload/Kbuild",
+      "sha256": "f3985b9360ea4469c19d7d4f49ea65d0e690ce73a644ded3c31b6198dbec7e55",
+      "source_identity": [
+        66306,
+        26753319,
+        33204,
+        335,
+        1794422714807767806,
+        1794422714807767806
+      ]
+    },
+    {
+      "bytes": 40001,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/payload/runtime_fixture.c",
+      "path": "collection/payload/attempt02/input/tests/kernel/payload/runtime_fixture.c",
+      "sha256": "85944c66ac370ff604eebcd0df9c38b43827d0b3252293e860aa2e23bb29c9d3",
+      "source_identity": [
+        66306,
+        26753320,
+        33204,
+        40001,
+        1794422714820768046,
+        1794422714820768046
+      ]
+    },
+    {
+      "bytes": 8631,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/payload/runtime_fixture_observe.inc",
+      "path": "collection/payload/attempt02/input/tests/kernel/payload/runtime_fixture_observe.inc",
+      "sha256": "fcc01b878726a864f6d791942e834e7cf9f1d92dbf8df7db0fec8f9a5b318a25",
+      "source_identity": [
+        66306,
+        26753321,
+        33204,
+        8631,
+        1794422714834768304,
+        1794422714834768304
+      ]
+    },
+    {
+      "bytes": 74504,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/run_runtime_fixture.py",
+      "path": "collection/payload/attempt02/input/tests/kernel/run_runtime_fixture.py",
+      "sha256": "18b3ffdde7a2515a7f3dcbdd1a935b0d50e80104666f4effcdd6c78250ef1ded",
+      "source_identity": [
+        66306,
+        26753322,
+        33204,
+        74504,
+        1794422714847768544,
+        1794422714847768544
+      ]
+    },
+    {
+      "bytes": 353,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwlock/payload/Kbuild",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwlock/payload/Kbuild",
+      "sha256": "eb1b871242b2bc65631c3833a43d7b45cf272efd9da4dcb576dd69491161990b",
+      "source_identity": [
+        66306,
+        26753325,
+        33204,
+        353,
+        1794422714861768802,
+        1794422714861768802
+      ]
+    },
+    {
+      "bytes": 110,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwlock/payload/rwlock_runtime_fixture.c",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwlock/payload/rwlock_runtime_fixture.c",
+      "sha256": "268e148524e4b748db84cf8932c5b646e6aa962f2c3455ab3d735604b27c3f6c",
+      "source_identity": [
+        66306,
+        26753326,
+        33204,
+        110,
+        1794422714874769042,
+        1794422714874769042
+      ]
+    },
+    {
+      "bytes": 301,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwlock/run_rwlock_runtime_fixture.py",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwlock/run_rwlock_runtime_fixture.py",
+      "sha256": "2a805bfe959ab3f011ce2660438d01bd705477bf8045a4e98fc82194bd932c99",
+      "source_identity": [
+        66306,
+        26753327,
+        33204,
+        301,
+        1794422714887769281,
+        1794422714887769281
+      ]
+    },
+    {
+      "bytes": 6028,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem/README.md",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem/README.md",
+      "sha256": "e347453c7f2dda007925bad170ec3924d9c9ec18f841a7c3de91e9a62c7f338a",
+      "source_identity": [
+        66306,
+        26753329,
+        33204,
+        6028,
+        1794422714900769521,
+        1794422714900769521
+      ]
+    },
+    {
+      "bytes": 47,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem/__init__.py",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem/__init__.py",
+      "sha256": "63f4edc0559a5e186005b2e0ee2a26652a8b5aa0a2a488565d0df4ec92e05a8c",
+      "source_identity": [
+        66306,
+        26753330,
+        33204,
+        47,
+        1794422714913769761,
+        1794422714913769761
+      ]
+    },
+    {
+      "bytes": 373,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem/payload/Kbuild",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem/payload/Kbuild",
+      "sha256": "5d8c79de5903f340319b3421d54ebafaf4864985509cb5196f619598b8adb032",
+      "source_identity": [
+        66306,
+        26753332,
+        33204,
+        373,
+        1794422714927770019,
+        1794422714927770019
+      ]
+    },
+    {
+      "bytes": 8382,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem/payload/reader_cases.inc",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem/payload/reader_cases.inc",
+      "sha256": "03f67a5a0853e0692d9719a963f2af2798514e66a94871fabe2bc04f08d2a109",
+      "source_identity": [
+        66306,
+        26753333,
+        33204,
+        8382,
+        1794422714940770259,
+        1794422714940770259
+      ]
+    },
+    {
+      "bytes": 109,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem/payload/rwsem_runtime_fixture.c",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem/payload/rwsem_runtime_fixture.c",
+      "sha256": "3353075eaf1be12e1a0c0975efb48c7fc84781fda7dfbf6dfefe38aaf027193a",
+      "source_identity": [
+        66306,
+        26753334,
+        33204,
+        109,
+        1794422714953770499,
+        1794422714953770499
+      ]
+    },
+    {
+      "bytes": 30912,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem/reader_cases.py",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem/reader_cases.py",
+      "sha256": "b6ba66d0661d951147ff152bed8e647fdab9d0e98349908fb1e8c5532f7aed31",
+      "source_identity": [
+        66306,
+        26753335,
+        33204,
+        30912,
+        1794422714966770738,
+        1794422714966770738
+      ]
+    },
+    {
+      "bytes": 289,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem/run_rwsem_runtime_fixture.py",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem/run_rwsem_runtime_fixture.py",
+      "sha256": "c7f14017e2b53bc85c89a3ca2924c6da4c39a814416c2ae39f1ce00ccae750b5",
+      "source_identity": [
+        66306,
+        26753336,
+        33204,
+        289,
+        1794422714980770997,
+        1794422714980770997
+      ]
+    },
+    {
+      "bytes": 4093,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem_api/README.md",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem_api/README.md",
+      "sha256": "50226257520bc84fec66c652afe77db6eced10d9905779c29e8899b1037ff310",
+      "source_identity": [
+        66306,
+        26753338,
+        33204,
+        4093,
+        1794422714993771236,
+        1794422714993771236
+      ]
+    },
+    {
+      "bytes": 188,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem_api/payload/Kbuild",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem_api/payload/Kbuild",
+      "sha256": "b5f4d2a36dc403d198c764a0c93853b7cba418ee3051dff3e23a3b14aac87741",
+      "source_identity": [
+        66306,
+        26753340,
+        33204,
+        188,
+        1794422715006771476,
+        1794422715006771476
+      ]
+    },
+    {
+      "bytes": 22004,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem_api/payload/rwsem_api_fixture.c",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem_api/payload/rwsem_api_fixture.c",
+      "sha256": "42648850979577360d88a2fd4066f48ea31e0ac46f29e5666de6ca0b6ac0f50a",
+      "source_identity": [
+        66306,
+        26753341,
+        33204,
+        22004,
+        1794422715019771716,
+        1794422715019771716
+      ]
+    },
+    {
+      "bytes": 6827,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem_killable/README.md",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem_killable/README.md",
+      "sha256": "3530a8c6649dea31f3f3dca7a6e8943a07128044a9e2a0892b3ed9495b850d76",
+      "source_identity": [
+        66306,
+        26753343,
+        33204,
+        6827,
+        1794422715033771974,
+        1794422715033771974
+      ]
+    },
+    {
+      "bytes": 311,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem_killable/payload/Kbuild",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem_killable/payload/Kbuild",
+      "sha256": "679334a73ae0d12df36034b84312ed26b5c20f4c8ec5be1f22efa0d1691386b2",
+      "source_identity": [
+        66306,
+        26753345,
+        33204,
+        311,
+        1794422715046772214,
+        1794422715046772214
+      ]
+    },
+    {
+      "bytes": 25790,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem_killable/payload/fixture.c",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem_killable/payload/fixture.c",
+      "sha256": "ccd39fdff6c370830cb04896f4aa7f829dbae140606941fa1f1f17263100527a",
+      "source_identity": [
+        66306,
+        26753346,
+        33204,
+        25790,
+        1794422715059772454,
+        1794422715059772454
+      ]
+    },
+    {
+      "bytes": 39518,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/rwsem_killable/runner.py",
+      "path": "collection/payload/attempt02/input/tests/kernel/rwsem_killable/runner.py",
+      "sha256": "f3b0544cee53a2d61d875476da29e0f1ac2641021029a15bb3df64fddf69624b",
+      "source_identity": [
+        66306,
+        26753347,
+        33204,
+        39518,
+        1794422715072772694,
+        1794422715072772694
+      ]
+    },
+    {
+      "bytes": 369,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/spin/payload/Kbuild",
+      "path": "collection/payload/attempt02/input/tests/kernel/spin/payload/Kbuild",
+      "sha256": "be3c11359d6cf6ee1c294171f6f778268242f4f757044a1a24281cb2a42e6187",
+      "source_identity": [
+        66306,
+        26753350,
+        33204,
+        369,
+        1794422715086772952,
+        1794422715086772952
+      ]
+    },
+    {
+      "bytes": 108,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/spin/payload/spin_runtime_fixture.c",
+      "path": "collection/payload/attempt02/input/tests/kernel/spin/payload/spin_runtime_fixture.c",
+      "sha256": "e70f93a44a46435bce5200c5497f17215234afb888301958b68b6c1eb5461fb0",
+      "source_identity": [
+        66306,
+        26753351,
+        33204,
+        108,
+        1794422715100773210,
+        1794422715100773210
+      ]
+    },
+    {
+      "bytes": 293,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/kernel/spin/run_spin_runtime_fixture.py",
+      "path": "collection/payload/attempt02/input/tests/kernel/spin/run_spin_runtime_fixture.py",
+      "sha256": "203034a6b44c2fc6355763d0367b581aa84eed629d4c8ad813216387a7c1a017",
+      "source_identity": [
+        66306,
+        26753352,
+        33204,
+        293,
+        1794422715113773450,
+        1794422715113773450
+      ]
+    },
+    {
+      "bytes": 7959,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/test_kernel_gs_rip.py",
+      "path": "collection/payload/attempt02/input/tests/test_kernel_gs_rip.py",
+      "sha256": "4a309b7c8053ece20ce58c1ac0d6cb9f8a658b331642c2af68e9e1fa9aed01e1",
+      "source_identity": [
+        66306,
+        26753353,
+        33204,
+        7959,
+        1794422715126773690,
+        1794422715126773690
+      ]
+    },
+    {
+      "bytes": 3541,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/input/tests/test_source_boundaries.py",
+      "path": "collection/payload/attempt02/input/tests/test_source_boundaries.py",
+      "sha256": "c9ba1513dd6a98f0d2b272c9468210710a7b6fb3003b3cea20a3d3c9f34a0252",
+      "source_identity": [
+        66306,
+        26753354,
+        33204,
+        3541,
+        1794422715139773929,
+        1794422715139773929
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/client-build.log",
+      "path": "collection/payload/attempt02/receipts/client-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753356,
+        33204,
+        0,
+        1794422715153774188,
+        1794422715153774188
+      ]
+    },
+    {
+      "bytes": 17725,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/killable-build.log",
+      "path": "collection/payload/attempt02/receipts/killable-build.log",
+      "sha256": "f7b5aeea2c68adf48c8d24547b6bcb396c79865dd290f845ddf84e58bc44fefd",
+      "source_identity": [
+        66306,
+        26753357,
+        33204,
+        17725,
+        1794422715166774427,
+        1794422715166774427
+      ]
+    },
+    {
+      "bytes": 1,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/killable-depends.log",
+      "path": "collection/payload/attempt02/receipts/killable-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "source_identity": [
+        66306,
+        26753358,
+        33204,
+        1,
+        1794422715180774686,
+        1794422715180774686
+      ]
+    },
+    {
+      "bytes": 7,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/killable-sig_hashalgo.log",
+      "path": "collection/payload/attempt02/receipts/killable-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "source_identity": [
+        66306,
+        26753359,
+        33204,
+        7,
+        1794422715193774925,
+        1794422715193774925
+      ]
+    },
+    {
+      "bytes": 60,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/killable-sig_key.log",
+      "path": "collection/payload/attempt02/receipts/killable-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08",
+      "source_identity": [
+        66306,
+        26753360,
+        33204,
+        60,
+        1794422715206775165,
+        1794422715206775165
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/killable-sign.log",
+      "path": "collection/payload/attempt02/receipts/killable-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753361,
+        33204,
+        0,
+        1794422715219775405,
+        1794422715219775405
+      ]
+    },
+    {
+      "bytes": 36,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/killable-signer.log",
+      "path": "collection/payload/attempt02/receipts/killable-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "source_identity": [
+        66306,
+        26753362,
+        33204,
+        36,
+        1794422715232775645,
+        1794422715232775645
+      ]
+    },
+    {
+      "bytes": 56,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/killable-vermagic.log",
+      "path": "collection/payload/attempt02/receipts/killable-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0",
+      "source_identity": [
+        66306,
+        26753363,
+        33204,
+        56,
+        1794422715246775903,
+        1794422715246775903
+      ]
+    },
+    {
+      "bytes": 17965,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mmap-build.log",
+      "path": "collection/payload/attempt02/receipts/mmap-build.log",
+      "sha256": "ce38b2a77cd08c3ed71044c781853b9e7be43bf77237bb05f09324ffc02b47f9",
+      "source_identity": [
+        66306,
+        26753364,
+        33204,
+        17965,
+        1794422715259776143,
+        1794422715259776143
+      ]
+    },
+    {
+      "bytes": 1,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mmap-depends.log",
+      "path": "collection/payload/attempt02/receipts/mmap-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "source_identity": [
+        66306,
+        26753365,
+        33204,
+        1,
+        1794422715273776401,
+        1794422715273776401
+      ]
+    },
+    {
+      "bytes": 7,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mmap-sig_hashalgo.log",
+      "path": "collection/payload/attempt02/receipts/mmap-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "source_identity": [
+        66306,
+        26753366,
+        33204,
+        7,
+        1794422715286776641,
+        1794422715286776641
+      ]
+    },
+    {
+      "bytes": 60,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mmap-sig_key.log",
+      "path": "collection/payload/attempt02/receipts/mmap-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08",
+      "source_identity": [
+        66306,
+        26753367,
+        33204,
+        60,
+        1794422715299776881,
+        1794422715299776881
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mmap-sign.log",
+      "path": "collection/payload/attempt02/receipts/mmap-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753368,
+        33204,
+        0,
+        1794422715312777120,
+        1794422715312777120
+      ]
+    },
+    {
+      "bytes": 36,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mmap-signer.log",
+      "path": "collection/payload/attempt02/receipts/mmap-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "source_identity": [
+        66306,
+        26753369,
+        33204,
+        36,
+        1794422715325777360,
+        1794422715325777360
+      ]
+    },
+    {
+      "bytes": 56,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mmap-vermagic.log",
+      "path": "collection/payload/attempt02/receipts/mmap-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0",
+      "source_identity": [
+        66306,
+        26753370,
+        33204,
+        56,
+        1794422715339777618,
+        1794422715339777618
+      ]
+    },
+    {
+      "bytes": 17709,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mutex-build.log",
+      "path": "collection/payload/attempt02/receipts/mutex-build.log",
+      "sha256": "554b8a21a7bb34437866adc6063a6adbf88371f87f762a565acde26e89c6005d",
+      "source_identity": [
+        66306,
+        26753371,
+        33204,
+        17709,
+        1794422715352777858,
+        1794422715352777858
+      ]
+    },
+    {
+      "bytes": 1,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mutex-depends.log",
+      "path": "collection/payload/attempt02/receipts/mutex-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "source_identity": [
+        66306,
+        26753372,
+        33204,
+        1,
+        1794422715366778117,
+        1794422715366778117
+      ]
+    },
+    {
+      "bytes": 7,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mutex-sig_hashalgo.log",
+      "path": "collection/payload/attempt02/receipts/mutex-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "source_identity": [
+        66306,
+        26753373,
+        33204,
+        7,
+        1794422715379778356,
+        1794422715379778356
+      ]
+    },
+    {
+      "bytes": 60,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mutex-sig_key.log",
+      "path": "collection/payload/attempt02/receipts/mutex-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08",
+      "source_identity": [
+        66306,
+        26753374,
+        33204,
+        60,
+        1794422715392778596,
+        1794422715392778596
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mutex-sign.log",
+      "path": "collection/payload/attempt02/receipts/mutex-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753375,
+        33204,
+        0,
+        1794422715404778817,
+        1794422715404778817
+      ]
+    },
+    {
+      "bytes": 36,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mutex-signer.log",
+      "path": "collection/payload/attempt02/receipts/mutex-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "source_identity": [
+        66306,
+        26753376,
+        33204,
+        36,
+        1794422715417779057,
+        1794422715417779057
+      ]
+    },
+    {
+      "bytes": 56,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/mutex-vermagic.log",
+      "path": "collection/payload/attempt02/receipts/mutex-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0",
+      "source_identity": [
+        66306,
+        26753377,
+        33204,
+        56,
+        1794422715430779297,
+        1794422715430779297
+      ]
+    },
+    {
+      "bytes": 17560,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/native-api-build.log",
+      "path": "collection/payload/attempt02/receipts/native-api-build.log",
+      "sha256": "168bd8ec6690e7f607a3cf8d99db5dc6ca00b1da95c4d5c08765b78cba2cddcd",
+      "source_identity": [
+        66306,
+        26753378,
+        33204,
+        17560,
+        1794422715443779537,
+        1794422715443779537
+      ]
+    },
+    {
+      "bytes": 1,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/native-api-depends.log",
+      "path": "collection/payload/attempt02/receipts/native-api-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "source_identity": [
+        66306,
+        26753379,
+        33204,
+        1,
+        1794422715457779795,
+        1794422715457779795
+      ]
+    },
+    {
+      "bytes": 7,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/native-api-sig_hashalgo.log",
+      "path": "collection/payload/attempt02/receipts/native-api-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "source_identity": [
+        66306,
+        26753380,
+        33204,
+        7,
+        1794422715470780035,
+        1794422715470780035
+      ]
+    },
+    {
+      "bytes": 60,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/native-api-sig_key.log",
+      "path": "collection/payload/attempt02/receipts/native-api-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08",
+      "source_identity": [
+        66306,
+        26753381,
+        33204,
+        60,
+        1794422715484780293,
+        1794422715484780293
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/native-api-sign.log",
+      "path": "collection/payload/attempt02/receipts/native-api-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753382,
+        33204,
+        0,
+        1794422715497780533,
+        1794422715497780533
+      ]
+    },
+    {
+      "bytes": 36,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/native-api-signer.log",
+      "path": "collection/payload/attempt02/receipts/native-api-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "source_identity": [
+        66306,
+        26753383,
+        33204,
+        36,
+        1794422715510780773,
+        1794422715510780773
+      ]
+    },
+    {
+      "bytes": 56,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/native-api-vermagic.log",
+      "path": "collection/payload/attempt02/receipts/native-api-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0",
+      "source_identity": [
+        66306,
+        26753384,
+        33204,
+        56,
+        1794422715524781031,
+        1794422715524781031
+      ]
+    },
+    {
+      "bytes": 804,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/new-runner-syntax.log",
+      "path": "collection/payload/attempt02/receipts/new-runner-syntax.log",
+      "sha256": "e32fec1876076b74a8bae2bb9788f35b5dded7866f8cf59d007d6b7877c2b4b3",
+      "source_identity": [
+        66306,
+        26753385,
+        33204,
+        804,
+        1794422715537781271,
+        1794422715537781271
+      ]
+    },
+    {
+      "bytes": 173459,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/result.json",
+      "path": "collection/payload/attempt02/receipts/result.json",
+      "sha256": "2820a2952f5da8815e130d6d0fb62a5a7f912b48cf815ad4b533fd6b62e93432",
+      "source_identity": [
+        66306,
+        26753386,
+        33204,
+        173459,
+        1794422715550781510,
+        1794422715550781510
+      ]
+    },
+    {
+      "bytes": 18894,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/rwsem-build.log",
+      "path": "collection/payload/attempt02/receipts/rwsem-build.log",
+      "sha256": "00451ad0e0c471d5fb2ccd57d142509293347736ebafc7270707e77fd202e67d",
+      "source_identity": [
+        66306,
+        26753387,
+        33204,
+        18894,
+        1794422715566781805,
+        1794422715566781805
+      ]
+    },
+    {
+      "bytes": 1,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/rwsem-depends.log",
+      "path": "collection/payload/attempt02/receipts/rwsem-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "source_identity": [
+        66306,
+        26753388,
+        33204,
+        1,
+        1794422715580782064,
+        1794422715580782064
+      ]
+    },
+    {
+      "bytes": 7,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/rwsem-sig_hashalgo.log",
+      "path": "collection/payload/attempt02/receipts/rwsem-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "source_identity": [
+        66306,
+        26753389,
+        33204,
+        7,
+        1794422715593782303,
+        1794422715593782303
+      ]
+    },
+    {
+      "bytes": 60,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/rwsem-sig_key.log",
+      "path": "collection/payload/attempt02/receipts/rwsem-sig_key.log",
+      "sha256": "036271a80c3140d2c7a03024a1c5cb1113db67e228f45d86914c7b7432a29e08",
+      "source_identity": [
+        66306,
+        26753390,
+        33204,
+        60,
+        1794422715606782543,
+        1794422715606782543
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/rwsem-sign.log",
+      "path": "collection/payload/attempt02/receipts/rwsem-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753391,
+        33204,
+        0,
+        1794422715619782783,
+        1794422715619782783
+      ]
+    },
+    {
+      "bytes": 36,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/rwsem-signer.log",
+      "path": "collection/payload/attempt02/receipts/rwsem-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "source_identity": [
+        66306,
+        26753392,
+        33204,
+        36,
+        1794422715633783041,
+        1794422715633783041
+      ]
+    },
+    {
+      "bytes": 56,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/receipts/rwsem-vermagic.log",
+      "path": "collection/payload/attempt02/receipts/rwsem-vermagic.log",
+      "sha256": "85efa0ac6a78d7f0004a71e9636c2d260ebc9dac75fdbf7ec0a9663be0be07f0",
+      "source_identity": [
+        66306,
+        26753393,
+        33204,
+        56,
+        1794422715646783281,
+        1794422715646783281
+      ]
+    },
+    {
+      "bytes": 34842,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/transport/build.py",
+      "path": "collection/payload/attempt02/transport/build.py",
+      "sha256": "cbeca599151d06306919c9fb9172670716b121d1851b45a1e0cb97194cea1ad2",
+      "source_identity": [
+        66306,
+        26753395,
+        33204,
+        34842,
+        1794422715659783521,
+        1794422715659783521
+      ]
+    },
+    {
+      "bytes": 2849,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/transport/config.json",
+      "path": "collection/payload/attempt02/transport/config.json",
+      "sha256": "6f6529656254c405cc20d962fd3c5631ecbb24d1d31cee2d7a60451fdddddadf",
+      "source_identity": [
+        66306,
+        26753396,
+        33204,
+        2849,
+        1794422715673783779,
+        1794422715673783779
+      ]
+    },
+    {
+      "bytes": 23263,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/transport/recovery.json",
+      "path": "collection/payload/attempt02/transport/recovery.json",
+      "sha256": "82dfcac0163af8660dd989689d4f94b57742e72e5694f6fa4a20a9a6d7e72db9",
+      "source_identity": [
+        66306,
+        26753397,
+        33204,
+        23263,
+        1794422715687784037,
+        1794422715687784037
+      ]
+    },
+    {
+      "bytes": 24422,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/transport/source-derivation.json",
+      "path": "collection/payload/attempt02/transport/source-derivation.json",
+      "sha256": "0f0e02a2fbb7170a7e1e7de3d0737ea587920c2da633ed490c544d20db2d76f0",
+      "source_identity": [
+        66306,
+        26753398,
+        33204,
+        24422,
+        1794422715701784296,
+        1794422715701784296
+      ]
+    },
+    {
+      "bytes": 19194,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/transport/source-sha256.json",
+      "path": "collection/payload/attempt02/transport/source-sha256.json",
+      "sha256": "8a048df5e4782bc061df70e855c596314f1e67bacf25d9d1a74596ea063cf5ec",
+      "source_identity": [
+        66306,
+        26753399,
+        33204,
+        19194,
+        1794422715714784535,
+        1794422715714784535
+      ]
+    },
+    {
+      "bytes": 133,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/transport/source-state.json",
+      "path": "collection/payload/attempt02/transport/source-state.json",
+      "sha256": "80a6381a65bafaccbb6cb07c5920d680313bd1d58337c82d92dacc1c25d85b5a",
+      "source_identity": [
+        66306,
+        26753400,
+        33204,
+        133,
+        1794422715728784794,
+        1794422715728784794
+      ]
+    },
+    {
+      "bytes": 1751040,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/attempt02/transport/source.tar",
+      "path": "collection/payload/attempt02/transport/source.tar",
+      "sha256": "c8e1d301c13ff39bd522fb52c3d168278ce82e2b320a244f6474f670bb6d2826",
+      "source_identity": [
+        66306,
+        26753401,
+        33204,
+        1751040,
+        1794422715747785144,
+        1794422715747785144
+      ]
+    },
+    {
+      "bytes": 43096,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/client",
+      "path": "collection/payload/binaries/client",
+      "sha256": "bae90760f57f3930e1ff48443140eb096ea316c1fed00ae1840127f6985a4cd2",
+      "source_identity": [
+        66306,
+        26753403,
+        33204,
+        43096,
+        1794422715772785605,
+        1794422715772785605
+      ]
+    },
+    {
+      "bytes": 556161,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/killable-signed.ko",
+      "path": "collection/payload/binaries/killable-signed.ko",
+      "sha256": "b9392b8b8291522a0a6f91cddcd933461a1fb0549184e8c2b081a436a90a7a95",
+      "source_identity": [
+        66306,
+        26753404,
+        33204,
+        556161,
+        1794422715786785863,
+        1794422715786785863
+      ]
+    },
+    {
+      "bytes": 555440,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/killable-unsigned.ko",
+      "path": "collection/payload/binaries/killable-unsigned.ko",
+      "sha256": "35e0b38f3a85e1bcde1595d2bf80f4dd794652481de3405d67a6a4e833771270",
+      "source_identity": [
+        66306,
+        26753405,
+        33204,
+        555440,
+        1794422715805786214,
+        1794422715805786214
+      ]
+    },
+    {
+      "bytes": 602417,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/mmap-signed.ko",
+      "path": "collection/payload/binaries/mmap-signed.ko",
+      "sha256": "35f073b8c9635f7e34330d3b69c60e43afc03d77f854641345b3b3f1a442e645",
+      "source_identity": [
+        66306,
+        26753406,
+        33204,
+        602417,
+        1794422715824786564,
+        1794422715824786564
+      ]
+    },
+    {
+      "bytes": 601696,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/mmap-unsigned.ko",
+      "path": "collection/payload/binaries/mmap-unsigned.ko",
+      "sha256": "685abe66c063cec85dc9b57ff739d8b7faf74d50697829ab519204256a569b62",
+      "source_identity": [
+        66306,
+        26753407,
+        33204,
+        601696,
+        1794422715843786915,
+        1794422715843786915
+      ]
+    },
+    {
+      "bytes": 591497,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/mutex-signed.ko",
+      "path": "collection/payload/binaries/mutex-signed.ko",
+      "sha256": "0c2a39e5da75ef674e7ee743379069965b8f939d039c35bad76d967f1f6b201c",
+      "source_identity": [
+        66306,
+        26753408,
+        33204,
+        591497,
+        1794422715862787265,
+        1794422715862787265
+      ]
+    },
+    {
+      "bytes": 590776,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/mutex-unsigned.ko",
+      "path": "collection/payload/binaries/mutex-unsigned.ko",
+      "sha256": "c0d57530abbf89655ede0457a2cdcface0128cf60d86e0b297c7597661f34d07",
+      "source_identity": [
+        66306,
+        26753409,
+        33204,
+        590776,
+        1794422715881787616,
+        1794422715881787616
+      ]
+    },
+    {
+      "bytes": 608529,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/native-api-signed.ko",
+      "path": "collection/payload/binaries/native-api-signed.ko",
+      "sha256": "5af9433dd7ee176dca8e0b4c5cb01e1c2cf20eb782e7feca1bc40a06bfa90ea4",
+      "source_identity": [
+        66306,
+        26753410,
+        33204,
+        608529,
+        1794422715900787966,
+        1794422715900787966
+      ]
+    },
+    {
+      "bytes": 607808,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/native-api-unsigned.ko",
+      "path": "collection/payload/binaries/native-api-unsigned.ko",
+      "sha256": "c18ccbf885583800bb40765bb65b6621cffb4a81b05bdc449442c516143dbddc",
+      "source_identity": [
+        66306,
+        26753411,
+        33204,
+        607808,
+        1794422715919788317,
+        1794422715919788317
+      ]
+    },
+    {
+      "bytes": 689617,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/rwsem-signed.ko",
+      "path": "collection/payload/binaries/rwsem-signed.ko",
+      "sha256": "3653652728891a83b8faa00b3f8757489d48a75b1f9ec54f7c1820577a39fc13",
+      "source_identity": [
+        66306,
+        26753412,
+        33204,
+        689617,
+        1794422715939788686,
+        1794422715939788686
+      ]
+    },
+    {
+      "bytes": 688896,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/binaries/rwsem-unsigned.ko",
+      "path": "collection/payload/binaries/rwsem-unsigned.ko",
+      "sha256": "374bcbc7793604d4a7907d45ad9dc9dc379235a027775101295554e2e2059bb2",
+      "source_identity": [
+        66306,
+        26753413,
+        33204,
+        688896,
+        1794422715960789073,
+        1794422715960789073
+      ]
+    },
+    {
+      "bytes": 347,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks-driver/command.json",
+      "path": "collection/payload/checks-driver/command.json",
+      "sha256": "8ff3b08aa7a5347860927b6852f9eafc531c21fde88ea49256a94416df255bc1",
+      "source_identity": [
+        66306,
+        26753415,
+        33204,
+        347,
+        1794422715979789423,
+        1794422715979789423
+      ]
+    },
+    {
+      "bytes": 49,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks-driver/dispatch.json",
+      "path": "collection/payload/checks-driver/dispatch.json",
+      "sha256": "7fee9c0750e02811735c95d4c107aa5ad5afe69ec50991972ded86f8ef0a8367",
+      "source_identity": [
+        66306,
+        26753416,
+        33204,
+        49,
+        1794422715993789682,
+        1794422715993789682
+      ]
+    },
+    {
+      "bytes": 62,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks-driver/result.json",
+      "path": "collection/payload/checks-driver/result.json",
+      "sha256": "47b6b43f9e32335be3d6a98016620c37855a7c74d69817cc813b673a4cbb91af",
+      "source_identity": [
+        66306,
+        26753417,
+        33204,
+        62,
+        1794422716006789921,
+        1794422716006789921
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks-driver/stderr",
+      "path": "collection/payload/checks-driver/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753418,
+        33204,
+        0,
+        1794422716020790180,
+        1794422716020790180
+      ]
+    },
+    {
+      "bytes": 246,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks-driver/stdout",
+      "path": "collection/payload/checks-driver/stdout",
+      "sha256": "7a93b88db61e83682da56897f99633f7f6886f65d28e503ddf0943ae9b086f3f",
+      "source_identity": [
+        66306,
+        26753419,
+        33204,
+        246,
+        1794422716033790419,
+        1794422716033790419
+      ]
+    },
+    {
+      "bytes": 7847,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks-input/continue.py",
+      "path": "collection/payload/checks-input/continue.py",
+      "sha256": "1088a8660c3ec82288310da764fe393d1380cfca50e1196651f3cfe2c7b69797",
+      "source_identity": [
+        66306,
+        26753421,
+        33204,
+        7847,
+        1794422716046790659,
+        1794422716046790659
+      ]
+    },
+    {
+      "bytes": 51534,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks-input/mmap-runner-fixed.py",
+      "path": "collection/payload/checks-input/mmap-runner-fixed.py",
+      "sha256": "c20114507195b4dbccdd2fbca504230400a8cc9be3c51182d76ea30eff3dfb31",
+      "source_identity": [
+        66306,
+        26753422,
+        33204,
+        51534,
+        1794422716060790917,
+        1794422716060790917
+      ]
+    },
+    {
+      "bytes": 15,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks/corrected-runner-syntax.log",
+      "path": "collection/payload/checks/corrected-runner-syntax.log",
+      "sha256": "112519aaed1b173ed9dcc2b26f17f8d86fe4cf74d7962f50062c5c09b529201a",
+      "source_identity": [
+        66306,
+        26753424,
+        33204,
+        15,
+        1794422716074791176,
+        1794422716074791176
+      ]
+    },
+    {
+      "bytes": 27223,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks/result.json",
+      "path": "collection/payload/checks/result.json",
+      "sha256": "4e92343c84336fba6ad01e70074999a63e60dff1c4ece157f8029e2291af64d0",
+      "source_identity": [
+        66306,
+        26753425,
+        33204,
+        27223,
+        1794422716087791416,
+        1794422716087791416
+      ]
+    },
+    {
+      "bytes": 789,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks/source-boundary-four.log",
+      "path": "collection/payload/checks/source-boundary-four.log",
+      "sha256": "59d325a68ecf83f263328530b3a59374dc158b78eae2da432f439210ededa890",
+      "source_identity": [
+        66306,
+        26753426,
+        33204,
+        789,
+        1794422716101791674,
+        1794422716101791674
+      ]
+    },
+    {
+      "bytes": 2675,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/checks/unselected-syscalls.log",
+      "path": "collection/payload/checks/unselected-syscalls.log",
+      "sha256": "40068f843df8ae1bb6dcd0fe40e9d76d04d88e3411161115a55a51abbf6a3160",
+      "source_identity": [
+        66306,
+        26753427,
+        33204,
+        2675,
+        1794422716115791932,
+        1794422716115791932
+      ]
+    },
+    {
+      "bytes": 1328,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/build-01/input/Kbuild",
+      "path": "collection/payload/failed-unpack/build-01/input/Kbuild",
+      "sha256": "63e09601f83dff10da0a51c920d44a3dac1a685c060fa0e8670d930c0f250cb7",
+      "source_identity": [
+        66306,
+        26753431,
+        33204,
+        1328,
+        1794422716128792172,
+        1794422716128792172
+      ]
+    },
+    {
+      "bytes": 942,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/build-01/input/Kconfig",
+      "path": "collection/payload/failed-unpack/build-01/input/Kconfig",
+      "sha256": "f57bcb6c2e27799559fa139630b6090b0371c62119298b62429b006e5c788c29",
+      "source_identity": [
+        66306,
+        26753432,
+        33204,
+        942,
+        1794422716142792430,
+        1794422716142792430
+      ]
+    },
+    {
+      "bytes": 146495,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/build-01/receipts/result.json",
+      "path": "collection/payload/failed-unpack/build-01/receipts/result.json",
+      "sha256": "316e8243fb471e5f92a87d0bd6ff7566e7237c6a663b651d5cf2cb60635299f4",
+      "source_identity": [
+        66306,
+        26753434,
+        33204,
+        146495,
+        1794422716155792670,
+        1794422716155792670
+      ]
+    },
+    {
+      "bytes": 505,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/driver-01/command.json",
+      "path": "collection/payload/failed-unpack/driver-01/command.json",
+      "sha256": "6bd05c40d8525a024624c80cbf539753a8fe8ab2d7e916bb66a6380609b3e909",
+      "source_identity": [
+        66306,
+        26753436,
+        33204,
+        505,
+        1794422716170792946,
+        1794422716170792946
+      ]
+    },
+    {
+      "bytes": 49,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/driver-01/dispatch.json",
+      "path": "collection/payload/failed-unpack/driver-01/dispatch.json",
+      "sha256": "7df9cc6036449b1b31326ed21dc7998e8d2cfe8ee38be38a549bbd84b616237a",
+      "source_identity": [
+        66306,
+        26753437,
+        33204,
+        49,
+        1794422716183793186,
+        1794422716183793186
+      ]
+    },
+    {
+      "bytes": 62,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/driver-01/result.json",
+      "path": "collection/payload/failed-unpack/driver-01/result.json",
+      "sha256": "b13d7e1a3279ad814b92e4bcd40a5bbefffcefeff01e9639119f3d87481bbd6f",
+      "source_identity": [
+        66306,
+        26753438,
+        33204,
+        62,
+        1794422716196793426,
+        1794422716196793426
+      ]
+    },
+    {
+      "bytes": 996,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/driver-01/stderr",
+      "path": "collection/payload/failed-unpack/driver-01/stderr",
+      "sha256": "9d75950141d52c62b39122c115d5f310dbfaadb66d58ea621438d4a1d2b87fd4",
+      "source_identity": [
+        66306,
+        26753439,
+        33204,
+        996,
+        1794422716210793684,
+        1794422716210793684
+      ]
+    },
+    {
+      "bytes": 0,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/driver-01/stdout",
+      "path": "collection/payload/failed-unpack/driver-01/stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_identity": [
+        66306,
+        26753440,
+        33204,
+        0,
+        1794422716223793924,
+        1794422716223793924
+      ]
+    },
+    {
+      "bytes": 34842,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/transport/build.py",
+      "path": "collection/payload/failed-unpack/transport/build.py",
+      "sha256": "cbeca599151d06306919c9fb9172670716b121d1851b45a1e0cb97194cea1ad2",
+      "source_identity": [
+        66306,
+        26753442,
+        33204,
+        34842,
+        1794422716236794164,
+        1794422716236794164
+      ]
+    },
+    {
+      "bytes": 2849,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/transport/config.json",
+      "path": "collection/payload/failed-unpack/transport/config.json",
+      "sha256": "1fee23f8e59331a7f8f731accd5b0b2acdc552063bc7fd6ef5a53c3ec9a4a301",
+      "source_identity": [
+        66306,
+        26753443,
+        33204,
+        2849,
+        1794422716250794422,
+        1794422716250794422
+      ]
+    },
+    {
+      "bytes": 23263,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/transport/recovery.json",
+      "path": "collection/payload/failed-unpack/transport/recovery.json",
+      "sha256": "6cf0ef0a14f5375006d73e681855393ce6a095f4d16164394adf36cbe05f885c",
+      "source_identity": [
+        66306,
+        26753444,
+        33204,
+        23263,
+        1794422716264794680,
+        1794422716264794680
+      ]
+    },
+    {
+      "bytes": 19194,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/transport/source-sha256.json",
+      "path": "collection/payload/failed-unpack/transport/source-sha256.json",
+      "sha256": "8a048df5e4782bc061df70e855c596314f1e67bacf25d9d1a74596ea063cf5ec",
+      "source_identity": [
+        66306,
+        26753445,
+        33204,
+        19194,
+        1794422716278794939,
+        1794422716278794939
+      ]
+    },
+    {
+      "bytes": 133,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/transport/source-state.json",
+      "path": "collection/payload/failed-unpack/transport/source-state.json",
+      "sha256": "80a6381a65bafaccbb6cb07c5920d680313bd1d58337c82d92dacc1c25d85b5a",
+      "source_identity": [
+        66306,
+        26753446,
+        33204,
+        133,
+        1794422716291795178,
+        1794422716291795178
+      ]
+    },
+    {
+      "bytes": 1617920,
+      "origin": "/tmp/kdlock-kernel7-affected-collection-20261111-01/payload/failed-unpack/transport/source.tar",
+      "path": "collection/payload/failed-unpack/transport/source.tar",
+      "sha256": "ee8303da4bfcada82ed305ad93b42e1f1a99e1274f9dba7dc2b1437a31f0d461",
+      "source_identity": [
+        66306,
+        26753447,
+        33204,
+        1617920,
+        1794422716310795529,
+        1794422716310795529
+      ]
+    },
+    {
+      "bytes": 18008,
+      "origin": "/tmp/kdlock-kernel7-affected-evidence-draft-01/audit.py",
+      "path": "audit.py",
+      "sha256": "9740e5c81da5c88ef0069215b6b7d0467b57226bbd88a511c8a9f58d8e97ae46",
+      "source_identity": [
+        66306,
+        26753839,
+        33204,
+        18008,
+        1794425031969383616,
+        1794425031969383616
+      ]
+    },
+    {
+      "bytes": 18873,
+      "origin": "/tmp/kdlock-kernel7-affected-evidence-draft-01/audit-final.json",
+      "path": "audit.json",
+      "sha256": "ea1de3260e5cb3b7f1573b5e407441e4364fdc3762b631440aa147d6c25f3be8",
+      "source_identity": [
+        66306,
+        26753866,
+        33204,
+        18873,
+        1794425032442396347,
+        1794425032442396347
+      ]
+    },
+    {
+      "bytes": 226,
+      "origin": "/tmp/kdlock-kernel7-affected-evidence-draft-01/audit-attempt-01.json",
+      "path": "audit-attempt-01.json",
+      "sha256": "5bfae1d396ad212906ba5ec3f0c5ffc397e08009e7cffa5ae57a68eb77300bc6",
+      "source_identity": [
+        66306,
+        26753859,
+        33204,
+        226,
+        1794424952186225755,
+        1794424952186225755
+      ]
+    }
+  ],
+  "schema": 1,
+  "scope": "Exact source-host byte copies. Original guest identities and hashes remain in collection/copy-index.json."
+}
