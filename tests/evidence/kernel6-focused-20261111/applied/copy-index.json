@@ -1,0 +1,566 @@
+{
+  "bytes": 1250964,
+  "count": 35,
+  "files": [
+    {
+      "bytes": 12550,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/include/linux/rwsem.h",
+      "identity": [
+        2080,
+        1486305,
+        33188,
+        1,
+        12550,
+        1794399034934000000,
+        1794399034957000000
+      ],
+      "name": "actual/include/linux/rwsem.h",
+      "path": "payload/actual/include/linux/rwsem.h",
+      "sha256": "ecfb1e4d09a304184ea314a3818b334e75877315d83617c188cdf122184268dd"
+    },
+    {
+      "bytes": 73192,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/include/linux/sched.h",
+      "identity": [
+        2080,
+        1486300,
+        33188,
+        1,
+        73192,
+        1794399034924000000,
+        1794399034940000000
+      ],
+      "name": "actual/include/linux/sched.h",
+      "path": "payload/actual/include/linux/sched.h",
+      "sha256": "c0ddfcc8be427faebb47d9807a891a650081e3bcd26e139253da9c8b67f264e8"
+    },
+    {
+      "bytes": 74135,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/init/Kconfig",
+      "identity": [
+        2080,
+        1486303,
+        33188,
+        1,
+        74135,
+        1794399034931000000,
+        1794399034950000000
+      ],
+      "name": "actual/init/Kconfig",
+      "path": "payload/actual/init/Kconfig",
+      "sha256": "4a715d514aadc22c22bacd33964596336ace7b0e18bc4ea55dcca6b53d29d872"
+    },
+    {
+      "bytes": 7117,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/kernel/Makefile",
+      "identity": [
+        2080,
+        1486304,
+        33188,
+        1,
+        7117,
+        1794399034933000000,
+        1794399034954000000
+      ],
+      "name": "actual/kernel/Makefile",
+      "path": "payload/actual/kernel/Makefile",
+      "sha256": "81d7f2489749b47d6cc57735885c9a749dfe82ad120b73e8f9f5a298cdb8d6fb"
+    },
+    {
+      "bytes": 51400,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/kernel/exit.c",
+      "identity": [
+        2080,
+        1486302,
+        33188,
+        1,
+        51400,
+        1794399034929000000,
+        1794399034947000000
+      ],
+      "name": "actual/kernel/exit.c",
+      "path": "payload/actual/kernel/exit.c",
+      "sha256": "1bb762d02021af4d2d61945bc3deb01372d9468a7762acc6612e8ad43561e6cb"
+    },
+    {
+      "bytes": 83842,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/kernel/fork.c",
+      "identity": [
+        2080,
+        1486301,
+        33188,
+        1,
+        83842,
+        1794399034927000000,
+        1794399034943000000
+      ],
+      "name": "actual/kernel/fork.c",
+      "path": "payload/actual/kernel/fork.c",
+      "sha256": "330c947b46444b7eb4543febb26b16f80ce6e632de88af540c4f462844f05bb1"
+    },
+    {
+      "bytes": 50896,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/kernel/locking/rwsem.c",
+      "identity": [
+        2080,
+        1486306,
+        33188,
+        1,
+        50896,
+        1794399034936000000,
+        1794399034960000000
+      ],
+      "name": "actual/kernel/locking/rwsem.c",
+      "path": "payload/actual/kernel/locking/rwsem.c",
+      "sha256": "05313c275f12547fb00d1576cfe9590ce41c5bdd7db2bc9d9ec5650779bb9de7"
+    },
+    {
+      "bytes": 22613,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/prepare-focus.py",
+      "identity": [
+        2080,
+        1310804,
+        33188,
+        1,
+        22613,
+        1794399026076744727,
+        1794399026076744727
+      ],
+      "name": "inputs/controller.py",
+      "path": "payload/inputs/controller.py",
+      "sha256": "05f274c986ddaa94a5a43d6dfc25daf2d7e7172bf2e59d6a50f7327f5a39339b"
+    },
+    {
+      "bytes": 7597,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/input-package.json",
+      "identity": [
+        2080,
+        1310803,
+        33188,
+        1,
+        7597,
+        1794399026075009870,
+        1794399026075009870
+      ],
+      "name": "inputs/package.json",
+      "path": "payload/inputs/package.json",
+      "sha256": "e5d86bb042ed919f72275ed095d3e8113bc755abb07b6583aa6f415e68a899cf"
+    },
+    {
+      "bytes": 23263,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/recovery-fresh.json",
+      "identity": [
+        2080,
+        1310809,
+        33188,
+        1,
+        23263,
+        1794399026673894355,
+        1794399026673894355
+      ],
+      "name": "inputs/recovery.json",
+      "path": "payload/inputs/recovery.json",
+      "sha256": "7eadeb9274c8045a6e0ef5f0c655c938c2e063cf6e1c253f4252fab456939e0a"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-01/copy-normal-source.log",
+      "identity": [
+        2080,
+        1310811,
+        33188,
+        1,
+        0,
+        1794399027454000000,
+        1794399027454000000
+      ],
+      "name": "receipts/focused-01/copy-normal-source.log",
+      "path": "payload/receipts/focused-01/copy-normal-source.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-01/integration-apply.log",
+      "identity": [
+        2080,
+        1354426,
+        33188,
+        1,
+        91,
+        1794399034965000000,
+        1794399034965000000
+      ],
+      "name": "receipts/focused-01/integration-apply.log",
+      "path": "payload/receipts/focused-01/integration-apply.log",
+      "sha256": "d43acee84268b0cf0e7187ef53b5d1c4543c2d0765f68cbbc6f2a346f5f85ea3"
+    },
+    {
+      "bytes": 8411,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-01/integration-inspect.log",
+      "identity": [
+        2080,
+        1354423,
+        33188,
+        1,
+        8411,
+        1794399034337000000,
+        1794399034337000000
+      ],
+      "name": "receipts/focused-01/integration-inspect.log",
+      "path": "payload/receipts/focused-01/integration-inspect.log",
+      "sha256": "d63f04dfc0657ce96b42b3830d4343111a33ab7a4c1b6c6d9f7ec54cc3d04a65"
+    },
+    {
+      "bytes": 11827,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-01/integration-plan.log",
+      "identity": [
+        2080,
+        1354425,
+        33188,
+        1,
+        11827,
+        1794399034610000000,
+        1794399034610000000
+      ],
+      "name": "receipts/focused-01/integration-plan.log",
+      "path": "payload/receipts/focused-01/integration-plan.log",
+      "sha256": "2af2ed71535c84d56ce3c65e8593623d3ea674bbe02bfe8927d26437cb897c89"
+    },
+    {
+      "bytes": 81,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-01/integration-verify.log",
+      "identity": [
+        2080,
+        1354459,
+        33188,
+        1,
+        81,
+        1794399035121000000,
+        1794399035121000000
+      ],
+      "name": "receipts/focused-01/integration-verify.log",
+      "path": "payload/receipts/focused-01/integration-verify.log",
+      "sha256": "18b24dfde0c7a6b3e124a9fca6ebad96fcaf97bc2f303fe97154cecbf5bc166a"
+    },
+    {
+      "bytes": 23024,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-01/result.json",
+      "identity": [
+        2080,
+        1354460,
+        33188,
+        1,
+        23024,
+        1794399035311674513,
+        1794399035312000000
+      ],
+      "name": "receipts/focused-01/result.json",
+      "path": "payload/receipts/focused-01/result.json",
+      "sha256": "d5a86bc9308afe34870cadeb5dd73c0c68c32ceac92c857cc75ce99502f48d40"
+    },
+    {
+      "bytes": 12550,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/after/include/linux/rwsem.h",
+      "identity": [
+        2080,
+        1354453,
+        33152,
+        1,
+        12550,
+        1794399034904000000,
+        1794399034904000000
+      ],
+      "name": "receipts/integration-application/after/include/linux/rwsem.h",
+      "path": "payload/receipts/integration-application/after/include/linux/rwsem.h",
+      "sha256": "ecfb1e4d09a304184ea314a3818b334e75877315d83617c188cdf122184268dd"
+    },
+    {
+      "bytes": 73192,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/after/include/linux/sched.h",
+      "identity": [
+        2080,
+        1354446,
+        33152,
+        1,
+        73192,
+        1794399034894000000,
+        1794399034894000000
+      ],
+      "name": "receipts/integration-application/after/include/linux/sched.h",
+      "path": "payload/receipts/integration-application/after/include/linux/sched.h",
+      "sha256": "c0ddfcc8be427faebb47d9807a891a650081e3bcd26e139253da9c8b67f264e8"
+    },
+    {
+      "bytes": 74135,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/after/init/Kconfig",
+      "identity": [
+        2080,
+        1354451,
+        33152,
+        1,
+        74135,
+        1794399034900000000,
+        1794399034900000000
+      ],
+      "name": "receipts/integration-application/after/init/Kconfig",
+      "path": "payload/receipts/integration-application/after/init/Kconfig",
+      "sha256": "4a715d514aadc22c22bacd33964596336ace7b0e18bc4ea55dcca6b53d29d872"
+    },
+    {
+      "bytes": 7117,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/after/kernel/Makefile",
+      "identity": [
+        2080,
+        1354452,
+        33152,
+        1,
+        7117,
+        1794399034902000000,
+        1794399034902000000
+      ],
+      "name": "receipts/integration-application/after/kernel/Makefile",
+      "path": "payload/receipts/integration-application/after/kernel/Makefile",
+      "sha256": "81d7f2489749b47d6cc57735885c9a749dfe82ad120b73e8f9f5a298cdb8d6fb"
+    },
+    {
+      "bytes": 51400,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/after/kernel/exit.c",
+      "identity": [
+        2080,
+        1354449,
+        33152,
+        1,
+        51400,
+        1794399034898000000,
+        1794399034898000000
+      ],
+      "name": "receipts/integration-application/after/kernel/exit.c",
+      "path": "payload/receipts/integration-application/after/kernel/exit.c",
+      "sha256": "1bb762d02021af4d2d61945bc3deb01372d9468a7762acc6612e8ad43561e6cb"
+    },
+    {
+      "bytes": 83842,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/after/kernel/fork.c",
+      "identity": [
+        2080,
+        1354448,
+        33152,
+        1,
+        83842,
+        1794399034896000000,
+        1794399034896000000
+      ],
+      "name": "receipts/integration-application/after/kernel/fork.c",
+      "path": "payload/receipts/integration-application/after/kernel/fork.c",
+      "sha256": "330c947b46444b7eb4543febb26b16f80ce6e632de88af540c4f462844f05bb1"
+    },
+    {
+      "bytes": 50896,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/after/kernel/locking/rwsem.c",
+      "identity": [
+        2080,
+        1354455,
+        33152,
+        1,
+        50896,
+        1794399034905000000,
+        1794399034905000000
+      ],
+      "name": "receipts/integration-application/after/kernel/locking/rwsem.c",
+      "path": "payload/receipts/integration-application/after/kernel/locking/rwsem.c",
+      "sha256": "05313c275f12547fb00d1576cfe9590ce41c5bdd7db2bc9d9ec5650779bb9de7"
+    },
+    {
+      "bytes": 75939,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/before/Makefile",
+      "identity": [
+        2080,
+        1354430,
+        33152,
+        1,
+        75939,
+        1794399034877000000,
+        1794399034877000000
+      ],
+      "name": "receipts/integration-application/before/Makefile",
+      "path": "payload/receipts/integration-application/before/Makefile",
+      "sha256": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32"
+    },
+    {
+      "bytes": 11336,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/before/include/linux/rwsem.h",
+      "identity": [
+        2080,
+        1354440,
+        33152,
+        1,
+        11336,
+        1794399034890000000,
+        1794399034890000000
+      ],
+      "name": "receipts/integration-application/before/include/linux/rwsem.h",
+      "path": "payload/receipts/integration-application/before/include/linux/rwsem.h",
+      "sha256": "4630401ebc68d2e4879e2513d8fd8d418ea7423503b2198fe1699914c2e3747c"
+    },
+    {
+      "bytes": 73044,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/before/include/linux/sched.h",
+      "identity": [
+        2080,
+        1354433,
+        33152,
+        1,
+        73044,
+        1794399034880000000,
+        1794399034880000000
+      ],
+      "name": "receipts/integration-application/before/include/linux/sched.h",
+      "path": "payload/receipts/integration-application/before/include/linux/sched.h",
+      "sha256": "aee5c39f6114cf358e28e64e7ce53c8358f0f90d70467f2c2e643d4128bfea2d"
+    },
+    {
+      "bytes": 74103,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/before/init/Kconfig",
+      "identity": [
+        2080,
+        1354438,
+        33152,
+        1,
+        74103,
+        1794399034886000000,
+        1794399034886000000
+      ],
+      "name": "receipts/integration-application/before/init/Kconfig",
+      "path": "payload/receipts/integration-application/before/init/Kconfig",
+      "sha256": "c94d452b20157fd93b4cdce2147d5f4c777f65b97ea7c98bddbd1a6a30c567a7"
+    },
+    {
+      "bytes": 7077,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/before/kernel/Makefile",
+      "identity": [
+        2080,
+        1354439,
+        33152,
+        1,
+        7077,
+        1794399034888000000,
+        1794399034888000000
+      ],
+      "name": "receipts/integration-application/before/kernel/Makefile",
+      "path": "payload/receipts/integration-application/before/kernel/Makefile",
+      "sha256": "18ab5bdeb31f60dd99554e807be2042b2733451d3bd10b74c1e7ea8603c5eeda"
+    },
+    {
+      "bytes": 51174,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/before/kernel/exit.c",
+      "identity": [
+        2080,
+        1354436,
+        33152,
+        1,
+        51174,
+        1794399034884000000,
+        1794399034884000000
+      ],
+      "name": "receipts/integration-application/before/kernel/exit.c",
+      "path": "payload/receipts/integration-application/before/kernel/exit.c",
+      "sha256": "c409a652107d68488ffe1bee096025d6b224736c33dab04ea4441bbc88f63a2f"
+    },
+    {
+      "bytes": 83491,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/before/kernel/fork.c",
+      "identity": [
+        2080,
+        1354435,
+        33152,
+        1,
+        83491,
+        1794399034882000000,
+        1794399034882000000
+      ],
+      "name": "receipts/integration-application/before/kernel/fork.c",
+      "path": "payload/receipts/integration-application/before/kernel/fork.c",
+      "sha256": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0"
+    },
+    {
+      "bytes": 47567,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/before/kernel/locking/rwsem.c",
+      "identity": [
+        2080,
+        1354442,
+        33152,
+        1,
+        47567,
+        1794399034892000000,
+        1794399034892000000
+      ],
+      "name": "receipts/integration-application/before/kernel/locking/rwsem.c",
+      "path": "payload/receipts/integration-application/before/kernel/locking/rwsem.c",
+      "sha256": "5d030b8ab20d775f3e3cf92d307b56e8309d0a6d9c9a4d626af91a3ccd53ea65"
+    },
+    {
+      "bytes": 11827,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/integration.patch",
+      "identity": [
+        2080,
+        1354456,
+        33152,
+        1,
+        11827,
+        1794399034907000000,
+        1794399034907000000
+      ],
+      "name": "receipts/integration-application/integration.patch",
+      "path": "payload/receipts/integration-application/integration.patch",
+      "sha256": "2af2ed71535c84d56ce3c65e8593623d3ea674bbe02bfe8927d26437cb897c89"
+    },
+    {
+      "bytes": 1943,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/journal.jsonl",
+      "identity": [
+        2080,
+        1354458,
+        33152,
+        1,
+        1943,
+        1794399034964000000,
+        1794399034964000000
+      ],
+      "name": "receipts/integration-application/journal.jsonl",
+      "path": "payload/receipts/integration-application/journal.jsonl",
+      "sha256": "992ab41b1bdfea11026ae519fcc45be4c9aa6a21bca3229dcf0a8ddf10fe56df"
+    },
+    {
+      "bytes": 9493,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/integration-application/manifest.json",
+      "identity": [
+        2080,
+        1354457,
+        33152,
+        1,
+        9493,
+        1794399034909000000,
+        1794399034909000000
+      ],
+      "name": "receipts/integration-application/manifest.json",
+      "path": "payload/receipts/integration-application/manifest.json",
+      "sha256": "b086f2b86ab9a2029d3b51b0d8e33401386fe25effac5733b5559331c1e42112"
+    },
+    {
+      "bytes": 799,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/staging-01/result.json",
+      "identity": [
+        2080,
+        1310808,
+        33188,
+        1,
+        799,
+        1794399026082341083,
+        1794399026082341083
+      ],
+      "name": "receipts/staging-01/result.json",
+      "path": "payload/receipts/staging-01/result.json",
+      "sha256": "365136eae33d9beda8a64dd5357130795e3b0cd046a448c66ee2a504b959c273"
+    }
+  ]
+}

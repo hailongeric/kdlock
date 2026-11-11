@@ -6,7 +6,9 @@
 
 Later source checkpoints `532b68a6` and `02ffa1ec` add generic Linux rwsem API
 binding and native compatibility on one KD gate. They have independent source
-review but no build or behavioral receipt. The native API and real mmap/munmap
+review, [focused compile/unit/unselected-baseline receipts](../../../tests/evidence/kernel6-focused-20261111/README.md)
+and a [full kernel/link identity](../../../tests/evidence/kernel6-build-20261111/README.md).
+Selected native API/MM behavior and boot are still separate unrun stages. The native API and real mmap/munmap
 fixtures, preserved failures/limits and pending recovery inspection are recorded
 in the [generic rwsem source checkpoint](../../../tests/evidence/generic-rwsem-source-20261111/README.md).
 The first kernel6 preparation refused an ambiguous native/RT installer context

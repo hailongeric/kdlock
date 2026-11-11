@@ -1,0 +1,162 @@
+{
+  "bytes": 16974333,
+  "collected_unix": 1794402299.1447098,
+  "count": 10,
+  "directories": {
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01": {
+      "identity": [
+        2080,
+        1598821,
+        16832,
+        2,
+        4096,
+        1794402212759000000,
+        1794402212759000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01"
+    }
+  },
+  "files": {
+    "metadata/__x86_return_thunk.bin": {
+      "bytes": 6,
+      "identity": [
+        2080,
+        1598829,
+        33188,
+        1,
+        6,
+        1794402209022324630,
+        1794402209022324630
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/__x86_return_thunk.bin",
+      "sha256": "bdf176e5f04f9ff2f0eee0cc934104e7027457b9869327c2248bf4465e55a356"
+    },
+    "metadata/elf-notes.log": {
+      "bytes": 2120,
+      "identity": [
+        2080,
+        1598824,
+        33188,
+        1,
+        2120,
+        1794402208203000000,
+        1794402208203000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/elf-notes.log",
+      "sha256": "a9feee4437396663a67f157a22264e0143120de6c204805daa768f055fc56220"
+    },
+    "metadata/elf-symbols.log": {
+      "bytes": 16670076,
+      "identity": [
+        2080,
+        1598825,
+        33188,
+        1,
+        16670076,
+        1794402208464000000,
+        1794402208464000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/elf-symbols.log",
+      "sha256": "0a908767e2a090d01f89cb9ca090235a13fabb3d1ff9275845dae3c1b9035f41"
+    },
+    "metadata/final-identity.json": {
+      "bytes": 3764,
+      "identity": [
+        2080,
+        1598832,
+        33188,
+        1,
+        3764,
+        1794402209684865557,
+        1794402209685000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/final-identity.json",
+      "sha256": "995255c9c14c513a356a70ba4155beac0879d37f3abd07ab7afb1fc328c0353b"
+    },
+    "metadata/gs-config.json": {
+      "bytes": 840,
+      "identity": [
+        2080,
+        1598831,
+        33188,
+        1,
+        840,
+        1794402209680814557,
+        1794402209681000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/gs-config.json",
+      "sha256": "c0b79ddae02004339ee52ed870a28b2297c0f3b6efe091f42231e301b2644675"
+    },
+    "metadata/gs-disassembly.log": {
+      "bytes": 11394,
+      "identity": [
+        2080,
+        1598826,
+        33188,
+        1,
+        11394,
+        1794402208997000000,
+        1794402208997000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/gs-disassembly.log",
+      "sha256": "f61fe4069f7e9504158181d66e50f5dc1aa8753ffb4039e4572175e685851473"
+    },
+    "metadata/its_return_thunk.bin": {
+      "bytes": 2,
+      "identity": [
+        2080,
+        1598828,
+        33188,
+        1,
+        2,
+        1794402209022228163,
+        1794402209022228163
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/its_return_thunk.bin",
+      "sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+    },
+    "metadata/module-dependencies.log": {
+      "bytes": 1,
+      "identity": [
+        2080,
+        1598823,
+        33188,
+        1,
+        1,
+        1794402208188000000,
+        1794402208188000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/module-dependencies.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    "metadata/module-vermagic.log": {
+      "bytes": 56,
+      "identity": [
+        2080,
+        1598822,
+        33188,
+        1,
+        56,
+        1794402208173000000,
+        1794402208173000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/module-vermagic.log",
+      "sha256": "77177b784d9dc5bbb12b7d1036d1b7691d69cf14e1c42869f3e450db30c78bd2"
+    },
+    "metadata/result.json": {
+      "bytes": 286074,
+      "identity": [
+        2080,
+        1598830,
+        33188,
+        1,
+        286074,
+        1794402212740000000,
+        1794402212759000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/result.json",
+      "sha256": "240d1a501251cd65ea29ec81f8d8b67f9cb077f6aac5a0011fca1ed922d358f9"
+    }
+  },
+  "visited_paths": 11
+}

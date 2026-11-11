@@ -1,0 +1,33 @@
+{
+  "argv": [
+    "/tmp/kdlock-rw-collect5.py",
+    "--output",
+    "/tmp/kdlock-kernel6-full-build-collection-03",
+    "--tree",
+    "receipts",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-03",
+    "--max-files",
+    "32",
+    "--max-paths",
+    "128",
+    "--max-total-bytes",
+    "67108864",
+    "--max-file-bytes",
+    "33554432",
+    "--max-metadata-bytes",
+    "2097152",
+    "--inventory-seconds",
+    "30",
+    "--copy-seconds",
+    "60"
+  ],
+  "files": {},
+  "max_file_bytes": 33554432,
+  "max_files": 32,
+  "max_metadata_bytes": 2097152,
+  "max_paths": 128,
+  "max_total_bytes": 67108864,
+  "trees": {
+    "receipts": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-03"
+  }
+}

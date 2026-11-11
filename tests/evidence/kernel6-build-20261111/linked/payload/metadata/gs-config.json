@@ -1,0 +1,13 @@
+{
+  "build_id": "5ed6cd8cffed6960ce901261dfab3bb019a0442d",
+  "current_task_gs_offset": 18446744071633461272,
+  "kernel_config": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/build/.config",
+  "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "kernel_elf": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/build/vmlinux",
+  "kernel_elf_sha256": "a05068b9dfddd7ac6fc842b44ae97e29816a43c9c5870be188b9fe71ea5b759d",
+  "percpu_section_va": 18446744071633362944,
+  "scope": "Fresh linked ELF metadata only. A later actual postboot proof is required.",
+  "system_map": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/build/System.map",
+  "system_map_sha256": "7853a104680d6e693d97a9eb927852376b10e27d6157adb5dedf512282dedb83",
+  "verified_for_running_kernel": false
+}

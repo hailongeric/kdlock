@@ -1,7 +1,9 @@
 # Generic Linux rwsem binding
 
 This source lane extends the source-rebuilt Linux 7.0 x86_64, non-PREEMPT_RT
-primitive. It has no build or execution receipt yet. The earlier private reader
+primitive. It now has [focused compilation and baseline checks](../../tests/evidence/kernel6-focused-20261111/README.md)
+and [full build/linked-image identity](../../tests/evidence/kernel6-build-20261111/README.md).
+Selected API/MM execution and actual boot remain separate pending stages. The earlier private reader
 fixtures remain mechanism evidence; they do not validate these new Linux APIs
 or a real userspace workload.
 

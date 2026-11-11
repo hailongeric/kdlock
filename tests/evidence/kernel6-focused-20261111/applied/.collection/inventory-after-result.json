@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "python3 -"
+  ],
+  "error": null,
+  "finished_unix": 1794399362.3645122,
+  "input": "inventory-after-input.py.txt",
+  "input_sha256": "1d113313e17824ff8d24582aaa6fe4e78b227b09b7b551bd99b39d9313d246f4",
+  "process_reaped": true,
+  "remote_completed": true,
+  "returncode": 0,
+  "seconds": 30,
+  "started_unix": 1794399362.0815382,
+  "stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr_limit": 1048576,
+  "stdout": {
+    "bytes": 21688,
+    "sha256": "6106e618ce1b380b697de79a7b8ef3cdb3cc9b1b523f45d9a96070a0e05decb9"
+  },
+  "stdout_limit": 1048576
+}

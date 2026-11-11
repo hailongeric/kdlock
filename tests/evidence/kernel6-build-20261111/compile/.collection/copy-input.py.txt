@@ -1,0 +1,67 @@
+import base64,hashlib,json,os,pathlib,signal,stat,sys,tarfile,io,time
+C=json.loads(base64.b64decode('eyJ0cmVlcyI6IHsicmVjZWlwdHMiOiAiL21udC9rZGxvY2stYnVpbGRzMi9rZGxvY2stbWFpbi1rZXJuZWw2LTUzMmI2OGE2LXJ3c2VtLTA0L3JlY2VpcHRzL2Z1bGwtMDMifSwgImZpbGVzIjoge30sICJtYXhfZmlsZXMiOiAzMiwgIm1heF9wYXRocyI6IDEyOCwgIm1heF9maWxlX2J5dGVzIjogMzM1NTQ0MzIsICJtYXhfdG90YWxfYnl0ZXMiOiA2NzEwODg2NCwgIm1heF9tZXRhZGF0YV9ieXRlcyI6IDIwOTcxNTIsICJvcGVyYXRpb24iOiAiY29weSIsICJpbnZlbnRvcnkiOiB7ImJ5dGVzIjogMTM5NDM3NzEsICJjb2xsZWN0ZWRfdW5peCI6IDE3OTQ0MDE4NjMuNjc3MDAyLCAiY291bnQiOiAzLCAiZGlyZWN0b3JpZXMiOiB7Ii9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsNi01MzJiNjhhNi1yd3NlbS0wNC9yZWNlaXB0cy9mdWxsLTAzIjogeyJpZGVudGl0eSI6IFsyMDgwLCAxNTg3NzAzLCAxNjgzMiwgMiwgNDA5NiwgMTc5NDQwMTgwNjQyMTAwMDAwMCwgMTc5NDQwMTgwNjQyMTAwMDAwMF0sICJwYXRoIjogIi9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsNi01MzJiNjhhNi1yd3NlbS0wNC9yZWNlaXB0cy9mdWxsLTAzIn19LCAiZmlsZXMiOiB7InJlY2VpcHRzL2tlcm5lbC5sb2ciOiB7ImJ5dGVzIjogMTM3NjU5MDYsICJpZGVudGl0eSI6IFsyMDgwLCAxNTg3NzA1LCAzMzE4OCwgMSwgMTM3NjU5MDYsIDE3OTQ0MDE4MDEzNDgwMDAwMDAsIDE3OTQ0MDE4MDEzNDgwMDAwMDBdLCAicGF0aCI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDYtNTMyYjY4YTYtcndzZW0tMDQvcmVjZWlwdHMvZnVsbC0wMy9rZXJuZWwubG9nIiwgInNoYTI1NiI6ICI1MzE1ODVkMDBmZjMzZjExNjllNmEwMTY5NTVlM2JhNzUwZTQ1NThiMDk4MTBjMDVhZjk5N2U1MWU5MzM4N2RlIn0sICJyZWNlaXB0cy9ubHMubG9nIjogeyJieXRlcyI6IDM3NjM2LCAiaWRlbnRpdHkiOiBbMjA4MCwgMTU5ODgxMSwgMzMxODgsIDEsIDM3NjM2LCAxNzk0NDAxODA1MzQyMDAwMDAwLCAxNzk0NDAxODA1MzQyMDAwMDAwXSwgInBhdGgiOiAiL21udC9rZGxvY2stYnVpbGRzMi9rZGxvY2stbWFpbi1rZXJuZWw2LTUzMmI2OGE2LXJ3c2VtLTA0L3JlY2VpcHRzL2Z1bGwtMDMvbmxzLmxvZyIsICJzaGEyNTYiOiAiNjUzZTIyM2YyMDNlNDMxNDQ3ZTI3MTE2YWJhYzdiNjIwNTY4YzJiNzMyOWUyNTY5NTRlNDUyMjM1YTU0MzI5ZCJ9LCAicmVjZWlwdHMvcmVzdWx0Lmpzb24iOiB7ImJ5dGVzIjogMTQwMjI5LCAiaWRlbnRpdHkiOiBbMjA4MCwgMTU5ODgxMiwgMzMxODgsIDEsIDE0MDIyOSwgMTc5NDQwMTgwNjQxNTAwMDAwMCwgMTc5NDQwMTgwNjQyMTAwMDAwMF0sICJwYXRoIjogIi9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsNi01MzJiNjhhNi1yd3NlbS0wNC9yZWNlaXB0cy9mdWxsLTAzL3Jlc3VsdC5qc29uIiwgInNoYTI1NiI6ICJmNmNmOGU0OTY5NTdmNTY5OGUzM2FlMWQ2Yzk2ZGRhMTk3YjI0YWRlZjRkYzI3Yzg1YjgyZDRmNzRjY2Q1OWZlIn19LCAidmlzaXRlZF9wYXRocyI6IDR9LCAic2Vjb25kcyI6IDYwfQ=='))
+signal.alarm(C['seconds'])
+def need(value,message):
+ if not value:raise RuntimeError(message)
+def ident(s):
+ return [s.st_dev,s.st_ino,s.st_mode,s.st_nlink,s.st_size,s.st_mtime_ns,s.st_ctime_ns]
+def regular(name,expected=None):
+ p=pathlib.Path(name);before=p.lstat()
+ need(p.resolve(strict=True)==p and stat.S_ISREG(before.st_mode),'nonregular/canonical file: '+name)
+ need(before.st_size<=C['max_file_bytes'],'per-file byte bound: '+name)
+ if expected is not None:need(ident(before)==expected['identity'],'file identity before copy: '+name)
+ fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW)
+ h=hashlib.sha256();data=bytearray();count=0
+ with os.fdopen(fd,'rb') as f:
+  need(ident(os.fstat(f.fileno()))==ident(before),'opened file identity: '+name)
+  while True:
+   block=f.read(min(1048576,C['max_file_bytes']+1-count))
+   if not block:break
+   count+=len(block);need(count<=C['max_file_bytes'],'growing file exceeds bound')
+   h.update(block)
+   if C['operation']=='copy':data.extend(block)
+  need(ident(os.fstat(f.fileno()))==ident(before),'file changed during read: '+name)
+ need(ident(p.lstat())==ident(before),'file changed after read: '+name)
+ row=dict(path=name,bytes=count,sha256=h.hexdigest(),identity=ident(before))
+ need(count==before.st_size,'file length changed: '+name)
+ if expected is not None:need(row==expected,'file bytes differ from inventory: '+name)
+ return row,bytes(data)
+def directory(name):
+ p=pathlib.Path(name);s=p.lstat()
+ need(p.resolve(strict=True)==p and stat.S_ISDIR(s.st_mode),'noncanonical directory: '+name)
+ return dict(path=name,identity=ident(s))
+if C['operation']=='inventory':
+ selected=dict(C['files']);dirs={};visited=0
+ for label,root in C['trees'].items():
+  stack=[(label,root)]
+  while stack:
+   prefix,name=stack.pop();dirs[name]=directory(name);visited+=1
+   need(visited<=C['max_paths'],'visited-path bound')
+   with os.scandir(name) as entries:
+    for entry in entries:
+     visited+=1;need(visited<=C['max_paths'],'visited-path bound')
+     p=pathlib.Path(entry.path);s=p.lstat();member=prefix+'/'+entry.name
+     if stat.S_ISDIR(s.st_mode):stack.append((member,str(p)))
+     else:
+      need(stat.S_ISREG(s.st_mode),'nonregular selected entry: '+str(p))
+      need(member not in selected,'duplicate selected name: '+member)
+      selected[member]=str(p);need(len(selected)<=C['max_files'],'file-count bound')
+ need(len(selected)<=C['max_files'],'file-count bound')
+ rows={};total=0
+ for member,name in sorted(selected.items()):
+  row,_=regular(name);total+=row['bytes'];need(total<=C['max_total_bytes'],'total byte bound')
+  rows[member]=row
+ for name,row in dirs.items():need(directory(name)==row,'directory changed during inventory')
+ report=dict(files=rows,directories=dirs,count=len(rows),bytes=total,visited_paths=visited,collected_unix=time.time())
+ encoded=(json.dumps(report,sort_keys=True,indent=2)+'\n').encode()
+ need(len(encoded)<=C['max_metadata_bytes'],'inventory metadata bound')
+ sys.stdout.buffer.write(encoded)
+else:
+ index=C['inventory']
+ for name,row in index['directories'].items():need(directory(name)==row,'directory changed before transport')
+ with tarfile.open(fileobj=sys.stdout.buffer,mode='w|',format=tarfile.PAX_FORMAT) as archive:
+  for member,row in sorted(index['files'].items()):
+   actual,data=regular(row['path'],row)
+   item=tarfile.TarInfo(member);item.size=len(data);item.mode=0o644
+   archive.addfile(item,io.BytesIO(data))
+ for name,row in index['directories'].items():need(directory(name)==row,'directory changed after transport')

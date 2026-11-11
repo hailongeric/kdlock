@@ -1,0 +1,70 @@
+{
+  "bytes": 424770,
+  "count": 4,
+  "files": [
+    {
+      "bytes": 382017,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-continue-01/focused-objects.log",
+      "identity": [
+        2080,
+        1354500,
+        33188,
+        1,
+        382017,
+        1794400099461000000,
+        1794400099461000000
+      ],
+      "name": "receipts/focused-objects.log",
+      "path": "payload/receipts/focused-objects.log",
+      "sha256": "8809e26225059250ff051ac43147eb2d4515365f9eabdb29c6bdbdef6607f905"
+    },
+    {
+      "bytes": 89,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-continue-01/integration-verify.log",
+      "identity": [
+        2080,
+        1354463,
+        33188,
+        1,
+        89,
+        1794400033863000000,
+        1794400033863000000
+      ],
+      "name": "receipts/integration-verify.log",
+      "path": "payload/receipts/integration-verify.log",
+      "sha256": "db031cdac86c8a006a51307798cdbf889564af76b72a5b48942e75ff465a2c48"
+    },
+    {
+      "bytes": 950,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-continue-01/olddefconfig.log",
+      "identity": [
+        2080,
+        1354464,
+        33188,
+        1,
+        950,
+        1794400042741000000,
+        1794400042741000000
+      ],
+      "name": "receipts/olddefconfig.log",
+      "path": "payload/receipts/olddefconfig.log",
+      "sha256": "c7d685617d099a1897a192c1fa95234843252028031f42b6b5c85b3382d3d17b"
+    },
+    {
+      "bytes": 41714,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-continue-01/result.json",
+      "identity": [
+        2080,
+        1364796,
+        33188,
+        1,
+        41714,
+        1794400100359576164,
+        1794400100364000000
+      ],
+      "name": "receipts/result.json",
+      "path": "payload/receipts/result.json",
+      "sha256": "68610a5fcec913aa95da4c3b7e3df80577783ebb8e798a83c4f862aa2084600d"
+    }
+  ]
+}

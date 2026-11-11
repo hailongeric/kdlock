@@ -1,0 +1,33 @@
+{
+  "argv": [
+    "/tmp/kdlock-rw-collect5.py",
+    "--output",
+    "/tmp/kdlock-kernel6-focused-continue-collection-04",
+    "--tree",
+    "receipts",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-continue-01",
+    "--max-files",
+    "64",
+    "--max-paths",
+    "256",
+    "--max-total-bytes",
+    "33554432",
+    "--max-file-bytes",
+    "16777216",
+    "--max-metadata-bytes",
+    "2097152",
+    "--inventory-seconds",
+    "30",
+    "--copy-seconds",
+    "60"
+  ],
+  "files": {},
+  "max_file_bytes": 16777216,
+  "max_files": 64,
+  "max_metadata_bytes": 2097152,
+  "max_paths": 256,
+  "max_total_bytes": 33554432,
+  "trees": {
+    "receipts": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/focused-continue-01"
+  }
+}

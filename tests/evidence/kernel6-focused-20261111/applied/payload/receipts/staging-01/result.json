@@ -1,0 +1,19 @@
+{
+  "archive_sha256": "7e76bbe72210fbfc6a2343662818fb5e86138a3e786a0813c3c844d2cd27938d",
+  "asset_sha256": {
+    "input-package.json": "e5d86bb042ed919f72275ed095d3e8113bc755abb07b6583aa6f415e68a899cf",
+    "prepare-focus.py": "05f274c986ddaa94a5a43d6dfc25daf2d7e7172bf2e59d6a50f7327f5a39339b",
+    "source-state.json": "fcf722dcc8f25cf783ec70895b3d8d9bc2bd0708e52a3f19fdf89f9f50791c82"
+  },
+  "base": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04",
+  "boot": "51b49fa4-4d99-457e-a73e-632b690eb95e",
+  "busy": [],
+  "core_git_head": "532b68a65bdf96504e2cede6c23a5bc1476d94e9",
+  "files": 77,
+  "project_bytes": 658695,
+  "release": "7.0.0-38-kdlock1",
+  "source_snapshot": "3512f5dd639701f3f9953cfc6add1e4bbdd85e88",
+  "status": "COMPLETE",
+  "taint": 0,
+  "utc": 1794399026.0820873
+}

@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "python3 -"
+  ],
+  "input": "inventory-after-input.py.txt",
+  "input_sha256": "97e01dedc87c72249b11cf59badb5e601a8b6e1b8a02ad849e1ed4742c8d4dfe",
+  "seconds": 30,
+  "started_unix": 1794400853.0808423,
+  "stderr_limit": 2097152,
+  "stdout_limit": 2097152
+}

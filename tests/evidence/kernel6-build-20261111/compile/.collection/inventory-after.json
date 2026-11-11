@@ -1,0 +1,64 @@
+{
+  "bytes": 13943771,
+  "collected_unix": 1794401864.8068917,
+  "count": 3,
+  "directories": {
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-03": {
+      "identity": [
+        2080,
+        1587703,
+        16832,
+        2,
+        4096,
+        1794401806421000000,
+        1794401806421000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-03"
+    }
+  },
+  "files": {
+    "receipts/kernel.log": {
+      "bytes": 13765906,
+      "identity": [
+        2080,
+        1587705,
+        33188,
+        1,
+        13765906,
+        1794401801348000000,
+        1794401801348000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-03/kernel.log",
+      "sha256": "531585d00ff33f1169e6a016955e3ba750e4558b09810c05af997e51e93387de"
+    },
+    "receipts/nls.log": {
+      "bytes": 37636,
+      "identity": [
+        2080,
+        1598811,
+        33188,
+        1,
+        37636,
+        1794401805342000000,
+        1794401805342000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-03/nls.log",
+      "sha256": "653e223f203e431447e27116abac7b620568c2b7329e256954e452235a54329d"
+    },
+    "receipts/result.json": {
+      "bytes": 140229,
+      "identity": [
+        2080,
+        1598812,
+        33188,
+        1,
+        140229,
+        1794401806415000000,
+        1794401806421000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-03/result.json",
+      "sha256": "f6cf8e496957f5698e33ae1d6c96dda197b24adef4dc27c85b82d4f74ccd59fe"
+    }
+  },
+  "visited_paths": 4
+}

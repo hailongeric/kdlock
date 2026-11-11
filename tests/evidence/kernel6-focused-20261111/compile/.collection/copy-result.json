@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "python3 -"
+  ],
+  "error": null,
+  "finished_unix": 1794400216.4493532,
+  "input": "copy-input.py.txt",
+  "input_sha256": "afb09bb80ab9d14b0a4a301b8ced3187f2d9cf3f97bc5f9d70ca8f286ed8efa9",
+  "process_reaped": true,
+  "remote_completed": true,
+  "returncode": 0,
+  "seconds": 60,
+  "started_unix": 1794400216.1734126,
+  "stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr_limit": 2097152,
+  "stdout": {
+    "bytes": 430080,
+    "sha256": "5355d958ff8a6033bde95ef616b97d1039d2e08cf25ab1261b4221772d21f43c"
+  },
+  "stdout_limit": 33591712
+}
