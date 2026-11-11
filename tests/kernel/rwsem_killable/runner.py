@@ -140,6 +140,8 @@ def main():
     rows, raw = [], bytearray()
     header = b""
     children = {}
+    exit_acknowledged = {}
+    results["exit_acknowledgments"] = []
     wire_dir = args.output / "wire"
     wire_dir.mkdir()
 
@@ -178,7 +180,8 @@ def main():
             return reply
 
     def ioctl(operation, role=0, action=0, gated=0):
-        return fcntl.ioctl(ctl, operation, struct.pack("<4Q", role, action, gated, 0))
+        words = bytearray(struct.pack("<4Q", role, action, gated, 0))
+        return fcntl.ioctl(ctl, operation, words, True)
 
     def status():
         value = json.loads(os.pread(ctl, 8192, 0))
@@ -222,6 +225,8 @@ def main():
             time.sleep(0.01)
 
     def spawn(role, action, gated=False):
+        if role in children or role in exit_acknowledged:
+            raise AssertionError("role still has an original child or exit acknowledgment")
         pid = os.fork()
         if not pid:
             for fd in (ctl, event_fd, transport.fd if transport else -1):
@@ -238,27 +243,57 @@ def main():
         wait(lambda value: value["roles"][role]["pid"] == pid and value["roles"][role]["ready"], "role readiness")
         return pid
 
-    def joined(role, killed=False):
+    def allow_exit(role, completed=None):
+        if role not in children:
+            raise AssertionError("exit acknowledgment has no original child")
         pid = children[role]
-        completed = wait(lambda value: value["roles"][role]["done"], "source API/body completion before exit")
+        if role in exit_acknowledged:
+            previous = exit_acknowledged[role]
+            raise AssertionError("duplicate exit acknowledgment" if previous["pid"] == pid else
+                                 "exit acknowledgment refers to another child PID")
+        if completed is None:
+            completed = wait(lambda value: value["roles"][role]["done"], "source API/body completion before exit")
+        if completed["roles"][role]["pid"] != pid or not completed["roles"][role]["done"]:
+            raise AssertionError("exit acknowledgment lacks exact child completion")
         # RUN retains its exact task/storage endpoint until this explicit ACK.
         # The original task clears its raw observer before returning to do_exit.
-        results.setdefault("before_exit_ack", []).append({"role": role, "status": completed})
-        ioctl(EXIT_ACK, role)
+        results.setdefault("before_exit_ack", []).append({"role": role, "pid": pid, "status": completed})
+        acknowledgment = {"role": role, "pid": pid, "returned": False, "reaped": False}
+        exit_acknowledged[role] = acknowledgment
+        results["exit_acknowledgments"].append(acknowledgment)
+        acknowledgment["returncode"] = ioctl(EXIT_ACK, role)
+        if acknowledgment["returncode"]:
+            raise AssertionError("exit acknowledgment did not return success")
+        acknowledgment["returned"] = True
+
+    def joined(role, killed=False):
+        if role not in children:
+            raise AssertionError("join has no original child")
+        if role not in exit_acknowledged:
+            allow_exit(role)
+        pid = children[role]
+        acknowledgment = exit_acknowledged[role]
+        if acknowledgment["role"] != role or acknowledgment["pid"] != pid or not acknowledgment["returned"]:
+            raise AssertionError("join lacks an exact completed exit acknowledgment")
         deadline = time.monotonic() + args.deadline
         while True:
             returned, code = os.waitpid(pid, os.WNOHANG)
             if returned:
+                if returned != pid:
+                    raise AssertionError("waitpid returned another original child")
                 record = {"role": role, "pid": returned, "wait_status": code,
-                          "observed_at": time.monotonic(), "events_before_observation": len(observe())}
+                          "observed_at": time.monotonic()}
                 results.setdefault("waitpid", []).append(record)
+                acknowledgment.update(reaped=True, wait_status=code)
+                del exit_acknowledged[role]
+                del children[role]
+                record["events_before_observation"] = len(observe())
                 if (killed and (not os.WIFSIGNALED(code) or os.WTERMSIG(code) != signal.SIGKILL)) or (
                         not killed and (not os.WIFEXITED(code) or os.WEXITSTATUS(code))):
                     raise AssertionError("actual child exit disposition differs")
-                del children[role]
                 return record
             if time.monotonic() >= deadline:
-                raise TimeoutError("actual child exit is unverified; holder remains unchanged")
+                raise TimeoutError("actual child exit is unverified; original actors remain retained")
             time.sleep(0.01)
 
     def matching(kind, begin, **fields):
@@ -278,7 +313,7 @@ def main():
         final = wait(lambda value: not value["readers"] and not value["writer_pending"] and not value["writer"]
                      and not value["tail"] and not value["owner"] and value["pool_idle"] and not value["native_scopes"],
                      "exact gate and native-source finalization")
-        if children:
+        if children or exit_acknowledged:
             raise AssertionError("reset cannot substitute for waitpid")
         ioctl(RESET)
         return final
@@ -529,7 +564,55 @@ def main():
                 pending = wait(lambda value: value["roles"][C]["admission"] == 2, "C cancellation while W is live")
                 if pending["roles"][C]["done"] or pending["roles"][D]["effects"] or matching("PHYSICAL_END", begin, owner=grant[0]["owner"]):
                     raise AssertionError("C error or next service preceded current W physical completion")
-            ioctl(RELEASE, W); joined(W)
+            ioctl(RELEASE, W)
+            participants = (C, W, D) if kill_candidate else (C, W)
+            participant_tasks = {C: ct, W: wt}
+            if kill_candidate:
+                participant_tasks[D] = de["task"]
+            completed = wait(lambda current: all(current["roles"][role]["done"] for role in participants),
+                             "all dependent source API/body completions before exit ACKs")
+            for role in participants:
+                actual = completed["roles"][role]
+                cancelled_role = role == C and kill_candidate
+                expected_effects = 0 if cancelled_role else 1
+                expected_helper = 1 if role == W else 0
+                if (actual["pid"] != children[role] or actual["task"] != participant_tasks[role]
+                        or not actual["active"] or actual["exit_state"]
+                        or actual["result"] != (-errno.EINTR if cancelled_role else 0)
+                        or actual["effects"] != expected_effects or actual["steps"] != expected_effects
+                        or actual["helper_entered"] != expected_helper or actual["helper_returned"] != expected_helper):
+                    raise AssertionError("dependent source completion/result/effects differ before exit ACKs")
+            wg = grant[0]
+            release_identity = dict(state=wg["state"], acquisition=wg["acquisition"], owner=wg["owner"],
+                                    owner_task=ct, object=wg["object"], related=wg["related"])
+            requested = matching("RELEASE_REQUEST", begin, **release_identity, task=wt, phase=1, result=4)
+            handled = matching("RELEASE_HANDLED", begin, **release_identity, task=ct, phase=4, result=4)
+            physical_begin = matching("PHYSICAL_BEGIN", begin, owner=wg["owner"], owner_task=ct,
+                                      object=wg["object"], phase=1, result=0)
+            physical_end = matching("PHYSICAL_END", begin, owner=wg["owner"], owner_task=ct,
+                                    object=wg["object"], phase=2, result=0)
+            native_unlock = matching("NATIVE_UNLOCK", begin, node=wg["node"], state=wg["state"],
+                                     acquisition=wg["acquisition"], task=wt, origin=wt,
+                                     object=wg["object"], phase=4, result=9, flags=1 << 9)
+            if (any(len(found) != 1 for found in (requested, handled, physical_begin, physical_end, native_unlock))
+                    or not requested[0]["index"] < handled[0]["index"] < physical_begin[0]["index"]
+                    < physical_end[0]["index"] < native_unlock[0]["index"]):
+                raise AssertionError("W exact synchronous physical ACK is missing before exit ACKs")
+            # W's physical batch lives in W's slot but is retired only by C.
+            # Save every current observer before releasing either task's gate.
+            # C must be allowed to run owner progress while W's exit is awaited.
+            observe()
+            prefix = header + bytes(raw)
+            group = {"name": name, "participants": [{"role": role, "pid": children[role]} for role in participants],
+                     "status": completed, "events": len(rows), "raw_sha256": hashlib.sha256(prefix).hexdigest(),
+                     "w_physical_ack": {"request": requested[0], "handled": handled[0],
+                         "begin": physical_begin[0], "end": physical_end[0], "native_unlock": native_unlock[0]}}
+            durable(args.output / (name + "-before-exit-ack.bin"), prefix)
+            document(args.output / (name + "-before-exit-ack.json"), group)
+            results.setdefault("exit_ack_groups", []).append(group)
+            for role in participants:
+                allow_exit(role, completed)
+            joined(W)
             joined(C, killed=kill_candidate)
             if kill_candidate:
                 joined(D)
