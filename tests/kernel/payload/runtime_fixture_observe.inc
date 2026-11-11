@@ -12,7 +12,7 @@ static bool event_registered;
 enum fixture_scene_role { SCENE_HA, SCENE_HB, SCENE_CA, SCENE_CB, SCENE_W, SCENE_ROLES };
 static bool scene_active;
 static struct completion scene_go[SCENE_ROLES];
-#ifdef KD_FIXTURE_SPIN
+#ifdef KD_FIXTURE_ATOMIC
 static bool scene_release[SCENE_ROLES];
 #else
 static struct completion scene_release[SCENE_ROLES];
@@ -144,14 +144,14 @@ static struct miscdevice event_device = {
  */
 static void notrace fixture_release_holder(unsigned int role)
 {
-#ifdef KD_FIXTURE_SPIN
+#ifdef KD_FIXTURE_ATOMIC
 	smp_store_release(&scene_release[role], true);
 #else
 	complete_all(&scene_release[role]);
 #endif
 }
 
-#ifdef KD_FIXTURE_SPIN
+#ifdef KD_FIXTURE_ATOMIC
 static void notrace fixture_wait_holder(struct fixture_worker *worker)
 {
 	u64 started = ktime_get_mono_fast_ns();
@@ -172,8 +172,14 @@ static void notrace scene_single(struct fixture_worker *worker)
 	fixture_lock_t *lock = worker->role == SCENE_HA ? &lock_a[0] : &lock_b[0];
 	unsigned long flags;
 
+#ifdef KD_FIXTURE_RWSEM
+	if ((requested_mode == 9 || requested_mode == 10) && worker->role == SCENE_HB) {
+		fixture_rw_probe_reader(worker);
+		return;
+	}
+#endif
 	fixture_lock_acquire(lock);
-#ifdef KD_FIXTURE_SPIN
+#ifdef KD_FIXTURE_ATOMIC
 	fixture_spin_sample(worker, 1);
 #endif
 	if (worker->role == SCENE_HA || worker->role == SCENE_HB) {
@@ -181,14 +187,18 @@ static void notrace scene_single(struct fixture_worker *worker)
 		scene_held |= 1UL << worker->role;
 		raw_spin_unlock_irqrestore(&event_guard, flags);
 		wake_up_all(&event_wait);
-#ifdef KD_FIXTURE_SPIN
+#ifdef KD_FIXTURE_ATOMIC
 		fixture_wait_holder(worker);
 #else
 		wait_for_completion(&scene_release[worker->role]);
 #endif
 	}
 	fixture_lock_release(lock);
-#ifdef KD_FIXTURE_SPIN
+#ifdef KD_FIXTURE_RWSEM
+	if (requested_mode == 11 && worker->role == SCENE_HB)
+		fixture_rw_probe_reader(worker);
+#endif
+#ifdef KD_FIXTURE_ATOMIC
 	fixture_spin_sample(worker, 0);
 #endif
 }
@@ -209,19 +219,25 @@ static int notrace start_scene(unsigned int mode)
 	int result;
 
 	if (!runtime || worker_count || mode < 1 ||
-#ifdef KD_FIXTURE_SPIN
+#ifdef KD_FIXTURE_READERS
+	    mode > FIXTURE_MAX_MODE ||
+#elif defined(KD_FIXTURE_ATOMIC)
 	    mode > FIXTURE_SPIN_MISS_MODE ||
 #else
 	    mode > 2 ||
 #endif
 	    !fixture_locks_clear())
 		return -EBUSY;
+#ifdef KD_FIXTURE_RWLOCK
+	if (mode >= 9 && mode <= 11)
+		return -EINVAL;
+#endif
 	for (index = 0; index < FIXTURE_MAX_ITERATIONS; ++index) {
 		protected_a[index] = 0; protected_b[index] = 0; pointer_value[index] = 0;
 	}
 	for (index = 0; index < SCENE_ROLES; ++index) {
 		init_completion(&scene_go[index]);
-#ifdef KD_FIXTURE_SPIN
+#ifdef KD_FIXTURE_ATOMIC
 		WRITE_ONCE(scene_release[index], false);
 #else
 		init_completion(&scene_release[index]);
@@ -230,6 +246,10 @@ static int notrace start_scene(unsigned int mode)
 	}
 	scene_queued = 0; scene_held = 0; scene_child = 0;
 	requested_mode = mode; requested_iterations = 1;
+#ifdef KD_FIXTURE_READERS
+	rw_probe_needed = mode == 9 || mode == 10 || mode == 11;
+	rw_probe_attempted = false; rw_downgraded = false;
+#endif
 	reinit_completion(&start_gate);
 	atomic_set(&ready_count, 0);
 	WRITE_ONCE(ready_goal, SCENE_ROLES);

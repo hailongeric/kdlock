@@ -93,7 +93,7 @@ def scan_operation_calls(exported, objdump, directory, timeout):
 
     boundaries = {site.site: site.boundary for site in exported.snapshot.sites}
     api = {site.site: site.boundary for site in exported.snapshot.sites
-           if site.boundary in (BoundaryKind.LOCK, BoundaryKind.UNLOCK)}
+           if site.boundary in (BoundaryKind.LOCK, BoundaryKind.UNLOCK, BoundaryKind.MODE_CHANGE)}
     calls, lock_roots, indirect = [], [], []
     line_pattern = re.compile(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2}\s+)+)\s*(\S+)(?:\s+(.*))?$")
     for index, region in enumerate(exported.snapshot.regions):
@@ -137,8 +137,15 @@ def scan_operation_calls(exported, objdump, directory, timeout):
     return snapshot, tuple(sorted(set(lock_roots))), tuple(calls), tuple(indirect)
 
 
-def main(*, spin=False):
-    description = "VM-only plain-spin mechanism checks" if spin else __doc__
+def main(*, spin=False, family=None):
+    family = ("spin" if spin else "mutex") if family is None else family
+    if family not in ("mutex", "spin", "rwsem", "rwlock") or (spin and family != "spin"):
+        raise ValueError("one exact supported fixture family is required")
+    spin = family == "spin"
+    atomic = family in ("spin", "rwlock")
+    readers = family in ("rwsem", "rwlock")
+    synchronous = family != "mutex"
+    description = "VM-only " + family + " mechanism checks" if family != "mutex" else __doc__
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--module", type=Path, required=True)
@@ -159,18 +166,32 @@ def main(*, spin=False):
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--iterations", type=int, default=32)
     parser.add_argument("--deadline", type=float, default=120.0)
-    if spin:
-        parser.add_argument("--spin-cpus", type=int, nargs=5, required=True)
+    if readers:
+        parser.add_argument("--runtime-block-visits", type=int, required=True)
+    if family == "rwsem":
+        parser.add_argument("--coordination-spins", type=int, required=True)
+    if atomic:
+        parser.add_argument("--spin-cpus", "--role-cpus", dest="spin_cpus", type=int, nargs=5, required=True)
         parser.add_argument("--controller-cpu", type=int, required=True)
         parser.add_argument("--holder-timeout-ms", type=int, required=True)
+    elif readers:
+        parser.add_argument("--holder-timeout-ms", type=int, required=True)
     args = parser.parse_args()
-    module_name = "kd_spin_runtime_fixture" if spin else "kd_runtime_fixture"
-    lock_kind, unlock_kind = (4, 5) if spin else (1, 2)
+    if readers and not 0 < args.holder_timeout_ms < 1 << 32:
+        raise ValueError("reader fixture requires an explicit finite holder wait")
+    if readers and not 0 < args.runtime_block_visits < 1 << 64:
+        raise ValueError("reader image requires a finite explicit source-visit bound")
+    if family == "rwsem" and not 0 < args.coordination_spins < 1 << 64:
+        raise ValueError("rwsem source coordination needs a finite explicit iteration bound")
+    module_name = {"mutex": "kd_runtime_fixture", "spin": "kd_spin_runtime_fixture",
+                   "rwsem": "kd_rwsem_runtime_fixture", "rwlock": "kd_rwlock_runtime_fixture"}[family]
+    lock_kind, unlock_kind = {"mutex": (1, 2), "spin": (4, 5),
+                              "rwsem": (8, 9), "rwlock": (13, 14)}[family]
     if os.geteuid() != 0 or os.uname().machine != "x86_64":
         raise ValueError("fixture requires root in the designated x86_64 VM")
     if not os.uname().release.startswith("7.") or os.uname().release != args.expected_release:
         raise ValueError("actual kernel release differs from the explicit Linux 7 target")
-    if (not 2 <= args.workers <= (5 if spin else 8) or not 1 <= args.iterations <= 64
+    if (not 2 <= args.workers <= (5 if atomic else 8) or not 1 <= args.iterations <= 64
             or not math.isfinite(args.deadline) or args.deadline <= 0
             or not 0 <= args.gs_offset < 1 << 64
             or not 1 <= args.dependency_page_limit <= 4096 - 2
@@ -188,7 +209,7 @@ def main(*, spin=False):
             or (args.builtin_source_size and args.builtin_source_start // page_size !=
                 (args.builtin_source_start + args.builtin_source_size - 1) // page_size)):
         raise ValueError("optional built-in source must be a nonempty single-page-contained span")
-    if spin:
+    if atomic:
         assigned = {*args.spin_cpus, args.controller_cpu}
         if (len(assigned) != 6 or not assigned <= os.sched_getaffinity(0)
                 or not 0 < args.holder_timeout_ms < 1 << 32):
@@ -232,7 +253,7 @@ def main(*, spin=False):
     step_size = symbol_size(args.module, "fixture_source_step", tools["nm"], args.deadline)
     version = "fixture-" + digest(args.module) + "-" + proof["kernel_elf_sha256"] + "-" + proof["kernel_config_sha256"]
     results = {"evidence": "kernel-mechanism", "kernel_release": os.uname().release,
-               "module_sha256": digest(args.module), "source_version": version,
+               "module_sha256": digest(args.module), "source_version": version, "family": family,
                "gs_proof": proof, "module_sizes": {"body": body_size, "callee": step_size},
                "source_limits": {"dependency_pages": args.dependency_page_limit,
                                  "total_source_bytes": args.total_source_byte_limit},
@@ -247,10 +268,15 @@ def main(*, spin=False):
                                      "length": args.builtin_source_size,
                                      "elf_sha256": proof["kernel_elf_sha256"],
                                      "bytes_sha256": hashlib.sha256(builtin_bytes).hexdigest()}
-    if spin:
-        results["spin_context"] = {"role_cpus": args.spin_cpus,
+    if atomic:
+        results["spin_context" if spin else "rwlock_context"] = {"role_cpus": args.spin_cpus,
                                    "controller_cpu": args.controller_cpu,
                                    "holder_timeout_ms": args.holder_timeout_ms}
+    if readers:
+        results["reader_bounds"] = {"runtime_block_visits": args.runtime_block_visits,
+                                    "holder_timeout_ms": args.holder_timeout_ms}
+        if family == "rwsem":
+            results["reader_bounds"]["coordination_spins"] = args.coordination_spins
     (args.output / "identity.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
     module_listing = command([tools["objdump"], "-dr", str(args.module)], args.deadline)
     (args.output / "module.disassembly.txt").write_bytes(module_listing)
@@ -270,7 +296,8 @@ def main(*, spin=False):
                    "RELEASE_DEFER", "RELEASE_UNWIND", "RELEASE_NOTIFY_DONE", "RELEASE_HANDLED",
                    "RELEASE_SOURCE_DROP", "RELEASE_RETURN_DROP", "PHYSICAL_BEGIN", "PHYSICAL_END",
                    "RELEASE_RETIRE", "OWNER_RETIRE", "FRAME_PREPARE", "JIT_ENTER", "JIT_EXIT",
-                   "JIT_OPERATION", "CHILD_RETURN", "EPISODE_DONE", "FORWARD", "NATIVE_UNLOCK", "OWNER_STOP")
+                   "JIT_OPERATION", "CHILD_RETURN", "EPISODE_DONE", "FORWARD", "NATIVE_UNLOCK", "OWNER_STOP",
+                   "READ_ACQUIRE", "READ_RELEASE", "WRITE_DOWNGRADE_REAL", "WRITE_DOWNGRADE_RETAINED", "NATIVE_MODE")
     kinds = {name: index + 1 for index, name in enumerate(event_names)}
 
     def read_exact(fd, length):
@@ -488,13 +515,23 @@ def main(*, spin=False):
             time.sleep(0.02)
         expected = workers * iterations
         expected_b = 0 if mode == 0 else expected * (2 if mode == 2 else 1)
-        expected_calls = expected if spin and mode == 4 else expected * (mode + 1)
-        if spin:
+        expected_calls = expected if atomic and mode == 4 else expected * (mode + 1)
+        expected_a = expected
+        if readers and mode >= 5:
+            per_case = {5: (2, 0, 0, 2, 0, 0), 6: (3, 1, 0, 1, 0, 0),
+                        7: (3, 0, 1, 1, 0, 0), 8: (2, 0, 0, 2, 0, 0),
+                        9: (2, 1, 0, 1, 1, 1), 11: (3, 1, 1, 1, 1, 1)}[mode]
+            expected_calls, expected_a, expected_b, rw_effects, rw_post, rw_native = (
+                value * expected for value in per_case)
+            if any(int(values[name]) != value for name, value in
+                   (("rw_effects", rw_effects), ("rw_post", rw_post), ("rw_native", rw_native))) or int(values["rw_errors"]):
+                raise AssertionError("read/mode source effects or native continuation repeated")
+        if atomic:
             check_spin_status(values, workers)
             if mode == 4 and int(values["pin_checks"]) != 6 * expected:
                 raise AssertionError("native spin nesting pin checkpoints did not all execute")
         if (int(values["completed"]) != expected or int(values["calls"]) != expected_calls
-                or int(values["a"]) != expected or int(values["b"]) != expected_b
+                or int(values["a"]) != expected_a or int(values["b"]) != expected_b
                 or int(values["errors"]) or int(values["origin_errors"]) or int(values["core_errors"])
                 or int(values["locks_clear"]) != 1):
             (args.output / f"{name}-failure.txt").write_text(raw)
@@ -555,7 +592,7 @@ def main(*, spin=False):
         entries = [row for row in interval if has(row, "JIT_ENTER")]
         if not any(row["image"] == image and row["task"] != row["origin"] for row in entries):
             raise AssertionError("protected completion lacks a foreign generated entry")
-        if spin and any(not row["flags"] & (1 << 12) for row in entries):
+        if atomic and any(not row["flags"] & (1 << 12) for row in entries):
             raise AssertionError("spin JIT entered without an observed physical pin and IRQ-on task context")
         if not any(typed_unlock(row, node, image) for row in interval):
             raise AssertionError("episode completion lacks its exact JIT-handled source unlock")
@@ -618,29 +655,32 @@ def main(*, spin=False):
                                   and row["task"] == owner_task and row["phase"] == 3), None)
             if (not all((bound, handled, stopped, begin, physical, source_drop, retired, free, ready, owner_retired))
                     or not bound["index"] < handled["index"] < begin["index"] < physical["index"]
-                    or not stopped["index"] < (owner_retired["index"] if spin else begin["index"])
+                    or not stopped["index"] < (owner_retired["index"] if synchronous else begin["index"])
                     or not physical["index"] < source_drop["index"] < retired["index"]
                     or not retired["index"] <= ready["index"] < free["index"]
                     or not physical["index"] < owner_retired["index"]):
                 raise AssertionError("physical callback/control/last-user retirement proof is incomplete")
-            if spin and request is root and mode == 2:
+            if synchronous and request is root and mode == 2:
+                expected_route = 3 if spin else 4
+                expected_action = 3 if spin else 4
                 requested = next((row for row in release_rows if has(row, "RELEASE_REQUEST")
-                                  and row["phase"] == 1 and row["result"] == 3
+                                  and row["phase"] == 1 and row["result"] == expected_route
                                   and row["task"] != owner_task), None)
                 accepted = next((row for row in rows if typed_unlock(row, root["node"], image)
-                                 and row["node"] == child["node"] and row["phase"] == 3
+                                 and row["node"] == child["node"] and row["phase"] == expected_action
                                  and requested and row["task"] == requested["task"]), None)
                 resumed = next((row for row in rows if has(row, "JIT_ENTER")
                                 and row["node"] == child["node"] and accepted
                                 and row["task"] == accepted["task"] and row["image"] == image
                                 and row["cursor"] == accepted["cursor"]
-                                and row["index"] > accepted["index"] and row["flags"] & (1 << 12)), None)
+                                and row["index"] > accepted["index"]
+                                and (not atomic or row["flags"] & (1 << 12))), None)
                 if (not all((requested, accepted, resumed))
                         or not requested["index"] < handled["index"] < physical["index"] < accepted["index"]
                         or any(has(row, name) for row in release_rows
                                for name in ("RELEASE_DEFER", "RELEASE_UNWIND", "RELEASE_NOTIFY_DONE"))):
                     raise AssertionError("spin outer unlock continued before its original owner's physical ACK")
-            if request is root and mode == 2 and not spin:
+            if request is root and mode == 2 and not synchronous:
                 requested = next((row for row in release_rows if has(row, "RELEASE_REQUEST")
                                   and row["result"] == 2 and row["phase"] == 1 and row["return_user"]), None)
                 deferred = next((row for row in release_rows if has(row, "RELEASE_DEFER")
@@ -709,7 +749,7 @@ def main(*, spin=False):
         control_command(f"scene {mode}")
         _, first = wait_scene(lambda value: int(value["ready"], 16) == 31, f"scene{mode}-ready")
         tasks = [int(first[f"role{index}"], 16) for index in range(5)]
-        if spin:
+        if atomic:
             check_spin_status(first, 5)
         control_command("go 0"); control_command("go 1")
         wait_scene(lambda value: int(value["held"], 16) & 3 == 3, f"scene{mode}-holders")
@@ -719,7 +759,7 @@ def main(*, spin=False):
         wait_scene(lambda value: int(value["queued"], 16) & 16, f"scene{mode}-W")
         control_command("go 3")
         wait_scene(lambda value: int(value["queued"], 16) & 8, f"scene{mode}-CB")
-        if spin and mode == 3:
+        if atomic and mode == 3:
             control_command("release 1")
             control_command("release 0")
         else:
@@ -727,10 +767,10 @@ def main(*, spin=False):
             wait_scene(lambda value: int(value["child"], 16) != 0, f"scene{mode}-child")
             control_command("release 1")
         raw, final = wait_scene(lambda value: int(value["finished"]) == 5, f"scene{mode}-done")
-        if spin:
+        if atomic:
             check_spin_status(final, 5)
-        expected_calls = 2 if spin and mode == 3 else mode + 2
-        expected_b = 0 if spin and mode == 3 else (2 if mode == 2 else 1)
+        expected_calls = 2 if atomic and mode == 3 else mode + 2
+        expected_b = 0 if atomic and mode == 3 else (2 if mode == 2 else 1)
         if (int(final["completed"]) != 5 or int(final["calls"]) != expected_calls
                 or int(final["a"]) != 2 or int(final["b"]) != expected_b
                 or any(int(final[key]) for key in ("errors", "core_errors", "origin_errors"))
@@ -739,7 +779,7 @@ def main(*, spin=False):
         rows = observations()[begin:]
         root = next(row for row in rows if has(row, "ENQUEUE") and row["task"] == tasks[4]
                     and row["origin"] == tasks[4])
-        if spin and mode == 3:
+        if atomic and mode == 3:
             proof = validate_spin_suffix(rows, root, final, tasks, image)
             proof.update(name="spin-native-contended" if not image else "spin-miss-native-suffix",
                          mode=mode, start=begin, end=len(event_rows), raw_status=raw)
@@ -757,14 +797,14 @@ def main(*, spin=False):
                 or not int(final["w_regs"], 16) or root["acquisition"] == child["acquisition"]):
             raise AssertionError("actual common-MCS queue or one-state/distinct-acquisition relation differs")
         for request, executor, head in ((root, tasks[2], ca), (child, tasks[3], cb)):
-            if not spin and not any(has(row, "SELECT_LOCAL") and row["node"] == head["node"]
+            if not atomic and not any(has(row, "SELECT_LOCAL") and row["node"] == head["node"]
                        and row["task"] == executor and row["owner_task"] == executor for row in rows):
                 raise AssertionError("candidate did not become the ordinary physical MCS head")
             if not any(has(row, "SELECT_PROXY") and row["node"] == request["node"]
                        and row["task"] == executor and row["owner_task"] == executor
                        and row["related"] == head["node"] for row in rows):
                 raise AssertionError("ordinary optional arbitration did not select the required physical executor")
-        if spin:
+        if atomic:
             for request, candidate in ((root, ca), (child, cb)):
                 selected = next(row for row in rows if has(row, "SELECT_PROXY") and row["node"] == request["node"])
                 requeued = next((row for row in rows if has(row, "ENQUEUE") and row["node"] == candidate["node"]
@@ -788,7 +828,7 @@ def main(*, spin=False):
                         and row["task"] == tasks[3] and row["image"] == image), None)
         if not all((lock_b, enter_a, enter_b)) or not enter_a["index"] < lock_b["index"] < child["index"] < enter_b["index"]:
             raise AssertionError("no actual CA source-to-child operation and CB generated entry chain")
-        child_done = protected_completion(rows, child["node"], image, tasks[3], 5 if mode == 2 and not spin else 3)
+        child_done = protected_completion(rows, child["node"], image, tasks[3], 5 if mode == 2 and not synchronous else 3)
         returned = next((row for row in rows if has(row, "CHILD_RETURN") and row["node"] == root["node"]
                          and row["related"] == child["node"] and row["task"] == tasks[2]
                          and row["result"] == child_done["result"] and row["flags"] & 1024
@@ -809,7 +849,7 @@ def main(*, spin=False):
                 raise AssertionError("parent resumed neither the exact returned binding nor its current cursor")
         elif root_done["related"] != returned["return_user"] or root_done["cursor"] != returned["cursor"]:
             raise AssertionError("out-of-order root completion revived an old binding or cursor")
-        if mode == 2 and not spin:
+        if mode == 2 and not synchronous:
             if not any(typed_unlock(row, root["node"], image) and row["task"] == tasks[3]
                        and row["node"] == child["node"] and row["phase"] == 2 for row in rows):
                 raise AssertionError("outer logical unlock was not deferred from the actual inner executor")
@@ -836,6 +876,12 @@ def main(*, spin=False):
                 time.sleep(0.02)
         return workflow.result
 
+    reader_checks = None
+    if readers:
+        from rwsem.reader_cases import ReaderCases
+        reader_checks = ReaderCases(family, args, results, control_command, wait_scene,
+            observations, has, body_case, check_spin_status, validate_retirement)
+
     try:
         parameters = [f"gs_offset={args.gs_offset}", "gs_verified=1",
                       "immutable_text=1", "auxiliary_contract=1", f"source_size={body_size}",
@@ -845,15 +891,21 @@ def main(*, spin=False):
         if builtin_bytes is not None:
             parameters.extend((f"builtin_source_start={args.builtin_source_start}",
                                f"builtin_source_size={args.builtin_source_size}"))
-        if spin:
+        if atomic:
             parameters.extend(("spin_cpus=" + ",".join(map(str, args.spin_cpus)),
                                f"holder_timeout_ms={args.holder_timeout_ms}"))
+        elif readers:
+            parameters.append(f"holder_timeout_ms={args.holder_timeout_ms}")
+        if family == "rwsem":
+            parameters.append(f"coordination_spins={args.coordination_spins}")
         command([tools["insmod"], str(args.module), *parameters], args.deadline)
         control = os.open(f"/dev/{module_name}_ctl", os.O_RDWR | os.O_CLOEXEC)
         event_fd = os.open(f"/dev/{module_name}_events", os.O_RDONLY | os.O_CLOEXEC)
         managed_fork_case()
         body_case("native-local", 0, 1, args.iterations)
-        if spin:
+        if reader_checks is not None:
+            reader_checks.native()
+        if atomic:
             body_case("spin-native-nesting", 4, 1, args.iterations)
             scene_case(3, 0)
         limits = WireLimits(2 * 1024 * 1024, 4096, 256, 256, 512 * 1024)
@@ -873,6 +925,8 @@ def main(*, spin=False):
         results["actual_dependency_page_count"] = len(snapshot.regions) - 2
         results["actual_source_bytes"] = sum(len(region.data) for region in snapshot.regions)
         results["actual_call_records"] = calls
+        if reader_checks is not None:
+            reader_checks.calls = calls
         results["near_indirect_call_sites"] = indirect
         results["root_entry"] = roots[0]
         results["ordinary_indirect_kernel_learning"] = "unverified"
@@ -905,7 +959,7 @@ def main(*, spin=False):
                 DiscoveryLimits(4096, 15 * 4096, 32768, 5),
                 EntryMetadata("kd_fixture_entry", tuple(sorted({record["site"] + record["length"]
                               for record in calls if "operation" in record})), args.gs_offset),
-                CodegenLimits(4096, 64 * 1024, 1000000)), builder)
+                CodegenLimits(4096, 64 * 1024, args.runtime_block_visits if readers else 1000000)), builder)
             session.advance(); session.advance()  # actual claim, then copied/merged claim
             if session.phase is not SessionPhase.BUILD_START:
                 raise AssertionError("actual claim did not reach the documented pre-build state")
@@ -939,6 +993,8 @@ def main(*, spin=False):
         for number, mode in enumerate((0, 1, 2)):
             body_case(("contended-local", "nested", "out-of-order")[number], mode, args.workers, args.iterations)
             compiler_cycle(run_pending_probe=number == 0)
+        if reader_checks is not None:
+            reader_checks.training(compiler_cycle)
         # The final candidate is now fixed. No image replacement or pending
         # probe is permitted in these completion checks.
         fixed_image = old
@@ -951,15 +1007,20 @@ def main(*, spin=False):
             warm_proofs.append(scene_case(mode, fixed_image))
         save_observations("observations-before-shutdown")
         results["warm_completion"] = warm_proofs
+        if reader_checks is not None:
+            reader_checks.warm(fixed_image)
         # A final consumer claim must be empty after the fixed-image passes.
         empty_cycle = compiler_cycle(claim_only=True)
         if empty_cycle.claim.records or empty_cycle.publication is not None or old != fixed_image:
             raise AssertionError("warm completion generated misses or replaced its fixed image")
         results["warm_claim_empty"] = True
         validate_warm_plain(event_rows[warm_start:warm_plain_end], fixed_image)
-        if spin:
+        if atomic:
             results["spin_miss_handback"] = scene_case(3, fixed_image)
             save_observations("observations-after-miss")
+        if reader_checks is not None:
+            reader_checks.deliberate_misses(fixed_image)
+            save_observations("observations-after-reader-misses")
         states = coordinator.facts()
         successful_exits = tuple(state for state in states if state.recorded.fact.entry_result == 0
                                  and state.recorded.fact.exit.kind == int(ExitKind.COVERAGE_MISS))
@@ -1020,7 +1081,9 @@ def main(*, spin=False):
         results["managed_fork_exit"]["shutdown_native_holds_drained"] = True
         results["archive_sha256"] = archive.archive.identity.hex()
         results["settled_keys"] = len(archive.settlement.keys)
-        if spin:
+        if reader_checks is not None:
+            reader_checks.archived(coordinator.facts(), archive)
+        if atomic:
             miss = results["spin_miss_handback"]["exited"]
             retained = [state for state in coordinator.facts()
                         if state.recorded.fact.exit.source_ip == miss["ip"]
@@ -1042,8 +1105,10 @@ def main(*, spin=False):
         command([tools["rmmod"], module_name], args.deadline)
         results["returned_full_jit_body"] = "protected_episode_completed"
         results["full_c_function_jit_return"] = "outside_protected_episode_scope"
-        results["status"] = ("protected_spin_jit_recursive_mechanism_pass" if spin
-                             else "protected_jit_recursive_mechanism_pass")
+        results["status"] = {"mutex": "protected_jit_recursive_mechanism_pass",
+                             "spin": "protected_spin_jit_recursive_mechanism_pass",
+                             "rwsem": "protected_rwsem_jit_reader_mechanism_pass",
+                             "rwlock": "protected_rwlock_jit_reader_mechanism_pass"}[family]
         (args.output / "result.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
         return 0
     except BaseException as error:
