@@ -220,7 +220,28 @@ int kd_operation_complete(struct kd_thread_state *state,
 		return result;
 	if (state->operation.phase != KD_OPERATION_ENTERED)
 		return -EALREADY;
+	if (kd_operation_returns_int(state->operation.kind))
+		return -EOPNOTSUPP;
 	/* A deferred source unlock may complete while physical duty stays live. */
+	state->operation.phase = KD_OPERATION_DONE;
+	return 0;
+}
+
+int kd_operation_complete_int_result(struct kd_thread_state *state,
+		struct kd_execution_binding *binding, const void *identity, int value)
+{
+	int result = operation_matches(state, binding, identity);
+
+	if (result)
+		return result;
+	if (state->operation.phase != KD_OPERATION_ENTERED)
+		return -EALREADY;
+	if (!kd_operation_returns_int(state->operation.kind))
+		return -EOPNOTSUPP;
+	/* Materialize the x86 int result only after the exact disposition. The
+	 * sole current source actor commits AX and DONE before any CALL return.
+	 */
+	state->regs.ax = (u32)value;
 	state->operation.phase = KD_OPERATION_DONE;
 	return 0;
 }

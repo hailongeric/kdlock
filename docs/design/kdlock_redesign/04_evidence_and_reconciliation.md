@@ -23,15 +23,21 @@ readback](../../../tests/evidence/kernel6-prepare-context-20261111/README.md) ar
 retained, with the narrow reviewed fix at `3512f5dd`.
 Earlier kernel5 results below keep their original source/image scope.
 
-A later source-only step moves ordinary void Linux rwsem eligibility checks
-behind distinct typed entries and adds a borrowed-state guard before operation
-preparation. It preserves exact generic/private target identity and latest
-native/managed read-credit routing. It has static review only, with no new build,
-VM or MM-delegation receipt. The [generic integration guide](../../../kernel/integration/RWSEM.md#delegated-syscall-integration-in-progress)
-records the remaining killable result/cancellation, enrollment and lifetime work,
-the selected delayed cancellation/deferred-storage direction, and the exact
-excluded read-holder cancellation dependency. Kernel6's native MM and private
-JIT receipts remain separate evidence for their recorded earlier source.
+Later source-only changes move ordinary void Linux rwsem eligibility checks
+behind distinct typed entries and add a borrowed-state guard before operation
+preparation. A separate explicit cold opt-in adds the integer killable writer
+entry, exact managed grant/cancel arbitration and queue-only deferred task
+storage retirement. Legacy bindings keep killable macros native. Nested
+killable operations hand back before preparation; independent foreign nested
+signal notification is not implemented. An optional executor predicate adds a
+fragment-entry restriction, without proving general kernel context equivalence.
+These changes have independent static review only, with no new build, VM or
+MM-delegation receipt. The [generic integration guide](../../../kernel/integration/RWSEM.md#delegated-syscall-integration-in-progress)
+records the selected current-borrow drain policy, exact excluded read-holder
+cancellation dependency, retained queue actors and remaining owner-record,
+context and reached-frontier limits. The optional MM profile remains disabled
+by default and unvalidated. Kernel6's native MM and private JIT receipts retain
+their recorded earlier source scope.
 
 ## 1 Active authority and scope
 

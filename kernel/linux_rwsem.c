@@ -140,6 +140,26 @@ struct kd_mutex_entry *kd_linux_rwsem_prepare_down_write_current(struct kd_rwsem
 	return NULL;
 }
 
+/* The explicit cold binding opt-in reaches this integer clobber entry. Legacy
+ * bindings retain the callable path; unprepared tasks still use the same native
+ * pool and gate with an explicit integer result.
+ */
+struct kd_source_prepare_result kd_linux_rwsem_prepare_down_write_killable_current(
+		struct kd_rwsem *lock)
+{
+	if (source_root_ready())
+		return (struct kd_source_prepare_result) {
+			.entry = kd_rwsem_prepare_source_current(lock,
+				KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE,
+				(unsigned long)kd_linux_rwsem_down_write_killable_entry_asm),
+			.result = 0,
+		};
+	return (struct kd_source_prepare_result) {
+		.entry = NULL,
+		.result = (unsigned int)kd_rw_native_write_lock(&lock->core, TASK_KILLABLE),
+	};
+}
+
 struct kd_mutex_entry *kd_linux_rwsem_prepare_up_read_current(struct kd_rwsem *lock)
 {
 	if (managed_grant(lock, true))
@@ -167,9 +187,9 @@ struct kd_mutex_entry *kd_linux_rwsem_prepare_downgrade_write_current(struct kd_
 	return NULL;
 }
 
-int kd_linux_rwsem_bind(struct rw_semaphore *object,
+static int bind_source(struct rw_semaphore *object,
 		struct kd_linux_rwsem_binding *binding, struct kd_rwsem *lock,
-		bool source_calls)
+		bool source_calls, bool killable_source_calls)
 {
 	if (IS_ENABLED(CONFIG_DEBUG_LOCK_ALLOC) || IS_ENABLED(CONFIG_LOCKDEP) ||
 	    IS_ENABLED(CONFIG_DEBUG_RWSEMS))
@@ -188,8 +208,22 @@ int kd_linux_rwsem_bind(struct rw_semaphore *object,
 	binding->object = object;
 	binding->lock = lock;
 	binding->source_calls = source_calls;
+	binding->killable_source_calls = killable_source_calls;
 	smp_store_release(&object->kd_binding, binding);
 	return 0;
+}
+
+int kd_linux_rwsem_bind(struct rw_semaphore *object,
+		struct kd_linux_rwsem_binding *binding, struct kd_rwsem *lock,
+		bool source_calls)
+{
+	return bind_source(object, binding, lock, source_calls, false);
+}
+
+int kd_linux_rwsem_bind_killable_source(struct rw_semaphore *object,
+		struct kd_linux_rwsem_binding *binding, struct kd_rwsem *lock)
+{
+	return bind_source(object, binding, lock, true, true);
 }
 
 int kd_linux_rwsem_unbind(struct kd_linux_rwsem_binding *binding)
@@ -343,6 +377,9 @@ static const unsigned long native_targets[] = {
 	(unsigned long)kd_linux_rwsem_prepare_up_write_current,
 	(unsigned long)kd_linux_rwsem_prepare_downgrade_write_current,
 	(unsigned long)kd_rwsem_prepare_source_current,
+	(unsigned long)kd_linux_rwsem_prepare_down_write_killable_current,
+	(unsigned long)kd_rwsem_prepare_down_write_killable_current,
+	(unsigned long)kd_linux_rwsem_bind_killable_source,
 #if defined(CONFIG_DEBUG_RWSEMS) || defined(CONFIG_DETECT_HUNG_TASK_BLOCKER)
 	(unsigned long)rwsem_owner, (unsigned long)is_rwsem_reader_owned,
 #endif

@@ -5,6 +5,8 @@
 #include <linux/interrupt.h>
 #include <linux/preempt.h>
 #include <linux/sched.h>
+#include <linux/sched/signal.h>
+#include <linux/sched/task.h>
 #include <asm/processor.h>
 
 #include "rw.h"
@@ -223,6 +225,12 @@ int kd_rw_write_prepare(struct kd_rw *lock, struct kd_mutex_node *node,
 	if (!lock || !node || node->enqueued || node->shared_read || node->rw ||
 	    atomic_read(&node->selection) != KD_MUTEX_PRIVATE)
 		return -EINVAL;
+	if (node->wait_state != TASK_UNINTERRUPTIBLE &&
+	    (node->wait_state != TASK_KILLABLE || atomic_wait ||
+	     node->requester != node->state->origin))
+		return -EOPNOTSUPP;
+	if (node->wait_state == TASK_KILLABLE)
+		atomic_set(&node->cancel_users, KD_MUTEX_CANCEL_QUEUE | KD_MUTEX_CANCEL_RESULT);
 	node->rw = lock;
 	node->atomic_spin = atomic_wait;
 	node->service_policy = KD_MUTEX_SERVICE_WRITER_COHORT;
@@ -240,20 +248,45 @@ int kd_rw_write_acquire(struct kd_rw *lock, struct kd_mutex_node *node,
 	return kd_mutex_acquire(&lock->queue, node, batch, proxy_limit, outcome);
 }
 
-void kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
+/* C's canceled acquisition stays ungranted while it finishes its current W.
+ * The workload excludes R retaining a read until C's error while W waits R;
+ * this metadata request introduces no special handling for that pattern.
+ */
+static void note_candidate_cancel(struct kd_mutex_batch *batch)
+{
+	struct kd_mutex_node *candidate = batch->candidate;
+
+	if (candidate && candidate->wait_state == TASK_KILLABLE &&
+	    candidate->admission == KD_MUTEX_ADMISSION_PENDING &&
+	    fatal_signal_pending(candidate->state->origin)) {
+		candidate->cancel_requested = true;
+		candidate->admission = KD_MUTEX_ADMISSION_CANCELLED;
+	}
+}
+
+int kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 			struct kd_mutex_node *waiter)
 {
 	DEFINE_WAIT(wait);
 	bool atomic_wait = waiter->atomic_spin;
+	bool registered = false;
+	bool cancelled = false;
 
 	BUG_ON(!rw_context(atomic_wait));
 	raw_spin_lock(&lock->guard);
 	BUG_ON(lock->writer_pending || lock->writer);
 	lock->writer_pending = true;
+	if (waiter->wait_state == TASK_KILLABLE) {
+		BUG_ON(waiter->cancel_waiter);
+		get_task_struct(current);
+		waiter->cancel_waiter = current;
+		registered = true;
+	}
 	raw_spin_unlock(&lock->guard);
 	for (;;) {
 		bool blocked = false;
 		bool acquired = false;
+		unsigned int sleep_state = TASK_UNINTERRUPTIBLE;
 
 		if (!atomic_wait)
 			__set_current_state(TASK_RUNNING);
@@ -262,16 +295,44 @@ void kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 
 			BUG_ON(result);
 		}
-		if (!atomic_wait)
-			prepare_to_wait(&lock->changed, &wait, TASK_UNINTERRUPTIBLE);
 		raw_spin_lock(&lock->guard);
-		if (!blocked && !lock->readers) {
+		if (waiter->wait_state == TASK_KILLABLE && waiter->requester == current &&
+		    !waiter->cancel_requested)
+			sleep_state = TASK_KILLABLE;
+		if (batch->candidate && batch->candidate->wait_state == TASK_KILLABLE &&
+		    batch->candidate->admission == KD_MUTEX_ADMISSION_PENDING)
+			sleep_state = TASK_KILLABLE;
+		raw_spin_unlock(&lock->guard);
+		/* Publish the physical wait before checking origin's request. A fatal
+		 * signal on W either wakes this registered task or precedes this check.
+		 */
+		if (!atomic_wait)
+			prepare_to_wait(&lock->changed, &wait, sleep_state);
+		raw_spin_lock(&lock->guard);
+		note_candidate_cancel(batch);
+		if (waiter->admission == KD_MUTEX_ADMISSION_CANCELLED) {
+			cancelled = true;
+		} else if (!blocked && !lock->readers) {
+			/* Actual admission wins over a still-pending signal request. */
 			lock->writer = batch;
-			lock->writer_pending = false;
+			waiter->admission = KD_MUTEX_ADMISSION_GRANTED;
+			atomic_set(&waiter->cancel_users, 0);
 			acquired = true;
+		} else if (waiter->wait_state == TASK_KILLABLE &&
+			   (waiter->cancel_requested || fatal_signal_pending(waiter->state->origin))) {
+			waiter->cancel_requested = true;
+			waiter->admission = KD_MUTEX_ADMISSION_CANCELLED;
+			cancelled = true;
+		}
+		if (acquired || cancelled) {
+			lock->writer_pending = false;
+			if (registered)
+				waiter->cancel_waiter = NULL;
+			if (cancelled)
+				wake_up_all(&lock->changed);
 		}
 		raw_spin_unlock(&lock->guard);
-		if (acquired)
+		if (acquired || cancelled)
 			break;
 		if (atomic_wait)
 			cpu_relax();
@@ -281,6 +342,27 @@ void kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 	}
 	if (!atomic_wait)
 		finish_wait(&lock->changed, &wait);
+	if (registered)
+		put_task_struct(current);
+	return cancelled ? -EINTR : 0;
+}
+
+int kd_rw_write_grant(struct kd_rw *lock, struct kd_mutex_batch *batch,
+		struct kd_mutex_node *node)
+{
+	int result = 0;
+
+	raw_spin_lock(&lock->guard);
+	if (lock->writer != batch || node->rw != lock)
+		result = -ESTALE;
+	else if (node->admission == KD_MUTEX_ADMISSION_CANCELLED)
+		result = -EINTR;
+	else {
+		node->admission = KD_MUTEX_ADMISSION_GRANTED;
+		atomic_set(&node->cancel_users, 0);
+	}
+	raw_spin_unlock(&lock->guard);
+	return result;
 }
 
 void kd_rw_writer_exit(struct kd_rw *lock, struct kd_mutex_batch *batch,

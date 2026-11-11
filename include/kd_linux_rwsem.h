@@ -18,11 +18,19 @@ struct kd_linux_rwsem_binding {
 	struct rw_semaphore *object;
 	struct kd_rwsem *lock;
 	bool source_calls;
+	/* Separate cold opt-in; legacy bindings keep killable calls native. */
+	bool killable_source_calls;
 };
 
 int kd_linux_rwsem_bind(struct rw_semaphore *object,
 		struct kd_linux_rwsem_binding *binding, struct kd_rwsem *lock,
 		bool source_calls);
+/* Experimental source lane: ordinary pairs plus original-task killable writer
+ * capture. Caller supplies the same immutable binding/native-pool contracts and
+ * complete managed task/source resources. Selection has no support evidence.
+ */
+int kd_linux_rwsem_bind_killable_source(struct rw_semaphore *object,
+		struct kd_linux_rwsem_binding *binding, struct kd_rwsem *lock);
 int kd_linux_rwsem_unbind(struct kd_linux_rwsem_binding *binding);
 
 /* Normal callable C ABI. Signal/try operations remain local on the KD gate;

@@ -26,6 +26,7 @@ enum kd_mutex_selection {
 	KD_MUTEX_OFFERED,
 	KD_MUTEX_SELECTED_LOCAL,
 	KD_MUTEX_SELECTED_PROXY,
+	KD_MUTEX_SELECTED_CANCELLED,
 };
 
 /*
@@ -43,6 +44,20 @@ enum kd_mutex_outcome {
 	KD_MUTEX_PROXY_EPISODE_DONE,
 	KD_MUTEX_PROXY_ORIGIN_SUFFIX,
 	KD_MUTEX_PROXY_UNWIND_PARENT,
+	/* No grant or source body; the source bridge returns its integer error. */
+	KD_MUTEX_ACQUIRE_CANCELLED,
+};
+
+enum kd_mutex_cancel_actor {
+	KD_MUTEX_CANCEL_QUEUE = 1,
+	KD_MUTEX_CANCEL_RESULT = 2,
+	KD_MUTEX_CANCEL_COHORT = 4,
+};
+
+enum kd_mutex_admission {
+	KD_MUTEX_ADMISSION_PENDING,
+	KD_MUTEX_ADMISSION_GRANTED,
+	KD_MUTEX_ADMISSION_CANCELLED,
 };
 
 enum kd_mutex_unlock_action {
@@ -59,6 +74,12 @@ enum kd_mutex_service_policy {
 };
 
 struct kd_mutex_ops {
+	/* Optional final canceled-node actor. Queue, result and withdrawn cohort
+	 * accesses have all ended and retirable was published. Independently hold
+	 * node/context/callback backing through return; no core access follows.
+	 * This callback advances no source or physical release operation.
+	 */
+	void (*cancel_departed)(struct kd_mutex_node *node, void *context);
 	/*
 	 * Optional physical-task metadata progress while waiting. Use the
 	 * requester node for turn/result waits and the actual batch head for
@@ -124,6 +145,19 @@ struct kd_mutex_node {
 	bool source_granted;
 	bool ready;
 	bool atomic_spin;
+	/* Explicit root/original-task killable writer lane only. The RW guard
+	 * serializes admission, signal requests, turn ownership and wait-task
+	 * registration. Selection itself is never a successful writer grant.
+	 */
+	unsigned int wait_state;
+	enum kd_mutex_admission admission;
+	bool cancel_requested;
+	bool cancel_result_claimed;
+	bool turn_owned;
+	bool borrow_active;
+	struct task_struct *cancel_waiter;
+	/* Exact queue/result/cohort actor bits, not a grant/activity estimate. */
+	atomic_t cancel_users;
 	/* Wait context, service grouping and outer release are independent. The
 	 * legacy default preserves mutex cohorts and one-grant spin turns.
 	 */
@@ -171,6 +205,8 @@ struct kd_mutex_batch {
 	 * cohort. Reaping cannot publish its head reusable until it stops.
 	 */
 	bool cohort_active;
+	/* Retained ungranted C while this driver serves a W-owned cohort. */
+	struct kd_mutex_node *candidate;
 	struct kd_rw *rw;
 	struct kd_rw_read_credit *conversion;
 };

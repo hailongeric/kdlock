@@ -27,6 +27,8 @@ EXPORT_SYMBOL_GPL(kd_linux_rwsem_up_read_entry_asm);
 EXPORT_SYMBOL_GPL(kd_linux_rwsem_down_write_entry_asm);
 EXPORT_SYMBOL_GPL(kd_linux_rwsem_up_write_entry_asm);
 EXPORT_SYMBOL_GPL(kd_linux_rwsem_downgrade_write_entry_asm);
+EXPORT_SYMBOL_GPL(kd_rwsem_down_write_killable_entry_asm);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_down_write_killable_entry_asm);
 EXPORT_SYMBOL_GPL(kd_rwlock_init);
 EXPORT_SYMBOL_GPL(kd_rwlock_read_lock_entry_asm);
 EXPORT_SYMBOL_GPL(kd_rwlock_read_unlock_entry_asm);
@@ -47,6 +49,7 @@ EXPORT_SYMBOL_GPL(kd_task_lifecycle_exit_current);
 
 /* Cold generic primitive binding and exact caller-provided native storage. */
 EXPORT_SYMBOL_GPL(kd_linux_rwsem_bind);
+EXPORT_SYMBOL_GPL(kd_linux_rwsem_bind_killable_source);
 EXPORT_SYMBOL_GPL(kd_linux_rwsem_unbind);
 EXPORT_SYMBOL_GPL(kd_rw_native_pool_init);
 EXPORT_SYMBOL_GPL(kd_rw_native_pool_idle);

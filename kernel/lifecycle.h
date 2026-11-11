@@ -19,6 +19,12 @@ struct kd_task_lifecycle_context {
 	void *native_context;
 	int (*native_begin)(void *context, void **lease);
 	kd_task_native_release_fn native_release;
+	/* Set only while this context is cold and unpublished. Legacy init keeps
+	 * this disabled. Owner independently protects final native callback return;
+	 * NULL explicitly selects built-in callback/caller code.
+	 */
+	bool deferred_cancel_exit;
+	struct module *retire_code_owner;
 };
 
 int kd_task_lifecycle_context_init(struct kd_task_lifecycle_context *context,
@@ -48,6 +54,11 @@ int kd_task_lifecycle_abort_unpublished(struct task_struct *child);
  * context only. Close per-task admission, reject borrowed/auxiliary execution,
  * pending operations and logical-open grants; never fabricate unlocks. Pump
  * exact owner/grant/pool metadata with cond_resched until atomic detach succeeds.
+ * A cold deferred_cancel_exit context may instead revoke the task anchor with
+ * only exact canceled/ungranted queue metadata remaining. Its built-in worker
+ * retains the original allocation/stack/native lease until final queue actors
+ * end. Physical owners, executable/source/native/auxiliary controls and logical
+ * grants are excluded from that exception and keep the full current-task drain.
  * No wait on pending==false, source execution, timeout or forced reclamation.
  * Managed callers permit no UNTRACKED raw root/storage/config observer across
  * exit; exact tracked users remain retained until proved ended. Callback/module

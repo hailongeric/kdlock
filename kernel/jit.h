@@ -131,6 +131,12 @@ struct kd_jit_mutex_driver {
 	 */
 	enum kd_lock_family family;
 	enum kd_grant_mode mode;
+	/* Exact metadata handoff for a killable queue actor. granted runs only
+	 * after the grant is linked. cancel_departed runs after final canceled
+	 * queue/result/cohort access and may end the containing call's lifetime.
+	 */
+	int (*granted)(struct kd_jit_mutex_call *call, void *context);
+	void (*cancel_departed)(struct kd_jit_mutex_call *call, void *context);
 	/* Initialize every field, including absent hooks, before call_init. Keep
 	 * driver/context/callback code through all request/owner wait callbacks and
 	 * final exported return. Selection and export are committed: callbacks

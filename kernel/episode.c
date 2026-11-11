@@ -12,6 +12,7 @@
 #include "episode.h"
 #include "mutex_api.h"
 #include "observation.h"
+#include "task_storage.h"
 
 static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 		struct kd_execution_binding **binding, void *context);
@@ -69,6 +70,8 @@ static void frame_init(struct kd_episode_frame *frame,
 	kd_request_user_init(&frame->notifier_user);
 	kd_request_user_init(&frame->deferred_user);
 	kd_request_user_init(&frame->auxiliary_user);
+	kd_request_user_init(&frame->cancel_queue_user);
+	kd_task_cancel_actor_init(&frame->cancel_actor);
 	frame->control_held = false;
 	frame->image_held = false;
 	frame->grant_held = false;
@@ -77,6 +80,7 @@ static void frame_init(struct kd_episode_frame *frame,
 	frame->notifier_held = false;
 	frame->deferred_held = false;
 	frame->auxiliary_held = false;
+	frame->cancel_queue_held = false;
 	frame->source_image = false;
 	frame->return_image = false;
 	frame->execution_image = false;
@@ -188,6 +192,45 @@ static int pump(void)
 		if (!kd_owner_progress_ready(progress))
 			schedule();
 	}
+}
+
+/* The allocation actor and queue user jointly cover the final component API
+ * return. Success permits slot reuse; no frame access follows the actor finish.
+ */
+static int finish_cancel_queue(struct kd_episode_frame *frame)
+{
+	int result;
+
+	if (!frame->cancel_queue_held)
+		return 0;
+	frame->cancel_queue_held = false;
+	result = kd_task_cancel_actor_finish(&frame->cancel_actor,
+		&frame->cancel_queue_user, &frame->cancel_queue_user);
+	if (result)
+		frame->cancel_queue_held = true;
+	return result;
+}
+
+static int granted(struct kd_jit_mutex_call *call, void *context)
+{
+	struct kd_episode_frame *frame = context;
+
+	if (call != &frame->slot->call)
+		return -ESTALE;
+	return finish_cancel_queue(frame);
+}
+
+static void cancel_departed(struct kd_jit_mutex_call *call, void *context)
+{
+	struct kd_episode_frame *frame = context;
+	int result;
+
+	BUG_ON(call != &frame->slot->call);
+	result = finish_cancel_queue(frame);
+	/* A last allocation/queue user may have ended. Only the local result is
+	 * inspected after finish_cancel_queue returns; no frame/call read follows.
+	 */
+	BUG_ON(result);
 }
 
 static int put_image(struct kd_episode_frame *frame,
@@ -414,6 +457,9 @@ static int cancel_private(struct kd_episode_frame *frame, bool prepared)
 	result = finish_user(&frame->auxiliary_user, &frame->auxiliary_held);
 	if (result)
 		return result;
+	result = finish_cancel_queue(frame);
+	if (result)
+		return result;
 	result = finish_user(&frame->control_user, &frame->control_held);
 	if (result || prepared)
 		return result;
@@ -473,6 +519,24 @@ static int prepare(struct kd_episode_resources *resources,
 		if (error)
 			goto failed;
 	}
+	if (kd_operation_is_killable(operation)) {
+		/* Initial killable capture starts on its actual original requester.
+		 * A borrowed nested call is forwarded before reaching prepare.
+		 */
+		if (parent || resources->pool->state->origin != current) {
+			error = -EOPNOTSUPP;
+			goto failed;
+		}
+		error = hold_user(frame, &frame->cancel_queue_user,
+			&frame->cancel_queue_held, KD_REQUEST_USER_CONTROL);
+		if (error)
+			goto failed;
+		error = kd_task_cancel_actor_hold(kd_task_root_context_current(),
+			&frame->cancel_actor, slot, frame->claim,
+			&frame->cancel_queue_user, &frame->cancel_queue_user);
+		if (error)
+			goto failed;
+	}
 	/* Image absence/closing declines proxy eligibility, not the unified
 	 * persistent local queue path. Descendants extend their admitted image.
 	 */
@@ -490,6 +554,7 @@ static int prepare(struct kd_episode_resources *resources,
 		.atomic_spin = resources->config.atomic_spin,
 		.family = resources->config.family,
 		.mode = kd_operation_is_read(operation) ? KD_GRANT_MODE_READ : KD_GRANT_MODE_WRITE,
+		.granted = granted, .cancel_departed = cancel_departed,
 		.selected_local = selected_local, .wait_progress = wait_progress,
 		.wait_ready = wait_ready, .run = run, .exported = exported,
 		.stack = resources->config.stack,
@@ -679,6 +744,15 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			return forward(frame, binding,
 				frame->source_image ? frame->slot->source_use.image : NULL,
 				frame->source_image ? -EXDEV : -ENOENT);
+		if (resources->config.execution_ready) {
+			bool ready = resources->config.execution_ready(
+				resources->config.execution_context, frame->origin);
+
+			if (!kd_state_is_jit_current(state, *binding))
+				return KD_MUTEX_OUTCOME_UNSET;
+			if (!ready)
+				return forward(frame, binding, frame->slot->source_use.image, -EXDEV);
+		}
 		result = kd_jit_image_use_extend(&frame->slot->source_use, &frame->image_user,
 			&frame->slot->execution_use, &frame->image_user, KD_JIT_IMAGE_USE_EXECUTION);
 		BUG_ON(result);
@@ -745,6 +819,12 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			return forward(frame, binding, image, 0);
 		if (cached.kind != KD_OPERATION_NONE &&
 		    kd_operation_family(cached.kind) != resources->config.family)
+			return forward(frame, binding, image, -EOPNOTSUPP);
+		/* A foreign nested waiter does not yet have logical-origin signal
+		 * notification. Preserve the API by handing its untouched operation
+		 * back to W; the original-task bootstrap uses the same KD gate.
+		 */
+		if (kd_operation_is_killable(cached.kind))
 			return forward(frame, binding, image, -EOPNOTSUPP);
 		if (cached.kind != KD_OPERATION_NONE) {
 			bool ready = kd_linux_rwsem_source_operation_ready(state, *binding,
@@ -962,6 +1042,25 @@ int kd_episode_acquire_root(struct kd_episode_frame *frame,
 				    local_service_limit(frame->resources, binding), outcome);
 	if (result)
 		return result;
+	if (*outcome == KD_MUTEX_ACQUIRE_CANCELLED) {
+		/* No grant exists and no critical-section fragment ran. End the
+		 * preadmitted image/grant actors now; only exact queue/control users
+		 * may survive the original task's error continuation.
+		 */
+		frame->source_closed = true;
+		result = put_image(frame, &frame->slot->source_use, &frame->source_image);
+		if (result)
+			return result;
+		result = finish_image_actor(frame);
+		if (result)
+			return result;
+		result = finish_user(&frame->grant_user, &frame->grant_held);
+		if (result)
+			return result;
+		observe_frame(frame, KD_OBS_ACQUIRE_CANCELLED,
+			.object = (unsigned long)lock, .cursor = frame->resources->pool->state->regs.ip,
+			.phase = KD_OPERATION_RESUMABLE, .result = -EINTR);
+	}
 	if (*outcome == KD_MUTEX_LOCAL_GRANTED) {
 		result = kd_jit_mutex_drive(&frame->slot->call, &binding, outcome);
 		if (result)

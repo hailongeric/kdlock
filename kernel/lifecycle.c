@@ -39,6 +39,8 @@ int kd_task_lifecycle_context_init(struct kd_task_lifecycle_context *context,
 	context->native_context = native_context;
 	context->native_begin = native_begin;
 	context->native_release = native_release;
+	context->deferred_cancel_exit = false;
+	context->retire_code_owner = NULL;
 	return 0;
 }
 
@@ -67,6 +69,8 @@ static int start_task(const struct kd_task_lifecycle_context *context,
 		.config = &context->config,
 		.native_lease = lease,
 		.native_release = context->native_release,
+		.deferred_cancel_exit = context->deferred_cancel_exit,
+		.retire_code_owner = context->retire_code_owner,
 	};
 	result = child ? kd_task_storage_prepare_unpublished(&args, child, storage) :
 		kd_task_storage_start_current(&args, storage);
@@ -172,6 +176,16 @@ int kd_task_lifecycle_exit_current(void)
 		if (!list_empty(&root->owners.batches) || !list_empty(&root->core.grants)) {
 			result = -EBUSY;
 		} else {
+			/* This opt-in path revokes only a canceled, ungranted queue
+			 * residue. Ineligible work keeps the original exact drain loop.
+			 */
+			if (root->lifecycle->deferred_cancel_exit) {
+				result = kd_task_storage_defer_cancelled_current(storage, native);
+				if (!result)
+					return 0;
+				if (result != -EBUSY && result != -EAGAIN)
+					return result;
+			}
 			result = kd_request_pool_can_detach(root->core.requests, native);
 			if (!result) {
 				/* Exact internal drain plus the managed no-untracked-observer

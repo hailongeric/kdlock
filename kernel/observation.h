@@ -40,6 +40,8 @@ enum kd_observation_kind {
 	KD_OBS_NATIVE_READ_ACQUIRE, KD_OBS_NATIVE_READ_RELEASE,
 	KD_OBS_NATIVE_WRITE_ACQUIRE, KD_OBS_NATIVE_WRITE_RELEASE,
 	KD_OBS_NATIVE_DOWNGRADE, KD_OBS_NATIVE_CANCEL, KD_OBS_NATIVE_TRY_MISS,
+	/* Managed integer acquisition completed without a grant or body. */
+	KD_OBS_ACQUIRE_CANCELLED,
 };
 
 #define KD_OBS_FLAG_ENQUEUED             (1UL << 0)

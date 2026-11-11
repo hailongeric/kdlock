@@ -15,6 +15,7 @@
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/sched/task.h>
+#include <linux/sched/signal.h>
 #include <linux/interrupt.h>
 #include <linux/irqflags.h>
 #include <linux/preempt.h>
@@ -72,6 +73,137 @@ static void publish_condition(struct kd_mutex_node *node, int *condition)
 	smp_store_release(condition, 1);
 	wake_up_process(task);
 	put_task_struct(task);
+}
+
+/* These are exact final-user bits. Cache independent callback/task inputs
+ * before dropping this actor; another actor may publish final retirement.
+ */
+static void cancel_actor_done(struct kd_mutex_node *node, unsigned int actor)
+{
+	struct task_struct *task = node->requester;
+	void (*departed)(struct kd_mutex_node *, void *) =
+		node->ops ? node->ops->cancel_departed : NULL;
+	void *context = node->context;
+	int previous = atomic_fetch_andnot(actor, &node->cancel_users);
+
+	BUG_ON(!(previous & actor));
+	if (previous != actor)
+		return;
+	BUG_ON(READ_ONCE(node->admission) != KD_MUTEX_ADMISSION_CANCELLED);
+	node->grant_user = NULL;
+	observe_node(KD_OBS_NODE_RETIRE_READY, node, NULL, NULL,
+		KD_MUTEX_SELECTED_CANCELLED, 0);
+	smp_store_release(&node->retirable, 1);
+	wake_up_process(task);
+	put_task_struct(task);
+	/* The configured independent canceled-control hold retains this call.
+	 * Its completion may free backing; no node/context access follows.
+	 */
+	if (departed)
+		departed(node, context);
+}
+
+static void cancel_queue_depart(struct kd_mutex_node *node)
+{
+	if (!smp_load_acquire(&node->queue_done)) {
+		smp_store_release(&node->queue_done, 1);
+		observe_node(KD_OBS_QUEUE_DONE, node, NULL, NULL,
+			KD_MUTEX_SELECTED_CANCELLED, 0);
+	}
+	cancel_actor_done(node, KD_MUTEX_CANCEL_QUEUE);
+}
+
+/* Claim one result publication under the same guard as admission. Result is
+ * source completion only; an unlinked/canceled queue actor can remain retained.
+ */
+static void complete_cancel(struct kd_mutex_node *node)
+{
+	bool publish = false;
+
+	raw_spin_lock(&node->rw->guard);
+	if (node->admission == KD_MUTEX_ADMISSION_CANCELLED &&
+	    !node->borrow_active && !node->cancel_result_claimed &&
+	    (!node->turn_owned || smp_load_acquire(&node->queue_done))) {
+		node->cancel_result_claimed = true;
+		node->outcome = KD_MUTEX_ACQUIRE_CANCELLED;
+		publish = true;
+	}
+	raw_spin_unlock(&node->rw->guard);
+	if (publish)
+		publish_condition(node, &node->result_ready);
+}
+
+static bool request_cancel(struct kd_mutex_node *node)
+{
+	struct task_struct *waiter = NULL;
+	bool cancelled;
+
+	if (node->wait_state != TASK_KILLABLE)
+		return false;
+	raw_spin_lock(&node->rw->guard);
+	if (node->admission == KD_MUTEX_ADMISSION_PENDING &&
+	    fatal_signal_pending(node->state->origin)) {
+		int selection;
+
+		node->cancel_requested = true;
+		if (smp_load_acquire(&node->turn))
+			node->turn_owned = true;
+		if (node->borrow_active) {
+			/* Only this ungranted C is canceled. Current W still finishes. */
+			node->admission = KD_MUTEX_ADMISSION_CANCELLED;
+		} else if (!node->turn_owned) {
+			selection = atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
+				KD_MUTEX_SELECTED_CANCELLED);
+			if (selection == KD_MUTEX_SELECTED_LOCAL)
+				selection = atomic_cmpxchg(&node->selection,
+					KD_MUTEX_SELECTED_LOCAL, KD_MUTEX_SELECTED_CANCELLED);
+			if (selection == KD_MUTEX_OFFERED || selection == KD_MUTEX_SELECTED_LOCAL ||
+			    selection == KD_MUTEX_SELECTED_CANCELLED)
+				node->admission = KD_MUTEX_ADMISSION_CANCELLED;
+		}
+		if (node->cancel_waiter) {
+			waiter = node->cancel_waiter;
+			get_task_struct(waiter);
+		}
+	}
+	cancelled = node->admission == KD_MUTEX_ADMISSION_CANCELLED;
+	raw_spin_unlock(&node->rw->guard);
+	if (waiter) {
+		wake_up_process(waiter);
+		put_task_struct(waiter);
+	}
+	if (cancelled)
+		complete_cancel(node);
+	return cancelled;
+}
+
+/* A predecessor's turn claim prevents cancellation from returning before that
+ * predecessor finishes its actual turn store. A canceled unclaimed node is
+ * detached by this queue actor, not by its already-returned source caller.
+ */
+static bool select_managed_turn(struct kd_mutex_node *node)
+{
+	bool selected;
+
+	if (node->wait_state != TASK_KILLABLE)
+		return true;
+	raw_spin_lock(&node->rw->guard);
+	selected = node->admission != KD_MUTEX_ADMISSION_CANCELLED;
+	if (selected)
+		node->turn_owned = true;
+	raw_spin_unlock(&node->rw->guard);
+	return selected;
+}
+
+static unsigned int cohort_sleep_state(struct kd_mutex_batch *batch)
+{
+	struct kd_mutex_node *candidate = batch->candidate;
+
+	if (!candidate || candidate->wait_state != TASK_KILLABLE)
+		return TASK_UNINTERRUPTIBLE;
+	if (request_cancel(candidate))
+		return TASK_UNINTERRUPTIBLE;
+	return TASK_KILLABLE;
 }
 
 static struct task_struct *retain_owner_task(struct kd_mutex_node *node)
@@ -150,13 +282,22 @@ static void wait_request(struct kd_mutex_node *node)
 	}
 	for (;;) {
 		bool blocked = progress_wait(node);
+		unsigned int wait_state = TASK_UNINTERRUPTIBLE;
 
-		set_current_state(TASK_UNINTERRUPTIBLE);
+		if (node->wait_state == TASK_KILLABLE) {
+			request_cancel(node);
+			raw_spin_lock(&node->rw->guard);
+			if (node->admission == KD_MUTEX_ADMISSION_PENDING && !node->cancel_requested)
+				wait_state = TASK_KILLABLE;
+			raw_spin_unlock(&node->rw->guard);
+		}
+		set_current_state(wait_state);
 		if (!blocked && (smp_load_acquire(&node->turn) ||
 		    smp_load_acquire(&node->result_ready)))
 			break;
-		/* A release notification before sleep publication is seen here;
-		 * one afterward wakes the published state. No notification is lost.
+		/* Origin fatal publication either wakes this task or is sampled
+		 * before its next sleep. A sent request waits for its exact decision
+		 * uninterruptibly; a granted source cannot retroactively cancel.
 		 */
 		if (progress_ready(node))
 			continue;
@@ -192,17 +333,21 @@ static void mcs_physical_unlock(void *object)
 		}
 		if (!next)
 			next = wait_link(head);
-		if (!next->native_local || kd_rw_native_select_turn(next->native_local))
+		if (next->native_local ? kd_rw_native_select_turn(next->native_local) :
+		    select_managed_turn(next))
 			break;
 		/* A canceled native caller can already have returned. Its persistent
 		 * queue user survives until this exact unlink's final node access.
 		 */
-		{
+		if (next->native_local) {
 			struct kd_rw_native_record *record = next->native_local;
 
 			detach_proxy(batch, next);
 			smp_store_release(&next->retirable, 1);
 			kd_rw_native_queue_depart(record);
+		} else {
+			detach_proxy(batch, next);
+			cancel_queue_depart(next);
 		}
 	}
 	BUG_ON(head->atomic_spin != next->atomic_spin);
@@ -233,6 +378,7 @@ void kd_mutex_batch_init(struct kd_mutex_batch *batch)
 	batch->initialized = false;
 	batch->head_retired = false;
 	batch->cohort_active = false;
+	batch->candidate = NULL;
 	batch->rw = NULL;
 	batch->conversion = NULL;
 }
@@ -262,6 +408,14 @@ int kd_mutex_node_init(struct kd_mutex_node *node,
 	node->source_granted = false;
 	node->ready = ready;
 	node->atomic_spin = false;
+	node->wait_state = TASK_UNINTERRUPTIBLE;
+	node->admission = KD_MUTEX_ADMISSION_PENDING;
+	node->cancel_requested = false;
+	node->cancel_result_claimed = false;
+	node->turn_owned = false;
+	node->borrow_active = false;
+	node->cancel_waiter = NULL;
+	atomic_set(&node->cancel_users, 0);
 	node->service_policy = KD_MUTEX_SERVICE_DEFAULT;
 	node->synchronous_outer = false;
 	node->rw = NULL;
@@ -344,6 +498,11 @@ int kd_mutex_enqueue(struct kd_mutex *lock, struct kd_mutex_node *node)
 
 	if (node->native_local || node->requester != current || (node->atomic_spin && !spin_context()))
 		return -EPERM;
+	if (node->wait_state != TASK_UNINTERRUPTIBLE &&
+	    (node->wait_state != TASK_KILLABLE || node->atomic_spin || !node->rw ||
+	     node->requester != node->state->origin ||
+	     node->service_policy != KD_MUTEX_SERVICE_WRITER_COHORT))
+		return -EOPNOTSUPP;
 	if (!lock || ((node->atomic_spin ||
 	    node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT) && !node->possible_batch))
 		return -EINVAL;
@@ -445,6 +604,10 @@ static void bind_grant(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
 {
 	int result;
 
+	if (batch->rw) {
+		result = kd_rw_write_grant(batch->rw, batch, node);
+		BUG_ON(result);
+	}
 	node->batch = batch;
 	result = kd_mutex_release_bind(&batch->release_owner, &node->release,
 				       node->state, node->acquisition, node->grant_user);
@@ -454,8 +617,8 @@ static void bind_grant(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
 		     KD_MUTEX_UNLOCK_HELD, 0);
 }
 
-static void start_batch(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
-			unsigned int proxy_limit)
+static int start_batch(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
+			unsigned int proxy_limit, struct kd_mutex_node *candidate)
 {
 	int result;
 
@@ -468,6 +631,7 @@ static void start_batch(struct kd_mutex_node *node, struct kd_mutex_batch *batch
 	batch->head_retired = false;
 	batch->rw = node->rw;
 	batch->conversion = NULL;
+	batch->candidate = candidate;
 	/* Constructor writes remain private until writer_enter publishes the
 	 * physical family grant; diagnostics then see fully initialized control.
 	 */
@@ -478,12 +642,42 @@ static void start_batch(struct kd_mutex_node *node, struct kd_mutex_batch *batch
 	batch->release_owner.single_grant = node->atomic_spin &&
 		node->service_policy == KD_MUTEX_SERVICE_DEFAULT;
 	batch->release_owner.early_release = node->atomic_spin || node->synchronous_outer;
-	if (batch->rw)
-		kd_rw_writer_enter(batch->rw, batch, node);
+	if (batch->rw) {
+		result = kd_rw_writer_enter(batch->rw, batch, node);
+		if (result)
+			return result;
+	}
 	BUG_ON(READ_ONCE(batch->lock->owner));
 	WRITE_ONCE(batch->lock->owner, batch);
 	batch->initialized = true;
 	node->batch = batch;
+	return 0;
+}
+
+/* No physical writer was admitted. Pass this empty MCS turn normally without
+ * running rw_writer_exit or fabricating any source release obligation.
+ */
+static void finish_cancelled_turn(struct kd_mutex_node *node, struct kd_mutex_batch *batch)
+{
+	int result;
+
+	BUG_ON(batch->initialized || READ_ONCE(node->lock->owner));
+	batch->rw = NULL;
+	batch->candidate = NULL;
+	node->batch = batch;
+	WRITE_ONCE(node->lock->owner, batch);
+	batch->initialized = true;
+	result = kd_mutex_release_finish_physical(&batch->release_owner);
+	BUG_ON(result);
+	result = kd_mutex_release_owner_retire(&batch->release_owner);
+	BUG_ON(result);
+	batch->initialized = false;
+	batch->head = NULL;
+	batch->lock = NULL;
+	node->batch = NULL;
+	complete_cancel(node);
+	/* Exact queue actor's last visit, including its temporary owner control. */
+	cancel_queue_depart(node);
 }
 
 /*
@@ -508,7 +702,7 @@ static bool spin_serve_successor(struct kd_mutex_node *local)
 	WRITE_ONCE(local->next, NULL);
 	WRITE_ONCE(local->turn, 0);
 	batch = node->possible_batch;
-	start_batch(node, batch, 0);
+	BUG_ON(start_batch(node, batch, 0, NULL));
 	observe_node(KD_OBS_SELECT_PROXY, node, batch, local,
 		     KD_MUTEX_SELECTED_PROXY, 0);
 	bind_grant(batch, node);
@@ -570,7 +764,7 @@ static void wait_cohort_release(struct kd_mutex_node *node)
 			cpu_relax();
 			continue;
 		}
-		set_current_state(TASK_UNINTERRUPTIBLE);
+		set_current_state(cohort_sleep_state(node->batch));
 		phase = release_phase(node);
 		if ((phase == KD_MUTEX_UNLOCK_OWNER_HANDLED ||
 		     phase == KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED) && !blocked)
@@ -593,7 +787,11 @@ static bool serve_writer_cohort(struct kd_mutex_node *local, unsigned int limit)
 	struct kd_mutex_node *node = smp_load_acquire(&local->next);
 	struct kd_mutex_batch *batch;
 	unsigned int served = 0;
+	int result;
 
+	if (request_cancel(local) ||
+	    (local->wait_state == TASK_KILLABLE && READ_ONCE(local->cancel_requested)))
+		return false;
 	if (!node || node->service_policy != KD_MUTEX_SERVICE_WRITER_COHORT ||
 	    atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
 			   KD_MUTEX_SELECTED_PROXY) != KD_MUTEX_OFFERED)
@@ -601,10 +799,24 @@ static bool serve_writer_cohort(struct kd_mutex_node *local, unsigned int limit)
 	BUG_ON(!node->ready || !node->possible_batch || !node->ops ||
 	       !node->ops->execute_proxy || node->lock != local->lock ||
 	       node->atomic_spin != local->atomic_spin || node->rw != local->rw);
+	/* The acquired successor link ended its producer's final local access.
+	 * The driver actor now retains withdrawn C through current W and ACKs.
+	 */
+	raw_spin_lock(&local->rw->guard);
+	local->borrow_active = true;
+	local->turn_owned = false;
+	if (local->wait_state == TASK_KILLABLE)
+		atomic_or(KD_MUTEX_CANCEL_COHORT, &local->cancel_users);
+	raw_spin_unlock(&local->rw->guard);
 	WRITE_ONCE(local->next, NULL);
 	WRITE_ONCE(local->turn, 0);
 	batch = node->possible_batch;
-	start_batch(node, batch, limit);
+	result = start_batch(node, batch, limit, local);
+	if (result == -EINTR) {
+		finish_cancelled_turn(node, batch);
+		goto stopped;
+	}
+	BUG_ON(result);
 	batch->cohort_active = true;
 	for (;;) {
 		struct kd_thread_state *state = node->state;
@@ -632,7 +844,7 @@ static bool serve_writer_cohort(struct kd_mutex_node *local, unsigned int limit)
 		publish_condition(node, &node->result_ready);
 		wait_cohort_release(node);
 		served++;
-		if (served == limit || !cohort_open(batch))
+		if (request_cancel(local) || served == limit || !cohort_open(batch))
 			break;
 		node = smp_load_acquire(&batch->head->next);
 		if (!node || node->service_policy != KD_MUTEX_SERVICE_WRITER_COHORT ||
@@ -642,18 +854,34 @@ static bool serve_writer_cohort(struct kd_mutex_node *local, unsigned int limit)
 		detach_proxy(batch, node);
 	}
 	if (batch->release_owner.phase == KD_MUTEX_OWNER_OPEN) {
-		int result = kd_mutex_finish_batch(batch);
-
+		result = kd_mutex_finish_batch(batch);
 		BUG_ON(result);
 	}
+	batch->candidate = NULL;
 	/* No batch/head access follows the last backend actor's departure. */
 	batch->cohort_active = false;
+stopped:
 	while (progress_wait(local)) {
 		cpu_relax();
 		if (!local->atomic_spin)
 			cond_resched();
 	}
-	link_request(local->lock, local, KD_MUTEX_SELECTED_LOCAL);
+	/* Source cannot return until the current W's physical duty and driver
+	 * stopped. R-read-until-C-error while this W waits R is excluded usage.
+	 */
+	request_cancel(local);
+	raw_spin_lock(&local->rw->guard);
+	local->borrow_active = false;
+	raw_spin_unlock(&local->rw->guard);
+	if (READ_ONCE(local->admission) == KD_MUTEX_ADMISSION_CANCELLED) {
+		complete_cancel(local);
+		cancel_queue_depart(local);
+		cancel_actor_done(local, KD_MUTEX_CANCEL_COHORT);
+	} else {
+		if (local->wait_state == TASK_KILLABLE)
+			cancel_actor_done(local, KD_MUTEX_CANCEL_COHORT);
+		link_request(local->lock, local, KD_MUTEX_SELECTED_LOCAL);
+	}
 	return true;
 }
 
@@ -747,31 +975,33 @@ int kd_mutex_await(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 		return -EPERM;
 	node->wait_started = true;
 	wait_request(node);
-	if (smp_load_acquire(&node->result_ready)) {
-		BUG_ON(atomic_read(&node->selection) != KD_MUTEX_SELECTED_PROXY);
-		*outcome = node->outcome;
-		return 0;
-	}
+	if (smp_load_acquire(&node->result_ready))
+		goto returned;
 	selection = atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
 				  KD_MUTEX_SELECTED_LOCAL);
-	BUG_ON(selection != KD_MUTEX_OFFERED &&
-	       selection != KD_MUTEX_SELECTED_LOCAL);
+	BUG_ON(selection != KD_MUTEX_OFFERED && selection != KD_MUTEX_SELECTED_LOCAL);
 	if (node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT && proxy_limit &&
 	    serve_writer_cohort(node, proxy_limit))
 		wait_request(node);
 	else if (node->atomic_spin && node->service_policy == KD_MUTEX_SERVICE_DEFAULT &&
 		 proxy_limit && spin_serve_successor(node))
 		wait_request(node);
-	start_batch(node, batch, node->atomic_spin ? 0 : proxy_limit);
+	if (smp_load_acquire(&node->result_ready))
+		goto returned;
+	result = start_batch(node, batch, node->atomic_spin ? 0 : proxy_limit, NULL);
+	if (result == -EINTR) {
+		finish_cancelled_turn(node, batch);
+		*outcome = KD_MUTEX_ACQUIRE_CANCELLED;
+		return 0;
+	}
+	BUG_ON(result);
 	/* Actual MCS turn and physical-owner publication, not a local preclaim. */
-	observe_node(KD_OBS_SELECT_LOCAL, node, batch, node,
-		     KD_MUTEX_SELECTED_LOCAL, 0);
+	observe_node(KD_OBS_SELECT_LOCAL, node, batch, node, KD_MUTEX_SELECTED_LOCAL, 0);
 	if (node->ops && node->ops->selected_local) {
 		result = node->ops->selected_local(node, node->context);
 		BUG_ON(result);
 	}
 	if (!node->atomic_spin && node->service_policy == KD_MUTEX_SERVICE_DEFAULT) {
-		/* Its local source acquisition remains pending while it serves others. */
 		result = kd_mutex_combine(batch, proxy_limit, &served);
 		BUG_ON(result);
 	}
@@ -779,6 +1009,11 @@ int kd_mutex_await(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 	node->outcome = KD_MUTEX_LOCAL_GRANTED;
 	smp_store_release(&node->result_ready, 1);
 	*outcome = KD_MUTEX_LOCAL_GRANTED;
+	return 0;
+returned:
+	if (node->outcome != KD_MUTEX_ACQUIRE_CANCELLED)
+		BUG_ON(atomic_read(&node->selection) != KD_MUTEX_SELECTED_PROXY);
+	*outcome = node->outcome;
 	return 0;
 }
 
@@ -1003,6 +1238,12 @@ int kd_mutex_result_consumed(struct kd_mutex_node *node, const void *result_user
 		return -EAGAIN;
 	if (READ_ONCE(node->result_user) != result_user)
 		return -ESTALE;
+	if (READ_ONCE(node->admission) == KD_MUTEX_ADMISSION_CANCELLED) {
+		if (cmpxchg(&node->result_user, result_user, NULL) != result_user)
+			return -ESTALE;
+		cancel_actor_done(node, KD_MUTEX_CANCEL_RESULT);
+		return 0;
+	}
 	task = node->shared_read ? NULL : retain_owner_task(node);
 	if (cmpxchg(&node->result_user, result_user, NULL) != result_user) {
 		wake_retained_task(task);
@@ -1168,6 +1409,14 @@ int kd_mutex_native_node_init(struct kd_mutex_node *node,
 	node->source_granted = false;
 	node->ready = false;
 	node->atomic_spin = false;
+	node->wait_state = TASK_UNINTERRUPTIBLE;
+	node->admission = KD_MUTEX_ADMISSION_PENDING;
+	node->cancel_requested = false;
+	node->cancel_result_claimed = false;
+	node->turn_owned = false;
+	node->borrow_active = false;
+	node->cancel_waiter = NULL;
+	atomic_set(&node->cancel_users, 0);
 	node->service_policy = KD_MUTEX_SERVICE_WRITER_COHORT;
 	node->synchronous_outer = true;
 	node->rw = NULL;

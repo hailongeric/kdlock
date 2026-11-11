@@ -36,6 +36,13 @@ struct kd_episode_config {
 		void *context, unsigned long target);
 	void *classify_context;
 	unsigned int proxy_limit;
+	/* Optional additional executor requirement, checked at every generated
+	 * entry/resume. Pure task/header inspection only: no source rights or S_W
+	 * mutation. False takes exact native handback with its current grant.
+	 * Callback/context backing survives every source/native actor and return.
+	 */
+	bool (*execution_ready)(void *context, struct task_struct *origin);
+	void *execution_context;
 	void (*report)(void *context, const struct kd_jit_image *image,
 		       unsigned long source_ip, int entry_result,
 		       const struct kd_jit_io *io);
@@ -78,6 +85,8 @@ struct kd_episode_frame {
 	struct kd_request_user notifier_user;
 	struct kd_request_user deferred_user;
 	struct kd_request_user auxiliary_user;
+	struct kd_request_user cancel_queue_user;
+	struct kd_task_cancel_actor cancel_actor;
 	/* grant/source/image flags belong to the current source actor. Parent
 	 * return flags are set before child offer and cleared after child result
 	 * acquire. Exported metadata cleanup finishes before each MCS result store;
@@ -92,6 +101,7 @@ struct kd_episode_frame {
 	bool notifier_held;
 	bool deferred_held;
 	bool auxiliary_held;
+	bool cancel_queue_held;
 	bool source_image;
 	bool return_image;
 	bool execution_image;

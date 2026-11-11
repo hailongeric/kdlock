@@ -50,11 +50,16 @@ void kd_linux_rwsem_up_write_entry_asm(struct kd_rwsem *lock, unsigned long sour
 		unsigned long continuation_ip, unsigned long source_bp);
 void kd_linux_rwsem_downgrade_write_entry_asm(struct kd_rwsem *lock, unsigned long source_sp,
 		unsigned long continuation_ip, unsigned long source_bp);
+int kd_linux_rwsem_down_write_killable_entry_asm(struct kd_rwsem *lock,
+		unsigned long source_sp, unsigned long continuation_ip,
+		unsigned long source_bp);
 struct kd_mutex_entry *kd_linux_rwsem_prepare_down_read_current(struct kd_rwsem *lock);
 struct kd_mutex_entry *kd_linux_rwsem_prepare_up_read_current(struct kd_rwsem *lock);
 struct kd_mutex_entry *kd_linux_rwsem_prepare_down_write_current(struct kd_rwsem *lock);
 struct kd_mutex_entry *kd_linux_rwsem_prepare_up_write_current(struct kd_rwsem *lock);
 struct kd_mutex_entry *kd_linux_rwsem_prepare_downgrade_write_current(struct kd_rwsem *lock);
+struct kd_source_prepare_result kd_linux_rwsem_prepare_down_write_killable_current(
+		struct kd_rwsem *lock);
 
 /* Read-only borrowed-source eligibility for the five generic Linux aliases.
  * Nonaliases leave private routes unchanged. The caller retains source/root and
@@ -72,6 +77,8 @@ struct kd_mutex_entry *kd_rwsem_prepare_source_current(struct kd_rwsem *lock,
 struct kd_mutex_entry *kd_rwsem_prepare_down_read_current(struct kd_rwsem *lock);
 struct kd_mutex_entry *kd_rwsem_prepare_up_read_current(struct kd_rwsem *lock);
 struct kd_mutex_entry *kd_rwsem_prepare_down_write_current(struct kd_rwsem *lock);
+struct kd_source_prepare_result kd_rwsem_prepare_down_write_killable_current(
+		struct kd_rwsem *lock);
 struct kd_mutex_entry *kd_rwsem_prepare_up_write_current(struct kd_rwsem *lock);
 struct kd_mutex_entry *kd_rwsem_prepare_downgrade_write_current(struct kd_rwsem *lock);
 struct kd_mutex_entry *kd_rwlock_prepare_read_lock_current(struct kd_rwlock *lock);

@@ -1,7 +1,7 @@
 # Generic Linux rwsem binding
 
 This source lane extends the source-rebuilt Linux 7.0 x86_64, non-PREEMPT_RT
-primitive. It now has [focused compilation and baseline checks](../../tests/evidence/kernel6-focused-20261111/README.md)
+primitive. Its earlier kernel6 source has [focused compilation and baseline checks](../../tests/evidence/kernel6-focused-20261111/README.md)
 and [full build/linked-image identity](../../tests/evidence/kernel6-build-20261111/README.md).
 The exact [kernel6 boot](../../tests/evidence/kernel6-boot-20261111/README.md) and
 [native API and real syscall checks](../../tests/evidence/kernel6-native-api-mm-20261111/README.md)
@@ -81,14 +81,16 @@ learning or inferred to be typed entries from names or DI shape. This new
 boundary-routing source has independent static review but no build or runtime
 receipt; the kernel6 evidence below covers its earlier source identity.
 
-Signalable read/write and try APIs initially use their normal C result ABI and
-execute locally on the same KD gate. Successful signalable acquisition returns
+Callable signalable read/write and try APIs use their normal C result ABI and
+execute locally on the same KD gate. Legacy bindings also keep the killable
+writer macro on this route. Successful signalable acquisition returns
 0; interrupted acquisition returns `-EINTR` without a grant. Actual readiness
 wins before pending signal cancellation. Try returns 1 or 0 and publishes no
 queue membership on failure. An interrupted queued writer can return before
 its predecessor releases; its persistent queue user remains until exact turn
 selection or predecessor removal finishes. No source packet is allocated for
-these calls and no unused typed result-return extension is added.
+these callable operations. The explicit source opt-in described below has a
+separate result-bearing capture contract.
 
 A shared active-reader ledger orders actual managed and native credits. Owned
 `up_read` chooses the most recent exact credit for that original task across
@@ -138,16 +140,40 @@ run, broader context/progress obligations and the full acceptance matrix.
 
 ## Delegated syscall integration in progress
 
-Actual delegated/JIT mmap/munmap remains unimplemented and unvalidated. The
-ordinary void-entry routing above removes an early eligibility-helper frontier;
-it does not enable the syscall roots' integer `down_write_killable` entry.
-The next package needs a declared integer capture/return ABI, managed
-cancel/grant arbitration, managed parent/child enrollment and complete immutable
-source/dependency/native leases. The current MM provider remains
-`source_calls=false`; killable operations execute on the original task through
-the same KD gate with their existing native result and signal semantics. This
-is an interim route, not the final delegation design. Query/assert frontiers,
-executor context and source lifetime remain separate reached constraints.
+Actual delegated/JIT mmap/munmap remains unvalidated. Source changes after the
+kernel6 receipts add integer capture, managed cancellation and queue-only
+storage retirement. These changes have independent source review only: no new
+build, boot, mechanism result or real-MM JIT result is recorded here.
+
+`kd_linux_rwsem_bind` always sets `killable_source_calls=false`, preserving the
+interim original-task native route. The new cold
+`kd_linux_rwsem_bind_killable_source` explicitly selects both ordinary source
+macros and the integer `down_write_killable` alias. It requires complete managed
+task, request, auxiliary, source and native resources before publication. The
+private integer entry uses the same four-input clobber contract; EAX is the
+explicit result. Native preparation returns a two-word entry/result descriptor.
+Managed operation kind 15 commits EAX and DONE only after exact grant or cancel
+arbitration. Earlier operation and observation identifiers remain stable.
+
+Initial managed killable capture is original-task/root-only. A proxy reaching
+a nested killable entry hands the untouched operation to W before preparing it;
+logical-origin signal notification for a separate foreign nested waiter is not
+implemented. W then reaches the same alias and KD gate. This scope does not
+establish arbitrary nested killable delegation.
+
+An optional pure executor predicate is checked before each generated fragment.
+A refusal uses existing exact native handback at the current cursor and grant.
+The MM profile requires non-NULL matching current/origin mm identities. This is
+an additional restriction, not proof of hardware-current, per-CPU, scheduling,
+RCU, uaccess, fault-fixup or auxiliary-stack context equivalence. Query/assert
+helpers remain SPECIAL frontiers; neither entering JIT nor publishing an image
+proves that a meaningful MM body ran through generated code.
+
+The optional metadata-only ABI2 MM profile cold-creates an immutable source
+provider, runtime and original owner state before binding. Its module opt-in
+defaults to false. ABI1 retains its existing layouts and native-only behavior.
+Actual activity must still come from userspace mmap/munmap syscalls. Provider,
+client and host composition remain source work until fresh exact-image checks.
 
 The selected cancellation policy distinguishes an ungranted requester C from
 an already-granted W. Selection or an MCS turn is not a grant. Actual grant
@@ -166,11 +192,18 @@ for that excluded pattern. This usage assumption is not general progress proof
 and waives no grant, result, handback, task/object/storage or reclamation duty.
 Other dependency and context limits remain explicit.
 
-The selected storage direction allows task exit after `-EINTR` while exact
-remaining queue users retain the existing core/register packet, request/control
-backing and required task/stack/source/image references. This is not permission
-to exit with an executable continuation or an outstanding physical owner duty.
-Current managed exit still requires full drain: a new metadata-only detach and
-finalization authority, requester-only cleanup before exit and callback-return
-code retention need implementation and proof. No second packet or generic RCU
-delay substitutes for those last-user obligations.
+The queue-only deferred-exit source lane permits task exit after `-EINTR` when
+all executable continuation, physical owner, grant, image, auxiliary and native
+endpoint duties have ended. Exact canceled queue users retain the existing
+core/register packet, frame arrays, auxiliary allocation, original task/stack
+and native lease until final queue access. A preheld per-frame actor bridges
+the final pool API return; its last callback queues a built-in finalizer under
+the storage guard. The worker performs metadata-only retirement, then drops
+backing and calls the cached native release while holding its code owner.
+Neither a task reference, a counter nor an RCU delay substitutes for last use.
+
+Other residue still follows current-task exact drain. In particular, historical
+physical-owner records must be reaped before this queue-only detach can qualify;
+broader asynchronous owner-record retirement is not implemented. A task cannot
+exit with an executable source continuation or an outstanding physical duty.
+These ordering claims are source-reviewed invariants, not runtime evidence.

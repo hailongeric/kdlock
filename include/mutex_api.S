@@ -11,7 +11,7 @@
 	.intel_syntax noprefix
 	.text
 
-	.macro KD_MUTEX_SOURCE_ENTRY symbol, prepare
+	.macro KD_MUTEX_SOURCE_ENTRY symbol, prepare, returns_int=0
 	.p2align 4
 	.globl \symbol
 	.type \symbol, @function
@@ -32,6 +32,10 @@
 	call \prepare
 	mov rsp, QWORD PTR[rsp]
 	mov r8, rax
+	.if \returns_int
+	/* Cache the second return word before restoring the source DX input. */
+	mov r9, rdx
+	.endif
 	pop rcx
 	pop rdx
 	pop rsi
@@ -46,6 +50,9 @@
 	/* Local queue/owner work already finished on the native source stack.
 	 * This is its actual hardware CALL return, not a packet import.
 	 */
+	.if \returns_int
+	mov eax, r9d
+	.endif
 	ret
 	.size \symbol, .-\symbol
 	.endm
@@ -57,11 +64,13 @@
 	KD_MUTEX_SOURCE_ENTRY kd_rwsem_down_read_entry_asm, kd_rwsem_prepare_down_read_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwsem_up_read_entry_asm, kd_rwsem_prepare_up_read_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwsem_down_write_entry_asm, kd_rwsem_prepare_down_write_current
+	KD_MUTEX_SOURCE_ENTRY kd_rwsem_down_write_killable_entry_asm, kd_rwsem_prepare_down_write_killable_current, 1
 	KD_MUTEX_SOURCE_ENTRY kd_rwsem_up_write_entry_asm, kd_rwsem_prepare_up_write_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwsem_downgrade_write_entry_asm, kd_rwsem_prepare_downgrade_write_current
 	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_down_read_entry_asm, kd_linux_rwsem_prepare_down_read_current
 	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_up_read_entry_asm, kd_linux_rwsem_prepare_up_read_current
 	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_down_write_entry_asm, kd_linux_rwsem_prepare_down_write_current
+	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_down_write_killable_entry_asm, kd_linux_rwsem_prepare_down_write_killable_current, 1
 	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_up_write_entry_asm, kd_linux_rwsem_prepare_up_write_current
 	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_downgrade_write_entry_asm, kd_linux_rwsem_prepare_downgrade_write_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwlock_read_lock_entry_asm, kd_rwlock_prepare_read_lock_current

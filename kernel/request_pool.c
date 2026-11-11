@@ -29,9 +29,9 @@ static bool image_idle(const struct kd_jit_image_use *use)
 /* Only after the exact users ended; their pool-guard releases order these
  * otherwise component-owned idle fields without nesting their component guards.
  */
-static bool controls_idle(const struct kd_request_slot *slot)
+static bool components_idle(const struct kd_request_slot *slot)
 {
-	return list_empty(&slot->users) && !slot->parent &&
+	return !slot->parent &&
 	       user_idle(&slot->parent_user) &&
 	       image_idle(&slot->execution_use) && image_idle(&slot->exit_use) &&
 	       image_idle(&slot->return_use) && image_idle(&slot->source_use) &&
@@ -39,6 +39,11 @@ static bool controls_idle(const struct kd_request_slot *slot)
 		slot->entry.phase == KD_MUTEX_ENTRY_COMPLETE) &&
 	       !slot->owner_batch.progress && !slot->owner_batch.batch &&
 	       list_empty(&slot->owner_batch.link);
+}
+
+static bool controls_idle(const struct kd_request_slot *slot)
+{
+	return list_empty(&slot->users) && components_idle(slot);
 }
 
 static bool is_slot_binding(const struct kd_request_slot *slot,
@@ -597,6 +602,118 @@ int kd_request_pool_detach(struct kd_request_pool *pool,
 		list_for_each_entry_safe(slot, next, &pool->live_slots, pool_link)
 			free_locked(slot);
 	}
+	raw_spin_unlock_irqrestore(&pool->guard, flags);
+	return result;
+}
+
+/* storage.guard keeps these actors and their exact pool users linked across
+ * this check. No pool API takes storage.guard in the opposite order.
+ */
+static struct kd_task_cancel_actor *cancel_actor_for(struct list_head *actors,
+		struct kd_request_slot *slot)
+{
+	struct kd_task_cancel_actor *actor;
+
+	list_for_each_entry(actor, actors, link)
+		if (actor->slot == slot)
+			return actor;
+	return NULL;
+}
+
+static bool cancelled_queue_only(struct kd_request_slot *slot,
+		struct kd_task_cancel_actor *actor)
+{
+	struct kd_mutex_node *node = &slot->call.node;
+	struct kd_request_user *user = actor->queue_user;
+	int remaining;
+
+	if (!actor->linked || !actor->storage || actor->claim != slot->claim ||
+	    !user || !actor->identity || slot->phase != KD_REQUEST_SLOT_LIVE ||
+	    !user->linked || user->slot != slot || user->identity != actor->identity ||
+	    user->kind == KD_REQUEST_USER_UNUSED || user->kind == KD_REQUEST_USER_PARENT ||
+	    slot->users.next != &user->link || slot->users.prev != &user->link ||
+	    !components_idle(slot))
+		return false;
+	/* The requester consumed its result and all cohort/physical work before
+	 * EINTR. Only the real canceled queue actor can still access this node.
+	 * A zero bitmask is possible while its final callback waits on storage.
+	 */
+	remaining = atomic_read(&node->cancel_users);
+	if (remaining != KD_MUTEX_CANCEL_QUEUE &&
+	    (remaining || !smp_load_acquire(&node->retirable)))
+		return false;
+	return READ_ONCE(node->admission) == KD_MUTEX_ADMISSION_CANCELLED &&
+	       READ_ONCE(node->outcome) == KD_MUTEX_ACQUIRE_CANCELLED &&
+	       smp_load_acquire(&node->result_ready) && !READ_ONCE(node->result_user) &&
+	       !READ_ONCE(node->source_granted) && !READ_ONCE(node->release.owner) &&
+	       !READ_ONCE(node->borrow_active) && !READ_ONCE(node->cancel_waiter) &&
+	       !node->shared_read && !slot->call.grant.linked &&
+	       list_empty(&slot->call.grant.state_link) &&
+	       !READ_ONCE(slot->call.possible_batch.initialized);
+}
+
+int kd_request_pool_revoke_cancelled(struct kd_request_pool *pool,
+		struct kd_execution_binding *exact_native, struct list_head *actors)
+{
+	struct kd_request_slot *slot;
+	struct kd_task_cancel_actor *actor;
+	unsigned long flags;
+	int result = native_owner(pool, exact_native);
+
+	if (result)
+		return result;
+	if (!actors || list_empty(actors))
+		return -EBUSY;
+	raw_spin_lock_irqsave(&pool->guard, flags);
+	/* Every listed actor must name a live reservation in this exact pool. */
+	list_for_each_entry(actor, actors, link) {
+		if (!actor->slot || actor->slot->pool != pool ||
+		    !cancelled_queue_only(actor->slot, actor)) {
+			result = -EBUSY;
+			goto out;
+		}
+	}
+	list_for_each_entry(slot, &pool->live_slots, pool_link) {
+		actor = cancel_actor_for(actors, slot);
+		if (actor) {
+			if (!cancelled_queue_only(slot, actor)) {
+				result = -EBUSY;
+				goto out;
+			}
+		} else {
+			result = reusable_locked(slot, exact_native);
+			if (result)
+				goto out;
+		}
+	}
+	if (cmpxchg_release(&pool->state->binding, exact_native, NULL) != exact_native)
+		result = -ESTALE;
+out:
+	raw_spin_unlock_irqrestore(&pool->guard, flags);
+	return result;
+}
+
+int kd_request_pool_retire_detached(struct kd_request_pool *pool)
+{
+	struct kd_request_slot *slot, *next;
+	unsigned long flags;
+	int result = 0;
+
+	if (!pool)
+		return -EINVAL;
+	raw_spin_lock_irqsave(&pool->guard, flags);
+	if (kd_state_current_binding(pool->state)) {
+		result = -EBUSY;
+		goto out;
+	}
+	list_for_each_entry(slot, &pool->live_slots, pool_link) {
+		result = reusable_locked(slot, NULL);
+		if (result)
+			goto out;
+	}
+	list_for_each_entry_safe(slot, next, &pool->live_slots, pool_link)
+		free_locked(slot);
+out:
 	raw_spin_unlock_irqrestore(&pool->guard, flags);
 	return result;
 }

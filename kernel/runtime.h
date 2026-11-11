@@ -52,6 +52,11 @@ struct kd_jit_runtime_config {
 	bool atomic_spin;
 	/* Default MUTEX plus atomic_spin keeps the existing spin configuration. */
 	enum kd_lock_family family;
+	/* Optional extra execution-domain check. It does not establish general
+	 * kernel context equivalence or replace source/context contracts.
+	 */
+	bool (*execution_ready)(void *context, struct task_struct *origin);
+	void *execution_context;
 };
 
 struct kd_jit_runtime;

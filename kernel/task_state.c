@@ -216,3 +216,38 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 	put_task_struct(task);
 	return 0;
 }
+
+int kd_task_root_revoke_cancelled(struct kd_task_root_context *context,
+		struct kd_execution_binding *native_binding, struct list_head *actors)
+{
+	struct kd_thread_state *state;
+	int result;
+
+	if (!context || !native_binding || !actors)
+		return -EINVAL;
+	if (kd_task_root_context_current() != context || !context->attached ||
+	    context->task != current)
+		return -EPERM;
+	if (!context->source_closing || context->aux_entry ||
+	    context->native_spin_depth || !list_empty(&context->owners.batches) ||
+	    !list_empty(&context->native_grants))
+		return -EBUSY;
+	state = &context->core;
+	if (state->origin != current || !kd_state_is_current(state, native_binding) ||
+	    native_binding->kind != KD_EXECUTION_NATIVE)
+		return -EPERM;
+	if (!state->requests || state->exit_image || state->exit_use || state->exit_holder ||
+	    !list_empty(&state->grants) ||
+	    (state->operation.phase != KD_OPERATION_IDLE &&
+	     state->operation.phase != KD_OPERATION_RESUMABLE))
+		return -EBUSY;
+	result = kd_request_pool_revoke_cancelled(state->requests, native_binding, actors);
+	if (result)
+		return result;
+	/* Every fallible check precedes this exact task-anchor revocation. Keep
+	 * attach's task reference and all backing for the metadata-only worker.
+	 */
+	smp_store_release(&current->kd_root_context, NULL);
+	context->attached = false;
+	return 0;
+}

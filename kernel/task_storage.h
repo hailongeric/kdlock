@@ -9,6 +9,10 @@ struct kd_execution_binding;
 struct kd_task_root_context;
 struct kd_task_storage;
 struct task_struct;
+struct module;
+struct kd_task_cancel_actor;
+struct kd_request_slot;
+struct kd_request_user;
 
 typedef void (*kd_task_native_release_fn)(void *lease);
 
@@ -40,6 +44,12 @@ struct kd_task_storage_args {
 	const struct kd_episode_config *config;
 	void *native_lease;
 	kd_task_native_release_fn native_release;
+	/* Cold opt-in only. NULL code owner explicitly denotes built-in code.
+	 * The enclosing native lease retains this descriptor until deferred exit
+	 * acquires its independent module reference through native_release return.
+	 */
+	bool deferred_cancel_exit;
+	struct module *retire_code_owner;
 };
 
 /* Current original task, ordinary sleepable TASK_RUNNING context, before first
@@ -93,5 +103,32 @@ struct kd_task_root_context *kd_task_storage_root(struct kd_task_storage *storag
  */
 int kd_task_storage_stop_current(struct kd_task_storage *storage,
 		struct kd_execution_binding *expected_native, bool *pending);
+
+void kd_task_cancel_actor_init(struct kd_task_cancel_actor *actor);
+/* Private frame before queue publication; queue_user is already held on the
+ * same exact slot/claim and survives all queue callbacks. Legacy caller-owned
+ * roots with no task storage leave this actor unlinked and keep full drain.
+ */
+int kd_task_cancel_actor_hold(struct kd_task_root_context *root,
+		struct kd_task_cancel_actor *actor, struct kd_request_slot *slot,
+		const void *claim, struct kd_request_user *queue_user,
+		const void *identity);
+/* Final queue callback after node.retirable acquire, or admission's ordinary
+ * queue-hold handoff while other exact actors retain the frame. Unlink the
+ * allocation actor while queue_user is still linked, then finish that user
+ * under storage -> pool guards. Success ends every actor/user/frame access.
+ * No storage lock is acquired from inside a pool API or observation callback.
+ * Callback/caller return code remains independently retained through return;
+ * the common episode completion and allocation worker are built-in code.
+ */
+int kd_task_cancel_actor_finish(struct kd_task_cancel_actor *actor,
+		struct kd_request_user *queue_user, const void *identity);
+/* Close source admission first. Success revokes current's exact root/endpoint,
+ * retaining the SAME allocation, original stack and native lease until the
+ * final canceled queue callback. No worker performs source/current-bound work.
+ * Ineligible storage remains attached for the existing exact drain path.
+ */
+int kd_task_storage_defer_cancelled_current(struct kd_task_storage *storage,
+		struct kd_execution_binding *expected_native);
 
 #endif

@@ -12,6 +12,9 @@ void kd_rwsem_up_read_entry_asm(struct kd_rwsem *lock, unsigned long source_sp,
 		unsigned long continuation_ip, unsigned long source_bp);
 void kd_rwsem_down_write_entry_asm(struct kd_rwsem *lock, unsigned long source_sp,
 		unsigned long continuation_ip, unsigned long source_bp);
+int kd_rwsem_down_write_killable_entry_asm(struct kd_rwsem *lock,
+		unsigned long source_sp, unsigned long continuation_ip,
+		unsigned long source_bp);
 void kd_rwsem_up_write_entry_asm(struct kd_rwsem *lock, unsigned long source_sp,
 		unsigned long continuation_ip, unsigned long source_bp);
 void kd_rwsem_downgrade_write_entry_asm(struct kd_rwsem *lock, unsigned long source_sp,
@@ -31,6 +34,11 @@ void kd_rwsem_downgrade_write_entry_asm(struct kd_rwsem *lock, unsigned long sou
 	KD_SOURCE_CALL((object), struct kd_rwsem, kd_rwsem_up_read_entry_asm)
 #define kd_rwsem_down_write(object) \
 	KD_SOURCE_CALL((object), struct kd_rwsem, kd_rwsem_down_write_entry_asm)
+/* Result-bearing source contract only; implementation and validation of the
+ * selected killable lane remain separate from this entry declaration.
+ */
+#define kd_rwsem_down_write_killable(object) \
+	KD_SOURCE_CALL_INT((object), struct kd_rwsem, kd_rwsem_down_write_killable_entry_asm)
 #define kd_rwsem_up_write(object) \
 	KD_SOURCE_CALL((object), struct kd_rwsem, kd_rwsem_up_write_entry_asm)
 #define kd_rwsem_downgrade_write(object) \

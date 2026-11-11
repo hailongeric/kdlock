@@ -9,6 +9,15 @@
 struct kd_mutex;
 struct kd_mutex_entry;
 
+/* Native preparation returns two integer words in RAX/RDX. The result is used
+ * only when entry is NULL; an auxiliary entry publishes its source result later.
+ * This small descriptor is not a source register packet.
+ */
+struct kd_source_prepare_result {
+	struct kd_mutex_entry *entry;
+	unsigned long result;
+};
+
 /* Distinct operation targets. Native admission runs before lending source. */
 void kd_mutex_lock_entry_asm(struct kd_mutex *lock,
 		unsigned long source_sp, unsigned long continuation_ip,
@@ -50,6 +59,29 @@ void kd_mutex_unlock_entry_asm(struct kd_mutex *lock,
 			     : "rax", "rbx", "r8", "r9", "r10", "r11", \
 			       "r12", "r13", "r14", "r15", "cc", "memory"); \
 		(void)0; \
+	})
+
+/* Integer result variant of the same four-input clobber contract. The exact
+ * operation driver supplies EAX after its grant/cancel disposition. This macro
+ * adds no callable, signal-delivery, context or enrollment policy.
+ */
+#define KD_SOURCE_CALL_INT(object, object_type, entry_symbol) \
+	({ \
+		__auto_type kd_mutex_source_object = (object); \
+		object_type *kd_mutex_arg = kd_mutex_source_object; \
+		unsigned long kd_mutex_sp, kd_mutex_ip, kd_mutex_bp; \
+		int kd_mutex_result; \
+		asm volatile("movq %%rsp, %%rsi\n\t" \
+			     "leaq 1f(%%rip), %%rdx\n\t" \
+			     "movq %%rbp, %%rcx\n\t" \
+			     "call " #entry_symbol "\n\t1:\n\t" \
+			     : "+D"(kd_mutex_arg), "=S"(kd_mutex_sp), \
+			       "=d"(kd_mutex_ip), "=c"(kd_mutex_bp), \
+			       "=a"(kd_mutex_result), ASM_CALL_CONSTRAINT \
+			     : \
+			     : "rbx", "r8", "r9", "r10", "r11", \
+			       "r12", "r13", "r14", "r15", "cc", "memory"); \
+		kd_mutex_result; \
 	})
 
 #define KD_MUTEX_SOURCE_CALL(object, entry_symbol) \

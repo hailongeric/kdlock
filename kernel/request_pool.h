@@ -205,4 +205,18 @@ int kd_request_pool_can_detach(struct kd_request_pool *pool,
 int kd_request_pool_detach(struct kd_request_pool *pool,
 			   struct kd_execution_binding *exact_native);
 
+/* Caller holds its storage guard and closed all source/current-only actors.
+ * Finished slots retain their usual full checks. Every other occupied slot
+ * must have ONLY its exact listed canceled queue membership, no grant/result,
+ * image, parent, owner or auxiliary work. CAS revokes the native binding only;
+ * arrays remain intact until all queue callbacks have returned their pool APIs.
+ */
+int kd_request_pool_revoke_cancelled(struct kd_request_pool *pool,
+		struct kd_execution_binding *exact_native, struct list_head *actors);
+/* Metadata-only worker finalization after binding revocation and all allocation
+ * actors ended. Recheck retirable acquire and ALL component/user idle proofs
+ * for every slot before any free. No current-task or episode callback is used.
+ */
+int kd_request_pool_retire_detached(struct kd_request_pool *pool);
+
 #endif

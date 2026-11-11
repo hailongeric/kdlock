@@ -329,6 +329,8 @@ int kd_jit_runtime_episode_config(struct kd_jit_runtime *runtime, struct kd_epis
 		.resolve = resolve_operation, .resolve_context = NULL,
 		.classify_target = classify_target, .classify_context = runtime,
 		.proxy_limit = runtime->config.proxy_limit, .report = report_exit, .report_context = runtime,
+		.execution_ready = runtime->config.execution_ready,
+		.execution_context = runtime->config.execution_context,
 	};
 	return 0;
 }
@@ -453,6 +455,12 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 		runtime, kd_jit_runtime_native_begin, kd_jit_runtime_native_release);
 	if (result)
 		goto drop;
+	/* Cold opt-in: the built-in finalizer retains this code owner through
+	 * its cached native-release callback return. Existing custom lifecycle
+	 * contexts retain their constructor's full-drain default.
+	 */
+	runtime->lifecycle.deferred_cancel_exit = true;
+	runtime->lifecycle.retire_code_owner = config->owner;
 	result = kd_jit_channel_register(&runtime->channel, config->channel_name, config->owner,
 		&runtime->session, config->frame_capacity);
 	if (result)
@@ -565,6 +573,8 @@ static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input
 		{ (unsigned long)kd_linux_rwsem_down_write_entry_asm, KD_JIT_RUNTIME_LOCK },
 		{ (unsigned long)kd_linux_rwsem_up_write_entry_asm, KD_JIT_RUNTIME_UNLOCK },
 		{ (unsigned long)kd_linux_rwsem_downgrade_write_entry_asm, KD_JIT_RUNTIME_MODE_CHANGE },
+		{ (unsigned long)kd_rwsem_down_write_killable_entry_asm, KD_JIT_RUNTIME_LOCK },
+		{ (unsigned long)kd_linux_rwsem_down_write_killable_entry_asm, KD_JIT_RUNTIME_LOCK },
 		{ (unsigned long)kd_rwlock_read_lock_entry_asm, KD_JIT_RUNTIME_LOCK },
 		{ (unsigned long)kd_rwlock_read_unlock_entry_asm, KD_JIT_RUNTIME_UNLOCK },
 		{ (unsigned long)kd_rwlock_write_lock_entry_asm, KD_JIT_RUNTIME_LOCK },

@@ -13,6 +13,22 @@ struct kd_request_slot;
 struct kd_episode_resources;
 struct kd_task_storage;
 struct kd_task_lifecycle_context;
+struct kd_request_user;
+
+/* Preallocated per-frame allocation actor, separate from the pool membership.
+ * storage.guard owns this record while linked. The exact queue user retains
+ * the frame through actor_finish's last pool API; a task/node reference alone
+ * does not retain the containing allocation. No source packet is stored here.
+ */
+struct kd_task_cancel_actor {
+	struct list_head link;
+	struct kd_task_storage *storage;
+	struct kd_request_slot *slot;
+	const void *claim;
+	struct kd_request_user *queue_user;
+	const void *identity;
+	bool linked;
+};
 
 /*
  * One stable task-owned root/auxiliary header, never another borrowed packet.
@@ -123,5 +139,14 @@ void kd_task_root_reset_unpublished(struct task_struct *task);
  */
 int kd_task_root_detach(struct kd_task_root_context *context,
 		       struct kd_execution_binding *native_binding);
+
+/* Current original native task only, with every executable/source/native and
+ * physical duty ended. Under the caller's storage guard, permit ONLY the exact
+ * canceled, ungranted queue actors on actors to remain. Revoke the endpoint and
+ * task anchor once, retaining the root/task/pool backing for metadata retirement.
+ * This does not drop the attach task reference or clear the canonical packet.
+ */
+int kd_task_root_revoke_cancelled(struct kd_task_root_context *context,
+		struct kd_execution_binding *native_binding, struct list_head *actors);
 
 #endif

@@ -453,11 +453,52 @@ static int finish_acquisition(struct kd_jit_mutex_call *call,
 	result = kd_state_link_grant(state, binding, &call->grant);
 	if (result)
 		return result;
-	result = kd_operation_complete(state, binding, &call->acquisition_identity);
+	if (call->driver->granted) {
+		result = call->driver->granted(call, call->driver->context);
+		if (result)
+			return result;
+	}
+	result = kd_operation_returns_int(state->operation.kind) ?
+		kd_operation_complete_int_result(state, binding,
+			&call->acquisition_identity, 0) :
+		kd_operation_complete(state, binding, &call->acquisition_identity);
 	if (result)
 		return result;
 	return kd_operation_return(state, binding, &call->acquisition_identity,
 				   call->driver->stack);
+}
+
+/* A failed operation has no grant and never runs a critical-section fragment.
+ * Only the original requester accepts its stopped offer and publishes the
+ * canonical integer result. Late queue actors cannot alter this packet.
+ */
+static int finish_cancelled_acquisition(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding **binding)
+{
+	struct kd_thread_state *state = call->node.state;
+	int result;
+
+	if (current != state->origin || call->node.requester != current ||
+	    call->node.admission != KD_MUTEX_ADMISSION_CANCELLED ||
+	    call->node.source_granted || call->grant.linked || call->node.release.owner)
+		return -ESTALE;
+	result = accept_selected(&call->node, call);
+	if (result)
+		return result;
+	*binding = &call->execution;
+	/* No source-operation/packet read precedes acceptance of this exact
+	 * stopped offer, even though the original task is the result consumer.
+	 */
+	if (!kd_operation_is_killable(state->operation.kind) ||
+	    state->operation.identity != &call->acquisition_identity ||
+	    state->operation.phase != KD_OPERATION_ENTERED)
+		return -ESTALE;
+	result = kd_operation_complete_int_result(state, *binding,
+		&call->acquisition_identity, -EINTR);
+	if (result)
+		return result;
+	return kd_operation_return(state, *binding, &call->acquisition_identity,
+		call->driver->stack);
 }
 
 int kd_jit_mutex_drive(struct kd_jit_mutex_call *call,
@@ -525,7 +566,24 @@ static enum kd_mutex_outcome execute_selected(struct kd_mutex_node *node,
 	return outcome;
 }
 
+static void cancel_departed(struct kd_mutex_node *node, void *context)
+{
+	struct kd_jit_mutex_call *call = context;
+	void (*finished)(struct kd_jit_mutex_call *, void *);
+	void *driver_context;
+
+	BUG_ON(node != &call->node);
+	finished = call->driver->cancel_departed;
+	driver_context = call->driver->context;
+	/* The driver's independent queue actor retains call through this visit.
+	 * Its final handoff may reclaim storage; no call access follows it.
+	 */
+	if (finished)
+		finished(call, driver_context);
+}
+
 static const struct kd_mutex_ops source_ops = {
+	.cancel_departed = cancel_departed,
 	.selected_local = accept_local,
 	.execute_proxy = execute_selected,
 	.wait_progress = progress_wait,
@@ -739,6 +797,14 @@ int kd_jit_acquire(struct kd_jit_mutex_call *call, void *object,
 	    kd_operation_family(state->operation.kind) != call->grant.family ||
 	    kd_operation_is_read(state->operation.kind) != (call->grant.mode == KD_GRANT_MODE_READ))
 		return -EINVAL;
+	/* Foreign nested waits need a separate origin-notification contract.
+	 * The episode driver hands those calls to W before preparing them.
+	 */
+	if (kd_operation_is_killable(state->operation.kind) &&
+	    (current != state->origin || call->node.requester != state->origin))
+		return -EOPNOTSUPP;
+	call->node.wait_state = kd_operation_is_killable(state->operation.kind) ?
+		TASK_KILLABLE : TASK_UNINTERRUPTIBLE;
 	rw = call_rw(call, object);
 	if (call->grant.mode == KD_GRANT_MODE_READ && !rw)
 		return -EINVAL;
@@ -780,6 +846,8 @@ int kd_jit_acquire(struct kd_jit_mutex_call *call, void *object,
 					proxy_limit, outcome) :
 		kd_mutex_acquire(object, &call->node, &call->possible_batch, proxy_limit, outcome);
 	BUG_ON(result);
+	if (*outcome == KD_MUTEX_ACQUIRE_CANCELLED)
+		return finish_cancelled_acquisition(call, binding);
 	if (*outcome == KD_MUTEX_LOCAL_GRANTED) {
 		*binding = &call->execution;
 		return finish_acquisition(call, *binding);

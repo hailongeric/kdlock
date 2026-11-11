@@ -73,6 +73,8 @@ static const struct rw_entry rw_entries[] = {
 	{ KD_OPERATION_RWSEM_DOWN_WRITE, (unsigned long)kd_linux_rwsem_down_write_entry_asm },
 	{ KD_OPERATION_RWSEM_UP_WRITE, (unsigned long)kd_linux_rwsem_up_write_entry_asm },
 	{ KD_OPERATION_RWSEM_DOWNGRADE_WRITE, (unsigned long)kd_linux_rwsem_downgrade_write_entry_asm },
+	{ KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE, (unsigned long)kd_rwsem_down_write_killable_entry_asm },
+	{ KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE, (unsigned long)kd_linux_rwsem_down_write_killable_entry_asm },
 	{ KD_OPERATION_RWLOCK_READ_LOCK, (unsigned long)kd_rwlock_read_lock_entry_asm },
 	{ KD_OPERATION_RWLOCK_READ_UNLOCK, (unsigned long)kd_rwlock_read_unlock_entry_asm },
 	{ KD_OPERATION_RWLOCK_WRITE_LOCK, (unsigned long)kd_rwlock_write_lock_entry_asm },
@@ -243,6 +245,17 @@ struct kd_mutex_entry *kd_rwsem_prepare_down_write_current(struct kd_rwsem *lock
 {
 	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWN_WRITE,
 		(unsigned long)kd_rwsem_down_write_entry_asm);
+}
+
+struct kd_source_prepare_result kd_rwsem_prepare_down_write_killable_current(
+		struct kd_rwsem *lock)
+{
+	return (struct kd_source_prepare_result) {
+		.entry = prepare_current(lock ? &lock->core.queue : NULL,
+			KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE,
+			(unsigned long)kd_rwsem_down_write_killable_entry_asm),
+		.result = 0,
+	};
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_up_write_current(struct kd_rwsem *lock)

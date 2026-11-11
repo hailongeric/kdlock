@@ -120,8 +120,13 @@ int kd_rw_write_downgrade(struct kd_mutex_node *node,
 int kd_rw_write_held(struct kd_mutex_node *node, struct kd_thread_state *state);
 
 /* Private common-queue hooks. No source work or packet access occurs here. */
-void kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
+int kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 			struct kd_mutex_node *waiter);
+/* Actual physical writer admission already exists for this batch. Commit a
+ * later cohort member under the same family guard before its source grant.
+ */
+int kd_rw_write_grant(struct kd_rw *lock, struct kd_mutex_batch *batch,
+		struct kd_mutex_node *node);
 void kd_rw_writer_exit(struct kd_rw *lock, struct kd_mutex_batch *batch,
 			struct kd_rw_read_credit *conversion);
 

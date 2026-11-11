@@ -27,7 +27,7 @@ struct kd_execution_binding {
 	enum kd_execution_kind kind;
 };
 
-/* Existing operation IDs 0..5 remain stable. Source IO carries direction,
+/* Existing operation IDs 0..14 remain stable. Source IO carries direction,
  * while exact registered targets select these family/API kinds in lock code.
  */
 enum kd_operation_kind {
@@ -46,6 +46,7 @@ enum kd_operation_kind {
 	KD_OPERATION_RWLOCK_READ_UNLOCK,
 	KD_OPERATION_RWLOCK_WRITE_LOCK,
 	KD_OPERATION_RWLOCK_WRITE_UNLOCK,
+	KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE = 15,
 };
 
 enum kd_lock_family {
@@ -74,7 +75,18 @@ static inline bool kd_operation_is_lock(enum kd_operation_kind kind)
 {
 	return kind == KD_OPERATION_MUTEX_LOCK || kind == KD_OPERATION_SPIN_LOCK ||
 	       kind == KD_OPERATION_RWSEM_DOWN_READ || kind == KD_OPERATION_RWSEM_DOWN_WRITE ||
-	       kind == KD_OPERATION_RWLOCK_READ_LOCK || kind == KD_OPERATION_RWLOCK_WRITE_LOCK;
+	       kind == KD_OPERATION_RWLOCK_READ_LOCK || kind == KD_OPERATION_RWLOCK_WRITE_LOCK ||
+	       kind == KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE;
+}
+
+static inline bool kd_operation_is_killable(enum kd_operation_kind kind)
+{
+	return kind == KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE;
+}
+
+static inline bool kd_operation_returns_int(enum kd_operation_kind kind)
+{
+	return kind == KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE;
 }
 
 static inline bool kd_operation_is_unlock(enum kd_operation_kind kind)
@@ -108,6 +120,7 @@ static inline enum kd_lock_family kd_operation_family(enum kd_operation_kind kin
 	case KD_OPERATION_RWSEM_DOWN_WRITE:
 	case KD_OPERATION_RWSEM_UP_WRITE:
 	case KD_OPERATION_RWSEM_DOWNGRADE_WRITE:
+	case KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE:
 		return KD_LOCK_FAMILY_RWSEM;
 	case KD_OPERATION_RWLOCK_READ_LOCK:
 	case KD_OPERATION_RWLOCK_READ_UNLOCK:
@@ -284,6 +297,11 @@ int kd_operation_enter(struct kd_thread_state *state,
 int kd_operation_complete(struct kd_thread_state *state,
 			  struct kd_execution_binding *binding,
 			  const void *identity);
+/* Grant/cancel disposition precedes this sole result publication. A repeated
+ * completion cannot rewrite AX; operation_return retains the actual CALL form.
+ */
+int kd_operation_complete_int_result(struct kd_thread_state *state,
+		struct kd_execution_binding *binding, const void *identity, int value);
 int kd_operation_return(struct kd_thread_state *state,
 			struct kd_execution_binding *binding,
 			const void *identity,
