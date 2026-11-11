@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "-o",
+    "ServerAliveInterval=15",
+    "-o",
+    "ServerAliveCountMax=4",
+    "root@10.176.26.71",
+    "python3 -B -c 'import base64;exec(base64.b64decode(\"aW1wb3J0IHN5cyxqc29uLGJhc2U2NCxoYXNobGliLG9zLHRpbWUsZGF0ZXRpbWUKZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnY9anNvbi5sb2FkcyhzeXMuc3RkaW4uYnVmZmVyLnJlYWRsaW5lKDEwNDg1NzYpKTtiPWJhc2U2NC5iNjRkZWNvZGUodlsncHJvb2YnXSx2YWxpZGF0ZT1UcnVlKTthc3NlcnQgaGFzaGxpYi5zaGEyNTYoYikuaGV4ZGlnZXN0KCk9PXZbJ3NoYSddO3A9UGF0aCh2WydwYXRoJ10pO2Fzc2VydCBwPT1QYXRoKCcvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDYtNTMyYjY4YTYtcndzZW0tMDQvb3BzLWtkcmVidWlsZDYtYXBpLTAxL3JlY292ZXJ5LXN0YWdlLTAxLmpzb24nKSBhbmQgbm90IG9zLnBhdGgubGV4aXN0cyhwKTthc3NlcnQgMDw9dGltZS50aW1lKCktZGF0ZXRpbWUuZGF0ZXRpbWUuZnJvbWlzb2Zvcm1hdChqc29uLmxvYWRzKGIpWyd1dGMnXSkudGltZXN0YW1wKCk8MTIwCndpdGggcC5vcGVuKCd4YicpIGFzIGY6Zi53cml0ZShiKTtmLmZsdXNoKCk7b3MuZnN5bmMoZi5maWxlbm8oKSkKcHJpbnQoanNvbi5kdW1wcyh7J2NvbnRyb2xsZXJfcGlkJzpvcy5nZXRwaWQoKSwnYXJndic6dlsnYXJndiddfSksZmx1c2g9VHJ1ZSk7b3MuZXhlY3ZwKHZbJ2FyZ3YnXVswXSx2Wydhcmd2J10pCg==\"))'"
+  ],
+  "unix": 1794405779.6814513
+}

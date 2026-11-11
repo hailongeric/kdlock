@@ -1,0 +1,41 @@
+{
+  "phase": "stage",
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "staged_helpers": {
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/ops-kdrebuild6-api-01/kdlock-kdrebuild6-install.py": "ba6f3ee167a8b55807804597b5ea416aedaf33ddd990879bbd70da1736908018",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/ops-kdrebuild6-api-01/kdlock-kdrebuild6-checks.py": "a94a086efb7fccc443c11b25629888c148af88297c59f0a6d66c21bd862121ce",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/ops-kdrebuild6-api-01/kdlock-kdrebuild6-postboot.py": "c234e11984c57e1ecc792b89ba110c35c4da6b639fa2f99aeaafedf61e1d02cb"
+  },
+  "argv": [
+    "python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/ops-kdrebuild6-api-01/kdlock-kdrebuild6-install.py",
+    "stage",
+    "--controller-idle-recovery-confirmed",
+    "--final-build-success-reviewed",
+    "--final-build-receipt",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/result.json",
+    "--final-build-receipt-sha256",
+    "240d1a501251cd65ea29ec81f8d8b67f9cb077f6aac5a0011fca1ed922d358f9",
+    "--offroot-receipt",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/result.json",
+    "--offroot-receipt-sha256",
+    "054ea3702187da1e24f9990b4f9bd10349952f839ff661fe89cbaca782d385a6",
+    "--recovery-receipt",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/ops-kdrebuild6-api-01/recovery-stage-01.json",
+    "--recovery-receipt-sha256",
+    "DYNAMIC_EXACT_FRESH_APPROVED_PROOF_SHA",
+    "--root-working-bytes",
+    "268435456",
+    "--checks",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/ops-kdrebuild6-api-01/kdlock-kdrebuild6-checks.py"
+  ],
+  "recovery_workflow": "Stage pinned helper files first, then run the same approved read-only sudo host proof and dispatch with its exact hash within120s.",
+  "root_reserve_bytes": 1073741824,
+  "root_working_bytes": 268435456,
+  "module_fixture_context": {
+    "receipt": "/mnt/kdlock-builds/kdlock-main-work/kernel6-api-modules-80c272e5-03/receipts/result.json",
+    "sha256": "293aabf920da108861ce7bc0f218cd3dc7ad639cc952ed2b58f9626e5f72a183"
+  },
+  "scope": "Prepare only limited one-NLS namespace/private initramfs/menu syntax and protection receipts under off-root STAGE; no real installation, one-shot arm or reboot."
+}

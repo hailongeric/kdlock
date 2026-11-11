@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "-o",
+    "ServerAliveInterval=10",
+    "-o",
+    "ServerAliveCountMax=3",
+    "root@10.176.26.71",
+    "python3 -B /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/ops-kdrebuild6-api-01/kdlock-kdrebuild6-postboot.py --output /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/postboot-kdrebuild6-api-01 --timeout 20 --max-command-bytes 33554432 --max-notes-bytes 1048576"
+  ],
+  "helper_sha256": "c234e11984c57e1ecc792b89ba110c35c4da6b639fa2f99aeaafedf61e1d02cb",
+  "dispatch_unix": 1794406490.5397975
+}

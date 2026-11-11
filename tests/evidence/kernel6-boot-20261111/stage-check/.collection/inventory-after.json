@@ -1,0 +1,149 @@
+{
+  "bytes": 12752,
+  "collected_unix": 1794405947.693589,
+  "count": 10,
+  "directories": {},
+  "files": {
+    "check-complete.json": {
+      "bytes": 145,
+      "identity": [
+        2080,
+        1598998,
+        33188,
+        1,
+        145,
+        1794405837107141873,
+        1794405837107141873
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/check-complete.json",
+      "sha256": "2822417b5fc48192408026b34f9018851f852a2887a3693d981ccf3e5c4c81ff"
+    },
+    "check-idle.json": {
+      "bytes": 3016,
+      "identity": [
+        2080,
+        1598966,
+        33188,
+        1,
+        3016,
+        1794405835111770660,
+        1794405835111770660
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/check-idle.json",
+      "sha256": "d8024eab9f896580cda205aeaf5709d3f257930bc8e44b1f34f123983b5d0af6"
+    },
+    "check-modules-stage.json": {
+      "bytes": 853,
+      "identity": [
+        2080,
+        1598974,
+        33188,
+        1,
+        853,
+        1794405836717683841,
+        1794405836717683841
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/check-modules-stage.json",
+      "sha256": "765b3c451316293df837232cd2b4f38267e938a7d0da6ace21d789c71a84943f"
+    },
+    "configuration.json": {
+      "bytes": 1025,
+      "identity": [
+        2080,
+        1598873,
+        33188,
+        1,
+        1025,
+        1794405778746764990,
+        1794405778746764990
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/configuration.json",
+      "sha256": "ae9cb7370e06ddf72e9b667a406b30dcd962bd4fedcf0d410973d1e31affbb94"
+    },
+    "limited-stage.json": {
+      "bytes": 3481,
+      "identity": [
+        2080,
+        1598994,
+        33188,
+        1,
+        3481,
+        1794405837088702516,
+        1794405837088702516
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/limited-stage.json",
+      "sha256": "ad40a5ae0a717fd0a60430df472270d63088b46e68749664bb2add9cb7d53c8f"
+    },
+    "root-budget.json": {
+      "bytes": 217,
+      "identity": [
+        2080,
+        1598995,
+        33188,
+        1,
+        217,
+        1794405837092796157,
+        1794405837092796157
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/root-budget.json",
+      "sha256": "8267534b10db6c9a0acad3d0ebfd5c12ba9e97d22d7198038be2c60458fabe61"
+    },
+    "stage-closure.json": {
+      "bytes": 208,
+      "identity": [
+        2080,
+        1598960,
+        33188,
+        1,
+        208,
+        1794405834645647473,
+        1794405834645647473
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/stage-closure.json",
+      "sha256": "688a447f83a9af1a759dd36b2f1a6fd1f1214edf1f2e55d9094dcbf5d2b2ad5b"
+    },
+    "stage-complete.json": {
+      "bytes": 145,
+      "identity": [
+        2080,
+        1598963,
+        33188,
+        1,
+        145,
+        1794405834661251887,
+        1794405834661251887
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/stage-complete.json",
+      "sha256": "c50a262b7a21df61985321ea74d1d72271e6daf625c7d9b8eebdb6cdadaaee0f"
+    },
+    "stage-grub-sources.json": {
+      "bytes": 646,
+      "identity": [
+        2080,
+        1598895,
+        33188,
+        1,
+        646,
+        1794405825335297864,
+        1794405825335297864
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/stage-grub-sources.json",
+      "sha256": "956bea669beaa32926554c02b564e981f99f8ea0e77ff88b4e36a94ad2475ff0"
+    },
+    "stage-idle.json": {
+      "bytes": 3016,
+      "identity": [
+        2080,
+        1598877,
+        33188,
+        1,
+        3016,
+        1794405778849741113,
+        1794405778849741113
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/install-kdrebuild6-api-01/stage-idle.json",
+      "sha256": "e11c635f376a6b1dbb1d25bfa255aa109fc27b019135c74c609b33554f74709d"
+    }
+  },
+  "visited_paths": 0
+}

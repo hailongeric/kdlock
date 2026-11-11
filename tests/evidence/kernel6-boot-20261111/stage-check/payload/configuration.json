@@ -1,0 +1,13 @@
+{
+  "final_build_receipt": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/result.json",
+  "final_build_receipt_sha256": "240d1a501251cd65ea29ec81f8d8b67f9cb077f6aac5a0011fca1ed922d358f9",
+  "final_identity": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/full-metadata-01/final-identity.json",
+  "final_identity_sha256": "995255c9c14c513a356a70ba4155beac0879d37f3abd07ab7afb1fc328c0353b",
+  "kernel_code_commit": "532b68a65bdf96504e2cede6c23a5bc1476d94e9",
+  "offroot_receipt": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/result.json",
+  "offroot_receipt_sha256": "054ea3702187da1e24f9990b4f9bd10349952f839ff661fe89cbaca782d385a6",
+  "recovery_receipt": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/ops-kdrebuild6-api-01/recovery-stage-01.json",
+  "recovery_receipt_sha256": "8966ea7630ecc56f808c01e2cdf85389e315f5985ae2c193b29b1606ad4bfba0",
+  "root_reserve_bytes": 1073741824,
+  "root_working_bytes": 268435456
+}

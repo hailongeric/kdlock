@@ -1,0 +1,6 @@
+{
+  "modules": [
+    "kernel/fs/nls/nls_iso8859-1.ko"
+  ],
+  "namespace": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/install-stage-kdrebuild6-api-01/limited/lib/modules/7.0.0-38-kdrebuild6"
+}

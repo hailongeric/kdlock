@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "-o",
+    "ServerAliveInterval=15",
+    "-o",
+    "ServerAliveCountMax=4",
+    "root@10.176.26.71",
+    "python3 -B -c 'import base64;exec(base64.b64decode(\"aW1wb3J0IHN5cyxqc29uLGJhc2U2NCxoYXNobGliLG9zLHRpbWUsZGF0ZXRpbWUKZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnY9anNvbi5sb2FkcyhzeXMuc3RkaW4uYnVmZmVyLnJlYWRsaW5lKDEwNDg1NzYpKTtyb290PVBhdGgoJy9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsNi01MzJiNjhhNi1yd3NlbS0wNC9vcHMta2RyZWJ1aWxkNi1hcGktMDEnKTtwaW5zPXsna2Rsb2NrLWtkcmVidWlsZDYtaW5zdGFsbC5weSc6J2JhNmYzZWUxNjdhOGI1NTgwNzgwNDU5N2I1ZWE0MTZhZWRhZjMzZGRkOTkwODc5YmJkNzBkYTE3MzY5MDgwMTgnLCdrZGxvY2sta2RyZWJ1aWxkNi1jaGVja3MucHknOidhOTRhMDg2ZWZiN2ZjY2M0NDNjMTFiMjU2Mjk4ODhjMTQ4YWY4ODI5N2M1OWYwYTZkNjZjMjFiZDg2MjEyMWNlJywna2Rsb2NrLWtkcmVidWlsZDYtcG9zdGJvb3QucHknOidjMjM0ZTExOTg0YzU3ZTFlY2M3OTJiODliYTExMGMzNWM0ZGE2YjYzOWZhMmY5OWFlYWFmZWRmNjFlMWQwMmNiJ30KZm9yIG4saCBpbiBwaW5zLml0ZW1zKCk6YXNzZXJ0IGhhc2hsaWIuc2hhMjU2KChyb290L24pLnJlYWRfYnl0ZXMoKSkuaGV4ZGlnZXN0KCk9PWgKcD1yb290LygncmVjb3ZlcnktJyt2WydwaGFzZSddKyctMDEuanNvbicpO2Fzc2VydCB2WydwaGFzZSddIGluICgnaW5zdGFsbCcsJ2FybScpIGFuZCBub3Qgb3MucGF0aC5sZXhpc3RzKHApO2I9YmFzZTY0LmI2NGRlY29kZSh2Wydwcm9vZiddLHZhbGlkYXRlPVRydWUpO2Fzc2VydCBoYXNobGliLnNoYTI1NihiKS5oZXhkaWdlc3QoKT09dlsnc2hhJ10gYW5kIDA8PXRpbWUudGltZSgpLWRhdGV0aW1lLmRhdGV0aW1lLmZyb21pc29mb3JtYXQoanNvbi5sb2FkcyhiKVsndXRjJ10pLnRpbWVzdGFtcCgpPDEyMAp3aXRoIHAub3BlbigneGInKSBhcyBmOmYud3JpdGUoYik7Zi5mbHVzaCgpO29zLmZzeW5jKGYuZmlsZW5vKCkpCnByaW50KGpzb24uZHVtcHMoeydjb250cm9sbGVyX3BpZCc6b3MuZ2V0cGlkKCksJ3BoYXNlJzp2WydwaGFzZSddLCdyZWNvdmVyeV9zaGEyNTYnOnZbJ3NoYSddLCdhcmd2Jzp2Wydhcmd2J119KSxmbHVzaD1UcnVlKTtvcy5leGVjdnAodlsnYXJndiddWzBdLHZbJ2FyZ3YnXSkK\"))'"
+  ],
+  "unix": 1794406176.9520245
+}

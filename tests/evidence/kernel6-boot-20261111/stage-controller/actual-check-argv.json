@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/ops-kdrebuild6-api-01/kdlock-kdrebuild6-install.py",
+    "check",
+    "--controller-idle-recovery-confirmed"
+  ]
+}

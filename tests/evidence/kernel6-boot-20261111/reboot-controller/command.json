@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "systemctl reboot --no-wall"
+  ],
+  "old_boot": "51b49fa4-4d99-457e-a73e-632b690eb95e",
+  "armed_entry": "kdlock-kdrebuild6-api-01",
+  "dispatch_unix": 1794406347.4802196,
+  "one_attempt_only": true
+}
