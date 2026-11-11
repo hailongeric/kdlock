@@ -11,7 +11,12 @@ provide separate generated-execution mechanism evidence.
 The later integer/cancellation source `0c97cd34` has separate
 [kernel7 focused and full build evidence](../../tests/evidence/kernel7-build-20261111/README.md),
 including retained preparation and final-idle failures. Kernel7 has no boot or
-behavioral result here. The subsequent v3 typed-query source remains unbuilt.
+behavioral result here. The subsequent v3 typed-query core `0d42063e` has
+separate [kernel8 build](../../tests/evidence/kernel8-build-20261111/README.md),
+[boot identity](../../tests/evidence/kernel8-boot-20261111/README.md), and
+[native API and real syscall receipts](../../tests/evidence/kernel8-native-api-mm-20261111/README.md).
+Those actual syscall checks use `source_calls=false`; they do not establish
+generated MM execution or typed query reentry.
 
 ## One selected object and one gate
 
@@ -213,7 +218,7 @@ broader asynchronous owner-record retirement is not implemented. A task cannot
 exit with an executable source continuation or an outstanding physical duty.
 These ordering claims are source-reviewed invariants, not runtime evidence.
 
-## Typed physical query source lane (unbuilt)
+## Typed physical query source lane
 
 A later source change adds distinct `is_locked` and `is_write_locked` entries.
 The fresh v3 installer routes the existing inline rwsem query/assert branches
@@ -239,6 +244,44 @@ its physical WRITE grant is still held. A real/native downgrade creates READ
 and makes that predicate false. Neither query proves logical-task ownership or
 authorizes release. This extension supplies no MM helper model and no task,
 per-CPU, RCU or fault-context equivalence. Unsupported reached operations keep
-exact native handback. The query source and four additional boundary cases
-(total eight) have source review only; no compilation or execution result is
-recorded for this lane.
+exact native handback. The query core compiled and booted as kernel8. Its
+[eight directly affected boundary cases and linked GS checks](../../tests/evidence/kernel8-affected-build-20261111/README.md)
+passed after the separately retained test-input correction. Private typed
+query reentry and generated MM completion remain separate runtime checks.
+
+
+## Native RCU and page-table context boundary
+
+The optional MM profile supplies four generic permanent SPECIAL entries:
+`__rcu_read_lock`, `__rcu_read_unlock`, `_raw_spin_lock` and
+`_raw_spin_unlock`. The shared host scanner propagates their classification
+to the actual source CALL before it executes. These records provide no
+execution service or MM helper model. Registered entry implementation CALLs
+remain implementation code, and SPECIAL returns are not generated fragment
+entries. Inline context effects and IRQ/BH/NMI variants need their own exact
+boundary or operation contract.
+
+Static inspection of the linked kernel8 image identifies an RCU interval
+before the PTE lock: `__pte_offset_map` calls `__rcu_read_lock` at
+`0xffffffff81841237`; `pte_offset_map_lock` later calls `_raw_spin_lock` at
+`0xffffffff8184159c`. The spin entry increments physical preemption depth at
+`0xffffffff8276ccf5`. Normal PTE cleanup calls spin unlock at
+`0xffffffff8181e89a`, then RCU unlock at `0xffffffff8181e89f`; retry and flush
+paths have their own releases. A cut only before spin acquisition would
+already be inside RCU. These linked bytes describe a possible source path;
+they are not evidence that a generated syscall reached it.
+
+Full generated protected-MM completion requires a generic context protocol
+beyond these frontiers. Physical C must retain exact native RCU/PTL duties,
+while any immediate first-unexecuted native handback must let W execute its
+suffix with valid local context and route each matching release to C through
+its final ACK. C cannot schedule while its native PTL preemption pin is open;
+if W can run only on that occupied CPU, waiting for W to release cannot make
+progress. Direct native W unlock balances the CPU executing W and does not
+automatically discharge C's preemption duty.
+The sleepable outer rwsem pump, root-family atomic reconciliation, same mm
+and origin GS substitution do not supply this route. Declining before the
+first context effect preserves the existing exact handback. Delaying that
+handback or releasing and reacquiring native context would change the selected
+contract. Neither policy is introduced by the frontier table, and this source
+lane supplies no full protected-MM completion claim.
