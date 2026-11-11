@@ -1,0 +1,330 @@
+{
+  "bytes": 680079,
+  "count": 34,
+  "files": {
+    "controller/fixture-controller.py": {
+      "bytes": 22146,
+      "ctime_ns": 1794363686149810517,
+      "dev": 2064,
+      "ino": 8522288,
+      "mtime_ns": 1794363686149810517,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/kdlock-main-kernel4-fixture.py",
+      "sha256": "d62798dc8cd4da4dee666aebe98eadaa91eaa4ead3bbc768c14074165ea40919"
+    },
+    "module-build-receipts/mutex/child-result.json": {
+      "bytes": 149,
+      "ctime_ns": 1794363785622066754,
+      "dev": 2064,
+      "ino": 8522467,
+      "mtime_ns": 1794363785622066754,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/mutex/child-result.json",
+      "sha256": "3536ccf04ff84b6b5a819ca007fe3b5fddfd5b94ed5150b96f7ebc1d6c51689d"
+    },
+    "module-build-receipts/mutex/child.json": {
+      "bytes": 65,
+      "ctime_ns": 1794363783115582962,
+      "dev": 2064,
+      "ino": 8522446,
+      "mtime_ns": 1794363783115582962,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/mutex/child.json",
+      "sha256": "d5d83bf5da557e2d6fa71d62e9c71effcd8735b18673f210622f41cf8dfaa334"
+    },
+    "module-build-receipts/mutex/command.json": {
+      "bytes": 600,
+      "ctime_ns": 1794363783108000000,
+      "dev": 2064,
+      "ino": 8522444,
+      "mtime_ns": 1794363783108000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/mutex/command.json",
+      "sha256": "a38f42e826a37f9851c973956f298f5f4c1d3fd0384c3821565de29cba095ec5"
+    },
+    "module-build-receipts/mutex/modinfo.txt": {
+      "bytes": 1492,
+      "ctime_ns": 1794363785632295831,
+      "dev": 2064,
+      "ino": 8522468,
+      "mtime_ns": 1794363785632295831,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/mutex/modinfo.txt",
+      "sha256": "25875b87d2b952b12a773968a60ea32c13bc3cc8cedad0c6d3c87c2e17e054fc"
+    },
+    "module-build-receipts/mutex/stdout.log": {
+      "bytes": 17974,
+      "ctime_ns": 1794363785491000000,
+      "dev": 2064,
+      "ino": 8522445,
+      "mtime_ns": 1794363785491000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/mutex/stdout.log",
+      "sha256": "308f25c6e97d0e26f20ce11cfd0d0c51613b94336ff3834a9b4dc86115a19706"
+    },
+    "module-build-receipts/mutex/symbols.txt": {
+      "bytes": 7941,
+      "ctime_ns": 1794363785648587511,
+      "dev": 2064,
+      "ino": 8522469,
+      "mtime_ns": 1794363785648587511,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/mutex/symbols.txt",
+      "sha256": "cf9652fda2ce2fc6fd410d9b4c88e63c66f39adb40992406a29e0f8707ac6f8f"
+    },
+    "module-build-receipts/result.json": {
+      "bytes": 38004,
+      "ctime_ns": 1794363786306773491,
+      "dev": 2064,
+      "ino": 8522470,
+      "mtime_ns": 1794363786306773491,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/result.json",
+      "sha256": "1bfa8f99cbd05c231e39000749f6772944c2bf1586cc9856525533bde3d0c620"
+    },
+    "module-build-receipts/spin/child-result.json": {
+      "bytes": 150,
+      "ctime_ns": 1794363782406333937,
+      "dev": 2064,
+      "ino": 8522439,
+      "mtime_ns": 1794363782406333937,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/spin/child-result.json",
+      "sha256": "685bc4c216fa90803e3bbe856951c39aa8a95b312aa106e2d11becc2425c4a85"
+    },
+    "module-build-receipts/spin/child.json": {
+      "bytes": 65,
+      "ctime_ns": 1794363779899964166,
+      "dev": 2064,
+      "ino": 8522418,
+      "mtime_ns": 1794363779899964166,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/spin/child.json",
+      "sha256": "8591593e8ef92708d5c0eb211e493da4ed57fe43241c13787b32351f48f8b973"
+    },
+    "module-build-receipts/spin/command.json": {
+      "bytes": 604,
+      "ctime_ns": 1794363779891412205,
+      "dev": 2064,
+      "ino": 8522416,
+      "mtime_ns": 1794363779891412205,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/spin/command.json",
+      "sha256": "f7c143706d1d918ce622728bcf41acbc6ebac0c199d3011b0e63bac46c9c75a7"
+    },
+    "module-build-receipts/spin/modinfo.txt": {
+      "bytes": 1663,
+      "ctime_ns": 1794363782412468076,
+      "dev": 2064,
+      "ino": 8522440,
+      "mtime_ns": 1794363782412468076,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/spin/modinfo.txt",
+      "sha256": "95c5a9c2d61613c53ea68787117e9d295dc5c2073c150ae5b2b47b2ac7f74506"
+    },
+    "module-build-receipts/spin/stdout.log": {
+      "bytes": 18501,
+      "ctime_ns": 1794363782400000000,
+      "dev": 2064,
+      "ino": 8522417,
+      "mtime_ns": 1794363782400000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/spin/stdout.log",
+      "sha256": "d54c7a628f6a2fa728e1fee347e42b33f54de90482f7b9ee8ceee8d8ea7a956f"
+    },
+    "module-build-receipts/spin/symbols.txt": {
+      "bytes": 8936,
+      "ctime_ns": 1794363782428940312,
+      "dev": 2064,
+      "ino": 8522441,
+      "mtime_ns": 1794363782428940312,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build-receipts/spin/symbols.txt",
+      "sha256": "95cc701b1427410637cab959b3e724db18a90d73ffc213bb6c0730da53dce850"
+    },
+    "normal-command-files/mutex/..module-common.o.cmd": {
+      "bytes": 85179,
+      "ctime_ns": 1794363785316000000,
+      "dev": 2064,
+      "ino": 8522465,
+      "mtime_ns": 1794363785316000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/..module-common.o.cmd",
+      "sha256": "943522f6334444645544d0460c2a0805d9903540aead8b9756b877ebe0d6e548"
+    },
+    "normal-command-files/mutex/.Module.symvers.cmd": {
+      "bytes": 252,
+      "ctime_ns": 1794363784927000000,
+      "dev": 2064,
+      "ino": 8522460,
+      "mtime_ns": 1794363784927000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/.Module.symvers.cmd",
+      "sha256": "94f2a3c77e4a63059026ec4f5eb8cc89fa184cf1c7380f783fd63207ae24cfb5"
+    },
+    "normal-command-files/mutex/.kd_runtime_fixture.ko.cmd": {
+      "bytes": 281,
+      "ctime_ns": 1794363785338000000,
+      "dev": 2064,
+      "ino": 8522466,
+      "mtime_ns": 1794363785338000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/.kd_runtime_fixture.ko.cmd",
+      "sha256": "acde17e0018dcf74d54122abeb448415ff642305694cde37fd36be6c4e5bf066"
+    },
+    "normal-command-files/mutex/.kd_runtime_fixture.mod.cmd": {
+      "bytes": 131,
+      "ctime_ns": 1794363783748000000,
+      "dev": 2064,
+      "ino": 8522451,
+      "mtime_ns": 1794363783748000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/.kd_runtime_fixture.mod.cmd",
+      "sha256": "a5f2af20e212e43f97c4d5141bc5222c99066641a1b4a05a61cae3b46dc397b8"
+    },
+    "normal-command-files/mutex/.kd_runtime_fixture.mod.o.cmd": {
+      "bytes": 83644,
+      "ctime_ns": 1794363785330000000,
+      "dev": 2064,
+      "ino": 8522461,
+      "mtime_ns": 1794363785330000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/.kd_runtime_fixture.mod.o.cmd",
+      "sha256": "49c9ffe1ddafa0c85ba4d6ff5c8a3f622bb0d6d5aa922e9b2cc0fd1b739048f1"
+    },
+    "normal-command-files/mutex/.kd_runtime_fixture.o.cmd": {
+      "bytes": 512,
+      "ctime_ns": 1794363784722000000,
+      "dev": 2064,
+      "ino": 8522455,
+      "mtime_ns": 1794363784722000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/.kd_runtime_fixture.o.cmd",
+      "sha256": "89171dcfc9214d502d16d7d823ec030d1c763bf8e7cd9fcae71a35ab0f263974"
+    },
+    "normal-command-files/mutex/.modules.order.cmd": {
+      "bytes": 78,
+      "ctime_ns": 1794363784724000000,
+      "dev": 2064,
+      "ino": 8522457,
+      "mtime_ns": 1794363784724000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/.modules.order.cmd",
+      "sha256": "2a1c17a77f0c8287574bf7d729b4f7df40ac28d3cc678637b1e63ac7c19ee187"
+    },
+    "normal-command-files/mutex/.runtime_fixture.o.cmd": {
+      "bytes": 95903,
+      "ctime_ns": 1794363784685000000,
+      "dev": 2064,
+      "ino": 8522454,
+      "mtime_ns": 1794363784685000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/.runtime_fixture.o.cmd",
+      "sha256": "3cc49ac5964c9e38b191d943afcb582f4b8978a7762529b4eac28b04be38caea"
+    },
+    "normal-command-files/spin/..module-common.o.cmd": {
+      "bytes": 85184,
+      "ctime_ns": 1794363782226000000,
+      "dev": 2064,
+      "ino": 8522437,
+      "mtime_ns": 1794363782226000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/..module-common.o.cmd",
+      "sha256": "2a14e8005bfcbb14fbc55e66a3185f0cd268bfaf5186cd99c9540880a1781db5"
+    },
+    "normal-command-files/spin/.Module.symvers.cmd": {
+      "bytes": 252,
+      "ctime_ns": 1794363781818392036,
+      "dev": 2064,
+      "ino": 8522432,
+      "mtime_ns": 1794363781818392036,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/.Module.symvers.cmd",
+      "sha256": "94f2a3c77e4a63059026ec4f5eb8cc89fa184cf1c7380f783fd63207ae24cfb5"
+    },
+    "normal-command-files/spin/.kd_spin_runtime_fixture.ko.cmd": {
+      "bytes": 301,
+      "ctime_ns": 1794363782241000000,
+      "dev": 2064,
+      "ino": 8522438,
+      "mtime_ns": 1794363782241000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/.kd_spin_runtime_fixture.ko.cmd",
+      "sha256": "c56f9b4d02ebb317b2e285d250e09e3b197cd7110fb8fd9c7a5ecd9532fe3b1d"
+    },
+    "normal-command-files/spin/.kd_spin_runtime_fixture.mod.cmd": {
+      "bytes": 146,
+      "ctime_ns": 1794363780548000000,
+      "dev": 2064,
+      "ino": 8522423,
+      "mtime_ns": 1794363780548000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/.kd_spin_runtime_fixture.mod.cmd",
+      "sha256": "48729730ec7fb1522e2c1a1ae414ff8e8f3a4ed7a151194d1f9ab1325ae423a5"
+    },
+    "normal-command-files/spin/.kd_spin_runtime_fixture.mod.o.cmd": {
+      "bytes": 83724,
+      "ctime_ns": 1794363782233000000,
+      "dev": 2064,
+      "ino": 8522434,
+      "mtime_ns": 1794363782233000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/.kd_spin_runtime_fixture.mod.o.cmd",
+      "sha256": "2e06bc56fa882bcb6dac699e869d1cbf32ea55b5f07471ecd8776bc1af2e6e88"
+    },
+    "normal-command-files/spin/.kd_spin_runtime_fixture.o.cmd": {
+      "bytes": 537,
+      "ctime_ns": 1794363781609000000,
+      "dev": 2064,
+      "ino": 8522427,
+      "mtime_ns": 1794363781609000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/.kd_spin_runtime_fixture.o.cmd",
+      "sha256": "b07d2aff03a753b28353db2b6bf46d8b262145f29f2a79528892f2513f1f202b"
+    },
+    "normal-command-files/spin/.modules.order.cmd": {
+      "bytes": 83,
+      "ctime_ns": 1794363781611000000,
+      "dev": 2064,
+      "ino": 8522429,
+      "mtime_ns": 1794363781611000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/.modules.order.cmd",
+      "sha256": "3f0e565a4079dc21ce9f993ca1d68a32ab4ece38fce6ba6f3a9b906b14da3555"
+    },
+    "normal-command-files/spin/.spin_runtime_fixture.o.cmd": {
+      "bytes": 96620,
+      "ctime_ns": 1794363781572000000,
+      "dev": 2064,
+      "ino": 8522426,
+      "mtime_ns": 1794363781572000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/.spin_runtime_fixture.o.cmd",
+      "sha256": "010d0c1b52f8db2c0a86d474ac13e869d29e0596a572b708911d74ee5ce77580"
+    },
+    "source/actual-kernel4-build-inputs.json": {
+      "bytes": 13666,
+      "ctime_ns": 1794363737983074915,
+      "dev": 2064,
+      "ino": 8522405,
+      "mtime_ns": 1794362357000000000,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/actual-kernel4-build-inputs.json",
+      "sha256": "1a626dfb99d2098c7e0a2aef199c5c0f33ca1ffe00078f1cdae63ac184dac9e0"
+    },
+    "source/actual-kernel4-six-kernel-pins.json": {
+      "bytes": 544,
+      "ctime_ns": 1794363737983306759,
+      "dev": 2064,
+      "ino": 8522406,
+      "mtime_ns": 1794363428964396934,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/actual-kernel4-six-kernel-pins.json",
+      "sha256": "503fab29b3b8066ead750fe2223278865b4df6d60d991b532cacf588ec834886"
+    },
+    "source/source-manifest.json": {
+      "bytes": 13878,
+      "ctime_ns": 1794363686147792135,
+      "dev": 2064,
+      "ino": 8522285,
+      "mtime_ns": 1794363686147792135,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/kdlock-main-0a07f678-kernel4-manifest.json",
+      "sha256": "bf93df075a8d7f52dadebdb14b3ec9e366ac0c954cd47d92d72b331f65358ab7"
+    },
+    "source/source-state.json": {
+      "bytes": 874,
+      "ctime_ns": 1794363686147082628,
+      "dev": 2064,
+      "ino": 8522284,
+      "mtime_ns": 1794363686147082628,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/kdlock-main-0a07f678-kernel4-state.json",
+      "sha256": "5f36db39bf1909262dd9718c0b1f0e2566667f80e0449e89d3b58ff3ebd162bb"
+    }
+  },
+  "module_identities": {
+    "mutex": {
+      "bytes": 581920,
+      "dev": 2064,
+      "ino": 8522463,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/kd_runtime_fixture.ko",
+      "sha256": "57a20a4e5d821cd649e73e8baaf1aa66543aa18ce5a6977cf2c4f5b09f3bfd53"
+    },
+    "spin": {
+      "bytes": 612840,
+      "dev": 2064,
+      "ino": 8522433,
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/kd_spin_runtime_fixture.ko",
+      "sha256": "180d36459307576ff3c54b874186a058da710acf9c8c76ba28e5929efffe8b47"
+    }
+  },
+  "scope": "Read-only immutable receipts/configuration. No protocol, build, test, process or live-state operations.",
+  "utc": "2026-11-11T03:04:38.744529+00:00"
+}

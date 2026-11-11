@@ -1,0 +1,105 @@
+
+/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+ffffffff814f9dc0 <kd_mutex_release_request>:
+ffffffff814f9dc0:	e8 bb ca ef ff                               	call   ffffffff813f6880 <__fentry__>
+ffffffff814f9dc5:	55                                           	push   rbp
+ffffffff814f9dc6:	48 89 e5                                     	mov    rbp,rsp
+ffffffff814f9dc9:	41 57                                        	push   r15
+ffffffff814f9dcb:	41 56                                        	push   r14
+ffffffff814f9dcd:	41 55                                        	push   r13
+ffffffff814f9dcf:	41 54                                        	push   r12
+ffffffff814f9dd1:	53                                           	push   rbx
+ffffffff814f9dd2:	48 83 ec 08                                  	sub    rsp,0x8
+ffffffff814f9dd6:	4c 8b 67 10                                  	mov    r12,QWORD PTR [rdi+0x10]
+ffffffff814f9dda:	4d 85 e4                                     	test   r12,r12
+ffffffff814f9ddd:	0f 84 d3 00 00 00                            	je     ffffffff814f9eb6 <kd_mutex_release_request+0xf6>
+ffffffff814f9de3:	48 89 fb                                     	mov    rbx,rdi
+ffffffff814f9de6:	4c 89 e7                                     	mov    rdi,r12
+ffffffff814f9de9:	89 4d d0                                     	mov    DWORD PTR [rbp-0x30],ecx
+ffffffff814f9dec:	49 89 d6                                     	mov    r14,rdx
+ffffffff814f9def:	49 89 f5                                     	mov    r13,rsi
+ffffffff814f9df2:	e8 39 fe 21 01                               	call   ffffffff82719c30 <_raw_spin_lock>
+ffffffff814f9df7:	4c 3b 63 10                                  	cmp    r12,QWORD PTR [rbx+0x10]
+ffffffff814f9dfb:	0f 85 ad 00 00 00                            	jne    ffffffff814f9eae <kd_mutex_release_request+0xee>
+ffffffff814f9e01:	41 83 7c 24 30 03                            	cmp    DWORD PTR [r12+0x30],0x3
+ffffffff814f9e07:	0f 84 a1 00 00 00                            	je     ffffffff814f9eae <kd_mutex_release_request+0xee>
+ffffffff814f9e0d:	41 bf 8c ff ff ff                            	mov    r15d,0xffffff8c
+ffffffff814f9e13:	4c 39 6b 18                                  	cmp    QWORD PTR [rbx+0x18],r13
+ffffffff814f9e17:	74 2c                                        	je     ffffffff814f9e45 <kd_mutex_release_request+0x85>
+ffffffff814f9e19:	4c 89 e7                                     	mov    rdi,r12
+ffffffff814f9e1c:	e8 bf ff 21 01                               	call   ffffffff82719de0 <_raw_spin_unlock>
+ffffffff814f9e21:	48 83 c4 08                                  	add    rsp,0x8
+ffffffff814f9e25:	44 89 f8                                     	mov    eax,r15d
+ffffffff814f9e28:	5b                                           	pop    rbx
+ffffffff814f9e29:	41 5c                                        	pop    r12
+ffffffff814f9e2b:	41 5d                                        	pop    r13
+ffffffff814f9e2d:	41 5e                                        	pop    r14
+ffffffff814f9e2f:	41 5f                                        	pop    r15
+ffffffff814f9e31:	5d                                           	pop    rbp
+ffffffff814f9e32:	31 d2                                        	xor    edx,edx
+ffffffff814f9e34:	31 c9                                        	xor    ecx,ecx
+ffffffff814f9e36:	31 f6                                        	xor    esi,esi
+ffffffff814f9e38:	31 ff                                        	xor    edi,edi
+ffffffff814f9e3a:	45 31 c0                                     	xor    r8d,r8d
+ffffffff814f9e3d:	45 31 c9                                     	xor    r9d,r9d
+ffffffff814f9e40:	e9 eb 1f 22 01                               	jmp    ffffffff8271be30 <__pi___x86_return_thunk>
+ffffffff814f9e45:	4c 39 73 20                                  	cmp    QWORD PTR [rbx+0x20],r14
+ffffffff814f9e49:	75 ce                                        	jne    ffffffff814f9e19 <kd_mutex_release_request+0x59>
+ffffffff814f9e4b:	8b 45 d0                                     	mov    eax,DWORD PTR [rbp-0x30]
+ffffffff814f9e4e:	83 e8 01                                     	sub    eax,0x1
+ffffffff814f9e51:	83 f8 02                                     	cmp    eax,0x2
+ffffffff814f9e54:	77 4d                                        	ja     ffffffff814f9ea3 <kd_mutex_release_request+0xe3>
+ffffffff814f9e56:	45 0f b6 6c 24 34                            	movzx  r13d,BYTE PTR [r12+0x34]
+ffffffff814f9e5c:	41 80 fd 01                                  	cmp    r13b,0x1
+ffffffff814f9e60:	0f 87 6d 1a d2 ff                            	ja     ffffffff8121b8d3 <kd_mutex_release_request.cold>
+ffffffff814f9e66:	83 7d d0 03                                  	cmp    DWORD PTR [rbp-0x30],0x3
+ffffffff814f9e6a:	0f 94 c0                                     	sete   al
+ffffffff814f9e6d:	41 83 e5 01                                  	and    r13d,0x1
+ffffffff814f9e71:	44 38 e8                                     	cmp    al,r13b
+ffffffff814f9e74:	75 2d                                        	jne    ffffffff814f9ea3 <kd_mutex_release_request+0xe3>
+ffffffff814f9e76:	83 7d d0 01                                  	cmp    DWORD PTR [rbp-0x30],0x1
+ffffffff814f9e7a:	74 45                                        	je     ffffffff814f9ec1 <kd_mutex_release_request+0x101>
+ffffffff814f9e7c:	8b 43 40                                     	mov    eax,DWORD PTR [rbx+0x40]
+ffffffff814f9e7f:	41 bf 8e ff ff ff                            	mov    r15d,0xffffff8e
+ffffffff814f9e85:	85 c0                                        	test   eax,eax
+ffffffff814f9e87:	75 90                                        	jne    ffffffff814f9e19 <kd_mutex_release_request+0x59>
+ffffffff814f9e89:	48 8b 45 d0                                  	mov    rax,QWORD PTR [rbp-0x30]
+ffffffff814f9e8d:	48 c1 e0 20                                  	shl    rax,0x20
+ffffffff814f9e91:	48 83 c8 01                                  	or     rax,0x1
+ffffffff814f9e95:	48 89 43 40                                  	mov    QWORD PTR [rbx+0x40],rax
+ffffffff814f9e99:	66 90                                        	xchg   ax,ax
+ffffffff814f9e9b:	45 31 ff                                     	xor    r15d,r15d
+ffffffff814f9e9e:	e9 76 ff ff ff                               	jmp    ffffffff814f9e19 <kd_mutex_release_request+0x59>
+ffffffff814f9ea3:	41 bf ea ff ff ff                            	mov    r15d,0xffffffea
+ffffffff814f9ea9:	e9 6b ff ff ff                               	jmp    ffffffff814f9e19 <kd_mutex_release_request+0x59>
+ffffffff814f9eae:	4c 89 e7                                     	mov    rdi,r12
+ffffffff814f9eb1:	e8 2a ff 21 01                               	call   ffffffff82719de0 <_raw_spin_unlock>
+ffffffff814f9eb6:	41 bf 8c ff ff ff                            	mov    r15d,0xffffff8c
+ffffffff814f9ebc:	e9 60 ff ff ff                               	jmp    ffffffff814f9e21 <kd_mutex_release_request+0x61>
+ffffffff814f9ec1:	65 48 8b 05 4f 51 f1 02                      	mov    rax,QWORD PTR gs:[rip+0x2f1514f]        # ffffffff8440f018 <current_task>
+ffffffff814f9ec9:	41 bf ff ff ff ff                            	mov    r15d,0xffffffff
+ffffffff814f9ecf:	49 39 44 24 08                               	cmp    QWORD PTR [r12+0x8],rax
+ffffffff814f9ed4:	0f 85 3f ff ff ff                            	jne    ffffffff814f9e19 <kd_mutex_release_request+0x59>
+ffffffff814f9eda:	eb a0                                        	jmp    ffffffff814f9e7c <kd_mutex_release_request+0xbc>
+ffffffff814f9edc:	48 8b 4b 28                                  	mov    rcx,QWORD PTR [rbx+0x28]
+ffffffff814f9ee0:	4c 8b 4b 38                                  	mov    r9,QWORD PTR [rbx+0x38]
+ffffffff814f9ee4:	4c 89 e2                                     	mov    rdx,r12
+ffffffff814f9ee7:	48 89 de                                     	mov    rsi,rbx
+ffffffff814f9eea:	4c 8b 43 30                                  	mov    r8,QWORD PTR [rbx+0x30]
+ffffffff814f9eee:	bf 0b 00 00 00                               	mov    edi,0xb
+ffffffff814f9ef3:	e8 e8 f9 ff ff                               	call   ffffffff814f98e0 <observe_release.part.0>
+ffffffff814f9ef8:	eb a1                                        	jmp    ffffffff814f9e9b <kd_mutex_release_request+0xdb>
+
+Disassembly of section .data:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_aux:
+
+Disassembly of section .altinstr_replacement:
+
+Disassembly of section .exit.text:

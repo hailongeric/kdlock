@@ -1,0 +1,26 @@
+{
+  "attempts": [
+    {
+      "argv": [
+        "ssh",
+        "-p",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "root@10.176.26.71",
+        "timeout 10 sh -s"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "7.0.0-38-kdrebuild4\n84e4ba94-b616-4b65-9efe-820921f36c16\n0\n",
+      "unix": 1794364193.8658903
+    }
+  ],
+  "elapsed_seconds": 0.6687318701297045,
+  "expected_release": "7.0.0-38-kdrebuild4",
+  "old_boot": "884c4a65-4f4c-4a6b-89a3-cefd65221615",
+  "phase": "CANDIDATE_RECONNECTED",
+  "unix": 1794364194.5346205
+}

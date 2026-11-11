@@ -1,0 +1,51 @@
+{
+  "core": {
+    "lines": 217,
+    "other_warnings": [],
+    "perl_warning_lines": 0,
+    "warning_lines": 0
+  },
+  "kernel": {
+    "lines": 148169,
+    "other_warnings": [
+      {
+        "line": 134284,
+        "text": "vmlinux.o: warning: objtool: kd_mutex_lock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "line": 134285,
+        "text": "vmlinux.o: warning: objtool: kd_mutex_unlock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "line": 134286,
+        "text": "vmlinux.o: warning: objtool: kd_spin_lock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "line": 134287,
+        "text": "vmlinux.o: warning: objtool: kd_spin_unlock_entry_asm+0x31: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "line": 134288,
+        "text": "vmlinux.o: warning: objtool: kd_mutex_entry_asm+0x24: indirect call found in MITIGATION_RETPOLINE build"
+      },
+      {
+        "line": 134289,
+        "text": "vmlinux.o: warning: objtool: kd_native_resume+0x49: 'naked' return found in MITIGATION_RETHUNK build"
+      },
+      {
+        "line": 134290,
+        "text": "vmlinux.o: warning: objtool: kd_jit_resume_origin() falls through to next function kd_jit_mutex_grant_call()"
+      },
+      {
+        "line": 134291,
+        "text": "vmlinux.o: warning: objtool: kd_spin_native_resume+0x13: unsupported stack pointer realignment"
+      },
+      {
+        "line": 134294,
+        "text": "WARNING: modpost: missing MODULE_DESCRIPTION() in ubuntu/ubuntu-host/ubuntu-host.o"
+      }
+    ],
+    "perl_warning_lines": 21192,
+    "warning_lines": 21201
+  }
+}

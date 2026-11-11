@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "modprobe",
+    "-d",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/full",
+    "-S",
+    "7.0.0-38-kdrebuild4",
+    "--show-depends",
+    "vfat"
+  ],
+  "elapsed_seconds": 0.007108007997885579,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-vfat.log",
+  "log_sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9",
+  "returncode": 0,
+  "timed_out": false
+}

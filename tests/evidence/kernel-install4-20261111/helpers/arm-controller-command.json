@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-install.py",
+    "arm",
+    "--controller-idle-recovery-confirmed"
+  ],
+  "install_complete_sha256": "249bcecef6d57af4ea7a80361573935719110da4e2a411a535e685ebd545b48e",
+  "unix": 1794364070.049907
+}

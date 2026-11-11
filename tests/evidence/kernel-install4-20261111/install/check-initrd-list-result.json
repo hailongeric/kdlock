@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "lsinitramfs",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/initrd.img-7.0.0-38-kdrebuild4"
+  ],
+  "elapsed_seconds": 0.17086066600313643,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-initrd-list.log",
+  "log_sha256": "201fc17091bb17aeb073880758de258d50ae11a77cb9412638e42d9506a4d912",
+  "returncode": 0,
+  "timed_out": false
+}

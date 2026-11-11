@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "systemctl",
+    "reboot"
+  ],
+  "elapsed_seconds": 0.004963359999237582,
+  "phase": "REBOOT_COMMAND_RETURNED",
+  "returncode": 0,
+  "stderr": "",
+  "stdout": "",
+  "unix": 1794364155.0561619
+}

@@ -1,0 +1,20 @@
+filename:       /mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/spin/kd_spin_runtime_fixture.ko
+description:    Ordinary kdlock spin runtime kernel mechanism fixture
+license:        GPL
+srcversion:     7E801680597FDA8A3AAC767
+depends:        
+name:           kd_spin_runtime_fixture
+retpoline:      Y
+vermagic:       7.0.0-38-kdrebuild4 SMP preempt mod_unload modversions 
+parm:           spin_cpus:Distinct online CPUs for the five spin roles (array of uint)
+parm:           holder_timeout_ms:Explicit maximum holder gate wait in milliseconds (uint)
+parm:           gs_offset:Actual running-target current_task GS offset, verified from its kernel ELF/source (ulong)
+parm:           gs_verified:Operator supplied the exact running-target GS/configuration receipt (bool)
+parm:           immutable_text:Module/source dependencies remain unpatched through final source/native users (bool)
+parm:           auxiliary_contract:Operator admits this target's task-owned auxiliary stack/context contract (bool)
+parm:           source_size:Exact fixture_source_body ELF symbol size from this module binary (uint)
+parm:           step_size:Exact fixture_source_step ELF symbol size from this module binary (uint)
+parm:           dependency_page_limit:Explicit maximum retained module-owned executable dependency pages (uint)
+parm:           total_source_byte_limit:Explicit maximum total copied body, callee and dependency bytes (ulong)
+parm:           source_version:Explicit module/kernel/configuration identity for this mechanism run (charp)
+parm:           event_capacity:Explicit preallocated scalar-observation record count (ulong)

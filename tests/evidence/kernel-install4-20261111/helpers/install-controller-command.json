@@ -1,0 +1,61 @@
+{
+  "actual_module_build_sha256": "1bfa8f99cbd05c231e39000749f6772944c2bf1586cc9856525533bde3d0c620",
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-install.py",
+    "install",
+    "--controller-idle-recovery-confirmed"
+  ],
+  "normal_recovery_files": [
+    {
+      "mode": 420,
+      "path": "/boot/System.map-6.1.159-kdclobber2",
+      "sha256": "e52ed9012806d5370eea13dd74c545ebf7419635df0665386caa0943a3790995",
+      "size": 5133645
+    },
+    {
+      "mode": 420,
+      "path": "/boot/System.map-7.0.0-38-kdlock1",
+      "sha256": "1b06d9aee8db0dcb36480985a83ef1d48cba19ef2f1be9abb82955bed7b53159",
+      "size": 10530773
+    },
+    {
+      "mode": 420,
+      "path": "/boot/config-6.1.159-kdclobber2",
+      "sha256": "e1dd628c6f2315c77debd559cf6df1f299814b0b4ba47d5964cfb5bde4dd4ccd",
+      "size": 264462
+    },
+    {
+      "mode": 420,
+      "path": "/boot/config-7.0.0-38-kdlock1",
+      "sha256": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+      "size": 308540
+    },
+    {
+      "mode": 420,
+      "path": "/boot/initrd.img-6.1.159-kdclobber2",
+      "sha256": "ff77ff8919ca9608d187825f7c43bee87b811fe253a6d53a37ba10681dd69064",
+      "size": 78240626
+    },
+    {
+      "mode": 420,
+      "path": "/boot/initrd.img-7.0.0-38-kdlock1",
+      "sha256": "a13aaa736d57c6d9a52e8acea99ee6de42379882f000cbbff857a05de68e0769",
+      "size": 103189900
+    },
+    {
+      "mode": 420,
+      "path": "/boot/vmlinuz-6.1.159-kdclobber2",
+      "sha256": "3221e8ee72eb947d06ed7b2a2ab3bae348d6edd798cdd55ae439c040227ad19d",
+      "size": 12468736
+    },
+    {
+      "mode": 420,
+      "path": "/boot/vmlinuz-7.0.0-38-kdlock1",
+      "sha256": "8530a19fcca7b3ef65c39aa35ad2e8a46904ded34d124afb2e4f4285f9631d71",
+      "size": 17109504
+    }
+  ],
+  "recovery_sha256": "4d1e49b0806cf3f4e37e1bf6ad5177bd78060502694c54b19023b2b8f440d76d",
+  "unix": 1794363984.9462414
+}

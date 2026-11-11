@@ -1,0 +1,11 @@
+{
+  "host_free_bytes": 9040871424,
+  "phase": "HELPER_AST_AND_INPUT_PINS_VERIFIED",
+  "pins": {
+    "kdlock-kdrebuild4-checks.py": "2e9a311ee545ed78ed176b697964d45fe8170ea17cc62cdc3637ab8521383b7a",
+    "kdlock-kdrebuild4-install.py": "6a5232df1ff93ad26faa219f341bfa2ae285bd988ee4e7f36dbc884305dbdbad",
+    "kdlock-kdrebuild4-postboot.py": "80b6eb9d68d2d1bcf1650c9bcdb315b63867665efaff08eda311d4d96c2790eb",
+    "kdlock-kernel4-stage-recovery-spin-01.json": "2ba7984fb66df42d93d6f654c1ec17f4d298aad353569e15980471146709d177"
+  },
+  "unix": 1794363009.0115457
+}

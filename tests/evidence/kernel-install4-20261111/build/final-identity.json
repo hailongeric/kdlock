@@ -1,0 +1,86 @@
+{
+  "build_id": "f3caad92c0cdc5f955a2410f3ec3ec0e5ccad053",
+  "files": {
+    ".config": {
+      "bytes": 308548,
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+    },
+    "Module.symvers": {
+      "bytes": 2385270,
+      "sha256": "e4b9faad85933d5f3ffbcb70313fc6416135df4587fdd63cc363e1d6a620192b"
+    },
+    "System.map": {
+      "bytes": 10567738,
+      "sha256": "5832a5f64db2100543972a9f97e1d7b969f746a4bafed04ec04f04c8f5484c78"
+    },
+    "arch/x86/boot/bzImage": {
+      "bytes": 17191424,
+      "sha256": "d89fead1a6d3a7ad573e530eb29b460754655c67b05c49780a43dc88d653afbf"
+    },
+    "certs/signing_key.x509": {
+      "bytes": 1324,
+      "sha256": "d2cc0e225390e9f1b8e355a9b56ac5b7a6532cc49fb724b3d5a56622a23b35a5"
+    },
+    "include/config/auto.conf": {
+      "bytes": 251819,
+      "sha256": "d731f7137d4af0af8468041db3b03292d174ed184d3916fa9162a29cb8f63243"
+    },
+    "include/config/kernel.release": {
+      "bytes": 20,
+      "sha256": "a79fd7078936815525022ebb9ff4607c380f6d6259c92d23e3431108dc2f7a87"
+    },
+    "include/generated/autoconf.h": {
+      "bytes": 381211,
+      "sha256": "ba620d16cd34149765ecae7223c519826d89e1bd51ef996f25af495b7cf18314"
+    },
+    "include/generated/utsrelease.h": {
+      "bytes": 42,
+      "sha256": "efa16a86f679dbb4adc76f66059d248cd0981646c7f4bea5e19194474d6b00e0"
+    },
+    "include/generated/utsversion.h": {
+      "bytes": 74,
+      "sha256": "2533a1b555632c7aae3ff761a43f94d915a75e33e3fcb2a2999445bc6e956ef2"
+    },
+    "modules.builtin": {
+      "bytes": 10431,
+      "sha256": "ef55d7bc5528d2c01f38fc0d8f6473c75e14ec62349898f6529be9bbac871366"
+    },
+    "modules.builtin.modinfo": {
+      "bytes": 159067,
+      "sha256": "f173376892f5d1a020884e4c6062b51e7cf26718928e1225be5e4fb507c34d0c"
+    },
+    "modules.order": {
+      "bytes": 226838,
+      "sha256": "53585e7c733e6ae2ca38882eb323756a8184adee0d878a49a2489b7f15e62f82"
+    },
+    "vmlinux": {
+      "bytes": 508538992,
+      "sha256": "310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5"
+    }
+  },
+  "gs_symbols": {
+    "__per_cpu_start": 18446744071633334272,
+    "const_current_task": 18446744071633432600,
+    "current_task": 18446744071633432600
+  },
+  "gs_witness": {
+    "current_task": "0xffffffff8440f018",
+    "function": "kd_mutex_release_request",
+    "instruction_hex": "65488b054f51f102",
+    "kernel_config": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/.config",
+    "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "line": "ffffffff814f9ec1:\t65 48 8b 05 4f 51 f1 02                      \tmov    rax,QWORD PTR gs:[rip+0x2f1514f]        # ffffffff8440f018 <current_task>",
+    "per_cpu_start": "0xffffffff843f7000",
+    "scope": "Fresh linked ELF metadata; no boot or generated execution.",
+    "signed_displacement": 49369423,
+    "site": "0xffffffff814f9ec1",
+    "source_next_ip": "0xffffffff814f9ec9",
+    "system_map": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/System.map",
+    "system_map_sha256": "5832a5f64db2100543972a9f97e1d7b969f746a4bafed04ec04f04c8f5484c78",
+    "vmlinux": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux",
+    "vmlinux_sha256": "310df27ab801ecb0cb291d510a77d491030b6c85388a3930df2f54306bc27dd5"
+  },
+  "module_count": 6901,
+  "module_vermagic": "7.0.0-38-kdrebuild4 SMP preempt mod_unload modversions",
+  "module_vermagic_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/arch/x86/crypto/aegis128-aesni.ko"
+}

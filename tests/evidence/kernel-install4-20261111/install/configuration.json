@@ -1,0 +1,11 @@
+{
+  "final_build_receipt": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/result.json",
+  "final_build_receipt_sha256": "e00db7a5961879692c102a00e072c70ffc5fcbe1c5051a4203b256ea44a7cac1",
+  "final_identity": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/final-identity.json",
+  "final_identity_sha256": "7c79198ee04da92873339bc5d02bd9cba47ac14598f13bf56baf25ce36c69a5c",
+  "kernel_code_commit": "2d0ad60b0bc46929f3070aefa364e710c0a81115",
+  "recovery_receipt": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kernel4-stage-recovery-spin-01.json",
+  "recovery_receipt_sha256": "2ba7984fb66df42d93d6f654c1ec17f4d298aad353569e15980471146709d177",
+  "root_reserve_bytes": 1073741824,
+  "root_working_bytes": 16777216
+}

@@ -1,0 +1,1754 @@
+{
+  "bytes": 41149992,
+  "count": 194,
+  "files": {
+    "build/final-identity.json": {
+      "bytes": 3552,
+      "ctime_ns": 1794362758906000000,
+      "dev": 2080,
+      "ino": 2623243,
+      "mtime_ns": 1794362758898402234,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/final-identity.json",
+      "sha256": "7c79198ee04da92873339bc5d02bd9cba47ac14598f13bf56baf25ce36c69a5c"
+    },
+    "build/gs-config.json": {
+      "bytes": 1052,
+      "ctime_ns": 1794362758555000000,
+      "dev": 2080,
+      "ino": 2623240,
+      "mtime_ns": 1794362758551325786,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/gs-config.json",
+      "sha256": "8f66576d3eb468ff047dcfdd0821a53f763a78e47de52e7a6cd74857cecb5b64"
+    },
+    "build/result.json": {
+      "bytes": 6222,
+      "ctime_ns": 1794362758927000000,
+      "dev": 2080,
+      "ino": 2623244,
+      "mtime_ns": 1794362758925342002,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/result.json",
+      "sha256": "e00db7a5961879692c102a00e072c70ffc5fcbe1c5051a4203b256ea44a7cac1"
+    },
+    "helpers/arm-controller-command.json": {
+      "bytes": 357,
+      "ctime_ns": 1794364070050075945,
+      "dev": 2080,
+      "ino": 2631623,
+      "mtime_ns": 1794364070050075945,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/arm-controller-command.json",
+      "sha256": "4d7bcf191455bc2ef61eb7890530511809f7ee2fc7f24f79b58b59787eb53ad3"
+    },
+    "helpers/arm-controller-result.json": {
+      "bytes": 180,
+      "ctime_ns": 1794364094914915344,
+      "dev": 2080,
+      "ino": 2631647,
+      "mtime_ns": 1794364094914915344,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/arm-controller-result.json",
+      "sha256": "1564922471a8094b67aa9fb9aaa8f6d2f134f0a5e16d8c33c7025105b17b5b06"
+    },
+    "helpers/arm-controller.stdout.log": {
+      "bytes": 7396,
+      "ctime_ns": 1794364094901000000,
+      "dev": 2080,
+      "ino": 2631624,
+      "mtime_ns": 1794364094901000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/arm-controller.stdout.log",
+      "sha256": "0b350bda1e8725c926195fb131ffeaccc7ab9791814d05af6455ddc40c3159d3"
+    },
+    "helpers/beforeboot-recovery.json": {
+      "bytes": 4573,
+      "ctime_ns": 1794364154573000000,
+      "dev": 2080,
+      "ino": 2631648,
+      "mtime_ns": 1794364154573000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/beforeboot-recovery.json",
+      "sha256": "067f9b3df06079d5c0b2a9456f2397cbc1d4edfe0ae2df29b5057f438653b007"
+    },
+    "helpers/check-controller-command.json": {
+      "bytes": 262,
+      "ctime_ns": 1794363310873381510,
+      "dev": 2080,
+      "ino": 2631539,
+      "mtime_ns": 1794363310873381510,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/check-controller-command.json",
+      "sha256": "1c9e809fd10c10e535d2785e934272b6566c491862bf3570bfdf48640bcae46a"
+    },
+    "helpers/check-controller-result.json": {
+      "bytes": 179,
+      "ctime_ns": 1794363313310715238,
+      "dev": 2080,
+      "ino": 2631576,
+      "mtime_ns": 1794363313310715238,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/check-controller-result.json",
+      "sha256": "c6fb28429c76d4b515e25daefc6a5261c21ba63894514f2c271c41b89dbd72d7"
+    },
+    "helpers/check-controller.stdout.log": {
+      "bytes": 13141,
+      "ctime_ns": 1794363313295000000,
+      "dev": 2080,
+      "ino": 2631540,
+      "mtime_ns": 1794363313295000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/check-controller.stdout.log",
+      "sha256": "9e9b1b74d287f9545573fb908a7268e05cae0b91d363383940ef8282e27e6dea"
+    },
+    "helpers/helper-ast-and-pins.json": {
+      "bytes": 561,
+      "ctime_ns": 1794363009011696763,
+      "dev": 2080,
+      "ino": 2623249,
+      "mtime_ns": 1794363009011696763,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/helper-ast-and-pins.json",
+      "sha256": "42f98c334050d9b144f7914ac68d882ebd81f24dc3cbfa4d76f545470fef1c3f"
+    },
+    "helpers/install-controller-command.json": {
+      "bytes": 1997,
+      "ctime_ns": 1794363984946642166,
+      "dev": 2080,
+      "ino": 2631580,
+      "mtime_ns": 1794363984946642166,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/install-controller-command.json",
+      "sha256": "71928eb28c91e71a69cbac5d007c430698f90ab88982454ac1736f825e1e2830"
+    },
+    "helpers/install-controller-result.json": {
+      "bytes": 179,
+      "ctime_ns": 1794364030630525259,
+      "dev": 2080,
+      "ino": 2631622,
+      "mtime_ns": 1794364030630525259,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/install-controller-result.json",
+      "sha256": "046cd52b2b972211cc4b3ebe9359a6d39f70397ccd8a3a04ec27787548884023"
+    },
+    "helpers/install-controller.stdout.log": {
+      "bytes": 13114,
+      "ctime_ns": 1794364030613000000,
+      "dev": 2080,
+      "ino": 2631581,
+      "mtime_ns": 1794364030613000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/install-controller.stdout.log",
+      "sha256": "2aa55eacd9a7ad6cf0112d332d930d975ae8cf8b22269a4892348298c31e0af1"
+    },
+    "helpers/kdlock-kdrebuild4-checks.py": {
+      "bytes": 12170,
+      "ctime_ns": 1794363008750000000,
+      "dev": 2080,
+      "ino": 2623245,
+      "mtime_ns": 1794362341000000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-checks.py",
+      "sha256": "2e9a311ee545ed78ed176b697964d45fe8170ea17cc62cdc3637ab8521383b7a"
+    },
+    "helpers/kdlock-kdrebuild4-install.py": {
+      "bytes": 25258,
+      "ctime_ns": 1794363008750000000,
+      "dev": 2080,
+      "ino": 2623246,
+      "mtime_ns": 1794362341000000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-install.py",
+      "sha256": "6a5232df1ff93ad26faa219f341bfa2ae285bd988ee4e7f36dbc884305dbdbad"
+    },
+    "helpers/kdlock-kdrebuild4-postboot.py": {
+      "bytes": 20247,
+      "ctime_ns": 1794363008750000000,
+      "dev": 2080,
+      "ino": 2623247,
+      "mtime_ns": 1794362860000000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-postboot.py",
+      "sha256": "80b6eb9d68d2d1bcf1650c9bcdb315b63867665efaff08eda311d4d96c2790eb"
+    },
+    "helpers/kdlock-kernel4-stage-recovery-spin-01.json": {
+      "bytes": 4497,
+      "ctime_ns": 1794363008750000000,
+      "dev": 2080,
+      "ino": 2623248,
+      "mtime_ns": 1794362969000000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kernel4-stage-recovery-spin-01.json",
+      "sha256": "2ba7984fb66df42d93d6f654c1ec17f4d298aad353569e15980471146709d177"
+    },
+    "helpers/postboot-controller-command.json": {
+      "bytes": 517,
+      "ctime_ns": 1794364219601568119,
+      "dev": 2080,
+      "ino": 2631653,
+      "mtime_ns": 1794364219601568119,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/postboot-controller-command.json",
+      "sha256": "98dc395a5576a4553cb06319c30c4bad11d62905167902bcf33343686c9b636f"
+    },
+    "helpers/postboot-controller-result.json": {
+      "bytes": 179,
+      "ctime_ns": 1794364223629156813,
+      "dev": 2080,
+      "ino": 2631679,
+      "mtime_ns": 1794364223629156813,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/postboot-controller-result.json",
+      "sha256": "dfad80d156b2eef6ee3f8c8e89e99d522fa2ed2e9246a9a7a301e21a19153875"
+    },
+    "helpers/postboot-controller.stdout.log": {
+      "bytes": 197,
+      "ctime_ns": 1794364223613000000,
+      "dev": 2080,
+      "ino": 2631654,
+      "mtime_ns": 1794364223613000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/postboot-controller.stdout.log",
+      "sha256": "bc899951e6b3beb6214d68400f1a868f3e9c5b8fdc5e7bd2a0aa0074b98d849b"
+    },
+    "helpers/pre-reboot-grub.json": {
+      "bytes": 570,
+      "ctime_ns": 1794364155020915506,
+      "dev": 2080,
+      "ino": 2631650,
+      "mtime_ns": 1794364155020915506,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/pre-reboot-grub.json",
+      "sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768"
+    },
+    "helpers/pre-reboot-idle.json": {
+      "bytes": 3016,
+      "ctime_ns": 1794364154909000000,
+      "dev": 2080,
+      "ino": 2631649,
+      "mtime_ns": 1794364154909000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/pre-reboot-idle.json",
+      "sha256": "e81d152558b65cec81a4ec5d6acf1389342d5cf33fd78bf66d7261af1ef37f64"
+    },
+    "helpers/preinstall-recovery.json": {
+      "bytes": 4496,
+      "ctime_ns": 1794363984152000000,
+      "dev": 2080,
+      "ino": 2631579,
+      "mtime_ns": 1794363984152000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/preinstall-recovery.json",
+      "sha256": "4d1e49b0806cf3f4e37e1bf6ad5177bd78060502694c54b19023b2b8f440d76d"
+    },
+    "helpers/reboot-pre.json": {
+      "bytes": 1142,
+      "ctime_ns": 1794364155047466888,
+      "dev": 2080,
+      "ino": 2631651,
+      "mtime_ns": 1794364155047466888,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/reboot-pre.json",
+      "sha256": "63967485f8ba54b467e7f1644ef3a63bc6f832657cc22c2f0706ac5c630fa61c"
+    },
+    "helpers/reboot-result.json": {
+      "bytes": 212,
+      "ctime_ns": 1794364155056297420,
+      "dev": 2080,
+      "ino": 2631652,
+      "mtime_ns": 1794364155056297420,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/reboot-result.json",
+      "sha256": "830ae0ec23d866f8c6b28826eaab4df949369673b51833285b43de86b19b460d"
+    },
+    "helpers/stage-check-window-closed.json": {
+      "bytes": 3016,
+      "ctime_ns": 1794363351737637970,
+      "dev": 2080,
+      "ino": 2631577,
+      "mtime_ns": 1794363351737637970,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/stage-check-window-closed.json",
+      "sha256": "aaa3c562fae47d69173b09f2c4614cb5e0b797f03248023efa43afb5b0dd2089"
+    },
+    "helpers/stage-controller-command.json": {
+      "bytes": 1019,
+      "ctime_ns": 1794363009017450560,
+      "dev": 2080,
+      "ino": 2623250,
+      "mtime_ns": 1794363009017450560,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/stage-controller-command.json",
+      "sha256": "56c15b74d44060ab06363cee9b2c9fb2b03ad209f47b6d66cacc5865417f55c4"
+    },
+    "helpers/stage-controller-result.json": {
+      "bytes": 180,
+      "ctime_ns": 1794363232758619089,
+      "dev": 2080,
+      "ino": 2631538,
+      "mtime_ns": 1794363232758619089,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/stage-controller-result.json",
+      "sha256": "5195ce2b7041b53c39dcdcf356cfd1b14d63c22db4814de723381dd3863009a1"
+    },
+    "helpers/stage-controller.stdout.log": {
+      "bytes": 16213,
+      "ctime_ns": 1794363232743000000,
+      "dev": 2080,
+      "ino": 2623251,
+      "mtime_ns": 1794363232743000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/stage-controller.stdout.log",
+      "sha256": "8e05ec6ecabebb8bc180b0b963a818da83fe26c7b7adeb3f4b9f4a1006a0a20f"
+    },
+    "install/arm-complete.json": {
+      "bytes": 143,
+      "ctime_ns": 1794364094897874468,
+      "dev": 2080,
+      "ino": 2631646,
+      "mtime_ns": 1794364094897874468,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-complete.json",
+      "sha256": "752885ce1f30d8d9334e6f03eec7e5192fe0acd9bb90049f0add86429e7b36c8"
+    },
+    "install/arm-disk-usage-result.json": {
+      "bytes": 416,
+      "ctime_ns": 1794364094894000000,
+      "dev": 2080,
+      "ino": 2631645,
+      "mtime_ns": 1794364094894000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-disk-usage-result.json",
+      "sha256": "f381cff0ea3dbd042e9f6a18ae386a0c8652d4a439d8b84a2e8ff76ac87b4d82"
+    },
+    "install/arm-disk-usage.log": {
+      "bytes": 263,
+      "ctime_ns": 1794364094891000000,
+      "dev": 2080,
+      "ino": 2631644,
+      "mtime_ns": 1794364094891000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-disk-usage.log",
+      "sha256": "fce66227cb729665e6441c855f951303ed7629b3ad97f47dee390c30925eec92"
+    },
+    "install/arm-exact-build-id-result.json": {
+      "bytes": 415,
+      "ctime_ns": 1794364071070068267,
+      "dev": 2080,
+      "ino": 2631630,
+      "mtime_ns": 1794364071070068267,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-exact-build-id-result.json",
+      "sha256": "e3540d6126366280cd6122e613628541d8d8bf34d81d71ff84a27d4183db43e4"
+    },
+    "install/arm-exact-build-id.log": {
+      "bytes": 2120,
+      "ctime_ns": 1794364071065000000,
+      "dev": 2080,
+      "ino": 2631629,
+      "mtime_ns": 1794364071065000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-exact-build-id.log",
+      "sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    "install/arm-grub-after-arm-result.json": {
+      "bytes": 602,
+      "ctime_ns": 1794364094862060472,
+      "dev": 2080,
+      "ino": 2631641,
+      "mtime_ns": 1794364094862060472,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-after-arm-result.json",
+      "sha256": "e549fa2756a53e8c64119a9752cb537e4344b097daa95771e6014607d02be534"
+    },
+    "install/arm-grub-after-arm.json": {
+      "bytes": 570,
+      "ctime_ns": 1794364094829910536,
+      "dev": 2080,
+      "ino": 2631640,
+      "mtime_ns": 1794364094829910536,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-after-arm.json",
+      "sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768"
+    },
+    "install/arm-grub-after-arm.log": {
+      "bytes": 0,
+      "ctime_ns": 1794364094747000000,
+      "dev": 2080,
+      "ino": 2631639,
+      "mtime_ns": 1794364094747000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-after-arm.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/arm-grub-before-arm-result.json": {
+      "bytes": 589,
+      "ctime_ns": 1794364094668962928,
+      "dev": 2080,
+      "ino": 2631636,
+      "mtime_ns": 1794364094668962928,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-before-arm-result.json",
+      "sha256": "2cc8c5d8a9c7bbe5f3e916844a7b7adac85634a79478ff4cec6263016fe6382a"
+    },
+    "install/arm-grub-before-arm.json": {
+      "bytes": 441,
+      "ctime_ns": 1794364094606808323,
+      "dev": 2080,
+      "ino": 2631635,
+      "mtime_ns": 1794364094606808323,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-before-arm.json",
+      "sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a"
+    },
+    "install/arm-grub-before-arm.log": {
+      "bytes": 0,
+      "ctime_ns": 1794364094503000000,
+      "dev": 2080,
+      "ino": 2631634,
+      "mtime_ns": 1794364094503000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-before-arm.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/arm-idle-result.json": {
+      "bytes": 568,
+      "ctime_ns": 1794364070247495937,
+      "dev": 2080,
+      "ino": 2631628,
+      "mtime_ns": 1794364070247495937,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-idle-result.json",
+      "sha256": "b38dc9e7edaa08d0126ffd0928ee485479e63f0a271c39964cf91fc12bd52d6d"
+    },
+    "install/arm-idle.json": {
+      "bytes": 3016,
+      "ctime_ns": 1794364070222794240,
+      "dev": 2080,
+      "ino": 2631627,
+      "mtime_ns": 1794364070222794240,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-idle.json",
+      "sha256": "6fe12d60230504074591e695b35c4452e78ce799f8f62f7ad1a4fad973373cc0"
+    },
+    "install/arm-idle.log": {
+      "bytes": 0,
+      "ctime_ns": 1794364070132000000,
+      "dev": 2080,
+      "ino": 2631626,
+      "mtime_ns": 1794364070132000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-idle.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/arm-journal.jsonl": {
+      "bytes": 7396,
+      "ctime_ns": 1794364094899000000,
+      "dev": 2080,
+      "ino": 2631625,
+      "mtime_ns": 1794364094899000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-journal.jsonl",
+      "sha256": "0b350bda1e8725c926195fb131ffeaccc7ab9791814d05af6455ddc40c3159d3"
+    },
+    "install/arm-one-shot-result.json": {
+      "bytes": 463,
+      "ctime_ns": 1794364094741871353,
+      "dev": 2080,
+      "ino": 2631638,
+      "mtime_ns": 1794364094741871353,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-one-shot-result.json",
+      "sha256": "f3c6e4d8ff950d05fbca8e7a89c411edc92552d8a8706e3a95a6450f6a77dc57"
+    },
+    "install/arm-one-shot.log": {
+      "bytes": 0,
+      "ctime_ns": 1794364094674000000,
+      "dev": 2080,
+      "ino": 2631637,
+      "mtime_ns": 1794364094674000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-one-shot.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/arm-protected-before-arm-result.json": {
+      "bytes": 755,
+      "ctime_ns": 1794364094497465965,
+      "dev": 2080,
+      "ino": 2631633,
+      "mtime_ns": 1794364094497465965,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-protected-before-arm-result.json",
+      "sha256": "1c421c8f454b48742ce2eee2fc133035e59b9a27671c9ecbd96b28709fcb4d12"
+    },
+    "install/arm-protected-before-arm.json": {
+      "bytes": 48,
+      "ctime_ns": 1794364094409000000,
+      "dev": 2080,
+      "ino": 2631632,
+      "mtime_ns": 1794364094409000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-protected-before-arm.json",
+      "sha256": "2bded74268a8b18a486881b031ad3d1143596edb56d3b388bcbd6b992a4507fd"
+    },
+    "install/arm-protected-before-arm.log": {
+      "bytes": 0,
+      "ctime_ns": 1794364071174000000,
+      "dev": 2080,
+      "ino": 2631631,
+      "mtime_ns": 1794364071174000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-protected-before-arm.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/arm-sync-result.json": {
+      "bytes": 315,
+      "ctime_ns": 1794364094885000000,
+      "dev": 2080,
+      "ino": 2631643,
+      "mtime_ns": 1794364094885000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-sync-result.json",
+      "sha256": "9279e15764ded1efa01450e25a5ed72fcbd314ed08d2fe290ce5eaccaa7894a2"
+    },
+    "install/arm-sync.log": {
+      "bytes": 0,
+      "ctime_ns": 1794364094867000000,
+      "dev": 2080,
+      "ino": 2631642,
+      "mtime_ns": 1794364094867000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-sync.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/check-complete.json": {
+      "bytes": 145,
+      "ctime_ns": 1794363313292000000,
+      "dev": 2080,
+      "ino": 2631575,
+      "mtime_ns": 1794363313292000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-complete.json",
+      "sha256": "c049043594d1502d7fa1c765be67c90311f42b52b567295d68308c9ad947662b"
+    },
+    "install/check-dependencies-efivarfs-result.json": {
+      "bytes": 528,
+      "ctime_ns": 1794363313036635546,
+      "dev": 2080,
+      "ino": 2631564,
+      "mtime_ns": 1794363313036635546,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-efivarfs-result.json",
+      "sha256": "5ae68ebb90a7c11aced77e869f8246708fe78dcbff2ee19540a9aae70cf4706b"
+    },
+    "install/check-dependencies-efivarfs.log": {
+      "bytes": 17,
+      "ctime_ns": 1794363313032000000,
+      "dev": 2080,
+      "ino": 2631563,
+      "mtime_ns": 1794363313032000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-efivarfs.log",
+      "sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    "install/check-dependencies-ext4-result.json": {
+      "bytes": 518,
+      "ctime_ns": 1794363313014000000,
+      "dev": 2080,
+      "ino": 2631560,
+      "mtime_ns": 1794363313014000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-ext4-result.json",
+      "sha256": "e623fdbe0fb9dfc79a64e125c1aa9c6a7da9922f9962297ed4e5d9e29e4438ee"
+    },
+    "install/check-dependencies-ext4.log": {
+      "bytes": 13,
+      "ctime_ns": 1794363313010000000,
+      "dev": 2080,
+      "ino": 2631559,
+      "mtime_ns": 1794363313010000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-ext4.log",
+      "sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    "install/check-dependencies-nls_iso8859_1-result.json": {
+      "bytes": 536,
+      "ctime_ns": 1794363313058069271,
+      "dev": 2080,
+      "ino": 2631568,
+      "mtime_ns": 1794363313058069271,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-nls_iso8859_1-result.json",
+      "sha256": "45c9ff51181cdb2d63b9ace8460dfb8d238347b68f0fec3d24da79bba9a26b2d"
+    },
+    "install/check-dependencies-nls_iso8859_1.log": {
+      "bytes": 168,
+      "ctime_ns": 1794363313054000000,
+      "dev": 2080,
+      "ino": 2631567,
+      "mtime_ns": 1794363313054000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-nls_iso8859_1.log",
+      "sha256": "c367d9055876141a0225f29e700a23b55e62dabbd842f9df26cd7867bd2c68f0"
+    },
+    "install/check-dependencies-sd_mod-result.json": {
+      "bytes": 524,
+      "ctime_ns": 1794363313003358033,
+      "dev": 2080,
+      "ino": 2631558,
+      "mtime_ns": 1794363313003358033,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-sd_mod-result.json",
+      "sha256": "ea4abb185bb5b581462b81d930510ee2f86b140e721357de2af740c9be878cc8"
+    },
+    "install/check-dependencies-sd_mod.log": {
+      "bytes": 15,
+      "ctime_ns": 1794363312999000000,
+      "dev": 2080,
+      "ino": 2631557,
+      "mtime_ns": 1794363312999000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-sd_mod.log",
+      "sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    "install/check-dependencies-vfat-result.json": {
+      "bytes": 520,
+      "ctime_ns": 1794363313047346695,
+      "dev": 2080,
+      "ino": 2631566,
+      "mtime_ns": 1794363313047346695,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-vfat-result.json",
+      "sha256": "cf047f925c257b21b2347e9213684d4dff86f317f12db9440d2a746c7be7b05c"
+    },
+    "install/check-dependencies-vfat.log": {
+      "bytes": 13,
+      "ctime_ns": 1794363313043000000,
+      "dev": 2080,
+      "ino": 2631565,
+      "mtime_ns": 1794363313043000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-vfat.log",
+      "sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    "install/check-dependencies-virtio_net-result.json": {
+      "bytes": 532,
+      "ctime_ns": 1794363313024922346,
+      "dev": 2080,
+      "ino": 2631562,
+      "mtime_ns": 1794363313024922346,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_net-result.json",
+      "sha256": "6004dd5a5ab13e8ad5f00599f14b21e47068c83c57d4ceb69e33e1cda98ba705"
+    },
+    "install/check-dependencies-virtio_net.log": {
+      "bytes": 19,
+      "ctime_ns": 1794363313021000000,
+      "dev": 2080,
+      "ino": 2631561,
+      "mtime_ns": 1794363313021000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_net.log",
+      "sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    "install/check-dependencies-virtio_pci-result.json": {
+      "bytes": 532,
+      "ctime_ns": 1794363312981653917,
+      "dev": 2080,
+      "ino": 2631554,
+      "mtime_ns": 1794363312981653917,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_pci-result.json",
+      "sha256": "40733e959c0a1d59b5d559c2cc9b81ffca2feb712e58b4237693b6ed20f6cd7e"
+    },
+    "install/check-dependencies-virtio_pci.log": {
+      "bytes": 19,
+      "ctime_ns": 1794363312977000000,
+      "dev": 2080,
+      "ino": 2631553,
+      "mtime_ns": 1794363312977000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_pci.log",
+      "sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    "install/check-dependencies-virtio_scsi-result.json": {
+      "bytes": 534,
+      "ctime_ns": 1794363312992544739,
+      "dev": 2080,
+      "ino": 2631556,
+      "mtime_ns": 1794363312992544739,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_scsi-result.json",
+      "sha256": "944c2483f9a0225c1569658c127ccbf231ea26f3594db38e4d5109a90e647002"
+    },
+    "install/check-dependencies-virtio_scsi.log": {
+      "bytes": 20,
+      "ctime_ns": 1794363312988000000,
+      "dev": 2080,
+      "ino": 2631555,
+      "mtime_ns": 1794363312988000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_scsi.log",
+      "sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    "install/check-disk-usage-result.json": {
+      "bytes": 418,
+      "ctime_ns": 1794363313288341784,
+      "dev": 2080,
+      "ino": 2631574,
+      "mtime_ns": 1794363313288341784,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-disk-usage-result.json",
+      "sha256": "319ba8ac152647f74fc88b6b06410c7211f5daa2462fcbf2de1b793abfb77ba4"
+    },
+    "install/check-disk-usage.log": {
+      "bytes": 263,
+      "ctime_ns": 1794363313286000000,
+      "dev": 2080,
+      "ino": 2631573,
+      "mtime_ns": 1794363313286000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-disk-usage.log",
+      "sha256": "a270f61d56102e0d818b3df566a4918b7b4dc803172ebd096cc216174cba547e"
+    },
+    "install/check-exact-build-id-result.json": {
+      "bytes": 418,
+      "ctime_ns": 1794363311976000000,
+      "dev": 2080,
+      "ino": 2631546,
+      "mtime_ns": 1794363311976000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-exact-build-id-result.json",
+      "sha256": "c0bcf95076584c4f9a57fc33715e62cbcfb6cb145200f10707916aab4a67bf28"
+    },
+    "install/check-exact-build-id.log": {
+      "bytes": 2120,
+      "ctime_ns": 1794363311972000000,
+      "dev": 2080,
+      "ino": 2631545,
+      "mtime_ns": 1794363311972000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-exact-build-id.log",
+      "sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    "install/check-identity-after-stage-result.json": {
+      "bytes": 607,
+      "ctime_ns": 1794363312848000000,
+      "dev": 2080,
+      "ino": 2631549,
+      "mtime_ns": 1794363312848000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-identity-after-stage-result.json",
+      "sha256": "9cfaa994cafa8aa65f8bb65bfd8f5c99c21b360e147fbc1fe1da2736d5009c8d"
+    },
+    "install/check-identity-after-stage.json": {
+      "bytes": 35579,
+      "ctime_ns": 1794363312786000000,
+      "dev": 2080,
+      "ino": 2631548,
+      "mtime_ns": 1794363312786000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-identity-after-stage.json",
+      "sha256": "21cdc2787293887ada2569bca5523ec11dd11dc965fc1d115608488111ab8d86"
+    },
+    "install/check-identity-after-stage.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363311981000000,
+      "dev": 2080,
+      "ino": 2631547,
+      "mtime_ns": 1794363311981000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-identity-after-stage.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/check-idle-result.json": {
+      "bytes": 572,
+      "ctime_ns": 1794363311072877595,
+      "dev": 2080,
+      "ino": 2631544,
+      "mtime_ns": 1794363311072877595,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-idle-result.json",
+      "sha256": "237b94d70009e89b6391843f68fc6b1f79255d22f72b498f9f18280a1b3911b7"
+    },
+    "install/check-idle.json": {
+      "bytes": 3015,
+      "ctime_ns": 1794363311048516944,
+      "dev": 2080,
+      "ino": 2631543,
+      "mtime_ns": 1794363311048516944,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-idle.json",
+      "sha256": "2e153fa1ec844d69881b447c461cb4dd0558db02a05c71fa853ffc91be00dcf5"
+    },
+    "install/check-idle.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363310957000000,
+      "dev": 2080,
+      "ino": 2631542,
+      "mtime_ns": 1794363310957000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-idle.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/check-initrd-list-result.json": {
+      "bytes": 458,
+      "ctime_ns": 1794363313233021938,
+      "dev": 2080,
+      "ino": 2631570,
+      "mtime_ns": 1794363313233021938,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-initrd-list-result.json",
+      "sha256": "b1fd8bd583fbce955ab7ababf91fb93ef0876a8cc41de669885bf33abd3f0ebf"
+    },
+    "install/check-initrd-list.log": {
+      "bytes": 12627,
+      "ctime_ns": 1794363313214000000,
+      "dev": 2080,
+      "ino": 2631569,
+      "mtime_ns": 1794363313214000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-initrd-list.log",
+      "sha256": "201fc17091bb17aeb073880758de258d50ae11a77cb9412638e42d9506a4d912"
+    },
+    "install/check-journal.jsonl": {
+      "bytes": 13141,
+      "ctime_ns": 1794363313293000000,
+      "dev": 2080,
+      "ino": 2631541,
+      "mtime_ns": 1794363313293000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-journal.jsonl",
+      "sha256": "9e9b1b74d287f9545573fb908a7268e05cae0b91d363383940ef8282e27e6dea"
+    },
+    "install/check-modules-stage-result.json": {
+      "bytes": 711,
+      "ctime_ns": 1794363312969730302,
+      "dev": 2080,
+      "ino": 2631552,
+      "mtime_ns": 1794363312969730302,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-modules-stage-result.json",
+      "sha256": "0f77342df53cffb0a7a66eb0cf8cfecd597876261c69c32fcf50c0748413e04d"
+    },
+    "install/check-modules-stage.json": {
+      "bytes": 851,
+      "ctime_ns": 1794363312927748228,
+      "dev": 2080,
+      "ino": 2631551,
+      "mtime_ns": 1794363312927748228,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-modules-stage.json",
+      "sha256": "33f9f15ca0faeb498ceaee28b1c56faa5093694dcbf4426db03110613c771a36"
+    },
+    "install/check-modules-stage.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363312854000000,
+      "dev": 2080,
+      "ino": 2631550,
+      "mtime_ns": 1794363312854000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-modules-stage.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/checks.py": {
+      "bytes": 12170,
+      "ctime_ns": 1794363009093859186,
+      "dev": 2080,
+      "ino": 2623254,
+      "mtime_ns": 1794363009093859186,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/checks.py",
+      "sha256": "2e9a311ee545ed78ed176b697964d45fe8170ea17cc62cdc3637ab8521383b7a"
+    },
+    "install/configuration.json": {
+      "bytes": 865,
+      "ctime_ns": 1794363009094083824,
+      "dev": 2080,
+      "ino": 2623256,
+      "mtime_ns": 1794363009094083824,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/configuration.json",
+      "sha256": "cac81862b09be0cd788309196e07cd89a2702c9f22665f4be7e0c6c790a9767d"
+    },
+    "install/controller.py": {
+      "bytes": 25258,
+      "ctime_ns": 1794363009093966289,
+      "dev": 2080,
+      "ino": 2623255,
+      "mtime_ns": 1794363009093966289,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/controller.py",
+      "sha256": "6a5232df1ff93ad26faa219f341bfa2ae285bd988ee4e7f36dbc884305dbdbad"
+    },
+    "install/grub.cfg-before": {
+      "bytes": 30458,
+      "ctime_ns": 1794363065635694469,
+      "dev": 2080,
+      "ino": 2623270,
+      "mtime_ns": 1794363065635694469,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/grub.cfg-before",
+      "sha256": "17c2ab033f0f294e903ebf53b4a1c3aac5fe88ed8ee4df19aa3c0661937a6fbd"
+    },
+    "install/helper-hashes.json": {
+      "bytes": 173,
+      "ctime_ns": 1794363009096275411,
+      "dev": 2080,
+      "ino": 2623257,
+      "mtime_ns": 1794363009096275411,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/helper-hashes.json",
+      "sha256": "419c4029e8a47a34770b566ce8ba74677d2bd9c175cdc4edaa9f705ff53ee0ff"
+    },
+    "install/identity-pin.json": {
+      "bytes": 35579,
+      "ctime_ns": 1794363065636000000,
+      "dev": 2080,
+      "ino": 2623271,
+      "mtime_ns": 1794363065636000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/identity-pin.json",
+      "sha256": "21cdc2787293887ada2569bca5523ec11dd11dc965fc1d115608488111ab8d86"
+    },
+    "install/install-complete.json": {
+      "bytes": 147,
+      "ctime_ns": 1794364030609916828,
+      "dev": 2080,
+      "ino": 2631621,
+      "mtime_ns": 1794364030609916828,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-complete.json",
+      "sha256": "249bcecef6d57af4ea7a80361573935719110da4e2a411a535e685ebd545b48e"
+    },
+    "install/install-dependencies-efivarfs-result.json": {
+      "bytes": 417,
+      "ctime_ns": 1794363989029268584,
+      "dev": 2080,
+      "ino": 2631605,
+      "mtime_ns": 1794363989029268584,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-efivarfs-result.json",
+      "sha256": "b3b4897d2f1fd63fd1577d7fbaf4ab123ca4e495925230525d5adaea9f692ca8"
+    },
+    "install/install-dependencies-efivarfs.log": {
+      "bytes": 17,
+      "ctime_ns": 1794363989025000000,
+      "dev": 2080,
+      "ino": 2631604,
+      "mtime_ns": 1794363989025000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-efivarfs.log",
+      "sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    "install/install-dependencies-ext4-result.json": {
+      "bytes": 408,
+      "ctime_ns": 1794363989007655499,
+      "dev": 2080,
+      "ino": 2631601,
+      "mtime_ns": 1794363989007655499,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-ext4-result.json",
+      "sha256": "53953fb40aed73e6c9f87376a432ece62ac3c72a36142da525966814107cb339"
+    },
+    "install/install-dependencies-ext4.log": {
+      "bytes": 13,
+      "ctime_ns": 1794363989003000000,
+      "dev": 2080,
+      "ino": 2631600,
+      "mtime_ns": 1794363989003000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-ext4.log",
+      "sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    "install/install-dependencies-nls_iso8859_1-result.json": {
+      "bytes": 426,
+      "ctime_ns": 1794363989051257555,
+      "dev": 2080,
+      "ino": 2631609,
+      "mtime_ns": 1794363989051257555,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-nls_iso8859_1-result.json",
+      "sha256": "7e787c7570638eb60e294993592241291c78cb14c261fa4d4985b58e87ce74de"
+    },
+    "install/install-dependencies-nls_iso8859_1.log": {
+      "bytes": 72,
+      "ctime_ns": 1794363989047000000,
+      "dev": 2080,
+      "ino": 2631608,
+      "mtime_ns": 1794363989047000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-nls_iso8859_1.log",
+      "sha256": "1c33605d24854a99a986b1fec7e72d984cd92e0bfc76492e39ad9d250a807aac"
+    },
+    "install/install-dependencies-sd_mod-result.json": {
+      "bytes": 412,
+      "ctime_ns": 1794363988996822799,
+      "dev": 2080,
+      "ino": 2631599,
+      "mtime_ns": 1794363988996822799,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-sd_mod-result.json",
+      "sha256": "2a53079c72e9a9323759f4ee4f4f212341cec257b802d58ebfc44fe8b27248bf"
+    },
+    "install/install-dependencies-sd_mod.log": {
+      "bytes": 15,
+      "ctime_ns": 1794363988993000000,
+      "dev": 2080,
+      "ino": 2631598,
+      "mtime_ns": 1794363988993000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-sd_mod.log",
+      "sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    "install/install-dependencies-vfat-result.json": {
+      "bytes": 408,
+      "ctime_ns": 1794363989040000000,
+      "dev": 2080,
+      "ino": 2631607,
+      "mtime_ns": 1794363989040000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-vfat-result.json",
+      "sha256": "674e683ab0005ab7448873631f783afa8cb4b815a7e7e5f7723e0240fc6a66f3"
+    },
+    "install/install-dependencies-vfat.log": {
+      "bytes": 13,
+      "ctime_ns": 1794363989036000000,
+      "dev": 2080,
+      "ino": 2631606,
+      "mtime_ns": 1794363989036000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-vfat.log",
+      "sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    "install/install-dependencies-virtio_net-result.json": {
+      "bytes": 420,
+      "ctime_ns": 1794363989018521634,
+      "dev": 2080,
+      "ino": 2631603,
+      "mtime_ns": 1794363989018521634,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_net-result.json",
+      "sha256": "8ee3c90f39fd62e51f31b5d9b0079b164fd526e5f666877e9fc937606c2356e8"
+    },
+    "install/install-dependencies-virtio_net.log": {
+      "bytes": 19,
+      "ctime_ns": 1794363989014000000,
+      "dev": 2080,
+      "ino": 2631602,
+      "mtime_ns": 1794363989014000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_net.log",
+      "sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    "install/install-dependencies-virtio_pci-result.json": {
+      "bytes": 419,
+      "ctime_ns": 1794363988975052439,
+      "dev": 2080,
+      "ino": 2631595,
+      "mtime_ns": 1794363988975052439,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_pci-result.json",
+      "sha256": "6e9f3a7e59e69e2448d5910633487eb6e73610babf5a85b44caccf814a6a1924"
+    },
+    "install/install-dependencies-virtio_pci.log": {
+      "bytes": 19,
+      "ctime_ns": 1794363988971000000,
+      "dev": 2080,
+      "ino": 2631594,
+      "mtime_ns": 1794363988971000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_pci.log",
+      "sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    "install/install-dependencies-virtio_scsi-result.json": {
+      "bytes": 422,
+      "ctime_ns": 1794363988985977990,
+      "dev": 2080,
+      "ino": 2631597,
+      "mtime_ns": 1794363988985977990,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_scsi-result.json",
+      "sha256": "b2223e495f17ea9cbd2259212b81da7e15b49209ceb98624fca9f45b81160ce9"
+    },
+    "install/install-dependencies-virtio_scsi.log": {
+      "bytes": 20,
+      "ctime_ns": 1794363988982000000,
+      "dev": 2080,
+      "ino": 2631596,
+      "mtime_ns": 1794363988982000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_scsi.log",
+      "sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    "install/install-disk-usage-result.json": {
+      "bytes": 420,
+      "ctime_ns": 1794364030606276452,
+      "dev": 2080,
+      "ino": 2631620,
+      "mtime_ns": 1794364030606276452,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-disk-usage-result.json",
+      "sha256": "adae1dffd6c6baf19a747f0cfa92e6af279e76768e745d8b2716e9930c1884e5"
+    },
+    "install/install-disk-usage.log": {
+      "bytes": 263,
+      "ctime_ns": 1794364030603000000,
+      "dev": 2080,
+      "ino": 2631619,
+      "mtime_ns": 1794364030603000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-disk-usage.log",
+      "sha256": "3c5804019ea8239bece55951c51802ccb812d66ce3ee91699830094e8a4d947d"
+    },
+    "install/install-exact-build-id-result.json": {
+      "bytes": 420,
+      "ctime_ns": 1794363985809566931,
+      "dev": 2080,
+      "ino": 2631587,
+      "mtime_ns": 1794363985809566931,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-exact-build-id-result.json",
+      "sha256": "3fad33e2fe4cb25164c0b8b0afaffa6520500288de1fc873f34f87d85b576aa1"
+    },
+    "install/install-exact-build-id.log": {
+      "bytes": 2120,
+      "ctime_ns": 1794363985804000000,
+      "dev": 2080,
+      "ino": 2631586,
+      "mtime_ns": 1794363985804000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-exact-build-id.log",
+      "sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    "install/install-grub-installed-result.json": {
+      "bytes": 596,
+      "ctime_ns": 1794364030524419025,
+      "dev": 2080,
+      "ino": 2631617,
+      "mtime_ns": 1794364030524419025,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-grub-installed-result.json",
+      "sha256": "46add17e5b80a671e036ea48e6010929bd81c0d3ff626fd5922d5d7b8582a55d"
+    },
+    "install/install-grub-installed.json": {
+      "bytes": 441,
+      "ctime_ns": 1794364030461759504,
+      "dev": 2080,
+      "ino": 2631616,
+      "mtime_ns": 1794364030461759504,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-grub-installed.json",
+      "sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a"
+    },
+    "install/install-grub-installed.log": {
+      "bytes": 0,
+      "ctime_ns": 1794364030359000000,
+      "dev": 2080,
+      "ino": 2631615,
+      "mtime_ns": 1794364030359000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-grub-installed.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/install-idle-result.json": {
+      "bytes": 576,
+      "ctime_ns": 1794363985144388805,
+      "dev": 2080,
+      "ino": 2631585,
+      "mtime_ns": 1794363985144388805,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-idle-result.json",
+      "sha256": "9e805bf196ff1fd2e63400082ae9cff8bd9661fdf348baa1c3f1f321a9614e04"
+    },
+    "install/install-idle.json": {
+      "bytes": 3015,
+      "ctime_ns": 1794363985119607691,
+      "dev": 2080,
+      "ino": 2631584,
+      "mtime_ns": 1794363985119607691,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-idle.json",
+      "sha256": "b0e877a2d762a4041923f922c5b2ac3c8b40377e7f202239dae8bececb7cfba5"
+    },
+    "install/install-idle.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363985029000000,
+      "dev": 2080,
+      "ino": 2631583,
+      "mtime_ns": 1794363985029000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-idle.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/install-initrd-list-result.json": {
+      "bytes": 377,
+      "ctime_ns": 1794363989228260772,
+      "dev": 2080,
+      "ino": 2631611,
+      "mtime_ns": 1794363989228260772,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-initrd-list-result.json",
+      "sha256": "8698cc0b3139dcf15e6be03bdbc4aec8a5d81f0624c0b46ba221bcb91e255eeb"
+    },
+    "install/install-initrd-list.log": {
+      "bytes": 12627,
+      "ctime_ns": 1794363989206000000,
+      "dev": 2080,
+      "ino": 2631610,
+      "mtime_ns": 1794363989206000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-initrd-list.log",
+      "sha256": "201fc17091bb17aeb073880758de258d50ae11a77cb9412638e42d9506a4d912"
+    },
+    "install/install-journal.jsonl": {
+      "bytes": 13114,
+      "ctime_ns": 1794364030611000000,
+      "dev": 2080,
+      "ino": 2631582,
+      "mtime_ns": 1794364030611000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-journal.jsonl",
+      "sha256": "2aa55eacd9a7ad6cf0112d332d930d975ae8cf8b22269a4892348298c31e0af1"
+    },
+    "install/install-modules-installed-result.json": {
+      "bytes": 628,
+      "ctime_ns": 1794363986667789683,
+      "dev": 2080,
+      "ino": 2631591,
+      "mtime_ns": 1794363986667789683,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-modules-installed-result.json",
+      "sha256": "cb1ef3c355b1f38920491be25d743a8afdb5db09f450e18cfcba8f0ef6a26c7b"
+    },
+    "install/install-modules-installed.json": {
+      "bytes": 659,
+      "ctime_ns": 1794363986624083449,
+      "dev": 2080,
+      "ino": 2631590,
+      "mtime_ns": 1794363986624083449,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-modules-installed.json",
+      "sha256": "a37d9263dd09947ef5519be4fa9bb05a470d4fd9ff45211245fbe1d2832336ac"
+    },
+    "install/install-modules-installed.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363986552000000,
+      "dev": 2080,
+      "ino": 2631589,
+      "mtime_ns": 1794363986552000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-modules-installed.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/install-protected-after-result.json": {
+      "bytes": 753,
+      "ctime_ns": 1794364030351427684,
+      "dev": 2080,
+      "ino": 2631614,
+      "mtime_ns": 1794364030351427684,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-protected-after-result.json",
+      "sha256": "4b7bc4c32d0ccdb9f1fea34988dfb0603aa6c459c01535f2a2d4a6327a43aa66"
+    },
+    "install/install-protected-after.json": {
+      "bytes": 48,
+      "ctime_ns": 1794364030297000000,
+      "dev": 2080,
+      "ino": 2631613,
+      "mtime_ns": 1794364030297000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-protected-after.json",
+      "sha256": "2bded74268a8b18a486881b031ad3d1143596edb56d3b388bcbd6b992a4507fd"
+    },
+    "install/install-protected-after.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363989233000000,
+      "dev": 2080,
+      "ino": 2631612,
+      "mtime_ns": 1794363989233000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-protected-after.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/install-update-grub-result.json": {
+      "bytes": 332,
+      "ctime_ns": 1794363988963331342,
+      "dev": 2080,
+      "ino": 2631593,
+      "mtime_ns": 1794363988963331342,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-update-grub-result.json",
+      "sha256": "cf50ff7f1165b984e040fdf1e3f4e89843ef8b46f77b6e0d5cc5b023059eadc3"
+    },
+    "install/install-update-grub.log": {
+      "bytes": 1935,
+      "ctime_ns": 1794363988917000000,
+      "dev": 2080,
+      "ino": 2631592,
+      "mtime_ns": 1794363988917000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-update-grub.log",
+      "sha256": "15d7661c2bbdd92ab704f8ef5f74e3e0ca14995a578a05d09869fc1e8cf5b60b"
+    },
+    "install/installed-boot.json": {
+      "bytes": 1792,
+      "ctime_ns": 1794364030598036685,
+      "dev": 2080,
+      "ino": 2631618,
+      "mtime_ns": 1794364030598036685,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/installed-boot.json",
+      "sha256": "385fb8336d291d94e36cfe875899ebc931569a690255d7d9d36d53fe20084154"
+    },
+    "install/limited-stage.json": {
+      "bytes": 3481,
+      "ctime_ns": 1794363313277941559,
+      "dev": 2080,
+      "ino": 2631571,
+      "mtime_ns": 1794363313277941559,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/limited-stage.json",
+      "sha256": "67d487e3c830b9231f882bde5f8e8f3b9e36a063b76f314a059f3041c9ee76de"
+    },
+    "install/root-budget-before-install.json": {
+      "bytes": 215,
+      "ctime_ns": 1794363986502217752,
+      "dev": 2080,
+      "ino": 2631588,
+      "mtime_ns": 1794363986502217752,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/root-budget-before-install.json",
+      "sha256": "c791b5aa26aa3d2431458da0547f6a30b4fad0a4e5309793f792bcf02e9cd37c"
+    },
+    "install/root-budget.json": {
+      "bytes": 215,
+      "ctime_ns": 1794363313281030624,
+      "dev": 2080,
+      "ino": 2631572,
+      "mtime_ns": 1794363313281030624,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/root-budget.json",
+      "sha256": "76a9aaa262fdcecad85d55d36abdae2cb2033c901f2c5857c9170d064d903bed"
+    },
+    "install/stage-closure.json": {
+      "bytes": 207,
+      "ctime_ns": 1794363232726368235,
+      "dev": 2080,
+      "ino": 2631534,
+      "mtime_ns": 1794363232726368235,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-closure.json",
+      "sha256": "b875b35a4ccf6b6c4be0d027089f9e4a408d1cff8f54fe94d00be2b3ebf2d9fa"
+    },
+    "install/stage-complete.json": {
+      "bytes": 145,
+      "ctime_ns": 1794363232740038226,
+      "dev": 2080,
+      "ino": 2631537,
+      "mtime_ns": 1794363232740038226,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-complete.json",
+      "sha256": "12cc2a4d143c478a3ba9dc435d42577a99c665b9ed7b79fd21e330dd3af5a655"
+    },
+    "install/stage-dependencies-efivarfs-result.json": {
+      "bytes": 525,
+      "ctime_ns": 1794363223497011648,
+      "dev": 2080,
+      "ino": 2631482,
+      "mtime_ns": 1794363223497011648,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-efivarfs-result.json",
+      "sha256": "d724688bf403a6fff3ffaec66b100ecf7896abeee1d294e13e70348dc89b18d0"
+    },
+    "install/stage-dependencies-efivarfs.log": {
+      "bytes": 17,
+      "ctime_ns": 1794363223493000000,
+      "dev": 2080,
+      "ino": 2631481,
+      "mtime_ns": 1794363223493000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-efivarfs.log",
+      "sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    "install/stage-dependencies-ext4-result.json": {
+      "bytes": 517,
+      "ctime_ns": 1794363223475492753,
+      "dev": 2080,
+      "ino": 2631478,
+      "mtime_ns": 1794363223475492753,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-ext4-result.json",
+      "sha256": "489e73535f65c4699466909e7db4479ec1e092007e2c74883ce29f702afc82df"
+    },
+    "install/stage-dependencies-ext4.log": {
+      "bytes": 13,
+      "ctime_ns": 1794363223471000000,
+      "dev": 2080,
+      "ino": 2631477,
+      "mtime_ns": 1794363223471000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-ext4.log",
+      "sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    "install/stage-dependencies-nls_iso8859_1-result.json": {
+      "bytes": 535,
+      "ctime_ns": 1794363223518601107,
+      "dev": 2080,
+      "ino": 2631486,
+      "mtime_ns": 1794363223518601107,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-nls_iso8859_1-result.json",
+      "sha256": "38dde23482ccb2a549926c66cc6580c58a4af1679f23026e704399b9e5c63d88"
+    },
+    "install/stage-dependencies-nls_iso8859_1.log": {
+      "bytes": 165,
+      "ctime_ns": 1794363223514000000,
+      "dev": 2080,
+      "ino": 2631485,
+      "mtime_ns": 1794363223514000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-nls_iso8859_1.log",
+      "sha256": "2c643eec0db010a17e49f1f9241cdb2479f433da8b618941922c47cd0988cfb7"
+    },
+    "install/stage-dependencies-sd_mod-result.json": {
+      "bytes": 521,
+      "ctime_ns": 1794363223464814458,
+      "dev": 2080,
+      "ino": 2631476,
+      "mtime_ns": 1794363223464814458,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-sd_mod-result.json",
+      "sha256": "9c548b210f70e8b2207c80afbb4214cf0f7af5697571bdb0a94a8ca4bb231473"
+    },
+    "install/stage-dependencies-sd_mod.log": {
+      "bytes": 15,
+      "ctime_ns": 1794363223461000000,
+      "dev": 2080,
+      "ino": 2631475,
+      "mtime_ns": 1794363223461000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-sd_mod.log",
+      "sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    "install/stage-dependencies-vfat-result.json": {
+      "bytes": 517,
+      "ctime_ns": 1794363223507789833,
+      "dev": 2080,
+      "ino": 2631484,
+      "mtime_ns": 1794363223507789833,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-vfat-result.json",
+      "sha256": "397179ce43887a3705ddc9352bf9ffa054d20b0b3bb2354c200e3a5f7dde0500"
+    },
+    "install/stage-dependencies-vfat.log": {
+      "bytes": 13,
+      "ctime_ns": 1794363223504000000,
+      "dev": 2080,
+      "ino": 2631483,
+      "mtime_ns": 1794363223504000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-vfat.log",
+      "sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    "install/stage-dependencies-virtio_net-result.json": {
+      "bytes": 529,
+      "ctime_ns": 1794363223486277370,
+      "dev": 2080,
+      "ino": 2631480,
+      "mtime_ns": 1794363223486277370,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_net-result.json",
+      "sha256": "5e03a669dbb9358d8ae8b67a7304f4d7999cc29224657ba5ad31067a13ea94ce"
+    },
+    "install/stage-dependencies-virtio_net.log": {
+      "bytes": 19,
+      "ctime_ns": 1794363223482000000,
+      "dev": 2080,
+      "ino": 2631479,
+      "mtime_ns": 1794363223482000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_net.log",
+      "sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    "install/stage-dependencies-virtio_pci-result.json": {
+      "bytes": 528,
+      "ctime_ns": 1794363223443000000,
+      "dev": 2080,
+      "ino": 2631472,
+      "mtime_ns": 1794363223443000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_pci-result.json",
+      "sha256": "e514aa9871734fcdfa8f3d32da2d5a5c3352b2a507b04724ed32fa36e5198e96"
+    },
+    "install/stage-dependencies-virtio_pci.log": {
+      "bytes": 19,
+      "ctime_ns": 1794363223438000000,
+      "dev": 2080,
+      "ino": 2631471,
+      "mtime_ns": 1794363223438000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_pci.log",
+      "sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    "install/stage-dependencies-virtio_scsi-result.json": {
+      "bytes": 531,
+      "ctime_ns": 1794363223453970379,
+      "dev": 2080,
+      "ino": 2631474,
+      "mtime_ns": 1794363223453970379,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_scsi-result.json",
+      "sha256": "caeb14b906aac8b4d9f366fe258f73456bde3e637e39eeec3e54603bb87185c0"
+    },
+    "install/stage-dependencies-virtio_scsi.log": {
+      "bytes": 20,
+      "ctime_ns": 1794363223450000000,
+      "dev": 2080,
+      "ino": 2631473,
+      "mtime_ns": 1794363223450000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_scsi.log",
+      "sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    "install/stage-depmod-limited-result.json": {
+      "bytes": 580,
+      "ctime_ns": 1794363223564245686,
+      "dev": 2080,
+      "ino": 2631511,
+      "mtime_ns": 1794363223564245686,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-depmod-limited-result.json",
+      "sha256": "e62737e5fb382b26f44a33209889eeeb42341e0b77427b70364b4edf38b74add"
+    },
+    "install/stage-depmod-limited.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363223527000000,
+      "dev": 2080,
+      "ino": 2631499,
+      "mtime_ns": 1794363223527000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-depmod-limited.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/stage-disk-usage-result.json": {
+      "bytes": 418,
+      "ctime_ns": 1794363232736000000,
+      "dev": 2080,
+      "ino": 2631536,
+      "mtime_ns": 1794363232736000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-disk-usage-result.json",
+      "sha256": "4ecb2b9d3d1217236877a748e9871c5487ddfc0fb3d0de578019cbfc8205fb1a"
+    },
+    "install/stage-disk-usage.log": {
+      "bytes": 263,
+      "ctime_ns": 1794363232732000000,
+      "dev": 2080,
+      "ino": 2631535,
+      "mtime_ns": 1794363232732000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-disk-usage.log",
+      "sha256": "2d6cf377258eb99d412cfc675216a92148e8b5d1f6746f15b173f2354a36e755"
+    },
+    "install/stage-exact-build-id-result.json": {
+      "bytes": 418,
+      "ctime_ns": 1794363009878284158,
+      "dev": 2080,
+      "ino": 2623263,
+      "mtime_ns": 1794363009878284158,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-exact-build-id-result.json",
+      "sha256": "5bf105d0af4c94493d4840744235785bed785b4f5397469d1f5fc17ff2d1d007"
+    },
+    "install/stage-exact-build-id.log": {
+      "bytes": 2120,
+      "ctime_ns": 1794363009873000000,
+      "dev": 2080,
+      "ino": 2623262,
+      "mtime_ns": 1794363009873000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-exact-build-id.log",
+      "sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    "install/stage-identity-before-result.json": {
+      "bytes": 597,
+      "ctime_ns": 1794363065630848749,
+      "dev": 2080,
+      "ino": 2623269,
+      "mtime_ns": 1794363065630848749,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-identity-before-result.json",
+      "sha256": "229f91c1eccbd1d33a5bb1b02cca62fe6ad3efa20266211197a0a4fcb8331cab"
+    },
+    "install/stage-identity-before.json": {
+      "bytes": 35579,
+      "ctime_ns": 1794363065590000000,
+      "dev": 2080,
+      "ino": 2623268,
+      "mtime_ns": 1794363065590000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-identity-before.json",
+      "sha256": "21cdc2787293887ada2569bca5523ec11dd11dc965fc1d115608488111ab8d86"
+    },
+    "install/stage-identity-before.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363064814000000,
+      "dev": 2080,
+      "ino": 2623267,
+      "mtime_ns": 1794363064814000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-identity-before.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/stage-idle-result.json": {
+      "bytes": 572,
+      "ctime_ns": 1794363009218376365,
+      "dev": 2080,
+      "ino": 2623261,
+      "mtime_ns": 1794363009218376365,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-idle-result.json",
+      "sha256": "d10f0a9ecd063bcc74bc83b733a29eb7b4541f0912c9c2f1bb6365274b633b28"
+    },
+    "install/stage-idle.json": {
+      "bytes": 3016,
+      "ctime_ns": 1794363009193569344,
+      "dev": 2080,
+      "ino": 2623260,
+      "mtime_ns": 1794363009193569344,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-idle.json",
+      "sha256": "e07207815567a4567c8d6fc44c71ef23008626e4bff8ed1e6594290ce02f7a79"
+    },
+    "install/stage-idle.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363009103000000,
+      "dev": 2080,
+      "ino": 2623259,
+      "mtime_ns": 1794363009103000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-idle.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install/stage-initramfs-off-root-result.json": {
+      "bytes": 1055,
+      "ctime_ns": 1794363232722410306,
+      "dev": 2080,
+      "ino": 2631533,
+      "mtime_ns": 1794363232722410306,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-initramfs-off-root-result.json",
+      "sha256": "e2c00f7bc6cd6fe81414faf04f6887cff5b3773ecb9e92ccbbd1b9e695a692ff"
+    },
+    "install/stage-initramfs-off-root.log": {
+      "bytes": 2650,
+      "ctime_ns": 1794363228278000000,
+      "dev": 2080,
+      "ino": 2631531,
+      "mtime_ns": 1794363228278000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-initramfs-off-root.log",
+      "sha256": "e84f83569531ac8700531c00f10044f92fdc01bfe4428af067a53d852ba852d6"
+    },
+    "install/stage-journal.jsonl": {
+      "bytes": 16213,
+      "ctime_ns": 1794363232741000000,
+      "dev": 2080,
+      "ino": 2623258,
+      "mtime_ns": 1794363232741000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-journal.jsonl",
+      "sha256": "8e05ec6ecabebb8bc180b0b963a818da83fe26c7b7adeb3f4b9f4a1006a0a20f"
+    },
+    "install/stage-modules-install-result.json": {
+      "bytes": 687,
+      "ctime_ns": 1794363223379455762,
+      "dev": 2080,
+      "ino": 2631470,
+      "mtime_ns": 1794363223379455762,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-modules-install-result.json",
+      "sha256": "65bd807914e2b903e87aa55c7a853b2fdffdc30986755effdd7bdb4f777010a6"
+    },
+    "install/stage-modules-install.log": {
+      "bytes": 3677085,
+      "ctime_ns": 1794363223319000000,
+      "dev": 2080,
+      "ino": 2623272,
+      "mtime_ns": 1794363223319000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-modules-install.log",
+      "sha256": "a703bf7e79cff9bd21b1ee614e33a9df2837ff71c095d66e278d4d3044e09b75"
+    },
+    "install/stage-protected-before-result.json": {
+      "bytes": 596,
+      "ctime_ns": 1794363064636005792,
+      "dev": 2080,
+      "ino": 2623266,
+      "mtime_ns": 1794363064636005792,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-protected-before-result.json",
+      "sha256": "411a8d3cb57a86f224a41ccd77311f32d6f66dbd3a9152b1879fcf0149b12ccd"
+    },
+    "install/stage-protected-before.json": {
+      "bytes": 23556132,
+      "ctime_ns": 1794363064562000000,
+      "dev": 2080,
+      "ino": 2623265,
+      "mtime_ns": 1794363064562000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-protected-before.json",
+      "sha256": "c936ad4af5a73b29df8d1c889aa2df13601f10fb9d1ff7a9508d3d09230d3d02"
+    },
+    "install/stage-protected-before.log": {
+      "bytes": 0,
+      "ctime_ns": 1794363009883000000,
+      "dev": 2080,
+      "ino": 2623264,
+      "mtime_ns": 1794363009883000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-protected-before.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "postboot/boot-kernel-journal.txt": {
+      "bytes": 60588,
+      "ctime_ns": 1794364219709000000,
+      "dev": 2080,
+      "ino": 2631660,
+      "mtime_ns": 1794364219709000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/boot-kernel-journal.txt",
+      "sha256": "bb42175a3608ffb3644fc2c766ced698c8ea01d7bca02f5e02c4e354a9ef0c32"
+    },
+    "postboot/cmdline.txt": {
+      "bytes": 139,
+      "ctime_ns": 1794364219685109756,
+      "dev": 2080,
+      "ino": 2631657,
+      "mtime_ns": 1794364219685109756,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/cmdline.txt",
+      "sha256": "260f0a15cefe5bb46431f0537c042ab6b94624f9598f8c38ba9528ad3ec4831d"
+    },
+    "postboot/cpuinfo.txt": {
+      "bytes": 111374,
+      "ctime_ns": 1794364219688967920,
+      "dev": 2080,
+      "ino": 2631659,
+      "mtime_ns": 1794364219688967920,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/cpuinfo.txt",
+      "sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921"
+    },
+    "postboot/dmesg.txt": {
+      "bytes": 51366,
+      "ctime_ns": 1794364219734000000,
+      "dev": 2080,
+      "ino": 2631661,
+      "mtime_ns": 1794364219734000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/dmesg.txt",
+      "sha256": "6b8b8be92e4184509feeb5b11749476e33ec24f09a4a515ed010eaa60a38e5c8"
+    },
+    "postboot/grub-environment.txt": {
+      "bytes": 12,
+      "ctime_ns": 1794364222001000000,
+      "dev": 2080,
+      "ino": 2631667,
+      "mtime_ns": 1794364222001000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/grub-environment.txt",
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    "postboot/grub.cfg": {
+      "bytes": 32383,
+      "ctime_ns": 1794364221975605985,
+      "dev": 2080,
+      "ino": 2631666,
+      "mtime_ns": 1794364221975605985,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/grub.cfg",
+      "sha256": "9797117f0ac48ebd8122a39b38716c3f7dd5c86c59ced0ead048389ae086f9a1"
+    },
+    "postboot/gs-proof.json": {
+      "bytes": 709,
+      "ctime_ns": 1794364223580423196,
+      "dev": 2080,
+      "ino": 2631677,
+      "mtime_ns": 1794364223580423196,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/gs-proof.json",
+      "sha256": "34e0e8eaa537dd42f36bbef547c271de2e2fe740131d1dd3f8cf92349f2683ea"
+    },
+    "postboot/modules.txt": {
+      "bytes": 48,
+      "ctime_ns": 1794364219686900493,
+      "dev": 2080,
+      "ino": 2631658,
+      "mtime_ns": 1794364219686900493,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/modules.txt",
+      "sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132"
+    },
+    "postboot/mount-boot-efi.txt": {
+      "bytes": 26,
+      "ctime_ns": 1794364223491000000,
+      "dev": 2080,
+      "ino": 2631672,
+      "mtime_ns": 1794364223491000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/mount-boot-efi.txt",
+      "sha256": "e8c67255efc0448583a1645c3d315d417cba50c01bdbe0260a4333a3e261b48d"
+    },
+    "postboot/mount-mnt-kdlock-builds.txt": {
+      "bytes": 33,
+      "ctime_ns": 1794364223500000000,
+      "dev": 2080,
+      "ino": 2631673,
+      "mtime_ns": 1794364223500000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/mount-mnt-kdlock-builds.txt",
+      "sha256": "3bda93efc31be965b14352cd48863f2bd1b11d8ed632e0b280a8db1e107567ab"
+    },
+    "postboot/mount-mnt-kdlock-builds2.txt": {
+      "bytes": 34,
+      "ctime_ns": 1794364223509000000,
+      "dev": 2080,
+      "ino": 2631674,
+      "mtime_ns": 1794364223509000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/mount-mnt-kdlock-builds2.txt",
+      "sha256": "c8a80456051a5abbc122afa9720b480e196e20082fa4511a3ce2a2c962f547ad"
+    },
+    "postboot/mount-root.txt": {
+      "bytes": 17,
+      "ctime_ns": 1794364223483000000,
+      "dev": 2080,
+      "ino": 2631671,
+      "mtime_ns": 1794364223483000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/mount-root.txt",
+      "sha256": "5684e9db57b2bdf63e8bd6e87299d59fc5d83f14f850816171b7a816006838cc"
+    },
+    "postboot/normal-recovery-boot-unchanged.json": {
+      "bytes": 1755,
+      "ctime_ns": 1794364223553043242,
+      "dev": 2080,
+      "ino": 2631676,
+      "mtime_ns": 1794364223553043242,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/normal-recovery-boot-unchanged.json",
+      "sha256": "e7ebcfb8468ac3965cddfad5563554c1881589ed49474018a5df6e850d1cf332"
+    },
+    "postboot/prior-arm-complete.json": {
+      "bytes": 143,
+      "ctime_ns": 1794364222014054082,
+      "dev": 2080,
+      "ino": 2631668,
+      "mtime_ns": 1794364222014054082,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/prior-arm-complete.json",
+      "sha256": "752885ce1f30d8d9334e6f03eec7e5192fe0acd9bb90049f0add86429e7b36c8"
+    },
+    "postboot/prior-armed-grub.json": {
+      "bytes": 570,
+      "ctime_ns": 1794364222016004919,
+      "dev": 2080,
+      "ino": 2631669,
+      "mtime_ns": 1794364222016004919,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/prior-armed-grub.json",
+      "sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768"
+    },
+    "postboot/prior-candidate-boot-unchanged.json": {
+      "bytes": 2427,
+      "ctime_ns": 1794364223421691517,
+      "dev": 2080,
+      "ino": 2631670,
+      "mtime_ns": 1794364223421691517,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/prior-candidate-boot-unchanged.json",
+      "sha256": "6f0f114959a2f0c9fe6c8b29b575b037f748723c018615146dd91bd1401a7a21"
+    },
+    "postboot/result.json": {
+      "bytes": 163210,
+      "ctime_ns": 1794364223584239547,
+      "dev": 2080,
+      "ino": 2631678,
+      "mtime_ns": 1794364223584239547,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/result.json",
+      "sha256": "9d9c7203ef44ab2e92c2d99b9a15663f4a38f8fa000b433c2a900825ee209e31"
+    },
+    "postboot/running-kernel-notes.bin": {
+      "bytes": 476,
+      "ctime_ns": 1794364219743919435,
+      "dev": 2080,
+      "ino": 2631662,
+      "mtime_ns": 1794364219743919435,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/running-kernel-notes.bin",
+      "sha256": "86a2472732bdedf985a236086c8951cd2cd1ff88c232894edc22787cc8b95bae"
+    },
+    "postboot/ssh-service.txt": {
+      "bytes": 7,
+      "ctime_ns": 1794364223522000000,
+      "dev": 2080,
+      "ino": 2631675,
+      "mtime_ns": 1794364223522000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/ssh-service.txt",
+      "sha256": "45df5ad5e0ecfa54d3226343e0e6857337494ba6e32f189d1174070665d8c659"
+    },
+    "postboot/uname.json": {
+      "bytes": 120,
+      "ctime_ns": 1794364219682454383,
+      "dev": 2080,
+      "ino": 2631656,
+      "mtime_ns": 1794364219682454383,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/uname.json",
+      "sha256": "e1640a1fbc18dd3912dcad99e61508c91ab9e011ac13af182de17b847a9f4238"
+    },
+    "postboot/vmlinux-notes.txt": {
+      "bytes": 2120,
+      "ctime_ns": 1794364220778000000,
+      "dev": 2080,
+      "ino": 2631663,
+      "mtime_ns": 1794364220778000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/vmlinux-notes.txt",
+      "sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    "postboot/vmlinux-sections.txt": {
+      "bytes": 5644,
+      "ctime_ns": 1794364221968000000,
+      "dev": 2080,
+      "ino": 2631665,
+      "mtime_ns": 1794364221968000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/vmlinux-sections.txt",
+      "sha256": "2acab6dc144a718056369b45c953207101970e5e7a8cd79b5568f78e4c847334"
+    },
+    "postboot/vmlinux-symbols.txt": {
+      "bytes": 13022530,
+      "ctime_ns": 1794364221210000000,
+      "dev": 2080,
+      "ino": 2631664,
+      "mtime_ns": 1794364221210000000,
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/vmlinux-symbols.txt",
+      "sha256": "e827413b746ec17552a3793bdaec88eca3ddfdba94722151a9afbc9f9a2a104b"
+    }
+  },
+  "scope": "Read-only immutable receipts/configuration. No protocol, build, test, process or live-state operations.",
+  "utc": "2026-11-11T02:59:01.321749+00:00"
+}

@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "modprobe",
+    "-S",
+    "7.0.0-38-kdrebuild4",
+    "--show-depends",
+    "virtio_scsi"
+  ],
+  "elapsed_seconds": 0.006989515000896063,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_scsi.log",
+  "log_sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f",
+  "returncode": 0,
+  "timed_out": false
+}

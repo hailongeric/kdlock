@@ -1,0 +1,18 @@
+filename:       /mnt/kdlock-builds/kdlock-main-work/kernel4-fixtures-0a07f678-01a1bc4f/module-build/mutex/kd_runtime_fixture.ko
+description:    Ordinary kdlock mutex runtime kernel mechanism fixture (unrun source)
+license:        GPL
+srcversion:     3B986C723630E57416AB57E
+depends:        
+name:           kd_runtime_fixture
+retpoline:      Y
+vermagic:       7.0.0-38-kdrebuild4 SMP preempt mod_unload modversions 
+parm:           gs_offset:Actual running-target current_task GS offset, verified from its kernel ELF/source (ulong)
+parm:           gs_verified:Operator supplied the exact running-target GS/configuration receipt (bool)
+parm:           immutable_text:Module/source dependencies remain unpatched through final source/native users (bool)
+parm:           auxiliary_contract:Operator admits this target's task-owned auxiliary stack/context contract (bool)
+parm:           source_size:Exact fixture_source_body ELF symbol size from this module binary (uint)
+parm:           step_size:Exact fixture_source_step ELF symbol size from this module binary (uint)
+parm:           dependency_page_limit:Explicit maximum retained module-owned executable dependency pages (uint)
+parm:           total_source_byte_limit:Explicit maximum total copied body, callee and dependency bytes (ulong)
+parm:           source_version:Explicit module/kernel/configuration identity for this mechanism run (charp)
+parm:           event_capacity:Explicit preallocated scalar-observation record count (ulong)

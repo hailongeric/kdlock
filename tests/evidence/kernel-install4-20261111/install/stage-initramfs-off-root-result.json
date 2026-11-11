@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "unshare",
+    "--mount",
+    "--propagation",
+    "private",
+    "/bin/sh",
+    "-c",
+    "set -eu; mount --bind \"$1/lib/modules\" /lib/modules; exec env TMPDIR=\"$2\" modules=list mkinitramfs -d \"$3\" -o \"$4\" \"$5\"",
+    "kdrebuild4-initramfs",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/limited",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/initramfs-temp",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/initramfs-config",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/initrd.img-7.0.0-38-kdrebuild4",
+    "7.0.0-38-kdrebuild4"
+  ],
+  "elapsed_seconds": 9.150497426999209,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-initramfs-off-root.log",
+  "log_sha256": "e84f83569531ac8700531c00f10044f92fdc01bfe4428af067a53d852ba852d6",
+  "returncode": 0,
+  "timed_out": false
+}

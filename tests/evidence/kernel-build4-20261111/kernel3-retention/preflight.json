@@ -1,0 +1,98 @@
+{
+  "current": {
+    "boot": "884c4a65-4f4c-4a6b-89a3-cefd65221615",
+    "release": "7.0.0-38-kdlock1",
+    "taint": 0
+  },
+  "free_bytes": {
+    "/": 1273212928,
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f": 9987166208
+  },
+  "helper": {
+    "identity": {
+      "allocated": 20480,
+      "ctime_ns": 1794361883459000000,
+      "dev": 2080,
+      "gid": 0,
+      "ino": 2622841,
+      "mode": 420,
+      "mtime_ns": 1794361883459000000,
+      "nlink": 1,
+      "size": 16896,
+      "uid": 0
+    },
+    "sha256": "d39219016ad1bc0c4240797ad9179731080093b617f26ad7f1f487c0c6beae2b",
+    "size": 16896
+  },
+  "installed_before": {
+    "/boot/System.map-7.0.0-38-kdrebuild3": {
+      "identity": {
+        "allocated": 10571776,
+        "ctime_ns": 1794341978038000000,
+        "dev": 2049,
+        "gid": 0,
+        "ino": 85654,
+        "mode": 420,
+        "mtime_ns": 1794341978038000000,
+        "nlink": 1,
+        "size": 10565464,
+        "uid": 0
+      },
+      "sha256": "e7723218a35731108e2a1ae4ea1b33942fe7c1e44cc6671bc9345f08222c4d22",
+      "size": 10565464
+    },
+    "/boot/config-7.0.0-38-kdrebuild3": {
+      "identity": {
+        "allocated": 311296,
+        "ctime_ns": 1794341978077723455,
+        "dev": 2049,
+        "gid": 0,
+        "ino": 85657,
+        "mode": 420,
+        "mtime_ns": 1794341978077723455,
+        "nlink": 1,
+        "size": 308548,
+        "uid": 0
+      },
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "size": 308548
+    },
+    "/boot/initrd.img-7.0.0-38-kdrebuild3": {
+      "identity": {
+        "allocated": 103190528,
+        "ctime_ns": 1794341991230000000,
+        "dev": 2049,
+        "gid": 0,
+        "ino": 85659,
+        "mode": 420,
+        "mtime_ns": 1794341991013000000,
+        "nlink": 1,
+        "size": 103176800,
+        "uid": 0
+      },
+      "sha256": "30edb5699e61260afd54efedf1f23f0ab5ba77248ecdd55895b923b54eae045c",
+      "size": 103176800
+    },
+    "/boot/vmlinuz-7.0.0-38-kdrebuild3": {
+      "identity": {
+        "allocated": 17195008,
+        "ctime_ns": 1794341977956442256,
+        "dev": 2049,
+        "gid": 0,
+        "ino": 38356,
+        "mode": 420,
+        "mtime_ns": 1794341977956442256,
+        "nlink": 1,
+        "size": 17187328,
+        "uid": 0
+      },
+      "sha256": "582e7b7b7be00fe9ba6f373ed25ad27864a13949c0bff1d7fa466271d479733e",
+      "size": 17187328
+    }
+  },
+  "recovery": {
+    "host_free_bytes": 9583472640,
+    "sha256": "4144fa7ae9b1ea5363ce8d7ca6f54f8d88269526d908448f8fd51d91ee48fdbf",
+    "source": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-retention-preflight-01/recovery.json"
+  }
+}

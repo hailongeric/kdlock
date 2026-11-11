@@ -1,0 +1,414 @@
+{
+  "AGENTS.md": {
+    "bytes": 3363,
+    "sha256": "6ab0935b9cae372c19809470e4207c415ee4226cff814e066a456c813c2d4303"
+  },
+  "Kbuild": {
+    "bytes": 1267,
+    "sha256": "bc7ed7236b1a931cc05b7c3390d47c8e46c27801e58e4ee86322c6f646b54e2c"
+  },
+  "Kconfig": {
+    "bytes": 876,
+    "sha256": "2546e02759b4bea08d5a27395e58421d0ef21936d5085281ecfb7236f38cd340"
+  },
+  "README.md": {
+    "bytes": 20178,
+    "sha256": "38b5aa2f4b090da07aa7a1a94d8c9e82b970f80b30c9a41b9dc9a1cf958257a8"
+  },
+  "disassem/archive.py": {
+    "bytes": 18711,
+    "sha256": "0dff097683107c37b57cda8e8edeb05b4f70a52adb05ac9efe55f15981d677ea"
+  },
+  "disassem/artifact.py": {
+    "bytes": 16131,
+    "sha256": "09a5fe9cbbf44d04206f0a430b590a169c3bc1405105ba7d6f9aa4b1a0522815"
+  },
+  "disassem/backend/__init__.py": {
+    "bytes": 231,
+    "sha256": "8a10f2d55cb13aaa224f43c9b527a6f91e24a79baa7b7c2bd03b9f1f4ac97ae7"
+  },
+  "disassem/backend/assist.py": {
+    "bytes": 3729,
+    "sha256": "4db555895df0c0c47daedb34bd2a88a4090ed1ab6b17e74428a2a6dd8faa1eda"
+  },
+  "disassem/backend/compat.py": {
+    "bytes": 904,
+    "sha256": "9234e51b76c3f9b3688408b17d6501d69d2b8581d4d169ed83865dda9fcebe5d"
+  },
+  "disassem/backend/conflict.py": {
+    "bytes": 6749,
+    "sha256": "ac4f435b4008130e03a8910b9159b1009216f5cf47748986eb090219db8f695d"
+  },
+  "disassem/backend/diagnostics.py": {
+    "bytes": 514,
+    "sha256": "adb0bde8d44dd287b8232272f31c1b746fbe0effdb670cd81c07143a38c19bcc"
+  },
+  "disassem/backend/errors.py": {
+    "bytes": 412,
+    "sha256": "2df8c7e0313f907b7d89f8ef99154a8fc76fe10e88e789e532e579349c85c617"
+  },
+  "disassem/backend/instructions.py": {
+    "bytes": 13935,
+    "sha256": "78b70b7a883db410ea83add5ba94fb85685c159f82c6e959713a16bf9e64a6e1"
+  },
+  "disassem/backend/normal.py": {
+    "bytes": 11404,
+    "sha256": "72d11aff60b4561485000397f59355ad78e6a958ca6daadd8fa4c00ca36ed864"
+  },
+  "disassem/compiler.py": {
+    "bytes": 25302,
+    "sha256": "ddcc1f364620ca7413899db7e114fd8741ab379a3c5ad5ccd819be4d47f8368a"
+  },
+  "disassem/coverage.py": {
+    "bytes": 3464,
+    "sha256": "6bfb02fa269588b9ad531d10e9e2a2738ef3c3bf9c35821e12d097209a3451e9"
+  },
+  "disassem/feedback.py": {
+    "bytes": 11273,
+    "sha256": "4d68ebb58181006cb8b92c8fed78f20c76204ce0ca17202c9a7ccafca7c08cb4"
+  },
+  "disassem/fragment.py": {
+    "bytes": 10679,
+    "sha256": "b5f2787df43b94540f26c9b5156bb476415bdb0d0adfa7565dfbc087767da7cd"
+  },
+  "disassem/image_builder.py": {
+    "bytes": 17601,
+    "sha256": "30781d85aef41df36f6b6a1da3449e29871c4a181686f9dfcd3a962cbb1a02bf"
+  },
+  "disassem/learning.py": {
+    "bytes": 33737,
+    "sha256": "2f8b47caa933338e5c0134eb17a0ae4a051f6b24920504dce1d9eb85d24c4ef3"
+  },
+  "disassem/lowering.py": {
+    "bytes": 28755,
+    "sha256": "abd1ca8be29212916925f87c3205c84b6d68e32c702316632d6f743cbbad7328"
+  },
+  "disassem/requirements.txt": {
+    "bytes": 193,
+    "sha256": "dbca917470f57958f724a2ba13c131eee7f19ca3d3c7f9c97fbaef09a1bfa8e5"
+  },
+  "disassem/session.py": {
+    "bytes": 37215,
+    "sha256": "adbab87a51b65b92915cfde6d42f89e39588a4f070ad03adfb949b3b7e13c0e5"
+  },
+  "disassem/source_decode.py": {
+    "bytes": 9867,
+    "sha256": "c172f53a1e0851d75b0d5f10c31fd801aaf9faf5472ecc1b1892a71063605206"
+  },
+  "disassem/wire.py": {
+    "bytes": 11641,
+    "sha256": "ab9c6851df85392eeec500bac39ff9184ae4c6b6fade43bae30e39713cfeb31a"
+  },
+  "include/asm_head.h": {
+    "bytes": 1442,
+    "sha256": "dcae354686db004a515957fb73f6645d19f98bbb1fe3a07f1b73dfaff318455c"
+  },
+  "include/kd_control.h": {
+    "bytes": 1275,
+    "sha256": "403b7ef160f75b5f149abafd35da59bac89215a5f5e22c4138714d6b6dcbad6a"
+  },
+  "include/kd_mutex.h": {
+    "bytes": 5857,
+    "sha256": "56b8541b70beb5c9b952d66b2eab8f89d57ea9e92bdec4617757fdf5eefdad3e"
+  },
+  "include/kd_mutex_api.h": {
+    "bytes": 2637,
+    "sha256": "086a000a572c40b1657412c57e4cd5773c5efdd8b186dd1db2504a68df49b5f0"
+  },
+  "include/kd_regs.h": {
+    "bytes": 7890,
+    "sha256": "72ee3d149d22570e960e536c6a8c2e1e1bae289b8a2c1c17bd2599e64aa4ca1a"
+  },
+  "include/kd_spin_api.h": {
+    "bytes": 1144,
+    "sha256": "bc34bd6327f35172d2671d11e98eab8a5e50b8aeb5508ad49dc095598a843908"
+  },
+  "include/mutex_api.S": {
+    "bytes": 1876,
+    "sha256": "95005f70e04b21f3e7c3c10ecffc7726548a233eed35288a72d1203593978929"
+  },
+  "include/mutex_entry.S": {
+    "bytes": 1761,
+    "sha256": "6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108"
+  },
+  "include/native_resume.S": {
+    "bytes": 2249,
+    "sha256": "6c57676d9194a2f2090d602fdf55bba891add8b6f8d560472bfb4fd7bbf4b0dd"
+  },
+  "include/wrapper.S": {
+    "bytes": 3456,
+    "sha256": "42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5"
+  },
+  "kernel/channel.c": {
+    "bytes": 8787,
+    "sha256": "17803ac448b5f836c311457451106df047fc73e2dd5a3aa32b837159e3c69b03"
+  },
+  "kernel/channel.h": {
+    "bytes": 2012,
+    "sha256": "606ce81101fc1c53805dc22c870747b6faba3b931302fcf003a3b7bd2fd948f3"
+  },
+  "kernel/compiled_image.c": {
+    "bytes": 14847,
+    "sha256": "0ef92a96b335041523341c2918641cef0c7aa7c0cbfc32e5f3ccd0484db47f2d"
+  },
+  "kernel/compiled_image.h": {
+    "bytes": 4244,
+    "sha256": "ec54afc42d2aa32079c2c28de7af7ba7141abbdece9c0c1e36361ea6ad2b29c9"
+  },
+  "kernel/control.c": {
+    "bytes": 27904,
+    "sha256": "c50a6de92ef238f387e023473937c418c02314bd7353082db69915a7fb79853d"
+  },
+  "kernel/control.h": {
+    "bytes": 7947,
+    "sha256": "410021ca0e235e57e093b1056af2cb19d9d2199d679a3811efebaeef53002912"
+  },
+  "kernel/episode.c": {
+    "bytes": 34835,
+    "sha256": "f57821cecc48d398848ece4af8546041b7d86696981bcb726606741e00dd231e"
+  },
+  "kernel/episode.h": {
+    "bytes": 5770,
+    "sha256": "471cae935f7b3b1ff2f0afbe5392e8f1cb2d786461b9a316c5c968ad080d09c4"
+  },
+  "kernel/exports.c": {
+    "bytes": 1082,
+    "sha256": "193bab180ebeb7e38a1a809e354244681947b6d8fdd897f130a83aed76b173a1"
+  },
+  "kernel/feedback.c": {
+    "bytes": 16318,
+    "sha256": "fb00418fd7443ff0cff4ab5af9d1a4ffe0fd691f29f0b17ae33d8baa653960f0"
+  },
+  "kernel/feedback.h": {
+    "bytes": 9425,
+    "sha256": "e65def1ab23fdc490a7ab0b18a2f1b8bc00f538c17e62e0f1cacbc6c809a0464"
+  },
+  "kernel/feedback_publish.c": {
+    "bytes": 13955,
+    "sha256": "eab297e4eb31259d1f0ca9b32be051c6604e2f80d5fe7a0c2fa7c89017c96104"
+  },
+  "kernel/feedback_publish.h": {
+    "bytes": 7927,
+    "sha256": "04c14ae7abb8346230fbe2f6eeadf79c57f91be4cf8204676b7e79a1153d4066"
+  },
+  "kernel/image.c": {
+    "bytes": 10329,
+    "sha256": "2045cb89d88175e9b73f7d3b247b72943fbcfa8eaaa3a2ffede0e670968e2bd3"
+  },
+  "kernel/image.h": {
+    "bytes": 8070,
+    "sha256": "49b080029f0abc3ea87e6230cbb925a22f8dbdea50242b42664ce47b135044e5"
+  },
+  "kernel/image_inputs.h": {
+    "bytes": 1311,
+    "sha256": "a56154b1717dfa494c767a87355128d92f9f710c9bc4ebdc0729a4ca3f8bdc40"
+  },
+  "kernel/image_owner.c": {
+    "bytes": 17392,
+    "sha256": "c647127502b78d6a3d0d29040d98bf97bc87e666f5418755a876ff0a6b14ff15"
+  },
+  "kernel/image_owner.h": {
+    "bytes": 9128,
+    "sha256": "0bdc71a22db182ee6ffc89834a30c28a348c1724c60ea6649ef53141380ffccb"
+  },
+  "kernel/integration/BUILDING.md": {
+    "bytes": 9003,
+    "sha256": "12ae79448491551ebfe967d2a86818273bc707cc20277afc2dd232135fb7a8fa"
+  },
+  "kernel/integration/CONTROL.md": {
+    "bytes": 7483,
+    "sha256": "c90b04e736d2070e3ced4c92ee91ee59b48330de71413fe2a0cb78ce07bf4bd5"
+  },
+  "kernel/integration/IMAGES.md": {
+    "bytes": 17011,
+    "sha256": "94a3ee669e29e680f3c09d491bf9e92bb9066e4be7cdaaacafab82d76de19f30"
+  },
+  "kernel/integration/README.md": {
+    "bytes": 17421,
+    "sha256": "ebc955703d4cf9a8a60f446858dd69bde7f15206e4109a9826c4e30ae7b5bac1"
+  },
+  "kernel/integration/apply_target.py": {
+    "bytes": 18590,
+    "sha256": "83983bed0868855fabb83ca0fd66f23e8120bdd6196ec621ef951464466f7086"
+  },
+  "kernel/integration/task_struct.patch": {
+    "bytes": 2629,
+    "sha256": "ce09f22277695687904b9d181b52e5429c05413a9768060d405152fb848eb4ec"
+  },
+  "kernel/jit.c": {
+    "bytes": 26074,
+    "sha256": "0ad0decd674e5325b1c6ee813e2ae43f441d50fe375608d07761da856faffeea"
+  },
+  "kernel/jit.h": {
+    "bytes": 12498,
+    "sha256": "35e54bbe397171aaacc8989821e99e62e34650bb2eb86a5b634019f699a2acbd"
+  },
+  "kernel/lifecycle.c": {
+    "bytes": 6301,
+    "sha256": "2c687ff078212732b86ba8438b5e04bb0ae9bc0d7f7ef0a2b2693a793e5585dc"
+  },
+  "kernel/lifecycle.h": {
+    "bytes": 3154,
+    "sha256": "946cb5cad5e7a6895efb3617f935f8369a58e03bccf002ca4ed2bb24d02aafdc"
+  },
+  "kernel/mutex.c": {
+    "bytes": 27756,
+    "sha256": "c89d44756d9445c686940cd6fdb670a772c34f2acb65aaa5df3997647b1eabcf"
+  },
+  "kernel/mutex.h": {
+    "bytes": 10281,
+    "sha256": "4f7a7a8cd98d32d1bed7558f9fcf092b49fe9f6bd67fba2a6b21c2b983531f2f"
+  },
+  "kernel/mutex_api.c": {
+    "bytes": 5662,
+    "sha256": "4d4f748347a0121fca271e3843ca4ca86fb0e83c26f9fa76690f8080b32978a6"
+  },
+  "kernel/mutex_api.h": {
+    "bytes": 1799,
+    "sha256": "c82dc9aa859a1a6d15350bf15344d0ffd000bcd80baa773f1f474c16c4fcf316"
+  },
+  "kernel/mutex_release.c": {
+    "bytes": 13302,
+    "sha256": "7f1ae92ef9bafbcfa8b4e55f63d0fe8e0d478de100538e6c943bc6ece2078a64"
+  },
+  "kernel/mutex_release.h": {
+    "bytes": 5842,
+    "sha256": "22f099efc4319a2ecd70448f70732fafbb6c1f044de2e4d5d4a4f7e4a1cca057"
+  },
+  "kernel/native_entry.c": {
+    "bytes": 7496,
+    "sha256": "8f2aaa2e92e25032c3cf3a129b0f5b00d1dd759a62ca3d53aec1ee89a96b800c"
+  },
+  "kernel/native_entry.h": {
+    "bytes": 1991,
+    "sha256": "80d60672aaa65bb4cdf1884b5f25031571c1ab5e2d7f589cf2fce6524bb70c2e"
+  },
+  "kernel/observation.c": {
+    "bytes": 293,
+    "sha256": "1d9a4ac626de10516682680904c958bd0af1539eae0828b4236b5e0bea2b2e3a"
+  },
+  "kernel/observation.h": {
+    "bytes": 3446,
+    "sha256": "6ce2bcb3aab7ab0090133c807fb56310220432256b77a3ccf3403b5f2e829d62"
+  },
+  "kernel/owner_progress.c": {
+    "bytes": 8507,
+    "sha256": "1332e0d46caa92421bf7cb4aada70bb804d178e706ea3b9c54bfa47de559c383"
+  },
+  "kernel/owner_progress.h": {
+    "bytes": 3764,
+    "sha256": "06d4b5390826247a96d943c6d0e8c61a5af2e53e107f8338648f9654280ab83b"
+  },
+  "kernel/request_pool.c": {
+    "bytes": 18875,
+    "sha256": "1a058bfad5ea6440f3f2bdc513a266e84e4cbcf5aa5e61b4aeef2b22b41a1986"
+  },
+  "kernel/request_pool.h": {
+    "bytes": 9965,
+    "sha256": "f1450e3bc166f0a784809fd496d6471ef5ec13baa25c1e71ecf73e78cb6ecc90"
+  },
+  "kernel/runtime.c": {
+    "bytes": 30439,
+    "sha256": "98ebbe6414a18b1f379d95ea756387429b76782620a5e57099156ed32bd30d12"
+  },
+  "kernel/runtime.h": {
+    "bytes": 3496,
+    "sha256": "7b1ab3673f2a6e6cc7846d3ecb0d971bd9d1a7c7d35944647735ebdfec66e670"
+  },
+  "kernel/source_epoch.c": {
+    "bytes": 6933,
+    "sha256": "2ef40e9ad005caf758c31f9947bf0b49b67f7bf19eae3a0ec8684090ebe8ff12"
+  },
+  "kernel/source_epoch.h": {
+    "bytes": 6567,
+    "sha256": "f1838dbd76af0232cbee8909f85dbefe2972bd8bce8271faf909a98ec05fe0bb"
+  },
+  "kernel/source_provider.c": {
+    "bytes": 4789,
+    "sha256": "c242e5bd9a091461a2c6f9d5d8907102d8986c62897959629c04789f8f0aa49e"
+  },
+  "kernel/source_provider.h": {
+    "bytes": 3194,
+    "sha256": "0bde73385ec8620af476303299b559440d2da181797fb82a1d39a36a26c5f261"
+  },
+  "kernel/source_stack.c": {
+    "bytes": 2336,
+    "sha256": "81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302"
+  },
+  "kernel/source_stack.h": {
+    "bytes": 2031,
+    "sha256": "91458b0aa42309ebcf3c8b474bd2420f24574558e3362b1f993f21f0d7d4f16d"
+  },
+  "kernel/state.c": {
+    "bytes": 12871,
+    "sha256": "dc7177d0bd47dbe2aa836df989ecf66c35f8ddfd389b89c8c01e9239bd9fcf06"
+  },
+  "kernel/state.h": {
+    "bytes": 8209,
+    "sha256": "4b94cde46a54a8e4859dfc765e2a24c68f1f5aa084e3bf892145d4d8c2803501"
+  },
+  "kernel/target.h": {
+    "bytes": 574,
+    "sha256": "37c98012e3bca9db2ff3bac401bfb3eefe2c63b0625cb96ec67774bd8e3a225f"
+  },
+  "kernel/task_progress.c": {
+    "bytes": 2724,
+    "sha256": "191d1cf54b30689fe7243e48bd7c3f6e6e34b63ccb3ff9bd2feff034ac307c9e"
+  },
+  "kernel/task_progress.h": {
+    "bytes": 2386,
+    "sha256": "e51bb0e84a9ce4aed2d575d59f09b3048b16bca4b0d8f8417711cd55635ad4c3"
+  },
+  "kernel/task_setup.c": {
+    "bytes": 6911,
+    "sha256": "a4a510f30b3dddeff1b9eb8d3f09f25bfd5b98529326aaa3628db7fc4160c30a"
+  },
+  "kernel/task_setup.h": {
+    "bytes": 4511,
+    "sha256": "bb1e830d13f49f6235dc0587a4828bb3ecf2307fa3a8901698c658399420f975"
+  },
+  "kernel/task_state.c": {
+    "bytes": 7592,
+    "sha256": "6a9c5402fcdb6cdd69d32c892b1873ea3495d3b85c4d2aeede1c84497f19932a"
+  },
+  "kernel/task_state.h": {
+    "bytes": 6038,
+    "sha256": "e965f08ba0edb079cc2793514d6d813c780f735f79f1a1922bfc10aa196e259f"
+  },
+  "kernel/task_storage.c": {
+    "bytes": 7416,
+    "sha256": "19e6c702ce136a0cff67b905d7e4f7c4d049cf0f2bdbcfba6bbee262ac578caf"
+  },
+  "kernel/task_storage.h": {
+    "bytes": 5113,
+    "sha256": "2f53c1f3899cf311cfc3d9bb6028180d2f40b295ff124ec23b1ccc6388b54b95"
+  },
+  "tests/kernel/payload/Kbuild": {
+    "bytes": 335,
+    "sha256": "f3985b9360ea4469c19d7d4f49ea65d0e690ce73a644ded3c31b6198dbec7e55"
+  },
+  "tests/kernel/payload/runtime_fixture.c": {
+    "bytes": 31468,
+    "sha256": "cfbe9115bde3ea1b0f7718cf7c5b12eff92d71829bec2ef483d6d4312fd76fdd"
+  },
+  "tests/kernel/payload/runtime_fixture_observe.inc": {
+    "bytes": 8044,
+    "sha256": "00246e4df7fb56009ce3f3f2f7cf5b8443bb2e85ae0d5d011b52507f63346e1d"
+  },
+  "tests/kernel/run_runtime_fixture.py": {
+    "bytes": 63793,
+    "sha256": "a41b6116b895b76fbdb3d32ac0b94187e1dcba8468b0a1cbb428f9027b1cff41"
+  },
+  "tests/kernel/spin/payload/Kbuild": {
+    "bytes": 369,
+    "sha256": "be3c11359d6cf6ee1c294171f6f778268242f4f757044a1a24281cb2a42e6187"
+  },
+  "tests/kernel/spin/payload/spin_runtime_fixture.c": {
+    "bytes": 108,
+    "sha256": "e70f93a44a46435bce5200c5497f17215234afb888301958b68b6c1eb5461fb0"
+  },
+  "tests/kernel/spin/run_spin_runtime_fixture.py": {
+    "bytes": 293,
+    "sha256": "203034a6b44c2fc6355763d0367b581aa84eed629d4c8ad813216387a7c1a017"
+  }
+}

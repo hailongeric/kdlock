@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-install.py",
+    "stage",
+    "--controller-idle-recovery-confirmed",
+    "--final-build-success-reviewed",
+    "--final-build-receipt",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/result.json",
+    "--final-build-receipt-sha256",
+    "e00db7a5961879692c102a00e072c70ffc5fcbe1c5051a4203b256ea44a7cac1",
+    "--recovery-receipt",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kernel4-stage-recovery-spin-01.json",
+    "--recovery-receipt-sha256",
+    "2ba7984fb66df42d93d6f654c1ec17f4d298aad353569e15980471146709d177",
+    "--root-working-bytes",
+    "16777216",
+    "--checks",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-checks.py"
+  ],
+  "unix": 1794363009.0173118
+}

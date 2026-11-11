@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "modprobe",
+    "-d",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/full",
+    "-S",
+    "7.0.0-38-kdrebuild4",
+    "--show-depends",
+    "nls_iso8859_1"
+  ],
+  "elapsed_seconds": 0.006909532999998191,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-nls_iso8859_1.log",
+  "log_sha256": "2c643eec0db010a17e49f1f9241cdb2479f433da8b618941922c47cd0988cfb7",
+  "returncode": 0,
+  "timed_out": false
+}

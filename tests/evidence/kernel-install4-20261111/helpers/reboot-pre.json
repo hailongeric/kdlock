@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "systemctl",
+    "reboot"
+  ],
+  "arm_complete_sha256": "752885ce1f30d8d9334e6f03eec7e5192fe0acd9bb90049f0add86429e7b36c8",
+  "grub": {
+    "candidate_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild4-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "environment": {
+      "next_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild4-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+    },
+    "grub_cfg_sha256": "9797117f0ac48ebd8122a39b38716c3f7dd5c86c59ced0ead048389ae086f9a1",
+    "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+  },
+  "old_boot": "884c4a65-4f4c-4a6b-89a3-cefd65221615",
+  "phase": "PRE_REBOOT_VERIFIED",
+  "postboot_helper_sha256": "80b6eb9d68d2d1bcf1650c9bcdb315b63867665efaff08eda311d4d96c2790eb",
+  "recovery_sha256": "067f9b3df06079d5c0b2a9456f2397cbc1d4edfe0ae2df29b5057f438653b007",
+  "serial_path": "/tmp/qemu-serial.log",
+  "serial_size_before": 141840418,
+  "timeout_seconds": 30,
+  "unix": 1794364155.0472386
+}

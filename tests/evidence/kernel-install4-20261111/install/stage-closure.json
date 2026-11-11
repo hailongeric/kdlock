@@ -1,0 +1,6 @@
+{
+  "modules": [
+    "kernel/fs/nls/nls_iso8859-1.ko"
+  ],
+  "namespace": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/limited/lib/modules/7.0.0-38-kdrebuild4"
+}

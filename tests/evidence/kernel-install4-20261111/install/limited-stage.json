@@ -1,0 +1,140 @@
+{
+  "closure": {
+    "efivarfs": {
+      "builtin": true,
+      "modules": []
+    },
+    "ext4": {
+      "builtin": true,
+      "modules": []
+    },
+    "nls_iso8859_1": {
+      "builtin": false,
+      "modules": [
+        "kernel/fs/nls/nls_iso8859-1.ko"
+      ]
+    },
+    "sd_mod": {
+      "builtin": true,
+      "modules": []
+    },
+    "vfat": {
+      "builtin": true,
+      "modules": []
+    },
+    "virtio_net": {
+      "builtin": true,
+      "modules": []
+    },
+    "virtio_pci": {
+      "builtin": true,
+      "modules": []
+    },
+    "virtio_scsi": {
+      "builtin": true,
+      "modules": []
+    }
+  },
+  "initrd": {
+    "sha256": "9b356a73d19bb9861fa05a7a77e6bad4ed875462b7cd9fe780f9a8554c34c31d",
+    "size": 30886382
+  },
+  "namespace": [
+    {
+      "mode": 420,
+      "name": "config-7.0.0-38-kdrebuild4",
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "size": 308548
+    },
+    {
+      "mode": 420,
+      "name": "kernel/fs/nls/nls_iso8859-1.ko",
+      "sha256": "d9f40ac78baedee8e5551bb4c59970057fcfea30793bdbe7179b6657c3e7e8a0",
+      "size": 12881
+    },
+    {
+      "mode": 420,
+      "name": "modules.alias",
+      "sha256": "a29f59569ef743ade2eada4d545211be2c5ba409842cb442c0548ecb51ec33bb",
+      "size": 45
+    },
+    {
+      "mode": 420,
+      "name": "modules.alias.bin",
+      "sha256": "87b6e280f77dbc7f4d6708f6d83aa23dac73185bc345bd7c98e5f619fc78ec37",
+      "size": 12
+    },
+    {
+      "mode": 420,
+      "name": "modules.builtin",
+      "sha256": "ef55d7bc5528d2c01f38fc0d8f6473c75e14ec62349898f6529be9bbac871366",
+      "size": 10431
+    },
+    {
+      "mode": 420,
+      "name": "modules.builtin.alias.bin",
+      "sha256": "ddb31bce0e7763fe0cc7cbefc665014f1dd72c7e85b7088b6cee400851ff126c",
+      "size": 73581
+    },
+    {
+      "mode": 420,
+      "name": "modules.builtin.bin",
+      "sha256": "90087995b50c4b592b3e709cd0f9a4cbabd053997a07138cedc1ccec8939eb92",
+      "size": 12411
+    },
+    {
+      "mode": 420,
+      "name": "modules.builtin.modinfo",
+      "sha256": "f173376892f5d1a020884e4c6062b51e7cf26718928e1225be5e4fb507c34d0c",
+      "size": 159067
+    },
+    {
+      "mode": 420,
+      "name": "modules.dep",
+      "sha256": "62d21ca6730bf75db1e59c0f67605aca65e9a11e6caf8eb4bdd6c050678c954c",
+      "size": 32
+    },
+    {
+      "mode": 420,
+      "name": "modules.dep.bin",
+      "sha256": "2f99e85829ba8e1bc9a73c8c3075d741a1a13cdf87a39f121fd8332ce6e5ecee",
+      "size": 71
+    },
+    {
+      "mode": 420,
+      "name": "modules.devname",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "mode": 420,
+      "name": "modules.order",
+      "sha256": "e4277eeafe648baf12efd6f38ff57fd7afab785f4b098c480984ad704f506d3f",
+      "size": 31
+    },
+    {
+      "mode": 420,
+      "name": "modules.softdep",
+      "sha256": "ac2de753255c506934be29e69261f1485f51ee9cf9c2bf467bcc0c4cf95f8713",
+      "size": 55
+    },
+    {
+      "mode": 420,
+      "name": "modules.symbols",
+      "sha256": "e1d07394350b0dc9be149c69080c47fb1faf4d88fabb900387b6016e6fff3976",
+      "size": 49
+    },
+    {
+      "mode": 420,
+      "name": "modules.symbols.bin",
+      "sha256": "87b6e280f77dbc7f4d6708f6d83aa23dac73185bc345bd7c98e5f619fc78ec37",
+      "size": 12
+    },
+    {
+      "mode": 420,
+      "name": "modules.weakdep",
+      "sha256": "a1fffe1059d8150b5d402b3f284f507025a8d4b5881810cb17b3fda8b8ab9304",
+      "size": 55
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "modprobe",
+    "-d",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/limited",
+    "-S",
+    "7.0.0-38-kdrebuild4",
+    "--show-depends",
+    "virtio_net"
+  ],
+  "elapsed_seconds": 0.007105572000000393,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_net.log",
+  "log_sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426",
+  "returncode": 0,
+  "timed_out": false
+}

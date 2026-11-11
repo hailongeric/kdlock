@@ -1,0 +1,1986 @@
+{
+  "copies": [
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3552,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/final-identity.json",
+      "origin_sha256": "7c79198ee04da92873339bc5d02bd9cba47ac14598f13bf56baf25ce36c69a5c",
+      "path": "build/final-identity.json",
+      "storage_bytes": 3552,
+      "storage_sha256": "7c79198ee04da92873339bc5d02bd9cba47ac14598f13bf56baf25ce36c69a5c"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1052,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/gs-config.json",
+      "origin_sha256": "8f66576d3eb468ff047dcfdd0821a53f763a78e47de52e7a6cd74857cecb5b64",
+      "path": "build/gs-config.json",
+      "storage_bytes": 1052,
+      "storage_sha256": "8f66576d3eb468ff047dcfdd0821a53f763a78e47de52e7a6cd74857cecb5b64"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 6222,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01/result.json",
+      "origin_sha256": "e00db7a5961879692c102a00e072c70ffc5fcbe1c5051a4203b256ea44a7cac1",
+      "path": "build/result.json",
+      "storage_bytes": 6222,
+      "storage_sha256": "e00db7a5961879692c102a00e072c70ffc5fcbe1c5051a4203b256ea44a7cac1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 357,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/arm-controller-command.json",
+      "origin_sha256": "4d7bcf191455bc2ef61eb7890530511809f7ee2fc7f24f79b58b59787eb53ad3",
+      "path": "helpers/arm-controller-command.json",
+      "storage_bytes": 357,
+      "storage_sha256": "4d7bcf191455bc2ef61eb7890530511809f7ee2fc7f24f79b58b59787eb53ad3"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 180,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/arm-controller-result.json",
+      "origin_sha256": "1564922471a8094b67aa9fb9aaa8f6d2f134f0a5e16d8c33c7025105b17b5b06",
+      "path": "helpers/arm-controller-result.json",
+      "storage_bytes": 180,
+      "storage_sha256": "1564922471a8094b67aa9fb9aaa8f6d2f134f0a5e16d8c33c7025105b17b5b06"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 7396,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/arm-controller.stdout.log",
+      "origin_sha256": "0b350bda1e8725c926195fb131ffeaccc7ab9791814d05af6455ddc40c3159d3",
+      "path": "helpers/arm-controller.stdout.log",
+      "storage_bytes": 7396,
+      "storage_sha256": "0b350bda1e8725c926195fb131ffeaccc7ab9791814d05af6455ddc40c3159d3"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 4573,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/beforeboot-recovery.json",
+      "origin_sha256": "067f9b3df06079d5c0b2a9456f2397cbc1d4edfe0ae2df29b5057f438653b007",
+      "path": "helpers/beforeboot-recovery.json",
+      "storage_bytes": 4573,
+      "storage_sha256": "067f9b3df06079d5c0b2a9456f2397cbc1d4edfe0ae2df29b5057f438653b007"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 262,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/check-controller-command.json",
+      "origin_sha256": "1c9e809fd10c10e535d2785e934272b6566c491862bf3570bfdf48640bcae46a",
+      "path": "helpers/check-controller-command.json",
+      "storage_bytes": 262,
+      "storage_sha256": "1c9e809fd10c10e535d2785e934272b6566c491862bf3570bfdf48640bcae46a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 179,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/check-controller-result.json",
+      "origin_sha256": "c6fb28429c76d4b515e25daefc6a5261c21ba63894514f2c271c41b89dbd72d7",
+      "path": "helpers/check-controller-result.json",
+      "storage_bytes": 179,
+      "storage_sha256": "c6fb28429c76d4b515e25daefc6a5261c21ba63894514f2c271c41b89dbd72d7"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13141,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/check-controller.stdout.log",
+      "origin_sha256": "9e9b1b74d287f9545573fb908a7268e05cae0b91d363383940ef8282e27e6dea",
+      "path": "helpers/check-controller.stdout.log",
+      "storage_bytes": 13141,
+      "storage_sha256": "9e9b1b74d287f9545573fb908a7268e05cae0b91d363383940ef8282e27e6dea"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 561,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/helper-ast-and-pins.json",
+      "origin_sha256": "42f98c334050d9b144f7914ac68d882ebd81f24dc3cbfa4d76f545470fef1c3f",
+      "path": "helpers/helper-ast-and-pins.json",
+      "storage_bytes": 561,
+      "storage_sha256": "42f98c334050d9b144f7914ac68d882ebd81f24dc3cbfa4d76f545470fef1c3f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1997,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/install-controller-command.json",
+      "origin_sha256": "71928eb28c91e71a69cbac5d007c430698f90ab88982454ac1736f825e1e2830",
+      "path": "helpers/install-controller-command.json",
+      "storage_bytes": 1997,
+      "storage_sha256": "71928eb28c91e71a69cbac5d007c430698f90ab88982454ac1736f825e1e2830"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 179,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/install-controller-result.json",
+      "origin_sha256": "046cd52b2b972211cc4b3ebe9359a6d39f70397ccd8a3a04ec27787548884023",
+      "path": "helpers/install-controller-result.json",
+      "storage_bytes": 179,
+      "storage_sha256": "046cd52b2b972211cc4b3ebe9359a6d39f70397ccd8a3a04ec27787548884023"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13114,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/install-controller.stdout.log",
+      "origin_sha256": "2aa55eacd9a7ad6cf0112d332d930d975ae8cf8b22269a4892348298c31e0af1",
+      "path": "helpers/install-controller.stdout.log",
+      "storage_bytes": 13114,
+      "storage_sha256": "2aa55eacd9a7ad6cf0112d332d930d975ae8cf8b22269a4892348298c31e0af1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12170,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-checks.py",
+      "origin_sha256": "2e9a311ee545ed78ed176b697964d45fe8170ea17cc62cdc3637ab8521383b7a",
+      "path": "helpers/kdlock-kdrebuild4-checks.py",
+      "storage_bytes": 12170,
+      "storage_sha256": "2e9a311ee545ed78ed176b697964d45fe8170ea17cc62cdc3637ab8521383b7a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 25258,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-install.py",
+      "origin_sha256": "6a5232df1ff93ad26faa219f341bfa2ae285bd988ee4e7f36dbc884305dbdbad",
+      "path": "helpers/kdlock-kdrebuild4-install.py",
+      "storage_bytes": 25258,
+      "storage_sha256": "6a5232df1ff93ad26faa219f341bfa2ae285bd988ee4e7f36dbc884305dbdbad"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 20247,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kdrebuild4-postboot.py",
+      "origin_sha256": "80b6eb9d68d2d1bcf1650c9bcdb315b63867665efaff08eda311d4d96c2790eb",
+      "path": "helpers/kdlock-kdrebuild4-postboot.py",
+      "storage_bytes": 20247,
+      "storage_sha256": "80b6eb9d68d2d1bcf1650c9bcdb315b63867665efaff08eda311d4d96c2790eb"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 4497,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/kdlock-kernel4-stage-recovery-spin-01.json",
+      "origin_sha256": "2ba7984fb66df42d93d6f654c1ec17f4d298aad353569e15980471146709d177",
+      "path": "helpers/kdlock-kernel4-stage-recovery-spin-01.json",
+      "storage_bytes": 4497,
+      "storage_sha256": "2ba7984fb66df42d93d6f654c1ec17f4d298aad353569e15980471146709d177"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 517,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/postboot-controller-command.json",
+      "origin_sha256": "98dc395a5576a4553cb06319c30c4bad11d62905167902bcf33343686c9b636f",
+      "path": "helpers/postboot-controller-command.json",
+      "storage_bytes": 517,
+      "storage_sha256": "98dc395a5576a4553cb06319c30c4bad11d62905167902bcf33343686c9b636f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 179,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/postboot-controller-result.json",
+      "origin_sha256": "dfad80d156b2eef6ee3f8c8e89e99d522fa2ed2e9246a9a7a301e21a19153875",
+      "path": "helpers/postboot-controller-result.json",
+      "storage_bytes": 179,
+      "storage_sha256": "dfad80d156b2eef6ee3f8c8e89e99d522fa2ed2e9246a9a7a301e21a19153875"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 197,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/postboot-controller.stdout.log",
+      "origin_sha256": "bc899951e6b3beb6214d68400f1a868f3e9c5b8fdc5e7bd2a0aa0074b98d849b",
+      "path": "helpers/postboot-controller.stdout.log",
+      "storage_bytes": 197,
+      "storage_sha256": "bc899951e6b3beb6214d68400f1a868f3e9c5b8fdc5e7bd2a0aa0074b98d849b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 570,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/pre-reboot-grub.json",
+      "origin_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768",
+      "path": "helpers/pre-reboot-grub.json",
+      "storage_bytes": 570,
+      "storage_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3016,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/pre-reboot-idle.json",
+      "origin_sha256": "e81d152558b65cec81a4ec5d6acf1389342d5cf33fd78bf66d7261af1ef37f64",
+      "path": "helpers/pre-reboot-idle.json",
+      "storage_bytes": 3016,
+      "storage_sha256": "e81d152558b65cec81a4ec5d6acf1389342d5cf33fd78bf66d7261af1ef37f64"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 4496,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/preinstall-recovery.json",
+      "origin_sha256": "4d1e49b0806cf3f4e37e1bf6ad5177bd78060502694c54b19023b2b8f440d76d",
+      "path": "helpers/preinstall-recovery.json",
+      "storage_bytes": 4496,
+      "storage_sha256": "4d1e49b0806cf3f4e37e1bf6ad5177bd78060502694c54b19023b2b8f440d76d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1142,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/reboot-pre.json",
+      "origin_sha256": "63967485f8ba54b467e7f1644ef3a63bc6f832657cc22c2f0706ac5c630fa61c",
+      "path": "helpers/reboot-pre.json",
+      "storage_bytes": 1142,
+      "storage_sha256": "63967485f8ba54b467e7f1644ef3a63bc6f832657cc22c2f0706ac5c630fa61c"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 212,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/reboot-result.json",
+      "origin_sha256": "830ae0ec23d866f8c6b28826eaab4df949369673b51833285b43de86b19b460d",
+      "path": "helpers/reboot-result.json",
+      "storage_bytes": 212,
+      "storage_sha256": "830ae0ec23d866f8c6b28826eaab4df949369673b51833285b43de86b19b460d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3016,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/stage-check-window-closed.json",
+      "origin_sha256": "aaa3c562fae47d69173b09f2c4614cb5e0b797f03248023efa43afb5b0dd2089",
+      "path": "helpers/stage-check-window-closed.json",
+      "storage_bytes": 3016,
+      "storage_sha256": "aaa3c562fae47d69173b09f2c4614cb5e0b797f03248023efa43afb5b0dd2089"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1019,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/stage-controller-command.json",
+      "origin_sha256": "56c15b74d44060ab06363cee9b2c9fb2b03ad209f47b6d66cacc5865417f55c4",
+      "path": "helpers/stage-controller-command.json",
+      "storage_bytes": 1019,
+      "storage_sha256": "56c15b74d44060ab06363cee9b2c9fb2b03ad209f47b6d66cacc5865417f55c4"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 180,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/stage-controller-result.json",
+      "origin_sha256": "5195ce2b7041b53c39dcdcf356cfd1b14d63c22db4814de723381dd3863009a1",
+      "path": "helpers/stage-controller-result.json",
+      "storage_bytes": 180,
+      "storage_sha256": "5195ce2b7041b53c39dcdcf356cfd1b14d63c22db4814de723381dd3863009a1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 16213,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel4-install-helpers-spin-01/stage-controller.stdout.log",
+      "origin_sha256": "8e05ec6ecabebb8bc180b0b963a818da83fe26c7b7adeb3f4b9f4a1006a0a20f",
+      "path": "helpers/stage-controller.stdout.log",
+      "storage_bytes": 16213,
+      "storage_sha256": "8e05ec6ecabebb8bc180b0b963a818da83fe26c7b7adeb3f4b9f4a1006a0a20f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 143,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-complete.json",
+      "origin_sha256": "752885ce1f30d8d9334e6f03eec7e5192fe0acd9bb90049f0add86429e7b36c8",
+      "path": "install/arm-complete.json",
+      "storage_bytes": 143,
+      "storage_sha256": "752885ce1f30d8d9334e6f03eec7e5192fe0acd9bb90049f0add86429e7b36c8"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 416,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-disk-usage-result.json",
+      "origin_sha256": "f381cff0ea3dbd042e9f6a18ae386a0c8652d4a439d8b84a2e8ff76ac87b4d82",
+      "path": "install/arm-disk-usage-result.json",
+      "storage_bytes": 416,
+      "storage_sha256": "f381cff0ea3dbd042e9f6a18ae386a0c8652d4a439d8b84a2e8ff76ac87b4d82"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 263,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-disk-usage.log",
+      "origin_sha256": "fce66227cb729665e6441c855f951303ed7629b3ad97f47dee390c30925eec92",
+      "path": "install/arm-disk-usage.log",
+      "storage_bytes": 263,
+      "storage_sha256": "fce66227cb729665e6441c855f951303ed7629b3ad97f47dee390c30925eec92"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 415,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-exact-build-id-result.json",
+      "origin_sha256": "e3540d6126366280cd6122e613628541d8d8bf34d81d71ff84a27d4183db43e4",
+      "path": "install/arm-exact-build-id-result.json",
+      "storage_bytes": 415,
+      "storage_sha256": "e3540d6126366280cd6122e613628541d8d8bf34d81d71ff84a27d4183db43e4"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2120,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-exact-build-id.log",
+      "origin_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf",
+      "path": "install/arm-exact-build-id.log",
+      "storage_bytes": 2120,
+      "storage_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 602,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-after-arm-result.json",
+      "origin_sha256": "e549fa2756a53e8c64119a9752cb537e4344b097daa95771e6014607d02be534",
+      "path": "install/arm-grub-after-arm-result.json",
+      "storage_bytes": 602,
+      "storage_sha256": "e549fa2756a53e8c64119a9752cb537e4344b097daa95771e6014607d02be534"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 570,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-after-arm.json",
+      "origin_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768",
+      "path": "install/arm-grub-after-arm.json",
+      "storage_bytes": 570,
+      "storage_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-after-arm.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/arm-grub-after-arm.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 589,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-before-arm-result.json",
+      "origin_sha256": "2cc8c5d8a9c7bbe5f3e916844a7b7adac85634a79478ff4cec6263016fe6382a",
+      "path": "install/arm-grub-before-arm-result.json",
+      "storage_bytes": 589,
+      "storage_sha256": "2cc8c5d8a9c7bbe5f3e916844a7b7adac85634a79478ff4cec6263016fe6382a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 441,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-before-arm.json",
+      "origin_sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a",
+      "path": "install/arm-grub-before-arm.json",
+      "storage_bytes": 441,
+      "storage_sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-grub-before-arm.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/arm-grub-before-arm.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 568,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-idle-result.json",
+      "origin_sha256": "b38dc9e7edaa08d0126ffd0928ee485479e63f0a271c39964cf91fc12bd52d6d",
+      "path": "install/arm-idle-result.json",
+      "storage_bytes": 568,
+      "storage_sha256": "b38dc9e7edaa08d0126ffd0928ee485479e63f0a271c39964cf91fc12bd52d6d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3016,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-idle.json",
+      "origin_sha256": "6fe12d60230504074591e695b35c4452e78ce799f8f62f7ad1a4fad973373cc0",
+      "path": "install/arm-idle.json",
+      "storage_bytes": 3016,
+      "storage_sha256": "6fe12d60230504074591e695b35c4452e78ce799f8f62f7ad1a4fad973373cc0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-idle.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/arm-idle.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 7396,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-journal.jsonl",
+      "origin_sha256": "0b350bda1e8725c926195fb131ffeaccc7ab9791814d05af6455ddc40c3159d3",
+      "path": "install/arm-journal.jsonl",
+      "storage_bytes": 7396,
+      "storage_sha256": "0b350bda1e8725c926195fb131ffeaccc7ab9791814d05af6455ddc40c3159d3"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 463,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-one-shot-result.json",
+      "origin_sha256": "f3c6e4d8ff950d05fbca8e7a89c411edc92552d8a8706e3a95a6450f6a77dc57",
+      "path": "install/arm-one-shot-result.json",
+      "storage_bytes": 463,
+      "storage_sha256": "f3c6e4d8ff950d05fbca8e7a89c411edc92552d8a8706e3a95a6450f6a77dc57"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-one-shot.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/arm-one-shot.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 755,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-protected-before-arm-result.json",
+      "origin_sha256": "1c421c8f454b48742ce2eee2fc133035e59b9a27671c9ecbd96b28709fcb4d12",
+      "path": "install/arm-protected-before-arm-result.json",
+      "storage_bytes": 755,
+      "storage_sha256": "1c421c8f454b48742ce2eee2fc133035e59b9a27671c9ecbd96b28709fcb4d12"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 48,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-protected-before-arm.json",
+      "origin_sha256": "2bded74268a8b18a486881b031ad3d1143596edb56d3b388bcbd6b992a4507fd",
+      "path": "install/arm-protected-before-arm.json",
+      "storage_bytes": 48,
+      "storage_sha256": "2bded74268a8b18a486881b031ad3d1143596edb56d3b388bcbd6b992a4507fd"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-protected-before-arm.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/arm-protected-before-arm.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 315,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-sync-result.json",
+      "origin_sha256": "9279e15764ded1efa01450e25a5ed72fcbd314ed08d2fe290ce5eaccaa7894a2",
+      "path": "install/arm-sync-result.json",
+      "storage_bytes": 315,
+      "storage_sha256": "9279e15764ded1efa01450e25a5ed72fcbd314ed08d2fe290ce5eaccaa7894a2"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/arm-sync.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/arm-sync.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 145,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-complete.json",
+      "origin_sha256": "c049043594d1502d7fa1c765be67c90311f42b52b567295d68308c9ad947662b",
+      "path": "install/check-complete.json",
+      "storage_bytes": 145,
+      "storage_sha256": "c049043594d1502d7fa1c765be67c90311f42b52b567295d68308c9ad947662b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 528,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-efivarfs-result.json",
+      "origin_sha256": "5ae68ebb90a7c11aced77e869f8246708fe78dcbff2ee19540a9aae70cf4706b",
+      "path": "install/check-dependencies-efivarfs-result.json",
+      "storage_bytes": 528,
+      "storage_sha256": "5ae68ebb90a7c11aced77e869f8246708fe78dcbff2ee19540a9aae70cf4706b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 17,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-efivarfs.log",
+      "origin_sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d",
+      "path": "install/check-dependencies-efivarfs.log",
+      "storage_bytes": 17,
+      "storage_sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 518,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-ext4-result.json",
+      "origin_sha256": "e623fdbe0fb9dfc79a64e125c1aa9c6a7da9922f9962297ed4e5d9e29e4438ee",
+      "path": "install/check-dependencies-ext4-result.json",
+      "storage_bytes": 518,
+      "storage_sha256": "e623fdbe0fb9dfc79a64e125c1aa9c6a7da9922f9962297ed4e5d9e29e4438ee"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-ext4.log",
+      "origin_sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5",
+      "path": "install/check-dependencies-ext4.log",
+      "storage_bytes": 13,
+      "storage_sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 536,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-nls_iso8859_1-result.json",
+      "origin_sha256": "45c9ff51181cdb2d63b9ace8460dfb8d238347b68f0fec3d24da79bba9a26b2d",
+      "path": "install/check-dependencies-nls_iso8859_1-result.json",
+      "storage_bytes": 536,
+      "storage_sha256": "45c9ff51181cdb2d63b9ace8460dfb8d238347b68f0fec3d24da79bba9a26b2d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 168,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-nls_iso8859_1.log",
+      "origin_sha256": "c367d9055876141a0225f29e700a23b55e62dabbd842f9df26cd7867bd2c68f0",
+      "path": "install/check-dependencies-nls_iso8859_1.log",
+      "storage_bytes": 168,
+      "storage_sha256": "c367d9055876141a0225f29e700a23b55e62dabbd842f9df26cd7867bd2c68f0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 524,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-sd_mod-result.json",
+      "origin_sha256": "ea4abb185bb5b581462b81d930510ee2f86b140e721357de2af740c9be878cc8",
+      "path": "install/check-dependencies-sd_mod-result.json",
+      "storage_bytes": 524,
+      "storage_sha256": "ea4abb185bb5b581462b81d930510ee2f86b140e721357de2af740c9be878cc8"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 15,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-sd_mod.log",
+      "origin_sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785",
+      "path": "install/check-dependencies-sd_mod.log",
+      "storage_bytes": 15,
+      "storage_sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 520,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-vfat-result.json",
+      "origin_sha256": "cf047f925c257b21b2347e9213684d4dff86f317f12db9440d2a746c7be7b05c",
+      "path": "install/check-dependencies-vfat-result.json",
+      "storage_bytes": 520,
+      "storage_sha256": "cf047f925c257b21b2347e9213684d4dff86f317f12db9440d2a746c7be7b05c"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-vfat.log",
+      "origin_sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9",
+      "path": "install/check-dependencies-vfat.log",
+      "storage_bytes": 13,
+      "storage_sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 532,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_net-result.json",
+      "origin_sha256": "6004dd5a5ab13e8ad5f00599f14b21e47068c83c57d4ceb69e33e1cda98ba705",
+      "path": "install/check-dependencies-virtio_net-result.json",
+      "storage_bytes": 532,
+      "storage_sha256": "6004dd5a5ab13e8ad5f00599f14b21e47068c83c57d4ceb69e33e1cda98ba705"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 19,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_net.log",
+      "origin_sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426",
+      "path": "install/check-dependencies-virtio_net.log",
+      "storage_bytes": 19,
+      "storage_sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 532,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_pci-result.json",
+      "origin_sha256": "40733e959c0a1d59b5d559c2cc9b81ffca2feb712e58b4237693b6ed20f6cd7e",
+      "path": "install/check-dependencies-virtio_pci-result.json",
+      "storage_bytes": 532,
+      "storage_sha256": "40733e959c0a1d59b5d559c2cc9b81ffca2feb712e58b4237693b6ed20f6cd7e"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 19,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_pci.log",
+      "origin_sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10",
+      "path": "install/check-dependencies-virtio_pci.log",
+      "storage_bytes": 19,
+      "storage_sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 534,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_scsi-result.json",
+      "origin_sha256": "944c2483f9a0225c1569658c127ccbf231ea26f3594db38e4d5109a90e647002",
+      "path": "install/check-dependencies-virtio_scsi-result.json",
+      "storage_bytes": 534,
+      "storage_sha256": "944c2483f9a0225c1569658c127ccbf231ea26f3594db38e4d5109a90e647002"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 20,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-dependencies-virtio_scsi.log",
+      "origin_sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f",
+      "path": "install/check-dependencies-virtio_scsi.log",
+      "storage_bytes": 20,
+      "storage_sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 418,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-disk-usage-result.json",
+      "origin_sha256": "319ba8ac152647f74fc88b6b06410c7211f5daa2462fcbf2de1b793abfb77ba4",
+      "path": "install/check-disk-usage-result.json",
+      "storage_bytes": 418,
+      "storage_sha256": "319ba8ac152647f74fc88b6b06410c7211f5daa2462fcbf2de1b793abfb77ba4"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 263,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-disk-usage.log",
+      "origin_sha256": "a270f61d56102e0d818b3df566a4918b7b4dc803172ebd096cc216174cba547e",
+      "path": "install/check-disk-usage.log",
+      "storage_bytes": 263,
+      "storage_sha256": "a270f61d56102e0d818b3df566a4918b7b4dc803172ebd096cc216174cba547e"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 418,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-exact-build-id-result.json",
+      "origin_sha256": "c0bcf95076584c4f9a57fc33715e62cbcfb6cb145200f10707916aab4a67bf28",
+      "path": "install/check-exact-build-id-result.json",
+      "storage_bytes": 418,
+      "storage_sha256": "c0bcf95076584c4f9a57fc33715e62cbcfb6cb145200f10707916aab4a67bf28"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2120,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-exact-build-id.log",
+      "origin_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf",
+      "path": "install/check-exact-build-id.log",
+      "storage_bytes": 2120,
+      "storage_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 607,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-identity-after-stage-result.json",
+      "origin_sha256": "9cfaa994cafa8aa65f8bb65bfd8f5c99c21b360e147fbc1fe1da2736d5009c8d",
+      "path": "install/check-identity-after-stage-result.json",
+      "storage_bytes": 607,
+      "storage_sha256": "9cfaa994cafa8aa65f8bb65bfd8f5c99c21b360e147fbc1fe1da2736d5009c8d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 35579,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-identity-after-stage.json",
+      "origin_sha256": "21cdc2787293887ada2569bca5523ec11dd11dc965fc1d115608488111ab8d86",
+      "path": "install/check-identity-after-stage.json",
+      "storage_bytes": 35579,
+      "storage_sha256": "21cdc2787293887ada2569bca5523ec11dd11dc965fc1d115608488111ab8d86"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-identity-after-stage.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/check-identity-after-stage.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 572,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-idle-result.json",
+      "origin_sha256": "237b94d70009e89b6391843f68fc6b1f79255d22f72b498f9f18280a1b3911b7",
+      "path": "install/check-idle-result.json",
+      "storage_bytes": 572,
+      "storage_sha256": "237b94d70009e89b6391843f68fc6b1f79255d22f72b498f9f18280a1b3911b7"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3015,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-idle.json",
+      "origin_sha256": "2e153fa1ec844d69881b447c461cb4dd0558db02a05c71fa853ffc91be00dcf5",
+      "path": "install/check-idle.json",
+      "storage_bytes": 3015,
+      "storage_sha256": "2e153fa1ec844d69881b447c461cb4dd0558db02a05c71fa853ffc91be00dcf5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-idle.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/check-idle.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 458,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-initrd-list-result.json",
+      "origin_sha256": "b1fd8bd583fbce955ab7ababf91fb93ef0876a8cc41de669885bf33abd3f0ebf",
+      "path": "install/check-initrd-list-result.json",
+      "storage_bytes": 458,
+      "storage_sha256": "b1fd8bd583fbce955ab7ababf91fb93ef0876a8cc41de669885bf33abd3f0ebf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12627,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-initrd-list.log",
+      "origin_sha256": "201fc17091bb17aeb073880758de258d50ae11a77cb9412638e42d9506a4d912",
+      "path": "install/check-initrd-list.log",
+      "storage_bytes": 12627,
+      "storage_sha256": "201fc17091bb17aeb073880758de258d50ae11a77cb9412638e42d9506a4d912"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13141,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-journal.jsonl",
+      "origin_sha256": "9e9b1b74d287f9545573fb908a7268e05cae0b91d363383940ef8282e27e6dea",
+      "path": "install/check-journal.jsonl",
+      "storage_bytes": 13141,
+      "storage_sha256": "9e9b1b74d287f9545573fb908a7268e05cae0b91d363383940ef8282e27e6dea"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 711,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-modules-stage-result.json",
+      "origin_sha256": "0f77342df53cffb0a7a66eb0cf8cfecd597876261c69c32fcf50c0748413e04d",
+      "path": "install/check-modules-stage-result.json",
+      "storage_bytes": 711,
+      "storage_sha256": "0f77342df53cffb0a7a66eb0cf8cfecd597876261c69c32fcf50c0748413e04d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 851,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-modules-stage.json",
+      "origin_sha256": "33f9f15ca0faeb498ceaee28b1c56faa5093694dcbf4426db03110613c771a36",
+      "path": "install/check-modules-stage.json",
+      "storage_bytes": 851,
+      "storage_sha256": "33f9f15ca0faeb498ceaee28b1c56faa5093694dcbf4426db03110613c771a36"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-modules-stage.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/check-modules-stage.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12170,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/checks.py",
+      "origin_sha256": "2e9a311ee545ed78ed176b697964d45fe8170ea17cc62cdc3637ab8521383b7a",
+      "path": "install/checks.py",
+      "storage_bytes": 12170,
+      "storage_sha256": "2e9a311ee545ed78ed176b697964d45fe8170ea17cc62cdc3637ab8521383b7a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 865,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/configuration.json",
+      "origin_sha256": "cac81862b09be0cd788309196e07cd89a2702c9f22665f4be7e0c6c790a9767d",
+      "path": "install/configuration.json",
+      "storage_bytes": 865,
+      "storage_sha256": "cac81862b09be0cd788309196e07cd89a2702c9f22665f4be7e0c6c790a9767d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 25258,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/controller.py",
+      "origin_sha256": "6a5232df1ff93ad26faa219f341bfa2ae285bd988ee4e7f36dbc884305dbdbad",
+      "path": "install/controller.py",
+      "storage_bytes": 25258,
+      "storage_sha256": "6a5232df1ff93ad26faa219f341bfa2ae285bd988ee4e7f36dbc884305dbdbad"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 30458,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/grub.cfg-before",
+      "origin_sha256": "17c2ab033f0f294e903ebf53b4a1c3aac5fe88ed8ee4df19aa3c0661937a6fbd",
+      "path": "install/grub.cfg-before",
+      "storage_bytes": 30458,
+      "storage_sha256": "17c2ab033f0f294e903ebf53b4a1c3aac5fe88ed8ee4df19aa3c0661937a6fbd"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 173,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/helper-hashes.json",
+      "origin_sha256": "419c4029e8a47a34770b566ce8ba74677d2bd9c175cdc4edaa9f705ff53ee0ff",
+      "path": "install/helper-hashes.json",
+      "storage_bytes": 173,
+      "storage_sha256": "419c4029e8a47a34770b566ce8ba74677d2bd9c175cdc4edaa9f705ff53ee0ff"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 35579,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/identity-pin.json",
+      "origin_sha256": "21cdc2787293887ada2569bca5523ec11dd11dc965fc1d115608488111ab8d86",
+      "path": "install/identity-pin.json",
+      "storage_bytes": 35579,
+      "storage_sha256": "21cdc2787293887ada2569bca5523ec11dd11dc965fc1d115608488111ab8d86"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 147,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-complete.json",
+      "origin_sha256": "249bcecef6d57af4ea7a80361573935719110da4e2a411a535e685ebd545b48e",
+      "path": "install/install-complete.json",
+      "storage_bytes": 147,
+      "storage_sha256": "249bcecef6d57af4ea7a80361573935719110da4e2a411a535e685ebd545b48e"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 417,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-efivarfs-result.json",
+      "origin_sha256": "b3b4897d2f1fd63fd1577d7fbaf4ab123ca4e495925230525d5adaea9f692ca8",
+      "path": "install/install-dependencies-efivarfs-result.json",
+      "storage_bytes": 417,
+      "storage_sha256": "b3b4897d2f1fd63fd1577d7fbaf4ab123ca4e495925230525d5adaea9f692ca8"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 17,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-efivarfs.log",
+      "origin_sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d",
+      "path": "install/install-dependencies-efivarfs.log",
+      "storage_bytes": 17,
+      "storage_sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 408,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-ext4-result.json",
+      "origin_sha256": "53953fb40aed73e6c9f87376a432ece62ac3c72a36142da525966814107cb339",
+      "path": "install/install-dependencies-ext4-result.json",
+      "storage_bytes": 408,
+      "storage_sha256": "53953fb40aed73e6c9f87376a432ece62ac3c72a36142da525966814107cb339"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-ext4.log",
+      "origin_sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5",
+      "path": "install/install-dependencies-ext4.log",
+      "storage_bytes": 13,
+      "storage_sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 426,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-nls_iso8859_1-result.json",
+      "origin_sha256": "7e787c7570638eb60e294993592241291c78cb14c261fa4d4985b58e87ce74de",
+      "path": "install/install-dependencies-nls_iso8859_1-result.json",
+      "storage_bytes": 426,
+      "storage_sha256": "7e787c7570638eb60e294993592241291c78cb14c261fa4d4985b58e87ce74de"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 72,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-nls_iso8859_1.log",
+      "origin_sha256": "1c33605d24854a99a986b1fec7e72d984cd92e0bfc76492e39ad9d250a807aac",
+      "path": "install/install-dependencies-nls_iso8859_1.log",
+      "storage_bytes": 72,
+      "storage_sha256": "1c33605d24854a99a986b1fec7e72d984cd92e0bfc76492e39ad9d250a807aac"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 412,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-sd_mod-result.json",
+      "origin_sha256": "2a53079c72e9a9323759f4ee4f4f212341cec257b802d58ebfc44fe8b27248bf",
+      "path": "install/install-dependencies-sd_mod-result.json",
+      "storage_bytes": 412,
+      "storage_sha256": "2a53079c72e9a9323759f4ee4f4f212341cec257b802d58ebfc44fe8b27248bf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 15,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-sd_mod.log",
+      "origin_sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785",
+      "path": "install/install-dependencies-sd_mod.log",
+      "storage_bytes": 15,
+      "storage_sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 408,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-vfat-result.json",
+      "origin_sha256": "674e683ab0005ab7448873631f783afa8cb4b815a7e7e5f7723e0240fc6a66f3",
+      "path": "install/install-dependencies-vfat-result.json",
+      "storage_bytes": 408,
+      "storage_sha256": "674e683ab0005ab7448873631f783afa8cb4b815a7e7e5f7723e0240fc6a66f3"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-vfat.log",
+      "origin_sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9",
+      "path": "install/install-dependencies-vfat.log",
+      "storage_bytes": 13,
+      "storage_sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 420,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_net-result.json",
+      "origin_sha256": "8ee3c90f39fd62e51f31b5d9b0079b164fd526e5f666877e9fc937606c2356e8",
+      "path": "install/install-dependencies-virtio_net-result.json",
+      "storage_bytes": 420,
+      "storage_sha256": "8ee3c90f39fd62e51f31b5d9b0079b164fd526e5f666877e9fc937606c2356e8"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 19,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_net.log",
+      "origin_sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426",
+      "path": "install/install-dependencies-virtio_net.log",
+      "storage_bytes": 19,
+      "storage_sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 419,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_pci-result.json",
+      "origin_sha256": "6e9f3a7e59e69e2448d5910633487eb6e73610babf5a85b44caccf814a6a1924",
+      "path": "install/install-dependencies-virtio_pci-result.json",
+      "storage_bytes": 419,
+      "storage_sha256": "6e9f3a7e59e69e2448d5910633487eb6e73610babf5a85b44caccf814a6a1924"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 19,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_pci.log",
+      "origin_sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10",
+      "path": "install/install-dependencies-virtio_pci.log",
+      "storage_bytes": 19,
+      "storage_sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 422,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_scsi-result.json",
+      "origin_sha256": "b2223e495f17ea9cbd2259212b81da7e15b49209ceb98624fca9f45b81160ce9",
+      "path": "install/install-dependencies-virtio_scsi-result.json",
+      "storage_bytes": 422,
+      "storage_sha256": "b2223e495f17ea9cbd2259212b81da7e15b49209ceb98624fca9f45b81160ce9"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 20,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-dependencies-virtio_scsi.log",
+      "origin_sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f",
+      "path": "install/install-dependencies-virtio_scsi.log",
+      "storage_bytes": 20,
+      "storage_sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 420,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-disk-usage-result.json",
+      "origin_sha256": "adae1dffd6c6baf19a747f0cfa92e6af279e76768e745d8b2716e9930c1884e5",
+      "path": "install/install-disk-usage-result.json",
+      "storage_bytes": 420,
+      "storage_sha256": "adae1dffd6c6baf19a747f0cfa92e6af279e76768e745d8b2716e9930c1884e5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 263,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-disk-usage.log",
+      "origin_sha256": "3c5804019ea8239bece55951c51802ccb812d66ce3ee91699830094e8a4d947d",
+      "path": "install/install-disk-usage.log",
+      "storage_bytes": 263,
+      "storage_sha256": "3c5804019ea8239bece55951c51802ccb812d66ce3ee91699830094e8a4d947d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 420,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-exact-build-id-result.json",
+      "origin_sha256": "3fad33e2fe4cb25164c0b8b0afaffa6520500288de1fc873f34f87d85b576aa1",
+      "path": "install/install-exact-build-id-result.json",
+      "storage_bytes": 420,
+      "storage_sha256": "3fad33e2fe4cb25164c0b8b0afaffa6520500288de1fc873f34f87d85b576aa1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2120,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-exact-build-id.log",
+      "origin_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf",
+      "path": "install/install-exact-build-id.log",
+      "storage_bytes": 2120,
+      "storage_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 596,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-grub-installed-result.json",
+      "origin_sha256": "46add17e5b80a671e036ea48e6010929bd81c0d3ff626fd5922d5d7b8582a55d",
+      "path": "install/install-grub-installed-result.json",
+      "storage_bytes": 596,
+      "storage_sha256": "46add17e5b80a671e036ea48e6010929bd81c0d3ff626fd5922d5d7b8582a55d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 441,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-grub-installed.json",
+      "origin_sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a",
+      "path": "install/install-grub-installed.json",
+      "storage_bytes": 441,
+      "storage_sha256": "5e0a97c527fb9d83ef0db637956f1ed0c7ba68888733a4de80856988a83a947a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-grub-installed.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/install-grub-installed.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 576,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-idle-result.json",
+      "origin_sha256": "9e805bf196ff1fd2e63400082ae9cff8bd9661fdf348baa1c3f1f321a9614e04",
+      "path": "install/install-idle-result.json",
+      "storage_bytes": 576,
+      "storage_sha256": "9e805bf196ff1fd2e63400082ae9cff8bd9661fdf348baa1c3f1f321a9614e04"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3015,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-idle.json",
+      "origin_sha256": "b0e877a2d762a4041923f922c5b2ac3c8b40377e7f202239dae8bececb7cfba5",
+      "path": "install/install-idle.json",
+      "storage_bytes": 3015,
+      "storage_sha256": "b0e877a2d762a4041923f922c5b2ac3c8b40377e7f202239dae8bececb7cfba5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-idle.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/install-idle.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 377,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-initrd-list-result.json",
+      "origin_sha256": "8698cc0b3139dcf15e6be03bdbc4aec8a5d81f0624c0b46ba221bcb91e255eeb",
+      "path": "install/install-initrd-list-result.json",
+      "storage_bytes": 377,
+      "storage_sha256": "8698cc0b3139dcf15e6be03bdbc4aec8a5d81f0624c0b46ba221bcb91e255eeb"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12627,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-initrd-list.log",
+      "origin_sha256": "201fc17091bb17aeb073880758de258d50ae11a77cb9412638e42d9506a4d912",
+      "path": "install/install-initrd-list.log",
+      "storage_bytes": 12627,
+      "storage_sha256": "201fc17091bb17aeb073880758de258d50ae11a77cb9412638e42d9506a4d912"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13114,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-journal.jsonl",
+      "origin_sha256": "2aa55eacd9a7ad6cf0112d332d930d975ae8cf8b22269a4892348298c31e0af1",
+      "path": "install/install-journal.jsonl",
+      "storage_bytes": 13114,
+      "storage_sha256": "2aa55eacd9a7ad6cf0112d332d930d975ae8cf8b22269a4892348298c31e0af1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 628,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-modules-installed-result.json",
+      "origin_sha256": "cb1ef3c355b1f38920491be25d743a8afdb5db09f450e18cfcba8f0ef6a26c7b",
+      "path": "install/install-modules-installed-result.json",
+      "storage_bytes": 628,
+      "storage_sha256": "cb1ef3c355b1f38920491be25d743a8afdb5db09f450e18cfcba8f0ef6a26c7b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 659,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-modules-installed.json",
+      "origin_sha256": "a37d9263dd09947ef5519be4fa9bb05a470d4fd9ff45211245fbe1d2832336ac",
+      "path": "install/install-modules-installed.json",
+      "storage_bytes": 659,
+      "storage_sha256": "a37d9263dd09947ef5519be4fa9bb05a470d4fd9ff45211245fbe1d2832336ac"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-modules-installed.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/install-modules-installed.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 753,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-protected-after-result.json",
+      "origin_sha256": "4b7bc4c32d0ccdb9f1fea34988dfb0603aa6c459c01535f2a2d4a6327a43aa66",
+      "path": "install/install-protected-after-result.json",
+      "storage_bytes": 753,
+      "storage_sha256": "4b7bc4c32d0ccdb9f1fea34988dfb0603aa6c459c01535f2a2d4a6327a43aa66"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 48,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-protected-after.json",
+      "origin_sha256": "2bded74268a8b18a486881b031ad3d1143596edb56d3b388bcbd6b992a4507fd",
+      "path": "install/install-protected-after.json",
+      "storage_bytes": 48,
+      "storage_sha256": "2bded74268a8b18a486881b031ad3d1143596edb56d3b388bcbd6b992a4507fd"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-protected-after.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/install-protected-after.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 332,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-update-grub-result.json",
+      "origin_sha256": "cf50ff7f1165b984e040fdf1e3f4e89843ef8b46f77b6e0d5cc5b023059eadc3",
+      "path": "install/install-update-grub-result.json",
+      "storage_bytes": 332,
+      "storage_sha256": "cf50ff7f1165b984e040fdf1e3f4e89843ef8b46f77b6e0d5cc5b023059eadc3"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1935,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/install-update-grub.log",
+      "origin_sha256": "15d7661c2bbdd92ab704f8ef5f74e3e0ca14995a578a05d09869fc1e8cf5b60b",
+      "path": "install/install-update-grub.log",
+      "storage_bytes": 1935,
+      "storage_sha256": "15d7661c2bbdd92ab704f8ef5f74e3e0ca14995a578a05d09869fc1e8cf5b60b"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1792,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/installed-boot.json",
+      "origin_sha256": "385fb8336d291d94e36cfe875899ebc931569a690255d7d9d36d53fe20084154",
+      "path": "install/installed-boot.json",
+      "storage_bytes": 1792,
+      "storage_sha256": "385fb8336d291d94e36cfe875899ebc931569a690255d7d9d36d53fe20084154"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3481,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/limited-stage.json",
+      "origin_sha256": "67d487e3c830b9231f882bde5f8e8f3b9e36a063b76f314a059f3041c9ee76de",
+      "path": "install/limited-stage.json",
+      "storage_bytes": 3481,
+      "storage_sha256": "67d487e3c830b9231f882bde5f8e8f3b9e36a063b76f314a059f3041c9ee76de"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 215,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/root-budget-before-install.json",
+      "origin_sha256": "c791b5aa26aa3d2431458da0547f6a30b4fad0a4e5309793f792bcf02e9cd37c",
+      "path": "install/root-budget-before-install.json",
+      "storage_bytes": 215,
+      "storage_sha256": "c791b5aa26aa3d2431458da0547f6a30b4fad0a4e5309793f792bcf02e9cd37c"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 215,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/root-budget.json",
+      "origin_sha256": "76a9aaa262fdcecad85d55d36abdae2cb2033c901f2c5857c9170d064d903bed",
+      "path": "install/root-budget.json",
+      "storage_bytes": 215,
+      "storage_sha256": "76a9aaa262fdcecad85d55d36abdae2cb2033c901f2c5857c9170d064d903bed"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 207,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-closure.json",
+      "origin_sha256": "b875b35a4ccf6b6c4be0d027089f9e4a408d1cff8f54fe94d00be2b3ebf2d9fa",
+      "path": "install/stage-closure.json",
+      "storage_bytes": 207,
+      "storage_sha256": "b875b35a4ccf6b6c4be0d027089f9e4a408d1cff8f54fe94d00be2b3ebf2d9fa"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 145,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-complete.json",
+      "origin_sha256": "12cc2a4d143c478a3ba9dc435d42577a99c665b9ed7b79fd21e330dd3af5a655",
+      "path": "install/stage-complete.json",
+      "storage_bytes": 145,
+      "storage_sha256": "12cc2a4d143c478a3ba9dc435d42577a99c665b9ed7b79fd21e330dd3af5a655"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 525,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-efivarfs-result.json",
+      "origin_sha256": "d724688bf403a6fff3ffaec66b100ecf7896abeee1d294e13e70348dc89b18d0",
+      "path": "install/stage-dependencies-efivarfs-result.json",
+      "storage_bytes": 525,
+      "storage_sha256": "d724688bf403a6fff3ffaec66b100ecf7896abeee1d294e13e70348dc89b18d0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 17,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-efivarfs.log",
+      "origin_sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d",
+      "path": "install/stage-dependencies-efivarfs.log",
+      "storage_bytes": 17,
+      "storage_sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 517,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-ext4-result.json",
+      "origin_sha256": "489e73535f65c4699466909e7db4479ec1e092007e2c74883ce29f702afc82df",
+      "path": "install/stage-dependencies-ext4-result.json",
+      "storage_bytes": 517,
+      "storage_sha256": "489e73535f65c4699466909e7db4479ec1e092007e2c74883ce29f702afc82df"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-ext4.log",
+      "origin_sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5",
+      "path": "install/stage-dependencies-ext4.log",
+      "storage_bytes": 13,
+      "storage_sha256": "ff98c60604278aba106fec9276d1db54d92ef7b613b5b350536a45037f8cb1f5"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 535,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-nls_iso8859_1-result.json",
+      "origin_sha256": "38dde23482ccb2a549926c66cc6580c58a4af1679f23026e704399b9e5c63d88",
+      "path": "install/stage-dependencies-nls_iso8859_1-result.json",
+      "storage_bytes": 535,
+      "storage_sha256": "38dde23482ccb2a549926c66cc6580c58a4af1679f23026e704399b9e5c63d88"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 165,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-nls_iso8859_1.log",
+      "origin_sha256": "2c643eec0db010a17e49f1f9241cdb2479f433da8b618941922c47cd0988cfb7",
+      "path": "install/stage-dependencies-nls_iso8859_1.log",
+      "storage_bytes": 165,
+      "storage_sha256": "2c643eec0db010a17e49f1f9241cdb2479f433da8b618941922c47cd0988cfb7"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 521,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-sd_mod-result.json",
+      "origin_sha256": "9c548b210f70e8b2207c80afbb4214cf0f7af5697571bdb0a94a8ca4bb231473",
+      "path": "install/stage-dependencies-sd_mod-result.json",
+      "storage_bytes": 521,
+      "storage_sha256": "9c548b210f70e8b2207c80afbb4214cf0f7af5697571bdb0a94a8ca4bb231473"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 15,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-sd_mod.log",
+      "origin_sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785",
+      "path": "install/stage-dependencies-sd_mod.log",
+      "storage_bytes": 15,
+      "storage_sha256": "a4ed0400cd30064486001bad4fbc8c8c52238a289e36207aeac3257306efe785"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 517,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-vfat-result.json",
+      "origin_sha256": "397179ce43887a3705ddc9352bf9ffa054d20b0b3bb2354c200e3a5f7dde0500",
+      "path": "install/stage-dependencies-vfat-result.json",
+      "storage_bytes": 517,
+      "storage_sha256": "397179ce43887a3705ddc9352bf9ffa054d20b0b3bb2354c200e3a5f7dde0500"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 13,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-vfat.log",
+      "origin_sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9",
+      "path": "install/stage-dependencies-vfat.log",
+      "storage_bytes": 13,
+      "storage_sha256": "29f0ba3518e8d86f6c41d725e9215378fcbf960e1113b094fc044f19b7b190e9"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 529,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_net-result.json",
+      "origin_sha256": "5e03a669dbb9358d8ae8b67a7304f4d7999cc29224657ba5ad31067a13ea94ce",
+      "path": "install/stage-dependencies-virtio_net-result.json",
+      "storage_bytes": 529,
+      "storage_sha256": "5e03a669dbb9358d8ae8b67a7304f4d7999cc29224657ba5ad31067a13ea94ce"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 19,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_net.log",
+      "origin_sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426",
+      "path": "install/stage-dependencies-virtio_net.log",
+      "storage_bytes": 19,
+      "storage_sha256": "4a7ec10f28e901044fbb67a7df9456100d27cd42ad167b3bcd756deb2009c426"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 528,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_pci-result.json",
+      "origin_sha256": "e514aa9871734fcdfa8f3d32da2d5a5c3352b2a507b04724ed32fa36e5198e96",
+      "path": "install/stage-dependencies-virtio_pci-result.json",
+      "storage_bytes": 528,
+      "storage_sha256": "e514aa9871734fcdfa8f3d32da2d5a5c3352b2a507b04724ed32fa36e5198e96"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 19,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_pci.log",
+      "origin_sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10",
+      "path": "install/stage-dependencies-virtio_pci.log",
+      "storage_bytes": 19,
+      "storage_sha256": "c4ed3d5b9d87d387576072e9187252523d2c30ed5c3f68ae015425c30c628e10"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 531,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_scsi-result.json",
+      "origin_sha256": "caeb14b906aac8b4d9f366fe258f73456bde3e637e39eeec3e54603bb87185c0",
+      "path": "install/stage-dependencies-virtio_scsi-result.json",
+      "storage_bytes": 531,
+      "storage_sha256": "caeb14b906aac8b4d9f366fe258f73456bde3e637e39eeec3e54603bb87185c0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 20,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-virtio_scsi.log",
+      "origin_sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f",
+      "path": "install/stage-dependencies-virtio_scsi.log",
+      "storage_bytes": 20,
+      "storage_sha256": "d2141a5cb706850fec1e2cad1b75b51d6f7339285f81363331a09fc8a8d08c0f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 580,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-depmod-limited-result.json",
+      "origin_sha256": "e62737e5fb382b26f44a33209889eeeb42341e0b77427b70364b4edf38b74add",
+      "path": "install/stage-depmod-limited-result.json",
+      "storage_bytes": 580,
+      "storage_sha256": "e62737e5fb382b26f44a33209889eeeb42341e0b77427b70364b4edf38b74add"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-depmod-limited.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/stage-depmod-limited.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 418,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-disk-usage-result.json",
+      "origin_sha256": "4ecb2b9d3d1217236877a748e9871c5487ddfc0fb3d0de578019cbfc8205fb1a",
+      "path": "install/stage-disk-usage-result.json",
+      "storage_bytes": 418,
+      "storage_sha256": "4ecb2b9d3d1217236877a748e9871c5487ddfc0fb3d0de578019cbfc8205fb1a"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 263,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-disk-usage.log",
+      "origin_sha256": "2d6cf377258eb99d412cfc675216a92148e8b5d1f6746f15b173f2354a36e755",
+      "path": "install/stage-disk-usage.log",
+      "storage_bytes": 263,
+      "storage_sha256": "2d6cf377258eb99d412cfc675216a92148e8b5d1f6746f15b173f2354a36e755"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 418,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-exact-build-id-result.json",
+      "origin_sha256": "5bf105d0af4c94493d4840744235785bed785b4f5397469d1f5fc17ff2d1d007",
+      "path": "install/stage-exact-build-id-result.json",
+      "storage_bytes": 418,
+      "storage_sha256": "5bf105d0af4c94493d4840744235785bed785b4f5397469d1f5fc17ff2d1d007"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2120,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-exact-build-id.log",
+      "origin_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf",
+      "path": "install/stage-exact-build-id.log",
+      "storage_bytes": 2120,
+      "storage_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 597,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-identity-before-result.json",
+      "origin_sha256": "229f91c1eccbd1d33a5bb1b02cca62fe6ad3efa20266211197a0a4fcb8331cab",
+      "path": "install/stage-identity-before-result.json",
+      "storage_bytes": 597,
+      "storage_sha256": "229f91c1eccbd1d33a5bb1b02cca62fe6ad3efa20266211197a0a4fcb8331cab"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 35579,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-identity-before.json",
+      "origin_sha256": "21cdc2787293887ada2569bca5523ec11dd11dc965fc1d115608488111ab8d86",
+      "path": "install/stage-identity-before.json",
+      "storage_bytes": 35579,
+      "storage_sha256": "21cdc2787293887ada2569bca5523ec11dd11dc965fc1d115608488111ab8d86"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-identity-before.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/stage-identity-before.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 572,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-idle-result.json",
+      "origin_sha256": "d10f0a9ecd063bcc74bc83b733a29eb7b4541f0912c9c2f1bb6365274b633b28",
+      "path": "install/stage-idle-result.json",
+      "storage_bytes": 572,
+      "storage_sha256": "d10f0a9ecd063bcc74bc83b733a29eb7b4541f0912c9c2f1bb6365274b633b28"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 3016,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-idle.json",
+      "origin_sha256": "e07207815567a4567c8d6fc44c71ef23008626e4bff8ed1e6594290ce02f7a79",
+      "path": "install/stage-idle.json",
+      "storage_bytes": 3016,
+      "storage_sha256": "e07207815567a4567c8d6fc44c71ef23008626e4bff8ed1e6594290ce02f7a79"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-idle.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/stage-idle.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1055,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-initramfs-off-root-result.json",
+      "origin_sha256": "e2c00f7bc6cd6fe81414faf04f6887cff5b3773ecb9e92ccbbd1b9e695a692ff",
+      "path": "install/stage-initramfs-off-root-result.json",
+      "storage_bytes": 1055,
+      "storage_sha256": "e2c00f7bc6cd6fe81414faf04f6887cff5b3773ecb9e92ccbbd1b9e695a692ff"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2650,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-initramfs-off-root.log",
+      "origin_sha256": "e84f83569531ac8700531c00f10044f92fdc01bfe4428af067a53d852ba852d6",
+      "path": "install/stage-initramfs-off-root.log",
+      "storage_bytes": 2650,
+      "storage_sha256": "e84f83569531ac8700531c00f10044f92fdc01bfe4428af067a53d852ba852d6"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 16213,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-journal.jsonl",
+      "origin_sha256": "8e05ec6ecabebb8bc180b0b963a818da83fe26c7b7adeb3f4b9f4a1006a0a20f",
+      "path": "install/stage-journal.jsonl",
+      "storage_bytes": 16213,
+      "storage_sha256": "8e05ec6ecabebb8bc180b0b963a818da83fe26c7b7adeb3f4b9f4a1006a0a20f"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 687,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-modules-install-result.json",
+      "origin_sha256": "65bd807914e2b903e87aa55c7a853b2fdffdc30986755effdd7bdb4f777010a6",
+      "path": "install/stage-modules-install-result.json",
+      "storage_bytes": 687,
+      "storage_sha256": "65bd807914e2b903e87aa55c7a853b2fdffdc30986755effdd7bdb4f777010a6"
+    },
+    {
+      "encoding": "gzip (lossless)",
+      "origin_bytes": 3677085,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-modules-install.log",
+      "origin_sha256": "a703bf7e79cff9bd21b1ee614e33a9df2837ff71c095d66e278d4d3044e09b75",
+      "path": "install/stage-modules-install.log.gz",
+      "storage_bytes": 102538,
+      "storage_sha256": "20d6aeed9b1265c882eee118b569545384b9b77c923323cd3f22c2de5c8ba90c"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 596,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-protected-before-result.json",
+      "origin_sha256": "411a8d3cb57a86f224a41ccd77311f32d6f66dbd3a9152b1879fcf0149b12ccd",
+      "path": "install/stage-protected-before-result.json",
+      "storage_bytes": 596,
+      "storage_sha256": "411a8d3cb57a86f224a41ccd77311f32d6f66dbd3a9152b1879fcf0149b12ccd"
+    },
+    {
+      "encoding": "gzip (lossless)",
+      "origin_bytes": 23556132,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-protected-before.json",
+      "origin_sha256": "c936ad4af5a73b29df8d1c889aa2df13601f10fb9d1ff7a9508d3d09230d3d02",
+      "path": "install/stage-protected-before.json.gz",
+      "storage_bytes": 5413268,
+      "storage_sha256": "309a391159a1e7d3d4857a4a8bd6e1f34fd464ef2c082e17c16352816a04026d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 0,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-protected-before.log",
+      "origin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "install/stage-protected-before.log",
+      "storage_bytes": 0,
+      "storage_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 60588,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/boot-kernel-journal.txt",
+      "origin_sha256": "bb42175a3608ffb3644fc2c766ced698c8ea01d7bca02f5e02c4e354a9ef0c32",
+      "path": "postboot/boot-kernel-journal.txt",
+      "storage_bytes": 60588,
+      "storage_sha256": "bb42175a3608ffb3644fc2c766ced698c8ea01d7bca02f5e02c4e354a9ef0c32"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 139,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/cmdline.txt",
+      "origin_sha256": "260f0a15cefe5bb46431f0537c042ab6b94624f9598f8c38ba9528ad3ec4831d",
+      "path": "postboot/cmdline.txt",
+      "storage_bytes": 139,
+      "storage_sha256": "260f0a15cefe5bb46431f0537c042ab6b94624f9598f8c38ba9528ad3ec4831d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 111374,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/cpuinfo.txt",
+      "origin_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921",
+      "path": "postboot/cpuinfo.txt",
+      "storage_bytes": 111374,
+      "storage_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 51366,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/dmesg.txt",
+      "origin_sha256": "6b8b8be92e4184509feeb5b11749476e33ec24f09a4a515ed010eaa60a38e5c8",
+      "path": "postboot/dmesg.txt",
+      "storage_bytes": 51366,
+      "storage_sha256": "6b8b8be92e4184509feeb5b11749476e33ec24f09a4a515ed010eaa60a38e5c8"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 12,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/grub-environment.txt",
+      "origin_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0",
+      "path": "postboot/grub-environment.txt",
+      "storage_bytes": 12,
+      "storage_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 32383,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/grub.cfg",
+      "origin_sha256": "9797117f0ac48ebd8122a39b38716c3f7dd5c86c59ced0ead048389ae086f9a1",
+      "path": "postboot/grub.cfg",
+      "storage_bytes": 32383,
+      "storage_sha256": "9797117f0ac48ebd8122a39b38716c3f7dd5c86c59ced0ead048389ae086f9a1"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 709,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/gs-proof.json",
+      "origin_sha256": "34e0e8eaa537dd42f36bbef547c271de2e2fe740131d1dd3f8cf92349f2683ea",
+      "path": "postboot/gs-proof.json",
+      "storage_bytes": 709,
+      "storage_sha256": "34e0e8eaa537dd42f36bbef547c271de2e2fe740131d1dd3f8cf92349f2683ea"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 48,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/modules.txt",
+      "origin_sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132",
+      "path": "postboot/modules.txt",
+      "storage_bytes": 48,
+      "storage_sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 26,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/mount-boot-efi.txt",
+      "origin_sha256": "e8c67255efc0448583a1645c3d315d417cba50c01bdbe0260a4333a3e261b48d",
+      "path": "postboot/mount-boot-efi.txt",
+      "storage_bytes": 26,
+      "storage_sha256": "e8c67255efc0448583a1645c3d315d417cba50c01bdbe0260a4333a3e261b48d"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 33,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/mount-mnt-kdlock-builds.txt",
+      "origin_sha256": "3bda93efc31be965b14352cd48863f2bd1b11d8ed632e0b280a8db1e107567ab",
+      "path": "postboot/mount-mnt-kdlock-builds.txt",
+      "storage_bytes": 33,
+      "storage_sha256": "3bda93efc31be965b14352cd48863f2bd1b11d8ed632e0b280a8db1e107567ab"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 34,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/mount-mnt-kdlock-builds2.txt",
+      "origin_sha256": "c8a80456051a5abbc122afa9720b480e196e20082fa4511a3ce2a2c962f547ad",
+      "path": "postboot/mount-mnt-kdlock-builds2.txt",
+      "storage_bytes": 34,
+      "storage_sha256": "c8a80456051a5abbc122afa9720b480e196e20082fa4511a3ce2a2c962f547ad"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 17,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/mount-root.txt",
+      "origin_sha256": "5684e9db57b2bdf63e8bd6e87299d59fc5d83f14f850816171b7a816006838cc",
+      "path": "postboot/mount-root.txt",
+      "storage_bytes": 17,
+      "storage_sha256": "5684e9db57b2bdf63e8bd6e87299d59fc5d83f14f850816171b7a816006838cc"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1755,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/normal-recovery-boot-unchanged.json",
+      "origin_sha256": "e7ebcfb8468ac3965cddfad5563554c1881589ed49474018a5df6e850d1cf332",
+      "path": "postboot/normal-recovery-boot-unchanged.json",
+      "storage_bytes": 1755,
+      "storage_sha256": "e7ebcfb8468ac3965cddfad5563554c1881589ed49474018a5df6e850d1cf332"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 143,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/prior-arm-complete.json",
+      "origin_sha256": "752885ce1f30d8d9334e6f03eec7e5192fe0acd9bb90049f0add86429e7b36c8",
+      "path": "postboot/prior-arm-complete.json",
+      "storage_bytes": 143,
+      "storage_sha256": "752885ce1f30d8d9334e6f03eec7e5192fe0acd9bb90049f0add86429e7b36c8"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 570,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/prior-armed-grub.json",
+      "origin_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768",
+      "path": "postboot/prior-armed-grub.json",
+      "storage_bytes": 570,
+      "storage_sha256": "a674c54e8d9619995114f2e5e677204f017867ffbc2c7921ce8f39ee19b38768"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2427,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/prior-candidate-boot-unchanged.json",
+      "origin_sha256": "6f0f114959a2f0c9fe6c8b29b575b037f748723c018615146dd91bd1401a7a21",
+      "path": "postboot/prior-candidate-boot-unchanged.json",
+      "storage_bytes": 2427,
+      "storage_sha256": "6f0f114959a2f0c9fe6c8b29b575b037f748723c018615146dd91bd1401a7a21"
+    },
+    {
+      "encoding": "gzip (lossless)",
+      "origin_bytes": 163210,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/result.json",
+      "origin_sha256": "9d9c7203ef44ab2e92c2d99b9a15663f4a38f8fa000b433c2a900825ee209e31",
+      "path": "postboot/result.json.gz",
+      "storage_bytes": 4461,
+      "storage_sha256": "f557d033232dc96819f3cbdfbddc46a9050c582849c35cbb4e5015a1628ec848"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 476,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/running-kernel-notes.bin",
+      "origin_sha256": "86a2472732bdedf985a236086c8951cd2cd1ff88c232894edc22787cc8b95bae",
+      "path": "postboot/running-kernel-notes.bin",
+      "storage_bytes": 476,
+      "storage_sha256": "86a2472732bdedf985a236086c8951cd2cd1ff88c232894edc22787cc8b95bae"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 7,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/ssh-service.txt",
+      "origin_sha256": "45df5ad5e0ecfa54d3226343e0e6857337494ba6e32f189d1174070665d8c659",
+      "path": "postboot/ssh-service.txt",
+      "storage_bytes": 7,
+      "storage_sha256": "45df5ad5e0ecfa54d3226343e0e6857337494ba6e32f189d1174070665d8c659"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 120,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/uname.json",
+      "origin_sha256": "e1640a1fbc18dd3912dcad99e61508c91ab9e011ac13af182de17b847a9f4238",
+      "path": "postboot/uname.json",
+      "storage_bytes": 120,
+      "storage_sha256": "e1640a1fbc18dd3912dcad99e61508c91ab9e011ac13af182de17b847a9f4238"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 2120,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/vmlinux-notes.txt",
+      "origin_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf",
+      "path": "postboot/vmlinux-notes.txt",
+      "storage_bytes": 2120,
+      "storage_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 5644,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/vmlinux-sections.txt",
+      "origin_sha256": "2acab6dc144a718056369b45c953207101970e5e7a8cd79b5568f78e4c847334",
+      "path": "postboot/vmlinux-sections.txt",
+      "storage_bytes": 5644,
+      "storage_sha256": "2acab6dc144a718056369b45c953207101970e5e7a8cd79b5568f78e4c847334"
+    },
+    {
+      "encoding": "gzip (lossless)",
+      "origin_bytes": 13022530,
+      "origin_kind": "guest immutable receipt",
+      "origin_path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild4-spin-01/vmlinux-symbols.txt",
+      "origin_sha256": "e827413b746ec17552a3793bdaec88eca3ddfdba94722151a9afbc9f9a2a104b",
+      "path": "postboot/vmlinux-symbols.txt.gz",
+      "storage_bytes": 2137273,
+      "storage_sha256": "ff94139f0042656d9d3370eac2ee69262cd06a17559ffd173b1449c750fd9786"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 6320,
+      "origin_kind": "source-host retained artifact",
+      "origin_path": "/tmp/kdlock-kdrebuild4-ops.recipe.md",
+      "origin_sha256": "70ebd22055865d6b72111d7df5b78e4df36c3b1cf590b3b6ff687d4d71e1df2e",
+      "path": "controller/ops-recipe.md",
+      "storage_bytes": 6320,
+      "storage_sha256": "70ebd22055865d6b72111d7df5b78e4df36c3b1cf590b3b6ff687d4d71e1df2e"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 1550,
+      "origin_kind": "source-host retained artifact",
+      "origin_path": "/tmp/kdlock-kernel4-postproof-observer-note.json",
+      "origin_sha256": "0d8b9d22c10c17bf2532d1152a67997299aa613ed17c71bb5ed1b3adeb542064",
+      "path": "controller/postproof-observer-note.json",
+      "storage_bytes": 1550,
+      "storage_sha256": "0d8b9d22c10c17bf2532d1152a67997299aa613ed17c71bb5ed1b3adeb542064"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 607,
+      "origin_kind": "source-host retained artifact",
+      "origin_path": "/tmp/kdlock-kernel4-reconnect-spin-01.json",
+      "origin_sha256": "6f2c73efa780faf8ea631272903cf9a4c8375d6740d1568322e4c678232644b0",
+      "path": "controller/reconnect.json",
+      "storage_bytes": 607,
+      "storage_sha256": "6f2c73efa780faf8ea631272903cf9a4c8375d6740d1568322e4c678232644b0"
+    },
+    {
+      "encoding": "exact bytes",
+      "origin_bytes": 9311,
+      "origin_kind": "source-host collection program",
+      "origin_path": "/tmp/kdlock-collect-kernel4.py",
+      "origin_sha256": "db1283599927c5e88adab2b3dccd766fd86bafb58ac07548c04e05625c25ac79",
+      "path": "collection-helper.py",
+      "storage_bytes": 9311,
+      "storage_sha256": "db1283599927c5e88adab2b3dccd766fd86bafb58ac07548c04e05625c25ac79"
+    }
+  ],
+  "remote_bytes": 41149992,
+  "remote_files": 194
+}

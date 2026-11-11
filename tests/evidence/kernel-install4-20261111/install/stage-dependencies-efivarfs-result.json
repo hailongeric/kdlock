@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "modprobe",
+    "-d",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/install-stage-kdrebuild4-spin-01/full",
+    "-S",
+    "7.0.0-38-kdrebuild4",
+    "--show-depends",
+    "efivarfs"
+  ],
+  "elapsed_seconds": 0.007070349998684833,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/stage-dependencies-efivarfs.log",
+  "log_sha256": "890252d9bcf1277746db37203cb32bb5e7166e17ecd028e3675ed1130beb5d2d",
+  "returncode": 0,
+  "timed_out": false
+}

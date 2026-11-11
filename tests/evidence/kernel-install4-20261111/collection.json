@@ -1,0 +1,47 @@
+{
+  "archive_bytes": 41308160,
+  "archive_sha256": "6ca6e08ae3e7c63bad8464688dcacaeea2df91164f5c2bb9e79a92ff14ee55c1",
+  "commands": [
+    {
+      "argv": [
+        "ssh",
+        "-p",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "root@10.176.26.71",
+        "timeout 85 python3 -"
+      ],
+      "finished_unix": 1794365943.0938547,
+      "input_script_sha256": "761f3c45f99e9408569701d8d030ac2acaf5f57e2bd0ef1af057a390cf084127",
+      "returncode": 0,
+      "started_unix": 1794365942.175313,
+      "stderr": "",
+      "stdout_bytes": 69893,
+      "stdout_sha256": "c3b733f3e7c14eabf51a80986438dc9181ea5ee68c35527549419c05a979d230"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-p",
+        "2222",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "root@10.176.26.71",
+        "timeout 115 python3 -"
+      ],
+      "finished_unix": 1794365943.8029854,
+      "input_script_sha256": "4156ffdd9282d2cf50bc045d7887e01d186b2cf38bcaf5fa2c1e3e34f4ebd687",
+      "returncode": 0,
+      "started_unix": 1794365943.0958965,
+      "stderr": "",
+      "stdout_bytes": 41308160,
+      "stdout_sha256": "6ca6e08ae3e7c63bad8464688dcacaeea2df91164f5c2bb9e79a92ff14ee55c1"
+    }
+  ],
+  "scope": "Only receipt/configuration reads and source-host lossless copies. No guest writes, process inspection, protocol commands, builds, tests or module operations."
+}

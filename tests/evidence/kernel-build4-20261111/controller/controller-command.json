@@ -1,0 +1,34 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-core-2d0ad60b-spin-01/kdlock-kernel4-build.py",
+    "--input",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-core-2d0ad60b-spin-01/source",
+    "--manifest",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel4-core-2d0ad60b-spin-01/build-inputs.json",
+    "--manifest-sha256",
+    "1a626dfb99d2098c7e0a2aef199c5c0f33ca1ffe00078f1cdae63ac184dac9e0",
+    "--retention-manifest",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/retained-kdrebuild3-1b50e373-spin-01/manifest.json",
+    "--retention-sha256",
+    "a253bc04061422153b89c6496494ac12f45b4b49c5f6cb8689f8a1810ca3ff4b",
+    "--expected-boot",
+    "884c4a65-4f4c-4a6b-89a3-cefd65221615",
+    "--source-commit",
+    "2d0ad60b0bc46929f3070aefa364e710c0a81115",
+    "--core-commit",
+    "2d0ad60b0bc46929f3070aefa364e710c0a81115",
+    "--receipt-dir",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/overlay-kdrebuild4-spin-01"
+  ],
+  "exact_package_files": 67,
+  "frozen_transfer_files": 73,
+  "helper_ast": "PASS",
+  "pins": {
+    "archive-inputs.json": "eb868452d68afaab86e047b3d4908c3bdc7d980e740daaa98f6ac6fc26824c08",
+    "build-inputs.json": "1a626dfb99d2098c7e0a2aef199c5c0f33ca1ffe00078f1cdae63ac184dac9e0",
+    "kdlock-kernel4-build.py": "36182b8854d22403858367ff1fb550916355ab94abbc763084a4b9e29bd8d5c4",
+    "source.tar": "e164ad25b30404ce18fca59a2d357b83feafd16c03f15ad44bc01e416c91b7d3"
+  },
+  "unix": 1794362465.0061698
+}

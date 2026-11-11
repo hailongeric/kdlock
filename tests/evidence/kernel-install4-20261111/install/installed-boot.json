@@ -1,0 +1,68 @@
+{
+  "dependencies": {
+    "efivarfs": {
+      "builtin": true,
+      "modules": []
+    },
+    "ext4": {
+      "builtin": true,
+      "modules": []
+    },
+    "nls_iso8859_1": {
+      "builtin": false,
+      "modules": [
+        "kernel/fs/nls/nls_iso8859-1.ko"
+      ]
+    },
+    "sd_mod": {
+      "builtin": true,
+      "modules": []
+    },
+    "vfat": {
+      "builtin": true,
+      "modules": []
+    },
+    "virtio_net": {
+      "builtin": true,
+      "modules": []
+    },
+    "virtio_pci": {
+      "builtin": true,
+      "modules": []
+    },
+    "virtio_scsi": {
+      "builtin": true,
+      "modules": []
+    }
+  },
+  "files": [
+    {
+      "path": "/boot/vmlinuz-7.0.0-38-kdrebuild4",
+      "sha256": "d89fead1a6d3a7ad573e530eb29b460754655c67b05c49780a43dc88d653afbf",
+      "size": 17191424
+    },
+    {
+      "path": "/boot/System.map-7.0.0-38-kdrebuild4",
+      "sha256": "5832a5f64db2100543972a9f97e1d7b969f746a4bafed04ec04f04c8f5484c78",
+      "size": 10567738
+    },
+    {
+      "path": "/boot/config-7.0.0-38-kdrebuild4",
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "size": 308548
+    },
+    {
+      "path": "/boot/initrd.img-7.0.0-38-kdrebuild4",
+      "sha256": "9b356a73d19bb9861fa05a7a77e6bad4ed875462b7cd9fe780f9a8554c34c31d",
+      "size": 30886382
+    }
+  ],
+  "grub": {
+    "candidate_entry": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild4-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "environment": {
+      "next_entry": ""
+    },
+    "grub_cfg_sha256": "9797117f0ac48ebd8122a39b38716c3f7dd5c86c59ced0ead048389ae086f9a1",
+    "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "readelf",
+    "-n",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/vmlinux"
+  ],
+  "elapsed_seconds": 0.008149027999024838,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-exact-build-id.log",
+  "log_sha256": "ead7047db26f53f1085e0e8d8310a2235469336d1d6a2ad5a6d6d10b031506bf",
+  "returncode": 0,
+  "timed_out": false
+}

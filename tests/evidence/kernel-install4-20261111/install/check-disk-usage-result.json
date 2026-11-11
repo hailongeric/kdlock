@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "df",
+    "-B1",
+    "/",
+    "/boot",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f"
+  ],
+  "elapsed_seconds": 0.005341175001376541,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild4-spin-01/check-disk-usage.log",
+  "log_sha256": "a270f61d56102e0d818b3df566a4918b7b4dc803172ebd096cc216174cba547e",
+  "returncode": 0,
+  "timed_out": false
+}
