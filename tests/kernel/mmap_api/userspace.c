@@ -21,6 +21,7 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <sys/syscall.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 #include "abi.h"
@@ -498,8 +499,12 @@ static bool number(const char *text, uint64_t *value)
 	return true;
 }
 
+#include "userspace_jit.inc"
+
 int main(int argc, char **argv)
 {
+	if (jit_requested(argc, argv))
+		return jit_main(argc, argv);
 	struct group group = { .mutex = PTHREAD_MUTEX_INITIALIZER,
 		.condition = PTHREAD_COND_INITIALIZER };
 	struct worker *workers;

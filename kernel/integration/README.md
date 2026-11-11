@@ -129,6 +129,18 @@ callers permit no untracked raw root/storage/config observer across exit;
 callback/module/caller-return backing survives its own final return. Actual
 auxiliary scheduler/IRQ/unwinder compatibility remains unproved.
 
+The later source-only killable lane at `0c97cd34` adds an explicit queue-only
+exception. A canceled, ungranted request may retain the same storage after its
+original task exits, once all source, grant, auxiliary, native endpoint and
+physical-owner duties have ended. Exact preheld frame actors bridge the final
+queue callback and pool API return. The final actor schedules built-in
+metadata-only retirement while the storage guard still retains allocation;
+source/native leases and callback code end after their own final accesses.
+Custom lifecycle contexts keep the full-drain default. Runtime-created contexts
+select this exception with an independent callback code-owner hold. Historical
+owner records must still be reaped by the original current task before it can
+qualify. This source review supplies no task-exit or allocator-reuse test result.
+
 The [control workflow](CONTROL.md) connects runtime-native retention, compiler
 transport and shutdown; [IMAGES.md](IMAGES.md) owns source/code/feedback lifetimes.
 These source implementations select no deployment count or control-stack budget.

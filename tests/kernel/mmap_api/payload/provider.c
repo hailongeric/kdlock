@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Metadata-only opt-in binding for actual userspace mmap/munmap checks. */
 #include <linux/atomic.h>
+#include <linux/err.h>
 #include <linux/capability.h>
 #include <linux/errno.h>
 #include <linux/fs.h>
@@ -10,6 +11,7 @@
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/overflow.h>
+#include <linux/preempt.h>
 #include <linux/sched.h>
 #include <linux/sched/mm.h>
 #include <linux/sched/signal.h>
@@ -17,10 +19,14 @@
 #include <linux/slab.h>
 #include <linux/tracepoint.h>
 #include <linux/uaccess.h>
+#include <asm/msr.h>
+#include <asm/msr-index.h>
 
 #include "include/kd_linux_rwsem.h"
 #include "kernel/observation.h"
 #include "kernel/rw_native.h"
+#include "kernel/runtime.h"
+#include "kernel/task_state.h"
 #include "../abi.h"
 
 #ifndef CONFIG_KDLOCK_REBUILD
@@ -37,6 +43,10 @@ enum observed_count {
 	COUNT_EVENTS, COUNT_TOTAL,
 };
 
+struct mmap_jit_selection;
+static void notrace jit_observe(struct mmap_jit_selection *jit,
+		const struct kd_observation *event);
+
 struct selected_mm {
 	struct kd_rwsem gate;
 	struct kd_rw_native_pool pool;
@@ -48,6 +58,7 @@ struct selected_mm {
 	size_t record_bytes;
 	atomic64_t counts[COUNT_TOTAL];
 	atomic_t count_overflow;
+	struct mmap_jit_selection *jit;
 };
 
 static DEFINE_MUTEX(control_mutex);
@@ -66,6 +77,9 @@ static void observe(void *context, const struct kd_observation *event)
 	struct selected_mm *selected = context;
 	enum observed_count count;
 
+	/* Full ABI2 scalar history precedes the ABI1 per-gate diagnostic filter. */
+	if (selected->jit)
+		jit_observe(selected->jit, event);
 	if (event->object != (unsigned long)&selected->gate.core.queue)
 		return;
 	switch (event->kind) {
@@ -124,6 +138,8 @@ static void snapshot(struct selected_mm *selected, struct kd_mmap_api_status *st
 		.count_overflow = atomic_read(&selected->count_overflow),
 	};
 }
+
+#include "mmap_jit_profile.inc"
 
 static int start_selection(const struct kd_mmap_api_request *request)
 {
@@ -245,6 +261,9 @@ static long control_ioctl(struct file *file, unsigned int command, unsigned long
 	int result;
 
 	(void)file;
+	if (command == KD_MMAP_API_START_JIT || command == KD_MMAP_API_QUERY_JIT ||
+	    command == KD_MMAP_API_LEAVE_JIT || command == KD_MMAP_API_END_JIT)
+		return jit_ioctl(command, argument);
 	if (!capable(CAP_SYS_ADMIN))
 		return -EPERM;
 	if (command != KD_MMAP_API_START && command != KD_MMAP_API_QUERY && command != KD_MMAP_API_END)
@@ -254,13 +273,15 @@ static long control_ioctl(struct file *file, unsigned int command, unsigned long
 	if (request.abi != KD_MMAP_API_ABI || request.reserved)
 		return -EINVAL;
 	mutex_lock(&control_mutex);
-	if (command == KD_MMAP_API_START)
+	if (selection && selection->jit)
+		result = -EBUSY;
+	else if (command == KD_MMAP_API_START)
 		result = start_selection(&request);
 	else if (command == KD_MMAP_API_END)
 		result = end_selection(&request);
 	else
 		result = request.native_capacity || request.contract_flags ? -EINVAL : 0;
-	if (selection)
+	if (selection && !selection->jit)
 		snapshot(selection, &saved_status);
 	reply.status = saved_status;
 	mutex_unlock(&control_mutex);
@@ -310,13 +331,25 @@ static struct miscdevice control_device = {
 
 static int __init provider_init(void)
 {
-	return misc_register(&control_device);
+	int result = misc_register(&control_device);
+
+	if (result || !enable_jit_profile)
+		return result;
+	result = misc_register(&jit_event_device);
+	if (result) {
+		misc_deregister(&control_device);
+		return result;
+	}
+	jit_event_device_live = true;
+	return 0;
 }
 
 static void __exit provider_exit(void)
 {
 	/* The independent selection hold prevents ordinary unload while bound. */
 	BUG_ON(selection);
+	if (jit_event_device_live)
+		misc_deregister(&jit_event_device);
 	misc_deregister(&control_device);
 }
 

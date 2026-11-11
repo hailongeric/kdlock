@@ -55,7 +55,7 @@ appear separately under `selected_gate`, with `kd_observations` set to
 `native_gate_only`. `overall_pass` additionally requires successful selected-gate
 retirement when that option was requested. A borrowed-JIT claim would require
 separate same-mm task-group enrollment, source/code leases and exact JIT
-provenance. This provider creates no S_W, image or dummy source provider.
+provenance. The ABI1 profile creates no S_W, image or dummy source provider.
 
 The monotonic deadline is cooperative between finite userspace phases. An
 in-flight syscall must return before its cleanup can finish. A supervising
@@ -148,3 +148,70 @@ keep typed LOCK/UNLOCK/MODE_CHANGE cuts. Ordinary callable Linux APIs receive a
 permanent SPECIAL pre-operation frontier and return to original native execution.
 The helper retains exact decoded CALL bytes and prefixes, introduces no helper
 model or new backend, and establishes no runtime object-binding or lifetime proof.
+
+## Optional source profile (source only)
+
+The new ABI2 profile is separate from the kernel6 ABI1 receipt. It has not been
+compiled or run. The provider's read-only `enable_jit_profile` module parameter
+defaults to false. Enabling it permits metadata setup; it establishes no MM JIT,
+full context or performance result. The selected object still uses one generic
+KD rwsem gate. Native MM bodies, surrounding data structures and syscall
+semantics are unchanged, and every workload effect comes through the common
+userspace `SYS_mmap`/`SYS_munmap` body.
+
+START_JIT accepts explicit source/dependency, version, configuration/load/GS and
+finite runtime/native capacities. It copies the region list and version once;
+userspace addresses are never leases. The observer is registered before source
+capture. Source provider, runtime and actual original owner enrollment precede
+the final `kd_linux_rwsem_bind_killable_source` publication. Managed pthread
+children receive independent task-owned cores and retain their own canonical
+S_W. The same-mm executor predicate is additional restriction only; it does not
+establish hardware-current, per-CPU, scheduler, RCU, uaccess, fault-fixup or
+auxiliary-stack equivalence. Immutable complete dependencies and the declared
+context/workload contracts remain caller obligations.
+
+The ABI2 client requires `--jit-config`, `--jit-config-bytes`,
+`--jit-phase-timeout-ms` and `--jit-rounds`, alongside explicit ordinary workload
+bounds, `--control-device` and `--quiescent-mm`. Its configuration file is the
+272-byte little-endian `{abi, contracts, config}` header from [abi.h](abi.h), with
+both pointer fields zero, followed by the exact region array and source-version
+bytes. `config.native_capacity` is authoritative; the ABI1 `--native-capacity`
+option is not accepted in this profile. All extents and identities are retained
+in the controller's input receipt.
+
+The original owner emits `jit_ready`, then waits for a fresh SIGUSR2 to run one
+ordinary syscall round. Each round joins its pthreads and unmaps the arena before
+emitting `jit_round_complete`. A fresh SIGUSR2 advances another requested round;
+SIGUSR1 instead starts LEAVE. Old phase signals are discarded before each
+marker. Workload deadlines apply separately to each round, and phase deadlines
+bound controller pauses. The host can learn from the cold round and publish an
+image before the next round without replaying any completed syscall.
+
+LEAVE closes the original owner's source admission and attempts exact storage
+retirement. It retains binding, native pool, source, raw observations and compiler
+channel. After `jit_owner_left`, the host finishes claims, sends SHUTDOWN,
+archives exact facts durably, settles them, sends END and closes the channel.
+Only a fresh SIGUSR1 after that marker permits the original owner to request
+END_JIT. END requires actual runtime/channel/source drain and no exact raw-reader
+memberships, then unbinds, destroys source and unregisters the observer before
+freeing backing. A failed setup, syscall round, output copy or retirement keeps
+its actual roles queryable. Later cleanup does not turn the failed run into a
+pass. A timeout proves no drain; retain the owner/mm/fds for reviewed recovery.
+
+The [VM-only controller](runner.py) composes the existing source export,
+cumulative learning, GNU image builder, feedback and shutdown sessions. It
+requires one explicit pinned configuration JSON and retains actual source,
+wire, GNU objects, publication/ACK, raw events, archive and retirement receipts.
+It admits roots only by exact request-incarnation/grant/continuation joins and
+prefix-aware decoded source CALL bytes. It uses no MM helper-name model or
+second translation backend.
+
+ABI2 raw events come from `/dev/kd_mmap_api_events`. Each open owns a frozen
+20-word-record prefix; reopen to collect later events and final overflow. The
+native status prefix still reports JIT observation unavailable. Its zero
+`jit_entries` is not an absence result. Join raw SLOT, GRANT, original state,
+physical executor, image and source records before reporting delegation or
+execution. Publication, JIT entry, returned fragment, actual MM-body coverage,
+syscall completion and final retirement are separate findings. Query/assert
+SPECIAL frontiers and other reached boundaries can stop generated execution
+early; a returned prefix does not establish meaningful MM-body delegation.
