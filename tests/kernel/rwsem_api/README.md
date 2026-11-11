@@ -5,8 +5,9 @@ onto the rebuilt KD gate with `source_calls=false`. It invokes the ordinary
 Linux APIs through source forms, callable function pointers and cleanup
 constructors. It supplies no source packet or managed JIT configuration.
 The fixture has a [successful module build and signing receipt](../../evidence/kernel6-api-build-20261111/README.md).
-Execution is pending. These cases establish no mmap syscall, generated-execution
-or performance result.
+All twelve cases passed on [kernel6](../../evidence/kernel6-native-api-mm-20261111/README.md),
+with all 19 workers joined and ordinary unload complete. These API cases establish
+no mmap syscall, generated-execution or performance result.
 
 Module parameters `native_capacity` and `wait_timeout_ms` are required and have
 no nonzero defaults. Capacity must cover at least three simultaneous records,

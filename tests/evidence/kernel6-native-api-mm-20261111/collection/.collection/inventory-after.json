@@ -1,0 +1,552 @@
+{
+  "bytes": 208348,
+  "collected_unix": 1794407121.068154,
+  "count": 37,
+  "directories": {
+    "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-inputs-80c272e5-01": {
+      "identity": [
+        2064,
+        8527568,
+        16832,
+        2,
+        4096,
+        1794406969184000000,
+        1794406969184000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-inputs-80c272e5-01"
+    },
+    "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01": {
+      "identity": [
+        2064,
+        8527571,
+        16832,
+        2,
+        4096,
+        1794406971570000000,
+        1794406971570000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01"
+    }
+  },
+  "files": {
+    "inputs/live-config-before-recovery.json": {
+      "bytes": 5970,
+      "identity": [
+        2064,
+        8527572,
+        33188,
+        1,
+        5970,
+        1794406968583740383,
+        1794406968583740383
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-inputs-80c272e5-01/live-config-before-recovery.json",
+      "sha256": "fc8c636dfe18d35504c2306a95797f98d3fcb7558309c020a3303cf2b0f3eb99"
+    },
+    "inputs/live-config.json": {
+      "bytes": 5984,
+      "identity": [
+        2064,
+        8527574,
+        33188,
+        1,
+        5984,
+        1794406969182159533,
+        1794406969184000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-inputs-80c272e5-01/live-config.json",
+      "sha256": "f5c4605f0a1179c8ccfb2c170da0dea818af741630b50db7d8e7f1ac3886991d"
+    },
+    "inputs/live-controller.py": {
+      "bytes": 25490,
+      "identity": [
+        2064,
+        8527569,
+        33188,
+        1,
+        25490,
+        1794406823046216411,
+        1794406823046216411
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-inputs-80c272e5-01/live-controller.py",
+      "sha256": "4be5676bb66356d097f551c76b3346e08f53b27494df77765a24feb9bb1a2e62"
+    },
+    "inputs/postboot-return.json": {
+      "bytes": 54,
+      "identity": [
+        2064,
+        8527570,
+        33188,
+        1,
+        54,
+        1794406823048811598,
+        1794406823048811598
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-inputs-80c272e5-01/postboot-return.json",
+      "sha256": "7eeb73be73911e386711941ca5d31c8ac9cb33e0274e8c01d51b4e3991090e6b"
+    },
+    "inputs/recovery.json": {
+      "bytes": 23263,
+      "identity": [
+        2064,
+        8527573,
+        33188,
+        1,
+        23263,
+        1794406969175384723,
+        1794406969175384723
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-inputs-80c272e5-01/recovery.json",
+      "sha256": "d165ff5e57691eed34d48f07c77073621d07dab368c9cc0ce155c3284b7e53b8"
+    },
+    "runtime/compat-after-run.json": {
+      "bytes": 1601,
+      "identity": [
+        2064,
+        8527590,
+        33188,
+        1,
+        1601,
+        1794406970249211889,
+        1794406970249211889
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-after-run.json",
+      "sha256": "00db5121fd4cbfa9f496ba39d710cb0b53a7123cd567f80eec58e0b7f6b697f7"
+    },
+    "runtime/compat-before.json": {
+      "bytes": 1542,
+      "identity": [
+        2064,
+        8527593,
+        33188,
+        1,
+        1542,
+        1794406970238761185,
+        1794406970238761185
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-before.json",
+      "sha256": "ef09d900f2dd98c314262658fc70be8e4623d6aea4515af303b157517dee5c1a"
+    },
+    "runtime/compat-driver.py": {
+      "bytes": 3058,
+      "identity": [
+        2064,
+        8527589,
+        33188,
+        1,
+        3058,
+        1794406970194381170,
+        1794406970194381170
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-driver.py",
+      "sha256": "17e07b4565dc1d1bcd5c4a050cc4a904a52d00a64ead1ee62feea685d82dc77f"
+    },
+    "runtime/compat-insmod.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527588,
+        33188,
+        1,
+        0,
+        1794406970082000000,
+        1794406970082000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-insmod.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/compat-insmod.stdout": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527585,
+        33188,
+        1,
+        0,
+        1794406970082000000,
+        1794406970082000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-insmod.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/compat-result.json": {
+      "bytes": 8929,
+      "identity": [
+        2064,
+        8527594,
+        33188,
+        1,
+        8929,
+        1794406970257317471,
+        1794406970259000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-result.json",
+      "sha256": "2e7771444a00ab722c54cebec0846af49f91d811f1c942f9dc7950e7a6c1a237"
+    },
+    "runtime/compat-rmmod.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527596,
+        33188,
+        1,
+        0,
+        1794406970318000000,
+        1794406970318000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-rmmod.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/compat-rmmod.stdout": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527595,
+        33188,
+        1,
+        0,
+        1794406970318000000,
+        1794406970318000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-rmmod.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/compat-run.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527591,
+        33188,
+        1,
+        0,
+        1794406970201000000,
+        1794406970201000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/compat-run.stdout": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527587,
+        33188,
+        1,
+        0,
+        1794406970201000000,
+        1794406970201000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compat-run.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/compatibility-modinfo.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527580,
+        33188,
+        1,
+        0,
+        1794406970020000000,
+        1794406970020000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compatibility-modinfo.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/compatibility-modinfo.stdout": {
+      "bytes": 21,
+      "identity": [
+        2064,
+        8527577,
+        33188,
+        1,
+        21,
+        1794406970023000000,
+        1794406970023000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compatibility-modinfo.stdout",
+      "sha256": "5ce1d52c64c6c6461a75309176076d8d9a1c98ae9da30dea1b374f8103396855"
+    },
+    "runtime/compatibility-vermagic.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527582,
+        33188,
+        1,
+        0,
+        1794406970036000000,
+        1794406970036000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compatibility-vermagic.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/compatibility-vermagic.stdout": {
+      "bytes": 56,
+      "identity": [
+        2064,
+        8527579,
+        33188,
+        1,
+        56,
+        1794406970038000000,
+        1794406970038000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/compatibility-vermagic.stdout",
+      "sha256": "77177b784d9dc5bbb12b7d1036d1b7691d69cf14e1c42869f3e450db30c78bd2"
+    },
+    "runtime/dmesg-after.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527606,
+        33188,
+        1,
+        0,
+        1794406971551000000,
+        1794406971551000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/dmesg-after.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/dmesg-after.stdout": {
+      "bytes": 52537,
+      "identity": [
+        2064,
+        8527602,
+        33188,
+        1,
+        52537,
+        1794406971555000000,
+        1794406971555000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/dmesg-after.stdout",
+      "sha256": "93e4865833e079c814ed6ba2749132ac01d2fc4a1579a4ebd7f8b0ae83d3e7b4"
+    },
+    "runtime/dmesg-before.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527578,
+        33188,
+        1,
+        0,
+        1794406970004000000,
+        1794406970004000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/dmesg-before.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/dmesg-before.stdout": {
+      "bytes": 52458,
+      "identity": [
+        2064,
+        8527575,
+        33188,
+        1,
+        52458,
+        1794406970008000000,
+        1794406970008000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/dmesg-before.stdout",
+      "sha256": "ec5fa03c4933f9b49c751ea65a8c8d6cb3d1e84bec1f04087f454a49ab034f4c"
+    },
+    "runtime/mmap-client.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527600,
+        33188,
+        1,
+        0,
+        1794406970612000000,
+        1794406970612000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/mmap-client.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/mmap-client.stdout": {
+      "bytes": 3637,
+      "identity": [
+        2064,
+        8527597,
+        33188,
+        1,
+        3637,
+        1794406970678000000,
+        1794406970678000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/mmap-client.stdout",
+      "sha256": "3f02fe9407fa57401a1d4542b30c8ab3ef3b5f95027ca8d5fbe42a942d67eabc"
+    },
+    "runtime/mmap-result.json": {
+      "bytes": 4968,
+      "identity": [
+        2064,
+        8527601,
+        33188,
+        1,
+        4968,
+        1794406970725922863,
+        1794406970728000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/mmap-result.json",
+      "sha256": "8874b7f66ca30129c540ea9b8542b6f1bbf91f0c78761e08eee239589ebbc5e1"
+    },
+    "runtime/provider-insmod.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527598,
+        33188,
+        1,
+        0,
+        1794406970496000000,
+        1794406970496000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/provider-insmod.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/provider-insmod.stdout": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527592,
+        33188,
+        1,
+        0,
+        1794406970496000000,
+        1794406970496000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/provider-insmod.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/provider-modinfo.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527584,
+        33188,
+        1,
+        0,
+        1794406970052000000,
+        1794406970052000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/provider-modinfo.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/provider-modinfo.stdout": {
+      "bytes": 21,
+      "identity": [
+        2064,
+        8527581,
+        33188,
+        1,
+        21,
+        1794406970054000000,
+        1794406970054000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/provider-modinfo.stdout",
+      "sha256": "73f2ebb855e89199caeda137030932d139b9bbbb889c117ec23307e010d0aecb"
+    },
+    "runtime/provider-rmmod.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527603,
+        33188,
+        1,
+        0,
+        1794406970734000000,
+        1794406970734000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/provider-rmmod.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/provider-rmmod.stdout": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527599,
+        33188,
+        1,
+        0,
+        1794406970734000000,
+        1794406970734000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/provider-rmmod.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/provider-vermagic.stderr": {
+      "bytes": 0,
+      "identity": [
+        2064,
+        8527586,
+        33188,
+        1,
+        0,
+        1794406970066000000,
+        1794406970066000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/provider-vermagic.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "runtime/provider-vermagic.stdout": {
+      "bytes": 56,
+      "identity": [
+        2064,
+        8527583,
+        33188,
+        1,
+        56,
+        1794406970069000000,
+        1794406970069000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/provider-vermagic.stdout",
+      "sha256": "77177b784d9dc5bbb12b7d1036d1b7691d69cf14e1c42869f3e450db30c78bd2"
+    },
+    "runtime/result.json": {
+      "bytes": 17751,
+      "identity": [
+        2064,
+        8527607,
+        33188,
+        1,
+        17751,
+        1794406971568364467,
+        1794406971570000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/result.json",
+      "sha256": "1c97c7fdbd5f9667bd81f23894109cd837121a952e7de31cfedbb00bb4888add"
+    },
+    "runtime/running-notes-after.bin": {
+      "bytes": 476,
+      "identity": [
+        2064,
+        8527604,
+        33188,
+        1,
+        476,
+        1794406971539641765,
+        1794406971539641765
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/running-notes-after.bin",
+      "sha256": "9640b74812588701f56f3a4c1891a889c691869f89d961899ac8b2c4c7b2bc99"
+    },
+    "runtime/running-notes.bin": {
+      "bytes": 476,
+      "identity": [
+        2064,
+        8527576,
+        33188,
+        1,
+        476,
+        1794406969997324984,
+        1794406969997324984
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/running-notes.bin",
+      "sha256": "9640b74812588701f56f3a4c1891a889c691869f89d961899ac8b2c4c7b2bc99"
+    }
+  },
+  "visited_paths": 39
+}

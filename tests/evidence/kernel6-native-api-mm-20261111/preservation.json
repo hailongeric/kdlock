@@ -1,0 +1,10 @@
+{
+  "audit_sha256": "4770d4759d21111990e7bcd5efae66fb0bf9f7e46c7c20c39bd61d4a8b75ef6d",
+  "full_postboot_evidence": "../kernel6-boot-20261111/README.md",
+  "guest_bytes": 208348,
+  "guest_files": 37,
+  "guest_inventory_before_after_equal": true,
+  "local_copies_verified": 88,
+  "runtime_result_sha256": "1c97c7fdbd5f9667bd81f23894109cd837121a952e7de31cfedbb00bb4888add",
+  "scope": "Offline copying and hash verification only. Original saved files remain unchanged."
+}

@@ -3,9 +3,11 @@
 This source lane extends the source-rebuilt Linux 7.0 x86_64, non-PREEMPT_RT
 primitive. It now has [focused compilation and baseline checks](../../tests/evidence/kernel6-focused-20261111/README.md)
 and [full build/linked-image identity](../../tests/evidence/kernel6-build-20261111/README.md).
-Selected API/MM execution and actual boot remain separate pending stages. The earlier private reader
-fixtures remain mechanism evidence; they do not validate these new Linux APIs
-or a real userspace workload.
+The exact [kernel6 boot](../../tests/evidence/kernel6-boot-20261111/README.md) and
+[native API and real syscall checks](../../tests/evidence/kernel6-native-api-mm-20261111/README.md)
+passed. These bounded checks use the ordinary task-context contract below; they
+supply no broader context, MM JIT or performance claim. Private reader fixtures
+provide separate generated-execution mechanism evidence.
 
 ## One selected object and one gate
 
@@ -103,3 +105,13 @@ review, fresh idle/space and exact recovery/identity checks. Skips, timeouts,
 compile failures and unrun stages are not passes. Real syscall completion, KD
 physical grants, native downgrade, JIT entry, returned generated body and
 performance remain separate evidence.
+
+The kernel6 native receipt records all twelve API cases passing with all 19
+workers joined. Four syscall workers completed 64 iterations each, with zero
+errors and exact mapping, absence, byte-effect and address-reuse observations.
+The selected gate observed 1,285 native write grants, 772 ordinary write
+releases and 513 real downgrades; 1,544 read grants plus those downgrades match
+2,057 read releases. Actual END retired the idle, clear gate, followed by
+ordinary unload of both modules. These counts include setup and cleanup and
+are not syscall-count equivalents or performance measurements. Per-gate JIT
+observation was unavailable.

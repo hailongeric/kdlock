@@ -8,9 +8,13 @@ Later source checkpoints `532b68a6` and `02ffa1ec` add generic Linux rwsem API
 binding and native compatibility on one KD gate. They have independent source
 review, [focused compile/unit/unselected-baseline receipts](../../../tests/evidence/kernel6-focused-20261111/README.md)
 and a [full kernel/link identity](../../../tests/evidence/kernel6-build-20261111/README.md).
-Selected native API/MM behavior and boot are still separate unrun stages. The native API and real mmap/munmap
-fixtures, preserved failures/limits and pending recovery inspection are recorded
-in the [generic rwsem source checkpoint](../../../tests/evidence/generic-rwsem-source-20261111/README.md).
+The [kernel6 boot](../../../tests/evidence/kernel6-boot-20261111/README.md) and
+[twelve-case native API and real mmap/munmap checks](../../../tests/evidence/kernel6-native-api-mm-20261111/README.md)
+passed on that exact image. The real syscall lane selects one KD gate with
+`source_calls=false`; it supplies native grant, downgrade and retirement
+evidence, with JIT observation unavailable. Private generated execution remains
+a separate result. The [source checkpoint](../../../tests/evidence/generic-rwsem-source-20261111/README.md)
+retains its original failures, limits and then-pending recovery inspection.
 The first kernel6 preparation refused an ambiguous native/RT installer context
 before any target application or compilation; its [failure and protected-input
 readback](../../../tests/evidence/kernel6-prepare-context-20261111/README.md) are

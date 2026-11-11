@@ -1,0 +1,6 @@
+{
+  "commit": "80c272e5f134d9a499c03782f71064d04fae25c3",
+  "git_status_after": " M docs/design/kdlock_redesign/04_evidence_and_reconciliation.md\n M kernel/integration/RWSEM.md\n?? tests/evidence/kernel6-build-20261111/\n?? tests/evidence/kernel6-focused-20261111/\n",
+  "git_status_before": " M docs/design/kdlock_redesign/04_evidence_and_reconciliation.md\n M kernel/integration/RWSEM.md\n?? tests/evidence/kernel6-build-20261111/\n?? tests/evidence/kernel6-focused-20261111/\n",
+  "scope": "Frozen Git object export; no worktree modifications or project execution."
+}

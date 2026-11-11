@@ -1,0 +1,601 @@
+{
+  "after": {
+    "case_index": 11,
+    "cases": [
+      {
+        "granted": [
+          1,
+          1,
+          1
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 7
+      },
+      {
+        "granted": [
+          1,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          -115,
+          -115
+        ],
+        "used_mask": 1
+      },
+      {
+        "granted": [
+          1,
+          1,
+          1
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 7
+      },
+      {
+        "granted": [
+          1,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          -115,
+          -115
+        ],
+        "used_mask": 1
+      },
+      {
+        "granted": [
+          1,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          -4,
+          -115
+        ],
+        "used_mask": 3
+      },
+      {
+        "granted": [
+          1,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          -4,
+          -115
+        ],
+        "used_mask": 3
+      },
+      {
+        "granted": [
+          1,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          -4,
+          -115
+        ],
+        "used_mask": 3
+      },
+      {
+        "granted": [
+          1,
+          0,
+          0
+        ],
+        "pending": [
+          1,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          -115,
+          -115
+        ],
+        "used_mask": 1
+      },
+      {
+        "granted": [
+          1,
+          0,
+          0
+        ],
+        "pending": [
+          1,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          -115,
+          -115
+        ],
+        "used_mask": 1
+      },
+      {
+        "granted": [
+          1,
+          0,
+          0
+        ],
+        "pending": [
+          1,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          -115,
+          -115
+        ],
+        "used_mask": 1
+      },
+      {
+        "granted": [
+          1,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          0,
+          -4,
+          -115
+        ],
+        "used_mask": 3
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 1,
+        "result": 0,
+        "returns": [
+          -115,
+          -115,
+          -115
+        ],
+        "used_mask": 0
+      }
+    ],
+    "count_overflow": 0,
+    "created": 19,
+    "error": 0,
+    "joined": 19,
+    "module_hold": 0,
+    "native_counts": [
+      10,
+      11,
+      10,
+      9,
+      1,
+      4,
+      2,
+      12
+    ],
+    "pool_idle": 1,
+    "state": 2,
+    "try_returns": [
+      1,
+      1,
+      0,
+      0
+    ],
+    "turn_cleanup_proved": 1,
+    "turn_wait_proved": 1,
+    "workers": [
+      {
+        "done": 0,
+        "joined": 1,
+        "nonowner_open": 0,
+        "return": -115,
+        "stop_return": 0,
+        "task": 0
+      },
+      {
+        "done": 0,
+        "joined": 1,
+        "nonowner_open": 0,
+        "return": -115,
+        "stop_return": 0,
+        "task": 0
+      },
+      {
+        "done": 0,
+        "joined": 1,
+        "nonowner_open": 0,
+        "return": -115,
+        "stop_return": 0,
+        "task": 0
+      }
+    ]
+  },
+  "before": {
+    "case_index": 0,
+    "cases": [
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      },
+      {
+        "granted": [
+          0,
+          0,
+          0
+        ],
+        "pending": [
+          0,
+          0,
+          0
+        ],
+        "ran": 0,
+        "result": 0,
+        "returns": [
+          0,
+          0,
+          0
+        ],
+        "used_mask": 0
+      }
+    ],
+    "count_overflow": 0,
+    "created": 0,
+    "error": 0,
+    "joined": 0,
+    "module_hold": 0,
+    "native_counts": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "pool_idle": 1,
+    "state": 0,
+    "try_returns": [
+      -115,
+      -115,
+      -115,
+      -115
+    ],
+    "turn_cleanup_proved": 0,
+    "turn_wait_proved": 0,
+    "workers": [
+      {
+        "done": 0,
+        "joined": 0,
+        "nonowner_open": 0,
+        "return": 0,
+        "stop_return": 0,
+        "task": 0
+      },
+      {
+        "done": 0,
+        "joined": 0,
+        "nonowner_open": 0,
+        "return": 0,
+        "stop_return": 0,
+        "task": 0
+      },
+      {
+        "done": 0,
+        "joined": 0,
+        "nonowner_open": 0,
+        "return": 0,
+        "stop_return": 0,
+        "task": 0
+      }
+    ]
+  },
+  "drained": true,
+  "fd": 3,
+  "fd_closed": true,
+  "phase": "COMPAT_PASS",
+  "pid": 3084,
+  "run_errno": 0,
+  "stop_errno": null
+}

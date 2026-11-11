@@ -6,8 +6,10 @@ independent of master's mmap1 workstream. The userspace program invokes actual
 extracted kernel body or ioctl performs the mapping work. The client has passed
 an [unselected syscall baseline](../../evidence/kernel6-focused-20261111/README.md),
 and the provider has a [module build and signing receipt](../../evidence/kernel6-api-build-20261111/README.md).
-Selected KD execution remains pending; these receipts establish no generated
-execution, KD downgrade or performance result.
+The [selected native-gate run](../../evidence/kernel6-native-api-mm-20261111/README.md)
+passed with four workers and 64 iterations each, including actual native
+downgrades, exact retirement and ordinary provider unload. This supplies no
+generated-execution or performance result.
 
 The caller supplies all three required positive decimal arguments:
 
