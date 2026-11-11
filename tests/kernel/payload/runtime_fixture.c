@@ -983,7 +983,15 @@ static int __init notrace fixture_init(void)
 	config = (struct kd_jit_runtime_config) {
 		.source = provider, .feedback_capacity = 4096, .cycle_capacity = 32, .image_capacity = 16,
 		.claim_capacity = 4096,
-		.compiled = { .code_capacity = 128 * 1024, .artifact_capacity = 512 * 1024,
+		.compiled = { .code_capacity = 128 * 1024,
+#ifdef KD_FIXTURE_READERS
+			/* Assembly, C metadata and manifest share this total budget.
+			 * The host admits up to 512 KiB for each text blob.
+			 */
+			.artifact_capacity = 3 * 512 * 1024,
+#else
+			.artifact_capacity = 512 * 1024,
+#endif
 			.flat_capacity = 256 * 1024, .entry_capacity = 64, .source_capacity = 4096,
 			.observation_capacity = 4096 },
 		.symbols = { .descriptor = SYMBOL_BYTES("kd_fixture_image"),
