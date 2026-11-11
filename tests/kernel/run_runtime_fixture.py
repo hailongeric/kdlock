@@ -51,6 +51,34 @@ def symbol_size(module, symbol, nm, timeout):
     raise ValueError(f"actual module ELF has no sized symbol {symbol}")
 
 
+def executable_elf_bytes(path, address, length):
+    """Read an exact virtual span from one executable ELF64 load segment."""
+    file_size = path.stat().st_size
+    with path.open("rb") as source:
+        raw = source.read(64)
+        if len(raw) != 64:
+            raise ValueError("kernel ELF header is truncated")
+        header = struct.unpack("<16sHHIQQQIHHHHHH", raw)
+        if (header[0][:6] != b"\x7fELF\x02\x01" or header[1:3] != (2, 62)
+                or header[9] != 56 or not header[10]
+                or header[5] + header[9] * header[10] > file_size):
+            raise ValueError("kernel ELF executable load table differs")
+        matches = []
+        for index in range(header[10]):
+            source.seek(header[5] + index * header[9])
+            kind, flags, offset, virtual, _physical, extent, _memory, _alignment = struct.unpack(
+                "<IIQQQQQQ", source.read(56))
+            if kind == 1 and flags & 1 and virtual <= address and address + length <= virtual + extent:
+                start = offset + address - virtual
+                if start + length > file_size:
+                    raise ValueError("kernel ELF source span exceeds its file")
+                matches.append(start)
+        if len(matches) != 1:
+            raise ValueError("built-in source span lacks one exact executable ELF mapping")
+        source.seek(matches[0])
+        return source.read(length)
+
+
 def scan_operation_calls(exported, objdump, directory, timeout):
     """Generic actual-byte CALL records, checked by the pinned source decoder.
 
@@ -122,6 +150,8 @@ def main(*, spin=False):
     parser.add_argument("--gs-offset", type=lambda value: int(value, 0), required=True)
     parser.add_argument("--dependency-page-limit", type=int, required=True)
     parser.add_argument("--total-source-byte-limit", type=int, required=True)
+    parser.add_argument("--builtin-source-start", type=lambda value: int(value, 0), default=0)
+    parser.add_argument("--builtin-source-size", type=lambda value: int(value, 0), default=0)
     parser.add_argument("--wire-log-byte-limit", type=int, required=True)
     parser.add_argument("--event-capacity", type=int, required=True)
     parser.add_argument("--immutable-text-contract", action="store_true", required=True)
@@ -150,6 +180,14 @@ def main(*, spin=False):
             or args.total_source_byte_limit + (2 + args.dependency_page_limit) * 16
                 + 32 + 7 * 8 + 64 * 16 + 8 + 256 > 2 * 1024 * 1024):
         raise ValueError("fixture worker/iteration/source/deadline extent is invalid")
+    page_size = os.sysconf("SC_PAGE_SIZE")
+    if (bool(args.builtin_source_start) != bool(args.builtin_source_size)
+            or not 0 <= args.builtin_source_start < 1 << 64
+            or not 0 <= args.builtin_source_size <= page_size
+            or args.builtin_source_start + args.builtin_source_size > 1 << 64
+            or (args.builtin_source_size and args.builtin_source_start // page_size !=
+                (args.builtin_source_start + args.builtin_source_size - 1) // page_size)):
+        raise ValueError("optional built-in source must be a nonempty single-page-contained span")
     if spin:
         assigned = {*args.spin_cpus, args.controller_cpu}
         if (len(assigned) != 6 or not assigned <= os.sched_getaffinity(0)
@@ -167,6 +205,9 @@ def main(*, spin=False):
     configuration = args.kernel_config.read_text()
     if "CONFIG_PREEMPT_RT=y" in configuration or "CONFIG_KDLOCK_REBUILD=y" not in configuration:
         raise ValueError("actual config is outside this rebuilt non-RT fixture lane")
+    builtin_bytes = (executable_elf_bytes(args.kernel_elf, args.builtin_source_start,
+                                          args.builtin_source_size)
+                     if args.builtin_source_size else None)
     args.output = args.output.resolve()
     args.output.mkdir(parents=False, exist_ok=False)
     args.repo = args.repo.resolve()
@@ -200,6 +241,12 @@ def main(*, spin=False):
                             "reserved_bytes": 0, "reservations": 0},
                "workers": args.workers, "iterations": args.iterations, "cases": [],
                "status": "incomplete", "returned_full_jit_body": "not_established"}
+    if builtin_bytes is not None:
+        (args.output / "builtin-source-elf.bin").write_bytes(builtin_bytes)
+        results["builtin_source"] = {"start": args.builtin_source_start,
+                                     "length": args.builtin_source_size,
+                                     "elf_sha256": proof["kernel_elf_sha256"],
+                                     "bytes_sha256": hashlib.sha256(builtin_bytes).hexdigest()}
     if spin:
         results["spin_context"] = {"role_cpus": args.spin_cpus,
                                    "controller_cpu": args.controller_cpu,
@@ -795,6 +842,9 @@ def main(*, spin=False):
                       f"step_size={step_size}", f"dependency_page_limit={args.dependency_page_limit}",
                       f"total_source_byte_limit={args.total_source_byte_limit}",
                       f"event_capacity={args.event_capacity}", f"source_version={version}"]
+        if builtin_bytes is not None:
+            parameters.extend((f"builtin_source_start={args.builtin_source_start}",
+                               f"builtin_source_size={args.builtin_source_size}"))
         if spin:
             parameters.extend(("spin_cpus=" + ",".join(map(str, args.spin_cpus)),
                                f"holder_timeout_ms={args.holder_timeout_ms}"))
@@ -810,6 +860,12 @@ def main(*, spin=False):
         transport = RecordedTransport.open(f"/dev/{module_name}", limits, 4 * 1024 * 1024 + 48)
         exported = drive(SourceExportSession(transport, SourceExportLimits(
             2 + args.dependency_page_limit, 64, args.total_source_byte_limit)))
+        if builtin_bytes is not None:
+            supplied = [region for region in exported.snapshot.regions
+                        if region.start == args.builtin_source_start and len(region.data) == args.builtin_source_size]
+            if len(supplied) != 1 or supplied[0].data != builtin_bytes:
+                raise ValueError("actual retained built-in bytes differ from the pinned executable ELF span")
+            results["builtin_source"]["export_matches_elf"] = True
         snapshot, roots, calls, indirect = scan_operation_calls(exported, tools["objdump"], args.output, args.deadline)
         results["actual_source_regions"] = [{"start": region.start, "length": len(region.data)}
                                             for region in snapshot.regions]

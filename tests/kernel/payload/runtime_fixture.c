@@ -87,6 +87,8 @@ static unsigned int source_size;
 static unsigned int step_size;
 static unsigned int dependency_page_limit;
 static unsigned long total_source_byte_limit;
+static unsigned long builtin_source_start;
+static unsigned long builtin_source_size;
 static char *source_version;
 module_param(gs_offset, ulong, 0444);
 module_param(gs_verified, bool, 0444);
@@ -96,6 +98,8 @@ module_param(source_size, uint, 0444);
 module_param(step_size, uint, 0444);
 module_param(dependency_page_limit, uint, 0444);
 module_param(total_source_byte_limit, ulong, 0444);
+module_param(builtin_source_start, ulong, 0444);
+module_param(builtin_source_size, ulong, 0444);
 module_param(source_version, charp, 0444);
 MODULE_PARM_DESC(gs_offset, "Actual running-target current_task GS offset, verified from its kernel ELF/source");
 MODULE_PARM_DESC(gs_verified, "Operator supplied the exact running-target GS/configuration receipt");
@@ -103,8 +107,10 @@ MODULE_PARM_DESC(immutable_text, "Module/source dependencies remain unpatched th
 MODULE_PARM_DESC(auxiliary_contract, "Operator admits this target's task-owned auxiliary stack/context contract");
 MODULE_PARM_DESC(source_size, "Exact fixture_source_body ELF symbol size from this module binary");
 MODULE_PARM_DESC(step_size, "Exact fixture_source_step ELF symbol size from this module binary");
-MODULE_PARM_DESC(dependency_page_limit, "Explicit maximum retained module-owned executable dependency pages");
+MODULE_PARM_DESC(dependency_page_limit, "Explicit maximum module dependency pages and built-in spans");
 MODULE_PARM_DESC(total_source_byte_limit, "Explicit maximum total copied body, callee and dependency bytes");
+MODULE_PARM_DESC(builtin_source_start, "Optional exact built-in executable source span start");
+MODULE_PARM_DESC(builtin_source_size, "Optional nonempty source span contained in one page");
 MODULE_PARM_DESC(source_version, "Explicit module/kernel/configuration identity for this mechanism run");
 
 struct fixture_worker {
@@ -174,6 +180,8 @@ static struct {
 	unsigned int dependency_page_limit;
 	unsigned long total_source_byte_limit;
 	unsigned int dependency_pages;
+	unsigned long builtin_source_start;
+	unsigned long builtin_source_size;
 	size_t source_bytes;
 } configuration_identity;
 
@@ -684,18 +692,24 @@ static struct miscdevice control_device = {
 
 #define SYMBOL_BYTES(text) { .data = (text), .length = sizeof(text) - 1 }
 
-/* The target finalizes module-owned executable dependency pages before init.
- * Copy those exact ordinary bytes under the same immutable-text/module hold as
- * the two ELF-sized source regions. No dependency instruction is modeled here.
+/* The target finalizes module-owned dependency pages before init. The
+ * optional built-in span shares the caller's immutable-text contract and has
+ * kernel residency. All regions supply ordinary bytes to the same compiler.
  */
 static int __init notrace fixture_regions(struct kd_jit_source_load_region **out,
 		unsigned int *out_count)
 {
 	struct kd_jit_source_load_region *regions;
-	unsigned int pages = 0, count, index, prior;
+	unsigned int pages = 0, dependencies, count, index, prior;
 	size_t dependency_bytes, total;
 
-	if (!dependency_page_limit || !total_source_byte_limit)
+	if (!dependency_page_limit || !total_source_byte_limit ||
+	    !!builtin_source_start != !!builtin_source_size)
+		return -EINVAL;
+	if (builtin_source_size &&
+	    (builtin_source_size - 1 > ~0UL - builtin_source_start ||
+	     (builtin_source_start >> PAGE_SHIFT) !=
+	     ((builtin_source_start + builtin_source_size - 1) >> PAGE_SHIFT)))
 		return -EINVAL;
 #ifdef CONFIG_MITIGATION_ITS
 	if (THIS_MODULE->arch.its_pages.num < 0 ||
@@ -703,8 +717,10 @@ static int __init notrace fixture_regions(struct kd_jit_source_load_region **out
 		return -EINVAL;
 	pages = THIS_MODULE->arch.its_pages.num;
 #endif
-	if (pages > dependency_page_limit || check_add_overflow(2U, pages, &count) ||
+	if (check_add_overflow(pages, builtin_source_size ? 1U : 0U, &dependencies) ||
+	    dependencies > dependency_page_limit || check_add_overflow(2U, dependencies, &count) ||
 	    check_mul_overflow((size_t)pages, (size_t)PAGE_SIZE, &dependency_bytes) ||
+	    check_add_overflow(dependency_bytes, (size_t)builtin_source_size, &dependency_bytes) ||
 	    check_add_overflow((size_t)source_size, (size_t)step_size, &total) ||
 	    check_add_overflow(total, dependency_bytes, &total) || total > total_source_byte_limit)
 		return -E2BIG;
@@ -722,6 +738,10 @@ static int __init notrace fixture_regions(struct kd_jit_source_load_region **out
 		regions[index + 2] = (struct kd_jit_source_load_region) { start, PAGE_SIZE };
 	}
 #endif
+	if (builtin_source_size)
+		regions[pages + 2] = (struct kd_jit_source_load_region) {
+			builtin_source_start, builtin_source_size
+		};
 	for (index = 0; index < count; ++index) {
 		unsigned long start = regions[index].start, last;
 		size_t length = regions[index].length;
@@ -740,7 +760,7 @@ static int __init notrace fixture_regions(struct kd_jit_source_load_region **out
 				goto invalid;
 		}
 	}
-	configuration_identity.dependency_pages = pages;
+	configuration_identity.dependency_pages = dependencies;
 	configuration_identity.source_bytes = total;
 	*out = regions;
 	*out_count = count;
@@ -753,7 +773,7 @@ invalid:
 static int __init notrace fixture_init(void)
 {
 	struct kd_jit_source_load_region *regions;
-	struct module *modules[] = { THIS_MODULE };
+	struct module *modules[] = { THIS_MODULE, NULL };
 	struct kd_jit_source_provider_args source;
 	struct kd_jit_runtime_config config;
 	unsigned int index, region_count;
@@ -782,6 +802,8 @@ static int __init notrace fixture_init(void)
 	configuration_identity.step_size = step_size;
 	configuration_identity.dependency_page_limit = dependency_page_limit;
 	configuration_identity.total_source_byte_limit = total_source_byte_limit;
+	configuration_identity.builtin_source_start = builtin_source_start;
+	configuration_identity.builtin_source_size = builtin_source_size;
 	result = fixture_regions(&regions, &region_count);
 	if (result)
 		return result;
@@ -790,7 +812,8 @@ static int __init notrace fixture_init(void)
 		.version = (const unsigned char *)source_version, .version_length = strlen(source_version),
 		.regions = regions, .region_count = region_count,
 		.configuration_identity = &configuration_identity, .load_identity = &load_identity,
-		.current_task_gs_offset = gs_offset, .modules = modules, .module_count = ARRAY_SIZE(modules),
+		.current_task_gs_offset = gs_offset, .modules = modules,
+		.module_count = builtin_source_size ? ARRAY_SIZE(modules) : 1,
 	};
 	result = fixture_events_start();
 	if (result) {
