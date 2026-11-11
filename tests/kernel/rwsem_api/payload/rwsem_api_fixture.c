@@ -31,7 +31,7 @@
 #define API_RUN _IO('Q', 1)
 #define API_STOP _IO('Q', 2)
 #define WORKERS 3
-#define CASES 11
+#define CASES 12
 
 static unsigned int native_capacity;
 module_param(native_capacity, uint, 0400);
@@ -70,7 +70,7 @@ struct fixture {
 	enum run_state state;
 	unsigned int case_index, created, joined;
 	int error, try_values[4];
-	bool run_hold;
+	bool run_hold, turn_wait_proved, turn_cleanup_proved;
 };
 static struct fixture fixture;
 static DEFINE_MUTEX(control_mutex);
@@ -353,22 +353,73 @@ static int nonowner_transfer(void)
 	return kd_rw_native_pool_idle(&fixture.pool) ? 0 : -EBUSY;
 }
 
-static int cancelled(enum action action, int signal)
+/* This is the queue-head branch, distinct from a canceled successor whose
+ * predecessor still owns WRITE. Inspect only exact persistent control under
+ * the same family->pool ordering as the native backend.
+ */
+static int draining_turn(struct worker *worker)
+{
+	unsigned long end = jiffies + wait_ticks();
+	unsigned int index;
+	bool found;
+
+	for (;;) {
+		found = false;
+		raw_spin_lock(&fixture.gate.core.guard);
+		raw_spin_lock(&fixture.pool.guard);
+		for (index = 0; index < native_capacity; ++index) {
+			struct kd_rw_native_record *record = &fixture.records[index];
+
+			/* writer_pending publishes the completed private batch constructor
+			 * before inspecting its initialized field under the family guard.
+			 */
+			if (fixture.gate.core.writer_pending && !fixture.gate.core.writer &&
+			    fixture.gate.core.readers && record->task == worker->task &&
+			    record->phase == KD_RW_NATIVE_WRITE_WAIT && record->turn_owned &&
+			    record->batch.initialized && record->queue_user && !record->grant_user)
+				found = true;
+		}
+		raw_spin_unlock(&fixture.pool.guard);
+		raw_spin_unlock(&fixture.gate.core.guard);
+		if (found) {
+			fixture.turn_wait_proved = true;
+			return 0;
+		}
+		if (time_after_eq(jiffies, end)) return -ETIMEDOUT;
+		schedule_timeout_uninterruptible(1);
+	}
+}
+
+static int cancelled(enum action action, int signal, bool read_blocker)
 {
 	unsigned int index;
-	bool queued_cancel = false;
-	int result = start(0, API_WRITE, false);
+	bool queued_cancel = false, turn_clean;
+	long long write_grants;
+	int result = start(0, read_blocker ? API_READ : API_WRITE, false);
 
 	if (result || (result = acquired(0))) return result;
+	write_grants = atomic64_read(&fixture.counts[2]);
 	result = start(1, action, false);
 	if (result || (result = contended())) return result;
+	if (read_blocker && (result = draining_turn(&fixture.workers[1]))) return result;
 	if ((result = send_sig(signal, fixture.workers[1].task, 1))) return result;
 	if ((result = join_one(1))) return result;
 	if (fixture.workers[1].result != -EINTR || fixture.workers[1].granted)
 		return -EUCLEAN;
-	rwsem_assert_held_write(&fixture.sem);
+	if (read_blocker) {
+		if (!rwsem_is_locked(&fixture.sem) || kd_linux_rwsem_is_write_locked(&fixture.binding) ||
+		    write_grants != atomic64_read(&fixture.counts[2])) return -EUCLEAN;
+		raw_spin_lock(&fixture.gate.core.guard);
+		turn_clean = !fixture.gate.core.writer_pending && !fixture.gate.core.writer &&
+			!READ_ONCE(fixture.gate.core.queue.tail) && fixture.gate.core.readers == 1;
+		raw_spin_unlock(&fixture.gate.core.guard);
+		if (!turn_clean) return -EUCLEAN;
+		fixture.turn_cleanup_proved = true;
+	} else {
+		rwsem_assert_held_write(&fixture.sem);
+	}
 	if (completion_done(&fixture.workers[0].done)) return -EUCLEAN;
-	if (action == API_WRITE_KILL) {
+	if (action == API_WRITE_KILL && !read_blocker) {
 		raw_spin_lock(&fixture.pool.guard);
 		for (index = 0; index < native_capacity; ++index)
 			if (fixture.records[index].phase == KD_RW_NATIVE_CANCELLED &&
@@ -401,13 +452,14 @@ static int run_case(unsigned int index)
 	case 1: return try_and_constructors();
 	case 2: return conversion();
 	case 3: return nonowner_transfer();
-	case 4: return cancelled(API_READ_INTR, SIGUSR1);
-	case 5: return cancelled(API_READ_KILL, SIGKILL);
-	case 6: return cancelled(API_WRITE_KILL, SIGKILL);
+	case 4: return cancelled(API_READ_INTR, SIGUSR1, false);
+	case 5: return cancelled(API_READ_KILL, SIGKILL, false);
+	case 6: return cancelled(API_WRITE_KILL, SIGKILL, false);
 	case 7: return ready_pending(API_READ_INTR, SIGUSR1);
 	case 8: return ready_pending(API_READ_KILL, SIGKILL);
 	case 9: return ready_pending(API_WRITE_KILL, SIGKILL);
-	case 10:
+	case 10: return cancelled(API_WRITE_KILL, SIGKILL, true);
+	case 11:
 		if (atomic_read(&fixture.count_overflow) ||
 		    !kd_rw_native_pool_idle(&fixture.pool) || rwsem_is_locked(&fixture.sem))
 			return -EUCLEAN;
@@ -479,9 +531,11 @@ static ssize_t status_read(struct file *file, char __user *buffer, size_t length
 	if (mutex_lock_interruptible(&control_mutex)) { kfree(text); return -EINTR; }
 	used = scnprintf(text, PAGE_SIZE,
 		"{\"state\":%u,\"error\":%d,\"case_index\":%u,\"created\":%u,\"joined\":%u,"
-		"\"module_hold\":%u,\"pool_idle\":%u,\"count_overflow\":%u,\"native_counts\":[",
+		"\"module_hold\":%u,\"pool_idle\":%u,\"count_overflow\":%u,"
+		"\"turn_wait_proved\":%u,\"turn_cleanup_proved\":%u,\"native_counts\":[",
 		fixture.state, fixture.error, fixture.case_index, fixture.created, fixture.joined,
-		fixture.run_hold, kd_rw_native_pool_idle(&fixture.pool), atomic_read(&fixture.count_overflow));
+		fixture.run_hold, kd_rw_native_pool_idle(&fixture.pool), atomic_read(&fixture.count_overflow),
+		fixture.turn_wait_proved, fixture.turn_cleanup_proved);
 	for (index = 0; index < ARRAY_SIZE(fixture.counts); ++index)
 		used += scnprintf(text + used, PAGE_SIZE - used, "%s%lld", index ? "," : "",
 			(long long)atomic64_read(&fixture.counts[index]));

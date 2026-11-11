@@ -19,14 +19,20 @@ RUNNING1, PASS2, FAILED_RETAINED3 and DRAINED_FAILED4. Native counters are read
 acquire/release, write acquire/release, real downgrade, cancellation, try miss
 and MCS enqueue, in that order.
 
-The fixed cases cover concurrent real readers with writer exclusion, trylock
+The twelve fixed cases cover concurrent real readers with writer exclusion, trylock
 success1/failure0 and failed-try no-enqueue/no-grant observations, callable and
 cleanup-constructor routing, real writer-to-reader downgrade admitting another
 reader before matching up_read, and nonowner release after the acquiring kernel
 thread has actually exited. Controlled blocked waits check interruptible read
-with SIGUSR1 and killable read/write with SIGKILL. Each cancellation returns
+with SIGUSR1 and killable read/write with SIGKILL. Those three scenes require
 -EINTR while the original writer still holds its grant. The canceled queued
 writer's persistent queue user is checked before releasing that blocker.
+A separate cancellation scene holds a real READ credit and waits until the
+killable writer has its exact MCS turn, initialized batch and writer-pending
+reader drain. After SIGKILL it requires -EINTR, no native WRITE grant, no pending
+writer or queue tail, and the original READ still held. The saved
+turn_wait_proved and turn_cleanup_proved flags identify these observations.
+Its MCS physical callback is not interpreted as a WRITE grant.
 Available-grant cases enter read interruptible, read killable and write killable
 with their corresponding signal already pending, and require successful grant.
 Every completed case checks ordinary release and exact pool quiescence.
