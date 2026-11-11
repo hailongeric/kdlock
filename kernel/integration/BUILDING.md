@@ -23,11 +23,25 @@ and configured build output are absent from this repository. At source checkpoin
 receipts now record exact target application, 26 C plus three assembly core
 units, full kernel builds, kernel2 install/boot and limited native/fork execution.
 Kernel3 adds one observation C unit, with separate build/boot and scoped
-protected JIT fixture receipts. The current checkpoint links them without
-attributing those stages to the
-earlier 12 host-pipeline checks. All authorized builds, modules, tests and timing run
-only in the development VM. Source edits and
-static inspection remain on the source host.
+protected JIT fixture receipts. Kernel4 compiles the plain-spin source extension
+at `2d0ad60b` with 67 exact package inputs and the same 27 C plus three assembly
+units. The core and full-kernel commands returned 0. Its full-link warnings
+include five handwritten returns, an indirect call, function fallthrough and
+`kd_spin_native_resume` stack realignment, with the vendor and locale warnings
+retained. The current checkpoint keeps these exact build stages alongside the
+earlier 12 host-pipeline checks.
+[Kernel4 build receipt](../../tests/evidence/kernel-build4-20261111/README.md).
+
+Kernel4 installation and boot cover a limited module closure containing the
+checked signed `nls_iso8859-1.ko` and the declared built-in boot/network
+dependencies. The booted kernel4 spin fixture subsequently stopped at a source
+frontier. Its built-in-span source correction awaits rebuilding and live
+verification. Recovery and later execution await explicit user approval.
+[Kernel4 installation](../../tests/evidence/kernel-install4-20261111/README.md),
+[spin attempt and retained state](../../tests/evidence/runtime-spin-frontier-20261111/README.md).
+
+All authorized builds, modules, tests and timing run only in the development VM.
+Source edits and static inspection remain on the source host.
 
 Use the following layout when integrating the package into the selected kernel
 source tree, retaining its internal relative paths:
@@ -80,13 +94,16 @@ source tree, retaining its internal relative paths:
    code and all escaped users need their actual final-use proof before teardown
    or stack/storage release. Numerical ranges do not prove auxiliary scheduler,
    IRQ, stack-overflow or unwinder compatibility.
-6. Convert only the declared ordinary mutex lane, rebuilding every user of each
-   selected object under one physical protocol. The private `struct kd_mutex`,
-   initializer and `kd_mutex_lock`/`kd_mutex_unlock` source macros are not automatic
-   replacements for Linux `struct mutex` or every mutex API. Audit object
-   initialization, all call sites and context/lifetime use together; keep native
-   protected bodies and surrounding semantics unchanged. The packaging flag
-   enables no callable, signalable, trylock, I/O, reader, mode or IRQ lane.
+6. Convert only a declared source lane, rebuilding every user of each selected
+   object under one physical protocol. Ordinary mutex and plain-spin interfaces
+   have distinct objects, initialization and source macros. Audit initialization,
+   all call sites and context/lifetime use together, preserving native protected
+   bodies and surrounding semantics. Plain spin source requires IRQ-enabled task
+   context and preemption pins through matching source unlock. The current spin
+   fixture still awaits acceptance after its source frontier. Callable,
+   signalable, trylock, I/O, reader, mode and IRQ lanes retain their own scope.
+   [Mutex source API](../../include/kd_mutex_api.h),
+   [plain-spin source API](../../include/kd_spin_api.h).
 
 At `c6becf81`, Kbuild lists 26 C units: `episode`, image slots/owners, source
 epoch/provider/stack, feedback producer/pool/publication, channel/control/compiled

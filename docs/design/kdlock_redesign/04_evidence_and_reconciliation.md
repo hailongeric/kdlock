@@ -14,13 +14,16 @@ new architecture or establish support for the rebuilt lock.
 
 The independent source-rebuilt C12 route is selected, with fresh private layouts
 and no old binary lock/object-layout compatibility promise. C01 starts with
-ordinary mutex lock/unlock in sleepable task context; other families follow
-later. C03 subsequently selects TCLock-style out-of-order outer-mutex unlock
+ordinary mutex lock/unlock in sleepable task context. The later selected
+plain-spin source extension at `2d0ad60b` uses task context with IRQs enabled and
+preemption pinned across the source acquisition/unlock interval. Its kernel4
+attempt and pending source-dependency correction are recorded below. C03 subsequently selects TCLock-style out-of-order outer-mutex unlock
 deferral with responsible physical-owner context retained. The earlier
 transferable-grant recommendation is superseded. C11 now selects an MCS queue
 and C04 retains the KD physical-R11 canonical-packet-base mapping. Optional
 local/proxy/origin-combiner transactions, MCS/request lifetimes and exact
-adapter/bridge details still need implementation/proof; C08 now selects
+adapter/bridge details have source and scoped mutex observations. Broader
+correctness and progress proof remains open. C08 now selects
 preallocated miss-fact retention with continued admission as recorded below.
 C10 extensions remain separately scoped. Managed provisioning/lifecycle/provider
 composition is now source-connected through `c6becf81`; deployment and exact
@@ -76,8 +79,10 @@ The selected ordinary source path has exact-target build/boot, scoped generated
 prefix execution and cumulative ordinary-JMP learning through actual publication
 and ACK. The later kernel3 fixed-image fixture records protected JIT completion
 and actual two-combiner recursion, with physical release and final retirement
-observed separately. Earlier failures, prefixes and learning remain separate
-attempts. These stages have separate inputs and receipts:
+observed separately. The later plain-spin kernel4 attempt failed at a source
+frontier during its first warm recursive scene. Its source-span correction has
+source review, with rebuilding and live verification pending. The checkpoint
+retains each attempt's exact inputs and result.
 
 | Stage | Actual result and evidence boundary |
 | --- | --- |
@@ -94,6 +99,18 @@ attempts. These stages have separate inputs and receipts:
 | Kernel3 build and boot | The [kernel3 build](../../../tests/evidence/kernel-build3-20261110/README.md), [module4 build](../../../tests/evidence/module4-build-20261110/README.md) and [install/boot](../../../tests/evidence/kernel-install3-20261110/README.md) retain ordinary flags, 66 exact package inputs, 27 C plus three assembly targets, Build ID `264a4ef8e55952e5d9ceccf93f65f25f05a50c1f` and fresh boot `bceee25d-a189-4f51-89fa-0e31322b70e6`. Kernel2's independent witness is retained before its inactive build directory is reused. |
 | Fixed-image protected recursion (live5) | The [live5 receipt](../../../tests/evidence/runtime-recursive-20261110/README.md) records controller return 0 with `protected_jit_recursive_mechanism_pass`, 4,691 scalar records and zero overflow. The final image remains fixed for warm plain and two five-task scenes. Actual CA → CB → CA execution shares one S_W and distinct A/B acquisitions, with current binding/cursor return, positive child/root completion, original-owner deferred release, real physical callback completion and final request retirement. A final claim is empty; all eight earlier ordinary facts are ACKed, pending and SETTLED counts are zero, and ordinary destroy/unload completes. The unprotected C epilogue remains native. |
 | Operational return after live5 | The [separate normal-return receipt](../../../tests/evidence/return-normal5-20261110/README.md) records one ordinary return to `7.0.0-38-kdlock1`, fresh boot `884c4a65-4f4c-4a6b-89a3-cefd65221615`, expected normal Build ID and taint 0. The fixture/devices/workers are absent, eight normal/recovery boot files are unchanged, and the normal GRUB default/configuration is retained. This later boot does not replace live5's kernel3 execution identity. |
+| Kernel4 plain-spin source build and boot | Core `2d0ad60b` compiled 27 C and three assembly units with 67 exact package inputs. The core and full-kernel commands returned 0. Release `7.0.0-38-kdrebuild4` booted as `84e4ba94-b616-4b65-9efe-820921f36c16`, Build ID `f3caad92c0cdc5f955a2410f3ec3ec0e5ccad053`, with entry taint 0. Installation uses the declared limited closure containing one checked signed NLS module and built-in boot dependencies. Exact warning and installation scope are retained in the [build receipt](../../../tests/evidence/kernel-build4-20261111/README.md) and [installation/boot receipt](../../../tests/evidence/kernel-install4-20261111/README.md). |
+| Spin and mutex fixture compilation | Both separate module builds returned 0 and both runner AST parses passed for fixture `0a07f678` against core `2d0ad60b`. The spin and mutex logs retain their 2,288-byte and 2,264-byte frame warnings. This build window ran under normal `7.0.0-38-kdlock1`, boot `884c4a65-4f4c-4a6b-89a3-cefd65221615`, taint 0. The [fixture build receipt](../../../tests/evidence/module-spin-build-20261111/README.md) keeps these compilation results separate from the later runtime attempt. |
+| Spin source frontier | Fixture `0a07f678` returned `failed_or_incomplete` after 122.858 seconds. Three exported regions total 5,113 bytes. Four cycles produce three publications with ACK counts 0/1/1/0, and all 22 wire attempts return status 0. Its first warm recursive scene reached CA atomic JIT entry at row 4866, then COVERAGE_MISS/SOURCE_UNAVAILABLE/JUMP_RESOLVED at helper `0xffffffffc000b0de` to `0xffffffff8271be20`. W continued natively and enqueued B at row 4873, so `child=0` is correct. After the holder timeout all five workers finished with A=2, B=1, three helper effects, one worker error and zero pin/core/origin errors. The 4,949-record buffer has zero overflow. Recursive spin acceptance remains unmet in the [retained attempt](../../../tests/evidence/runtime-spin-frontier-20261111/README.md). |
+| Built-in source-span correction | The target is the actual kernel ELF's two-byte `its_return_thunk` span, `c3 cc`. Reviewed fixture correction `db7d7d6e` accepts an explicit ordinary built-in span under the existing bounds and immutable-source contract, then compares retained export bytes with executable ELF bytes before compilation. The next supplied span is `0xffffffff8271be20` with length 2. Module rebuilding and live verification are pending in the [follow-up record](../../../tests/evidence/runtime-spin-frontier-20261111/README.md#follow-up-and-retained-state). |
+| Retained spin state and pending approval | Automatic approval review rejected recovery before SSH dispatch, citing missing trusted user authorization in the child transcript for feedback settlement and module unload. Explicit user confirmation is pending. Runtime controls, the published image and five parked workers remain retained. Ordinary recovery, the mutex regression and operational return remain pending in the [retained-state record](../../../tests/evidence/runtime-spin-frontier-20261111/README.md#follow-up-and-retained-state). |
+
+Kernel4's full-link log retains five handwritten-return diagnostics, one
+indirect-call diagnostic, the function-fallthrough diagnostic and the
+`kd_spin_native_resume` stack-realignment diagnostic. The vendor module-description
+and Perl locale warnings are also preserved. The build and boot leave complete
+mitigation and auxiliary-context acceptance outstanding.
+[Kernel4 build receipt](../../../tests/evidence/kernel-build4-20261111/README.md).
 
 Live4's saved source CALL/JMP correlation places reached generated checkpoints
 before B, under B, and after A's logical unlock while B remains open. Those are

@@ -5,7 +5,7 @@ records exact build/boot and scoped execution results, retained failures and
 current validation limits. This guide states integration duties; its source
 instructions do not establish support or performance evidence.
 
-This guide describes connected source through `c6becf81`, preserving the original
+The control composition connected through `c6becf81` preserves the original
 UB JIT, KD GS lowering, one canonical S_W and direct MCS node->state lookup.
 Compiler control does not execute source bodies. Source functionality, target
 application/build, actual publication and returned execution are separate evidence.
@@ -20,6 +20,18 @@ protected JIT completion and actual two-combiner recursion, with exact release
 and retirement observations. Its separate receipt does not promote the earlier
 prefixes or establish general runtime support.
 
+The selected plain-spin source extension at `2d0ad60b` uses the same compiler
+channel and typed lock/unlock directions. Runtime target resolution identifies
+the operation family. Kernel4 built and booted, then fixture `0a07f678` failed
+at an unsupplied built-in return-thunk span during its first warm recursive
+scene. Reviewed correction `db7d7d6e` adds a generic caller-supplied source span,
+with rebuilding and live verification pending. The rejected recovery attempt
+reached no SSH dispatch. Ordinary recovery, the mutex regression and operational
+return await explicit user approval.
+[Build receipt](../../tests/evidence/kernel-build4-20261111/README.md),
+[installation receipt](../../tests/evidence/kernel-install4-20261111/README.md),
+[spin frontier and retained state](../../tests/evidence/runtime-spin-frontier-20261111/README.md).
+
 ## Cold source and task admission
 
 The source provider snapshots exact actual-address regions and retains all module
@@ -27,6 +39,14 @@ dependencies under the selected all-dependency immutable-text contract. Every
 mutator is excluded from before capture through final native/JIT/feedback use;
 module_get alone is no freeze. Version/configuration/load identities, complete
 operation boundaries and the current-task GS offset are explicit inputs.
+
+The fixture's optional built-in span is ordinary source input under that same
+contract. It counts against the supplied dependency/source-byte bounds and
+retains built-in kernel residency. The host compares the actual retained export
+with its exact executable mapping in the pinned ELF before compiling. The
+reviewed follow-up supplies the two bytes at `0xffffffff8271be20`. Verification
+of that corrected fixture remains pending.
+[Source-span follow-up](../../tests/evidence/runtime-spin-frontier-20261111/README.md#follow-up-and-retained-state).
 
 `kd_jit_runtime_create` composes source, image slot, feedback, durable cycle/image
 controls and one fd channel. Caller inputs explicitly bound requests, facts,

@@ -19,6 +19,15 @@ ordinary-mutex mechanism evidence; it establishes no general progress,
 performance, whole-kernel or real-world syscall/API result. Earlier partial
 attempts below retain their original evidence boundaries.
 
+The selected plain-spin extension has source at `2d0ad60b` and a kernel4
+build/boot record. Fixture `0a07f678` then failed its first warm recursive scene
+at an unsupplied built-in return-thunk span. The generic source-span correction
+`db7d7d6e` has source review, with module rebuilding and live verification pending.
+Recovery, the mutex regression and operational return await explicit user
+approval after automatic approval review rejected recovery before SSH dispatch.
+The current retained state and exact frontier are recorded centrally.
+[Current evidence checkpoint](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
+
 The private [compiler front end](disassem/compiler.py) connects a finite,
 immutable source snapshot to the original Miasm decoder and
 [fragment planner](disassem/fragment.py). It retains complete decoded records,
@@ -263,8 +272,11 @@ Read the design in order:
 C12 is selected: source-rebuilt integration with fresh private layouts and no
 compatibility promise for old binary lock/object layouts. C01 starts with
 ordinary mutex lock/unlock in sleepable task context on Linux 7.0 x86_64 without
-PREEMPT_RT; other lock families follow later. These are implementation scope
-approvals, not support evidence. C03 now selects TCLock-style out-of-order outer
+PREEMPT_RT. A later selected plain-spin extension supplies IRQ-enabled,
+preemption-pinned task-context source operations at `2d0ad60b`. Its kernel4
+fixture acceptance remains pending after the recorded source frontier. These
+selections authorize implementation scope. Other API/context lanes retain their
+own outstanding validation. C03 now selects TCLock-style out-of-order outer
 mutex unlock deferral: retain the responsible outer combiner, notify/unwind to
 it, continue its normal batch protocol and physically release through that
 protocol. Extra waiting is accepted; this is not a generic native release-timing
