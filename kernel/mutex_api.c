@@ -2,6 +2,9 @@
 /* Ordinary native entry and the common serial source-operation driver. */
 #include <linux/bug.h>
 #include <linux/errno.h>
+#include <linux/interrupt.h>
+#include <linux/irqflags.h>
+#include <linux/preempt.h>
 #include <linux/sched.h>
 
 #include "mutex_api.h"
@@ -29,6 +32,7 @@ int kd_mutex_bind_current(struct kd_episode_resources *resources,
 		return -EPERM;
 	root->mutex_control_bytes = required_control_bytes;
 	root->mutex_resources = resources;
+	root->owners.atomic_spin = resources->config.atomic_spin;
 	return 0;
 }
 
@@ -43,12 +47,27 @@ enum kd_operation_kind kd_mutex_resolve_entry_operation(void *context,
 	return KD_OPERATION_NONE;
 }
 
+enum kd_operation_kind kd_spin_resolve_entry_operation(unsigned long target)
+{
+	if (target == (unsigned long)kd_spin_lock_entry_asm)
+		return KD_OPERATION_SPIN_LOCK;
+	if (target == (unsigned long)kd_spin_unlock_entry_asm)
+		return KD_OPERATION_SPIN_UNLOCK;
+	return KD_OPERATION_NONE;
+}
+
+void kd_spin_init(struct kd_spinlock *lock)
+{
+	kd_mutex_init(&lock->queue);
+}
+
 static void run_native(struct kd_mutex_entry *entry, struct kd_mutex *lock,
 		       unsigned long source_sp, unsigned long continuation_ip,
 		       unsigned long source_bp)
 {
 	struct kd_episode_frame *frame = entry->context;
 	struct kd_execution_binding *native;
+	unsigned long api_target;
 	enum kd_mutex_outcome outcome;
 	int result;
 
@@ -56,10 +75,11 @@ static void run_native(struct kd_mutex_entry *entry, struct kd_mutex *lock,
 	 * before this exact prepared entry switched to its own auxiliary stack.
 	 */
 	native = kd_state_current_binding(frame->slot->pool->state);
-	BUG_ON(frame->operation != KD_OPERATION_MUTEX_LOCK);
+	BUG_ON(!kd_operation_is_lock(frame->operation));
+	api_target = kd_operation_is_spin(frame->operation) ?
+		(unsigned long)kd_spin_lock_entry_asm : (unsigned long)kd_mutex_lock_entry_asm;
 	result = kd_episode_acquire_root(frame, native, lock, source_sp,
-		continuation_ip, source_bp,
-		(unsigned long)kd_mutex_lock_entry_asm, &outcome);
+		continuation_ip, source_bp, api_target, &outcome);
 	BUG_ON(result || outcome != KD_MUTEX_PROXY_ORIGIN_SUFFIX);
 	/* Typed terminal propagation, not a snapshot of a possibly advanced
 	 * packet, identifies the immutable native destination for this root.
@@ -76,6 +96,7 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 	struct kd_task_root_context *root = kd_task_root_context_current();
 	struct kd_execution_binding *native;
 	struct kd_episode_frame *frame;
+	bool spin = kd_operation_is_spin(operation);
 	bool pending;
 	int result;
 
@@ -85,16 +106,31 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 	 */
 	BUG_ON(!root || !root->attached || root->task != current || !lock ||
 	       root->aux_entry || !root->mutex_resources ||
-	       (operation == KD_OPERATION_MUTEX_LOCK && root->source_closing));
+	       (kd_operation_is_lock(operation) && root->source_closing) ||
+	       root->owners.atomic_spin != spin);
+	if (spin) {
+		BUG_ON(!in_task() || irqs_disabled() ||
+		       preempt_count() != root->native_spin_depth * PREEMPT_OFFSET);
+		if (kd_operation_is_lock(operation)) {
+			BUG_ON(root->native_spin_depth >= PREEMPT_MASK / PREEMPT_OFFSET);
+			preempt_disable();
+		} else {
+			BUG_ON(!root->native_spin_depth);
+		}
+	}
 	native = kd_state_current_binding(&root->core);
 	BUG_ON(!kd_state_is_current(&root->core, native) ||
 	       native->kind != KD_EXECUTION_NATIVE);
 	result = kd_task_progress_native(root, native, &pending);
 	BUG_ON(result);
-	if (operation == KD_OPERATION_MUTEX_UNLOCK) {
+	if (kd_operation_is_unlock(operation)) {
 		result = kd_episode_unlock_native(root->mutex_resources,
-						  root, native, lock);
+						  root, native, lock, operation);
 		BUG_ON(result);
+		if (spin) {
+			root->native_spin_depth--;
+			preempt_enable();
+		}
 		return NULL;
 	}
 	result = kd_episode_prepare_root(root->mutex_resources, native,
@@ -114,4 +150,14 @@ struct kd_mutex_entry *kd_mutex_prepare_lock_current(struct kd_mutex *lock)
 struct kd_mutex_entry *kd_mutex_prepare_unlock_current(struct kd_mutex *lock)
 {
 	return prepare_current(lock, KD_OPERATION_MUTEX_UNLOCK);
+}
+
+struct kd_mutex_entry *kd_spin_prepare_lock_current(struct kd_spinlock *lock)
+{
+	return prepare_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_LOCK);
+}
+
+struct kd_mutex_entry *kd_spin_prepare_unlock_current(struct kd_spinlock *lock)
+{
+	return prepare_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_UNLOCK);
 }

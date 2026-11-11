@@ -16,6 +16,7 @@ void kd_owner_progress_init(struct kd_owner_progress *progress,
 {
 	INIT_LIST_HEAD(&progress->batches);
 	progress->task = task;
+	progress->atomic_spin = false;
 }
 
 void kd_owner_batch_init(struct kd_owner_batch *item)
@@ -30,7 +31,7 @@ void kd_owner_batch_init(struct kd_owner_batch *item)
 static bool owner_context(struct kd_owner_progress *progress)
 {
 	return progress && progress->task == current && in_task() &&
-	       !in_atomic() && !irqs_disabled();
+	       !irqs_disabled() && (progress->atomic_spin || !in_atomic());
 }
 
 int kd_owner_progress_track(struct kd_owner_progress *progress,
@@ -44,6 +45,8 @@ int kd_owner_progress_track(struct kd_owner_progress *progress,
 	if (!owner_context(progress))
 		return -EPERM;
 	if (!item || !batch || !batch->initialized || !batch->head)
+		return -EINVAL;
+	if (batch->head->atomic_spin != progress->atomic_spin)
 		return -EINVAL;
 	if (item->progress || item->batch || !list_empty(&item->link) ||
 	    item->control_stopped || item->terminal_foreign)
@@ -75,8 +78,11 @@ int kd_owner_progress_control_stopped(struct kd_owner_batch *item,
 		return -ESTALE;
 	if (item->control_stopped)
 		return -EALREADY;
-	if (item->batch->serving || !item->batch->head ||
+	if (!item->batch->head ||
 	    !READ_ONCE(item->batch->head->source_granted))
+		return -EBUSY;
+	if (item->batch->serving && (!item->batch->head->atomic_spin ||
+	    item->batch->serving != item->batch->head))
 		return -EBUSY;
 	item->terminal_foreign = terminal_foreign;
 	item->control_stopped = true;
@@ -85,7 +91,7 @@ int kd_owner_progress_control_stopped(struct kd_owner_batch *item,
 		.acquisition = (unsigned long)item->batch->head->acquisition,
 		.owner = (unsigned long)&item->batch->release_owner,
 		.owner_task = (unsigned long)item->batch->release_owner.task,
-		.object = (unsigned long)item->batch->lock, .related = (unsigned long)item,
+		.object = (unsigned long)item->batch->head->lock, .related = (unsigned long)item,
 		.phase = item->batch->release_owner.phase,
 		.flags = KD_OBS_FLAG_CONTROL_STOPPED |
 			(terminal_foreign ? KD_OBS_FLAG_TERMINAL_FOREIGN : 0));
@@ -95,7 +101,8 @@ int kd_owner_progress_control_stopped(struct kd_owner_batch *item,
 static bool handle_ready(const struct kd_mutex_release *release)
 {
 	return (release->phase == KD_MUTEX_UNLOCK_REQUESTED &&
-		release->route == KD_MUTEX_UNLOCK_ROUTE_OWNER) ||
+		(release->route == KD_MUTEX_UNLOCK_ROUTE_OWNER ||
+		 release->route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC)) ||
 	       (release->phase == KD_MUTEX_UNLOCK_UNWIND_READY &&
 		release->route == KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER);
 }
@@ -124,9 +131,10 @@ static bool finish_ready_locked(struct kd_owner_batch *item)
 	struct kd_mutex_batch *batch = item->batch;
 	struct kd_mutex_release *release;
 
-	if (!item->control_stopped ||
-	    batch->release_owner.phase != KD_MUTEX_OWNER_OPEN || batch->serving ||
+	if (batch->release_owner.phase != KD_MUTEX_OWNER_OPEN ||
 	    !batch->head || !READ_ONCE(batch->head->source_granted))
+		return false;
+	if (!batch->head->atomic_spin && (!item->control_stopped || batch->serving))
 		return false;
 	list_for_each_entry(release, &batch->release_owner.obligations, owner_link)
 		if (release->phase != KD_MUTEX_UNLOCK_OWNER_HANDLED)
@@ -139,7 +147,7 @@ static bool reap_ready_locked(struct kd_owner_batch *item)
 	struct kd_mutex_release_owner *owner = &item->batch->release_owner;
 	struct kd_mutex_release *release;
 
-	if (!item->control_stopped ||
+	if (!item->control_stopped || item->batch->serving ||
 	    owner->phase != KD_MUTEX_OWNER_PHYSICALLY_RELEASED)
 		return false;
 	if (list_empty(&owner->obligations))

@@ -7,6 +7,7 @@
 #include <linux/irqflags.h>
 #include <linux/preempt.h>
 #include <linux/sched.h>
+#include <asm/processor.h>
 
 #include "episode.h"
 #include "observation.h"
@@ -51,7 +52,8 @@ static void frame_init(struct kd_episode_frame *frame,
 	frame->origin = resources->pool->state->origin;
 	frame->root = parent ? parent->root : frame;
 	frame->parent = parent;
-	frame->operation = KD_OPERATION_MUTEX_LOCK;
+	frame->operation = resources->config.atomic_spin ? KD_OPERATION_SPIN_LOCK :
+		KD_OPERATION_MUTEX_LOCK;
 	INIT_LIST_HEAD(&frame->children);
 	INIT_LIST_HEAD(&frame->child_link);
 	INIT_LIST_HEAD(&frame->deferred);
@@ -167,6 +169,10 @@ static int pump(void)
 		result = kd_owner_progress_run(progress, &blocked);
 		if (result || !blocked)
 			return result;
+		if (progress->atomic_spin) {
+			cpu_relax();
+			continue;
+		}
 		set_current_state(TASK_UNINTERRUPTIBLE);
 		if (!kd_owner_progress_ready(progress))
 			schedule();
@@ -468,6 +474,7 @@ static int prepare(struct kd_episode_resources *resources,
 	else if (parent || (error != -ENOENT && error != -EAGAIN))
 		goto failed;
 	driver = (struct kd_jit_mutex_driver) {
+		.atomic_spin = resources->config.atomic_spin,
 		.selected_local = selected_local, .wait_progress = wait_progress,
 		.wait_ready = wait_ready, .run = run, .exported = exported,
 		.stack = resources->config.stack,
@@ -494,7 +501,8 @@ int kd_episode_prepare_root(struct kd_episode_resources *resources,
 {
 	int result;
 
-	if (!resources || !frame || operation != KD_OPERATION_MUTEX_LOCK)
+	if (!resources || !frame || !kd_operation_is_lock(operation) ||
+	    kd_operation_is_spin(operation) != resources->config.atomic_spin)
 		return -EINVAL;
 	*frame = NULL;
 	if (!kd_state_is_current(resources->pool->state, native_binding) ||
@@ -658,8 +666,12 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 		BUG_ON(result);
 		frame->execution_image = true;
 		image = frame->slot->execution_use.image;
+		/* Sample the physical pin before tracepoint dispatch can add its own. */
 		observe_frame(frame, KD_OBS_JIT_ENTER, .image = (unsigned long)image,
-			.cursor = state->regs.ip, .related = (unsigned long)*binding);
+			.cursor = state->regs.ip, .related = (unsigned long)*binding,
+			.flags = resources->config.atomic_spin && in_task() &&
+				(preempt_count() & PREEMPT_MASK) && !irqs_disabled() ?
+				KD_OBS_FLAG_ATOMIC_CONTEXT : 0);
 		result = kd_jit_enter(&frame->slot->execution_use, &frame->image_user,
 			&frame->slot->exit_use, &frame->image_user, state, *binding);
 		{
@@ -713,7 +725,10 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			return KD_MUTEX_OUTCOME_UNSET;
 		if (!operation_exit)
 			return forward(frame, binding, image, 0);
-		if (cached.kind == KD_OPERATION_MUTEX_LOCK) {
+		if (cached.kind != KD_OPERATION_NONE &&
+		    kd_operation_is_spin(cached.kind) != resources->config.atomic_spin)
+			return forward(frame, binding, image, -EOPNOTSUPP);
+		if (kd_operation_is_lock(cached.kind)) {
 			struct kd_episode_frame *child;
 			struct kd_execution_binding *child_binding = *binding;
 			enum kd_mutex_outcome outcome;
@@ -746,7 +761,7 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 				.image = (unsigned long)image, .ip = operation_ip,
 				.cursor = state->regs.ip, .object = object,
 				.related = (unsigned long)&child->slot->call.node,
-				.phase = state->operation.phase, .result = KD_OPERATION_MUTEX_LOCK);
+				.phase = state->operation.phase, .result = cached.kind);
 			result = kd_jit_mutex_acquire(&child->slot->call,
 				(struct kd_mutex *)state->regs.di, &child_binding,
 				local_service_limit(resources, child_binding), &outcome);
@@ -784,7 +799,7 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			*binding = child_binding;
 			continue;
 		}
-		if (cached.kind == KD_OPERATION_MUTEX_UNLOCK) {
+		if (kd_operation_is_unlock(cached.kind)) {
 			struct kd_source_grant *grant = kd_state_find_grant(state, *binding,
 								 (void *)state->regs.di);
 			struct kd_episode_frame *target;
@@ -797,7 +812,9 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			BUG_ON(IS_ERR(grant));
 			target = grant_frame(grant);
 			BUG_ON(IS_ERR(target));
-			deferred = active != target->slot->call.node.batch;
+			BUG_ON(target->slot->call.node.atomic_spin != resources->config.atomic_spin);
+			deferred = !resources->config.atomic_spin &&
+				active != target->slot->call.node.batch;
 			if (deferred) {
 				result = queue_deferred(frame, target);
 				BUG_ON(result);
@@ -823,7 +840,7 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 				.image = (unsigned long)image, .ip = operation_ip,
 				.cursor = state->regs.ip, .object = object,
 				.related = (unsigned long)&target->slot->call.node,
-				.phase = action, .result = KD_OPERATION_MUTEX_UNLOCK);
+				.phase = action, .result = cached.kind);
 			continue;
 		}
 		return forward(frame, binding, image, 0);
@@ -934,7 +951,8 @@ void kd_episode_native_done(void *context)
 
 int kd_episode_unlock_native(struct kd_episode_resources *resources,
 		 struct kd_task_root_context *root,
-		 struct kd_execution_binding *native_binding, struct kd_mutex *lock)
+		 struct kd_execution_binding *native_binding, struct kd_mutex *lock,
+		 enum kd_operation_kind operation)
 {
 	struct kd_source_grant *grant;
 	struct kd_episode_frame *frame;
@@ -946,7 +964,8 @@ int kd_episode_unlock_native(struct kd_episode_resources *resources,
 
 	if (!root || !root->attached || root != kd_task_root_context_current() ||
 	    root->task != current || root->aux_entry ||
-	    !in_task() || in_atomic() || irqs_disabled() ||
+	    !in_task() || irqs_disabled() || !kd_operation_is_unlock(operation) ||
+	    (in_atomic() && !kd_operation_is_spin(operation)) ||
 	    !kd_state_is_current(&root->core, native_binding) ||
 	    native_binding->kind != KD_EXECUTION_NATIVE)
 		return -EPERM;
@@ -956,7 +975,8 @@ int kd_episode_unlock_native(struct kd_episode_resources *resources,
 	frame = grant_frame(grant);
 	if (IS_ERR(frame))
 		return PTR_ERR(frame);
-	if (resources && resources != frame->resources)
+	if ((resources && resources != frame->resources) ||
+	    frame->slot->call.node.atomic_spin != kd_operation_is_spin(operation))
 		return -ESTALE;
 	resources = frame->resources;
 	kd_request_user_init(&user);

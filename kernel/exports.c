@@ -11,6 +11,9 @@
 EXPORT_SYMBOL_GPL(kd_mutex_init);
 EXPORT_SYMBOL_GPL(kd_mutex_lock_entry_asm);
 EXPORT_SYMBOL_GPL(kd_mutex_unlock_entry_asm);
+EXPORT_SYMBOL_GPL(kd_spin_init);
+EXPORT_SYMBOL_GPL(kd_spin_lock_entry_asm);
+EXPORT_SYMBOL_GPL(kd_spin_unlock_entry_asm);
 EXPORT_SYMBOL_GPL(kd_jit_source_provider_create);
 EXPORT_SYMBOL_GPL(kd_jit_source_provider_close);
 EXPORT_SYMBOL_GPL(kd_jit_source_provider_destroy);

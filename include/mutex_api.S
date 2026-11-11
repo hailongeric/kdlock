@@ -52,4 +52,6 @@
 
 	KD_MUTEX_SOURCE_ENTRY kd_mutex_lock_entry_asm, kd_mutex_prepare_lock_current
 	KD_MUTEX_SOURCE_ENTRY kd_mutex_unlock_entry_asm, kd_mutex_prepare_unlock_current
+	KD_MUTEX_SOURCE_ENTRY kd_spin_lock_entry_asm, kd_spin_prepare_lock_current
+	KD_MUTEX_SOURCE_ENTRY kd_spin_unlock_entry_asm, kd_spin_prepare_unlock_current
 	.section .note.GNU-stack, "", @progbits

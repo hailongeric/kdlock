@@ -49,6 +49,7 @@ struct kd_jit_runtime_config {
 	size_t auxiliary_bytes;
 	unsigned long required_control_bytes;
 	unsigned int proxy_limit;
+	bool atomic_spin;
 };
 
 struct kd_jit_runtime;

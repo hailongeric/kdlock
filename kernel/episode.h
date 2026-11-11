@@ -18,6 +18,11 @@ struct kd_episode_frame;
  * change JIT eligibility and can outlive task/resources without retaining S_W.
  */
 struct kd_episode_config {
+	/* A spin runtime uses the same request pool and image protocol. Its
+	 * stack, resolver, classifier, report and observation callbacks must
+	 * run with preemption disabled and IRQs enabled, without sleeping.
+	 */
+	bool atomic_spin;
 	struct kd_jit_image_slot *image_slot;
 	struct kd_jit_feedback_pool *feedback;
 	const struct kd_source_stack_ops *stack;
@@ -130,6 +135,7 @@ void kd_episode_native_done(void *context);
  */
 int kd_episode_unlock_native(struct kd_episode_resources *resources,
 		 struct kd_task_root_context *root,
-		 struct kd_execution_binding *native_binding, struct kd_mutex *lock);
+		 struct kd_execution_binding *native_binding, struct kd_mutex *lock,
+		 enum kd_operation_kind operation);
 
 #endif

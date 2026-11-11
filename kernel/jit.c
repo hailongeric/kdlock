@@ -225,11 +225,11 @@ int kd_jit_prepare_operation(const struct kd_jit_image *image,
 		return -ESTALE;
 	if (kind == KD_OPERATION_NONE)
 		return -ENOENT;
-	if (kind != KD_OPERATION_MUTEX_LOCK && kind != KD_OPERATION_MUTEX_UNLOCK)
+	if (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind))
 		return -EOPNOTSUPP;
 	if (state->io.kind == KD_JIT_EXIT_LOCK_OPERATION &&
-	    ((state->io.detail == KD_JIT_OP_LOCK && kind != KD_OPERATION_MUTEX_LOCK) ||
-	     (state->io.detail == KD_JIT_OP_UNLOCK && kind != KD_OPERATION_MUTEX_UNLOCK) ||
+	    ((state->io.detail == KD_JIT_OP_LOCK && !kd_operation_is_lock(kind)) ||
+	     (state->io.detail == KD_JIT_OP_UNLOCK && !kd_operation_is_unlock(kind)) ||
 	     state->io.detail == KD_JIT_OP_MODE_CHANGE))
 		return -EOPNOTSUPP;
 	result = kd_operation_begin(state, binding, identity, kind, form,
@@ -429,7 +429,8 @@ static int finish_acquisition(struct kd_jit_mutex_call *call,
 
 	if (!kd_state_is_jit_current(state, binding))
 		return -EPERM;
-	if (state->operation.kind != KD_OPERATION_MUTEX_LOCK ||
+	if (!kd_operation_is_lock(state->operation.kind) ||
+	    kd_operation_is_spin(state->operation.kind) != call->node.atomic_spin ||
 	    state->operation.identity != &call->acquisition_identity ||
 	    state->operation.phase != KD_OPERATION_ENTERED)
 		return -ESTALE;
@@ -494,6 +495,13 @@ static enum kd_mutex_outcome execute_selected(struct kd_mutex_node *node,
 
 	result = accept_selected(node, context);
 	BUG_ON(result);
+	/* A spin proxy owns this request's sole physical turn. A mutex proxy
+	 * belongs to the combiner's existing physical batch.
+	 */
+	if (node->atomic_spin && call->driver->selected_local) {
+		result = call->driver->selected_local(call, call->driver->context);
+		BUG_ON(result);
+	}
 	result = finish_acquisition(call, binding);
 	BUG_ON(result);
 	result = kd_jit_mutex_drive(call, &binding, &outcome);
@@ -516,6 +524,8 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 
 	if (!call || !state || !driver || !driver->run || !driver->stack ||
 	    (!!driver->wait_progress != !!driver->wait_ready) ||
+	    (driver->atomic_spin && (!driver->selected_local || !driver->wait_progress ||
+	     !driver->exported)) ||
 	    !driver->stack->read_word || !driver->stack->write_word ||
 	    !driver->origin_binding || driver->origin_binding->state != state ||
 	    driver->origin_binding->task != state->origin ||
@@ -537,9 +547,14 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 	kd_source_grant_init(&call->grant, state, NULL,
 		&call->acquisition_identity, &call->node.release, &call->grant,
 		drop_grant, call);
-	return kd_mutex_node_init(&call->node, state, &call->acquisition_identity,
+	result = kd_mutex_node_init(&call->node, state, &call->acquisition_identity,
 		&call->acquisition_identity, &call->grant, &call->result_identity,
 		ready, &source_ops, call);
+	if (!result) {
+		call->node.atomic_spin = driver->atomic_spin;
+		call->node.possible_batch = &call->possible_batch;
+	}
+	return result;
 }
 
 static int capture_mutex_operation(struct kd_jit_mutex_call *call,
@@ -558,8 +573,8 @@ static int capture_mutex_operation(struct kd_jit_mutex_call *call,
 		return -EPERM;
 	if (kd_task_state_own() != state)
 		return -ESTALE;
-	if (!identity || (kind != KD_OPERATION_MUTEX_LOCK &&
-	    kind != KD_OPERATION_MUTEX_UNLOCK) || !capture_binding || !lock ||
+	if (!identity || (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind)) ||
+	    kd_operation_is_spin(kind) != call->node.atomic_spin || !capture_binding || !lock ||
 	    !api_target || !continuation_ip ||
 	    call->node.enqueued || call->node.requester != current ||
 	    capture_binding == native_binding ||
@@ -608,7 +623,8 @@ int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
 		 unsigned long source_bp, unsigned long api_target)
 {
 	return capture_mutex_operation(call, &call->acquisition_identity,
-		KD_OPERATION_MUTEX_LOCK, native_binding, capture_binding, lock,
+		call->node.atomic_spin ? KD_OPERATION_SPIN_LOCK : KD_OPERATION_MUTEX_LOCK,
+		native_binding, capture_binding, lock,
 		source_sp, continuation_ip, source_bp, api_target);
 }
 
@@ -626,7 +642,8 @@ int kd_jit_capture_mutex_unlock(struct kd_jit_mutex_call *control,
 	    control->node.state != acquisition->node.state)
 		return -EINVAL;
 	return capture_mutex_operation(control, &acquisition->unlock_identity,
-		KD_OPERATION_MUTEX_UNLOCK, native_binding, capture_binding, lock,
+		control->node.atomic_spin ? KD_OPERATION_SPIN_UNLOCK : KD_OPERATION_MUTEX_UNLOCK,
+		native_binding, capture_binding, lock,
 		source_sp, continuation_ip, source_bp, api_target);
 }
 
@@ -642,7 +659,8 @@ int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,
 	if (!outcome || !lock || call->node.enqueued ||
 	    (void *)state->regs.di != lock ||
 	    state->operation.identity != &call->acquisition_identity ||
-	    state->operation.kind != KD_OPERATION_MUTEX_LOCK)
+	    !kd_operation_is_lock(state->operation.kind) ||
+	    kd_operation_is_spin(state->operation.kind) != call->node.atomic_spin)
 		return -EINVAL;
 	result = kd_operation_enter(state, *binding, &call->acquisition_identity);
 	if (result)
@@ -684,7 +702,8 @@ int kd_jit_mutex_unlock(struct kd_jit_mutex_call *call,
 	if (!kd_state_is_jit_current(state, binding))
 		return -EPERM;
 	if (state->operation.identity != &call->unlock_identity ||
-	    state->operation.kind != KD_OPERATION_MUTEX_UNLOCK)
+	    !kd_operation_is_unlock(state->operation.kind) ||
+	    kd_operation_is_spin(state->operation.kind) != call->node.atomic_spin)
 		return -ESTALE;
 	grant = kd_state_find_grant(state, binding, (void *)state->regs.di);
 	if (IS_ERR(grant))

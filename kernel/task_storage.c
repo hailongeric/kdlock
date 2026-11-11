@@ -142,6 +142,7 @@ static int start_task(const struct kd_task_storage_args *args,
 			if (!result) {
 				storage->root.mutex_resources = &storage->resources;
 				storage->root.mutex_control_bytes = input.required_control_bytes;
+				storage->root.owners.atomic_spin = config.atomic_spin;
 			} else {
 				int unwind = kd_task_root_detach_unpublished(&storage->root, task);
 

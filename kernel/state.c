@@ -146,7 +146,7 @@ int kd_operation_begin(struct kd_thread_state *state,
 	if (!kd_state_is_jit_current(state, binding))
 		return -EPERM;
 	if (!identity || !target ||
-	    (kind != KD_OPERATION_MUTEX_LOCK && kind != KD_OPERATION_MUTEX_UNLOCK) ||
+	    (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind)) ||
 	    (form != KD_OPERATION_NEW_CALL && form != KD_OPERATION_EXISTING_CALL &&
 	     form != KD_OPERATION_EXISTING_FRAME &&
 	     form != KD_OPERATION_CAPTURED_CONTINUATION))

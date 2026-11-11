@@ -229,13 +229,20 @@ static const struct kd_jit_control_provider_ops provider_ops = {
 	.command = extension,
 };
 
+static enum kd_operation_kind resolve_operation(void *context, unsigned long target)
+{
+	enum kd_operation_kind kind = kd_mutex_resolve_entry_operation(context, target);
+
+	return kind != KD_OPERATION_NONE ? kind : kd_spin_resolve_entry_operation(target);
+}
+
 static enum kd_jit_feedback_target_class classify_target(void *context, unsigned long target)
 {
 	struct kd_jit_runtime *runtime = context;
 	const struct kd_jit_source_description *source = &runtime->config.source->epoch.description;
 	unsigned int index;
 
-	if (kd_mutex_resolve_entry_operation(NULL, target) != KD_OPERATION_NONE)
+	if (resolve_operation(NULL, target) != KD_OPERATION_NONE)
 		return KD_JIT_FEEDBACK_SOURCE_API;
 	for (index = 0; index < runtime->config.boundary_count; ++index)
 		if (target == runtime->config.boundaries[index].site)
@@ -310,7 +317,8 @@ int kd_jit_runtime_episode_config(struct kd_jit_runtime *runtime, struct kd_epis
 		return -EINVAL;
 	*config = (struct kd_episode_config) {
 		.image_slot = &runtime->slot, .feedback = &runtime->feedback, .stack = NULL,
-		.resolve = kd_mutex_resolve_entry_operation, .resolve_context = NULL,
+		.atomic_spin = runtime->config.atomic_spin,
+		.resolve = resolve_operation, .resolve_context = NULL,
 		.classify_target = classify_target, .classify_context = runtime,
 		.proxy_limit = runtime->config.proxy_limit, .report = report_exit, .report_context = runtime,
 	};
@@ -350,17 +358,22 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 	/* The active call-depth return thunk changes native-escape flags. */
 	if (cpu_feature_enabled(X86_FEATURE_CALL_DEPTH))
 		return -EOPNOTSUPP;
+	if (config->atomic_spin && (!IS_ENABLED(CONFIG_PREEMPT_COUNT) ||
+	    IS_ENABLED(CONFIG_DEBUG_SPINLOCK) || IS_ENABLED(CONFIG_DEBUG_MUTEXES) ||
+	    IS_ENABLED(CONFIG_DEBUG_LOCK_ALLOC) || IS_ENABLED(CONFIG_LOCKDEP)))
+		return -EOPNOTSUPP;
 	if (check_mul_overflow((size_t)config->cycle_capacity, (size_t)config->claim_capacity, &cells) ||
 	    check_mul_overflow(cells, (size_t)3, &total))
 		return -EOVERFLOW;
 	for (index = 0; index < config->boundary_count; ++index) {
+		enum kd_operation_kind kind = resolve_operation(NULL, config->boundaries[index].site);
+
 		if (config->boundaries[index].kind < KD_JIT_RUNTIME_LOCK ||
 		    config->boundaries[index].kind > KD_JIT_RUNTIME_SPECIAL)
 			return -EINVAL;
-		if ((config->boundaries[index].site == (unsigned long)kd_mutex_lock_entry_asm &&
-		     config->boundaries[index].kind != KD_JIT_RUNTIME_LOCK) ||
-		    (config->boundaries[index].site == (unsigned long)kd_mutex_unlock_entry_asm &&
-		     config->boundaries[index].kind != KD_JIT_RUNTIME_UNLOCK))
+
+		if ((kd_operation_is_lock(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_LOCK) ||
+		    (kd_operation_is_unlock(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_UNLOCK))
 			return -EINVAL;
 		for (other = 0; other < index; ++other)
 			if (config->boundaries[other].site == config->boundaries[index].site)

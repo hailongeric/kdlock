@@ -38,6 +38,14 @@ static bool native_owned(struct kd_task_root_context *root,
 	       binding->kind == KD_EXECUTION_NATIVE && root->core.origin == current;
 }
 
+static bool entry_context(const struct kd_task_root_context *root)
+{
+	return in_task() && !irqs_disabled() &&
+	       (root && root->owners.atomic_spin ?
+		preempt_count() == (root->native_spin_depth + 1) * PREEMPT_OFFSET :
+		!in_atomic());
+}
+
 int kd_mutex_prepare_entry(struct kd_mutex_entry *entry,
 		 struct kd_execution_binding *native_binding,
 		 kd_mutex_entry_run_fn run, void *context,
@@ -49,7 +57,7 @@ int kd_mutex_prepare_entry(struct kd_mutex_entry *entry,
 
 	if (!entry || !run || required_control_bytes < sizeof(unsigned long))
 		return -EINVAL;
-	if (!in_task() || in_atomic() || irqs_disabled())
+	if (!entry_context(root))
 		return -EWOULDBLOCK;
 	if (!native_owned(root, native_binding))
 		return -EPERM;
@@ -98,7 +106,7 @@ int kd_mutex_cancel_entry(struct kd_mutex_entry *entry,
 {
 	struct kd_task_root_context *root = kd_task_root_context_current();
 
-	if (!in_task() || in_atomic() || irqs_disabled())
+	if (!entry_context(root))
 		return -EWOULDBLOCK;
 	if (!native_owned(root, native_binding))
 		return -EPERM;
@@ -114,6 +122,44 @@ int kd_mutex_cancel_entry(struct kd_mutex_entry *entry,
 }
 
 extern void __noreturn kd_native_resume(struct kd_regs *regs);
+extern void __noreturn kd_spin_native_resume(struct kd_regs *regs);
+
+void kd_spin_resume_unpin(void);
+void kd_spin_resume_unpin(void)
+{
+	preempt_enable();
+}
+
+/* Only W has returned source ownership here. Its physical count can
+ * still reflect grants released remotely or added during recursive JIT.
+ * Convert the control pin into a grant pin if any spin grant is live.
+ * With no grants, keep the last pin until RSP is on the original stack.
+ */
+static bool reconcile_spin_depth(struct kd_task_root_context *root)
+{
+	struct kd_thread_state *state = &root->core;
+	struct kd_source_grant *grant;
+	unsigned int count = root->native_spin_depth + 1;
+	unsigned int depth = 0, wanted;
+
+	list_for_each_entry(grant, &state->grants, state_link)
+		if (grant->logical_open)
+			depth++;
+	BUG_ON(depth > PREEMPT_MASK / PREEMPT_OFFSET);
+	BUG_ON(!depth && (state->operation.kind != KD_OPERATION_SPIN_UNLOCK ||
+		state->operation.phase != KD_OPERATION_RESUMABLE));
+	wanted = depth ? depth : 1;
+	while (count < wanted) {
+		preempt_disable();
+		count++;
+	}
+	while (count > wanted) {
+		preempt_enable_no_resched();
+		count--;
+	}
+	root->native_spin_depth = depth;
+	return depth == 0;
+}
 
 void __noreturn kd_mutex_resume_entry(struct kd_mutex_entry *entry,
 		 struct kd_execution_binding *native_binding,
@@ -122,13 +168,19 @@ void __noreturn kd_mutex_resume_entry(struct kd_mutex_entry *entry,
 	struct kd_task_root_context *root = kd_task_root_context_current();
 	struct kd_thread_state *state;
 
-	BUG_ON(!in_task() || in_atomic() || irqs_disabled());
+	BUG_ON(!entry_context(root));
 	BUG_ON(!native_owned(root, native_binding));
 	BUG_ON(!entry || root->aux_entry != entry || entry->task != current ||
 	       entry->control_top != root->aux_current ||
 	       entry->phase != KD_MUTEX_ENTRY_ENTERED);
 	BUG_ON(!outside_stacks(entry, native_binding, sizeof(*native_binding)));
 	state = &root->core;
+	/* The spin return can need a synthetic frame, up to 15 alignment
+	 * bytes and one hardware CALL on the source stack. Its full native
+	 * unlock/scheduling footprint is part of the admitted source context.
+	 */
+	BUG_ON(root->owners.atomic_spin && state->regs.sp <
+	       entry->source_low + 3 * sizeof(unsigned long) + 15);
 	BUG_ON(state->exit_image || state->exit_use || state->exit_holder ||
 	       (state->operation.phase != KD_OPERATION_IDLE &&
 		state->operation.phase != KD_OPERATION_RESUMABLE));
@@ -145,5 +197,7 @@ void __noreturn kd_mutex_resume_entry(struct kd_mutex_entry *entry,
 	 */
 	if (done)
 		done(context);
+	if (root->owners.atomic_spin && reconcile_spin_depth(root))
+		kd_spin_native_resume(&state->regs);
 	kd_native_resume(&state->regs);
 }

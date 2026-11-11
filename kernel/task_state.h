@@ -30,6 +30,10 @@ struct kd_task_root_context {
 	/* Own native-entry configuration, never an active borrowed S_W. */
 	struct kd_episode_resources *mutex_resources;
 	unsigned long mutex_control_bytes;
+	/* Preemption references belonging to this task's materialized spin
+	 * grants. A prepared spin entry holds one additional control reference.
+	 */
+	unsigned int native_spin_depth;
 	unsigned long aux_low;
 	unsigned long aux_high;
 	unsigned long aux_current;

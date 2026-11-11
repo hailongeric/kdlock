@@ -214,3 +214,51 @@ their own receipts in the current checkpoint. They do not establish full
 lifecycle/context proof or complete any T01-T56 acceptance item.
 The older external registry, two-task-pointer variant and removed temporary
 local fallback remain historical Git evidence, not the active integration.
+
+## Plain spin runtime
+
+Set `kd_jit_runtime_config.atomic_spin` for a runtime whose source uses the
+plain `kd_spin_lock` and `kd_spin_unlock` macros in
+[kd_spin_api.h](../../include/kd_spin_api.h). Initialize each object with
+`kd_spin_init` or `KD_SPINLOCK_INITIALIZER`. Attach each caller in ordinary
+task context before using the pair. All users of each object follow this pair
+and keep its storage valid through its last actual queue and physical access.
+The source provider supplies the exact spin entry addresses as LOCK and UNLOCK
+boundaries. The wire directions and the original UB and GS lowering stay shared
+with mutex. The kernel resolver distinguishes the exact spin entry targets.
+
+The source enters with IRQs enabled and no unrelated preemption, IRQ or BH
+obligation. Native nested calls can carry existing grants from this spin
+runtime. Source and callbacks while a spin grant is open require a valid
+atomic execution context, with no sleeping or explicit context changes.
+Delegated source may not rely on the executor's numerical preemption depth
+or physical CPU. IRQ, BH, signalable, trylock, callable and mixed-family entry
+variants need their own integration. The spin runtime requires
+`CONFIG_PREEMPT_COUNT` and uses the same non-PREEMPT_RT target.
+
+The acquisition takes a preemption reference before queue publication and
+moves wait control to the original task's auxiliary stack before lending its
+source stack. A physical head with no open source grant can serve its immediate
+eligible successor once. It withdraws its still ungranted request for that
+turn and serves the waiter under the waiter's sole physical grant. It publishes
+the waiter's result and pumps any remaining foreign physical release before
+rejoining the queue for its own acquisition. The physical owner must keep
+running its atomic control while another task needs its release. An atomic
+wait polls the same exact owner and result records without scheduling.
+
+A typed spin unlock completes after the responsible physical task performs
+the queue release and acknowledges it. A child that unlocks an outer spin
+grant can continue while its own grant remains held. The parent's control
+polls and releases that exact outer grant during the child wait. Logical
+completion, physical release and final request retirement have separate
+conditions. The mutex policy for deferred outer release still carries its
+same-object reacquisition limitation.
+
+When a continuation returns to W, its open spin grants determine the native
+preemption references. A control reference stays in place while W is on its
+auxiliary stack. After a final generated unlock, the ordinary preemption check
+runs on W's source stack with its native frame chain active. Admission requires
+the original stack to fit the ordinary unlock and scheduling path at that
+continuation. Complete auxiliary and unwind coverage remains a caller context
+obligation. Request and fact availability use the same finite provisioning
+contract as the mutex runtime.

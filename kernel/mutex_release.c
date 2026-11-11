@@ -5,8 +5,8 @@
  * src/kernel/linux-5.14.16/kernel/locking/mutex.c:809-855,475-491,295-333.
  * Its native stack switching, task fields, queue and lock word are not used.
  *
- * All helpers run in the declared sleepable task-context lane. The short guard
- * protects control records, with no source execution or scheduling under it.
+ * The short guard protects mutex and atomic spin release records. Source
+ * execution and scheduling take place outside it.
  * A caller must already retain any record before accessing it or registering
  * another user. Reinitialization requires the previous exact last users to end.
  * Private error returns describe control preconditions, not mutex API results.
@@ -53,7 +53,8 @@ static int release_lock(struct kd_mutex_release *release,
 }
 
 int kd_mutex_release_owner_init(struct kd_mutex_release_owner *owner,
-				kd_mutex_backend_unlock_fn unlock, void *object)
+				kd_mutex_backend_unlock_fn unlock, void *object,
+				bool atomic_spin)
 {
 	if (!unlock || !object)
 		return -EINVAL;
@@ -63,6 +64,7 @@ int kd_mutex_release_owner_init(struct kd_mutex_release_owner *owner,
 	owner->object = object;
 	INIT_LIST_HEAD(&owner->obligations);
 	owner->phase = KD_MUTEX_OWNER_OPEN;
+	owner->atomic_spin = atomic_spin;
 	return 0;
 }
 
@@ -80,6 +82,8 @@ int kd_mutex_release_bind(struct kd_mutex_release_owner *owner,
 	if (owner->task != current)
 		result = -EPERM;
 	else if (owner->phase != KD_MUTEX_OWNER_OPEN)
+		result = -EBUSY;
+	else if (owner->atomic_spin && !list_empty(&owner->obligations))
 		result = -EBUSY;
 	else {
 		list_for_each_entry(existing, &owner->obligations, owner_link) {
@@ -122,7 +126,10 @@ int kd_mutex_release_request(struct kd_mutex_release *release,
 	if (release->state != state || release->acquisition != acquisition)
 		result = -ESTALE;
 	else if (route != KD_MUTEX_UNLOCK_ROUTE_OWNER &&
-		 route != KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER)
+		 route != KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER &&
+		 route != KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC)
+		result = -EINVAL;
+	else if (owner->atomic_spin != (route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC))
 		result = -EINVAL;
 	else if (route == KD_MUTEX_UNLOCK_ROUTE_OWNER && owner->task != current)
 		result = -EPERM;
@@ -223,7 +230,8 @@ int kd_mutex_release_owner_handle(struct kd_mutex_release *release)
 	if (owner->task != current)
 		result = -EPERM;
 	else if ((release->phase == KD_MUTEX_UNLOCK_REQUESTED &&
-		  release->route == KD_MUTEX_UNLOCK_ROUTE_OWNER) ||
+		  (release->route == KD_MUTEX_UNLOCK_ROUTE_OWNER ||
+		   release->route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC)) ||
 		 (release->phase == KD_MUTEX_UNLOCK_UNWIND_READY &&
 		  release->route == KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER)) {
 		release->phase = KD_MUTEX_UNLOCK_OWNER_HANDLED;

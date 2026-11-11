@@ -12,18 +12,20 @@ struct kd_mutex_batch;
 struct kd_owner_progress {
 	struct list_head batches;
 	struct task_struct *task;
+	bool atomic_spin;
 };
 
 /*
  * Embed in its actual physical batch head's persistent containing allocation,
  * or independent storage held through successful reap. Never embed it in a
- * proxy node that this batch can retire before its head. Track only a local
- * physical winner, not an unused possible_batch in a proxy-selected request.
+ * proxy node that this batch can retire before its head. A spin proxy is the
+ * physical head of its own batch. Track that bound batch on the actual owner.
  *
- * control_stopped is explicit: the local batch's source/control C scope has
- * ended, no callback is running or may reenter it, and normal physical finish
- * can proceed after every logical release is owner-handled. It is neither a
- * source unlock nor physical completion. terminal_foreign additionally keeps
+ * control_stopped records that the driver exported or stopped its source.
+ * For a mutex batch this enables physical finish after owner handling of its
+ * releases. A spin batch can release its sole grant before control stops.
+ * The backend retains its callback separately until it returns, and reaping
+ * waits for both actors. terminal_foreign keeps
  * this task's own source pending until that physical duty completes. Later
  * source/result/return/notifier retirement alone does not impose that wait.
  */
@@ -48,8 +50,9 @@ int kd_owner_progress_control_stopped(struct kd_owner_batch *item,
 				     bool terminal_foreign);
 
 /*
- * Ordinary sleepable task context, TASK_RUNNING, serial and nonreentrant.
- * Handle ready release controls, finish stopped physical batches, then try reap
+ * Ordinary task context, TASK_RUNNING, IRQs enabled, serial and nonreentrant.
+ * Spin controllers allow atomic polling and later native retirement.
+ * Handle ready release controls, finish eligible physical batches, then try reap
  * without waiting for source/core/result/return/notifier users. No source code,
  * S_W access, allocation, image selection or new worker is involved.
  *

@@ -124,6 +124,7 @@ int kd_jit_resume_origin(struct kd_thread_state *state,
 struct kd_jit_mutex_call;
 
 struct kd_jit_mutex_driver {
+	bool atomic_spin;
 	/* Initialize every field, including absent hooks, before call_init. Keep
 	 * driver/context/callback code through all request/owner wait callbacks and
 	 * final exported return. Selection and export are committed: callbacks

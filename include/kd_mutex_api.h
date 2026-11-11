@@ -34,10 +34,10 @@ void kd_mutex_unlock_entry_asm(struct kd_mutex *lock,
  * remain required. This source does not enable unprepared tasks, callable,
  * signalable, trylock, I/O, IRQ or PREEMPT_RT lanes.
  */
-#define KD_MUTEX_SOURCE_CALL(object, entry_symbol) \
+#define KD_SOURCE_CALL(object, object_type, entry_symbol) \
 	({ \
 		__auto_type kd_mutex_source_object = (object); \
-		struct kd_mutex *kd_mutex_arg = kd_mutex_source_object; \
+		object_type *kd_mutex_arg = kd_mutex_source_object; \
 		unsigned long kd_mutex_sp, kd_mutex_ip, kd_mutex_bp; \
 		asm volatile("movq %%rsp, %%rsi\n\t" \
 			     "leaq 1f(%%rip), %%rdx\n\t" \
@@ -51,6 +51,9 @@ void kd_mutex_unlock_entry_asm(struct kd_mutex *lock,
 			       "r12", "r13", "r14", "r15", "cc", "memory"); \
 		(void)0; \
 	})
+
+#define KD_MUTEX_SOURCE_CALL(object, entry_symbol) \
+	KD_SOURCE_CALL((object), struct kd_mutex, entry_symbol)
 
 #define kd_mutex_lock(object) \
 	KD_MUTEX_SOURCE_CALL((object), kd_mutex_lock_entry_asm)

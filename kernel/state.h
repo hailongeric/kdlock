@@ -31,7 +31,24 @@ enum kd_operation_kind {
 	KD_OPERATION_MUTEX_LOCK,
 	KD_OPERATION_MUTEX_UNLOCK,
 	KD_OPERATION_MODE_CHANGE,
+	KD_OPERATION_SPIN_LOCK,
+	KD_OPERATION_SPIN_UNLOCK,
 };
+
+static inline bool kd_operation_is_lock(enum kd_operation_kind kind)
+{
+	return kind == KD_OPERATION_MUTEX_LOCK || kind == KD_OPERATION_SPIN_LOCK;
+}
+
+static inline bool kd_operation_is_unlock(enum kd_operation_kind kind)
+{
+	return kind == KD_OPERATION_MUTEX_UNLOCK || kind == KD_OPERATION_SPIN_UNLOCK;
+}
+
+static inline bool kd_operation_is_spin(enum kd_operation_kind kind)
+{
+	return kind == KD_OPERATION_SPIN_LOCK || kind == KD_OPERATION_SPIN_UNLOCK;
+}
 
 enum kd_operation_form {
 	KD_OPERATION_NEW_CALL,

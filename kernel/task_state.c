@@ -16,6 +16,7 @@ void kd_task_root_context_init(struct kd_task_root_context *context)
 	kd_owner_progress_init(&context->owners, NULL);
 	context->mutex_resources = NULL;
 	context->mutex_control_bytes = 0;
+	context->native_spin_depth = 0;
 	context->aux_low = 0;
 	context->aux_high = 0;
 	context->aux_current = 0;
@@ -137,6 +138,7 @@ int kd_task_root_detach_unpublished(struct kd_task_root_context *context,
 	context->attached = false;
 	context->mutex_resources = NULL;
 	context->mutex_control_bytes = 0;
+	context->native_spin_depth = 0;
 	context->lifecycle = NULL;
 	context->storage = NULL;
 	state->requests = NULL;
@@ -203,6 +205,7 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 	context->attached = false;
 	context->mutex_resources = NULL;
 	context->mutex_control_bytes = 0;
+	context->native_spin_depth = 0;
 	context->lifecycle = NULL;
 	context->storage = NULL;
 	state->requests = NULL;

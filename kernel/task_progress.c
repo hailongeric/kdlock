@@ -28,7 +28,7 @@ int kd_task_progress_native(struct kd_task_root_context *root,
 	*pending = true;
 	if (!root || !expected_native)
 		return -EINVAL;
-	if (!in_task() || in_atomic() || irqs_disabled() ||
+	if (!in_task() || (in_atomic() && !root->owners.atomic_spin) || irqs_disabled() ||
 	    READ_ONCE(current->__state) != TASK_RUNNING)
 		return -EWOULDBLOCK;
 	/* Reject an own-root auxiliary/borrowed role before any own-core read. */

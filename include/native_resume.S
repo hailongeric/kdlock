@@ -35,4 +35,26 @@ kd_native_resume:
 	mov rdi, QWORD PTR[rdi + KD_REG_DI]
 	ret
 	.size kd_native_resume, .-kd_native_resume
+	/* The last spin unlock left no grant. Keep the control pin until
+	 * the source stack and its frame chain are active. Build a transient
+	 * frame whose caller is the exact post-unlock continuation. The
+	 * admitted source stack has room for the ordinary unlock and its
+	 * scheduling path here. R12 retains the canonical packet across the
+	 * C call, and kd_native_resume restores source R12 and exact IP/SP.
+	 */
+	.p2align 4
+	.globl kd_spin_native_resume
+	.type kd_spin_native_resume, @function
+kd_spin_native_resume:
+	endbr64
+	mov r12, rdi
+	mov rsp, QWORD PTR[rdi + KD_REG_SP]
+	push QWORD PTR[rdi + KD_REG_IP]
+	push QWORD PTR[rdi + KD_REG_BP]
+	mov rbp, rsp
+	and rsp, -16
+	call kd_spin_resume_unpin
+	mov rdi, r12
+	jmp kd_native_resume
+	.size kd_spin_native_resume, .-kd_spin_native_resume
 	.section .note.GNU-stack, "", @progbits

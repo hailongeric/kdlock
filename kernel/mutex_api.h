@@ -3,7 +3,7 @@
 #define KDLOCK_MUTEX_API_CONTROL_H
 
 #include "episode.h"
-#include "../include/kd_mutex_api.h"
+#include "../include/kd_spin_api.h"
 
 /* Current-task setup only, before first source admission. Caller owns immutable
  * resources/configuration, explicit request and complete control-stack bounds,
@@ -20,6 +20,8 @@ int kd_mutex_bind_current(struct kd_episode_resources *resources,
 enum kd_operation_kind kd_mutex_resolve_entry_operation(void *context,
 						unsigned long target);
 
+enum kd_operation_kind kd_spin_resolve_entry_operation(unsigned long target);
+
 /* Assembly-only native bootstrap endpoints; ordinary callers use the macros.
  * NULL means a native unlock completed through its exact retained acquisition.
  * A descriptor means auxiliary entry is prepared before source capture/lending.
@@ -28,5 +30,7 @@ enum kd_operation_kind kd_mutex_resolve_entry_operation(void *context,
  */
 struct kd_mutex_entry *kd_mutex_prepare_lock_current(struct kd_mutex *lock);
 struct kd_mutex_entry *kd_mutex_prepare_unlock_current(struct kd_mutex *lock);
+struct kd_mutex_entry *kd_spin_prepare_lock_current(struct kd_spinlock *lock);
+struct kd_mutex_entry *kd_spin_prepare_unlock_current(struct kd_spinlock *lock);
 
 #endif

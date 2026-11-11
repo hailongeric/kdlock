@@ -22,6 +22,7 @@ enum kd_mutex_unlock_route {
 	KD_MUTEX_UNLOCK_ROUTE_UNSET,
 	KD_MUTEX_UNLOCK_ROUTE_OWNER,
 	KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER,
+	KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC,
 };
 
 enum kd_mutex_unlock_phase {
@@ -46,6 +47,7 @@ struct kd_mutex_release_owner {
 	void *object;
 	struct list_head obligations;
 	enum kd_mutex_owner_phase phase;
+	bool atomic_spin;
 };
 
 /*
@@ -77,7 +79,8 @@ struct kd_mutex_release {
  * initialization failure leaves its existing release duty with the caller.
  */
 int kd_mutex_release_owner_init(struct kd_mutex_release_owner *owner,
-				kd_mutex_backend_unlock_fn unlock, void *object);
+				kd_mutex_backend_unlock_fn unlock, void *object,
+				bool atomic_spin);
 int kd_mutex_release_bind(struct kd_mutex_release_owner *owner,
 			 struct kd_mutex_release *release,
 			 struct kd_thread_state *state,

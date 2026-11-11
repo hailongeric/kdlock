@@ -46,6 +46,7 @@ enum kd_mutex_unlock_action {
 	KD_MUTEX_UNLOCK_BATCH_BODY,
 	KD_MUTEX_UNLOCK_BATCH_HEAD,
 	KD_MUTEX_UNLOCK_DEFERRED_PARENT,
+	KD_MUTEX_UNLOCK_ATOMIC,
 };
 
 struct kd_mutex_ops {
@@ -53,6 +54,7 @@ struct kd_mutex_ops {
 	 * Optional physical-task metadata progress while waiting. Use the
 	 * requester node for turn/result waits and the actual batch head for
 	 * owner waits; a proxy node's source origin is not this task's controller.
+	 * A spin unlock awaiting a physical ACK uses its exact retained grant node.
 	 * progress runs TASK_RUNNING and may finish/reap stopped physical duties.
 	 * blocked prevents source/turn return while terminal foreign duties remain.
 	 * ready is a nonblocking exact-metadata recheck after sleep publication.
@@ -71,10 +73,12 @@ struct kd_mutex_ops {
 	 * exact source offer, finish the source acquisition CALL/RET once, then
 	 * execute admitted fragments/recursive operations or a valid handback.
 	 * Export/stop the old executor and establish the result's current-state
-	 * route before returning. This synchronous callback runs outside atomics
-	 * and must not finish or reenter combining of its own batch. A live-grant
-	 * result must enable a retained origin/outer actor to reach its unlock and
-	 * publish unwind readiness; it cannot strand the owner waiting for itself.
+	 * route before returning. The mutex callback runs in sleepable task
+	 * context. The spin callback runs with preemption disabled and IRQs
+	 * enabled. It may release its single physical grant before it returns.
+	 * Neither callback reenters combining of its own batch. A live-grant
+	 * result must enable a retained origin/outer actor to reach its unlock.
+	 * A deferred mutex release also needs its own unwind notification.
 	 */
 	enum kd_mutex_outcome (*execute_proxy)(struct kd_mutex_node *node,
 					     void *context);
@@ -104,6 +108,7 @@ struct kd_mutex_node {
 	bool wait_started;
 	bool source_granted;
 	bool ready;
+	bool atomic_spin;
 	struct task_struct *requester;
 	struct kd_thread_state *state;
 	const void *acquisition;
@@ -114,6 +119,7 @@ struct kd_mutex_node {
 	void *context;
 	struct kd_mutex *lock;
 	struct kd_mutex_batch *batch;
+	struct kd_mutex_batch *possible_batch;
 	enum kd_mutex_outcome outcome;
 	struct kd_mutex_release release;
 };
@@ -158,9 +164,13 @@ int kd_mutex_node_discard(struct kd_mutex_node *node);
  * Reserve a freshly initialized or successfully reaped possible-local batch
  * before enqueue, even when this request may ultimately be served by a proxy.
  * Turn/result waiting uses ordinary TASK_UNINTERRUPTIBLE sleep/wakeup in this
- * task-context lane. Short predecessor-link publication waits poll with
- * cond_resched, because the producer's link store must be its final previous-
- * node access. Neither wait strategy is a performance qualification.
+ * mutex lane. Spin requests set atomic_spin and possible_batch while private.
+ * Their waits poll with preemption disabled and IRQs enabled, including
+ * predecessor link publication. Each spin turn binds one source grant. A
+ * head serving its immediate successor keeps its own request pending and
+ * rejoins the tail once as a local selection after the callback returns and
+ * its terminal foreign physical duties drain. The pending caller retains
+ * the lock object across both queue memberships.
  */
 int kd_mutex_enqueue(struct kd_mutex *lock, struct kd_mutex_node *node);
 bool kd_mutex_choose_local(struct kd_mutex_node *node);
@@ -214,6 +224,8 @@ int kd_mutex_grant_unlinked(struct kd_mutex_node *node, const void *grant_user);
  * It does not wait for core collection or retire context. reap is owner-only,
  * returns -EBUSY while exact result/core/return/notifier users remain, and must
  * be retried while the context stays retained. It never dereferences lock.
+ * A spin batch can release its sole grant while its callback runs. Reaping
+ * still waits for the callback to return and for the other exact users.
  */
 int kd_mutex_finish_batch(struct kd_mutex_batch *batch);
 int kd_mutex_reap_batch(struct kd_mutex_batch *batch);

@@ -47,6 +47,7 @@ enum kd_observation_kind {
 #define KD_OBS_FLAG_SOURCE_CLOSED        (1UL << 9)
 #define KD_OBS_FLAG_CURRENT_JIT          (1UL << 10)
 #define KD_OBS_FLAG_NODE_RETIRABLE       (1UL << 11)
+#define KD_OBS_FLAG_ATOMIC_CONTEXT       (1UL << 12)
 
 struct kd_observation {
 	unsigned long kind, task, state, origin, node, acquisition, parent;
