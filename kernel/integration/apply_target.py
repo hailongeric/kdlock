@@ -168,6 +168,12 @@ def rwsem_dispatch(name, result_type="void"):
 
 
 EDITS["kernel/locking/rwsem.c"] = (
+    (b"\t\t(atomic_long_read(&sem->owner) & ~RWSEM_OWNER_FLAGS_MASK);\n}\n",
+     b"\t\t(atomic_long_read(&sem->owner) & ~RWSEM_OWNER_FLAGS_MASK);\n}\n"
+     b"#ifdef CONFIG_KDLOCK_REBUILD\nEXPORT_SYMBOL_GPL(rwsem_owner);\n#endif\n"),
+    (b"\treturn rwsem_test_oflags(sem, RWSEM_READER_OWNED);\n}\n",
+     b"\treturn rwsem_test_oflags(sem, RWSEM_READER_OWNED);\n}\n"
+     b"#ifdef CONFIG_KDLOCK_REBUILD\nEXPORT_SYMBOL_GPL(is_rwsem_reader_owned);\n#endif\n"),
     (b"#include <linux/types.h>\n",
      b"/* Ordinary source aliases are disabled only for real callable definitions. */\n"
      b"#define KDLOCK_RWSEM_CALLABLE\n#include <linux/types.h>\n"),

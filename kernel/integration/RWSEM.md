@@ -25,6 +25,8 @@ observers and final accesses across the transition. Merely seeing an unlocked
 count, no contention or an idle pool cannot establish this exclusion. Busy
 checks supplement that proof; they do not supply it. No automatic allocation,
 selection, global task registry or mmap-specific lock protocol is introduced.
+The actual Linux owner-query symbols also have GPL exports in the rebuilt
+configuration, so module callers observe the same generic dispatch.
 Selected bindings currently refuse lockdep, DEBUG_LOCK_ALLOC and DEBUG_RWSEMS;
 these configurations have no supported bound-object lane.
 
