@@ -1,0 +1,34 @@
+{
+  "changed_from_a99186a5": [
+    "kernel/integration/RWSEM.md",
+    "tests/kernel/rwsem_killable/README.md",
+    "tests/kernel/rwsem_killable/runner.py"
+  ],
+  "files": 143,
+  "format": "kdlock.regular-only-host-export.v1",
+  "git_status": "",
+  "kernel_core_git_head": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+  "kernel_package_files": 78,
+  "new_members": [],
+  "prior_refusal": {
+    "reason": "Expected two K members omitted existing approved RWSEM integration documentation member; refused before output creation.",
+    "script": "/tmp/export-kernel8-host-de76da8a-refused-01.py"
+  },
+  "scope": "Retained SOURCE row-to-named-body host fix and approved integration status prose; no new kernel/module build or live claim.",
+  "source_git_head": "de76da8aa2031d73f185f5864071f316c1150c08",
+  "transfer_bytes": 1594299,
+  "transport": {
+    "source-sha256.json": {
+      "bytes": 19793,
+      "sha256": "71d4362e06dd6e4c3ecbb1c7b42e8d859b3c1c76d1ef4c44767b1e874e04fa60"
+    },
+    "source-state.json": {
+      "bytes": 133,
+      "sha256": "3d396f46e1a26618f1afd6e5dd9480ca9f0c3cb88d54851600e032851846d01f"
+    },
+    "source.tar": {
+      "bytes": 1710080,
+      "sha256": "ac7e533e1b3cefef7a78d9cdcbe48dbc53fc759bb577d36f7b1335f4ba0863c9"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-input-01/phase1.py"
+  ],
+  "helper_sha256": "e459c44538cf3a72293018c12e6a6932cf6f43aa9e0cf3f787a5b1a49055b687",
+  "vm_helper_ast": "PASS"
+}

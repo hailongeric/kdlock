@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-support-de76da8a-input-01/checks.py", line 130, in <module>
+    try:main()
+        ~~~~^^
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-support-de76da8a-input-01/checks.py", line 114, in main
+    log=ns['dispatch']('saved-source-named-spans',[str(PYTHON),'-B',str(check),str(inp),str(OUT/'saved-source')],deadline,60,OUT,bounds,cwd=inp)
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/transport/build.py", line 354, in dispatch
+    require(child.returncode == 0, label + ' failed; original output retained')
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/transport/build.py", line 48, in require
+    raise RuntimeError(message)
+RuntimeError: saved-source-named-spans failed; original output retained

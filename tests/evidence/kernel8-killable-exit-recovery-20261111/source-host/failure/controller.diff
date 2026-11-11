@@ -1,0 +1,76 @@
+--- /tmp/kdlock-kernel8-managed-killable-20261111-01/controller.py
++++ /tmp/kdlock-kernel8-managed-killable-20261111-02/controller.py
+@@ -11,11 +11,11 @@
+ 
+ BASE = Path('/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01')
+ KERNEL = Path('/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01')
+-INPUT = BASE/'managed-killable-input-01'
+-OUT = BASE/'managed-killable-receipts-01'
+-LIVE = BASE/'managed-killable-live-01'
+-HOST = BASE/'host-checks-a99186a5-01'
+-SOURCE = 'a99186a53568514da850bae6495f0542de7650b7'
++INPUT = BASE/'managed-killable-input-02'
++OUT = BASE/'managed-killable-receipts-02'
++LIVE = BASE/'managed-killable-live-02'
++HOST = BASE/'host-checks-de76da8a-01'
++SOURCE = 'de76da8aa2031d73f185f5864071f316c1150c08'
+ COMPILED = '140aecc4f83a6b6ae6f20245234e8a63504f9210'
+ CORE = '0d42063ead37dc8fc1631fa56c8348890ede9c5f'
+ PYTHON = Path('/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3')
+@@ -78,12 +78,16 @@
+               'LD_PRELOAD','LD_LIBRARY_PATH','GCC_EXEC_PREFIX','COMPILER_PATH','LIBRARY_PATH','CPATH','C_INCLUDE_PATH')),
+          'inherited execution override refused')
+     host_path,checked=ns['checked_json'](HOST/'receipts/result.json',args.host_checks_sha256)
+-    need(checked['status']=='HOST_CONTEXT_BOUNDARY_CHECKS_COMPLETE' and checked['source_git_head']==SOURCE and
+-         checked['checks']=={'source_boundary_cases':9,'source_boundary_skips':0,'changed_killable_runner_ast':1} and
++    need(checked['status']=='HOST_NAMED_SOURCE_CHECKS_COMPLETE' and checked['source_git_head']==SOURCE and
++         checked['checks']=={'fixed_killable_runner_ast':1,'saved_source_named_spans':3} and
+          all(row['returncode']==0 for row in checked['commands']) and len(checked['commands'])==2,
+          'actual changed host checks must complete first')
++    cleanup_path,cleanup=ns['checked_json'](BASE/'recovery-killable-regions-01/result.json',
++         '793484d3b32ef8b62759659f7704f0d3323e5090cc0815395d171636d15b0092')
++    need(cleanup['status']=='ORDINARY_CLEANUP_COMPLETE' and cleanup['original_failure_preserved'] is True,
++         'actual first-attempt cleanup must complete before fresh K')
+     before=idle(native)
+-    need(before['identity']==checked['identity_after']['identity']==
++    need(before['identity']==cleanup['identity_after']==checked['identity_after']['identity']==
+          {'boot':'e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0','release':'7.0.0-38-kdrebuild8','taint':4096},
+          'same actual drained boot/taint differs; no fresh-boot claim')
+     need(native['running_notes']()[1]=='a33dd4d11d0f0c6649107507e685b6e86e716c1a', 'running Build ID differs')
+@@ -93,12 +97,12 @@
+                             ('/usr/sbin/rmmod','6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7'),
+                             ('/usr/bin/dmesg','889b3947799e06c354b611f2759364b92e65e6ad596166e05bf62525f72468ce')):
+         need(digest(Path(alias).resolve(strict=True))==expected, 'actual tool differs: ' + alias)
+-    manifest=BASE/'host-support-a99186a5-input-01/source-sha256.json'
+-    state=BASE/'host-support-a99186a5-input-01/source-state.json'
+-    need(digest(manifest)=='94d35052c09b1688293191c74ff54f8017f97dfa4fe176c54417c687ff66f4a0' and
+-         digest(state)=='e3dcd9f8edd023b32a22d1e7bd6478aa26a958e461f5eeb89bf7765797814489', 'clean143 identities differ')
++    manifest=BASE/'host-support-de76da8a-input-01/source-sha256.json'
++    state=BASE/'host-support-de76da8a-input-01/source-state.json'
++    need(digest(manifest)=='71d4362e06dd6e4c3ecbb1c7b42e8d859b3c1c76d1ef4c44767b1e874e04fa60' and
++         digest(state)=='3d396f46e1a26618f1afd6e5dd9480ca9f0c3cb88d54851600e032851846d01f', 'clean143 identities differ')
+     files=json.loads(manifest.read_text());ns['source_files'](HOST/'input',files)
+-    need(len(files)==143 and json.loads(state.read_text())=={'files':143,'git_status':'','source_git_head':SOURCE,'transfer_bytes':1589405},
++    need(len(files)==143 and json.loads(state.read_text())=={'files':143,'git_status':'','source_git_head':SOURCE,'transfer_bytes':1594299},
+          'exact143 source snapshot required')
+     need(digest(MODULE)==MODULE_SHA and digest(INPUT/'limits.json')==LIMITS_SHA, 'actual module/caller limits differ')
+     bounds=json.loads((INPUT/'limits.json').read_text())
+@@ -120,6 +124,7 @@
+     need(ns['available']('/')>=1024**3 and ns['available'](BASE)>=4*1024**3, 'root/data floors')
+     OUT.mkdir(mode=0o700);g['out']=OUT
+     record={'status':'PREPARED','source_git_head':SOURCE,'compiled_module_source_git_head':COMPILED,'kernel_core_git_head':CORE,
++            'cleanup_receipt':str(cleanup_path),'cleanup_sha256':'793484d3b32ef8b62759659f7704f0d3323e5090cc0815395d171636d15b0092',
+             'identity_before':before,'host_checks_receipt':str(host_path),'host_checks_sha256':args.host_checks_sha256,
+             'module_sha256':MODULE_SHA,'limits_sha256':LIMITS_SHA,'limits':bounds,'recovery':recovery,
+             'core_pins_before':pins,'boot_before':ns['boot_files'](),'commands':[],
+@@ -172,8 +177,8 @@
+          after['identity']['taint']==before['identity']['taint'], 'unexpected final boot/release/taint')
+     ns['source_files'](HOST/'input',files)
+     need(digest(MODULE)==MODULE_SHA and digest(INPUT/'limits.json')==LIMITS_SHA and
+-         digest(manifest)=='94d35052c09b1688293191c74ff54f8017f97dfa4fe176c54417c687ff66f4a0' and
+-         digest(state)=='e3dcd9f8edd023b32a22d1e7bd6478aa26a958e461f5eeb89bf7765797814489' and
++         digest(manifest)=='71d4362e06dd6e4c3ecbb1c7b42e8d859b3c1c76d1ef4c44767b1e874e04fa60' and
++         digest(state)=='3d396f46e1a26618f1afd6e5dd9480ca9f0c3cb88d54851600e032851846d01f' and
+          ns['pins'](build,pins) and ns['protected'](focused)==built['protected_after'] and
+          ns['source_pins'](focused,source)==built['source_after'] and ns['boot_files']()==record['boot_before'],
+          'immutable runtime inputs or protected outputs changed')

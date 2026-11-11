@@ -1,0 +1,200 @@
+{
+  "bytes": 77640,
+  "collected_unix": 1794435173.3566406,
+  "count": 11,
+  "directories": {
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-driver-01": {
+      "identity": [
+        2080,
+        7734379,
+        16832,
+        2,
+        4096,
+        1794435146700000000,
+        1794435146700000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-driver-01"
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-input-01": {
+      "identity": [
+        2080,
+        7734377,
+        16832,
+        2,
+        4096,
+        1794435146543000000,
+        1794435146543000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-input-01"
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/recovery-killable-exit-ack-01": {
+      "identity": [
+        2080,
+        7734384,
+        16832,
+        2,
+        4096,
+        1794435146666000000,
+        1794435146666000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/recovery-killable-exit-ack-01"
+    }
+  },
+  "files": {
+    "driver/command.json": {
+      "bytes": 272,
+      "identity": [
+        2080,
+        7734380,
+        33188,
+        1,
+        272,
+        1794435146580564947,
+        1794435146580564947
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-driver-01/command.json",
+      "sha256": "f5cdf787d7a7b87201e394c7435d02ad2758d4830a804762ab69451c000c96ce"
+    },
+    "driver/dispatch.json": {
+      "bytes": 18,
+      "identity": [
+        2080,
+        7734383,
+        33188,
+        1,
+        18,
+        1794435146583990653,
+        1794435146583990653
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-driver-01/dispatch.json",
+      "sha256": "0096c41782a1845b1210d7f8fe6e62af5e698451c03b46036d26c038d66db20e"
+    },
+    "driver/return.json": {
+      "bytes": 64,
+      "identity": [
+        2080,
+        7734385,
+        33188,
+        1,
+        64,
+        1794435146700523240,
+        1794435146700523240
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-driver-01/return.json",
+      "sha256": "4d060dc08511096493946ded081e79928ade91e55a56cbce57117dd4032848d3"
+    },
+    "driver/stderr": {
+      "bytes": 0,
+      "identity": [
+        2080,
+        7734382,
+        33188,
+        1,
+        0,
+        1794435146583000000,
+        1794435146583000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-driver-01/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "driver/stdout": {
+      "bytes": 155,
+      "identity": [
+        2080,
+        7734381,
+        33188,
+        1,
+        155,
+        1794435146668000000,
+        1794435146668000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-driver-01/stdout",
+      "sha256": "a37b60fdffe59314971f5e2ebe1d9d91b46941e621d3ccfcfcb3a6077af4554b"
+    },
+    "input/phase1.py": {
+      "bytes": 9069,
+      "identity": [
+        2080,
+        7734378,
+        33188,
+        1,
+        9069,
+        1794435146543672875,
+        1794435146543672875
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-exit-ack-input-01/phase1.py",
+      "sha256": "e459c44538cf3a72293018c12e6a6932cf6f43aa9e0cf3f787a5b1a49055b687"
+    },
+    "runtime/after.json": {
+      "bytes": 1953,
+      "identity": [
+        2080,
+        7734388,
+        33188,
+        1,
+        1953,
+        1794435146656425760,
+        1794435146656425760
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/recovery-killable-exit-ack-01/after.json",
+      "sha256": "4f23d74e5a1e7d778b59c02bb8ca958bdbc38d61cb4a063b0f9a7bebc2133eff"
+    },
+    "runtime/before.json": {
+      "bytes": 1987,
+      "identity": [
+        2080,
+        7734386,
+        33188,
+        1,
+        1987,
+        1794435146628493079,
+        1794435146628493079
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/recovery-killable-exit-ack-01/before.json",
+      "sha256": "3305fddbcc7a60a0f11c0d4c7a0c72df5132b8ca645bff00bdc6fd368f15f2f9"
+    },
+    "runtime/events-after.bin": {
+      "bytes": 15400,
+      "identity": [
+        2080,
+        7734389,
+        33188,
+        1,
+        15400,
+        1794435146659092795,
+        1794435146659092795
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/recovery-killable-exit-ack-01/events-after.bin",
+      "sha256": "6ac8f9e4e794a8db3c9e3054ec62ff701d2d872ef9da93fa23d1017d0b5d035e"
+    },
+    "runtime/events-before.bin": {
+      "bytes": 14120,
+      "identity": [
+        2080,
+        7734387,
+        33188,
+        1,
+        14120,
+        1794435146631193803,
+        1794435146631193803
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/recovery-killable-exit-ack-01/events-before.bin",
+      "sha256": "876a0ac991b0f8bb8667fd41687fb290442979d1763db003ae915dee4a733d95"
+    },
+    "runtime/result.json": {
+      "bytes": 34602,
+      "identity": [
+        2080,
+        7734390,
+        33188,
+        1,
+        34602,
+        1794435146663000000,
+        1794435146666000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/recovery-killable-exit-ack-01/result.json",
+      "sha256": "bc55fb499055250590bf9bbbdb3a325e19ca0a087ca9e231ec883bb584672d82"
+    }
+  },
+  "visited_paths": 14
+}

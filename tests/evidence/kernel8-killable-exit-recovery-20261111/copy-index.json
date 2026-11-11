@@ -1,0 +1,3106 @@
+[
+  {
+    "destination": "collections/failure/.collection/collection-helper.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 18940,
+    "raw_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/collection-helper.py.txt",
+    "stored_bytes": 18940,
+    "stored_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d"
+  },
+  {
+    "destination": "collections/failure/.collection/copy-command.json",
+    "encoding": "identity",
+    "raw_bytes": 390,
+    "raw_sha256": "449afb18f4f11fd5d23113bac8cec68fe93af65e365dacc25f347520f4b8aa2b",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/copy-command.json",
+    "stored_bytes": 390,
+    "stored_sha256": "449afb18f4f11fd5d23113bac8cec68fe93af65e365dacc25f347520f4b8aa2b"
+  },
+  {
+    "destination": "collections/failure/.collection/copy-input.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 48170,
+    "raw_sha256": "f35fd7fbd97b2ecdc3088301b20fdc829b0f42fbdc7419d6f087cb7183f8cbe5",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/copy-input.py.txt",
+    "stored_bytes": 48170,
+    "stored_sha256": "f35fd7fbd97b2ecdc3088301b20fdc829b0f42fbdc7419d6f087cb7183f8cbe5"
+  },
+  {
+    "destination": "collections/failure/.collection/copy-result.json",
+    "encoding": "identity",
+    "raw_bytes": 757,
+    "raw_sha256": "79ed1f0b5f59b9b79f6d0c96099b738afa22cce192f4695f23f787b1742222f1",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/copy-result.json",
+    "stored_bytes": 757,
+    "stored_sha256": "79ed1f0b5f59b9b79f6d0c96099b738afa22cce192f4695f23f787b1742222f1"
+  },
+  {
+    "destination": "collections/failure/.collection/copy-stderr.log",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/copy-stderr.log",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/failure/.collection/copy.tar.gz",
+    "encoding": "gzip",
+    "raw_bytes": 1105920,
+    "raw_sha256": "79f7cd1e868b9daba1f0e207c4743a0404b8f10b38e3df59fd2e19a04dc14693",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/copy.tar",
+    "stored_bytes": 128832,
+    "stored_sha256": "8c766f2fb758ec69b091a861cad8a1a58f5069f3e8e55f63364ee7f7779c6c16"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-after-command.json",
+    "encoding": "identity",
+    "raw_bytes": 398,
+    "raw_sha256": "3bb369c49934fdb4d0685c20df372ebdfbdc929ecad4c5600bae1bf6ad4686ef",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-after-command.json",
+    "stored_bytes": 398,
+    "stored_sha256": "3bb369c49934fdb4d0685c20df372ebdfbdc929ecad4c5600bae1bf6ad4686ef"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-after-input.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 4426,
+    "raw_sha256": "e01386ef81309474a8b8578e14bd5b96a578e1420d6c8f8fe4ef4664de15a142",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-after-input.py.txt",
+    "stored_bytes": 4426,
+    "stored_sha256": "e01386ef81309474a8b8578e14bd5b96a578e1420d6c8f8fe4ef4664de15a142"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-after-result.json",
+    "encoding": "identity",
+    "raw_bytes": 763,
+    "raw_sha256": "631b38e8834b593df2d6465656d17b6d158486afd844e86a37ddb8a347ec5346",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-after-result.json",
+    "stored_bytes": 763,
+    "stored_sha256": "631b38e8834b593df2d6465656d17b6d158486afd844e86a37ddb8a347ec5346"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-after-stderr.log",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-after-stderr.log",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-after.json",
+    "encoding": "identity",
+    "raw_bytes": 42146,
+    "raw_sha256": "4faef8acf6d6b3e97089856337867f9ee4013e2350dbfacb3340f2deddd04b9e",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-after.json",
+    "stored_bytes": 42146,
+    "stored_sha256": "4faef8acf6d6b3e97089856337867f9ee4013e2350dbfacb3340f2deddd04b9e"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-before-command.json",
+    "encoding": "identity",
+    "raw_bytes": 400,
+    "raw_sha256": "01ad9055fba0c6519908c7c549c4c31bfdd5ce3102a02f9a14581e42e7a485d9",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-before-command.json",
+    "stored_bytes": 400,
+    "stored_sha256": "01ad9055fba0c6519908c7c549c4c31bfdd5ce3102a02f9a14581e42e7a485d9"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-before-input.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 4426,
+    "raw_sha256": "e01386ef81309474a8b8578e14bd5b96a578e1420d6c8f8fe4ef4664de15a142",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-before-input.py.txt",
+    "stored_bytes": 4426,
+    "stored_sha256": "e01386ef81309474a8b8578e14bd5b96a578e1420d6c8f8fe4ef4664de15a142"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-before-result.json",
+    "encoding": "identity",
+    "raw_bytes": 765,
+    "raw_sha256": "1ea44d12ef034a35b3a4efe7bf28c69956ca65c7f66006fb95ca4440292c05ca",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-before-result.json",
+    "stored_bytes": 765,
+    "stored_sha256": "1ea44d12ef034a35b3a4efe7bf28c69956ca65c7f66006fb95ca4440292c05ca"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-before-stderr.log",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-before-stderr.log",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/failure/.collection/inventory-before.json",
+    "encoding": "identity",
+    "raw_bytes": 42147,
+    "raw_sha256": "1c0ed41bc07f9e654d012a03563c4f6a6251d6ec436bd72ff3a8c1b48600b393",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/inventory-before.json",
+    "stored_bytes": 42147,
+    "stored_sha256": "1c0ed41bc07f9e654d012a03563c4f6a6251d6ec436bd72ff3a8c1b48600b393"
+  },
+  {
+    "destination": "collections/failure/.collection/selection.json",
+    "encoding": "identity",
+    "raw_bytes": 1494,
+    "raw_sha256": "304f525eb9979e5a122fd4b6f15954feb08b2428e9a2813a4915dc625fbcb573",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/.collection/selection.json",
+    "stored_bytes": 1494,
+    "stored_sha256": "304f525eb9979e5a122fd4b6f15954feb08b2428e9a2813a4915dc625fbcb573"
+  },
+  {
+    "destination": "collections/failure/collection.json",
+    "encoding": "identity",
+    "raw_bytes": 284,
+    "raw_sha256": "cef607e2cb6d2ed83edf5c6cd3d7725b1cbd06672c52026f82c89e5e1fa986a6",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/collection.json",
+    "stored_bytes": 284,
+    "stored_sha256": "cef607e2cb6d2ed83edf5c6cd3d7725b1cbd06672c52026f82c89e5e1fa986a6"
+  },
+  {
+    "destination": "collections/failure/copy-index.json",
+    "encoding": "identity",
+    "raw_bytes": 42807,
+    "raw_sha256": "9b59d3ecf75ec384a94107724bb32f6ea344cd6a5b6b5e4006cbf441be7c4c65",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/copy-index.json",
+    "stored_bytes": 42807,
+    "stored_sha256": "9b59d3ecf75ec384a94107724bb32f6ea344cd6a5b6b5e4006cbf441be7c4c65"
+  },
+  {
+    "destination": "collections/failure/payload/controller/managed-killable.log",
+    "encoding": "identity",
+    "raw_bytes": 140,
+    "raw_sha256": "1c61c586993b465af9660d3050bf01c043dfe9aa907779e0ae347e9be63b1b8e",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/controller/managed-killable.log",
+    "stored_bytes": 140,
+    "stored_sha256": "1c61c586993b465af9660d3050bf01c043dfe9aa907779e0ae347e9be63b1b8e"
+  },
+  {
+    "destination": "collections/failure/payload/controller/result.json.gz",
+    "encoding": "gzip",
+    "raw_bytes": 113997,
+    "raw_sha256": "90b5dc2f94262b5fd41eb816c95b9737954e94793bf89ae051bdba55ac3a192a",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/controller/result.json",
+    "stored_bytes": 37628,
+    "stored_sha256": "c4fcad2aa4976a81fe38008c5c73ef9ad3b1de6430d6e61b2ba9dcf31ab6acc2"
+  },
+  {
+    "destination": "collections/failure/payload/driver/command.json",
+    "encoding": "identity",
+    "raw_bytes": 445,
+    "raw_sha256": "31459c3b1abdb68b736981ea30409111b2333ab49be84bcc1620e70dfd6b42e8",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/driver/command.json",
+    "stored_bytes": 445,
+    "stored_sha256": "31459c3b1abdb68b736981ea30409111b2333ab49be84bcc1620e70dfd6b42e8"
+  },
+  {
+    "destination": "collections/failure/payload/driver/dispatch.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "6c0c02dee000021ee4aef9e74429bec786ac441ff52905a25f7bd3b6ae5eac81",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/driver/dispatch.json",
+    "stored_bytes": 18,
+    "stored_sha256": "6c0c02dee000021ee4aef9e74429bec786ac441ff52905a25f7bd3b6ae5eac81"
+  },
+  {
+    "destination": "collections/failure/payload/driver/return.json",
+    "encoding": "identity",
+    "raw_bytes": 62,
+    "raw_sha256": "55e0cd61cf39d9f0e92067d890de1cbb5836f34ee5ee61d4aa6f12005e228d94",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/driver/return.json",
+    "stored_bytes": 62,
+    "stored_sha256": "55e0cd61cf39d9f0e92067d890de1cbb5836f34ee5ee61d4aa6f12005e228d94"
+  },
+  {
+    "destination": "collections/failure/payload/driver/stderr",
+    "encoding": "identity",
+    "raw_bytes": 521,
+    "raw_sha256": "d7d4a80c543994761efcd3c4af9d165bd2635ca591b6043175e6070c9773881f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/driver/stderr",
+    "stored_bytes": 521,
+    "stored_sha256": "d7d4a80c543994761efcd3c4af9d165bd2635ca591b6043175e6070c9773881f"
+  },
+  {
+    "destination": "collections/failure/payload/driver/stdout",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/driver/stdout",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/failure/payload/input/controller.py",
+    "encoding": "identity",
+    "raw_bytes": 14324,
+    "raw_sha256": "0630c67f28ac15dfe04e42eb0327b71cffed9b83615bbd5edbfb08c5d407075a",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/input/controller.py",
+    "stored_bytes": 14324,
+    "stored_sha256": "0630c67f28ac15dfe04e42eb0327b71cffed9b83615bbd5edbfb08c5d407075a"
+  },
+  {
+    "destination": "collections/failure/payload/input/limits.json",
+    "encoding": "identity",
+    "raw_bytes": 1112,
+    "raw_sha256": "23f2208dd9fe4f0d55df3cfe7955d10005a99b22995cb2b2e8f744b270a68cb8",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/input/limits.json",
+    "stored_bytes": 1112,
+    "stored_sha256": "23f2208dd9fe4f0d55df3cfe7955d10005a99b22995cb2b2e8f744b270a68cb8"
+  },
+  {
+    "destination": "collections/failure/payload/input/recovery.json",
+    "encoding": "identity",
+    "raw_bytes": 23263,
+    "raw_sha256": "ac5ed7177cc58e7d8a407bb568a950241c98686b51e3ffdc8747a14e1dc4c499",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/input/recovery.json",
+    "stored_bytes": 23263,
+    "stored_sha256": "ac5ed7177cc58e7d8a407bb568a950241c98686b51e3ffdc8747a14e1dc4c499"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/ack.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "1e1d54806611813608a399ac2b9c5046014496cde4ac18d236bf913106003317",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/ack.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "1e1d54806611813608a399ac2b9c5046014496cde4ac18d236bf913106003317"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/build/image.S",
+    "encoding": "identity",
+    "raw_bytes": 38404,
+    "raw_sha256": "f9f5d64126c666d4acee6b002e72aee164eb0468f8833b5dc67af03d61a004cf",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/build/image.S",
+    "stored_bytes": 38404,
+    "stored_sha256": "f9f5d64126c666d4acee6b002e72aee164eb0468f8833b5dc67af03d61a004cf"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/build/image.bin",
+    "encoding": "identity",
+    "raw_bytes": 6510,
+    "raw_sha256": "5d154f558533c2a1dbff645d16c0d255e57cf92a43928dcd5b84decd5ec162d3",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/build/image.bin",
+    "stored_bytes": 6510,
+    "stored_sha256": "5d154f558533c2a1dbff645d16c0d255e57cf92a43928dcd5b84decd5ec162d3"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/build/image.elf",
+    "encoding": "identity",
+    "raw_bytes": 11032,
+    "raw_sha256": "07c9da07c197fe730f70d4677d9c174d17918bc868b7e9efef3912525f6aa9d7",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/build/image.elf",
+    "stored_bytes": 11032,
+    "stored_sha256": "07c9da07c197fe730f70d4677d9c174d17918bc868b7e9efef3912525f6aa9d7"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/build/image.ld",
+    "encoding": "identity",
+    "raw_bytes": 112,
+    "raw_sha256": "de68d8ca0b2a3ed2bfe5134f2aa5bf71624e92af52cdbfd64aa5bf780568c091",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/build/image.ld",
+    "stored_bytes": 112,
+    "stored_sha256": "de68d8ca0b2a3ed2bfe5134f2aa5bf71624e92af52cdbfd64aa5bf780568c091"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/build/image.o",
+    "encoding": "identity",
+    "raw_bytes": 7216,
+    "raw_sha256": "18d2f3516d19db5f545e3b7046e7f064d4f2466ddb55fba66d2c6aa7ec92f2dd",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/build/image.o",
+    "stored_bytes": 7216,
+    "stored_sha256": "18d2f3516d19db5f545e3b7046e7f064d4f2466ddb55fba66d2c6aa7ec92f2dd"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/build/image.s",
+    "encoding": "identity",
+    "raw_bytes": 35338,
+    "raw_sha256": "be75ad427397687ab9964dc5568856e04349913bc84efe1d6912218eb5454b5d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/build/image.s",
+    "stored_bytes": 35338,
+    "stored_sha256": "be75ad427397687ab9964dc5568856e04349913bc84efe1d6912218eb5454b5d"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/claim.bin",
+    "encoding": "identity",
+    "raw_bytes": 267,
+    "raw_sha256": "82a3c089003a1352fd9cfd084bc465a808facd74dc2a28983e8d8de1e2a4b59f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/claim.bin",
+    "stored_bytes": 267,
+    "stored_sha256": "82a3c089003a1352fd9cfd084bc465a808facd74dc2a28983e8d8de1e2a4b59f"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/commit.bin",
+    "encoding": "identity",
+    "raw_bytes": 144,
+    "raw_sha256": "2607fc7537626b6fe63c2a85ee47ac0d0ac95d67fe26abee65df80fffbeff1eb",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/commit.bin",
+    "stored_bytes": 144,
+    "stored_sha256": "2607fc7537626b6fe63c2a85ee47ac0d0ac95d67fe26abee65df80fffbeff1eb"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/image.S",
+    "encoding": "identity",
+    "raw_bytes": 38404,
+    "raw_sha256": "f9f5d64126c666d4acee6b002e72aee164eb0468f8833b5dc67af03d61a004cf",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/image.S",
+    "stored_bytes": 38404,
+    "stored_sha256": "f9f5d64126c666d4acee6b002e72aee164eb0468f8833b5dc67af03d61a004cf"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/manifest.json",
+    "encoding": "identity",
+    "raw_bytes": 22102,
+    "raw_sha256": "07372a8e41bfea11800d707df55aa32f3fa7d50f9fd72b1f2f3fac9fe5ec39f4",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/manifest.json",
+    "stored_bytes": 22102,
+    "stored_sha256": "07372a8e41bfea11800d707df55aa32f3fa7d50f9fd72b1f2f3fac9fe5ec39f4"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/cycle-1/metadata.c",
+    "encoding": "identity",
+    "raw_bytes": 35701,
+    "raw_sha256": "2b8c6fbcc9545992aa8fa415bdd1ead5ebea83c485a6a4fd2c1f901974d50216",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/cycle-1/metadata.c",
+    "stored_bytes": 35701,
+    "stored_sha256": "2b8c6fbcc9545992aa8fa415bdd1ead5ebea83c485a6a4fd2c1f901974d50216"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/identity.json",
+    "encoding": "identity",
+    "raw_bytes": 2606,
+    "raw_sha256": "a49d22a4f88294e75dde154bc6a21123bea3c171fc204212a83ac589bbd96c97",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/identity.json",
+    "stored_bytes": 2606,
+    "stored_sha256": "a49d22a4f88294e75dde154bc6a21123bea3c171fc204212a83ac589bbd96c97"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/module.disassembly.txt.gz",
+    "encoding": "gzip",
+    "raw_bytes": 143896,
+    "raw_sha256": "054df51685bda43e1ace1dc2133da8abefe960feaf5efb80a705d649d915aa73",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/module.disassembly.txt",
+    "stored_bytes": 25904,
+    "stored_sha256": "ca2fec96cc8425dc48e542c0d4e9cc245445284f338b708943f3cd16b7e9edb8"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/observations-failure.bin",
+    "encoding": "identity",
+    "raw_bytes": 14120,
+    "raw_sha256": "876a0ac991b0f8bb8667fd41687fb290442979d1763db003ae915dee4a733d95",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/observations-failure.bin",
+    "stored_bytes": 14120,
+    "stored_sha256": "876a0ac991b0f8bb8667fd41687fb290442979d1763db003ae915dee4a733d95"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/queued-exit-before-holder-release.bin",
+    "encoding": "identity",
+    "raw_bytes": 6120,
+    "raw_sha256": "11b26052b9f20e8371d8a5dbb0fd234c513b1c0c179161c3b378d7270ae74a57",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/queued-exit-before-holder-release.bin",
+    "stored_bytes": 6120,
+    "stored_sha256": "11b26052b9f20e8371d8a5dbb0fd234c513b1c0c179161c3b378d7270ae74a57"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/queued-exit-before-holder-release.json",
+    "encoding": "identity",
+    "raw_bytes": 8206,
+    "raw_sha256": "e68384d78f327c06d558a2b9b3e980c2ae23eeadaf1ef86a9472c11d6707bf2f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/queued-exit-before-holder-release.json",
+    "stored_bytes": 8206,
+    "stored_sha256": "e68384d78f327c06d558a2b9b3e980c2ae23eeadaf1ef86a9472c11d6707bf2f"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/reader-drain-cancel.json",
+    "encoding": "identity",
+    "raw_bytes": 7977,
+    "raw_sha256": "58d4243edf95882311ed6f3f86e39c4ee56495b3faad78865aee5825b9143909",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/reader-drain-cancel.json",
+    "stored_bytes": 7977,
+    "stored_sha256": "58d4243edf95882311ed6f3f86e39c4ee56495b3faad78865aee5825b9143909"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/ready-before-fatal-cancel.json",
+    "encoding": "identity",
+    "raw_bytes": 3769,
+    "raw_sha256": "acf26e0302343d4826d388dfd64126a97feb2f0a4a47e4a7c9b0ca95bf8bbd7d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/ready-before-fatal-cancel.json",
+    "stored_bytes": 3769,
+    "stored_sha256": "acf26e0302343d4826d388dfd64126a97feb2f0a4a47e4a7c9b0ca95bf8bbd7d"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/result.json",
+    "encoding": "identity",
+    "raw_bytes": 61742,
+    "raw_sha256": "e63803abd5888a13f5e624b4272ce4b5819dcc5695be416a0c7df339c9e884ce",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/result.json",
+    "stored_bytes": 61742,
+    "stored_sha256": "e63803abd5888a13f5e624b4272ce4b5819dcc5695be416a0c7df339c9e884ce"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-0.bin",
+    "encoding": "identity",
+    "raw_bytes": 2,
+    "raw_sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-0.bin",
+    "stored_bytes": 2,
+    "stored_sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-0.disassembly.txt",
+    "encoding": "identity",
+    "raw_bytes": 326,
+    "raw_sha256": "84013736bdfcca4b272ce82043fa6d06e02460c1d7703e0663d944dfa97641f4",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-0.disassembly.txt",
+    "stored_bytes": 326,
+    "stored_sha256": "84013736bdfcca4b272ce82043fa6d06e02460c1d7703e0663d944dfa97641f4"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-1.bin",
+    "encoding": "identity",
+    "raw_bytes": 27,
+    "raw_sha256": "4eaa627fe980dc9b5f3ac664219934feaee3f780b55b2be83ab4284cd63d357f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-1.bin",
+    "stored_bytes": 27,
+    "stored_sha256": "4eaa627fe980dc9b5f3ac664219934feaee3f780b55b2be83ab4284cd63d357f"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-1.disassembly.txt",
+    "encoding": "identity",
+    "raw_bytes": 974,
+    "raw_sha256": "1d616b0274995c5e06fc8b723b7e94b48e10a0f68a155ca8b5afee863be8e082",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-1.disassembly.txt",
+    "stored_bytes": 974,
+    "stored_sha256": "1d616b0274995c5e06fc8b723b7e94b48e10a0f68a155ca8b5afee863be8e082"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-2.bin",
+    "encoding": "identity",
+    "raw_bytes": 211,
+    "raw_sha256": "5072fb728bef8f67aebc2e2c06574491a7e1f38fc18e1d3351c4adda2fe4d34a",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-2.bin",
+    "stored_bytes": 211,
+    "stored_sha256": "5072fb728bef8f67aebc2e2c06574491a7e1f38fc18e1d3351c4adda2fe4d34a"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-2.disassembly.txt",
+    "encoding": "identity",
+    "raw_bytes": 5623,
+    "raw_sha256": "630834c109be54b93c245235966bf2a20e7cd43db4a5ebd7c9e2138bb378ec3d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-2.disassembly.txt",
+    "stored_bytes": 5623,
+    "stored_sha256": "630834c109be54b93c245235966bf2a20e7cd43db4a5ebd7c9e2138bb378ec3d"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-3.bin",
+    "encoding": "identity",
+    "raw_bytes": 205,
+    "raw_sha256": "1bba842166dcd11d4ecce950b6aa3bf143dcab07b541f7050a02ccbf6c1f800f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-3.bin",
+    "stored_bytes": 205,
+    "stored_sha256": "1bba842166dcd11d4ecce950b6aa3bf143dcab07b541f7050a02ccbf6c1f800f"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-3.disassembly.txt",
+    "encoding": "identity",
+    "raw_bytes": 5253,
+    "raw_sha256": "5123914fa173c3500d0628f3a0847a67cdcabb36b1f9d93fcea63c00b76731a4",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-3.disassembly.txt",
+    "stored_bytes": 5253,
+    "stored_sha256": "5123914fa173c3500d0628f3a0847a67cdcabb36b1f9d93fcea63c00b76731a4"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-4.bin",
+    "encoding": "identity",
+    "raw_bytes": 4096,
+    "raw_sha256": "9b51aecc254538314acbd3506f48abd8be9766383c0a3c8715761ed96da55656",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-4.bin",
+    "stored_bytes": 4096,
+    "stored_sha256": "9b51aecc254538314acbd3506f48abd8be9766383c0a3c8715761ed96da55656"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-4.disassembly.txt.gz",
+    "encoding": "gzip",
+    "raw_bytes": 294903,
+    "raw_sha256": "faa4de7aa14b0b164c99ad8c778986f7e3053bf668385265654d576976661f9b",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-4.disassembly.txt",
+    "stored_bytes": 12471,
+    "stored_sha256": "68007a88a2f85405d15f6ede9e1111015d740e6cb0927f8c70cb007066f90f53"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-export.bin",
+    "encoding": "identity",
+    "raw_bytes": 5864,
+    "raw_sha256": "1ad4f2fbc9fdc87a9785edd520b0da7ae4a1ca1ffd6d8b00dcc6cf847c4b3921",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-export.bin",
+    "stored_bytes": 5864,
+    "stored_sha256": "1ad4f2fbc9fdc87a9785edd520b0da7ae4a1ca1ffd6d8b00dcc6cf847c4b3921"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/source-metadata.json",
+    "encoding": "identity",
+    "raw_bytes": 2889,
+    "raw_sha256": "31e2baf91bd6780a6f5c5e285efe4e1459f7e8a947b695fb372b27ac816939a9",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/source-metadata.json",
+    "stored_bytes": 2889,
+    "stored_sha256": "31e2baf91bd6780a6f5c5e285efe4e1459f7e8a947b695fb372b27ac816939a9"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000001/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 48,
+    "raw_sha256": "64f58d44a1f7be92f26abe823e9839a126656a63df1eb249ed6c2c9ccc75daf8",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000001/reply.bin",
+    "stored_bytes": 48,
+    "stored_sha256": "64f58d44a1f7be92f26abe823e9839a126656a63df1eb249ed6c2c9ccc75daf8"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000001/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000001/request.bin",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000001/request.json",
+    "encoding": "identity",
+    "raw_bytes": 90,
+    "raw_sha256": "b61355c4289fe374e30908474ae6a364b9bca9c0ac485543890b834311491da2",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000001/request.json",
+    "stored_bytes": 90,
+    "stored_sha256": "b61355c4289fe374e30908474ae6a364b9bca9c0ac485543890b834311491da2"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000001/result.json",
+    "encoding": "identity",
+    "raw_bytes": 182,
+    "raw_sha256": "22032e46e4936028a25bfe8819d3065069b97a8fb07fad336d35d2dc3eb019fe",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000001/result.json",
+    "stored_bytes": 182,
+    "stored_sha256": "22032e46e4936028a25bfe8819d3065069b97a8fb07fad336d35d2dc3eb019fe"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000001/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "83c3f340099ae0d207e262ee1f8cf203af8a0ddc3848adf24e17dac745a3cd7c",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000001/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "83c3f340099ae0d207e262ee1f8cf203af8a0ddc3848adf24e17dac745a3cd7c"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000002/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 5864,
+    "raw_sha256": "1ad4f2fbc9fdc87a9785edd520b0da7ae4a1ca1ffd6d8b00dcc6cf847c4b3921",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000002/reply.bin",
+    "stored_bytes": 5864,
+    "stored_sha256": "1ad4f2fbc9fdc87a9785edd520b0da7ae4a1ca1ffd6d8b00dcc6cf847c4b3921"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000002/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 32,
+    "raw_sha256": "8820465cd3023f7864c0b641c7f65d2fd6d7dada86df40a627ebcd2f43bd6011",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000002/request.bin",
+    "stored_bytes": 32,
+    "stored_sha256": "8820465cd3023f7864c0b641c7f65d2fd6d7dada86df40a627ebcd2f43bd6011"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000002/request.json",
+    "encoding": "identity",
+    "raw_bytes": 91,
+    "raw_sha256": "32121ab6d6f8fc8a7a1c212beeb8f94367f72d82fd573d9bca014250da958222",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000002/request.json",
+    "stored_bytes": 91,
+    "stored_sha256": "32121ab6d6f8fc8a7a1c212beeb8f94367f72d82fd573d9bca014250da958222"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000002/result.json",
+    "encoding": "identity",
+    "raw_bytes": 185,
+    "raw_sha256": "ea2d07b32ef3b85223522b9d7a9d76fee4c5af64106636ef85e7ab961b1a810c",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000002/result.json",
+    "stored_bytes": 185,
+    "stored_sha256": "ea2d07b32ef3b85223522b9d7a9d76fee4c5af64106636ef85e7ab961b1a810c"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000002/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "4e9bb61bd3cb219bcfc1392e577ba7c7d7a5bf319fd23fce5f733ece03de8643",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000002/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "4e9bb61bd3cb219bcfc1392e577ba7c7d7a5bf319fd23fce5f733ece03de8643"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000003/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 267,
+    "raw_sha256": "82a3c089003a1352fd9cfd084bc465a808facd74dc2a28983e8d8de1e2a4b59f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000003/reply.bin",
+    "stored_bytes": 267,
+    "stored_sha256": "82a3c089003a1352fd9cfd084bc465a808facd74dc2a28983e8d8de1e2a4b59f"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000003/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 56,
+    "raw_sha256": "ae303c9d3a5493dda0d5eee0733b1ebe3f783f9bd9dc19360e85520b46e30712",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000003/request.bin",
+    "stored_bytes": 56,
+    "stored_sha256": "ae303c9d3a5493dda0d5eee0733b1ebe3f783f9bd9dc19360e85520b46e30712"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000003/request.json",
+    "encoding": "identity",
+    "raw_bytes": 91,
+    "raw_sha256": "6e215ff2b422863ce4640ba69340f5d33138972077381d1df97762163845bd78",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000003/request.json",
+    "stored_bytes": 91,
+    "stored_sha256": "6e215ff2b422863ce4640ba69340f5d33138972077381d1df97762163845bd78"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000003/result.json",
+    "encoding": "identity",
+    "raw_bytes": 184,
+    "raw_sha256": "b37d378750b212e0bdca56ce99c4605bb94f11cf711035d7f037590273acbcc6",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000003/result.json",
+    "stored_bytes": 184,
+    "stored_sha256": "b37d378750b212e0bdca56ce99c4605bb94f11cf711035d7f037590273acbcc6"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000003/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "9a525859e459bcd44dac562eb546532753eb165a6cda8833722ab0e7ef3d55b8",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000003/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "9a525859e459bcd44dac562eb546532753eb165a6cda8833722ab0e7ef3d55b8"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000004/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 227,
+    "raw_sha256": "074d7e392938bfd3c13be1c1e1daec19112048e450ad015b4786b14ae4c25b25",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000004/reply.bin",
+    "stored_bytes": 227,
+    "stored_sha256": "074d7e392938bfd3c13be1c1e1daec19112048e450ad015b4786b14ae4c25b25"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000004/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "b38876c006105676015cc86dc62cf6ce3bdd592ba3e06a2f2cfd48778546de92",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000004/request.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "b38876c006105676015cc86dc62cf6ce3bdd592ba3e06a2f2cfd48778546de92"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000004/request.json",
+    "encoding": "identity",
+    "raw_bytes": 91,
+    "raw_sha256": "2ea05114bd30bb8eb797b8e28b1a7729bee084e8f5abc758e394fbd77edd4c82",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000004/request.json",
+    "stored_bytes": 91,
+    "stored_sha256": "2ea05114bd30bb8eb797b8e28b1a7729bee084e8f5abc758e394fbd77edd4c82"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000004/result.json",
+    "encoding": "identity",
+    "raw_bytes": 184,
+    "raw_sha256": "8392bfe7d32f894232c809f595cfa5094b90c7fe49ccf5f59cc249336c26b06d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000004/result.json",
+    "stored_bytes": 184,
+    "stored_sha256": "8392bfe7d32f894232c809f595cfa5094b90c7fe49ccf5f59cc249336c26b06d"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000004/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "ef81de7874158897bd522f7061a805cad7727680e4270a8d673fbf308d54b281",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000004/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "ef81de7874158897bd522f7061a805cad7727680e4270a8d673fbf308d54b281"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000005/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 40,
+    "raw_sha256": "84cfb385480afe36e702033cca29eeaae20c970b6de2aa3339691886ddbab1e0",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000005/reply.bin",
+    "stored_bytes": 40,
+    "stored_sha256": "84cfb385480afe36e702033cca29eeaae20c970b6de2aa3339691886ddbab1e0"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000005/request.bin.gz",
+    "encoding": "gzip",
+    "raw_bytes": 106176,
+    "raw_sha256": "3a9ff7d67cffb7a0e532d099bbdfa742fa8dd1df273b49ea02194af2cd734153",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000005/request.bin",
+    "stored_bytes": 11854,
+    "stored_sha256": "4a0c562631f6c7d764c84f2073bbc34bccd05bca843cd25576d1386c03d417c0"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000005/request.json",
+    "encoding": "identity",
+    "raw_bytes": 95,
+    "raw_sha256": "7cb3abf20e24997ee5654217a9195f747a6228d761edb593a9a6e7fd74186519",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000005/request.json",
+    "stored_bytes": 95,
+    "stored_sha256": "7cb3abf20e24997ee5654217a9195f747a6228d761edb593a9a6e7fd74186519"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000005/result.json",
+    "encoding": "identity",
+    "raw_bytes": 187,
+    "raw_sha256": "b629967557ad58249b30ed7f5e5b2220a9252b9469eded6b54cd48b535d1e817",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000005/result.json",
+    "stored_bytes": 187,
+    "stored_sha256": "b629967557ad58249b30ed7f5e5b2220a9252b9469eded6b54cd48b535d1e817"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000005/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "43bda8b684c0d05c7170666ee4b8060283de82a79f31eaf9058797662a761353",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000005/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "43bda8b684c0d05c7170666ee4b8060283de82a79f31eaf9058797662a761353"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000006/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 144,
+    "raw_sha256": "2607fc7537626b6fe63c2a85ee47ac0d0ac95d67fe26abee65df80fffbeff1eb",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000006/reply.bin",
+    "stored_bytes": 144,
+    "stored_sha256": "2607fc7537626b6fe63c2a85ee47ac0d0ac95d67fe26abee65df80fffbeff1eb"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000006/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 56,
+    "raw_sha256": "a705519e98ed5d6f26561e6783b1b346dd3a04ea141f2624f1b2afd47043d9ad",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000006/request.bin",
+    "stored_bytes": 56,
+    "stored_sha256": "a705519e98ed5d6f26561e6783b1b346dd3a04ea141f2624f1b2afd47043d9ad"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000006/request.json",
+    "encoding": "identity",
+    "raw_bytes": 91,
+    "raw_sha256": "d7bb09be3e349aeb56fb712a228998146e838fd483148287f671a6a6f073f8d9",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000006/request.json",
+    "stored_bytes": 91,
+    "stored_sha256": "d7bb09be3e349aeb56fb712a228998146e838fd483148287f671a6a6f073f8d9"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000006/result.json",
+    "encoding": "identity",
+    "raw_bytes": 184,
+    "raw_sha256": "84dbc0d445962afc7f0476206334f171940ba9ac1057000dc1698c6de45dcd48",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000006/result.json",
+    "stored_bytes": 184,
+    "stored_sha256": "84dbc0d445962afc7f0476206334f171940ba9ac1057000dc1698c6de45dcd48"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000006/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "6ec32e87a0361ad4420cc201608a99893cad12d0be1a3027d2ed1dc1d18e75f6",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000006/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "6ec32e87a0361ad4420cc201608a99893cad12d0be1a3027d2ed1dc1d18e75f6"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000007/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "1e1d54806611813608a399ac2b9c5046014496cde4ac18d236bf913106003317",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000007/reply.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "1e1d54806611813608a399ac2b9c5046014496cde4ac18d236bf913106003317"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000007/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 40,
+    "raw_sha256": "da7f5c0dc6073f70470f39b4dfe6f0f804574759e49639c59bdc198bd101ccf9",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000007/request.bin",
+    "stored_bytes": 40,
+    "stored_sha256": "da7f5c0dc6073f70470f39b4dfe6f0f804574759e49639c59bdc198bd101ccf9"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000007/request.json",
+    "encoding": "identity",
+    "raw_bytes": 91,
+    "raw_sha256": "1f3a88735c5baf002fb1fccc1e71258f6109f05ab57f90d99de2f0a4e20d212b",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000007/request.json",
+    "stored_bytes": 91,
+    "stored_sha256": "1f3a88735c5baf002fb1fccc1e71258f6109f05ab57f90d99de2f0a4e20d212b"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000007/result.json",
+    "encoding": "identity",
+    "raw_bytes": 183,
+    "raw_sha256": "9f036592f9ff2af5b3b90a158e14394ba9af9a4330c1378ad3a34f6a88a9f1b8",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000007/result.json",
+    "stored_bytes": 183,
+    "stored_sha256": "9f036592f9ff2af5b3b90a158e14394ba9af9a4330c1378ad3a34f6a88a9f1b8"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000007/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "fc4dd38e0f4914ed74a4b5242b5dcb00a700f8560dc0b73627fa61a7c1e0c862",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000007/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "fc4dd38e0f4914ed74a4b5242b5dcb00a700f8560dc0b73627fa61a7c1e0c862"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000008/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 48,
+    "raw_sha256": "db4fbdb6f88475ceef4024ebbf0ab905bea52443d44f3b692fa4fd09ea727711",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000008/reply.bin",
+    "stored_bytes": 48,
+    "stored_sha256": "db4fbdb6f88475ceef4024ebbf0ab905bea52443d44f3b692fa4fd09ea727711"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000008/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 48,
+    "raw_sha256": "db4fbdb6f88475ceef4024ebbf0ab905bea52443d44f3b692fa4fd09ea727711",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000008/request.bin",
+    "stored_bytes": 48,
+    "stored_sha256": "db4fbdb6f88475ceef4024ebbf0ab905bea52443d44f3b692fa4fd09ea727711"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000008/request.json",
+    "encoding": "identity",
+    "raw_bytes": 91,
+    "raw_sha256": "8000b0581c776fe7baf7f4c07be4fa63e05bba6aff5c32b71bb743e330e2247f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000008/request.json",
+    "stored_bytes": 91,
+    "stored_sha256": "8000b0581c776fe7baf7f4c07be4fa63e05bba6aff5c32b71bb743e330e2247f"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000008/result.json",
+    "encoding": "identity",
+    "raw_bytes": 183,
+    "raw_sha256": "d513fb532f1029a9f5e658e37035aac212f41c31e2621e9ad6b54dde6f5ad377",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000008/result.json",
+    "stored_bytes": 183,
+    "stored_sha256": "d513fb532f1029a9f5e658e37035aac212f41c31e2621e9ad6b54dde6f5ad377"
+  },
+  {
+    "destination": "collections/failure/payload/runtime/wire/attempt-00000008/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "7c7ce2770409d710fd8951e26d6a73dc8398639db0b77edea7a60d0d3040e0ff",
+    "source": "/tmp/kdlock-kernel8-managed-killable-failure-collection-20261111-02/payload/runtime/wire/attempt-00000008/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "7c7ce2770409d710fd8951e26d6a73dc8398639db0b77edea7a60d0d3040e0ff"
+  },
+  {
+    "destination": "collections/phase1/.collection/collection-helper.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 18940,
+    "raw_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/collection-helper.py.txt",
+    "stored_bytes": 18940,
+    "stored_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d"
+  },
+  {
+    "destination": "collections/phase1/.collection/copy-command.json",
+    "encoding": "identity",
+    "raw_bytes": 390,
+    "raw_sha256": "d314935371cd2cffb2f504ab93de64c187a2f8590f075f674a849043f6398cce",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/copy-command.json",
+    "stored_bytes": 390,
+    "stored_sha256": "d314935371cd2cffb2f504ab93de64c187a2f8590f075f674a849043f6398cce"
+  },
+  {
+    "destination": "collections/phase1/.collection/copy-input.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 10226,
+    "raw_sha256": "7abc9fa5ce931d56476faec19a26e095c2becfef9a027e586f8092ba8fdb4a7d",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/copy-input.py.txt",
+    "stored_bytes": 10226,
+    "stored_sha256": "7abc9fa5ce931d56476faec19a26e095c2becfef9a027e586f8092ba8fdb4a7d"
+  },
+  {
+    "destination": "collections/phase1/.collection/copy-result.json",
+    "encoding": "identity",
+    "raw_bytes": 755,
+    "raw_sha256": "4eb952d4ce3ec0a6bd03f9f0e39d01f16c75ec0a9c0caa845812006d1176850c",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/copy-result.json",
+    "stored_bytes": 755,
+    "stored_sha256": "4eb952d4ce3ec0a6bd03f9f0e39d01f16c75ec0a9c0caa845812006d1176850c"
+  },
+  {
+    "destination": "collections/phase1/.collection/copy-stderr.log",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/copy-stderr.log",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase1/.collection/copy.tar.gz",
+    "encoding": "gzip",
+    "raw_bytes": 92160,
+    "raw_sha256": "d8b1756375a63b571229298d23fc913c0b73f7e367672b5e6902b5214b4dccbf",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/copy.tar",
+    "stored_bytes": 9140,
+    "stored_sha256": "ef16e9941e756c9fe2291bf4d185590f0d986743a851942715758f2de8ed6899"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-after-command.json",
+    "encoding": "identity",
+    "raw_bytes": 399,
+    "raw_sha256": "b02f88dbb19ce1e1222a28828897ddd5977acd175635b457a7aa42b67f903a71",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-after-command.json",
+    "stored_bytes": 399,
+    "stored_sha256": "b02f88dbb19ce1e1222a28828897ddd5977acd175635b457a7aa42b67f903a71"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-after-input.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 4294,
+    "raw_sha256": "8c3cc0c2f9a42c638a094384d278b5988a0f076197350a84b401b0cdee89607a",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-after-input.py.txt",
+    "stored_bytes": 4294,
+    "stored_sha256": "8c3cc0c2f9a42c638a094384d278b5988a0f076197350a84b401b0cdee89607a"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-after-result.json",
+    "encoding": "identity",
+    "raw_bytes": 763,
+    "raw_sha256": "176be547c4e975d5f79136fb3110b760bb40aaaff09c98310543b0b7bcfad485",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-after-result.json",
+    "stored_bytes": 763,
+    "stored_sha256": "176be547c4e975d5f79136fb3110b760bb40aaaff09c98310543b0b7bcfad485"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-after-stderr.log",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-after-stderr.log",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-after.json",
+    "encoding": "identity",
+    "raw_bytes": 5799,
+    "raw_sha256": "8322a446f9f2473a844f041f5a88f9b36d0e23584b6db372a45725cbb808fccf",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-after.json",
+    "stored_bytes": 5799,
+    "stored_sha256": "8322a446f9f2473a844f041f5a88f9b36d0e23584b6db372a45725cbb808fccf"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-before-command.json",
+    "encoding": "identity",
+    "raw_bytes": 400,
+    "raw_sha256": "bf14e1dc89f8661dfc5c77c62471b1cb83f9f1127de204da690f4b09532fd710",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-before-command.json",
+    "stored_bytes": 400,
+    "stored_sha256": "bf14e1dc89f8661dfc5c77c62471b1cb83f9f1127de204da690f4b09532fd710"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-before-input.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 4294,
+    "raw_sha256": "8c3cc0c2f9a42c638a094384d278b5988a0f076197350a84b401b0cdee89607a",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-before-input.py.txt",
+    "stored_bytes": 4294,
+    "stored_sha256": "8c3cc0c2f9a42c638a094384d278b5988a0f076197350a84b401b0cdee89607a"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-before-result.json",
+    "encoding": "identity",
+    "raw_bytes": 764,
+    "raw_sha256": "5ecc7ba7586102315eb0a9c9cc53c60107ebcbc52dd2572d7ebba89e052a0c4f",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-before-result.json",
+    "stored_bytes": 764,
+    "stored_sha256": "5ecc7ba7586102315eb0a9c9cc53c60107ebcbc52dd2572d7ebba89e052a0c4f"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-before-stderr.log",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-before-stderr.log",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase1/.collection/inventory-before.json",
+    "encoding": "identity",
+    "raw_bytes": 5799,
+    "raw_sha256": "6c5973c12fc229438fe3be1a1d2e732a96adfc9e27f413d32335c0f584e23831",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/inventory-before.json",
+    "stored_bytes": 5799,
+    "stored_sha256": "6c5973c12fc229438fe3be1a1d2e732a96adfc9e27f413d32335c0f584e23831"
+  },
+  {
+    "destination": "collections/phase1/.collection/selection.json",
+    "encoding": "identity",
+    "raw_bytes": 1261,
+    "raw_sha256": "03f79e53679aa105622f36ac2e15e7506e095b9f9246eba70a16013bfffb4a58",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/.collection/selection.json",
+    "stored_bytes": 1261,
+    "stored_sha256": "03f79e53679aa105622f36ac2e15e7506e095b9f9246eba70a16013bfffb4a58"
+  },
+  {
+    "destination": "collections/phase1/collection.json",
+    "encoding": "identity",
+    "raw_bytes": 283,
+    "raw_sha256": "63763ba1d759e2f3faa61c3aa99ae849fddee4b9446b36461e2607fe7b87497e",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/collection.json",
+    "stored_bytes": 283,
+    "stored_sha256": "63763ba1d759e2f3faa61c3aa99ae849fddee4b9446b36461e2607fe7b87497e"
+  },
+  {
+    "destination": "collections/phase1/copy-index.json",
+    "encoding": "identity",
+    "raw_bytes": 5319,
+    "raw_sha256": "0ab6f442e48c553fd51a6eb9221a909d51c036a53019a2ee20cd022ee6d47b6e",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/copy-index.json",
+    "stored_bytes": 5319,
+    "stored_sha256": "0ab6f442e48c553fd51a6eb9221a909d51c036a53019a2ee20cd022ee6d47b6e"
+  },
+  {
+    "destination": "collections/phase1/payload/driver/command.json",
+    "encoding": "identity",
+    "raw_bytes": 272,
+    "raw_sha256": "f5cdf787d7a7b87201e394c7435d02ad2758d4830a804762ab69451c000c96ce",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/driver/command.json",
+    "stored_bytes": 272,
+    "stored_sha256": "f5cdf787d7a7b87201e394c7435d02ad2758d4830a804762ab69451c000c96ce"
+  },
+  {
+    "destination": "collections/phase1/payload/driver/dispatch.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "0096c41782a1845b1210d7f8fe6e62af5e698451c03b46036d26c038d66db20e",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/driver/dispatch.json",
+    "stored_bytes": 18,
+    "stored_sha256": "0096c41782a1845b1210d7f8fe6e62af5e698451c03b46036d26c038d66db20e"
+  },
+  {
+    "destination": "collections/phase1/payload/driver/return.json",
+    "encoding": "identity",
+    "raw_bytes": 64,
+    "raw_sha256": "4d060dc08511096493946ded081e79928ade91e55a56cbce57117dd4032848d3",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/driver/return.json",
+    "stored_bytes": 64,
+    "stored_sha256": "4d060dc08511096493946ded081e79928ade91e55a56cbce57117dd4032848d3"
+  },
+  {
+    "destination": "collections/phase1/payload/driver/stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/driver/stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase1/payload/driver/stdout",
+    "encoding": "identity",
+    "raw_bytes": 155,
+    "raw_sha256": "a37b60fdffe59314971f5e2ebe1d9d91b46941e621d3ccfcfcb3a6077af4554b",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/driver/stdout",
+    "stored_bytes": 155,
+    "stored_sha256": "a37b60fdffe59314971f5e2ebe1d9d91b46941e621d3ccfcfcb3a6077af4554b"
+  },
+  {
+    "destination": "collections/phase1/payload/input/phase1.py",
+    "encoding": "identity",
+    "raw_bytes": 9069,
+    "raw_sha256": "e459c44538cf3a72293018c12e6a6932cf6f43aa9e0cf3f787a5b1a49055b687",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/input/phase1.py",
+    "stored_bytes": 9069,
+    "stored_sha256": "e459c44538cf3a72293018c12e6a6932cf6f43aa9e0cf3f787a5b1a49055b687"
+  },
+  {
+    "destination": "collections/phase1/payload/runtime/after.json",
+    "encoding": "identity",
+    "raw_bytes": 1953,
+    "raw_sha256": "4f23d74e5a1e7d778b59c02bb8ca958bdbc38d61cb4a063b0f9a7bebc2133eff",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/runtime/after.json",
+    "stored_bytes": 1953,
+    "stored_sha256": "4f23d74e5a1e7d778b59c02bb8ca958bdbc38d61cb4a063b0f9a7bebc2133eff"
+  },
+  {
+    "destination": "collections/phase1/payload/runtime/before.json",
+    "encoding": "identity",
+    "raw_bytes": 1987,
+    "raw_sha256": "3305fddbcc7a60a0f11c0d4c7a0c72df5132b8ca645bff00bdc6fd368f15f2f9",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/runtime/before.json",
+    "stored_bytes": 1987,
+    "stored_sha256": "3305fddbcc7a60a0f11c0d4c7a0c72df5132b8ca645bff00bdc6fd368f15f2f9"
+  },
+  {
+    "destination": "collections/phase1/payload/runtime/events-after.bin",
+    "encoding": "identity",
+    "raw_bytes": 15400,
+    "raw_sha256": "6ac8f9e4e794a8db3c9e3054ec62ff701d2d872ef9da93fa23d1017d0b5d035e",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/runtime/events-after.bin",
+    "stored_bytes": 15400,
+    "stored_sha256": "6ac8f9e4e794a8db3c9e3054ec62ff701d2d872ef9da93fa23d1017d0b5d035e"
+  },
+  {
+    "destination": "collections/phase1/payload/runtime/events-before.bin",
+    "encoding": "identity",
+    "raw_bytes": 14120,
+    "raw_sha256": "876a0ac991b0f8bb8667fd41687fb290442979d1763db003ae915dee4a733d95",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/runtime/events-before.bin",
+    "stored_bytes": 14120,
+    "stored_sha256": "876a0ac991b0f8bb8667fd41687fb290442979d1763db003ae915dee4a733d95"
+  },
+  {
+    "destination": "collections/phase1/payload/runtime/result.json",
+    "encoding": "identity",
+    "raw_bytes": 34602,
+    "raw_sha256": "bc55fb499055250590bf9bbbdb3a325e19ca0a087ca9e231ec883bb584672d82",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-collection-20261111-01/payload/runtime/result.json",
+    "stored_bytes": 34602,
+    "stored_sha256": "bc55fb499055250590bf9bbbdb3a325e19ca0a087ca9e231ec883bb584672d82"
+  },
+  {
+    "destination": "collections/phase2/.collection/collection-helper.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 18940,
+    "raw_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/collection-helper.py.txt",
+    "stored_bytes": 18940,
+    "stored_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d"
+  },
+  {
+    "destination": "collections/phase2/.collection/copy-command.json",
+    "encoding": "identity",
+    "raw_bytes": 389,
+    "raw_sha256": "ee4f34f5d2c30552d920e7d405ea0e76ba67629f7a12737e153015dc016b9ce9",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/copy-command.json",
+    "stored_bytes": 389,
+    "stored_sha256": "ee4f34f5d2c30552d920e7d405ea0e76ba67629f7a12737e153015dc016b9ce9"
+  },
+  {
+    "destination": "collections/phase2/.collection/copy-input.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 26974,
+    "raw_sha256": "c66243c86d5f727692b7c284f1a489709403a57791fef372dc964bf83a9127fa",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/copy-input.py.txt",
+    "stored_bytes": 26974,
+    "stored_sha256": "c66243c86d5f727692b7c284f1a489709403a57791fef372dc964bf83a9127fa"
+  },
+  {
+    "destination": "collections/phase2/.collection/copy-result.json",
+    "encoding": "identity",
+    "raw_bytes": 755,
+    "raw_sha256": "898a12123542299c929a787488ecde9e29de2393a95e5e311eb99068c3017790",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/copy-result.json",
+    "stored_bytes": 755,
+    "stored_sha256": "898a12123542299c929a787488ecde9e29de2393a95e5e311eb99068c3017790"
+  },
+  {
+    "destination": "collections/phase2/.collection/copy-stderr.log",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/copy-stderr.log",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase2/.collection/copy.tar.gz",
+    "encoding": "gzip",
+    "raw_bytes": 2498560,
+    "raw_sha256": "a27f3803b20ddf30e4b502e817764aa79493e854542cfb04eabda7c51d5fa560",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/copy.tar",
+    "stored_bytes": 183544,
+    "stored_sha256": "e16fec4fc3b9cdf4706d29da2eb3888193b674bb56ff973423c4f14d4827e751"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-after-command.json",
+    "encoding": "identity",
+    "raw_bytes": 399,
+    "raw_sha256": "df9f171799058203d1788baea38fa7939ee8f58e13b519b86f7316a7bb51e020",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-after-command.json",
+    "stored_bytes": 399,
+    "stored_sha256": "df9f171799058203d1788baea38fa7939ee8f58e13b519b86f7316a7bb51e020"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-after-input.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 4306,
+    "raw_sha256": "578c17e7c1694ce98de5f24546379b183abe6a6b7a67df72c4d36c4c88eea144",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-after-input.py.txt",
+    "stored_bytes": 4306,
+    "stored_sha256": "578c17e7c1694ce98de5f24546379b183abe6a6b7a67df72c4d36c4c88eea144"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-after-result.json",
+    "encoding": "identity",
+    "raw_bytes": 764,
+    "raw_sha256": "f3dd0bcd620c0934bc56504fc2cea339b5832220e6e50262420886e85eca7c33",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-after-result.json",
+    "stored_bytes": 764,
+    "stored_sha256": "f3dd0bcd620c0934bc56504fc2cea339b5832220e6e50262420886e85eca7c33"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-after-stderr.log",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-after-stderr.log",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-after.json",
+    "encoding": "identity",
+    "raw_bytes": 21795,
+    "raw_sha256": "fd6d4d85eedf23a9b54eb0d4bd40990b7f67d1608d511a928fcce742123f247a",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-after.json",
+    "stored_bytes": 21795,
+    "stored_sha256": "fd6d4d85eedf23a9b54eb0d4bd40990b7f67d1608d511a928fcce742123f247a"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-before-command.json",
+    "encoding": "identity",
+    "raw_bytes": 400,
+    "raw_sha256": "418e20e62d435bbbba60da4b291086d67673d65463ae85cab09b2a081e142f70",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-before-command.json",
+    "stored_bytes": 400,
+    "stored_sha256": "418e20e62d435bbbba60da4b291086d67673d65463ae85cab09b2a081e142f70"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-before-input.py.txt",
+    "encoding": "identity",
+    "raw_bytes": 4306,
+    "raw_sha256": "578c17e7c1694ce98de5f24546379b183abe6a6b7a67df72c4d36c4c88eea144",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-before-input.py.txt",
+    "stored_bytes": 4306,
+    "stored_sha256": "578c17e7c1694ce98de5f24546379b183abe6a6b7a67df72c4d36c4c88eea144"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-before-result.json",
+    "encoding": "identity",
+    "raw_bytes": 763,
+    "raw_sha256": "4c20245d80d2a0f3222978d807a5bec9aaaf516a4dbd62bed2d4873a5a08abf8",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-before-result.json",
+    "stored_bytes": 763,
+    "stored_sha256": "4c20245d80d2a0f3222978d807a5bec9aaaf516a4dbd62bed2d4873a5a08abf8"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-before-stderr.log",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-before-stderr.log",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase2/.collection/inventory-before.json",
+    "encoding": "identity",
+    "raw_bytes": 21795,
+    "raw_sha256": "5352ce9ceb1e330b874f48ee8ea581893c699df88888b1ce5cd9dde43394060f",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/inventory-before.json",
+    "stored_bytes": 21795,
+    "stored_sha256": "5352ce9ceb1e330b874f48ee8ea581893c699df88888b1ce5cd9dde43394060f"
+  },
+  {
+    "destination": "collections/phase2/.collection/selection.json",
+    "encoding": "identity",
+    "raw_bytes": 1285,
+    "raw_sha256": "db88faf1c70d4d830617f49ebb03173b1ffc3050fb02afab80eeb6eca3af6988",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/.collection/selection.json",
+    "stored_bytes": 1285,
+    "stored_sha256": "db88faf1c70d4d830617f49ebb03173b1ffc3050fb02afab80eeb6eca3af6988"
+  },
+  {
+    "destination": "collections/phase2/collection.json",
+    "encoding": "identity",
+    "raw_bytes": 285,
+    "raw_sha256": "a9f2f6f74b418cb7f4cd69f484fa772fdd3aabb875259e15f121c7999bb0a3d6",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/collection.json",
+    "stored_bytes": 285,
+    "stored_sha256": "a9f2f6f74b418cb7f4cd69f484fa772fdd3aabb875259e15f121c7999bb0a3d6"
+  },
+  {
+    "destination": "collections/phase2/copy-index.json",
+    "encoding": "identity",
+    "raw_bytes": 20974,
+    "raw_sha256": "3ca46482648234f458a141c69a94ee70c275a7870a8154be1e6f9f44cafca695",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/copy-index.json",
+    "stored_bytes": 20974,
+    "stored_sha256": "3ca46482648234f458a141c69a94ee70c275a7870a8154be1e6f9f44cafca695"
+  },
+  {
+    "destination": "collections/phase2/payload/driver/command.json",
+    "encoding": "identity",
+    "raw_bytes": 303,
+    "raw_sha256": "63c220d55d0fcd92b323b5b3337aa4a017f0ea817951f7f343ec2789ca8b8d27",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/driver/command.json",
+    "stored_bytes": 303,
+    "stored_sha256": "63c220d55d0fcd92b323b5b3337aa4a017f0ea817951f7f343ec2789ca8b8d27"
+  },
+  {
+    "destination": "collections/phase2/payload/driver/dispatch.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "0ce6a328d5a8ca46b14826b095c407da76ff67a51b7b596f9e01ad608d2b198e",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/driver/dispatch.json",
+    "stored_bytes": 18,
+    "stored_sha256": "0ce6a328d5a8ca46b14826b095c407da76ff67a51b7b596f9e01ad608d2b198e"
+  },
+  {
+    "destination": "collections/phase2/payload/driver/return.json",
+    "encoding": "identity",
+    "raw_bytes": 62,
+    "raw_sha256": "556c11f603dc75febb184699ba84005331f62f5d869f4b93e76daa3191a97098",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/driver/return.json",
+    "stored_bytes": 62,
+    "stored_sha256": "556c11f603dc75febb184699ba84005331f62f5d869f4b93e76daa3191a97098"
+  },
+  {
+    "destination": "collections/phase2/payload/driver/stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/driver/stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase2/payload/driver/stdout",
+    "encoding": "identity",
+    "raw_bytes": 154,
+    "raw_sha256": "77b78977d7d2ed2d4bfa237eb500bed066756e96adb26e0f5f94ee1744364ad2",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/driver/stdout",
+    "stored_bytes": 154,
+    "stored_sha256": "77b78977d7d2ed2d4bfa237eb500bed066756e96adb26e0f5f94ee1744364ad2"
+  },
+  {
+    "destination": "collections/phase2/payload/input/history-pins.json",
+    "encoding": "identity",
+    "raw_bytes": 10116,
+    "raw_sha256": "9c3f2e665cd3ddef068397edf4b509a31012ee3104fddfb25eb0dff8dafb504f",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/input/history-pins.json",
+    "stored_bytes": 10116,
+    "stored_sha256": "9c3f2e665cd3ddef068397edf4b509a31012ee3104fddfb25eb0dff8dafb504f"
+  },
+  {
+    "destination": "collections/phase2/payload/input/phase2.py",
+    "encoding": "identity",
+    "raw_bytes": 24161,
+    "raw_sha256": "d464f26e78576e7faee73b8615268c0d3bf2d78d7a68b303851dad8214b2736e",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/input/phase2.py",
+    "stored_bytes": 24161,
+    "stored_sha256": "d464f26e78576e7faee73b8615268c0d3bf2d78d7a68b303851dad8214b2736e"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/after-retire.json",
+    "encoding": "identity",
+    "raw_bytes": 1751,
+    "raw_sha256": "b3ab64cd491dda90b705c16ebcd3acea3f6681b5e375dea6614868b0a32af456",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/after-retire.json",
+    "stored_bytes": 1751,
+    "stored_sha256": "b3ab64cd491dda90b705c16ebcd3acea3f6681b5e375dea6614868b0a32af456"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/before.json",
+    "encoding": "identity",
+    "raw_bytes": 1953,
+    "raw_sha256": "4f23d74e5a1e7d778b59c02bb8ca958bdbc38d61cb4a063b0f9a7bebc2133eff",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/before.json",
+    "stored_bytes": 1953,
+    "stored_sha256": "4f23d74e5a1e7d778b59c02bb8ca958bdbc38d61cb4a063b0f9a7bebc2133eff"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/pre-signal.json",
+    "encoding": "identity",
+    "raw_bytes": 1953,
+    "raw_sha256": "4f23d74e5a1e7d778b59c02bb8ca958bdbc38d61cb4a063b0f9a7bebc2133eff",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/pre-signal.json",
+    "stored_bytes": 1953,
+    "stored_sha256": "4f23d74e5a1e7d778b59c02bb8ca958bdbc38d61cb4a063b0f9a7bebc2133eff"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/restored-producer-proof.json",
+    "encoding": "identity",
+    "raw_bytes": 991,
+    "raw_sha256": "89c6ac29cb51dd20bc0975fd920f2c7db78ba0575003d06e0454fd4c9eda6865",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/restored-producer-proof.json",
+    "stored_bytes": 991,
+    "stored_sha256": "89c6ac29cb51dd20bc0975fd920f2c7db78ba0575003d06e0454fd4c9eda6865"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/result.json.gz",
+    "encoding": "gzip",
+    "raw_bytes": 119182,
+    "raw_sha256": "285c6d6954e164db5f968118e6814d6c2a2e97787bb2eb014a38afc014b9dd6c",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/result.json",
+    "stored_bytes": 37763,
+    "stored_sha256": "c3e83e7ea4763e57708be9bf2c879aa336a01faf71e56e120291b244328303f2"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/rmmod.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/rmmod.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/rmmod.stdout",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/rmmod.stdout",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-0.bin",
+    "encoding": "identity",
+    "raw_bytes": 2,
+    "raw_sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-0.bin",
+    "stored_bytes": 2,
+    "stored_sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-0.disassembly.txt",
+    "encoding": "identity",
+    "raw_bytes": 341,
+    "raw_sha256": "665845dcce90227e761635c9a3a14598160e042a1558363e12cee29f6c4b5a95",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-0.disassembly.txt",
+    "stored_bytes": 341,
+    "stored_sha256": "665845dcce90227e761635c9a3a14598160e042a1558363e12cee29f6c4b5a95"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-1.bin",
+    "encoding": "identity",
+    "raw_bytes": 27,
+    "raw_sha256": "4eaa627fe980dc9b5f3ac664219934feaee3f780b55b2be83ab4284cd63d357f",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-1.bin",
+    "stored_bytes": 27,
+    "stored_sha256": "4eaa627fe980dc9b5f3ac664219934feaee3f780b55b2be83ab4284cd63d357f"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-1.disassembly.txt",
+    "encoding": "identity",
+    "raw_bytes": 989,
+    "raw_sha256": "68cb11d6e410c1c2f0dee18bff3dcc4f18c9bb448d0360c05480b8246ad649a0",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-1.disassembly.txt",
+    "stored_bytes": 989,
+    "stored_sha256": "68cb11d6e410c1c2f0dee18bff3dcc4f18c9bb448d0360c05480b8246ad649a0"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-2.bin",
+    "encoding": "identity",
+    "raw_bytes": 211,
+    "raw_sha256": "5072fb728bef8f67aebc2e2c06574491a7e1f38fc18e1d3351c4adda2fe4d34a",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-2.bin",
+    "stored_bytes": 211,
+    "stored_sha256": "5072fb728bef8f67aebc2e2c06574491a7e1f38fc18e1d3351c4adda2fe4d34a"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-2.disassembly.txt",
+    "encoding": "identity",
+    "raw_bytes": 5638,
+    "raw_sha256": "79001417fa2eecc57a60a836ae4ce4f5cf7e3fba6dba2093e597bb85c809152b",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-2.disassembly.txt",
+    "stored_bytes": 5638,
+    "stored_sha256": "79001417fa2eecc57a60a836ae4ce4f5cf7e3fba6dba2093e597bb85c809152b"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-3.bin",
+    "encoding": "identity",
+    "raw_bytes": 205,
+    "raw_sha256": "1bba842166dcd11d4ecce950b6aa3bf143dcab07b541f7050a02ccbf6c1f800f",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-3.bin",
+    "stored_bytes": 205,
+    "stored_sha256": "1bba842166dcd11d4ecce950b6aa3bf143dcab07b541f7050a02ccbf6c1f800f"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-3.disassembly.txt",
+    "encoding": "identity",
+    "raw_bytes": 5268,
+    "raw_sha256": "c020edde554b58d73803b9172839ec7b74ebababab1da8e03c0d21e6c97441fb",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-3.disassembly.txt",
+    "stored_bytes": 5268,
+    "stored_sha256": "c020edde554b58d73803b9172839ec7b74ebababab1da8e03c0d21e6c97441fb"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-4.bin",
+    "encoding": "identity",
+    "raw_bytes": 4096,
+    "raw_sha256": "9b51aecc254538314acbd3506f48abd8be9766383c0a3c8715761ed96da55656",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-4.bin",
+    "stored_bytes": 4096,
+    "stored_sha256": "9b51aecc254538314acbd3506f48abd8be9766383c0a3c8715761ed96da55656"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/saved-source/source-4.disassembly.txt.gz",
+    "encoding": "gzip",
+    "raw_bytes": 294918,
+    "raw_sha256": "2c888e6fa23047721127927d0450edbf795e859303d0f82e5488d0a5c7906481",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/saved-source/source-4.disassembly.txt",
+    "stored_bytes": 12481,
+    "stored_sha256": "730de7124666937db08c8d83dfd18799f391176dc0adc5524b95d4713294fb5b"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/shutdown-archive.json.gz",
+    "encoding": "gzip",
+    "raw_bytes": 1988859,
+    "raw_sha256": "6c11f4106a039014e8cbb0805791f2a4b2d32e1b2298475bb74b44cdd7316338",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/shutdown-archive.json",
+    "stored_bytes": 115594,
+    "stored_sha256": "bbaf45ee13412efe700bfac965a80b908384d9dca4e0a18a17972ee27ee07a8b"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000001/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 144,
+    "raw_sha256": "bba509638121a32f96ab4046604c458f3d0153f563d188ac54f3783667c2a644",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000001/reply.bin",
+    "stored_bytes": 144,
+    "stored_sha256": "bba509638121a32f96ab4046604c458f3d0153f563d188ac54f3783667c2a644"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000001/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000001/request.bin",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000001/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "f89b9e93f996717a7fd9927424547df39ab5c97b3f4ccc21818f139eb8eb0cb9",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000001/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "f89b9e93f996717a7fd9927424547df39ab5c97b3f4ccc21818f139eb8eb0cb9"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000002/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 40,
+    "raw_sha256": "77815f924bbd29e01864f0b15171341f067cfeeba9e54ccaf9da490edfd7805f",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000002/reply.bin",
+    "stored_bytes": 40,
+    "stored_sha256": "77815f924bbd29e01864f0b15171341f067cfeeba9e54ccaf9da490edfd7805f"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000002/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 32,
+    "raw_sha256": "bad33eb94ee55a7729de94b24e3f610dd27152857d28d9608acb0090ef926ea5",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000002/request.bin",
+    "stored_bytes": 32,
+    "stored_sha256": "bad33eb94ee55a7729de94b24e3f610dd27152857d28d9608acb0090ef926ea5"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000002/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "6646bd378abcef904e63b61e79128396278cd304ddca65b84266a04583d06d16",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000002/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "6646bd378abcef904e63b61e79128396278cd304ddca65b84266a04583d06d16"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000003/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 363,
+    "raw_sha256": "0c80554cc23448d5f907abd4ef5b272018d221386ec03667bbf9f64373abeeaa",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000003/reply.bin",
+    "stored_bytes": 363,
+    "stored_sha256": "0c80554cc23448d5f907abd4ef5b272018d221386ec03667bbf9f64373abeeaa"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000003/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 56,
+    "raw_sha256": "fab6ad2ed058d496b4b3ee11ee021ccd4033901b65e0d74c1669e6f6ecfef6b0",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000003/request.bin",
+    "stored_bytes": 56,
+    "stored_sha256": "fab6ad2ed058d496b4b3ee11ee021ccd4033901b65e0d74c1669e6f6ecfef6b0"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000003/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "66bccabf9779506e20d80bf55ea8468a4e2b1f4331d978b7344bdb42134650ff",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000003/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "66bccabf9779506e20d80bf55ea8468a4e2b1f4331d978b7344bdb42134650ff"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000004/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "e118ab17d2929add261eb0d0e2819e9f7960362334feeedacd06233cbda8594b",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000004/reply.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "e118ab17d2929add261eb0d0e2819e9f7960362334feeedacd06233cbda8594b"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000004/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 104,
+    "raw_sha256": "cc6057b6d7af035b1e43163ecabadcbca67493e4d7efcc62ef8d9f390f9b63ef",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000004/request.bin",
+    "stored_bytes": 104,
+    "stored_sha256": "cc6057b6d7af035b1e43163ecabadcbca67493e4d7efcc62ef8d9f390f9b63ef"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000004/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "41f39f8aa609027c9252c71d8ae1223a1b6bbf298a2b5d1f9dc4070d15ace7be",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000004/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "41f39f8aa609027c9252c71d8ae1223a1b6bbf298a2b5d1f9dc4070d15ace7be"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000005/reply.bin",
+    "encoding": "identity",
+    "raw_bytes": 48,
+    "raw_sha256": "dfbe02bb19c1c2429ec03acc12dd82a94ab26c727b57c6a096eb91c3b5f40447",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000005/reply.bin",
+    "stored_bytes": 48,
+    "stored_sha256": "dfbe02bb19c1c2429ec03acc12dd82a94ab26c727b57c6a096eb91c3b5f40447"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000005/request.bin",
+    "encoding": "identity",
+    "raw_bytes": 48,
+    "raw_sha256": "dfbe02bb19c1c2429ec03acc12dd82a94ab26c727b57c6a096eb91c3b5f40447",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000005/request.bin",
+    "stored_bytes": 48,
+    "stored_sha256": "dfbe02bb19c1c2429ec03acc12dd82a94ab26c727b57c6a096eb91c3b5f40447"
+  },
+  {
+    "destination": "collections/phase2/payload/runtime/wire/attempt-00000005/returned-envelope.bin",
+    "encoding": "identity",
+    "raw_bytes": 72,
+    "raw_sha256": "275eb885ad5c9e0d2a0ceffb7506b01ec53b207b2a7f386b24efc6542a5461a1",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01/payload/runtime/wire/attempt-00000005/returned-envelope.bin",
+    "stored_bytes": 72,
+    "stored_sha256": "275eb885ad5c9e0d2a0ceffb7506b01ec53b207b2a7f386b24efc6542a5461a1"
+  },
+  {
+    "destination": "source-host/failure/actual-argv.json",
+    "encoding": "identity",
+    "raw_bytes": 328,
+    "raw_sha256": "02bad4791de98317fc4bf83cd7d35bd08203b73fc1ee4f3f1d3553baf4cee8a9",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/actual-argv.json",
+    "stored_bytes": 328,
+    "stored_sha256": "02bad4791de98317fc4bf83cd7d35bd08203b73fc1ee4f3f1d3553baf4cee8a9"
+  },
+  {
+    "destination": "source-host/failure/argv-before-recovery.json",
+    "encoding": "identity",
+    "raw_bytes": 292,
+    "raw_sha256": "d16df0355a2741f9a4e63a1c77a8c2795db02b7d80404e639553580a5eb40a5b",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/argv-before-recovery.json",
+    "stored_bytes": 292,
+    "stored_sha256": "d16df0355a2741f9a4e63a1c77a8c2795db02b7d80404e639553580a5eb40a5b"
+  },
+  {
+    "destination": "source-host/failure/collect.py",
+    "encoding": "identity",
+    "raw_bytes": 470,
+    "raw_sha256": "e843352ad75c49e2e97f2f5bfc1f9f58cd0f32e8c87ae22fde20ca9174e6da4f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/collect.py",
+    "stored_bytes": 470,
+    "stored_sha256": "e843352ad75c49e2e97f2f5bfc1f9f58cd0f32e8c87ae22fde20ca9174e6da4f"
+  },
+  {
+    "destination": "source-host/failure/collection-argv.json",
+    "encoding": "identity",
+    "raw_bytes": 846,
+    "raw_sha256": "a40c27828a4e46cc43751d7d1f12bb383bbcb003edc287041f06954183d1000d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/collection-argv.json",
+    "stored_bytes": 846,
+    "stored_sha256": "a40c27828a4e46cc43751d7d1f12bb383bbcb003edc287041f06954183d1000d"
+  },
+  {
+    "destination": "source-host/failure/collection-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/collection-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/failure/collection.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/collection.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/failure/collection.stdout",
+    "encoding": "identity",
+    "raw_bytes": 145,
+    "raw_sha256": "e9c7d1c34d4d059e8402a862be34372483a6e1f80b1972af0f5e8f11f4f1ea98",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/collection.stdout",
+    "stored_bytes": 145,
+    "stored_sha256": "e9c7d1c34d4d059e8402a862be34372483a6e1f80b1972af0f5e8f11f4f1ea98"
+  },
+  {
+    "destination": "source-host/failure/continuation-guard.diff",
+    "encoding": "identity",
+    "raw_bytes": 1810,
+    "raw_sha256": "da6495607cd2daa4a052c7ae37cebecdc0e788eae9c8f6019f2094ed4a69965e",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/continuation-guard.diff",
+    "stored_bytes": 1810,
+    "stored_sha256": "da6495607cd2daa4a052c7ae37cebecdc0e788eae9c8f6019f2094ed4a69965e"
+  },
+  {
+    "destination": "source-host/failure/controller.diff",
+    "encoding": "identity",
+    "raw_bytes": 5958,
+    "raw_sha256": "871067fc80e6bfe6d39de42750cab21958bbd50cd1566eddc15b29697e1abd42",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/controller.diff",
+    "stored_bytes": 5958,
+    "stored_sha256": "871067fc80e6bfe6d39de42750cab21958bbd50cd1566eddc15b29697e1abd42"
+  },
+  {
+    "destination": "source-host/failure/controller.py",
+    "encoding": "identity",
+    "raw_bytes": 14324,
+    "raw_sha256": "0630c67f28ac15dfe04e42eb0327b71cffed9b83615bbd5edbfb08c5d407075a",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/controller.py",
+    "stored_bytes": 14324,
+    "stored_sha256": "0630c67f28ac15dfe04e42eb0327b71cffed9b83615bbd5edbfb08c5d407075a"
+  },
+  {
+    "destination": "source-host/failure/current-events.bin",
+    "encoding": "identity",
+    "raw_bytes": 14120,
+    "raw_sha256": "876a0ac991b0f8bb8667fd41687fb290442979d1763db003ae915dee4a733d95",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/current-events.bin",
+    "stored_bytes": 14120,
+    "stored_sha256": "876a0ac991b0f8bb8667fd41687fb290442979d1763db003ae915dee4a733d95"
+  },
+  {
+    "destination": "source-host/failure/first-read/managed-killable-driver-02/stderr",
+    "encoding": "identity",
+    "raw_bytes": 521,
+    "raw_sha256": "d7d4a80c543994761efcd3c4af9d165bd2635ca591b6043175e6070c9773881f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read/managed-killable-driver-02/stderr",
+    "stored_bytes": 521,
+    "stored_sha256": "d7d4a80c543994761efcd3c4af9d165bd2635ca591b6043175e6070c9773881f"
+  },
+  {
+    "destination": "source-host/failure/first-read/managed-killable-driver-02/stdout",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read/managed-killable-driver-02/stdout",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/failure/first-read/managed-killable-live-02/result.json",
+    "encoding": "identity",
+    "raw_bytes": 61742,
+    "raw_sha256": "e63803abd5888a13f5e624b4272ce4b5819dcc5695be416a0c7df339c9e884ce",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read/managed-killable-live-02/result.json",
+    "stored_bytes": 61742,
+    "stored_sha256": "e63803abd5888a13f5e624b4272ce4b5819dcc5695be416a0c7df339c9e884ce"
+  },
+  {
+    "destination": "source-host/failure/first-read/managed-killable-receipts-02/managed-killable.log",
+    "encoding": "identity",
+    "raw_bytes": 140,
+    "raw_sha256": "1c61c586993b465af9660d3050bf01c043dfe9aa907779e0ae347e9be63b1b8e",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read/managed-killable-receipts-02/managed-killable.log",
+    "stored_bytes": 140,
+    "stored_sha256": "1c61c586993b465af9660d3050bf01c043dfe9aa907779e0ae347e9be63b1b8e"
+  },
+  {
+    "destination": "source-host/failure/first-read/managed-killable-receipts-02/result.json.gz",
+    "encoding": "gzip",
+    "raw_bytes": 113997,
+    "raw_sha256": "90b5dc2f94262b5fd41eb816c95b9737954e94793bf89ae051bdba55ac3a192a",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read/managed-killable-receipts-02/result.json",
+    "stored_bytes": 37628,
+    "stored_sha256": "c4fcad2aa4976a81fe38008c5c73ef9ad3b1de6430d6e61b2ba9dcf31ab6acc2"
+  },
+  {
+    "destination": "source-host/failure/first-read-command.json",
+    "encoding": "identity",
+    "raw_bytes": 295,
+    "raw_sha256": "8898c1e690e23c836d2372b34b49d882f3b6fb6701ff508efda054db7320d922",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read-command.json",
+    "stored_bytes": 295,
+    "stored_sha256": "8898c1e690e23c836d2372b34b49d882f3b6fb6701ff508efda054db7320d922"
+  },
+  {
+    "destination": "source-host/failure/first-read-index.json",
+    "encoding": "identity",
+    "raw_bytes": 1662,
+    "raw_sha256": "50bbe2f4aa981168e00419dc3566cde991e6ed26b253298f66b2a3dbf59a2639",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read-index.json",
+    "stored_bytes": 1662,
+    "stored_sha256": "50bbe2f4aa981168e00419dc3566cde991e6ed26b253298f66b2a3dbf59a2639"
+  },
+  {
+    "destination": "source-host/failure/first-read-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/failure/first-read-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 933,
+    "raw_sha256": "b393bdd5fcef24626fd00124fae69559ffbddffb4d3af77dee94c8e1c63b8c6d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read-stdin.py",
+    "stored_bytes": 933,
+    "stored_sha256": "b393bdd5fcef24626fd00124fae69559ffbddffb4d3af77dee94c8e1c63b8c6d"
+  },
+  {
+    "destination": "source-host/failure/first-read.py",
+    "encoding": "identity",
+    "raw_bytes": 1379,
+    "raw_sha256": "bd85edc150384c5f51e31c4eb72d5221a318568e402447da484c300911215daf",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read.py",
+    "stored_bytes": 1379,
+    "stored_sha256": "bd85edc150384c5f51e31c4eb72d5221a318568e402447da484c300911215daf"
+  },
+  {
+    "destination": "source-host/failure/first-read.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/failure/first-read.stdout.gz",
+    "encoding": "gzip",
+    "raw_bytes": 236758,
+    "raw_sha256": "8e4da183ff181d2ac9a7ca650208367b5b16282c61710394734fe965e39fbd51",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/first-read.stdout",
+    "stored_bytes": 58110,
+    "stored_sha256": "6bfc6bf210f29c51e7712017307f07c1c81944fd915ce560e83de8908e117d1c"
+  },
+  {
+    "destination": "source-host/failure/launch-command.json",
+    "encoding": "identity",
+    "raw_bytes": 293,
+    "raw_sha256": "1b8fa8575c39b3645495406de801cf549ce125603d6313e286c572c6882d34a9",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/launch-command.json",
+    "stored_bytes": 293,
+    "stored_sha256": "1b8fa8575c39b3645495406de801cf549ce125603d6313e286c572c6882d34a9"
+  },
+  {
+    "destination": "source-host/failure/launch-result.json",
+    "encoding": "identity",
+    "raw_bytes": 56,
+    "raw_sha256": "bdb37af5d90fcfb3d629791a7a256f93996906ec3105c765b8d2455531060cfb",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/launch-result.json",
+    "stored_bytes": 56,
+    "stored_sha256": "bdb37af5d90fcfb3d629791a7a256f93996906ec3105c765b8d2455531060cfb"
+  },
+  {
+    "destination": "source-host/failure/launch-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 32871,
+    "raw_sha256": "b8c21a760849e5b949ba12b21c646c10668091c85e80adf4e3b7346956a4d04f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/launch-stdin.py",
+    "stored_bytes": 32871,
+    "stored_sha256": "b8c21a760849e5b949ba12b21c646c10668091c85e80adf4e3b7346956a4d04f"
+  },
+  {
+    "destination": "source-host/failure/launch.py",
+    "encoding": "identity",
+    "raw_bytes": 754,
+    "raw_sha256": "01a31c6cab8e35a0d2b62d6d43ab2d672ad63a318963df8c3b1a18175ee08ca4",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/launch.py",
+    "stored_bytes": 754,
+    "stored_sha256": "01a31c6cab8e35a0d2b62d6d43ab2d672ad63a318963df8c3b1a18175ee08ca4"
+  },
+  {
+    "destination": "source-host/failure/launch.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/launch.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/failure/launch.stdout",
+    "encoding": "identity",
+    "raw_bytes": 76,
+    "raw_sha256": "c562c4517af8814f4bd814a7ceed6966570a1d586904bc50e36af7f520087e12",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/launch.stdout",
+    "stored_bytes": 76,
+    "stored_sha256": "c562c4517af8814f4bd814a7ceed6966570a1d586904bc50e36af7f520087e12"
+  },
+  {
+    "destination": "source-host/failure/limits.json",
+    "encoding": "identity",
+    "raw_bytes": 1112,
+    "raw_sha256": "23f2208dd9fe4f0d55df3cfe7955d10005a99b22995cb2b2e8f744b270a68cb8",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/limits.json",
+    "stored_bytes": 1112,
+    "stored_sha256": "23f2208dd9fe4f0d55df3cfe7955d10005a99b22995cb2b2e8f744b270a68cb8"
+  },
+  {
+    "destination": "source-host/failure/recovery-command.json",
+    "encoding": "identity",
+    "raw_bytes": 301,
+    "raw_sha256": "899c7170e8f83a9d1e5c31d4dbaa5c3670b8111c73beff2d7e66dd8869b09eec",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/recovery-command.json",
+    "stored_bytes": 301,
+    "stored_sha256": "899c7170e8f83a9d1e5c31d4dbaa5c3670b8111c73beff2d7e66dd8869b09eec"
+  },
+  {
+    "destination": "source-host/failure/recovery-result.json",
+    "encoding": "identity",
+    "raw_bytes": 63,
+    "raw_sha256": "0b2a132cb7199d7714033f51484e7cb84807b28847fecfa667db93bee1d13e2a",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/recovery-result.json",
+    "stored_bytes": 63,
+    "stored_sha256": "0b2a132cb7199d7714033f51484e7cb84807b28847fecfa667db93bee1d13e2a"
+  },
+  {
+    "destination": "source-host/failure/recovery.json",
+    "encoding": "identity",
+    "raw_bytes": 23263,
+    "raw_sha256": "ac5ed7177cc58e7d8a407bb568a950241c98686b51e3ffdc8747a14e1dc4c499",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/recovery.json",
+    "stored_bytes": 23263,
+    "stored_sha256": "ac5ed7177cc58e7d8a407bb568a950241c98686b51e3ffdc8747a14e1dc4c499"
+  },
+  {
+    "destination": "source-host/failure/recovery.py",
+    "encoding": "identity",
+    "raw_bytes": 1989,
+    "raw_sha256": "75850eb10212fd77287f5a333b65880f9cbf4c25f8e5fd68b313702fba93ad56",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/recovery.py",
+    "stored_bytes": 1989,
+    "stored_sha256": "75850eb10212fd77287f5a333b65880f9cbf4c25f8e5fd68b313702fba93ad56"
+  },
+  {
+    "destination": "source-host/failure/recovery.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/recovery.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/failure/stage-command.json",
+    "encoding": "identity",
+    "raw_bytes": 290,
+    "raw_sha256": "eef831a719f2720e602145e814d875f8826b18a8aad038c78229277f21706057",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/stage-command.json",
+    "stored_bytes": 290,
+    "stored_sha256": "eef831a719f2720e602145e814d875f8826b18a8aad038c78229277f21706057"
+  },
+  {
+    "destination": "source-host/failure/stage-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/stage-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/failure/stage-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 21956,
+    "raw_sha256": "a5a9b99b72ade0d116b821f417a62da6a2542f041fb24c96b9433d5e31adb3b5",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/stage-stdin.py",
+    "stored_bytes": 21956,
+    "stored_sha256": "a5a9b99b72ade0d116b821f417a62da6a2542f041fb24c96b9433d5e31adb3b5"
+  },
+  {
+    "destination": "source-host/failure/stage.py",
+    "encoding": "identity",
+    "raw_bytes": 683,
+    "raw_sha256": "c92390eaabf85b9de27ef29445b85953595cb8d5ad13e9bff0791682d3946c9f",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/stage.py",
+    "stored_bytes": 683,
+    "stored_sha256": "c92390eaabf85b9de27ef29445b85953595cb8d5ad13e9bff0791682d3946c9f"
+  },
+  {
+    "destination": "source-host/failure/stage.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/stage.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/failure/stage.stdout",
+    "encoding": "identity",
+    "raw_bytes": 539,
+    "raw_sha256": "477a072ad01311180c2415e60385e2af47c071df2ac4efc2195342725b3428b3",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/stage.stdout",
+    "stored_bytes": 539,
+    "stored_sha256": "477a072ad01311180c2415e60385e2af47c071df2ac4efc2195342725b3428b3"
+  },
+  {
+    "destination": "source-host/failure/status-read-command.json",
+    "encoding": "identity",
+    "raw_bytes": 296,
+    "raw_sha256": "e6c61d79782facb4539ade7b6638a014a29156fbd5dc2ad318ad9db59470cee6",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/status-read-command.json",
+    "stored_bytes": 296,
+    "stored_sha256": "e6c61d79782facb4539ade7b6638a014a29156fbd5dc2ad318ad9db59470cee6"
+  },
+  {
+    "destination": "source-host/failure/status-read-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/status-read-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/failure/status-read-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 2707,
+    "raw_sha256": "30e2ea2690d45c16b6e0e1807e0a08b70dd3485c74f09cb09d87a71c1636083b",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/status-read-stdin.py",
+    "stored_bytes": 2707,
+    "stored_sha256": "30e2ea2690d45c16b6e0e1807e0a08b70dd3485c74f09cb09d87a71c1636083b"
+  },
+  {
+    "destination": "source-host/failure/status-read.jsonl",
+    "encoding": "identity",
+    "raw_bytes": 34788,
+    "raw_sha256": "101a941709883dd354a650244d7b6268923dadadc9ece9bdadd1f60086a52ee7",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/status-read.jsonl",
+    "stored_bytes": 34788,
+    "stored_sha256": "101a941709883dd354a650244d7b6268923dadadc9ece9bdadd1f60086a52ee7"
+  },
+  {
+    "destination": "source-host/failure/status-read.py",
+    "encoding": "identity",
+    "raw_bytes": 718,
+    "raw_sha256": "d3ae766ef39ba1b953ad03cf7f5ae8e23e05fe6df40ec161478e37cce3ede93e",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/status-read.py",
+    "stored_bytes": 718,
+    "stored_sha256": "d3ae766ef39ba1b953ad03cf7f5ae8e23e05fe6df40ec161478e37cce3ede93e"
+  },
+  {
+    "destination": "source-host/failure/status-read.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-managed-killable-20261111-02/status-read.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/phase1/argv.json",
+    "encoding": "identity",
+    "raw_bytes": 136,
+    "raw_sha256": "b785d6101d2a78bbf35171f70e1e7e13a0dfe6fb93f5f7a03ddb28d4ef7695fa",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/argv.json",
+    "stored_bytes": 136,
+    "stored_sha256": "b785d6101d2a78bbf35171f70e1e7e13a0dfe6fb93f5f7a03ddb28d4ef7695fa"
+  },
+  {
+    "destination": "source-host/phase1/collect.py",
+    "encoding": "identity",
+    "raw_bytes": 471,
+    "raw_sha256": "5444276f3954945ac9203d1301f1866e7b378f68b5b5e52677714798bee18ccc",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/collect.py",
+    "stored_bytes": 471,
+    "stored_sha256": "5444276f3954945ac9203d1301f1866e7b378f68b5b5e52677714798bee18ccc"
+  },
+  {
+    "destination": "source-host/phase1/collection-argv.json",
+    "encoding": "identity",
+    "raw_bytes": 723,
+    "raw_sha256": "9995c33a826ce037fe49370811e6b384572bdfff60394021b581d39a6f766357",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/collection-argv.json",
+    "stored_bytes": 723,
+    "stored_sha256": "9995c33a826ce037fe49370811e6b384572bdfff60394021b581d39a6f766357"
+  },
+  {
+    "destination": "source-host/phase1/collection-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/collection-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/phase1/collection.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/collection.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/phase1/collection.stdout",
+    "encoding": "identity",
+    "raw_bytes": 136,
+    "raw_sha256": "6042458ac0467288b3d4d14b127d02d172e7c120101a2c47a939643a6c79f81c",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/collection.stdout",
+    "stored_bytes": 136,
+    "stored_sha256": "6042458ac0467288b3d4d14b127d02d172e7c120101a2c47a939643a6c79f81c"
+  },
+  {
+    "destination": "source-host/phase1/identity-command.json",
+    "encoding": "identity",
+    "raw_bytes": 294,
+    "raw_sha256": "8c1ebb09239beda04bfcc3368b032b2c14604bb91a85289194ba40351df39c65",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/identity-command.json",
+    "stored_bytes": 294,
+    "stored_sha256": "8c1ebb09239beda04bfcc3368b032b2c14604bb91a85289194ba40351df39c65"
+  },
+  {
+    "destination": "source-host/phase1/identity-read.py",
+    "encoding": "identity",
+    "raw_bytes": 784,
+    "raw_sha256": "f671e8251e93ec800cd7c44734efe2b47004073b2c4855cf29fa43f5865b4b2e",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/identity-read.py",
+    "stored_bytes": 784,
+    "stored_sha256": "f671e8251e93ec800cd7c44734efe2b47004073b2c4855cf29fa43f5865b4b2e"
+  },
+  {
+    "destination": "source-host/phase1/identity-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/identity-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/phase1/identity-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 532,
+    "raw_sha256": "cc523c4d8ebb93b6a27a3f3bcc4b92a2f5ebc839a1d3d4a296f9a17411a500a2",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/identity-stdin.py",
+    "stored_bytes": 532,
+    "stored_sha256": "cc523c4d8ebb93b6a27a3f3bcc4b92a2f5ebc839a1d3d4a296f9a17411a500a2"
+  },
+  {
+    "destination": "source-host/phase1/identity.json",
+    "encoding": "identity",
+    "raw_bytes": 10633,
+    "raw_sha256": "aea16687a71ed02eb9efb80642c8d463b6680e257819085a6cc0f7e0379c97a0",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/identity.json",
+    "stored_bytes": 10633,
+    "stored_sha256": "aea16687a71ed02eb9efb80642c8d463b6680e257819085a6cc0f7e0379c97a0"
+  },
+  {
+    "destination": "source-host/phase1/identity.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/identity.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/phase1/launch-command.json",
+    "encoding": "identity",
+    "raw_bytes": 293,
+    "raw_sha256": "d657e5db67274a27494278f177e34dfbb3c4cfa1503783f6b3831d22d317a975",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/launch-command.json",
+    "stored_bytes": 293,
+    "stored_sha256": "d657e5db67274a27494278f177e34dfbb3c4cfa1503783f6b3831d22d317a975"
+  },
+  {
+    "destination": "source-host/phase1/launch-result.json",
+    "encoding": "identity",
+    "raw_bytes": 57,
+    "raw_sha256": "7b8aa2c87e459b539abacc25c1297d10d51a2b19fa6f2cdaeec14b0a3687b29b",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/launch-result.json",
+    "stored_bytes": 57,
+    "stored_sha256": "7b8aa2c87e459b539abacc25c1297d10d51a2b19fa6f2cdaeec14b0a3687b29b"
+  },
+  {
+    "destination": "source-host/phase1/launch-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 13725,
+    "raw_sha256": "ed1613d19efbb4677fbe5239848af9d871aa7a58a613386fda1b150657d3d134",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/launch-stdin.py",
+    "stored_bytes": 13725,
+    "stored_sha256": "ed1613d19efbb4677fbe5239848af9d871aa7a58a613386fda1b150657d3d134"
+  },
+  {
+    "destination": "source-host/phase1/launch.py",
+    "encoding": "identity",
+    "raw_bytes": 753,
+    "raw_sha256": "bbf8ffed4a0eb70363a4f2f89108442dff5fc6558120853e7bca88bfefd18b75",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/launch.py",
+    "stored_bytes": 753,
+    "stored_sha256": "bbf8ffed4a0eb70363a4f2f89108442dff5fc6558120853e7bca88bfefd18b75"
+  },
+  {
+    "destination": "source-host/phase1/launch.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/launch.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/phase1/launch.stdout",
+    "encoding": "identity",
+    "raw_bytes": 76,
+    "raw_sha256": "c6c5f24f40e49b68812179c6673e3151af2018ade5b9cadce196dcaf18b393f5",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/launch.stdout",
+    "stored_bytes": 76,
+    "stored_sha256": "c6c5f24f40e49b68812179c6673e3151af2018ade5b9cadce196dcaf18b393f5"
+  },
+  {
+    "destination": "source-host/phase1/phase1.py",
+    "encoding": "identity",
+    "raw_bytes": 9069,
+    "raw_sha256": "e459c44538cf3a72293018c12e6a6932cf6f43aa9e0cf3f787a5b1a49055b687",
+    "source": "/tmp/kdlock-kernel8-killable-exit-ack-20261111-01/phase1.py",
+    "stored_bytes": 9069,
+    "stored_sha256": "e459c44538cf3a72293018c12e6a6932cf6f43aa9e0cf3f787a5b1a49055b687"
+  },
+  {
+    "destination": "source-host/phase2/argv.json",
+    "encoding": "identity",
+    "raw_bytes": 194,
+    "raw_sha256": "d0bba05898bf7e39563c9e0ee1e43e42c76da24b7d7fcbf44b867baa0a5fe0cb",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/argv.json",
+    "stored_bytes": 194,
+    "stored_sha256": "d0bba05898bf7e39563c9e0ee1e43e42c76da24b7d7fcbf44b867baa0a5fe0cb"
+  },
+  {
+    "destination": "source-host/phase2/collect.py",
+    "encoding": "identity",
+    "raw_bytes": 477,
+    "raw_sha256": "d39d1370e3f383cba471a51a8a7dae01ccb9c8f9ca70790cb2e904848bc97be0",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/collect.py",
+    "stored_bytes": 477,
+    "stored_sha256": "d39d1370e3f383cba471a51a8a7dae01ccb9c8f9ca70790cb2e904848bc97be0"
+  },
+  {
+    "destination": "source-host/phase2/collection-argv.json",
+    "encoding": "identity",
+    "raw_bytes": 738,
+    "raw_sha256": "87f613949ca5c7009f6540e0be9c0fa8fe732ab2ce4ff042cae78ec68bc05c8e",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/collection-argv.json",
+    "stored_bytes": 738,
+    "stored_sha256": "87f613949ca5c7009f6540e0be9c0fa8fe732ab2ce4ff042cae78ec68bc05c8e"
+  },
+  {
+    "destination": "source-host/phase2/collection-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/collection-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/phase2/collection.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/collection.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/phase2/collection.stdout",
+    "encoding": "identity",
+    "raw_bytes": 144,
+    "raw_sha256": "e02cd276204550e42daca076f8d8c7171d1a0a701d4fed19076fa058e128dfba",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/collection.stdout",
+    "stored_bytes": 144,
+    "stored_sha256": "e02cd276204550e42daca076f8d8c7171d1a0a701d4fed19076fa058e128dfba"
+  },
+  {
+    "destination": "source-host/phase2/history-pins.json",
+    "encoding": "identity",
+    "raw_bytes": 10116,
+    "raw_sha256": "9c3f2e665cd3ddef068397edf4b509a31012ee3104fddfb25eb0dff8dafb504f",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/history-pins.json",
+    "stored_bytes": 10116,
+    "stored_sha256": "9c3f2e665cd3ddef068397edf4b509a31012ee3104fddfb25eb0dff8dafb504f"
+  },
+  {
+    "destination": "source-host/phase2/launch-command.json",
+    "encoding": "identity",
+    "raw_bytes": 299,
+    "raw_sha256": "f128a01ebeecc75f2be8b5f840bf9c92dcaffa522797b6e613b3827b23c7631f",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/launch-command.json",
+    "stored_bytes": 299,
+    "stored_sha256": "f128a01ebeecc75f2be8b5f840bf9c92dcaffa522797b6e613b3827b23c7631f"
+  },
+  {
+    "destination": "source-host/phase2/launch-result.json",
+    "encoding": "identity",
+    "raw_bytes": 56,
+    "raw_sha256": "ebb9bfe526a7f369b5a508c43ab3340f50e5c7d8d4de4a83b60c90cac9e060f0",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/launch-result.json",
+    "stored_bytes": 56,
+    "stored_sha256": "ebb9bfe526a7f369b5a508c43ab3340f50e5c7d8d4de4a83b60c90cac9e060f0"
+  },
+  {
+    "destination": "source-host/phase2/launch-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 1895,
+    "raw_sha256": "11bb723c72be859b75769fdd129cd74fa61594f959c336dded1f72cb7aad8385",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/launch-stdin.py",
+    "stored_bytes": 1895,
+    "stored_sha256": "11bb723c72be859b75769fdd129cd74fa61594f959c336dded1f72cb7aad8385"
+  },
+  {
+    "destination": "source-host/phase2/launch.py",
+    "encoding": "identity",
+    "raw_bytes": 759,
+    "raw_sha256": "d3b76032b9595247aa495456f1c3c7fa3416556848ca6575b587c342c0f09851",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/launch.py",
+    "stored_bytes": 759,
+    "stored_sha256": "d3b76032b9595247aa495456f1c3c7fa3416556848ca6575b587c342c0f09851"
+  },
+  {
+    "destination": "source-host/phase2/launch.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/launch.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/phase2/launch.stdout",
+    "encoding": "identity",
+    "raw_bytes": 76,
+    "raw_sha256": "ab924cf868b5cf05de5902f746bf3750c9040e29e0dc4981fb50c2c455bedee8",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/launch.stdout",
+    "stored_bytes": 76,
+    "stored_sha256": "ab924cf868b5cf05de5902f746bf3750c9040e29e0dc4981fb50c2c455bedee8"
+  },
+  {
+    "destination": "source-host/phase2/phase2.py",
+    "encoding": "identity",
+    "raw_bytes": 24161,
+    "raw_sha256": "d464f26e78576e7faee73b8615268c0d3bf2d78d7a68b303851dad8214b2736e",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/phase2.py",
+    "stored_bytes": 24161,
+    "stored_sha256": "d464f26e78576e7faee73b8615268c0d3bf2d78d7a68b303851dad8214b2736e"
+  },
+  {
+    "destination": "source-host/phase2/stage-command.json",
+    "encoding": "identity",
+    "raw_bytes": 297,
+    "raw_sha256": "020ba0c791f456cd25569f9d8f0da9699476653929281b4cda662ce62b860d5a",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/stage-command.json",
+    "stored_bytes": 297,
+    "stored_sha256": "020ba0c791f456cd25569f9d8f0da9699476653929281b4cda662ce62b860d5a"
+  },
+  {
+    "destination": "source-host/phase2/stage-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/stage-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/phase2/stage-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 46946,
+    "raw_sha256": "d4efd8ba8097b618dcfbd1cd95e814b6f1aafa5339d4a71681fadf4006c33d22",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/stage-stdin.py",
+    "stored_bytes": 46946,
+    "stored_sha256": "d4efd8ba8097b618dcfbd1cd95e814b6f1aafa5339d4a71681fadf4006c33d22"
+  },
+  {
+    "destination": "source-host/phase2/stage.py",
+    "encoding": "identity",
+    "raw_bytes": 690,
+    "raw_sha256": "a8abee4a19942dccc7442534a5391047ae6b80c6d4de5745ebdd727485f491ea",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/stage.py",
+    "stored_bytes": 690,
+    "stored_sha256": "a8abee4a19942dccc7442534a5391047ae6b80c6d4de5745ebdd727485f491ea"
+  },
+  {
+    "destination": "source-host/phase2/stage.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/stage.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/phase2/stage.stdout",
+    "encoding": "identity",
+    "raw_bytes": 344,
+    "raw_sha256": "b66c70ee029b13f8b9d2c051da010bca5aa1263d035d5a2c7e54a98cca521dd8",
+    "source": "/tmp/kdlock-kernel8-killable-cycle-recovery-20261111-01/stage.stdout",
+    "stored_bytes": 344,
+    "stored_sha256": "b66c70ee029b13f8b9d2c051da010bca5aa1263d035d5a2c7e54a98cca521dd8"
+  },
+  {
+    "destination": "source-host/saved-check-failed/argv.json",
+    "encoding": "identity",
+    "raw_bytes": 140,
+    "raw_sha256": "5fa61cfe1c7ae0f744870e77a6a1bde84d7cf0b6052a22dc03d2bf8930476ba2",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/argv.json",
+    "stored_bytes": 140,
+    "stored_sha256": "5fa61cfe1c7ae0f744870e77a6a1bde84d7cf0b6052a22dc03d2bf8930476ba2"
+  },
+  {
+    "destination": "source-host/saved-check-failed/checks.py",
+    "encoding": "identity",
+    "raw_bytes": 9555,
+    "raw_sha256": "15568b0ccf293a933a5d8608cc405dbffef4449cdfef82588a11ada1726b8540",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/checks.py",
+    "stored_bytes": 9555,
+    "stored_sha256": "15568b0ccf293a933a5d8608cc405dbffef4449cdfef82588a11ada1726b8540"
+  },
+  {
+    "destination": "source-host/saved-check-failed/completed02/fixed-killable-runner-ast.log",
+    "encoding": "identity",
+    "raw_bytes": 31,
+    "raw_sha256": "a671de8fb32d7cb1d020567de032ab742034718d12eb34be1b0e4898237a047c",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/completed02/fixed-killable-runner-ast.log",
+    "stored_bytes": 31,
+    "stored_sha256": "a671de8fb32d7cb1d020567de032ab742034718d12eb34be1b0e4898237a047c"
+  },
+  {
+    "destination": "source-host/saved-check-failed/completed02/result.json.gz",
+    "encoding": "gzip",
+    "raw_bytes": 112320,
+    "raw_sha256": "96e3903dbb55ed34d6d2276bd1433a22e5898c3adb9f8824d24adce17864b7df",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/completed02/result.json",
+    "stored_bytes": 37036,
+    "stored_sha256": "93334c0b87ba20167edb33af6f8dd0e3d7bf81d714ddb87bb74e045ea9669aaf"
+  },
+  {
+    "destination": "source-host/saved-check-failed/completed02/saved-source-named-spans.log",
+    "encoding": "identity",
+    "raw_bytes": 519,
+    "raw_sha256": "c257a64ecd3ad43cdd28f0df07392f731847ad44de0b60caccdd7d3af7b7240c",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/completed02/saved-source-named-spans.log",
+    "stored_bytes": 519,
+    "stored_sha256": "c257a64ecd3ad43cdd28f0df07392f731847ad44de0b60caccdd7d3af7b7240c"
+  },
+  {
+    "destination": "source-host/saved-check-failed/completed02/stderr",
+    "encoding": "identity",
+    "raw_bytes": 960,
+    "raw_sha256": "1208c8be6166f8d280a9bbf9fc7c5693db7061187350e1246b99cd9f5f70bfe0",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/completed02/stderr",
+    "stored_bytes": 960,
+    "stored_sha256": "1208c8be6166f8d280a9bbf9fc7c5693db7061187350e1246b99cd9f5f70bfe0"
+  },
+  {
+    "destination": "source-host/saved-check-failed/completed02/stdout",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/completed02/stdout",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/saved-check-failed/launch-command.json",
+    "encoding": "identity",
+    "raw_bytes": 302,
+    "raw_sha256": "bf0e39b2a2064f098ed36952ef477ff2375db053eb20861c869d9772a7519cac",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/launch-command.json",
+    "stored_bytes": 302,
+    "stored_sha256": "bf0e39b2a2064f098ed36952ef477ff2375db053eb20861c869d9772a7519cac"
+  },
+  {
+    "destination": "source-host/saved-check-failed/launch-result.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "8869ca5e7f3ae989b151917c32f706ea8b83fd8d2ab5fd425117c4860c4e595f",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/launch-result.json",
+    "stored_bytes": 18,
+    "stored_sha256": "8869ca5e7f3ae989b151917c32f706ea8b83fd8d2ab5fd425117c4860c4e595f"
+  },
+  {
+    "destination": "source-host/saved-check-failed/launch-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 1296,
+    "raw_sha256": "eb79970a54ccd94ced0b0355c367f6bfe1db75f5d6fad0b338b4a462f15d6243",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/launch-stdin.py",
+    "stored_bytes": 1296,
+    "stored_sha256": "eb79970a54ccd94ced0b0355c367f6bfe1db75f5d6fad0b338b4a462f15d6243"
+  },
+  {
+    "destination": "source-host/saved-check-failed/launch.py",
+    "encoding": "identity",
+    "raw_bytes": 701,
+    "raw_sha256": "d57adc978a4a0f698736ff8fc313fe31f9f813a605b1846423a9cdee4ce52c36",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/launch.py",
+    "stored_bytes": 701,
+    "stored_sha256": "d57adc978a4a0f698736ff8fc313fe31f9f813a605b1846423a9cdee4ce52c36"
+  },
+  {
+    "destination": "source-host/saved-check-failed/launch.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/launch.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/saved-check-failed/launch.stdout",
+    "encoding": "identity",
+    "raw_bytes": 76,
+    "raw_sha256": "61f968a07b3569b8b5d9d81a5c681ddfa56f7f374b92fa670708c002732ea8e3",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/launch.stdout",
+    "stored_bytes": 76,
+    "stored_sha256": "61f968a07b3569b8b5d9d81a5c681ddfa56f7f374b92fa670708c002732ea8e3"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read-command.json",
+    "encoding": "identity",
+    "raw_bytes": 299,
+    "raw_sha256": "4990ef90466131cd7398d3f883803ffa233f6ee6229abdd1b458375799de7825",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read-command.json",
+    "stored_bytes": 299,
+    "stored_sha256": "4990ef90466131cd7398d3f883803ffa233f6ee6229abdd1b458375799de7825"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read-index.json",
+    "encoding": "identity",
+    "raw_bytes": 1492,
+    "raw_sha256": "248eec3b92ee47544638be3d38424248246880609b80cd49ff8fb52e76e4427f",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read-index.json",
+    "stored_bytes": 1492,
+    "stored_sha256": "248eec3b92ee47544638be3d38424248246880609b80cd49ff8fb52e76e4427f"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "8869ca5e7f3ae989b151917c32f706ea8b83fd8d2ab5fd425117c4860c4e595f",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "8869ca5e7f3ae989b151917c32f706ea8b83fd8d2ab5fd425117c4860c4e595f"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 618,
+    "raw_sha256": "bcf84752d3ce01f1dcc205474857404c8ee7c1f623756a1f9a6e138d194821e1",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read-stdin.py",
+    "stored_bytes": 618,
+    "stored_sha256": "bcf84752d3ce01f1dcc205474857404c8ee7c1f623756a1f9a6e138d194821e1"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read.py",
+    "encoding": "identity",
+    "raw_bytes": 1168,
+    "raw_sha256": "9b1e4d38a0633560ffe6b7aac1854bd22e2935a6731965bfbc17bb752cb6a9dd",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read.py",
+    "stored_bytes": 1168,
+    "stored_sha256": "9b1e4d38a0633560ffe6b7aac1854bd22e2935a6731965bfbc17bb752cb6a9dd"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read.stderr",
+    "encoding": "identity",
+    "raw_bytes": 449,
+    "raw_sha256": "136a7aada2ea0243e854829d6d1d45b0ab14988ea284c8e45645d56dc68ceca7",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read.stderr",
+    "stored_bytes": 449,
+    "stored_sha256": "136a7aada2ea0243e854829d6d1d45b0ab14988ea284c8e45645d56dc68ceca7"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read.stdout",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read.stdout",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read02-command.json",
+    "encoding": "identity",
+    "raw_bytes": 301,
+    "raw_sha256": "c7b9f077ef6291c4a0d7020b6826fe55286fa470642250d9e03b79ba8eaa5b24",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read02-command.json",
+    "stored_bytes": 301,
+    "stored_sha256": "c7b9f077ef6291c4a0d7020b6826fe55286fa470642250d9e03b79ba8eaa5b24"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read02-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read02-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read02-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 766,
+    "raw_sha256": "e635defe2ddcaad842843829f78bd6541a266e9b3cacf9c3659e9bfa80cdef4c",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read02-stdin.py",
+    "stored_bytes": 766,
+    "stored_sha256": "e635defe2ddcaad842843829f78bd6541a266e9b3cacf9c3659e9bfa80cdef4c"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read02.py",
+    "encoding": "identity",
+    "raw_bytes": 1213,
+    "raw_sha256": "19df609417949fe217c611e9527eb31f835c8f6869d28f83616628ee0ee51b10",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read02.py",
+    "stored_bytes": 1213,
+    "stored_sha256": "19df609417949fe217c611e9527eb31f835c8f6869d28f83616628ee0ee51b10"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read02.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read02.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/saved-check-failed/read02.stdout.gz",
+    "encoding": "gzip",
+    "raw_bytes": 153226,
+    "raw_sha256": "5ccf73dcec49346707a4070f351adcced6bad7f771c05819760a7f0ec4fd90a6",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/read02.stdout",
+    "stored_bytes": 50032,
+    "stored_sha256": "56f24462df7c75554afd9f94d8f5901f3b19526cf36298c74a16748ef5cf57a7"
+  },
+  {
+    "destination": "source-host/saved-check-failed/saved-source-check.py",
+    "encoding": "identity",
+    "raw_bytes": 3520,
+    "raw_sha256": "2cc061130b003f6d0e90dadf8eb753863700609757762a816580669c9b9bd9e6",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/saved-source-check.py",
+    "stored_bytes": 3520,
+    "stored_sha256": "2cc061130b003f6d0e90dadf8eb753863700609757762a816580669c9b9bd9e6"
+  },
+  {
+    "destination": "source-host/saved-check-failed/stage-command.json",
+    "encoding": "identity",
+    "raw_bytes": 300,
+    "raw_sha256": "fa1e0fba0c7d977588d0db3569e2dcd38eaa2990323bb86eb85a127486b48857",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/stage-command.json",
+    "stored_bytes": 300,
+    "stored_sha256": "fa1e0fba0c7d977588d0db3569e2dcd38eaa2990323bb86eb85a127486b48857"
+  },
+  {
+    "destination": "source-host/saved-check-failed/stage-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/stage-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/saved-check-failed/stage-stdin.py.gz",
+    "encoding": "gzip",
+    "raw_bytes": 2325819,
+    "raw_sha256": "9e53baea83c9891b859b2f9f0e246592e2e7c0d7dc3aa31140615146fc45f138",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/stage-stdin.py",
+    "stored_bytes": 629387,
+    "stored_sha256": "35e2028fb5c4f98ab5483f768201e5833caec2b461b38f3248784e438b6b9c3c"
+  },
+  {
+    "destination": "source-host/saved-check-failed/stage.py",
+    "encoding": "identity",
+    "raw_bytes": 693,
+    "raw_sha256": "64f3c346dd8f63e79ee3e5a496080f16ac7ee83b76fea9a7b4ac1c1e4bb22cbf",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/stage.py",
+    "stored_bytes": 693,
+    "stored_sha256": "64f3c346dd8f63e79ee3e5a496080f16ac7ee83b76fea9a7b4ac1c1e4bb22cbf"
+  },
+  {
+    "destination": "source-host/saved-check-failed/stage.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/stage.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/saved-check-failed/stage.stdout",
+    "encoding": "identity",
+    "raw_bytes": 806,
+    "raw_sha256": "55ef695ca6aef5eeec86d231b32b2a40a4924128359082ef6a20f898fe0806b8",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-01/stage.stdout",
+    "stored_bytes": 806,
+    "stored_sha256": "55ef695ca6aef5eeec86d231b32b2a40a4924128359082ef6a20f898fe0806b8"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/argv.json",
+    "encoding": "identity",
+    "raw_bytes": 150,
+    "raw_sha256": "8994025ab4ad53f988dee959601680eb497814258b411eb2e45c6558c882122d",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/argv.json",
+    "stored_bytes": 150,
+    "stored_sha256": "8994025ab4ad53f988dee959601680eb497814258b411eb2e45c6558c882122d"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/checks.py",
+    "encoding": "identity",
+    "raw_bytes": 10556,
+    "raw_sha256": "3c4b2889e613493f1efe4c5fd6d51d67236adb1277c0559bd500738394e5a424",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/checks.py",
+    "stored_bytes": 10556,
+    "stored_sha256": "3c4b2889e613493f1efe4c5fd6d51d67236adb1277c0559bd500738394e5a424"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/completed/named-source-proof.json",
+    "encoding": "identity",
+    "raw_bytes": 3180,
+    "raw_sha256": "7bf34c6c46792ab9b59f5938db7806dc3c3200bc98947cdf8b783149798b0588",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/completed/named-source-proof.json",
+    "stored_bytes": 3180,
+    "stored_sha256": "7bf34c6c46792ab9b59f5938db7806dc3c3200bc98947cdf8b783149798b0588"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/completed/result.json.gz",
+    "encoding": "gzip",
+    "raw_bytes": 113148,
+    "raw_sha256": "ad66e175dfb83ea6b3a8b23ce0782d1a4cfdeebfc3004a0367b2e79d3b17a808",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/completed/result.json",
+    "stored_bytes": 37257,
+    "stored_sha256": "5dec5f1f1106ee749e8a4118baee0f13ea20fa5be06d5cf99f8409348a6f4929"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/completed/saved-source-named-spans.log",
+    "encoding": "identity",
+    "raw_bytes": 36,
+    "raw_sha256": "da94c1e1bb0115dce5ac7f4c8243ac92ef528737df588b7623dd60a759dce6b6",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/completed/saved-source-named-spans.log",
+    "stored_bytes": 36,
+    "stored_sha256": "da94c1e1bb0115dce5ac7f4c8243ac92ef528737df588b7623dd60a759dce6b6"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/launch-command.json",
+    "encoding": "identity",
+    "raw_bytes": 302,
+    "raw_sha256": "dd06c874e960dd2c2ced81699b1ea8c699ab8e85c9d6f64ea69e7126094feb56",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/launch-command.json",
+    "stored_bytes": 302,
+    "stored_sha256": "dd06c874e960dd2c2ced81699b1ea8c699ab8e85c9d6f64ea69e7126094feb56"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/launch-result.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/launch-result.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/launch-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 1317,
+    "raw_sha256": "b88f39686d1b619e2338b3f043c37c2749745afc451fbb8e212eb1c504d6f818",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/launch-stdin.py",
+    "stored_bytes": 1317,
+    "stored_sha256": "b88f39686d1b619e2338b3f043c37c2749745afc451fbb8e212eb1c504d6f818"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/launch.py",
+    "encoding": "identity",
+    "raw_bytes": 701,
+    "raw_sha256": "f0e750890f9ed96a5873e7bffdb26bb2fa725fab070f4e8f736869d35cd4055e",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/launch.py",
+    "stored_bytes": 701,
+    "stored_sha256": "f0e750890f9ed96a5873e7bffdb26bb2fa725fab070f4e8f736869d35cd4055e"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/launch.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/launch.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/launch.stdout",
+    "encoding": "identity",
+    "raw_bytes": 76,
+    "raw_sha256": "75bf59822fcfac6924af65fdf43182622ad7d1a8116b3f7016499b46e2ffe999",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/launch.stdout",
+    "stored_bytes": 76,
+    "stored_sha256": "75bf59822fcfac6924af65fdf43182622ad7d1a8116b3f7016499b46e2ffe999"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/read-command.json",
+    "encoding": "identity",
+    "raw_bytes": 299,
+    "raw_sha256": "4b60f5308c09ffa895d36ca1692b2c2df885c82072fbb4b3514fe902bbec3dd6",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/read-command.json",
+    "stored_bytes": 299,
+    "stored_sha256": "4b60f5308c09ffa895d36ca1692b2c2df885c82072fbb4b3514fe902bbec3dd6"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/read-index.json",
+    "encoding": "identity",
+    "raw_bytes": 855,
+    "raw_sha256": "5c36cc44bca7cd9cd81b83ff9f3927cb9f8f1629a478a57f6ad3bd05ea356e2f",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/read-index.json",
+    "stored_bytes": 855,
+    "stored_sha256": "5c36cc44bca7cd9cd81b83ff9f3927cb9f8f1629a478a57f6ad3bd05ea356e2f"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/read-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/read-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/read-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 595,
+    "raw_sha256": "025f38f71e8f9b3cdbdf3b3f387993e8d09d8d332049e05df820431207ec6d8b",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/read-stdin.py",
+    "stored_bytes": 595,
+    "stored_sha256": "025f38f71e8f9b3cdbdf3b3f387993e8d09d8d332049e05df820431207ec6d8b"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/read.py",
+    "encoding": "identity",
+    "raw_bytes": 1168,
+    "raw_sha256": "83ba90b7c8ca8446178eba222d0c2feb54ee1f2e7521c875e40a42a539e5899d",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/read.py",
+    "stored_bytes": 1168,
+    "stored_sha256": "83ba90b7c8ca8446178eba222d0c2feb54ee1f2e7521c875e40a42a539e5899d"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/read.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/read.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/read.stdout.gz",
+    "encoding": "gzip",
+    "raw_bytes": 155987,
+    "raw_sha256": "f22bcb2232ef752411eab4744c90a452af28a5d0083d95262be25c2036f06503",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/read.stdout",
+    "stored_bytes": 50887,
+    "stored_sha256": "f5fe9f632313cbcdf17522a92f82a5b9b13dcdc180907e5e2a73bfc905ef6f92"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/saved-source-check.py",
+    "encoding": "identity",
+    "raw_bytes": 3526,
+    "raw_sha256": "85cd27ca3683af35b4d5b28f9b0a86c71b3b5ab843f5cf47d566415da9f0ad5f",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/saved-source-check.py",
+    "stored_bytes": 3526,
+    "stored_sha256": "85cd27ca3683af35b4d5b28f9b0a86c71b3b5ab843f5cf47d566415da9f0ad5f"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/stage-command.json",
+    "encoding": "identity",
+    "raw_bytes": 300,
+    "raw_sha256": "dfa31c101ee69b674758e0fa766974cba7d791e73187ce70a91328e92c10afaf",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/stage-command.json",
+    "stored_bytes": 300,
+    "stored_sha256": "dfa31c101ee69b674758e0fa766974cba7d791e73187ce70a91328e92c10afaf"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/stage-return.json",
+    "encoding": "identity",
+    "raw_bytes": 18,
+    "raw_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/stage-return.json",
+    "stored_bytes": 18,
+    "stored_sha256": "df4d721d233a2334088d2d2e0110346ae9e509ff46bf0b379fbcfa85c715af4d"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/stage-stdin.py",
+    "encoding": "identity",
+    "raw_bytes": 20160,
+    "raw_sha256": "333f03adc5916605b2c826c8605532348aa65561d6b8c61ccd3f8ebb87a618d5",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/stage-stdin.py",
+    "stored_bytes": 20160,
+    "stored_sha256": "333f03adc5916605b2c826c8605532348aa65561d6b8c61ccd3f8ebb87a618d5"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/stage.py",
+    "encoding": "identity",
+    "raw_bytes": 693,
+    "raw_sha256": "cb100b85b4cbe01758c0f462eb7d49fcb3e6999fa42a5045b7a05d765ea5a994",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/stage.py",
+    "stored_bytes": 693,
+    "stored_sha256": "cb100b85b4cbe01758c0f462eb7d49fcb3e6999fa42a5045b7a05d765ea5a994"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/stage.stderr",
+    "encoding": "identity",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/stage.stderr",
+    "stored_bytes": 0,
+    "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "destination": "source-host/saved-check-continuation/stage.stdout",
+    "encoding": "identity",
+    "raw_bytes": 555,
+    "raw_sha256": "8f02e1790c0d9b504abe687395096dcbf86befcd65cdc01a3820220f5ab0b162",
+    "source": "/tmp/kdlock-kernel8-killable-fixed-host-checks-20261111-02/stage.stdout",
+    "stored_bytes": 555,
+    "stored_sha256": "8f02e1790c0d9b504abe687395096dcbf86befcd65cdc01a3820220f5ab0b162"
+  },
+  {
+    "destination": "source-fix/before/source-sha256.json",
+    "encoding": "identity",
+    "raw_bytes": 19793,
+    "raw_sha256": "71d4362e06dd6e4c3ecbb1c7b42e8d859b3c1c76d1ef4c44767b1e874e04fa60",
+    "source": "/tmp/kdlock-kernel8-fixture-source-de76da8a-01/source-sha256.json",
+    "stored_bytes": 19793,
+    "stored_sha256": "71d4362e06dd6e4c3ecbb1c7b42e8d859b3c1c76d1ef4c44767b1e874e04fa60"
+  },
+  {
+    "destination": "source-fix/before/source-state.json",
+    "encoding": "identity",
+    "raw_bytes": 133,
+    "raw_sha256": "3d396f46e1a26618f1afd6e5dd9480ca9f0c3cb88d54851600e032851846d01f",
+    "source": "/tmp/kdlock-kernel8-fixture-source-de76da8a-01/source-state.json",
+    "stored_bytes": 133,
+    "stored_sha256": "3d396f46e1a26618f1afd6e5dd9480ca9f0c3cb88d54851600e032851846d01f"
+  },
+  {
+    "destination": "source-fix/before/export-receipt.json",
+    "encoding": "identity",
+    "raw_bytes": 1260,
+    "raw_sha256": "1cf82255c9fd68c711c0158efa9002eebd75a9b2e118631c56301c01230b7deb",
+    "source": "/tmp/kdlock-kernel8-fixture-source-de76da8a-01/export-receipt.json",
+    "stored_bytes": 1260,
+    "stored_sha256": "1cf82255c9fd68c711c0158efa9002eebd75a9b2e118631c56301c01230b7deb"
+  },
+  {
+    "archive_member": "tests/kernel/rwsem_killable/runner.py",
+    "destination": "source-fix/before/tests/kernel/rwsem_killable/runner.py",
+    "encoding": "identity",
+    "raw_bytes": 41066,
+    "raw_sha256": "82835f248fd34751dfabdbeddacb0e3fb6c01f88d5ba20643d9a398ec411f463",
+    "source": "/tmp/kdlock-kernel8-fixture-source-de76da8a-01/source.tar",
+    "source_archive_sha256": "ac7e533e1b3cefef7a78d9cdcbe48dbc53fc759bb577d36f7b1335f4ba0863c9",
+    "stored_bytes": 41066,
+    "stored_sha256": "82835f248fd34751dfabdbeddacb0e3fb6c01f88d5ba20643d9a398ec411f463"
+  },
+  {
+    "archive_member": "tests/kernel/rwsem_killable/README.md",
+    "destination": "source-fix/before/tests/kernel/rwsem_killable/README.md",
+    "encoding": "identity",
+    "raw_bytes": 7691,
+    "raw_sha256": "5b226d32f2eb02bf04a2a80532120450ad22a7354a004e060a9b01bf8e661721",
+    "source": "/tmp/kdlock-kernel8-fixture-source-de76da8a-01/source.tar",
+    "source_archive_sha256": "ac7e533e1b3cefef7a78d9cdcbe48dbc53fc759bb577d36f7b1335f4ba0863c9",
+    "stored_bytes": 7691,
+    "stored_sha256": "5b226d32f2eb02bf04a2a80532120450ad22a7354a004e060a9b01bf8e661721"
+  },
+  {
+    "destination": "source-fix/grouped-ack-source-fix/source-sha256.json",
+    "encoding": "identity",
+    "raw_bytes": 19793,
+    "raw_sha256": "3974c1ffb59ef6116b317f02fd4a7befb795ac381a31e960f56b5519675df35a",
+    "source": "/tmp/kdlock-kernel8-fixture-source-6a4ba5a1-01/source-sha256.json",
+    "stored_bytes": 19793,
+    "stored_sha256": "3974c1ffb59ef6116b317f02fd4a7befb795ac381a31e960f56b5519675df35a"
+  },
+  {
+    "destination": "source-fix/grouped-ack-source-fix/source-state.json",
+    "encoding": "identity",
+    "raw_bytes": 133,
+    "raw_sha256": "7e17b8073e71112a250bc69b4efe41b70b19651e2c271078588d48911c8dcca5",
+    "source": "/tmp/kdlock-kernel8-fixture-source-6a4ba5a1-01/source-state.json",
+    "stored_bytes": 133,
+    "stored_sha256": "7e17b8073e71112a250bc69b4efe41b70b19651e2c271078588d48911c8dcca5"
+  },
+  {
+    "destination": "source-fix/grouped-ack-source-fix/export-receipt.json",
+    "encoding": "identity",
+    "raw_bytes": 1160,
+    "raw_sha256": "8fb057a3530b4e33f75e3bef3a9f06ba4fa8fa820d41c07e2910b1381a2647fe",
+    "source": "/tmp/kdlock-kernel8-fixture-source-6a4ba5a1-01/export-receipt.json",
+    "stored_bytes": 1160,
+    "stored_sha256": "8fb057a3530b4e33f75e3bef3a9f06ba4fa8fa820d41c07e2910b1381a2647fe"
+  },
+  {
+    "archive_member": "tests/kernel/rwsem_killable/runner.py",
+    "destination": "source-fix/grouped-ack-source-fix/tests/kernel/rwsem_killable/runner.py",
+    "encoding": "identity",
+    "raw_bytes": 46830,
+    "raw_sha256": "5d69bb0d5ccd11313a90faf18f146b05ba17fcf08922b5c48d119864a5e1a961",
+    "source": "/tmp/kdlock-kernel8-fixture-source-6a4ba5a1-01/source.tar",
+    "source_archive_sha256": "bcc417947d09418764bc87925044e59bd56b45a724eea8477f5cdeb8f3d15605",
+    "stored_bytes": 46830,
+    "stored_sha256": "5d69bb0d5ccd11313a90faf18f146b05ba17fcf08922b5c48d119864a5e1a961"
+  },
+  {
+    "archive_member": "tests/kernel/rwsem_killable/README.md",
+    "destination": "source-fix/grouped-ack-source-fix/tests/kernel/rwsem_killable/README.md",
+    "encoding": "identity",
+    "raw_bytes": 9124,
+    "raw_sha256": "b29a86d53fbbeef501dc26276439b1914d17d5185ab3c0e22c5729e23cd4eb7f",
+    "source": "/tmp/kdlock-kernel8-fixture-source-6a4ba5a1-01/source.tar",
+    "source_archive_sha256": "bcc417947d09418764bc87925044e59bd56b45a724eea8477f5cdeb8f3d15605",
+    "stored_bytes": 9124,
+    "stored_sha256": "b29a86d53fbbeef501dc26276439b1914d17d5185ab3c0e22c5729e23cd4eb7f"
+  }
+]

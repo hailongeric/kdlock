@@ -1,0 +1,41 @@
+{
+  "argv": [
+    "/tmp/kdlock-rw-collect5.py",
+    "--output",
+    "/tmp/kdlock-kernel8-killable-cycle-recovery-collection-20261111-01",
+    "--tree",
+    "runtime",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/recovery-killable-cycle-01",
+    "--tree",
+    "driver",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-cycle-recovery-driver-01",
+    "--tree",
+    "input",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-cycle-recovery-input-01",
+    "--max-files",
+    "10240",
+    "--max-paths",
+    "40960",
+    "--max-total-bytes",
+    "268435456",
+    "--max-file-bytes",
+    "50331648",
+    "--max-metadata-bytes",
+    "16777216",
+    "--inventory-seconds",
+    "90",
+    "--copy-seconds",
+    "180"
+  ],
+  "files": {},
+  "max_file_bytes": 50331648,
+  "max_files": 10240,
+  "max_metadata_bytes": 16777216,
+  "max_paths": 40960,
+  "max_total_bytes": 268435456,
+  "trees": {
+    "driver": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-cycle-recovery-driver-01",
+    "input": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/killable-cycle-recovery-input-01",
+    "runtime": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/recovery-killable-cycle-01"
+  }
+}

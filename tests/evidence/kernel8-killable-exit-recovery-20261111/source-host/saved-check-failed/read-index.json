@@ -1,0 +1,30 @@
+{
+  "result.json": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-checks-de76da8a-01/receipts/result.json",
+    "bytes": 112320,
+    "sha256": "96e3903dbb55ed34d6d2276bd1433a22e5898c3adb9f8824d24adce17864b7df"
+  },
+  "fixed-killable-runner-ast.log": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-checks-de76da8a-01/receipts/fixed-killable-runner-ast.log",
+    "bytes": 31,
+    "sha256": "a671de8fb32d7cb1d020567de032ab742034718d12eb34be1b0e4898237a047c"
+  },
+  "saved-source-named-spans.log": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-checks-de76da8a-01/receipts/saved-source-named-spans.log",
+    "bytes": 519,
+    "sha256": "c257a64ecd3ad43cdd28f0df07392f731847ad44de0b60caccdd7d3af7b7240c"
+  },
+  "../saved-source/named-source-proof.json": {
+    "absent": true
+  },
+  "../../host-checks-de76da8a-driver-01/stderr": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-checks-de76da8a-01/receipts/../../host-checks-de76da8a-driver-01/stderr",
+    "bytes": 960,
+    "sha256": "1208c8be6166f8d280a9bbf9fc7c5693db7061187350e1246b99cd9f5f70bfe0"
+  },
+  "../../host-checks-de76da8a-driver-01/stdout": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-checks-de76da8a-01/receipts/../../host-checks-de76da8a-driver-01/stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
