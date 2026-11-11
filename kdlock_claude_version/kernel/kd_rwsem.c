@@ -246,11 +246,40 @@ int kd_down_read_trylock(struct kd_rwsem *sem)
 }
 EXPORT_SYMBOL(kd_down_read_trylock);
 
+/*
+ * Before queueing on ->m, wait a bounded time for the writer side to clear.
+ * Write sections are usually short, and the queue path costs at least one
+ * sleep and wakeup per reader, in sequence: the holder of ->m sleeps on
+ * ->count, and the next reader sleeps behind it. Readers waiting here do
+ * not hold back writers: a queued writer's KD_RWSEM_WWAIT keeps them out
+ * until it has had its turn.
+ */
+static bool kd_down_read_spin(struct kd_rwsem *sem)
+{
+	long c;
+	int i;
+
+	for (i = 0; i < KD_RWSEM_SPIN; i++) {
+		c = atomic_long_read(&sem->count);
+		if (!(c & KD_RWSEM_WMASK)) {
+			if (atomic_long_try_cmpxchg_acquire(&sem->count, &c, c + KD_RWSEM_RBIAS))
+				return true;
+			continue;
+		}
+		if (need_resched())
+			break;
+		cpu_relax();
+	}
+	return false;
+}
+
 static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state)
 {
 	int ret;
 
 	kd_rwsem_read_undo(sem);
+	if (kd_down_read_spin(sem))
+		return 0;
 
 	/* Queue behind earlier writers and readers. */
 	ret = kd_mutex_sleep(&sem->m, state);

@@ -50,7 +50,8 @@ static inline int kd_spin_is_locked(struct kd_spinlock *l)
 
 static inline int kd_spin_is_contended(struct kd_spinlock *l)
 {
-	return READ_ONCE(l->q.tail) != 0;
+	/* A queue or a pending waiter (KD_QF_PENDING), as for qspinlock. */
+	return READ_ONCE(l->q.tail) != 0 || READ_ONCE(l->q.flags) != 0;
 }
 
 /* ---- rwlock ----------------------------------------------------------- */

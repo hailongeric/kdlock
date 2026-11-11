@@ -40,6 +40,7 @@ core_param(kd_numa, kd_numa, bool, 0644);
 
 #define KD_WAIT_STACK_ORDER	2	/* 16 KiB; interrupts taken while waiting land here */
 #define KD_EXEC_PIN		32	/* extra preempt count while executing a section */
+#define KD_OWNER_POLL		64	/* queued sleepable waiter: owner check interval */
 
 #define KD_CHECK(type, member, off) \
 	static_assert(offsetof(type, member) == (off))
@@ -250,8 +251,6 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	r->nroots = level + 1;
 	r->released &= ~BIT(level);
 	kc->depth++;
-	if (f && f->set_owner)
-		f->set_owner(root, r->task);
 
 	for (;;) {
 		/* Set up every time: a nested session reuses these fields. */
@@ -351,6 +350,15 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	r->nroots = level;
 	r->released &= ~BIT(level);
 	r->stop = native ? KD_STOP_HANDBACK : KD_STOP_DONE;
+	/*
+	 * The owner a mutex records is the task that runs with it: the
+	 * combiner during its session, the origin once the grant is handed
+	 * back. It is written only on handback, not per section: every queued
+	 * waiter polls it to decide whether to keep spinning, so a store per
+	 * section would move the lock's cache line to all of them each time.
+	 */
+	if (native && !done && f && f->set_owner)
+		f->set_owner(root, r->task);
 
 	d = preempt_count() - pc0;
 	if (d) {
@@ -426,11 +434,23 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	    kc->depth >= KD_MAX_DEPTH)
 		return false;
 
-	while ((n = READ_ONCE(me->next)) && *budget < kd_batch) {
-		if (!n->entry || need_resched())
+	while ((n = READ_ONCE(me->next))) {
+		if (*budget >= kd_batch) {
+			kd_stat_inc(kc, KD_STAT_STOP_BUDGET);
 			break;
-		if (sleepable && (READ_ONCE(q->flags) & KD_QF_HANDOFF))
+		}
+		if (!n->entry) {
+			kd_stat_inc(kc, KD_STAT_STOP_PLAIN);
 			break;
+		}
+		if (need_resched()) {
+			kd_stat_inc(kc, KD_STAT_STOP_RESCHED);
+			break;
+		}
+		if (sleepable && (READ_ONCE(q->flags) & KD_QF_HANDOFF)) {
+			kd_stat_inc(kc, KD_STAT_STOP_HANDOFF);
+			break;
+		}
 		if (numa && n->nid != me->nid) {
 			/*
 			 * Not claimed: a sleepable-class waiter may still
@@ -447,8 +467,10 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			kd_stat_inc(kc, KD_STAT_NUMA_DEFERRED);
 			continue;
 		}
-		if (!kd_ctx_compatible(n->regs))
+		if (!kd_ctx_compatible(n->regs)) {
+			kd_stat_inc(kc, KD_STAT_STOP_CTX);
 			break;
+		}
 		if (sleepable &&
 		    cmpxchg(&n->state, KD_N_WAIT, KD_N_RUN) != KD_N_WAIT) {
 			/* Left to sleep before we got here. */
@@ -684,25 +706,35 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 	struct kd_qlock *q = &m->q;
 	struct kd_node *me;
 	bool have_q = false;
-	unsigned int budget = 0;
+	unsigned int budget = 0, spins;
 	u32 st;
 
 	/* Queueing only pays off while the holder is making progress. */
-	if (!kd_mutex_can_spin(m))
+	if (!kd_mutex_can_spin(m)) {
+		kd_stat_inc(kc, KD_STAT_NO_SPIN);
 		return KD_WAIT_SLEEP;
+	}
 	me = kd_mnode_alloc(kc);
 	if (!me)
 		return KD_WAIT_SLEEP;
 	kd_node_offer(kc, me, nested, entry);
 
 	if (kd_q_enqueue(q, me, true)) {
-		for (;;) {
+		/*
+		 * The owner word shares its cache line with the queue tail that
+		 * every new waiter swaps, so a queued waiter looks at it only
+		 * once per KD_OWNER_POLL iterations; it mostly reads its own node.
+		 */
+		for (spins = 1;; spins++) {
 			st = READ_ONCE(me->state);
 			if (st != KD_N_WAIT)
 				break;
-			if (!kd_mutex_can_spin(m)) {
-				if (cmpxchg(&me->state, KD_N_WAIT, KD_N_ABANDON) == KD_N_WAIT)
+			if (need_resched() ||
+			    (!(spins % KD_OWNER_POLL) && !kd_mutex_can_spin(m))) {
+				if (cmpxchg(&me->state, KD_N_WAIT, KD_N_ABANDON) == KD_N_WAIT) {
+					kd_stat_inc(kc, KD_STAT_ABANDON);
 					return KD_WAIT_SLEEP;	/* the queue frees the node */
+				}
 				continue;
 			}
 			cpu_relax();
@@ -721,8 +753,10 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 	for (;;) {
 		if (!have_q) {
 			while (!kd_q_trylock(q)) {
-				if (!kd_mutex_can_spin(m))
+				if (!kd_mutex_can_spin(m)) {
+					kd_stat_inc(kc, KD_STAT_HEAD_SLEEP);
 					goto sleep;
+				}
 				cpu_relax();
 			}
 			WRITE_ONCE(m->owner, current);

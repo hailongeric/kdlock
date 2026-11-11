@@ -110,6 +110,18 @@ enum {
 	KD_STAT_OFFERED,	/* waiters queued with generated code */
 	KD_STAT_PLAIN,		/* waiters queued without */
 	KD_STAT_NUMA_DEFERRED,	/* waiters of another node passed over by a session */
+	/* Why sessions stopped before the queue was empty or the budget spent. */
+	KD_STAT_STOP_PLAIN,	/* next waiter has no generated code */
+	KD_STAT_STOP_RESCHED,	/* the combiner's CPU is wanted elsewhere */
+	KD_STAT_STOP_HANDOFF,	/* a parked mutex/rwsem waiter asked for the lock */
+	KD_STAT_STOP_CTX,	/* next waiter's IRQ/BH state cannot be honored here */
+	KD_STAT_STOP_BUDGET,	/* kd_batch executions reached */
+	/* Sleepable families: how waiting ended up off the queue. */
+	KD_STAT_NO_SPIN,	/* did not queue: owner off CPU or resched pending */
+	KD_STAT_ABANDON,	/* queued waiter withdrew to sleep */
+	KD_STAT_HEAD_SLEEP,	/* queue head gave up spinning for the lock */
+	KD_STAT_PARKED,		/* schedule() calls of parked waiters */
+	KD_STAT_HANDOFF,	/* releases that handed ownership to a parked waiter */
 	KD_STAT_NR,
 };
 

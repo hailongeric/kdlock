@@ -38,6 +38,7 @@ struct kd_qlock {
 #define KD_Q_LOCKED		1U
 #define KD_QF_SLEEPERS		0x01	/* mutex: tasks are parked on ->waiters */
 #define KD_QF_HANDOFF		0x02	/* mutex: next release goes to the first parked task */
+#define KD_QF_PENDING		0x01	/* spinlock: one waiter spins on ->locked outside the queue */
 #define KD_QF_SHIFT		8
 
 #define __KD_QLOCK_UNLOCKED	{ { .val = ATOMIC_INIT(0) } }

@@ -57,6 +57,16 @@ static const char * const kd_stat_names[KD_STAT_NR] = {
 	[KD_STAT_OFFERED]		= "offered",
 	[KD_STAT_PLAIN]			= "plain",
 	[KD_STAT_NUMA_DEFERRED]		= "numa_deferred",
+	[KD_STAT_STOP_PLAIN]		= "stop_plain",
+	[KD_STAT_STOP_RESCHED]		= "stop_resched",
+	[KD_STAT_STOP_HANDOFF]		= "stop_handoff",
+	[KD_STAT_STOP_CTX]		= "stop_ctx",
+	[KD_STAT_STOP_BUDGET]		= "stop_budget",
+	[KD_STAT_NO_SPIN]		= "no_spin",
+	[KD_STAT_ABANDON]		= "abandon",
+	[KD_STAT_HEAD_SLEEP]		= "head_sleep",
+	[KD_STAT_PARKED]		= "parked",
+	[KD_STAT_HANDOFF]		= "handoff",
 };
 
 static int kd_stats_show(struct seq_file *m, void *v)

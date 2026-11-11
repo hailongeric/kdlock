@@ -93,6 +93,24 @@ int kd_mutex_trylock(struct kd_mutex *m)
 EXPORT_SYMBOL(kd_mutex_trylock);
 
 /*
+ * First parked waiter: spin while the owner runs, as the native mutex does
+ * for its first waiter. Returns when the lock looks free or was handed to
+ * @w, or when spinning stops paying off; the caller rechecks under the wait
+ * lock. The handoff request is honoured while this task still runs, so the
+ * new owner is on a CPU and the queued spinners keep spinning. Granting to
+ * a sleeping task instead makes every spinner see an off-CPU owner, leave
+ * the queue and park (a convoy).
+ */
+static void kd_mutex_spin_first(struct kd_mutex *m, struct kd_mutex_waiter *w)
+{
+	preempt_disable();
+	while (!READ_ONCE(w->granted) && READ_ONCE(m->q.locked) &&
+	       kd_mutex_can_spin(m))
+		cpu_relax();
+	preempt_enable();
+}
+
+/*
  * Sleeping acquisition. Also the complete lock path for callers that never
  * spin (rwsem readers queueing behind writers).
  */
@@ -112,6 +130,8 @@ int kd_mutex_sleep(struct kd_mutex *m, unsigned int state)
 	atomic_or(KD_QF_SLEEPERS << KD_QF_SHIFT, &m->q.val);
 
 	for (;;) {
+		bool first;
+
 		if (w.granted)
 			break;
 		if (kd_mutex_trylock_as(m, current))
@@ -120,16 +140,31 @@ int kd_mutex_sleep(struct kd_mutex *m, unsigned int state)
 			ret = -EINTR;
 			break;
 		}
-		if (++tries > 2 && !asked_handoff &&
-		    list_first_entry(&m->waiters, struct kd_mutex_waiter, list) == &w) {
+		first = list_first_entry(&m->waiters, struct kd_mutex_waiter, list) == &w;
+		if (++tries > 2 && !asked_handoff && first) {
 			atomic_or(KD_QF_HANDOFF << KD_QF_SHIFT, &m->q.val);
 			asked_handoff = true;
 			/* The holder may have released just before the flag. */
 			if (kd_mutex_trylock_as(m, current))
 				break;
 		}
+		if (first && tries > 1 && kd_mutex_can_spin(m)) {
+			/*
+			 * Woken at least once: spin instead of sleeping again.
+			 * Always recheck from the top afterwards: the grant may
+			 * have been made, and its wakeup spent, while this task
+			 * was running, so sleeping now would never end. When
+			 * spinning stopped for need_resched(), the next pass does
+			 * not spin (kd_mutex_can_spin() is false) and sleeps.
+			 */
+			kd_wait_unlock(m, flags);
+			kd_mutex_spin_first(m, &w);
+			flags = kd_wait_lock(m);
+			continue;
+		}
 		set_current_state(state);
 		kd_wait_unlock(m, flags);
+		raw_cpu_inc(kd_cpu.stat[KD_STAT_PARKED]);	/* approximate */
 		schedule();
 		flags = kd_wait_lock(m);
 	}
@@ -235,6 +270,7 @@ static noinline void kd_mutex_unlock_slow(struct kd_mutex *m)
 		/* Handoff: the lock byte stays set and changes owner. */
 		atomic_andnot(KD_QF_HANDOFF << KD_QF_SHIFT, &m->q.val);
 		if (w) {
+			raw_cpu_inc(kd_cpu.stat[KD_STAT_HANDOFF]);
 			w->granted = true;
 			WRITE_ONCE(m->owner, w->task);
 		} else {
