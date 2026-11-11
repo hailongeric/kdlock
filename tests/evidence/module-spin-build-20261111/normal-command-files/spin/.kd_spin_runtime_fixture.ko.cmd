@@ -1,0 +1,1 @@
+savedcmd_kd_spin_runtime_fixture.ko := ld -r -m elf_x86_64 -z noexecstack --no-warn-rwx-segments --build-id=sha1  -T /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build/scripts/module.lds -o kd_spin_runtime_fixture.ko kd_spin_runtime_fixture.o kd_spin_runtime_fixture.mod.o .module-common.o
