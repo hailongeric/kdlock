@@ -722,11 +722,15 @@ def main(*, spin=False, family=None):
                 or not int(final["w_regs"], 16) or int(final["w_miss_checks"]) != 1
                 or int(final["miss_checks"]) != 1):
             raise AssertionError("spin native suffix lost its exact queue, source identity or one checkpoint")
+        # A native rwlock head closes its own active cohort. A generated
+        # handback instead releases the foreign writer through exact SYNC ACK.
+        expected_action = 3 if spin else (4 if image else 1)
         native_unlock = next((row for row in rows if has(row, "NATIVE_UNLOCK")
                               and row["node"] == root["node"] and row["task"] == tasks[4]
-                              and row["state"] == root["state"] and row["phase"] == 3), None)
+                              and row["state"] == root["state"] and row["phase"] == expected_action
+                              and row["result"] == unlock_kind), None)
         if native_unlock is None:
-            raise AssertionError("native spin suffix lacks the original task's synchronous source unlock")
+            raise AssertionError(f"native {family} suffix lacks the original task's synchronous source unlock")
         proof = {"root": root["node"], "state": root["state"], "roles": tasks,
                  "native_unlock": native_unlock, "native_checkpoint_calls": 1}
         if not image:
