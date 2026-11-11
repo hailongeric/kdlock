@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: GPL-2.0
+
+config KDLOCK
+	bool "kdlock: delegating replacements for spinlock, rwlock, mutex and rwsem"
+	depends on X86_64 && SMP
+	depends on !PREEMPT_RT
+	depends on !DEBUG_SPINLOCK && !DEBUG_MUTEXES && !DEBUG_RWSEMS
+	depends on !DEBUG_LOCK_ALLOC && !LOCKDEP
+	# Entry stubs change the interrupt flag and preempt count directly.
+	depends on !TRACE_IRQFLAGS && !PARAVIRT_XXL
+	# A delegated section runs on its origin's stack from another CPU.
+	depends on VMAP_STACK
+	depends on EXECMEM
+	select KALLSYMS_ALL
+	help
+	  Replace the kernel's blocking primitives with kdlock. Under
+	  contention the lock holder executes the critical sections of queued
+	  waiters itself, from a relocated copy of their code produced by the
+	  userspace translator (jit/kd_daemon.py), so the protected data stays
+	  in one CPU's cache.
+
+	  Without the translator running, or for call sites it has not
+	  translated, the locks behave as plain queued locks.
+
+	  NR_CPUS must stay below 16384 (queue tail encoding).
