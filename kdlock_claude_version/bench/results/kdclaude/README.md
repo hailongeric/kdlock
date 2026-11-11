@@ -60,3 +60,9 @@ rotated per round, 3 rounds; `bench/ab_summary.py` prints median [min–max]).
 | #17 | bounded linger for the next arrival when the queue empties (`ab17`: 0/300/600/1000 ns) | n2/n3 much worse (spin c01 n2 4.93 → 1.16), n4 unchanged | no |
 
 `corr_tc.jsonl`: correctness pass with all three backends (288 points exact).
+| #18 | early packet prefetch from the next node's address (`ab18`) | spin +1–3% at 8–32; mutex c01 −6% (cause not established) | spin class only |
+| #19 | reader spin bound by time instead of 1024 iterations (`ab19r`: 0/5/20/50 µs) | bimodal: 5 µs helps rwsem w20 at 20–32 but halves 8/16 | no |
+| #19 | writer head spin bound by time (`ab19w`: 0/20/100 µs) | no effect | no |
+| #20 | holder of `->m` spins for the writer bit before sleeping (`ab20`) | w20 at 20 workers +16–33%; no change elsewhere | yes |
+| #21 | diagnosis (`diag21`): at a give-up the owner of `->m` was runnable in only ~3% of cases; it sleeps on the count holding `->m` | | |
+| #22/#23 | readers check the writer bits before adding (`ab22`, `ab23`: 1 read first, 2 `prefetchw` then read) | mixed: w20 +5–30%, c16 w1 −3% to −22% | no |

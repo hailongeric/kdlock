@@ -275,7 +275,7 @@ static bool kd_down_read_spin(struct kd_rwsem *sem)
 
 static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state)
 {
-	int ret;
+	int ret, i;
 
 	kd_rwsem_read_undo(sem);
 	if (kd_down_read_spin(sem))
@@ -291,6 +291,21 @@ static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state)
 	 * active writer to leave.
 	 */
 	atomic_long_add(KD_RWSEM_RBIAS, &sem->count);
+	/*
+	 * The writer still inside is usually a combiner running its own
+	 * section right after releasing ->m, which takes nanoseconds. Spin
+	 * for it before sleeping: a holder of ->m that sleeps makes every
+	 * queued writer see an off-CPU owner and park. Measured (A/B in one
+	 * boot): w20 at 20 workers +16-33%, no change elsewhere; the larger
+	 * high-worker-count rwsem loss has other causes (readers serialise
+	 * through ->m), see docs/DIFFERENCES.md D11.
+	 */
+	for (i = 0; i < KD_RWSEM_SPIN &&
+		    (atomic_long_read(&sem->count) & KD_RWSEM_WLOCKED); i++) {
+		if (need_resched())
+			break;
+		cpu_relax();
+	}
 	ret = kd_rwsem_sleep_on(sem, state,
 				!(atomic_long_read(&sem->count) & KD_RWSEM_WLOCKED));
 	if (ret)

@@ -392,6 +392,17 @@ static bool kd_ctx_compatible(const struct kd_regs *r)
 }
 
 /*
+ * Address of the packet of waiter @n without reading @n: a top-level
+ * waiter publishes its own CPU's packet, and its node is the first slot of
+ * the same per-CPU structure (slot 0 of nodes[]). For any other
+ * waiter the guess is wrong, which only makes a prefetch useless.
+ */
+static __always_inline struct kd_regs *kd_packet_guess(struct kd_node *n)
+{
+	return &container_of(n, struct kd_cpu, nodes[0])->regs;
+}
+
+/*
  * Combining session. @me is the queue head and holds the full grant on
  * @root. Execute queued waiters' sections until the budget is used up, a
  * waiter that cannot be delegated, or a handback.
@@ -431,6 +442,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	struct kd_node *n, *nn, *first = NULL, *last = NULL;
 	bool numa = READ_ONCE(kd_numa);
 	bool handed = false, ran = false;
+	struct kd_regs *guess;
 
 	if (!static_branch_likely(&kd_delegation) || !in_task() ||
 	    kc->depth >= KD_MAX_DEPTH)
@@ -504,14 +516,27 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 		 * that is stale by then only costs a useless prefetch.
 		 */
 		nn = READ_ONCE(n->next);
-		if (nn)
+		guess = NULL;
+		if (nn) {
 			prefetch(nn);
+			/*
+			 * Spin class only. Measured A/B in one boot: spin
+			 * +1-3% at 8-32 workers; mutex c01 -6%, cause not
+			 * established, so the sleepable class does not use it.
+			 */
+			if (!sleepable) {
+				guess = kd_packet_guess(nn);
+				prefetchw(guess);
+				prefetchw((void *)guess + 64);
+				prefetchw((void *)guess + 128);
+			}
+		}
 
 		handed = !kd_exec_one(root, n, f);
 		if (nn) {
 			struct kd_regs *nr = READ_ONCE(nn->regs);
 
-			if (nr) {
+			if (nr && nr != guess) {
 				prefetchw(nr);
 				prefetchw((void *)nr + 64);
 				prefetchw((void *)nr + 128);
