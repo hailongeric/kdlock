@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/controller.py",
+    "--config",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-input-0d42063e-01/focus-config.json",
+    "--config-sha",
+    "f93150edd07862c929284d15bda39cf7b2137622951b61b704824eee3025ab55"
+  ],
+  "helper_sha256": "7388c162416106986ba74e9b7fcbc46b721276fe968e51b2ab4248c533743d0e",
+  "recovery_sha256": "65242774adedeba3344ec223565bf6ce384a82ac7e387d88a2ca24e744cdb09f",
+  "started_unix": 1794423324.016822
+}
