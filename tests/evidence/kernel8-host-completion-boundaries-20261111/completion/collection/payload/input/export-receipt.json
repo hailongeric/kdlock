@@ -1,0 +1,37 @@
+{
+  "changed_from_4cc53e09": [
+    "tests/kernel/mmap_api/README.md",
+    "tests/kernel/mmap_api/runner.py",
+    "tests/kernel/rwsem_killable/README.md"
+  ],
+  "completion_test_cases": 12,
+  "files": 142,
+  "format": "kdlock.regular-only-host-export.v1",
+  "git_status": "",
+  "kernel_core_git_head": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+  "kernel_package_files": 78,
+  "new_members": [
+    "tests/kernel/mmap_api/completion.py",
+    "tests/test_mmap_completion.py"
+  ],
+  "prior_host_export_refusal": {
+    "path": "/tmp/kdlock-kernel8-fixture-source-b2ef338b-01",
+    "reason": "Expectation omitted two reviewed README changes; refused before state/manifest publication or VM transfer."
+  },
+  "source_git_head": "b2ef338b1a3ee9de89f67e98392fbea9e275bbd9",
+  "transfer_bytes": 1582134,
+  "transport": {
+    "source-sha256.json": {
+      "bytes": 19629,
+      "sha256": "217a296c1e1a25ea06768f2c08447d54590fc36787d71a724ca88fa8db636a71"
+    },
+    "source-state.json": {
+      "bytes": 133,
+      "sha256": "b29508720673c22ba1442082f35b0ae2f5033417ce1903f6e9dabface1311233"
+    },
+    "source.tar": {
+      "bytes": 1699840,
+      "sha256": "058973630e24ac665bbd17ad94d5f7402f8eb2118aefead269f1904565923f3b"
+    }
+  }
+}

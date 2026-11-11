@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "/tmp/kdlock-kernel8-host-checks-20261111-01/launch-stdin.py",
+  "timeout_seconds": 270
+}

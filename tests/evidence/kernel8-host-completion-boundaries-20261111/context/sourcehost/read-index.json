@@ -1,0 +1,17 @@
+{
+  "result.json": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-checks-a99186a5-01/receipts/result.json",
+    "bytes": 113051,
+    "sha256": "e4f76bb7ba3f50a4fcb8da57c1a3c478cb3c4dae748dd3bb546a48f05a674f6a"
+  },
+  "source-boundary-nine.log": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-checks-a99186a5-01/receipts/source-boundary-nine.log",
+    "bytes": 1723,
+    "sha256": "eb9104cc20b78d93bbcedbad9fa3f6f518705b03df3c71c4622595a77cdbfcc7"
+  },
+  "changed-killable-runner-ast.log": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-checks-a99186a5-01/receipts/changed-killable-runner-ast.log",
+    "bytes": 31,
+    "sha256": "a671de8fb32d7cb1d020567de032ab742034718d12eb34be1b0e4898237a047c"
+  }
+}
