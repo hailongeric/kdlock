@@ -3,9 +3,11 @@
 This directory starts a bounded real syscall check for the main rebuild. It is
 independent of master's mmap1 workstream. The userspace program invokes actual
 `SYS_mmap`, `SYS_munmap` and `SYS_mincore`. Kernel MM bodies are unchanged. No
-extracted kernel body or ioctl performs the mapping work. The source has not
-been compiled or run yet, and it establishes no KD, generated-execution,
-downgrade or performance evidence.
+extracted kernel body or ioctl performs the mapping work. The client has passed
+an [unselected syscall baseline](../../evidence/kernel6-focused-20261111/README.md),
+and the provider has a [module build and signing receipt](../../evidence/kernel6-api-build-20261111/README.md).
+Selected KD execution remains pending; these receipts establish no generated
+execution, KD downgrade or performance result.
 
 The caller supplies all three required positive decimal arguments:
 
@@ -134,7 +136,7 @@ no guessed owner-exit or foreign-owner cleanup. The successful path completes
 END before closing the file and permits ordinary module unload afterward.
 
 All compilation and execution belong in the VM after the overall implementation
-and static review are complete. A future focused build can use the VM's explicit
+and static review are complete. The focused client build used the VM's explicit
 C compiler with `-std=c11 -O2 -Wall -Wextra -Werror -pthread`; retain the actual
 compiler identity, command, copied source hash, stdout, stderr and return status.
 

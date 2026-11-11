@@ -4,8 +4,9 @@ This source fixture selects one private, freshly initialized `rw_semaphore`
 onto the rebuilt KD gate with `source_calls=false`. It invokes the ordinary
 Linux APIs through source forms, callable function pointers and cleanup
 constructors. It supplies no source packet or managed JIT configuration.
-Compilation and execution are pending. These cases establish no mmap syscall,
-generated-execution or performance result.
+The fixture has a [successful module build and signing receipt](../../evidence/kernel6-api-build-20261111/README.md).
+Execution is pending. These cases establish no mmap syscall, generated-execution
+or performance result.
 
 Module parameters `native_capacity` and `wait_timeout_ms` are required and have
 no nonzero defaults. Capacity must cover at least three simultaneous records,

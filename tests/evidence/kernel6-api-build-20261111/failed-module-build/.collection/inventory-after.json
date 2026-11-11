@@ -1,0 +1,50 @@
+{
+  "bytes": 149715,
+  "collected_unix": 1794404112.1128852,
+  "count": 2,
+  "directories": {
+    "/mnt/kdlock-builds/kdlock-main-work/kernel6-api-modules-0d0b52c0-02/receipts": {
+      "identity": [
+        2064,
+        8527302,
+        16832,
+        2,
+        4096,
+        1794404051706000000,
+        1794404051706000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-api-modules-0d0b52c0-02/receipts"
+    }
+  },
+  "files": {
+    "receipts/result.json": {
+      "bytes": 142992,
+      "identity": [
+        2064,
+        8527400,
+        33188,
+        1,
+        142992,
+        1794404051704000000,
+        1794404051706000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-api-modules-0d0b52c0-02/receipts/result.json",
+      "sha256": "74820c075be566754f7e367cdc22a75526e80faf76ce79a4791796cc61274d67"
+    },
+    "receipts/rwsem-build.log": {
+      "bytes": 6723,
+      "identity": [
+        2064,
+        8527303,
+        33188,
+        1,
+        6723,
+        1794404051505000000,
+        1794404051505000000
+      ],
+      "path": "/mnt/kdlock-builds/kdlock-main-work/kernel6-api-modules-0d0b52c0-02/receipts/rwsem-build.log",
+      "sha256": "0be2dde46cee738b5add4253fe1eaba4355ddc454f88415dce16406b69e3872d"
+    }
+  },
+  "visited_paths": 3
+}

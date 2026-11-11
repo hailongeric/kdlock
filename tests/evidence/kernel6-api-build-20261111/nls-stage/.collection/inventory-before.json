@@ -1,0 +1,107 @@
+{
+  "bytes": 285023,
+  "collected_unix": 1794402574.5609484,
+  "count": 7,
+  "directories": {},
+  "files": {
+    "installed-depends.log": {
+      "bytes": 1,
+      "identity": [
+        2080,
+        1598862,
+        33188,
+        1,
+        1,
+        1794402493593000000,
+        1794402493593000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/installed-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    "installed-sig_hashalgo.log": {
+      "bytes": 7,
+      "identity": [
+        2080,
+        1598861,
+        33188,
+        1,
+        7,
+        1794402493578908297,
+        1794402493578908297
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/installed-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec"
+    },
+    "installed-sig_key.log": {
+      "bytes": 60,
+      "identity": [
+        2080,
+        1598860,
+        33188,
+        1,
+        60,
+        1794402493564000000,
+        1794402493564000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/installed-sig_key.log",
+      "sha256": "a10f8ad0ce38b278cca315703b295d004c136a87899d7f625607c57f34c95b17"
+    },
+    "installed-signer.log": {
+      "bytes": 36,
+      "identity": [
+        2080,
+        1598836,
+        33188,
+        1,
+        36,
+        1794402493550000000,
+        1794402493550000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/installed-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb"
+    },
+    "installed-vermagic.log": {
+      "bytes": 56,
+      "identity": [
+        2080,
+        1598859,
+        33188,
+        1,
+        56,
+        1794402493535000000,
+        1794402493535000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/installed-vermagic.log",
+      "sha256": "77177b784d9dc5bbb12b7d1036d1b7691d69cf14e1c42869f3e450db30c78bd2"
+    },
+    "modules-install.log": {
+      "bytes": 4044,
+      "identity": [
+        2080,
+        1598833,
+        33188,
+        1,
+        4044,
+        1794402493395000000,
+        1794402493395000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/modules-install.log",
+      "sha256": "3975a342325f7d5fecea1c765c7ebfde99249aeb0dc8f549fd45cfd6e5cd7832"
+    },
+    "result.json": {
+      "bytes": 280819,
+      "identity": [
+        2080,
+        1598864,
+        33188,
+        1,
+        280819,
+        1794402496659000000,
+        1794402496665000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/result.json",
+      "sha256": "054ea3702187da1e24f9990b4f9bd10349952f839ff661fe89cbaca782d385a6"
+    }
+  },
+  "visited_paths": 0
+}

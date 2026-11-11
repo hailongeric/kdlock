@@ -1,0 +1,33 @@
+{
+  "argv": [
+    "/tmp/kdlock-rw-collect5.py",
+    "--output",
+    "/tmp/kdlock-kernel6-api-module-failure-collection-02",
+    "--tree",
+    "receipts",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel6-api-modules-0d0b52c0-02/receipts",
+    "--max-files",
+    "16",
+    "--max-paths",
+    "64",
+    "--max-total-bytes",
+    "16777216",
+    "--max-file-bytes",
+    "8388608",
+    "--max-metadata-bytes",
+    "2097152",
+    "--inventory-seconds",
+    "30",
+    "--copy-seconds",
+    "60"
+  ],
+  "files": {},
+  "max_file_bytes": 8388608,
+  "max_files": 16,
+  "max_metadata_bytes": 2097152,
+  "max_paths": 64,
+  "max_total_bytes": 16777216,
+  "trees": {
+    "receipts": "/mnt/kdlock-builds/kdlock-main-work/kernel6-api-modules-0d0b52c0-02/receipts"
+  }
+}

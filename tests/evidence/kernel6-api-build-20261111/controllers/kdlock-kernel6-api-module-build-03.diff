@@ -1,0 +1,20 @@
+--- /tmp/kdlock-kernel6-api-module-build-02.py
++++ /tmp/kdlock-kernel6-api-module-build-03.py
+@@ -243,7 +243,7 @@
+     return log
+ 
+ 
+-FIXTURE='0d0b52c05c374ba9f7772a8cfe1c61de1d64b1c7'
++FIXTURE='80c272e5f134d9a499c03782f71064d04fae25c3'
+ 
+ def unpack(archive, manifest, destination):
+     files=manifest['files'];require(len(files)==manifest['file_count']==83 and sum(v['bytes'] for v in files.values())==manifest['source_bytes']<=2*1024**2,'exact bounded source membership required')
+@@ -287,7 +287,7 @@
+     client_path,client=checked_json(args.client_receipt,args.client_sha);require(client['status']=='FOCUSED_CHECKS_COMPLETE' and client['boundary_tests']==4,'actual checked client prerequisite required');client_root=client_path.parent.parent;binary=canonical(client_root/'build/mmap-userspace');require(sha(binary)==client['binary_sha256'],'previously built client bytes changed')
+     for name in ('tests/kernel/mmap_api/userspace.c','tests/kernel/mmap_api/abi.h'):
+         require(sha(client_root/'input'/name)==manifest['files'][name]['sha256'],'reused client source/ABI differs')
+-    state_before=idle(focused['identity_after']);rec=recovery(args.recovery,args.recovery_sha,args.host_floor);root=Path(args.output);work=Path('/mnt/kdlock-builds/kdlock-main-work');require(root.is_absolute() and root.parent.resolve(strict=True)==work and root==work/'kernel6-api-modules-0d0b52c0-02' and not os.path.lexists(root),'fresh exact cold source/output root required');require(available('/')>=args.root_floor and available(work)>=args.output_floor,'module build headroom floor')
++    state_before=idle(focused['identity_after']);rec=recovery(args.recovery,args.recovery_sha,args.host_floor);root=Path(args.output);work=Path('/mnt/kdlock-builds/kdlock-main-work');require(root.is_absolute() and root.parent.resolve(strict=True)==work and root==work/'kernel6-api-modules-80c272e5-03' and not os.path.lexists(root),'fresh exact cold source/output root required');require(available('/')>=args.root_floor and available(work)>=args.output_floor,'module build headroom floor')
+     protected_before=protected(focused);kernel_source_before=source_pins(focused,source);boot_before=boot_files();root.mkdir(mode=0o700);out=root/'receipts';out.mkdir(mode=0o700);inp=root/'input';record={'status':'PREPARED','source_commit':FIXTURE,'kernel_core_commit':CORE,'kernel_source_snapshot_commit':manifest['kernel_source_snapshot_git_head'],'kernelrelease':RELEASE,'kernel_source':str(source),'kernel_build':str(build),'build_receipt':str(build_path),'build_receipt_sha256':args.build_sha,'final_identity_sha256':built['final_identity_sha256'],'core_pins_before':identity['files'],'offroot_receipt_sha256':args.offroot_sha,'archive_sha256':args.archive_sha,'manifest_sha256':args.manifest_sha,'state_sha256':args.state_sha,'source_input':str(inp),'commands':[],'modules':{},'identity_before':state_before,'protected_before':protected_before,'kernel_source_before':kernel_source_before,'boot_before':boot_before,'recovery':rec,'reused_client':{'path':str(binary),'sha256':client['binary_sha256'],'receipt':str(client_path),'receipt_sha256':args.client_sha,'source_and_abi_match':True,'executed_in_this_stage':False},'signing':{'public_certificate_sha256':identity['files']['certs/signing_key.x509']['sha256'],'expected_signature_metadata':signature,'private_key_data_recorded':False},'scope':'Two ordinary external Kbuild modules and separately signed copies only. No module load, control operation, test, syscall or boot.'};atomic_json('result.json',record);unpack(archive,manifest,inp);deadline=time.monotonic()+args.seconds;signed_dir=root/'signed';signed_dir.mkdir(mode=0o700)
+     for label,relative,module_name in (('rwsem','tests/kernel/rwsem_api/payload','kd_rwsem_api_fixture.ko'),('mmap','tests/kernel/mmap_api/payload','kd_mmap_api_provider.ko')):
+         module_out=root/(label+'-build');module_out.mkdir(mode=0o700)

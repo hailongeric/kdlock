@@ -1,0 +1,28 @@
+make: Entering directory '/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source'
+make  -C /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/build \
+-f /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/Makefile modules_install
+make[1]: Entering directory '/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/build'
+make --no-print-directory -C /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/build \
+-f /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/Makefile modules_install
+make -f /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/scripts/Makefile.modinst \
+sign-only=
+# SYMLINK /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/build
+  ln -s /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/build /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/build
+# INSTALL /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/modules.order
+  sed 's:^\(.*\)\.o$:kernel/.ko:' modules.order > /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/modules.order
+# INSTALL /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/modules.builtin
+  cp modules.builtin /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/modules.builtin
+# INSTALL /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/modules.builtin.modinfo
+  cp modules.builtin.modinfo /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/modules.builtin.modinfo
+# INSTALL /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/modules.builtin.ranges
+  cp modules.builtin.ranges /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/modules.builtin.ranges
+# INSTALL /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/kernel/fs/nls/nls_iso8859-1.ko
+  cp fs/nls/nls_iso8859-1.ko /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/kernel/fs/nls/nls_iso8859-1.ko
+# STRIP   /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/kernel/fs/nls/nls_iso8859-1.ko
+  strip --strip-debug /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/kernel/fs/nls/nls_iso8859-1.ko
+# SIGN    /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/kernel/fs/nls/nls_iso8859-1.ko
+  if test -e /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/debian/scripts/sign-module && /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/debian/scripts/sign-module /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/kernel/fs/nls/nls_iso8859-1.ko ; then ./scripts/sign-file sha512 "certs/signing_key.pem" ./certs/signing_key.x509 /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6/kernel/fs/nls/nls_iso8859-1.ko  ; fi
+# DEPMOD  /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/receipts/nls-stage-01/raw/lib/modules/7.0.0-38-kdrebuild6
+  /mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source/scripts/depmod.sh 7.0.0-38-kdrebuild6
+make[1]: Leaving directory '/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/build'
+make: Leaving directory '/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04/source'
