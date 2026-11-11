@@ -54,8 +54,33 @@ generated MM completion or typed query reentry result. The
 passed after the separately retained test-input correction. Kernel7's v2
 source and receipts remain distinct.
 
+The independent [kernel8 private rwsem query and mutex checks](../../../tests/evidence/kernel8-private-regressions-20261111/README.md)
+passed on that exact kernel8 boot. Rwsem records 7,257 events, 13 publications,
+13 coverage-ACKed keys and four separately settled facts. Mutex records 4,691
+events, four publications and eight coverage-ACKed keys with no pending facts.
+Their fixed-image mechanisms and actual typed query results remain separate
+from the native syscall lane.
+
+The [managed killable K04 receipt](../../../tests/evidence/kernel8-managed-killable-20261111/README.md)
+records all five named cancellation scenes and two learning scenes, 241 events,
+19 actual child exits and ordinary shutdown/unload. Four compiler cycles
+produce two publications and one coverage-ACKed key. The fixed image and source
+snapshot remain unchanged, with no new ordinary learning. Literal
+`fixed_claim_no_new_facts` is false: a second exact invocation reserves another
+FactKey at the same intentional native frontier. Both distinct keys remain
+unACKed and are durably archived and SETTLED. The earlier
+[exit-ACK wait cycle](../../../tests/evidence/kernel8-killable-exit-recovery-20261111/README.md)
+and [K03 claim-validator failure](../../../tests/evidence/kernel8-killable-claim-recovery-20261111/README.md)
+retain their failed verdicts and separately completed recoveries. This bounded
+mechanism evidence does not establish arbitrary nested cancellation or MM JIT
+completion.
+
 Later MM metadata adds generic RCU/plain-spin SPECIAL entries and shared
-pre-CALL propagation. The
+pre-CALL propagation.
+The [provider-only build](../../../tests/evidence/kernel8-provider-build-runner-ast-20261111/README.md)
+compiled and signed that metadata provider, retaining its 1,912-byte frame
+warning; the provider was not loaded and no MM body executed. The same archive
+separately records the single changed-runner syntax check. The
 [completion and boundary checker receipts](../../../tests/evidence/kernel8-host-completion-boundaries-20261111/README.md)
 record synthetic tests and syntax checks only. The
 [linked MM context review](../../../tests/evidence/kernel8-mm-context-review-20261111/README.md)

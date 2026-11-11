@@ -182,18 +182,21 @@ publishing an image proves that a meaningful MM body ran through generated code.
 The optional metadata-only ABI2 MM profile cold-creates an immutable source
 provider, runtime and original owner state before binding. Its module opt-in
 defaults to false. ABI1 retains its existing layouts and native-only behavior.
-Actual activity must still come from userspace mmap/munmap syscalls. Provider,
-client and host composition remain source work until fresh exact-image checks.
+Actual activity must still come from userspace mmap/munmap syscalls. The
+provider with the generic context frontiers has separate
+[compilation and signing evidence](../../tests/evidence/kernel8-provider-build-runner-ast-20261111/README.md).
+It was not loaded; actual ABI2 MM profile execution remains unvalidated.
 
 The selected cancellation policy distinguishes an ungranted requester C from
 an already-granted W. Selection or an MCS turn is not a grant. Actual grant
 readiness wins over signal cancellation at admission; a committed acquisition
 returns 0 before body effects and cannot later become `-EINTR`. If C has no own
-grant but is serving W, C stops accepting new borrowers, finishes the current
-W and its exact physical/release duties, and lets the existing lock-owned queue
-pass subsequent service to another eligible combiner before C returns
-`-EINTR`. The signal response is intentionally delayed; source effects are not
-undone, replayed or interrupted through a guessed continuation.
+grant but is serving W, C stops accepting new borrowers, hands back or finishes
+W's current continuation, drains its exact physical/release duties, and
+completes its own queue handoff before returning `-EINTR`. Subsequent grants
+remain with the existing lock-owned queue; their actual execution need not
+precede C's return. The signal response is intentionally delayed; source
+effects are not undone, replayed or interrupted through a guessed continuation.
 
 The current supported workload excludes this specific circular dependency:
 R retains a READ grant until C reports cancellation, while ungranted C is
@@ -216,7 +219,15 @@ Other residue still follows current-task exact drain. In particular, historical
 physical-owner records must be reaped before this queue-only detach can qualify;
 broader asynchronous owner-record retirement is not implemented. A task cannot
 exit with an executable source continuation or an outstanding physical duty.
-These ordering claims are source-reviewed invariants, not runtime evidence.
+The [bounded kernel8 killable fixture](../../tests/evidence/kernel8-managed-killable-20261111/README.md)
+records readiness before cancellation, cancellation while a reader remains held,
+actual queued-task exit before predecessor release, foreign waiter notification,
+and C returning `-EINTR` after W's physical release. W's later source unlock
+return is a separate event. The fixture preserves exact physical and storage
+retirement checks and all 19 actual child exits. It supplies mechanism evidence
+for these scenes, without establishing
+general nested cancellation or progress. The earlier exit-ACK wait cycle and
+claim-validator failure remain preserved with their separate ordinary recoveries.
 
 ## Typed physical query source lane
 
@@ -246,8 +257,11 @@ authorizes release. This extension supplies no MM helper model and no task,
 per-CPU, RCU or fault-context equivalence. Unsupported reached operations keep
 exact native handback. The query core compiled and booted as kernel8. Its
 [eight directly affected boundary cases and linked GS checks](../../tests/evidence/kernel8-affected-build-20261111/README.md)
-passed after the separately retained test-input correction. Private typed
-query reentry and generated MM completion remain separate runtime checks.
+passed after the separately retained test-input correction. The independent
+[kernel8 rwsem query and mutex regressions](../../tests/evidence/kernel8-private-regressions-20261111/README.md)
+also passed. The rwsem receipt records typed predicates through shared READ,
+WRITE, retained logical READ with physical WRITE, and native real READ after
+downgrade. These query observations do not establish generated MM completion.
 
 
 ## Native RCU and page-table context boundary
