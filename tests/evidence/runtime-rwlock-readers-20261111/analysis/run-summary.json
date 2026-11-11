@@ -1,0 +1,38 @@
+{
+  "all_final_binary_JSON_rows_equal": true,
+  "all_wire_status_zero": true,
+  "archive_sha256": "48ed78e26d069bba24936dbe1df82a2682e907d080d0642432649910e775c1d4",
+  "compiler_cycles": 12,
+  "controller_sha256": "1eabd219a39e5d781081b59f89a603eed2c220b19fc39570b8cf2474daad90a1",
+  "coverage_ACK_keys": 10,
+  "guest_payload_bytes": 36624790,
+  "guest_payload_count": 503,
+  "module_sha256": "f3f8e7e57c1fea405042af1afa5e2e5cf12e51882fc7849d55a24cbc9a309504",
+  "observation_overflow": 0,
+  "observation_records": 6628,
+  "publications": 10,
+  "reader_bounds": {
+    "cycle_capacity": 56,
+    "holder_timeout_ms": 20000,
+    "image_capacity": 54,
+    "learning_passes": 16,
+    "runtime_block_visits": 16000000
+  },
+  "settled_keys": 3,
+  "shared_provenance": "../module-reader-build-20261111",
+  "status": "protected_rwlock_jit_reader_mechanism_pass",
+  "warm_claim_empty": false,
+  "warm_claim_no_new_facts": true,
+  "warm_image_identity": 18379471558673722680,
+  "warm_retained_intentional_keys": [
+    {
+      "incarnation": 1,
+      "record": "440a600b010011ff"
+    }
+  ],
+  "wire_log": {
+    "byte_limit": 268435456,
+    "reservations": 70,
+    "reserved_bytes": 154768621
+  }
+}

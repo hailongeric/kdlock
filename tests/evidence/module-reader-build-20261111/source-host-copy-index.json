@@ -1,0 +1,1475 @@
+{
+  "copied_count": 86,
+  "files": [
+    {
+      "destination": "collection/.collection/collection-helper.py.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/collection-helper.py.txt",
+      "source_bytes": 18940,
+      "source_identity": [
+        66306,
+        26749000,
+        33204,
+        18940,
+        1794385436778503233,
+        1794385436778503233
+      ],
+      "source_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d",
+      "stored_bytes": 18940,
+      "stored_sha256": "3cd38218bee1a01d9747deee866eba8122144ec6571634f86872ba3cc1f9890d"
+    },
+    {
+      "destination": "collection/.collection/copy-command.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/copy-command.json",
+      "source_bytes": 390,
+      "source_identity": [
+        66306,
+        26749008,
+        33204,
+        390,
+        1794385437604517017,
+        1794385437604517017
+      ],
+      "source_sha256": "c5f47b92a5e536ced57c73dc8de1fee463c2b84323b08f1435b3cb66d76c3ce3",
+      "stored_bytes": 390,
+      "stored_sha256": "c5f47b92a5e536ced57c73dc8de1fee463c2b84323b08f1435b3cb66d76c3ce3"
+    },
+    {
+      "destination": "collection/.collection/copy-input.py.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/copy-input.py.txt",
+      "source_bytes": 563454,
+      "source_identity": [
+        66306,
+        26749007,
+        33204,
+        563454,
+        1794385437594516850,
+        1794385437594516850
+      ],
+      "source_sha256": "043b619482f22a092284af106c385ae81871ccec71aed049d4cd3dd6132837a1",
+      "stored_bytes": 563454,
+      "stored_sha256": "043b619482f22a092284af106c385ae81871ccec71aed049d4cd3dd6132837a1"
+    },
+    {
+      "destination": "collection/.collection/copy-result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/copy-result.json",
+      "source_bytes": 757,
+      "source_identity": [
+        66306,
+        26749011,
+        33204,
+        757,
+        1794385439120542315,
+        1794385439120542315
+      ],
+      "source_sha256": "e1418a111555c839595332a3023ae8df51c6bb45d5a87af4e430c1bb3b332b0c",
+      "stored_bytes": 757,
+      "stored_sha256": "e1418a111555c839595332a3023ae8df51c6bb45d5a87af4e430c1bb3b332b0c"
+    },
+    {
+      "destination": "collection/.collection/copy-stderr.log",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/copy-stderr.log",
+      "source_bytes": 0,
+      "source_identity": [
+        66306,
+        26749010,
+        33204,
+        0,
+        1794385437610517117,
+        1794385437610517117
+      ],
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "destination": "collection/.collection/copy.tar.gz",
+      "encoding": "gzip",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/copy.tar",
+      "source_bytes": 76953600,
+      "source_identity": [
+        66306,
+        26749009,
+        33204,
+        76953600,
+        1794385438552532837,
+        1794385438552532837
+      ],
+      "source_sha256": "8702b40702b0afca0fec3413f5560c5256ebcbc21e679858c28f142559d010e4",
+      "stored_bytes": 5842677,
+      "stored_sha256": "26262ab8babc2a3e5a6138d87f4d61ab96d52b6f977789a601cba63f9d812c22"
+    },
+    {
+      "destination": "collection/.collection/inventory-after-command.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-after-command.json",
+      "source_bytes": 399,
+      "source_identity": [
+        66306,
+        26749013,
+        33204,
+        399,
+        1794385439795553580,
+        1794385439795553580
+      ],
+      "source_sha256": "0c50b6a1941531bc05e04341dba711a95e0b899cb92e136d951602028e76c9c0",
+      "stored_bytes": 399,
+      "stored_sha256": "0c50b6a1941531bc05e04341dba711a95e0b899cb92e136d951602028e76c9c0"
+    },
+    {
+      "destination": "collection/.collection/inventory-after-input.py.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-after-input.py.txt",
+      "source_bytes": 5046,
+      "source_identity": [
+        66306,
+        26749012,
+        33204,
+        5046,
+        1794385439780553330,
+        1794385439780553330
+      ],
+      "source_sha256": "64cebd4e5c0e328535e3bd6568b0c312e05bd7307c110a1c61c9765585694697",
+      "stored_bytes": 5046,
+      "stored_sha256": "64cebd4e5c0e328535e3bd6568b0c312e05bd7307c110a1c61c9765585694697"
+    },
+    {
+      "destination": "collection/.collection/inventory-after-result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-after-result.json",
+      "source_bytes": 765,
+      "source_identity": [
+        66306,
+        26749016,
+        33204,
+        765,
+        1794385440262561374,
+        1794385440262561374
+      ],
+      "source_sha256": "7b17c5c5ab672debf358449d9c1d505a5c5050fbe25c906f979342fb40ff1e64",
+      "stored_bytes": 765,
+      "stored_sha256": "7b17c5c5ab672debf358449d9c1d505a5c5050fbe25c906f979342fb40ff1e64"
+    },
+    {
+      "destination": "collection/.collection/inventory-after-stderr.log",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-after-stderr.log",
+      "source_bytes": 0,
+      "source_identity": [
+        66306,
+        26749015,
+        33204,
+        0,
+        1794385439802553697,
+        1794385439802553697
+      ],
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "destination": "collection/.collection/inventory-after.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-after.json",
+      "source_bytes": 535522,
+      "source_identity": [
+        66306,
+        26749014,
+        33204,
+        535522,
+        1794385440239560990,
+        1794385440239560990
+      ],
+      "source_sha256": "659e65f36c343b295f9b3fb1fc8777854a8b988ba41e29e0409a6b3b65700e35",
+      "stored_bytes": 535522,
+      "stored_sha256": "659e65f36c343b295f9b3fb1fc8777854a8b988ba41e29e0409a6b3b65700e35"
+    },
+    {
+      "destination": "collection/.collection/inventory-before-command.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-before-command.json",
+      "source_bytes": 400,
+      "source_identity": [
+        66306,
+        26749003,
+        33204,
+        400,
+        1794385436798503567,
+        1794385436798503567
+      ],
+      "source_sha256": "e8eae1a0443cbb68ed5cf001a6f14bbd82f365279732fba498be9cc2e9d74da2",
+      "stored_bytes": 400,
+      "stored_sha256": "e8eae1a0443cbb68ed5cf001a6f14bbd82f365279732fba498be9cc2e9d74da2"
+    },
+    {
+      "destination": "collection/.collection/inventory-before-input.py.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-before-input.py.txt",
+      "source_bytes": 5046,
+      "source_identity": [
+        66306,
+        26749002,
+        33204,
+        5046,
+        1794385436791503450,
+        1794385436791503450
+      ],
+      "source_sha256": "64cebd4e5c0e328535e3bd6568b0c312e05bd7307c110a1c61c9765585694697",
+      "stored_bytes": 5046,
+      "stored_sha256": "64cebd4e5c0e328535e3bd6568b0c312e05bd7307c110a1c61c9765585694697"
+    },
+    {
+      "destination": "collection/.collection/inventory-before-result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-before-result.json",
+      "source_bytes": 766,
+      "source_identity": [
+        66306,
+        26749006,
+        33204,
+        766,
+        1794385437508515415,
+        1794385437508515415
+      ],
+      "source_sha256": "9ae1671b775d55c3da302ebcc1cca4d674477b798fdd3f204572540b4a550578",
+      "stored_bytes": 766,
+      "stored_sha256": "9ae1671b775d55c3da302ebcc1cca4d674477b798fdd3f204572540b4a550578"
+    },
+    {
+      "destination": "collection/.collection/inventory-before-stderr.log",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-before-stderr.log",
+      "source_bytes": 0,
+      "source_identity": [
+        66306,
+        26749005,
+        33204,
+        0,
+        1794385436804503667,
+        1794385436804503667
+      ],
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "destination": "collection/.collection/inventory-before.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/inventory-before.json",
+      "source_bytes": 535522,
+      "source_identity": [
+        66306,
+        26749004,
+        33204,
+        535522,
+        1794385437482514981,
+        1794385437482514981
+      ],
+      "source_sha256": "e5887516b47aee7e68be51b3463e50baf9e60ca1ead81917f9abbf8a966112aa",
+      "stored_bytes": 535522,
+      "stored_sha256": "e5887516b47aee7e68be51b3463e50baf9e60ca1ead81917f9abbf8a966112aa"
+    },
+    {
+      "destination": "collection/.collection/selection.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/.collection/selection.json",
+      "source_bytes": 2511,
+      "source_identity": [
+        66306,
+        26749001,
+        33204,
+        2511,
+        1794385436784503333,
+        1794385436784503333
+      ],
+      "source_sha256": "112ebfb269688641af6f9c13e6ab3fbea6e4da94d798a066a5f77b68574db048",
+      "stored_bytes": 2511,
+      "stored_sha256": "112ebfb269688641af6f9c13e6ab3fbea6e4da94d798a066a5f77b68574db048"
+    },
+    {
+      "destination": "collection/collection.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/collection.json",
+      "source_bytes": 286,
+      "source_identity": [
+        66306,
+        26750233,
+        33204,
+        286,
+        1794385454854804958,
+        1794385454854804958
+      ],
+      "source_sha256": "58620f322df66d795e2d2f82f5db3bd0bb7ea01e1d7e80187394ad58e8e11186",
+      "stored_bytes": 286,
+      "stored_sha256": "58620f322df66d795e2d2f82f5db3bd0bb7ea01e1d7e80187394ad58e8e11186"
+    },
+    {
+      "destination": "collection/copy-index.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/copy-index.json",
+      "source_bytes": 553447,
+      "source_identity": [
+        66306,
+        26750232,
+        33204,
+        553447,
+        1794385454846804824,
+        1794385454846804824
+      ],
+      "source_sha256": "f2ad589b7e3ad0ce6d5f2e92514449c9ef52f8274fb8c79e604aa67d764e30b9",
+      "stored_bytes": 553447,
+      "stored_sha256": "f2ad589b7e3ad0ce6d5f2e92514449c9ef52f8274fb8c79e604aa67d764e30b9"
+    },
+    {
+      "destination": "collection/payload/module-build/mutex/child-result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/mutex/child-result.json",
+      "source_bytes": 148,
+      "source_identity": [
+        66306,
+        26749020,
+        33204,
+        148,
+        1794385440603567065,
+        1794385440603567065
+      ],
+      "source_sha256": "bcf11be282428930a10096ad098f33ca7c25fce2493d7905fcbbe109e3dada59",
+      "stored_bytes": 148,
+      "stored_sha256": "bcf11be282428930a10096ad098f33ca7c25fce2493d7905fcbbe109e3dada59"
+    },
+    {
+      "destination": "collection/payload/module-build/mutex/child.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/mutex/child.json",
+      "source_bytes": 63,
+      "source_identity": [
+        66306,
+        26749021,
+        33204,
+        63,
+        1794385440624567415,
+        1794385440624567415
+      ],
+      "source_sha256": "d5f30d43469e790530e5087602bc0bffb30061d2cd44b8fa45c94ee67c32e3b9",
+      "stored_bytes": 63,
+      "stored_sha256": "d5f30d43469e790530e5087602bc0bffb30061d2cd44b8fa45c94ee67c32e3b9"
+    },
+    {
+      "destination": "collection/payload/module-build/mutex/command.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/mutex/command.json",
+      "source_bytes": 593,
+      "source_identity": [
+        66306,
+        26749022,
+        33204,
+        593,
+        1794385440637567632,
+        1794385440637567632
+      ],
+      "source_sha256": "a65fea6740358ebd60f5fe848d61f28adbf1dbe4a3294395b73cda1f9fa2db77",
+      "stored_bytes": 593,
+      "stored_sha256": "a65fea6740358ebd60f5fe848d61f28adbf1dbe4a3294395b73cda1f9fa2db77"
+    },
+    {
+      "destination": "collection/payload/module-build/mutex/modinfo.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/mutex/modinfo.txt",
+      "source_bytes": 1676,
+      "source_identity": [
+        66306,
+        26749023,
+        33204,
+        1676,
+        1794385440650567849,
+        1794385440650567849
+      ],
+      "source_sha256": "0870926a169798e6cbe3241592826a7709ea159f988131b777b52ae931700dcd",
+      "stored_bytes": 1676,
+      "stored_sha256": "0870926a169798e6cbe3241592826a7709ea159f988131b777b52ae931700dcd"
+    },
+    {
+      "destination": "collection/payload/module-build/mutex/stdout.log",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/mutex/stdout.log",
+      "source_bytes": 17929,
+      "source_identity": [
+        66306,
+        26749024,
+        33204,
+        17929,
+        1794385440663568066,
+        1794385440663568066
+      ],
+      "source_sha256": "654f6cfa655b77117bbc9eb5c0deda1c6d4714a1685edd7039f39e85ec160b57",
+      "stored_bytes": 17929,
+      "stored_sha256": "654f6cfa655b77117bbc9eb5c0deda1c6d4714a1685edd7039f39e85ec160b57"
+    },
+    {
+      "destination": "collection/payload/module-build/mutex/symbols.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/mutex/symbols.txt",
+      "source_bytes": 8560,
+      "source_identity": [
+        66306,
+        26749025,
+        33204,
+        8560,
+        1794385440676568283,
+        1794385440676568283
+      ],
+      "source_sha256": "001fdb1b73dea98ecbd6c131efe56057671a0d74a7768b2454d00705c85ed398",
+      "stored_bytes": 8560,
+      "stored_sha256": "001fdb1b73dea98ecbd6c131efe56057671a0d74a7768b2454d00705c85ed398"
+    },
+    {
+      "destination": "collection/payload/module-build/result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/result.json",
+      "source_bytes": 37029,
+      "source_identity": [
+        66306,
+        26749026,
+        33204,
+        37029,
+        1794385440689568500,
+        1794385440689568500
+      ],
+      "source_sha256": "0cabe41443f427102aa1e8ec6d0d4edfc8ec69fe44aa7d5a19e3c94c660e7fa2",
+      "stored_bytes": 37029,
+      "stored_sha256": "0cabe41443f427102aa1e8ec6d0d4edfc8ec69fe44aa7d5a19e3c94c660e7fa2"
+    },
+    {
+      "destination": "collection/payload/module-build/rwlock/child-result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwlock/child-result.json",
+      "source_bytes": 147,
+      "source_identity": [
+        66306,
+        26749028,
+        33204,
+        147,
+        1794385440702568717,
+        1794385440702568717
+      ],
+      "source_sha256": "0cc2cfc43279509704eacb5ebbd978049608f07a1889a809c9e98dfffe1795b5",
+      "stored_bytes": 147,
+      "stored_sha256": "0cc2cfc43279509704eacb5ebbd978049608f07a1889a809c9e98dfffe1795b5"
+    },
+    {
+      "destination": "collection/payload/module-build/rwlock/child.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwlock/child.json",
+      "source_bytes": 63,
+      "source_identity": [
+        66306,
+        26749029,
+        33204,
+        63,
+        1794385440715568934,
+        1794385440715568934
+      ],
+      "source_sha256": "21016e8266037c4466f072efe4a6cc71245a4b6c1ae3160ed604d1ed959a410b",
+      "stored_bytes": 63,
+      "stored_sha256": "21016e8266037c4466f072efe4a6cc71245a4b6c1ae3160ed604d1ed959a410b"
+    },
+    {
+      "destination": "collection/payload/module-build/rwlock/command.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwlock/command.json",
+      "source_bytes": 601,
+      "source_identity": [
+        66306,
+        26749030,
+        33204,
+        601,
+        1794385440727569134,
+        1794385440727569134
+      ],
+      "source_sha256": "ac866d62bfa7671c1ecf512a5c838d1513eadb6a6450193d4215406839582afc",
+      "stored_bytes": 601,
+      "stored_sha256": "ac866d62bfa7671c1ecf512a5c838d1513eadb6a6450193d4215406839582afc"
+    },
+    {
+      "destination": "collection/payload/module-build/rwlock/modinfo.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwlock/modinfo.txt",
+      "source_bytes": 1964,
+      "source_identity": [
+        66306,
+        26749031,
+        33204,
+        1964,
+        1794385440741569368,
+        1794385440741569368
+      ],
+      "source_sha256": "1fed3d1c45be706a6abe5cb9af648c93b3b4d9e708285be39b53d8385847dc64",
+      "stored_bytes": 1964,
+      "stored_sha256": "1fed3d1c45be706a6abe5cb9af648c93b3b4d9e708285be39b53d8385847dc64"
+    },
+    {
+      "destination": "collection/payload/module-build/rwlock/stdout.log",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwlock/stdout.log",
+      "source_bytes": 19560,
+      "source_identity": [
+        66306,
+        26749032,
+        33204,
+        19560,
+        1794385440753569568,
+        1794385440753569568
+      ],
+      "source_sha256": "bf10fe5a4c9221d3d094b494eb3ce0e91d95606e91bffce9a92ef4da437ccf67",
+      "stored_bytes": 19560,
+      "stored_sha256": "bf10fe5a4c9221d3d094b494eb3ce0e91d95606e91bffce9a92ef4da437ccf67"
+    },
+    {
+      "destination": "collection/payload/module-build/rwlock/symbols.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwlock/symbols.txt",
+      "source_bytes": 10777,
+      "source_identity": [
+        66306,
+        26749033,
+        33204,
+        10777,
+        1794385440766569785,
+        1794385440766569785
+      ],
+      "source_sha256": "44ef351cc59e4f7d679c17ac0c5e1db22aa9f2481fc70b21666594dc8b65b47e",
+      "stored_bytes": 10777,
+      "stored_sha256": "44ef351cc59e4f7d679c17ac0c5e1db22aa9f2481fc70b21666594dc8b65b47e"
+    },
+    {
+      "destination": "collection/payload/module-build/rwsem/child-result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwsem/child-result.json",
+      "source_bytes": 147,
+      "source_identity": [
+        66306,
+        26749035,
+        33204,
+        147,
+        1794385440780570019,
+        1794385440780570019
+      ],
+      "source_sha256": "2a9b9973c0a25cbbe4200f2f192ca6dff770a8afe09144557237d75020a54d86",
+      "stored_bytes": 147,
+      "stored_sha256": "2a9b9973c0a25cbbe4200f2f192ca6dff770a8afe09144557237d75020a54d86"
+    },
+    {
+      "destination": "collection/payload/module-build/rwsem/child.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwsem/child.json",
+      "source_bytes": 63,
+      "source_identity": [
+        66306,
+        26749036,
+        33204,
+        63,
+        1794385440792570219,
+        1794385440792570219
+      ],
+      "source_sha256": "5e1a27d09dad29713b4afd139700bf31909a51225cd00838f12975c9b8831c4b",
+      "stored_bytes": 63,
+      "stored_sha256": "5e1a27d09dad29713b4afd139700bf31909a51225cd00838f12975c9b8831c4b"
+    },
+    {
+      "destination": "collection/payload/module-build/rwsem/command.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwsem/command.json",
+      "source_bytes": 599,
+      "source_identity": [
+        66306,
+        26749037,
+        33204,
+        599,
+        1794385440805570436,
+        1794385440805570436
+      ],
+      "source_sha256": "0a7491cea3c379906785e4065fb28d1c9a756f41ae16c29a165eaa574613c2be",
+      "stored_bytes": 599,
+      "stored_sha256": "0a7491cea3c379906785e4065fb28d1c9a756f41ae16c29a165eaa574613c2be"
+    },
+    {
+      "destination": "collection/payload/module-build/rwsem/modinfo.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwsem/modinfo.txt",
+      "source_bytes": 1976,
+      "source_identity": [
+        66306,
+        26749038,
+        33204,
+        1976,
+        1794385440818570653,
+        1794385440818570653
+      ],
+      "source_sha256": "0c7fd3fce40c72c5ec0e6b8d29da545926d4980dab8e2cf0eebfedbe46235034",
+      "stored_bytes": 1976,
+      "stored_sha256": "0c7fd3fce40c72c5ec0e6b8d29da545926d4980dab8e2cf0eebfedbe46235034"
+    },
+    {
+      "destination": "collection/payload/module-build/rwsem/stdout.log",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwsem/stdout.log",
+      "source_bytes": 19108,
+      "source_identity": [
+        66306,
+        26749039,
+        33204,
+        19108,
+        1794385440831570870,
+        1794385440831570870
+      ],
+      "source_sha256": "5ad978ff38a42e91159c0d72648d66cefce19b20e397b9e29d0e9592eb20f0f8",
+      "stored_bytes": 19108,
+      "stored_sha256": "5ad978ff38a42e91159c0d72648d66cefce19b20e397b9e29d0e9592eb20f0f8"
+    },
+    {
+      "destination": "collection/payload/module-build/rwsem/symbols.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/rwsem/symbols.txt",
+      "source_bytes": 10787,
+      "source_identity": [
+        66306,
+        26749040,
+        33204,
+        10787,
+        1794385440844571087,
+        1794385440844571087
+      ],
+      "source_sha256": "f5af17dd82142d89221f5e10d62d02575d601028fb1a836fcb431e1c90c10287",
+      "stored_bytes": 10787,
+      "stored_sha256": "f5af17dd82142d89221f5e10d62d02575d601028fb1a836fcb431e1c90c10287"
+    },
+    {
+      "destination": "collection/payload/module-build/spin/child-result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/spin/child-result.json",
+      "source_bytes": 146,
+      "source_identity": [
+        66306,
+        26749042,
+        33204,
+        146,
+        1794385440857571304,
+        1794385440857571304
+      ],
+      "source_sha256": "bf57135c0ebd64c8f65b4f1129b3d68a733b8e3eec068ed7072f19aed1a6ff5c",
+      "stored_bytes": 146,
+      "stored_sha256": "bf57135c0ebd64c8f65b4f1129b3d68a733b8e3eec068ed7072f19aed1a6ff5c"
+    },
+    {
+      "destination": "collection/payload/module-build/spin/child.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/spin/child.json",
+      "source_bytes": 63,
+      "source_identity": [
+        66306,
+        26749043,
+        33204,
+        63,
+        1794385440870571521,
+        1794385440870571521
+      ],
+      "source_sha256": "ffe8ac7c579c9189354d27444a7118cd2720394064b2f79cd4859c0b339d3473",
+      "stored_bytes": 63,
+      "stored_sha256": "ffe8ac7c579c9189354d27444a7118cd2720394064b2f79cd4859c0b339d3473"
+    },
+    {
+      "destination": "collection/payload/module-build/spin/command.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/spin/command.json",
+      "source_bytes": 597,
+      "source_identity": [
+        66306,
+        26749044,
+        33204,
+        597,
+        1794385440883571738,
+        1794385440883571738
+      ],
+      "source_sha256": "b5d5332d8c2e4f44338ea15256b508a55105a3460bf40598a1a3df9d9a099b92",
+      "stored_bytes": 597,
+      "stored_sha256": "b5d5332d8c2e4f44338ea15256b508a55105a3460bf40598a1a3df9d9a099b92"
+    },
+    {
+      "destination": "collection/payload/module-build/spin/modinfo.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/spin/modinfo.txt",
+      "source_bytes": 1849,
+      "source_identity": [
+        66306,
+        26749045,
+        33204,
+        1849,
+        1794385440895571938,
+        1794385440895571938
+      ],
+      "source_sha256": "08689c4191b2ec5d2e363655159f0b2745496f06a7f9ff6c20ef46d1a3bf2303",
+      "stored_bytes": 1849,
+      "stored_sha256": "08689c4191b2ec5d2e363655159f0b2745496f06a7f9ff6c20ef46d1a3bf2303"
+    },
+    {
+      "destination": "collection/payload/module-build/spin/stdout.log",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/spin/stdout.log",
+      "source_bytes": 18453,
+      "source_identity": [
+        66306,
+        26749046,
+        33204,
+        18453,
+        1794385440908572155,
+        1794385440908572155
+      ],
+      "source_sha256": "30fd214a2a1b946f8f70567b9ff231140a75b88d43f9a5464102961762cc10fb",
+      "stored_bytes": 18453,
+      "stored_sha256": "30fd214a2a1b946f8f70567b9ff231140a75b88d43f9a5464102961762cc10fb"
+    },
+    {
+      "destination": "collection/payload/module-build/spin/symbols.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/module-build/spin/symbols.txt",
+      "source_bytes": 9555,
+      "source_identity": [
+        66306,
+        26749047,
+        33204,
+        9555,
+        1794385440921572372,
+        1794385440921572372
+      ],
+      "source_sha256": "94522165dd8b4668b19ca6da18d5385864bba96e5dcc2a268b495997f10bc82e",
+      "stored_bytes": 9555,
+      "stored_sha256": "94522165dd8b4668b19ca6da18d5385864bba96e5dcc2a268b495997f10bc82e"
+    },
+    {
+      "destination": "collection/payload/postboot/boot-kernel-journal.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/boot-kernel-journal.txt",
+      "source_bytes": 58003,
+      "source_identity": [
+        66306,
+        26749329,
+        33204,
+        58003,
+        1794385444101625447,
+        1794385444101625447
+      ],
+      "source_sha256": "60349d404dbf4306847ff49645de4a72bc5aa6295d06596a91d274c392562c95",
+      "stored_bytes": 58003,
+      "stored_sha256": "60349d404dbf4306847ff49645de4a72bc5aa6295d06596a91d274c392562c95"
+    },
+    {
+      "destination": "collection/payload/postboot/cmdline.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/cmdline.txt",
+      "source_bytes": 139,
+      "source_identity": [
+        66306,
+        26749330,
+        33204,
+        139,
+        1794385444114625664,
+        1794385444114625664
+      ],
+      "source_sha256": "f83c2812f822117594326a5944fe032a1c60dc16de11abf1cbfcdafcd8b1be8b",
+      "stored_bytes": 139,
+      "stored_sha256": "f83c2812f822117594326a5944fe032a1c60dc16de11abf1cbfcdafcd8b1be8b"
+    },
+    {
+      "destination": "collection/payload/postboot/cpuinfo.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/cpuinfo.txt",
+      "source_bytes": 111374,
+      "source_identity": [
+        66306,
+        26749331,
+        33204,
+        111374,
+        1794385444127625881,
+        1794385444127625881
+      ],
+      "source_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921",
+      "stored_bytes": 111374,
+      "stored_sha256": "8868e6573aefb1df428800b6ea44e33955cc1f45f045a9b44e41cf69e4ba4921"
+    },
+    {
+      "destination": "collection/payload/postboot/dmesg.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/dmesg.txt",
+      "source_bytes": 48991,
+      "source_identity": [
+        66306,
+        26749332,
+        33204,
+        48991,
+        1794385444140626098,
+        1794385444140626098
+      ],
+      "source_sha256": "dda1b4bf17cb24b6856c9e466cfde5e34cad7ecf0f173926ff7d77479c9cf2c4",
+      "stored_bytes": 48991,
+      "stored_sha256": "dda1b4bf17cb24b6856c9e466cfde5e34cad7ecf0f173926ff7d77479c9cf2c4"
+    },
+    {
+      "destination": "collection/payload/postboot/grub-environment.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/grub-environment.txt",
+      "source_bytes": 12,
+      "source_identity": [
+        66306,
+        26749333,
+        33204,
+        12,
+        1794385444154626332,
+        1794385444154626332
+      ],
+      "source_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0",
+      "stored_bytes": 12,
+      "stored_sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "destination": "collection/payload/postboot/grub.cfg",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/grub.cfg",
+      "source_bytes": 34308,
+      "source_identity": [
+        66306,
+        26749334,
+        33204,
+        34308,
+        1794385444166626532,
+        1794385444166626532
+      ],
+      "source_sha256": "4cb0e54c275387c4e725b1dc3d6c69393ec98207a5ea71d1c736c227b5eb93be",
+      "stored_bytes": 34308,
+      "stored_sha256": "4cb0e54c275387c4e725b1dc3d6c69393ec98207a5ea71d1c736c227b5eb93be"
+    },
+    {
+      "destination": "collection/payload/postboot/gs-proof.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/gs-proof.json",
+      "source_bytes": 709,
+      "source_identity": [
+        66306,
+        26749335,
+        33204,
+        709,
+        1794385444179626749,
+        1794385444179626749
+      ],
+      "source_sha256": "91ebb7c5763525eca8a339e64376be3583baa0789b3eda7cb3b05d5fb9e029ee",
+      "stored_bytes": 709,
+      "stored_sha256": "91ebb7c5763525eca8a339e64376be3583baa0789b3eda7cb3b05d5fb9e029ee"
+    },
+    {
+      "destination": "collection/payload/postboot/modules.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/modules.txt",
+      "source_bytes": 48,
+      "source_identity": [
+        66306,
+        26749336,
+        33204,
+        48,
+        1794385444192626966,
+        1794385444192626966
+      ],
+      "source_sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132",
+      "stored_bytes": 48,
+      "stored_sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132"
+    },
+    {
+      "destination": "collection/payload/postboot/mount-boot-efi.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/mount-boot-efi.txt",
+      "source_bytes": 26,
+      "source_identity": [
+        66306,
+        26749337,
+        33204,
+        26,
+        1794385444205627183,
+        1794385444205627183
+      ],
+      "source_sha256": "e8c67255efc0448583a1645c3d315d417cba50c01bdbe0260a4333a3e261b48d",
+      "stored_bytes": 26,
+      "stored_sha256": "e8c67255efc0448583a1645c3d315d417cba50c01bdbe0260a4333a3e261b48d"
+    },
+    {
+      "destination": "collection/payload/postboot/mount-mnt-kdlock-builds.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/mount-mnt-kdlock-builds.txt",
+      "source_bytes": 33,
+      "source_identity": [
+        66306,
+        26749338,
+        33204,
+        33,
+        1794385444218627400,
+        1794385444218627400
+      ],
+      "source_sha256": "3bda93efc31be965b14352cd48863f2bd1b11d8ed632e0b280a8db1e107567ab",
+      "stored_bytes": 33,
+      "stored_sha256": "3bda93efc31be965b14352cd48863f2bd1b11d8ed632e0b280a8db1e107567ab"
+    },
+    {
+      "destination": "collection/payload/postboot/mount-mnt-kdlock-builds2.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/mount-mnt-kdlock-builds2.txt",
+      "source_bytes": 34,
+      "source_identity": [
+        66306,
+        26749339,
+        33204,
+        34,
+        1794385444230627600,
+        1794385444230627600
+      ],
+      "source_sha256": "c8a80456051a5abbc122afa9720b480e196e20082fa4511a3ce2a2c962f547ad",
+      "stored_bytes": 34,
+      "stored_sha256": "c8a80456051a5abbc122afa9720b480e196e20082fa4511a3ce2a2c962f547ad"
+    },
+    {
+      "destination": "collection/payload/postboot/mount-root.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/mount-root.txt",
+      "source_bytes": 17,
+      "source_identity": [
+        66306,
+        26749340,
+        33204,
+        17,
+        1794385444243627817,
+        1794385444243627817
+      ],
+      "source_sha256": "5684e9db57b2bdf63e8bd6e87299d59fc5d83f14f850816171b7a816006838cc",
+      "stored_bytes": 17,
+      "stored_sha256": "5684e9db57b2bdf63e8bd6e87299d59fc5d83f14f850816171b7a816006838cc"
+    },
+    {
+      "destination": "collection/payload/postboot/normal-recovery-boot-unchanged.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/normal-recovery-boot-unchanged.json",
+      "source_bytes": 1755,
+      "source_identity": [
+        66306,
+        26749341,
+        33204,
+        1755,
+        1794385444256628034,
+        1794385444256628034
+      ],
+      "source_sha256": "d2fcedc598e32927c09397d40173ccb05d03bc14017699f59ce339e5caa7b9a7",
+      "stored_bytes": 1755,
+      "stored_sha256": "d2fcedc598e32927c09397d40173ccb05d03bc14017699f59ce339e5caa7b9a7"
+    },
+    {
+      "destination": "collection/payload/postboot/prior-arm-complete.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/prior-arm-complete.json",
+      "source_bytes": 142,
+      "source_identity": [
+        66306,
+        26749342,
+        33204,
+        142,
+        1794385444268628234,
+        1794385444268628234
+      ],
+      "source_sha256": "e26e29183a803fb4fb10df378215fd6a04238a028f2fea939f6c62267f0ffb90",
+      "stored_bytes": 142,
+      "stored_sha256": "e26e29183a803fb4fb10df378215fd6a04238a028f2fea939f6c62267f0ffb90"
+    },
+    {
+      "destination": "collection/payload/postboot/prior-armed-grub.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/prior-armed-grub.json",
+      "source_bytes": 570,
+      "source_identity": [
+        66306,
+        26749343,
+        33204,
+        570,
+        1794385444281628451,
+        1794385444281628451
+      ],
+      "source_sha256": "006464f1d4e02a5a0ece8d1b1d2019380ee8c84a1d5017bfef948853d170b328",
+      "stored_bytes": 570,
+      "stored_sha256": "006464f1d4e02a5a0ece8d1b1d2019380ee8c84a1d5017bfef948853d170b328"
+    },
+    {
+      "destination": "collection/payload/postboot/prior-candidate-boot-unchanged.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/prior-candidate-boot-unchanged.json",
+      "source_bytes": 3191,
+      "source_identity": [
+        66306,
+        26749344,
+        33204,
+        3191,
+        1794385444294628668,
+        1794385444294628668
+      ],
+      "source_sha256": "54bb8333b2e11cef6b4b8c24cdf98353b72b9a080e81829297d0d0f9aecb4758",
+      "stored_bytes": 3191,
+      "stored_sha256": "54bb8333b2e11cef6b4b8c24cdf98353b72b9a080e81829297d0d0f9aecb4758"
+    },
+    {
+      "destination": "collection/payload/postboot/result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/result.json",
+      "source_bytes": 163210,
+      "source_identity": [
+        66306,
+        26749345,
+        33204,
+        163210,
+        1794385444307628885,
+        1794385444307628885
+      ],
+      "source_sha256": "98ca8e1dec6eafa4272022000e652dbc8277448291e26d9f203d29eba25d1ddc",
+      "stored_bytes": 163210,
+      "stored_sha256": "98ca8e1dec6eafa4272022000e652dbc8277448291e26d9f203d29eba25d1ddc"
+    },
+    {
+      "destination": "collection/payload/postboot/running-kernel-notes.bin",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/running-kernel-notes.bin",
+      "source_bytes": 476,
+      "source_identity": [
+        66306,
+        26749346,
+        33204,
+        476,
+        1794385444321629119,
+        1794385444321629119
+      ],
+      "source_sha256": "a0d7ddd08583cf0b0b25324dbc384b12c0e71bd0d768c81e0b03a157956de23a",
+      "stored_bytes": 476,
+      "stored_sha256": "a0d7ddd08583cf0b0b25324dbc384b12c0e71bd0d768c81e0b03a157956de23a"
+    },
+    {
+      "destination": "collection/payload/postboot/ssh-service.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/ssh-service.txt",
+      "source_bytes": 7,
+      "source_identity": [
+        66306,
+        26749347,
+        33204,
+        7,
+        1794385444334629336,
+        1794385444334629336
+      ],
+      "source_sha256": "45df5ad5e0ecfa54d3226343e0e6857337494ba6e32f189d1174070665d8c659",
+      "stored_bytes": 7,
+      "stored_sha256": "45df5ad5e0ecfa54d3226343e0e6857337494ba6e32f189d1174070665d8c659"
+    },
+    {
+      "destination": "collection/payload/postboot/uname.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/uname.json",
+      "source_bytes": 120,
+      "source_identity": [
+        66306,
+        26749348,
+        33204,
+        120,
+        1794385444346629536,
+        1794385444346629536
+      ],
+      "source_sha256": "4b641318e1860e5f4739df91a0296f26e1cab8ec614e99100ddc66a498742259",
+      "stored_bytes": 120,
+      "stored_sha256": "4b641318e1860e5f4739df91a0296f26e1cab8ec614e99100ddc66a498742259"
+    },
+    {
+      "destination": "collection/payload/postboot/vmlinux-notes.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/vmlinux-notes.txt",
+      "source_bytes": 2120,
+      "source_identity": [
+        66306,
+        26749349,
+        33204,
+        2120,
+        1794385444359629753,
+        1794385444359629753
+      ],
+      "source_sha256": "d703f722e4fb6a7ee4e67d4a45b75966bf8bd093fae236c1d7fe46599628f52b",
+      "stored_bytes": 2120,
+      "stored_sha256": "d703f722e4fb6a7ee4e67d4a45b75966bf8bd093fae236c1d7fe46599628f52b"
+    },
+    {
+      "destination": "collection/payload/postboot/vmlinux-sections.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/vmlinux-sections.txt",
+      "source_bytes": 5644,
+      "source_identity": [
+        66306,
+        26749350,
+        33204,
+        5644,
+        1794385444372629970,
+        1794385444372629970
+      ],
+      "source_sha256": "f1dbd2447eb8b27177e5f632b54257b2f512f6d95fb2a51450b42d5cf7cb78c8",
+      "stored_bytes": 5644,
+      "stored_sha256": "f1dbd2447eb8b27177e5f632b54257b2f512f6d95fb2a51450b42d5cf7cb78c8"
+    },
+    {
+      "destination": "collection/payload/postboot/vmlinux-symbols.txt.gz",
+      "encoding": "gzip",
+      "source": "/tmp/kdlock-kernel5-final-families-collection-01/payload/postboot/vmlinux-symbols.txt",
+      "source_bytes": 13031062,
+      "source_identity": [
+        66306,
+        26749351,
+        33204,
+        13031062,
+        1794385444446631205,
+        1794385444446631205
+      ],
+      "source_sha256": "9a530269d520c1f963d7948fa5d4dc9f19b4465bd4949df45b27bb297b616c68",
+      "stored_bytes": 2138756,
+      "stored_sha256": "e9bdfa74645a3757594a7dee795161b5b014f9c7daed6c5d68ab076b11e9b8e9"
+    },
+    {
+      "destination": "source-host/fixture/kernel-pins.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/kernel-pins.json",
+      "source_bytes": 544,
+      "source_identity": [
+        66306,
+        26748471,
+        33204,
+        544,
+        1794384677084108758,
+        1794384677084108758
+      ],
+      "source_sha256": "70da8215fb1ddecef5a5cd245f63b5154425bfefc365a53d307b3ea9ca4bae78",
+      "stored_bytes": 544,
+      "stored_sha256": "70da8215fb1ddecef5a5cd245f63b5154425bfefc365a53d307b3ea9ca4bae78"
+    },
+    {
+      "destination": "source-host/fixture/module-build-command.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/module-build-command.json",
+      "source_bytes": 1757,
+      "source_identity": [
+        66306,
+        26748475,
+        33204,
+        1757,
+        1794384736302043245,
+        1794384736302043245
+      ],
+      "source_sha256": "4542e370a855954816b5d0506c5cd246d6cff1ac7d5c1b4a6c35dbd074f01837",
+      "stored_bytes": 1757,
+      "stored_sha256": "4542e370a855954816b5d0506c5cd246d6cff1ac7d5c1b4a6c35dbd074f01837"
+    },
+    {
+      "destination": "source-host/fixture/module-build-controller-result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/module-build-controller-result.json",
+      "source_bytes": 56,
+      "source_identity": [
+        66306,
+        26748478,
+        33204,
+        56,
+        1794384751261280565,
+        1794384751261280565
+      ],
+      "source_sha256": "1654b92c673a0ff8bb8a4438aaf008fd209721e4453fd3f2bebf430490ab6ba8",
+      "stored_bytes": 56,
+      "stored_sha256": "1654b92c673a0ff8bb8a4438aaf008fd209721e4453fd3f2bebf430490ab6ba8"
+    },
+    {
+      "destination": "source-host/fixture/module-build.stderr",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/module-build.stderr",
+      "source_bytes": 0,
+      "source_identity": [
+        66306,
+        26748477,
+        33204,
+        0,
+        1794384736302043245,
+        1794384736302043245
+      ],
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "destination": "source-host/fixture/module-build.stdout",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/module-build.stdout",
+      "source_bytes": 0,
+      "source_identity": [
+        66306,
+        26748476,
+        33204,
+        0,
+        1794384736302043245,
+        1794384736302043245
+      ],
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "destination": "source-host/fixture/module-result-read.stderr",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/module-result-read.stderr",
+      "source_bytes": 0,
+      "source_identity": [
+        66306,
+        26748479,
+        33204,
+        0,
+        1794384878664319771,
+        1794384878664319771
+      ],
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "destination": "source-host/fixture/module-result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/module-result.json",
+      "source_bytes": 37029,
+      "source_identity": [
+        66306,
+        26748480,
+        33204,
+        37029,
+        1794384878664319771,
+        1794384878664319771
+      ],
+      "source_sha256": "0cabe41443f427102aa1e8ec6d0d4edfc8ec69fe44aa7d5a19e3c94c660e7fa2",
+      "stored_bytes": 37029,
+      "stored_sha256": "0cabe41443f427102aa1e8ec6d0d4edfc8ec69fe44aa7d5a19e3c94c660e7fa2"
+    },
+    {
+      "destination": "source-host/fixture/source-manifest.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/source-manifest.json",
+      "source_bytes": 16505,
+      "source_identity": [
+        66306,
+        26748495,
+        33204,
+        16505,
+        1794384639658522569,
+        1794384639658522569
+      ],
+      "source_sha256": "b79c054e2e7775d0cf7c3ccdd68314571680ee18c2a2e34be8070216e4718a80",
+      "stored_bytes": 16505,
+      "stored_sha256": "b79c054e2e7775d0cf7c3ccdd68314571680ee18c2a2e34be8070216e4718a80"
+    },
+    {
+      "destination": "source-host/fixture/source-state.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/source-state.json",
+      "source_bytes": 526,
+      "source_identity": [
+        66306,
+        26748496,
+        33204,
+        526,
+        1794384639658522569,
+        1794384639658522569
+      ],
+      "source_sha256": "36cb1c4471258fb7df3e158e5b63ddee66b0ab55abe99ab7cb4ac22584ea7196",
+      "stored_bytes": 526,
+      "stored_sha256": "36cb1c4471258fb7df3e158e5b63ddee66b0ab55abe99ab7cb4ac22584ea7196"
+    },
+    {
+      "destination": "source-host/fixture/source.tar",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/source.tar",
+      "source_bytes": 1269760,
+      "source_identity": [
+        66306,
+        26748494,
+        33204,
+        1269760,
+        1794384639634522194,
+        1794384639634522194
+      ],
+      "source_sha256": "98e578c39d823cc40675ac23277e63d6c723367e88dbf0dd213d50c31ce5db80",
+      "stored_bytes": 1269760,
+      "stored_sha256": "98e578c39d823cc40675ac23277e63d6c723367e88dbf0dd213d50c31ce5db80"
+    },
+    {
+      "destination": "source-host/fixture/stage-controller.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/stage-controller.json",
+      "source_bytes": 304,
+      "source_identity": [
+        66306,
+        26748474,
+        33204,
+        304,
+        1794384678381129137,
+        1794384678381129137
+      ],
+      "source_sha256": "fdead43a0fc6113162b284e2a7bc863d4d7159e4f5742755630559e2831c1617",
+      "stored_bytes": 304,
+      "stored_sha256": "fdead43a0fc6113162b284e2a7bc863d4d7159e4f5742755630559e2831c1617"
+    },
+    {
+      "destination": "source-host/fixture/stage.stderr",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/stage.stderr",
+      "source_bytes": 0,
+      "source_identity": [
+        66306,
+        26748473,
+        33204,
+        0,
+        1794384678375129042,
+        1794384678375129042
+      ],
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "destination": "source-host/fixture/stage.stdout",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-fixture-09834f09-01/stage.stdout",
+      "source_bytes": 966,
+      "source_identity": [
+        66306,
+        26748472,
+        33204,
+        966,
+        1794384678374129027,
+        1794384678374129027
+      ],
+      "source_sha256": "00646582e7c0e17b6d2a30a961d6962e304139b283e14a4f91522cb94a495004",
+      "stored_bytes": 966,
+      "stored_sha256": "00646582e7c0e17b6d2a30a961d6962e304139b283e14a4f91522cb94a495004"
+    },
+    {
+      "destination": "source-host/postboot-controller/gs-proof.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-repeatboot5-rwlock-proof-01/gs-proof.json",
+      "source_bytes": 709,
+      "source_identity": [
+        66306,
+        26748976,
+        33204,
+        709,
+        1794385017501572696,
+        1794385017501572696
+      ],
+      "source_sha256": "91ebb7c5763525eca8a339e64376be3583baa0789b3eda7cb3b05d5fb9e029ee",
+      "stored_bytes": 709,
+      "stored_sha256": "91ebb7c5763525eca8a339e64376be3583baa0789b3eda7cb3b05d5fb9e029ee"
+    },
+    {
+      "destination": "source-host/postboot-controller/postboot-controller.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-repeatboot5-rwlock-proof-01/postboot-controller.json",
+      "source_bytes": 346,
+      "source_identity": [
+        66306,
+        26748974,
+        33204,
+        346,
+        1794385017498572647,
+        1794385017498572647
+      ],
+      "source_sha256": "7369082e95b713d0b128344be5b4dd68a02e260c8ebe4faef373f2d515e20816",
+      "stored_bytes": 346,
+      "stored_sha256": "7369082e95b713d0b128344be5b4dd68a02e260c8ebe4faef373f2d515e20816"
+    },
+    {
+      "destination": "source-host/postboot-controller/postboot.stderr",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-repeatboot5-rwlock-proof-01/postboot.stderr",
+      "source_bytes": 0,
+      "source_identity": [
+        66306,
+        26748973,
+        33204,
+        0,
+        1794385017497572631,
+        1794385017497572631
+      ],
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0,
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "destination": "source-host/postboot-controller/postboot.stdout",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-repeatboot5-rwlock-proof-01/postboot.stdout",
+      "source_bytes": 219000,
+      "source_identity": [
+        66306,
+        26748972,
+        33204,
+        219000,
+        1794385017497572631,
+        1794385017497572631
+      ],
+      "source_sha256": "3dfc49bd8788881d408309a7367c7fbfd877f2006eb1e6b38402e4f8e68d7f8f",
+      "stored_bytes": 219000,
+      "stored_sha256": "3dfc49bd8788881d408309a7367c7fbfd877f2006eb1e6b38402e4f8e68d7f8f"
+    },
+    {
+      "destination": "source-host/postboot-controller/result.json",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-rw-repeatboot5-rwlock-proof-01/result.json",
+      "source_bytes": 163210,
+      "source_identity": [
+        66306,
+        26748975,
+        33204,
+        163210,
+        1794385017501572696,
+        1794385017501572696
+      ],
+      "source_sha256": "98ca8e1dec6eafa4272022000e652dbc8277448291e26d9f203d29eba25d1ddc",
+      "stored_bytes": 163210,
+      "stored_sha256": "98ca8e1dec6eafa4272022000e652dbc8277448291e26d9f203d29eba25d1ddc"
+    },
+    {
+      "destination": "source-host/fixture-controller.py.txt",
+      "encoding": "identity",
+      "source": "/tmp/kdlock-main-kernel5-fixture.py",
+      "source_bytes": 24657,
+      "source_identity": [
+        66306,
+        20491066,
+        33204,
+        24657,
+        1794383142584764384,
+        1794383142584764384
+      ],
+      "source_sha256": "3b13927420577f308ac79d2d7a89ef5f8f3d6aa72af9753093d68cad937d31aa",
+      "stored_bytes": 24657,
+      "stored_sha256": "3b13927420577f308ac79d2d7a89ef5f8f3d6aa72af9753093d68cad937d31aa"
+    }
+  ],
+  "note": "Shared transport archive/index covers all eight labels. Runtime expanded payloads reside in their separate sibling evidence directories.",
+  "scope": "Only local saved-file copies, hashes, lossless gzip and read-only archive/binary metadata verification. No project imports, AST, tests, builds, guest or network calls.",
+  "shared_guest_payload_bytes": 76064363,
+  "shared_guest_payload_count": 1025,
+  "source_copied_bytes": 94536664,
+  "source_snapshot_files": 121,
+  "status": "SOURCE_HOST_OFFLINE_COPIES_VERIFIED",
+  "stored_copied_bytes": 12533435
+}

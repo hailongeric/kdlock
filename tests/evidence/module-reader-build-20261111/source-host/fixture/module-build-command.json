@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 420 python3 /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/fixture-controller.py --input /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/input --manifest /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/source-manifest.json --manifest-sha256 b79c054e2e7775d0cf7c3ccdd68314571680ee18c2a2e34be8070216e4718a80 --state /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/source-state.json --state-sha256 36cb1c4471258fb7df3e158e5b63ddee66b0ab55abe99ab7cb4ac22584ea7196 --build-inputs /mnt/kdlock-builds/kdlock-main-work/kernel5-core-1114b41e-rw-01/build-inputs.json --build-inputs-sha256 7f0ced9701d43f6dabe6e23488f38107bb59accab3230cd8e30a97d8369ab1ea --kernel-source /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source --kernel-build /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build --kernel-pins /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/kernel-pins.json --kernel-pins-sha256 70da8215fb1ddecef5a5cd245f63b5154425bfefc365a53d307b3ea9ca4bae78 --output /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/module-build --receipts /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/module-build-receipts --expected-boot b827f92c-254a-4cd3-a989-c6ea32c74605 --source-commit 09834f094acf904c835ee74e6c3960abcf96749d --core-commit 1114b41ea0f6ecf92f2c9af2904a4218bb344829 --package-source-commit 1114b41ea0f6ecf92f2c9af2904a4218bb344829 --space-floor 4000000000 --root-floor 1073741824 --seconds 90 build --jobs 4"
+  ],
+  "start_unix": 1794384736.3035445
+}

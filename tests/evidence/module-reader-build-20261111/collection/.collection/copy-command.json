@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "python3 -"
+  ],
+  "input": "copy-input.py.txt",
+  "input_sha256": "043b619482f22a092284af106c385ae81871ccec71aed049d4cd3dd6132837a1",
+  "seconds": 180,
+  "started_unix": 1794385437.6048713,
+  "stderr_limit": 16777216,
+  "stdout_limit": 541268576
+}

@@ -1,0 +1,9 @@
+{
+  "branch": "main",
+  "commit": "09834f094acf904c835ee74e6c3960abcf96749d",
+  "core_commit": "1114b41ea0f6ecf92f2c9af2904a4218bb344829",
+  "snapshot": "Exact Git objects at the controlled-learning fixture revision; no evidence trees included.",
+  "source_host_head": "09834f094acf904c835ee74e6c3960abcf96749d",
+  "source_host_status": "?? tests/evidence/build-space-retirement-20261111/\n?? tests/evidence/runtime-rwsem-capacity-20261111/\n?? tests/evidence/runtime-rwsem-target-20261111/\n",
+  "unix": 1794384639.6525888
+}

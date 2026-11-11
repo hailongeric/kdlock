@@ -1,0 +1,3781 @@
+{
+  "files": [
+    {
+      "bytes": 2,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/builtin-source-elf.bin",
+      "identity": [
+        2064,
+        8526953,
+        33188,
+        1,
+        2,
+        1794385328525776749,
+        1794385328525776749
+      ],
+      "name": "mutex-attempt/builtin-source-elf.bin",
+      "path": "payload/mutex-attempt/builtin-source-elf.bin",
+      "sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/ack.bin",
+      "identity": [
+        2064,
+        8527029,
+        33188,
+        1,
+        72,
+        1794385328745317889,
+        1794385328745317889
+      ],
+      "name": "mutex-attempt/cycle-1/ack.bin",
+      "path": "payload/mutex-attempt/cycle-1/ack.bin",
+      "sha256": "21e41df6779a9acc03cfb3810927f784775eae54d7fdf07483ef176a11b73e68"
+    },
+    {
+      "bytes": 69193,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/build/image.S",
+      "identity": [
+        2064,
+        8526995,
+        33188,
+        1,
+        69193,
+        1794385328697000000,
+        1794385328697000000
+      ],
+      "name": "mutex-attempt/cycle-1/build/image.S",
+      "path": "payload/mutex-attempt/cycle-1/build/image.S",
+      "sha256": "d34eec0bc53a5471b9081031440d939d3fc0fd1a859e73f5d0cc7e4dc602dcf9"
+    },
+    {
+      "bytes": 12208,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/build/image.bin",
+      "identity": [
+        2064,
+        8527000,
+        33261,
+        1,
+        12208,
+        1794385328729992212,
+        1794385328730025051
+      ],
+      "name": "mutex-attempt/cycle-1/build/image.bin",
+      "path": "payload/mutex-attempt/cycle-1/build/image.bin",
+      "sha256": "38ec361ae17b64bf6545bba9f4abc8a5e0847b776131d8d91934a1f66a6a86e9"
+    },
+    {
+      "bytes": 16728,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/build/image.elf",
+      "identity": [
+        2064,
+        8526999,
+        33261,
+        1,
+        16728,
+        1794385328725000000,
+        1794385328725858803
+      ],
+      "name": "mutex-attempt/cycle-1/build/image.elf",
+      "path": "payload/mutex-attempt/cycle-1/build/image.elf",
+      "sha256": "bcbcafaf3f96302eb7eac8467e1eed06da43ed55f9a61a69feac18abdac0dfaa"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/build/image.ld",
+      "identity": [
+        2064,
+        8526996,
+        33188,
+        1,
+        112,
+        1794385328697540274,
+        1794385328697540274
+      ],
+      "name": "mutex-attempt/cycle-1/build/image.ld",
+      "path": "payload/mutex-attempt/cycle-1/build/image.ld",
+      "sha256": "9836940c602e8dc7f2da04aed58d0bdbb55b7e33dec19792673defd9834166ea"
+    },
+    {
+      "bytes": 12912,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/build/image.o",
+      "identity": [
+        2064,
+        8526998,
+        33188,
+        1,
+        12912,
+        1794385328719000000,
+        1794385328719000000
+      ],
+      "name": "mutex-attempt/cycle-1/build/image.o",
+      "path": "payload/mutex-attempt/cycle-1/build/image.o",
+      "sha256": "33ca1090e0e296ea8dbb217fa15a13befe62565ddabae2f4216a5cb3af54781f"
+    },
+    {
+      "bytes": 65230,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/build/image.s",
+      "identity": [
+        2064,
+        8526997,
+        33188,
+        1,
+        65230,
+        1794385328708000000,
+        1794385328708000000
+      ],
+      "name": "mutex-attempt/cycle-1/build/image.s",
+      "path": "payload/mutex-attempt/cycle-1/build/image.s",
+      "sha256": "81ce41470677c9bc6c372e695c3ed98da1c07b106a797866d56cf843465693c2"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/claim.bin",
+      "identity": [
+        2064,
+        8526987,
+        33188,
+        1,
+        266,
+        1794385328626275793,
+        1794385328626275793
+      ],
+      "name": "mutex-attempt/cycle-1/claim.bin",
+      "path": "payload/mutex-attempt/cycle-1/claim.bin",
+      "sha256": "f6800c498679f2a4f119c221b894ab010d4a3165e02c4bc8bc2be1f3eea21b40"
+    },
+    {
+      "bytes": 144,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/commit.bin",
+      "identity": [
+        2064,
+        8527028,
+        33188,
+        1,
+        144,
+        1794385328745294136,
+        1794385328745294136
+      ],
+      "name": "mutex-attempt/cycle-1/commit.bin",
+      "path": "payload/mutex-attempt/cycle-1/commit.bin",
+      "sha256": "bb4ead6efe3e2c91966e38e8c394d0225cea1a21a1b62ecfaf36e2f89572f6e8"
+    },
+    {
+      "bytes": 69193,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/image.S",
+      "identity": [
+        2064,
+        8527025,
+        33188,
+        1,
+        69193,
+        1794385328745012847,
+        1794385328745012847
+      ],
+      "name": "mutex-attempt/cycle-1/image.S",
+      "path": "payload/mutex-attempt/cycle-1/image.S",
+      "sha256": "d34eec0bc53a5471b9081031440d939d3fc0fd1a859e73f5d0cc7e4dc602dcf9"
+    },
+    {
+      "bytes": 42480,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/manifest.json",
+      "identity": [
+        2064,
+        8527027,
+        33188,
+        1,
+        42480,
+        1794385328745250105,
+        1794385328745250105
+      ],
+      "name": "mutex-attempt/cycle-1/manifest.json",
+      "path": "payload/mutex-attempt/cycle-1/manifest.json",
+      "sha256": "bd574d52182f54b87246981782301584c1923367082e6fe2cc832b7bd67f88db"
+    },
+    {
+      "bytes": 68945,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-1/metadata.c",
+      "identity": [
+        2064,
+        8527026,
+        33188,
+        1,
+        68945,
+        1794385328745146424,
+        1794385328745146424
+      ],
+      "name": "mutex-attempt/cycle-1/metadata.c",
+      "path": "payload/mutex-attempt/cycle-1/metadata.c",
+      "sha256": "54d6a02dd214e04cd6876915bdb72cfa5410ddb2d9fc1762bfb800a37ac3e2fe"
+    },
+    {
+      "bytes": 104,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/ack.bin",
+      "identity": [
+        2064,
+        8527079,
+        33188,
+        1,
+        104,
+        1794385328922301134,
+        1794385328922301134
+      ],
+      "name": "mutex-attempt/cycle-2/ack.bin",
+      "path": "payload/mutex-attempt/cycle-2/ack.bin",
+      "sha256": "87959647c6a33d58de45b885954807df17a327fcedcef553e021581a3c96d272"
+    },
+    {
+      "bytes": 93646,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/build/image.S",
+      "identity": [
+        2064,
+        8527045,
+        33188,
+        1,
+        93646,
+        1794385328872099793,
+        1794385328872099793
+      ],
+      "name": "mutex-attempt/cycle-2/build/image.S",
+      "path": "payload/mutex-attempt/cycle-2/build/image.S",
+      "sha256": "5963783a98f65f84f170d26c2633dbb88417bc26f3be4083f0ce96994a1b42c1"
+    },
+    {
+      "bytes": 16678,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/build/image.bin",
+      "identity": [
+        2064,
+        8527050,
+        33261,
+        1,
+        16678,
+        1794385328904666634,
+        1794385328904717984
+      ],
+      "name": "mutex-attempt/cycle-2/build/image.bin",
+      "path": "payload/mutex-attempt/cycle-2/build/image.bin",
+      "sha256": "5e63190b246561b98eba9f4d8d1906c663d8142793ef9435a2933fb7ea3964b2"
+    },
+    {
+      "bytes": 21200,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/build/image.elf",
+      "identity": [
+        2064,
+        8527049,
+        33261,
+        1,
+        21200,
+        1794385328900000000,
+        1794385328900663725
+      ],
+      "name": "mutex-attempt/cycle-2/build/image.elf",
+      "path": "payload/mutex-attempt/cycle-2/build/image.elf",
+      "sha256": "3881a90e14be98e2a9d4a3036dadf4f4094ad3aa78bdb2134e3f793c7cb421d9"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/build/image.ld",
+      "identity": [
+        2064,
+        8527046,
+        33188,
+        1,
+        112,
+        1794385328872244547,
+        1794385328872244547
+      ],
+      "name": "mutex-attempt/cycle-2/build/image.ld",
+      "path": "payload/mutex-attempt/cycle-2/build/image.ld",
+      "sha256": "04c6e3d66b3a04db3545c9081d6af27e6b8cd5b2ff53de86884ea7126664857a"
+    },
+    {
+      "bytes": 17384,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/build/image.o",
+      "identity": [
+        2064,
+        8527048,
+        33188,
+        1,
+        17384,
+        1794385328894000000,
+        1794385328894000000
+      ],
+      "name": "mutex-attempt/cycle-2/build/image.o",
+      "path": "payload/mutex-attempt/cycle-2/build/image.o",
+      "sha256": "e723a0f33c8032c35a11055550a751fe06df53b64e7476bdb475f440cd18788b"
+    },
+    {
+      "bytes": 89033,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/build/image.s",
+      "identity": [
+        2064,
+        8527047,
+        33188,
+        1,
+        89033,
+        1794385328883000000,
+        1794385328883000000
+      ],
+      "name": "mutex-attempt/cycle-2/build/image.s",
+      "path": "payload/mutex-attempt/cycle-2/build/image.s",
+      "sha256": "b9163d5646ab0b3766c2901b8836479f5ea11205021e1ba4aa88a187fc424c7e"
+    },
+    {
+      "bytes": 458,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/claim.bin",
+      "identity": [
+        2064,
+        8527037,
+        33188,
+        1,
+        458,
+        1794385328789294789,
+        1794385328789294789
+      ],
+      "name": "mutex-attempt/cycle-2/claim.bin",
+      "path": "payload/mutex-attempt/cycle-2/claim.bin",
+      "sha256": "c646a95728d7a5788ba046e26b680461f4df36702272b6eb8da31e4a2b48819b"
+    },
+    {
+      "bytes": 176,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/commit.bin",
+      "identity": [
+        2064,
+        8527078,
+        33188,
+        1,
+        176,
+        1794385328922254060,
+        1794385328922254060
+      ],
+      "name": "mutex-attempt/cycle-2/commit.bin",
+      "path": "payload/mutex-attempt/cycle-2/commit.bin",
+      "sha256": "8a039115e071345c25e25f9e18d8c7d8a6b407fd8161808a996d0d16410205df"
+    },
+    {
+      "bytes": 93646,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/image.S",
+      "identity": [
+        2064,
+        8527075,
+        33188,
+        1,
+        93646,
+        1794385328921925608,
+        1794385328921925608
+      ],
+      "name": "mutex-attempt/cycle-2/image.S",
+      "path": "payload/mutex-attempt/cycle-2/image.S",
+      "sha256": "5963783a98f65f84f170d26c2633dbb88417bc26f3be4083f0ce96994a1b42c1"
+    },
+    {
+      "bytes": 50685,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/manifest.json",
+      "identity": [
+        2064,
+        8527077,
+        33188,
+        1,
+        50685,
+        1794385328922181708,
+        1794385328922181708
+      ],
+      "name": "mutex-attempt/cycle-2/manifest.json",
+      "path": "payload/mutex-attempt/cycle-2/manifest.json",
+      "sha256": "87ffc5632ab2fd3211e91d1e44f9e4d71ac1a2d538b2f96bc6cd32723f939897"
+    },
+    {
+      "bytes": 80646,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-2/metadata.c",
+      "identity": [
+        2064,
+        8527076,
+        33188,
+        1,
+        80646,
+        1794385328922066718,
+        1794385328922066718
+      ],
+      "name": "mutex-attempt/cycle-2/metadata.c",
+      "path": "payload/mutex-attempt/cycle-2/metadata.c",
+      "sha256": "fce15d8a63ed2cdc26f7e9b1cf759eac1fa048be89f2fcde37f4a9af3a2603d6"
+    },
+    {
+      "bytes": 136,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/ack.bin",
+      "identity": [
+        2064,
+        8527129,
+        33188,
+        1,
+        136,
+        1794385329081173050,
+        1794385329081173050
+      ],
+      "name": "mutex-attempt/cycle-3/ack.bin",
+      "path": "payload/mutex-attempt/cycle-3/ack.bin",
+      "sha256": "215f65716a4885968b818a0538c3528bed2830e09e3ab23df932b6225ab20c30"
+    },
+    {
+      "bytes": 106371,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/build/image.S",
+      "identity": [
+        2064,
+        8527095,
+        33188,
+        1,
+        106371,
+        1794385329030332867,
+        1794385329030332867
+      ],
+      "name": "mutex-attempt/cycle-3/build/image.S",
+      "path": "payload/mutex-attempt/cycle-3/build/image.S",
+      "sha256": "6cd77a0cc1b9190b50da144c01fe69522ebd75745927c18998c7552715f28cc9"
+    },
+    {
+      "bytes": 19027,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/build/image.bin",
+      "identity": [
+        2064,
+        8527100,
+        33261,
+        1,
+        19027,
+        1794385329065819569,
+        1794385329065852088
+      ],
+      "name": "mutex-attempt/cycle-3/build/image.bin",
+      "path": "payload/mutex-attempt/cycle-3/build/image.bin",
+      "sha256": "08f641b28c0447a9ece9557648d32aeaea17a37f95e4df3b67ca09d2d9bd88b3"
+    },
+    {
+      "bytes": 23552,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/build/image.elf",
+      "identity": [
+        2064,
+        8527099,
+        33261,
+        1,
+        23552,
+        1794385329061000000,
+        1794385329061677701
+      ],
+      "name": "mutex-attempt/cycle-3/build/image.elf",
+      "path": "payload/mutex-attempt/cycle-3/build/image.elf",
+      "sha256": "c09c0a490edfd3cbf43fea00687f2d6e8c1f030de8c0e8824ebe1e10de140b7e"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/build/image.ld",
+      "identity": [
+        2064,
+        8527096,
+        33188,
+        1,
+        112,
+        1794385329030489303,
+        1794385329030489303
+      ],
+      "name": "mutex-attempt/cycle-3/build/image.ld",
+      "path": "payload/mutex-attempt/cycle-3/build/image.ld",
+      "sha256": "9836940c602e8dc7f2da04aed58d0bdbb55b7e33dec19792673defd9834166ea"
+    },
+    {
+      "bytes": 19736,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/build/image.o",
+      "identity": [
+        2064,
+        8527098,
+        33188,
+        1,
+        19736,
+        1794385329055000000,
+        1794385329055000000
+      ],
+      "name": "mutex-attempt/cycle-3/build/image.o",
+      "path": "payload/mutex-attempt/cycle-3/build/image.o",
+      "sha256": "890414b86e9815056bb10bfbfbb395ae6a6128e43b12a637c4a773aaf5a13a5e"
+    },
+    {
+      "bytes": 101476,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/build/image.s",
+      "identity": [
+        2064,
+        8527097,
+        33188,
+        1,
+        101476,
+        1794385329043000000,
+        1794385329043000000
+      ],
+      "name": "mutex-attempt/cycle-3/build/image.s",
+      "path": "payload/mutex-attempt/cycle-3/build/image.s",
+      "sha256": "f9fb4c9d9639882a38ae10c5cee7cce796c4d930ecc5f53690158827f9b27e7f"
+    },
+    {
+      "bytes": 650,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/claim.bin",
+      "identity": [
+        2064,
+        8527087,
+        33188,
+        1,
+        650,
+        1794385328944781481,
+        1794385328944781481
+      ],
+      "name": "mutex-attempt/cycle-3/claim.bin",
+      "path": "payload/mutex-attempt/cycle-3/claim.bin",
+      "sha256": "05d2544d194efc08f5b228c76553fd6ac54d0faf455e9312cd3d9d4d2be78f97"
+    },
+    {
+      "bytes": 208,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/commit.bin",
+      "identity": [
+        2064,
+        8527128,
+        33188,
+        1,
+        208,
+        1794385329081140904,
+        1794385329081140904
+      ],
+      "name": "mutex-attempt/cycle-3/commit.bin",
+      "path": "payload/mutex-attempt/cycle-3/commit.bin",
+      "sha256": "fee15ab58bd11de371c592dbd364865c5835f17492e17c3acbc28cbcc4680722"
+    },
+    {
+      "bytes": 106371,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/image.S",
+      "identity": [
+        2064,
+        8527125,
+        33188,
+        1,
+        106371,
+        1794385329080815176,
+        1794385329080815176
+      ],
+      "name": "mutex-attempt/cycle-3/image.S",
+      "path": "payload/mutex-attempt/cycle-3/image.S",
+      "sha256": "6cd77a0cc1b9190b50da144c01fe69522ebd75745927c18998c7552715f28cc9"
+    },
+    {
+      "bytes": 51912,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/manifest.json",
+      "identity": [
+        2064,
+        8527127,
+        33188,
+        1,
+        51912,
+        1794385329081089725,
+        1794385329081089725
+      ],
+      "name": "mutex-attempt/cycle-3/manifest.json",
+      "path": "payload/mutex-attempt/cycle-3/manifest.json",
+      "sha256": "00a4b31f6d7c6eb355a5bd4b0bf3140c848db2372645f43edb75d3ec58af9c7a"
+    },
+    {
+      "bytes": 80802,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-3/metadata.c",
+      "identity": [
+        2064,
+        8527126,
+        33188,
+        1,
+        80802,
+        1794385329080954020,
+        1794385329080954020
+      ],
+      "name": "mutex-attempt/cycle-3/metadata.c",
+      "path": "payload/mutex-attempt/cycle-3/metadata.c",
+      "sha256": "18e558d4971467c7eb01f29b9d78dbea2c7ab4d1d381ee7a13bae82b383cbe9f"
+    },
+    {
+      "bytes": 104,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/ack.bin",
+      "identity": [
+        2064,
+        8527179,
+        33188,
+        1,
+        104,
+        1794385329240177864,
+        1794385329240177864
+      ],
+      "name": "mutex-attempt/cycle-4/ack.bin",
+      "path": "payload/mutex-attempt/cycle-4/ack.bin",
+      "sha256": "09194bf1e5368b40e584e0c90962966aafcfee6cd5c4be733ff70ae88a6ce6ed"
+    },
+    {
+      "bytes": 112363,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/build/image.S",
+      "identity": [
+        2064,
+        8527145,
+        33188,
+        1,
+        112363,
+        1794385329191070069,
+        1794385329191070069
+      ],
+      "name": "mutex-attempt/cycle-4/build/image.S",
+      "path": "payload/mutex-attempt/cycle-4/build/image.S",
+      "sha256": "a46f455338c9876fa1f518783fab3b6a6478e781bf7280d34987d087183fa5ec"
+    },
+    {
+      "bytes": 20128,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/build/image.bin",
+      "identity": [
+        2064,
+        8527150,
+        33261,
+        1,
+        20128,
+        1794385329224979347,
+        1794385329225032725
+      ],
+      "name": "mutex-attempt/cycle-4/build/image.bin",
+      "path": "payload/mutex-attempt/cycle-4/build/image.bin",
+      "sha256": "8453c1a889ee1feda24c9b2db77461926767914b4b69db25d7c567833b3ee8ee"
+    },
+    {
+      "bytes": 24648,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/build/image.elf",
+      "identity": [
+        2064,
+        8527149,
+        33261,
+        1,
+        24648,
+        1794385329220000000,
+        1794385329220791739
+      ],
+      "name": "mutex-attempt/cycle-4/build/image.elf",
+      "path": "payload/mutex-attempt/cycle-4/build/image.elf",
+      "sha256": "ca7241ecaafc44b06c4df2e63a151c414603688f1ee8aa7e176bfd9eb4f35874"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/build/image.ld",
+      "identity": [
+        2064,
+        8527146,
+        33188,
+        1,
+        112,
+        1794385329191234770,
+        1794385329191234770
+      ],
+      "name": "mutex-attempt/cycle-4/build/image.ld",
+      "path": "payload/mutex-attempt/cycle-4/build/image.ld",
+      "sha256": "04c6e3d66b3a04db3545c9081d6af27e6b8cd5b2ff53de86884ea7126664857a"
+    },
+    {
+      "bytes": 20832,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/build/image.o",
+      "identity": [
+        2064,
+        8527148,
+        33188,
+        1,
+        20832,
+        1794385329214000000,
+        1794385329214000000
+      ],
+      "name": "mutex-attempt/cycle-4/build/image.o",
+      "path": "payload/mutex-attempt/cycle-4/build/image.o",
+      "sha256": "9ef9594eb8030d7027cf6fbb618fd0564da9a3506c0af47919d617a52c36b235"
+    },
+    {
+      "bytes": 107321,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/build/image.s",
+      "identity": [
+        2064,
+        8527147,
+        33188,
+        1,
+        107321,
+        1794385329202000000,
+        1794385329202000000
+      ],
+      "name": "mutex-attempt/cycle-4/build/image.s",
+      "path": "payload/mutex-attempt/cycle-4/build/image.s",
+      "sha256": "8ab0ebca60fa558b2006843710901cf0a41b029d72fb10ce082e4650cbff08ef"
+    },
+    {
+      "bytes": 458,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/claim.bin",
+      "identity": [
+        2064,
+        8527137,
+        33188,
+        1,
+        458,
+        1794385329103649265,
+        1794385329103649265
+      ],
+      "name": "mutex-attempt/cycle-4/claim.bin",
+      "path": "payload/mutex-attempt/cycle-4/claim.bin",
+      "sha256": "660fefc96db4a2ef9b44dd81dfac79cb1d2f9b32563b418b6a907d21b92f033e"
+    },
+    {
+      "bytes": 176,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/commit.bin",
+      "identity": [
+        2064,
+        8527178,
+        33188,
+        1,
+        176,
+        1794385329240154110,
+        1794385329240154110
+      ],
+      "name": "mutex-attempt/cycle-4/commit.bin",
+      "path": "payload/mutex-attempt/cycle-4/commit.bin",
+      "sha256": "78b40daf8b21db272bfff7841cb3f3168eb7d0a9e73b82695635aeca04109d3b"
+    },
+    {
+      "bytes": 112363,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/image.S",
+      "identity": [
+        2064,
+        8527175,
+        33188,
+        1,
+        112363,
+        1794385329239806177,
+        1794385329239806177
+      ],
+      "name": "mutex-attempt/cycle-4/image.S",
+      "path": "payload/mutex-attempt/cycle-4/image.S",
+      "sha256": "a46f455338c9876fa1f518783fab3b6a6478e781bf7280d34987d087183fa5ec"
+    },
+    {
+      "bytes": 52683,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/manifest.json",
+      "identity": [
+        2064,
+        8527177,
+        33188,
+        1,
+        52683,
+        1794385329240085976,
+        1794385329240085976
+      ],
+      "name": "mutex-attempt/cycle-4/manifest.json",
+      "path": "payload/mutex-attempt/cycle-4/manifest.json",
+      "sha256": "82dc84206330de174b48c17185605ee1c1b8f77749d191e0e34c2c52d28546e3"
+    },
+    {
+      "bytes": 80958,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-4/metadata.c",
+      "identity": [
+        2064,
+        8527176,
+        33188,
+        1,
+        80958,
+        1794385329239967013,
+        1794385329239967013
+      ],
+      "name": "mutex-attempt/cycle-4/metadata.c",
+      "path": "payload/mutex-attempt/cycle-4/metadata.c",
+      "sha256": "05bbf7a4a0120ab0577332cbb68dc40e2ac85acf9d76b98e674f400369f2f6b2"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/cycle-5/claim.bin",
+      "identity": [
+        2064,
+        8527189,
+        33188,
+        1,
+        266,
+        1794385329453498980,
+        1794385329453498980
+      ],
+      "name": "mutex-attempt/cycle-5/claim.bin",
+      "path": "payload/mutex-attempt/cycle-5/claim.bin",
+      "sha256": "20a88d335ce28349a36ce994d66bb5c63433e25c0cc1932cebb7f7a671fa3f43"
+    },
+    {
+      "bytes": 1810,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/identity.json",
+      "identity": [
+        2064,
+        8526954,
+        33188,
+        1,
+        1810,
+        1794385328525919011,
+        1794385328525919011
+      ],
+      "name": "mutex-attempt/identity.json",
+      "path": "payload/mutex-attempt/identity.json",
+      "sha256": "06f7d0cb591d95ebca83cc765e76610f21d2f002a1e8bbde0e60fa4851b3a5f5"
+    },
+    {
+      "bytes": 1459,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/managed-child-record.bin",
+      "identity": [
+        2064,
+        8526957,
+        33188,
+        1,
+        1459,
+        1794385328573739520,
+        1794385328573739520
+      ],
+      "name": "mutex-attempt/managed-child-record.bin",
+      "path": "payload/mutex-attempt/managed-child-record.bin",
+      "sha256": "854ba10e858b7e5c0e938884dbcc126b255078333172cf4cf2a74f6bc22e99a1"
+    },
+    {
+      "bytes": 199161,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/module.disassembly.txt",
+      "identity": [
+        2064,
+        8526955,
+        33188,
+        1,
+        199161,
+        1794385328534233692,
+        1794385328534233692
+      ],
+      "name": "mutex-attempt/module.disassembly.txt",
+      "path": "payload/mutex-attempt/module.disassembly.txt",
+      "sha256": "e26f8b0accddaac5bc613b083a7d588bf3e10105cb7a8ef92f9121609b78a442"
+    },
+    {
+      "bytes": 750600,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/observations-before-shutdown.bin",
+      "identity": [
+        2064,
+        8527180,
+        33188,
+        1,
+        750600,
+        1794385329421519216,
+        1794385329421519216
+      ],
+      "name": "mutex-attempt/observations-before-shutdown.bin",
+      "path": "payload/mutex-attempt/observations-before-shutdown.bin",
+      "sha256": "45dff9096c1bdf1ad92307dc15e79477f3d5142d0e87fe8292d1d6a0836f097d"
+    },
+    {
+      "bytes": 2638744,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/observations-before-shutdown.json",
+      "identity": [
+        2064,
+        8527181,
+        33188,
+        1,
+        2638744,
+        1794385329449000000,
+        1794385329449000000
+      ],
+      "name": "mutex-attempt/observations-before-shutdown.json",
+      "path": "payload/mutex-attempt/observations-before-shutdown.json",
+      "sha256": "7ced830424264e566738fcf8c2390653c0499ddf7fc270fe51ea137ce0aab05c"
+    },
+    {
+      "bytes": 750600,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/observations-final.bin",
+      "identity": [
+        2064,
+        8527221,
+        33188,
+        1,
+        750600,
+        1794385329508841375,
+        1794385329508841375
+      ],
+      "name": "mutex-attempt/observations-final.bin",
+      "path": "payload/mutex-attempt/observations-final.bin",
+      "sha256": "45dff9096c1bdf1ad92307dc15e79477f3d5142d0e87fe8292d1d6a0836f097d"
+    },
+    {
+      "bytes": 2638744,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/observations-final.json",
+      "identity": [
+        2064,
+        8527222,
+        33188,
+        1,
+        2638744,
+        1794385329532000000,
+        1794385329532000000
+      ],
+      "name": "mutex-attempt/observations-final.json",
+      "path": "payload/mutex-attempt/observations-final.json",
+      "sha256": "7ced830424264e566738fcf8c2390653c0499ddf7fc270fe51ea137ce0aab05c"
+    },
+    {
+      "bytes": 52710,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/result.json",
+      "identity": [
+        2064,
+        8527223,
+        33188,
+        1,
+        52710,
+        1794385329552520275,
+        1794385329552520275
+      ],
+      "name": "mutex-attempt/result.json",
+      "path": "payload/mutex-attempt/result.json",
+      "sha256": "7a4a85d310d9d209f9cd0147c987e86311b229dc29c7fa5d839a5d6e85b796d6"
+    },
+    {
+      "bytes": 15829,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/shutdown-archive.json",
+      "identity": [
+        2064,
+        8527208,
+        33152,
+        1,
+        15829,
+        1794385329464000000,
+        1794385329464000000
+      ],
+      "name": "mutex-attempt/shutdown-archive.json",
+      "path": "payload/mutex-attempt/shutdown-archive.json",
+      "sha256": "a71a73665429ca5c3cc964ef189ea9ae599334a5265e915089d42ded31e64968"
+    },
+    {
+      "bytes": 2,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-0.bin",
+      "identity": [
+        2064,
+        8526970,
+        33188,
+        1,
+        2,
+        1794385328600751462,
+        1794385328600751462
+      ],
+      "name": "mutex-attempt/source-0.bin",
+      "path": "payload/mutex-attempt/source-0.bin",
+      "sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+    },
+    {
+      "bytes": 322,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-0.disassembly.txt",
+      "identity": [
+        2064,
+        8526971,
+        33188,
+        1,
+        322,
+        1794385328602976209,
+        1794385328602976209
+      ],
+      "name": "mutex-attempt/source-0.disassembly.txt",
+      "path": "payload/mutex-attempt/source-0.disassembly.txt",
+      "sha256": "8a945f6b6d6853275cd5a0096695ed908d503e25ff5433e3089b1e6cd1d86c48"
+    },
+    {
+      "bytes": 116,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-1.bin",
+      "identity": [
+        2064,
+        8526972,
+        33188,
+        1,
+        116,
+        1794385328603046462,
+        1794385328603046462
+      ],
+      "name": "mutex-attempt/source-1.bin",
+      "path": "payload/mutex-attempt/source-1.bin",
+      "sha256": "8bbd545ab04d2879287de13790da6e4c77f33fd332ac6b91f239765bc67048db"
+    },
+    {
+      "bytes": 3485,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-1.disassembly.txt",
+      "identity": [
+        2064,
+        8526973,
+        33188,
+        1,
+        3485,
+        1794385328605312509,
+        1794385328605312509
+      ],
+      "name": "mutex-attempt/source-1.disassembly.txt",
+      "path": "payload/mutex-attempt/source-1.disassembly.txt",
+      "sha256": "72d40a4dbfbcfe07639529bc0de4f78be75e82815d37147952b8301677970bfe"
+    },
+    {
+      "bytes": 865,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-2.bin",
+      "identity": [
+        2064,
+        8526974,
+        33188,
+        1,
+        865,
+        1794385328606138738,
+        1794385328606138738
+      ],
+      "name": "mutex-attempt/source-2.bin",
+      "path": "payload/mutex-attempt/source-2.bin",
+      "sha256": "9461fdd33f56669e4ef868c423e62e76d7e2273ada9d52459ad3aa4f1038a2b6"
+    },
+    {
+      "bytes": 18724,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-2.disassembly.txt",
+      "identity": [
+        2064,
+        8526975,
+        33188,
+        1,
+        18724,
+        1794385328608520566,
+        1794385328608520566
+      ],
+      "name": "mutex-attempt/source-2.disassembly.txt",
+      "path": "payload/mutex-attempt/source-2.disassembly.txt",
+      "sha256": "b7a4ee9d6684ad47703b39a760943e1607b0dfe290b9847de855e1f92db1ed91"
+    },
+    {
+      "bytes": 4096,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-3.bin",
+      "identity": [
+        2064,
+        8526976,
+        33188,
+        1,
+        4096,
+        1794385328612143858,
+        1794385328612143858
+      ],
+      "name": "mutex-attempt/source-3.bin",
+      "path": "payload/mutex-attempt/source-3.bin",
+      "sha256": "b3210227317a522a16cab8fe475ac17dec4bb0aa5e8e4573ca6d7cb9d0518730"
+    },
+    {
+      "bytes": 294771,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-3.disassembly.txt",
+      "identity": [
+        2064,
+        8526977,
+        33188,
+        1,
+        294771,
+        1794385328619177242,
+        1794385328619177242
+      ],
+      "name": "mutex-attempt/source-3.disassembly.txt",
+      "path": "payload/mutex-attempt/source-3.disassembly.txt",
+      "sha256": "94e3927e989ddab0651a0738df99731452e328d08fdbb6a07d5018868f1d89cb"
+    },
+    {
+      "bytes": 5473,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-export.bin",
+      "identity": [
+        2064,
+        8526978,
+        33188,
+        1,
+        5473,
+        1794385328624956929,
+        1794385328624956929
+      ],
+      "name": "mutex-attempt/source-export.bin",
+      "path": "payload/mutex-attempt/source-export.bin",
+      "sha256": "378cfe84d6c503b8bce1f3c3493d6930ca057d94662a66e1d67170beff850be5"
+    },
+    {
+      "bytes": 1338,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/source-metadata.json",
+      "identity": [
+        2064,
+        8526979,
+        33188,
+        1,
+        1338,
+        1794385328625103745,
+        1794385328625103745
+      ],
+      "name": "mutex-attempt/source-metadata.json",
+      "path": "payload/mutex-attempt/source-metadata.json",
+      "sha256": "1707a93f0caa048e67beb60372bd642c917728ef2d861a662ee0f57a9e0c2e76"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000001/reply.bin",
+      "identity": [
+        2064,
+        8526962,
+        33188,
+        1,
+        48,
+        1794385328598018131,
+        1794385328598018131
+      ],
+      "name": "mutex-attempt/wire/attempt-00000001/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000001/reply.bin",
+      "sha256": "64f58d44a1f7be92f26abe823e9839a126656a63df1eb249ed6c2c9ccc75daf8"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000001/request.bin",
+      "identity": [
+        2064,
+        8526959,
+        33188,
+        1,
+        0,
+        1794385328597000000,
+        1794385328597000000
+      ],
+      "name": "mutex-attempt/wire/attempt-00000001/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000001/request.bin",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 90,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000001/request.json",
+      "identity": [
+        2064,
+        8526960,
+        33188,
+        1,
+        90,
+        1794385328597896800,
+        1794385328597896800
+      ],
+      "name": "mutex-attempt/wire/attempt-00000001/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000001/request.json",
+      "sha256": "a74b499fe36857aa54809859b474e30a74ddff2eab88db5f6b835d3e20403f68"
+    },
+    {
+      "bytes": 182,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000001/result.json",
+      "identity": [
+        2064,
+        8526963,
+        33188,
+        1,
+        182,
+        1794385328598076917,
+        1794385328598076917
+      ],
+      "name": "mutex-attempt/wire/attempt-00000001/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000001/result.json",
+      "sha256": "45bcea1df28c7d7b951e74872eed3084a5a3b75470205c321f5ea9042f0b1f2d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000001/returned-envelope.bin",
+      "identity": [
+        2064,
+        8526961,
+        33188,
+        1,
+        72,
+        1794385328597989944,
+        1794385328597989944
+      ],
+      "name": "mutex-attempt/wire/attempt-00000001/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000001/returned-envelope.bin",
+      "sha256": "d64997092f6ddeaad05f10f08e0c5399caa5236af6bd7d60b8312a4f81fee5a7"
+    },
+    {
+      "bytes": 5473,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000002/reply.bin",
+      "identity": [
+        2064,
+        8526968,
+        33188,
+        1,
+        5473,
+        1794385328599869465,
+        1794385328599869465
+      ],
+      "name": "mutex-attempt/wire/attempt-00000002/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000002/reply.bin",
+      "sha256": "378cfe84d6c503b8bce1f3c3493d6930ca057d94662a66e1d67170beff850be5"
+    },
+    {
+      "bytes": 32,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000002/request.bin",
+      "identity": [
+        2064,
+        8526965,
+        33188,
+        1,
+        32,
+        1794385328599672923,
+        1794385328599672923
+      ],
+      "name": "mutex-attempt/wire/attempt-00000002/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000002/request.bin",
+      "sha256": "8820465cd3023f7864c0b641c7f65d2fd6d7dada86df40a627ebcd2f43bd6011"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000002/request.json",
+      "identity": [
+        2064,
+        8526966,
+        33188,
+        1,
+        91,
+        1794385328599742041,
+        1794385328599742041
+      ],
+      "name": "mutex-attempt/wire/attempt-00000002/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000002/request.json",
+      "sha256": "32121ab6d6f8fc8a7a1c212beeb8f94367f72d82fd573d9bca014250da958222"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000002/result.json",
+      "identity": [
+        2064,
+        8526969,
+        33188,
+        1,
+        185,
+        1794385328599935140,
+        1794385328599935140
+      ],
+      "name": "mutex-attempt/wire/attempt-00000002/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000002/result.json",
+      "sha256": "ed411991b46bc8376370e3cbe8dfacd433c0b69d90923fd3611e6576e3a6ba4b"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000002/returned-envelope.bin",
+      "identity": [
+        2064,
+        8526967,
+        33188,
+        1,
+        72,
+        1794385328599823032,
+        1794385328599823032
+      ],
+      "name": "mutex-attempt/wire/attempt-00000002/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000002/returned-envelope.bin",
+      "sha256": "79a985caa3e119d22d1f1a46f2f4754d0ac10a3ebaf1401888913e79e4878f31"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000003/reply.bin",
+      "identity": [
+        2064,
+        8526985,
+        33188,
+        1,
+        266,
+        1794385328626063016,
+        1794385328626063016
+      ],
+      "name": "mutex-attempt/wire/attempt-00000003/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000003/reply.bin",
+      "sha256": "f6800c498679f2a4f119c221b894ab010d4a3165e02c4bc8bc2be1f3eea21b40"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000003/request.bin",
+      "identity": [
+        2064,
+        8526982,
+        33188,
+        1,
+        56,
+        1794385328625918587,
+        1794385328625918587
+      ],
+      "name": "mutex-attempt/wire/attempt-00000003/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000003/request.bin",
+      "sha256": "6828471cf27fd81d41f65935e75c1cff3fb0b261ba560ba7a3b7bc02e703e451"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000003/request.json",
+      "identity": [
+        2064,
+        8526983,
+        33188,
+        1,
+        91,
+        1794385328625989109,
+        1794385328625989109
+      ],
+      "name": "mutex-attempt/wire/attempt-00000003/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000003/request.json",
+      "sha256": "6e215ff2b422863ce4640ba69340f5d33138972077381d1df97762163845bd78"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000003/result.json",
+      "identity": [
+        2064,
+        8526986,
+        33188,
+        1,
+        184,
+        1794385328626106670,
+        1794385328626106670
+      ],
+      "name": "mutex-attempt/wire/attempt-00000003/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000003/result.json",
+      "sha256": "500bcba88f94f5af8de55f0f6af692c2d494a9587ce488fc01fef9f64508706b"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000003/returned-envelope.bin",
+      "identity": [
+        2064,
+        8526984,
+        33188,
+        1,
+        72,
+        1794385328626038381,
+        1794385328626038381
+      ],
+      "name": "mutex-attempt/wire/attempt-00000003/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000003/returned-envelope.bin",
+      "sha256": "5010b531d64cf46d4dd59b7170f794ff1d9d5c02340b5452302fb59669167174"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000004/reply.bin",
+      "identity": [
+        2064,
+        8526992,
+        33188,
+        1,
+        227,
+        1794385328627740497,
+        1794385328627740497
+      ],
+      "name": "mutex-attempt/wire/attempt-00000004/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000004/reply.bin",
+      "sha256": "6fc5892e3dd9e519304f1421cd904346ad5462fb28f04281a769a66e8574cda9"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000004/request.bin",
+      "identity": [
+        2064,
+        8526989,
+        33188,
+        1,
+        72,
+        1794385328626615220,
+        1794385328626615220
+      ],
+      "name": "mutex-attempt/wire/attempt-00000004/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000004/request.bin",
+      "sha256": "369b275de36ebf3fc3cf544ab91651bc398d98e83ba3737c7f8a0b6994c68632"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000004/request.json",
+      "identity": [
+        2064,
+        8526990,
+        33188,
+        1,
+        91,
+        1794385328626671614,
+        1794385328626671614
+      ],
+      "name": "mutex-attempt/wire/attempt-00000004/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000004/request.json",
+      "sha256": "2ea05114bd30bb8eb797b8e28b1a7729bee084e8f5abc758e394fbd77edd4c82"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000004/result.json",
+      "identity": [
+        2064,
+        8526993,
+        33188,
+        1,
+        184,
+        1794385328627793396,
+        1794385328627793396
+      ],
+      "name": "mutex-attempt/wire/attempt-00000004/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000004/result.json",
+      "sha256": "8392bfe7d32f894232c809f595cfa5094b90c7fe49ccf5f59cc249336c26b06d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000004/returned-envelope.bin",
+      "identity": [
+        2064,
+        8526991,
+        33188,
+        1,
+        72,
+        1794385328627703705,
+        1794385328627703705
+      ],
+      "name": "mutex-attempt/wire/attempt-00000004/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000004/returned-envelope.bin",
+      "sha256": "98930ae68323000076fe49eb7713597c0dabb53ef8cd01c49992947629942585"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000005/reply.bin",
+      "identity": [
+        2064,
+        8527005,
+        33188,
+        1,
+        40,
+        1794385328733096542,
+        1794385328733096542
+      ],
+      "name": "mutex-attempt/wire/attempt-00000005/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000005/reply.bin",
+      "sha256": "a206e03a761d71ac7648eea8aa3775718d22d0252d9c120e88017a0907f3fba6"
+    },
+    {
+      "bytes": 199557,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000005/request.bin",
+      "identity": [
+        2064,
+        8527002,
+        33188,
+        1,
+        199557,
+        1794385328732185984,
+        1794385328732185984
+      ],
+      "name": "mutex-attempt/wire/attempt-00000005/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000005/request.bin",
+      "sha256": "49a099d085f5dfd81ab2f56d151811b5d81d446e42a62eaf8d20d04c3215a606"
+    },
+    {
+      "bytes": 95,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000005/request.json",
+      "identity": [
+        2064,
+        8527003,
+        33188,
+        1,
+        95,
+        1794385328732473326,
+        1794385328732473326
+      ],
+      "name": "mutex-attempt/wire/attempt-00000005/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000005/request.json",
+      "sha256": "c874a3fb7bfcf363038988e5c9fbfe251ffabd1610c6f56f322a652cdb27003a"
+    },
+    {
+      "bytes": 187,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000005/result.json",
+      "identity": [
+        2064,
+        8527006,
+        33188,
+        1,
+        187,
+        1794385328733151178,
+        1794385328733151178
+      ],
+      "name": "mutex-attempt/wire/attempt-00000005/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000005/result.json",
+      "sha256": "fc085efc3a6d678cab3d14cf1cf81197773c8a8c357ba6c6d50ecb3131881fa1"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000005/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527004,
+        33188,
+        1,
+        72,
+        1794385328733063485,
+        1794385328733063485
+      ],
+      "name": "mutex-attempt/wire/attempt-00000005/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000005/returned-envelope.bin",
+      "sha256": "ccdc6196d47daa83e3f56d6487e97c90f5019409b9232a0fb964ee614762a76a"
+    },
+    {
+      "bytes": 144,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000006/reply.bin",
+      "identity": [
+        2064,
+        8527011,
+        33188,
+        1,
+        144,
+        1794385328743559521,
+        1794385328743559521
+      ],
+      "name": "mutex-attempt/wire/attempt-00000006/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000006/reply.bin",
+      "sha256": "bb4ead6efe3e2c91966e38e8c394d0225cea1a21a1b62ecfaf36e2f89572f6e8"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000006/request.bin",
+      "identity": [
+        2064,
+        8527008,
+        33188,
+        1,
+        56,
+        1794385328733515330,
+        1794385328733515330
+      ],
+      "name": "mutex-attempt/wire/attempt-00000006/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000006/request.bin",
+      "sha256": "9c1f67823488b4d19b689a1386fe3b84cbcfa91ed45d08b821d6614270475e10"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000006/request.json",
+      "identity": [
+        2064,
+        8527009,
+        33188,
+        1,
+        91,
+        1794385328733574498,
+        1794385328733574498
+      ],
+      "name": "mutex-attempt/wire/attempt-00000006/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000006/request.json",
+      "sha256": "d7bb09be3e349aeb56fb712a228998146e838fd483148287f671a6a6f073f8d9"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000006/result.json",
+      "identity": [
+        2064,
+        8527012,
+        33188,
+        1,
+        184,
+        1794385328743631554,
+        1794385328743631554
+      ],
+      "name": "mutex-attempt/wire/attempt-00000006/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000006/result.json",
+      "sha256": "84dbc0d445962afc7f0476206334f171940ba9ac1057000dc1698c6de45dcd48"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000006/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527010,
+        33188,
+        1,
+        72,
+        1794385328743519458,
+        1794385328743519458
+      ],
+      "name": "mutex-attempt/wire/attempt-00000006/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000006/returned-envelope.bin",
+      "sha256": "3813ed338e682e933107f72d2872c847d4cd33174b14f1e88a33c29af672546f"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000007/reply.bin",
+      "identity": [
+        2064,
+        8527017,
+        33188,
+        1,
+        72,
+        1794385328744226787,
+        1794385328744226787
+      ],
+      "name": "mutex-attempt/wire/attempt-00000007/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000007/reply.bin",
+      "sha256": "21e41df6779a9acc03cfb3810927f784775eae54d7fdf07483ef176a11b73e68"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000007/request.bin",
+      "identity": [
+        2064,
+        8527014,
+        33188,
+        1,
+        40,
+        1794385328744099865,
+        1794385328744099865
+      ],
+      "name": "mutex-attempt/wire/attempt-00000007/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000007/request.bin",
+      "sha256": "1a64ac33bf66f4230310c536ea390e960208939d363c0789fdb4e8635afc7799"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000007/request.json",
+      "identity": [
+        2064,
+        8527015,
+        33188,
+        1,
+        91,
+        1794385328744157582,
+        1794385328744157582
+      ],
+      "name": "mutex-attempt/wire/attempt-00000007/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000007/request.json",
+      "sha256": "1f3a88735c5baf002fb1fccc1e71258f6109f05ab57f90d99de2f0a4e20d212b"
+    },
+    {
+      "bytes": 183,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000007/result.json",
+      "identity": [
+        2064,
+        8527018,
+        33188,
+        1,
+        183,
+        1794385328744290116,
+        1794385328744290116
+      ],
+      "name": "mutex-attempt/wire/attempt-00000007/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000007/result.json",
+      "sha256": "9f036592f9ff2af5b3b90a158e14394ba9af9a4330c1378ad3a34f6a88a9f1b8"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000007/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527016,
+        33188,
+        1,
+        72,
+        1794385328744203222,
+        1794385328744203222
+      ],
+      "name": "mutex-attempt/wire/attempt-00000007/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000007/returned-envelope.bin",
+      "sha256": "e4a45b8453df3bcb4af10061b6e444d9ea1d7940d8f281e80f81dd2a6cdffd11"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000008/reply.bin",
+      "identity": [
+        2064,
+        8527023,
+        33188,
+        1,
+        48,
+        1794385328744827475,
+        1794385328744827475
+      ],
+      "name": "mutex-attempt/wire/attempt-00000008/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000008/reply.bin",
+      "sha256": "069237660ed5ca2e683c4a6b673424de7ac845356809ba49addcae495aebba10"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000008/request.bin",
+      "identity": [
+        2064,
+        8527020,
+        33188,
+        1,
+        48,
+        1794385328744663148,
+        1794385328744663148
+      ],
+      "name": "mutex-attempt/wire/attempt-00000008/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000008/request.bin",
+      "sha256": "069237660ed5ca2e683c4a6b673424de7ac845356809ba49addcae495aebba10"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000008/request.json",
+      "identity": [
+        2064,
+        8527021,
+        33188,
+        1,
+        91,
+        1794385328744715570,
+        1794385328744715570
+      ],
+      "name": "mutex-attempt/wire/attempt-00000008/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000008/request.json",
+      "sha256": "8000b0581c776fe7baf7f4c07be4fa63e05bba6aff5c32b71bb743e330e2247f"
+    },
+    {
+      "bytes": 183,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000008/result.json",
+      "identity": [
+        2064,
+        8527024,
+        33188,
+        1,
+        183,
+        1794385328744874638,
+        1794385328744874638
+      ],
+      "name": "mutex-attempt/wire/attempt-00000008/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000008/result.json",
+      "sha256": "d513fb532f1029a9f5e658e37035aac212f41c31e2621e9ad6b54dde6f5ad377"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000008/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527022,
+        33188,
+        1,
+        72,
+        1794385328744762749,
+        1794385328744762749
+      ],
+      "name": "mutex-attempt/wire/attempt-00000008/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000008/returned-envelope.bin",
+      "sha256": "70780c141f30ef4272d1bc6420e8217da3d9a7bda1d07ce2f38f07f42b6da5e4"
+    },
+    {
+      "bytes": 458,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000009/reply.bin",
+      "identity": [
+        2064,
+        8527035,
+        33188,
+        1,
+        458,
+        1794385328767644477,
+        1794385328767644477
+      ],
+      "name": "mutex-attempt/wire/attempt-00000009/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000009/reply.bin",
+      "sha256": "c646a95728d7a5788ba046e26b680461f4df36702272b6eb8da31e4a2b48819b"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000009/request.bin",
+      "identity": [
+        2064,
+        8527032,
+        33188,
+        1,
+        56,
+        1794385328767000000,
+        1794385328767000000
+      ],
+      "name": "mutex-attempt/wire/attempt-00000009/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000009/request.bin",
+      "sha256": "313d31b010edcdacd5cf104082218b9082050b1bf33510249742a26b45974157"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000009/request.json",
+      "identity": [
+        2064,
+        8527033,
+        33188,
+        1,
+        91,
+        1794385328767544140,
+        1794385328767544140
+      ],
+      "name": "mutex-attempt/wire/attempt-00000009/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000009/request.json",
+      "sha256": "cf146e5287ef66231d5abf17ebcc4ffdaa11a10f39c2fce3ffc1282a87ffdfb8"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000009/result.json",
+      "identity": [
+        2064,
+        8527036,
+        33188,
+        1,
+        184,
+        1794385328767689995,
+        1794385328767689995
+      ],
+      "name": "mutex-attempt/wire/attempt-00000009/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000009/result.json",
+      "sha256": "520ab8c5c3a23fc64cd95bc0224f36b39626aafc393f5a28233b36599bc472fe"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000009/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527034,
+        33188,
+        1,
+        72,
+        1794385328767600473,
+        1794385328767600473
+      ],
+      "name": "mutex-attempt/wire/attempt-00000009/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000009/returned-envelope.bin",
+      "sha256": "2e9de99089536a05eae01299769e45e7f41cdb7a638b10b9a3e322d05ad49b57"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000010/reply.bin",
+      "identity": [
+        2064,
+        8527042,
+        33188,
+        1,
+        227,
+        1794385328790778953,
+        1794385328790778953
+      ],
+      "name": "mutex-attempt/wire/attempt-00000010/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000010/reply.bin",
+      "sha256": "d173619eb91389a48f2232b7cef230f0416f71d5d8e4c346cd6638a95acbac83"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000010/request.bin",
+      "identity": [
+        2064,
+        8527039,
+        33188,
+        1,
+        72,
+        1794385328789704656,
+        1794385328789704656
+      ],
+      "name": "mutex-attempt/wire/attempt-00000010/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000010/request.bin",
+      "sha256": "748c0ede8ffa2e7bb4f6892af5d43fc96f9284075e50f1f6e6dfdd546d35b722"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000010/request.json",
+      "identity": [
+        2064,
+        8527040,
+        33188,
+        1,
+        91,
+        1794385328789779062,
+        1794385328789779062
+      ],
+      "name": "mutex-attempt/wire/attempt-00000010/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000010/request.json",
+      "sha256": "5a2c8b02e5f5b61c7c64e0e0b284a5c75a532cca127e7fcda3fc72c050b3c191"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000010/result.json",
+      "identity": [
+        2064,
+        8527043,
+        33188,
+        1,
+        184,
+        1794385328790837067,
+        1794385328790837067
+      ],
+      "name": "mutex-attempt/wire/attempt-00000010/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000010/result.json",
+      "sha256": "8229519324fb0699032035eac81096733c48447d7c976a54e54b83d401517818"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000010/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527041,
+        33188,
+        1,
+        72,
+        1794385328790736027,
+        1794385328790736027
+      ],
+      "name": "mutex-attempt/wire/attempt-00000010/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000010/returned-envelope.bin",
+      "sha256": "1dab18387601e7316b75e2e0c1a8481ed76cf8be613ff1f731dde6eb4f09ec28"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000011/reply.bin",
+      "identity": [
+        2064,
+        8527055,
+        33188,
+        1,
+        40,
+        1794385328908182955,
+        1794385328908182955
+      ],
+      "name": "mutex-attempt/wire/attempt-00000011/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000011/reply.bin",
+      "sha256": "6bf9540eb7825ebfdb56e4e6e5761223b3b9b303ebef0b9328c566203cce39c5"
+    },
+    {
+      "bytes": 249518,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000011/request.bin",
+      "identity": [
+        2064,
+        8527052,
+        33188,
+        1,
+        249518,
+        1794385328907175143,
+        1794385328907175143
+      ],
+      "name": "mutex-attempt/wire/attempt-00000011/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000011/request.bin",
+      "sha256": "07f5c4901d090071b0b337c565d39c6e50c09bf1a0896537844d1d79a1931155"
+    },
+    {
+      "bytes": 96,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000011/request.json",
+      "identity": [
+        2064,
+        8527053,
+        33188,
+        1,
+        96,
+        1794385328907535678,
+        1794385328907535678
+      ],
+      "name": "mutex-attempt/wire/attempt-00000011/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000011/request.json",
+      "sha256": "f0de833a32f2c02aea35de576cb3be95b8a8aaf38c3748f7c00dd197c5721c4f"
+    },
+    {
+      "bytes": 189,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000011/result.json",
+      "identity": [
+        2064,
+        8527056,
+        33188,
+        1,
+        189,
+        1794385328908243806,
+        1794385328908243806
+      ],
+      "name": "mutex-attempt/wire/attempt-00000011/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000011/result.json",
+      "sha256": "50920f337b7de6aae9badf37ee1486f8eabf43c32e49c4413f99baa5fc296ef0"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000011/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527054,
+        33188,
+        1,
+        72,
+        1794385328908138073,
+        1794385328908138073
+      ],
+      "name": "mutex-attempt/wire/attempt-00000011/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000011/returned-envelope.bin",
+      "sha256": "7f3cb7644724190d6ec683a8c7c7709db09fe1205cdaea099aa1861070f766e5"
+    },
+    {
+      "bytes": 176,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000012/reply.bin",
+      "identity": [
+        2064,
+        8527061,
+        33188,
+        1,
+        176,
+        1794385328920426704,
+        1794385328920426704
+      ],
+      "name": "mutex-attempt/wire/attempt-00000012/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000012/reply.bin",
+      "sha256": "8a039115e071345c25e25f9e18d8c7d8a6b407fd8161808a996d0d16410205df"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000012/request.bin",
+      "identity": [
+        2064,
+        8527058,
+        33188,
+        1,
+        88,
+        1794385328908673171,
+        1794385328908673171
+      ],
+      "name": "mutex-attempt/wire/attempt-00000012/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000012/request.bin",
+      "sha256": "095d1ab633e55bce80575b5b13315387971d14787e60d7734823314f982a4302"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000012/request.json",
+      "identity": [
+        2064,
+        8527059,
+        33188,
+        1,
+        92,
+        1794385328908736772,
+        1794385328908736772
+      ],
+      "name": "mutex-attempt/wire/attempt-00000012/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000012/request.json",
+      "sha256": "800d5dca27208252e44a7bc8edf83834c696587015131e329e5fba79aef19e37"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000012/result.json",
+      "identity": [
+        2064,
+        8527062,
+        33188,
+        1,
+        186,
+        1794385328920501040,
+        1794385328920501040
+      ],
+      "name": "mutex-attempt/wire/attempt-00000012/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000012/result.json",
+      "sha256": "58599bedde7fc217221c4888f2a5443b2846f2b218ec3520fa3ce17b2884b865"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000012/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527060,
+        33188,
+        1,
+        72,
+        1794385328920375553,
+        1794385328920375553
+      ],
+      "name": "mutex-attempt/wire/attempt-00000012/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000012/returned-envelope.bin",
+      "sha256": "7e2b5c377b47381e351114649298259545a61cd0acd87e39435d957c69ad9c71"
+    },
+    {
+      "bytes": 104,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000013/reply.bin",
+      "identity": [
+        2064,
+        8527067,
+        33188,
+        1,
+        104,
+        1794385328921121113,
+        1794385328921121113
+      ],
+      "name": "mutex-attempt/wire/attempt-00000013/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000013/reply.bin",
+      "sha256": "87959647c6a33d58de45b885954807df17a327fcedcef553e021581a3c96d272"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000013/request.bin",
+      "identity": [
+        2064,
+        8527064,
+        33188,
+        1,
+        40,
+        1794385328920971368,
+        1794385328920971368
+      ],
+      "name": "mutex-attempt/wire/attempt-00000013/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000013/request.bin",
+      "sha256": "e2f152889240f4369f36ab39213109269fe1652ae06b7e80f40c1b13598d26af"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000013/request.json",
+      "identity": [
+        2064,
+        8527065,
+        33188,
+        1,
+        92,
+        1794385328921034620,
+        1794385328921034620
+      ],
+      "name": "mutex-attempt/wire/attempt-00000013/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000013/request.json",
+      "sha256": "55fb7e2f01fd529accc8c5dd94170dc3c0ea75a2d73e6e7affb7bf390260721b"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000013/result.json",
+      "identity": [
+        2064,
+        8527068,
+        33188,
+        1,
+        186,
+        1794385328921174869,
+        1794385328921174869
+      ],
+      "name": "mutex-attempt/wire/attempt-00000013/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000013/result.json",
+      "sha256": "5cd2c157678f8be56df8cef927ec91a66443c45e2923b3cfe3316f455687f687"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000013/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527066,
+        33188,
+        1,
+        72,
+        1794385328921088471,
+        1794385328921088471
+      ],
+      "name": "mutex-attempt/wire/attempt-00000013/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000013/returned-envelope.bin",
+      "sha256": "807da2815b03ace7a4f8035be238a0013871c14992facd74deb6cea3faad8e4f"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000014/reply.bin",
+      "identity": [
+        2064,
+        8527073,
+        33188,
+        1,
+        48,
+        1794385328921711467,
+        1794385328921711467
+      ],
+      "name": "mutex-attempt/wire/attempt-00000014/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000014/reply.bin",
+      "sha256": "299e739414bd090963b0b79b55cb8cc7a3d1c3998e36de4fbe024a75604a0ddb"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000014/request.bin",
+      "identity": [
+        2064,
+        8527070,
+        33188,
+        1,
+        48,
+        1794385328921545892,
+        1794385328921545892
+      ],
+      "name": "mutex-attempt/wire/attempt-00000014/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000014/request.bin",
+      "sha256": "299e739414bd090963b0b79b55cb8cc7a3d1c3998e36de4fbe024a75604a0ddb"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000014/request.json",
+      "identity": [
+        2064,
+        8527071,
+        33188,
+        1,
+        92,
+        1794385328921603547,
+        1794385328921603547
+      ],
+      "name": "mutex-attempt/wire/attempt-00000014/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000014/request.json",
+      "sha256": "1d5338a3cb98302865cb3a324cbc221ba16096b4a77b3fe419f5abed4c1624ac"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000014/result.json",
+      "identity": [
+        2064,
+        8527074,
+        33188,
+        1,
+        185,
+        1794385328921758810,
+        1794385328921758810
+      ],
+      "name": "mutex-attempt/wire/attempt-00000014/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000014/result.json",
+      "sha256": "ec5777ae56472fb2632edc696e38c417d42b26e1d43c7cafe6ae7b6788c934cb"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000014/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527072,
+        33188,
+        1,
+        72,
+        1794385328921667823,
+        1794385328921667823
+      ],
+      "name": "mutex-attempt/wire/attempt-00000014/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000014/returned-envelope.bin",
+      "sha256": "1dde7826d047928719b8de8b5cfc31f0cdd35a0fa1132ac44590e22962fe3609"
+    },
+    {
+      "bytes": 650,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000015/reply.bin",
+      "identity": [
+        2064,
+        8527085,
+        33188,
+        1,
+        650,
+        1794385328944109607,
+        1794385328944109607
+      ],
+      "name": "mutex-attempt/wire/attempt-00000015/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000015/reply.bin",
+      "sha256": "05d2544d194efc08f5b228c76553fd6ac54d0faf455e9312cd3d9d4d2be78f97"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000015/request.bin",
+      "identity": [
+        2064,
+        8527082,
+        33188,
+        1,
+        56,
+        1794385328943958663,
+        1794385328943958663
+      ],
+      "name": "mutex-attempt/wire/attempt-00000015/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000015/request.bin",
+      "sha256": "839e85334967b3e347e09206e3fb023116f5cb3b22e84209375e5826c5e039bb"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000015/request.json",
+      "identity": [
+        2064,
+        8527083,
+        33188,
+        1,
+        92,
+        1794385328944032484,
+        1794385328944032484
+      ],
+      "name": "mutex-attempt/wire/attempt-00000015/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000015/request.json",
+      "sha256": "0404e444c3a82102839f90416a318a16336a234ebf1de9ab2ddcc3a7e921810c"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000015/result.json",
+      "identity": [
+        2064,
+        8527086,
+        33188,
+        1,
+        186,
+        1794385328944152848,
+        1794385328944152848
+      ],
+      "name": "mutex-attempt/wire/attempt-00000015/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000015/result.json",
+      "sha256": "faf67083d550b62af5411c718e1d807b0fc60e5d243a5b45c211a916bc7966e5"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000015/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527084,
+        33188,
+        1,
+        72,
+        1794385328944084964,
+        1794385328944084964
+      ],
+      "name": "mutex-attempt/wire/attempt-00000015/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000015/returned-envelope.bin",
+      "sha256": "bc4e40d3410a0d29b17143e2dcf21607b1786db19018084558fa07898a91334a"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000016/reply.bin",
+      "identity": [
+        2064,
+        8527092,
+        33188,
+        1,
+        227,
+        1794385328946186154,
+        1794385328946186154
+      ],
+      "name": "mutex-attempt/wire/attempt-00000016/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000016/reply.bin",
+      "sha256": "79024ba7e28d194b1d4289a7e5633abbabcd06bc171c825c654814de1d476147"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000016/request.bin",
+      "identity": [
+        2064,
+        8527089,
+        33188,
+        1,
+        72,
+        1794385328945155190,
+        1794385328945155190
+      ],
+      "name": "mutex-attempt/wire/attempt-00000016/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000016/request.bin",
+      "sha256": "7d019b193220b96312d622a8d4d99b52071a092216e3c1292ff13953355428f9"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000016/request.json",
+      "identity": [
+        2064,
+        8527090,
+        33188,
+        1,
+        92,
+        1794385328945229239,
+        1794385328945229239
+      ],
+      "name": "mutex-attempt/wire/attempt-00000016/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000016/request.json",
+      "sha256": "24115362874f6fab0adc7f6c56f72e9d718c3bcd7155158fdf7f039e60ee0931"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000016/result.json",
+      "identity": [
+        2064,
+        8527093,
+        33188,
+        1,
+        186,
+        1794385328946232499,
+        1794385328946232499
+      ],
+      "name": "mutex-attempt/wire/attempt-00000016/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000016/result.json",
+      "sha256": "36dcd9e9a1d65fb7d588eedc57b7ba4db7eeb1378a419b3c8f49dc329ba483a1"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000016/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527091,
+        33188,
+        1,
+        72,
+        1794385328946150697,
+        1794385328946150697
+      ],
+      "name": "mutex-attempt/wire/attempt-00000016/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000016/returned-envelope.bin",
+      "sha256": "68a89bc417d1291d06a1aeba29a1396fc82c8a88f69f3289324624307550b038"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000017/reply.bin",
+      "identity": [
+        2064,
+        8527105,
+        33188,
+        1,
+        40,
+        1794385329069257295,
+        1794385329069257295
+      ],
+      "name": "mutex-attempt/wire/attempt-00000017/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000017/reply.bin",
+      "sha256": "c2432158c8c2a7b5b663542549bff758106d4b7a2a52fbdd899cad57b62e7db5"
+    },
+    {
+      "bytes": 266007,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000017/request.bin",
+      "identity": [
+        2064,
+        8527102,
+        33188,
+        1,
+        266007,
+        1794385329068215379,
+        1794385329068215379
+      ],
+      "name": "mutex-attempt/wire/attempt-00000017/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000017/request.bin",
+      "sha256": "edcf71aa844000317f373ed538a819c15c8b868d3b3f6f823ddc11419a36c69c"
+    },
+    {
+      "bytes": 96,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000017/request.json",
+      "identity": [
+        2064,
+        8527103,
+        33188,
+        1,
+        96,
+        1794385329068600945,
+        1794385329068600945
+      ],
+      "name": "mutex-attempt/wire/attempt-00000017/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000017/request.json",
+      "sha256": "97fbbf8ddd53afa47351b6fb0873d7c0101c2dc8d4dbdc2ffc784c68a2fbb0fd"
+    },
+    {
+      "bytes": 189,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000017/result.json",
+      "identity": [
+        2064,
+        8527106,
+        33188,
+        1,
+        189,
+        1794385329069335657,
+        1794385329069335657
+      ],
+      "name": "mutex-attempt/wire/attempt-00000017/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000017/result.json",
+      "sha256": "1a5a82f94647f85caa087e1b824bc768a7c0e3f5e8a700d9f22d99912c472b2f"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000017/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527104,
+        33188,
+        1,
+        72,
+        1794385329069205049,
+        1794385329069205049
+      ],
+      "name": "mutex-attempt/wire/attempt-00000017/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000017/returned-envelope.bin",
+      "sha256": "82d9e0ad296d75662945b29eb10beac15afd3df092760f9319c07d923f661536"
+    },
+    {
+      "bytes": 208,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000018/reply.bin",
+      "identity": [
+        2064,
+        8527111,
+        33188,
+        1,
+        208,
+        1794385329079365815,
+        1794385329079365815
+      ],
+      "name": "mutex-attempt/wire/attempt-00000018/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000018/reply.bin",
+      "sha256": "fee15ab58bd11de371c592dbd364865c5835f17492e17c3acbc28cbcc4680722"
+    },
+    {
+      "bytes": 120,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000018/request.bin",
+      "identity": [
+        2064,
+        8527108,
+        33188,
+        1,
+        120,
+        1794385329069766528,
+        1794385329069766528
+      ],
+      "name": "mutex-attempt/wire/attempt-00000018/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000018/request.bin",
+      "sha256": "704220b66ba1df95643390ec56c9a6ebaf74edfba5c94a0e361de182b90b7ba7"
+    },
+    {
+      "bytes": 93,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000018/request.json",
+      "identity": [
+        2064,
+        8527109,
+        33188,
+        1,
+        93,
+        1794385329069826856,
+        1794385329069826856
+      ],
+      "name": "mutex-attempt/wire/attempt-00000018/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000018/request.json",
+      "sha256": "069086782c0e8fa12121413907328f3b4fac81be07790d1ff7c84c8aa528768b"
+    },
+    {
+      "bytes": 187,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000018/result.json",
+      "identity": [
+        2064,
+        8527112,
+        33188,
+        1,
+        187,
+        1794385329079421781,
+        1794385329079421781
+      ],
+      "name": "mutex-attempt/wire/attempt-00000018/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000018/result.json",
+      "sha256": "032230b417b348530df044bd13387dcdf86eb942e8f34d7a3435891ccf6ab834"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000018/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527110,
+        33188,
+        1,
+        72,
+        1794385329079325304,
+        1794385329079325304
+      ],
+      "name": "mutex-attempt/wire/attempt-00000018/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000018/returned-envelope.bin",
+      "sha256": "d60ae4ef5f14657a4a21a6f4935b152d0ed9b862c805d837d38ff15a58e6c568"
+    },
+    {
+      "bytes": 136,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000019/reply.bin",
+      "identity": [
+        2064,
+        8527117,
+        33188,
+        1,
+        136,
+        1794385329080024412,
+        1794385329080024412
+      ],
+      "name": "mutex-attempt/wire/attempt-00000019/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000019/reply.bin",
+      "sha256": "215f65716a4885968b818a0538c3528bed2830e09e3ab23df932b6225ab20c30"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000019/request.bin",
+      "identity": [
+        2064,
+        8527114,
+        33188,
+        1,
+        40,
+        1794385329079879598,
+        1794385329079879598
+      ],
+      "name": "mutex-attempt/wire/attempt-00000019/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000019/request.bin",
+      "sha256": "eafb3829367816fed564ef427b2fe193e8bae95ccf98cb48d7064c8d0212d069"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000019/request.json",
+      "identity": [
+        2064,
+        8527115,
+        33188,
+        1,
+        92,
+        1794385329079941041,
+        1794385329079941041
+      ],
+      "name": "mutex-attempt/wire/attempt-00000019/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000019/request.json",
+      "sha256": "64c8a38128b41da7726858c6a3abdd43df93ff451e9bdb1f7bb3c9a00c753d3e"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000019/result.json",
+      "identity": [
+        2064,
+        8527118,
+        33188,
+        1,
+        186,
+        1794385329080073335,
+        1794385329080073335
+      ],
+      "name": "mutex-attempt/wire/attempt-00000019/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000019/result.json",
+      "sha256": "b79a0d6d8f8138b94f86dd23d71ed1d2f0ef7e0163dd49377a11262e60ba86fb"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000019/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527116,
+        33188,
+        1,
+        72,
+        1794385329079995838,
+        1794385329079995838
+      ],
+      "name": "mutex-attempt/wire/attempt-00000019/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000019/returned-envelope.bin",
+      "sha256": "28dd4ac802d68271ebaf873686443908f0a6e48ec3461bba6d54f6253d2639f2"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000020/reply.bin",
+      "identity": [
+        2064,
+        8527123,
+        33188,
+        1,
+        48,
+        1794385329080595489,
+        1794385329080595489
+      ],
+      "name": "mutex-attempt/wire/attempt-00000020/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000020/reply.bin",
+      "sha256": "e3ec36a2d758b14daace26b9f9c44faf58b53432758ed25d59a3993e3e6372af"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000020/request.bin",
+      "identity": [
+        2064,
+        8527120,
+        33188,
+        1,
+        48,
+        1794385329080396101,
+        1794385329080396101
+      ],
+      "name": "mutex-attempt/wire/attempt-00000020/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000020/request.bin",
+      "sha256": "e3ec36a2d758b14daace26b9f9c44faf58b53432758ed25d59a3993e3e6372af"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000020/request.json",
+      "identity": [
+        2064,
+        8527121,
+        33188,
+        1,
+        92,
+        1794385329080475689,
+        1794385329080475689
+      ],
+      "name": "mutex-attempt/wire/attempt-00000020/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000020/request.json",
+      "sha256": "4490f000817b6f87b2c8dd56a6f4496f899df3a4efd83e7bc1502307159c54ce"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000020/result.json",
+      "identity": [
+        2064,
+        8527124,
+        33188,
+        1,
+        185,
+        1794385329080654818,
+        1794385329080654818
+      ],
+      "name": "mutex-attempt/wire/attempt-00000020/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000020/result.json",
+      "sha256": "77f555970002d62b933d281282b52b60d1fd400972ef16fd7d88f12126d553ed"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000020/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527122,
+        33188,
+        1,
+        72,
+        1794385329080562200,
+        1794385329080562200
+      ],
+      "name": "mutex-attempt/wire/attempt-00000020/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000020/returned-envelope.bin",
+      "sha256": "11f744244087dbf17cb2afaaf9f45ef9437da7a6284edd6544f1dce354f56e12"
+    },
+    {
+      "bytes": 458,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000021/reply.bin",
+      "identity": [
+        2064,
+        8527135,
+        33188,
+        1,
+        458,
+        1794385329103110729,
+        1794385329103110729
+      ],
+      "name": "mutex-attempt/wire/attempt-00000021/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000021/reply.bin",
+      "sha256": "660fefc96db4a2ef9b44dd81dfac79cb1d2f9b32563b418b6a907d21b92f033e"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000021/request.bin",
+      "identity": [
+        2064,
+        8527132,
+        33188,
+        1,
+        56,
+        1794385329102943099,
+        1794385329102943099
+      ],
+      "name": "mutex-attempt/wire/attempt-00000021/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000021/request.bin",
+      "sha256": "f57106edacc74a7bd988c93866a6d0f4b489b0d3adb6c8a0419008304c0b451e"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000021/request.json",
+      "identity": [
+        2064,
+        8527133,
+        33188,
+        1,
+        92,
+        1794385329103011478,
+        1794385329103011478
+      ],
+      "name": "mutex-attempt/wire/attempt-00000021/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000021/request.json",
+      "sha256": "0b7697d4e20f939ea934e95f3db48bfd85a4424006fe93315ce27c1c78ca8df7"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000021/result.json",
+      "identity": [
+        2064,
+        8527136,
+        33188,
+        1,
+        186,
+        1794385329103155042,
+        1794385329103155042
+      ],
+      "name": "mutex-attempt/wire/attempt-00000021/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000021/result.json",
+      "sha256": "560335798822b5e02752e855e03ba2e8c9328cdf1b244cf15f2d5be26d4301db"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000021/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527134,
+        33188,
+        1,
+        72,
+        1794385329103086487,
+        1794385329103086487
+      ],
+      "name": "mutex-attempt/wire/attempt-00000021/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000021/returned-envelope.bin",
+      "sha256": "2461007d72bc6c8fd8f13b9bfd7e305ae19f31c761ab62c4c5327cd629ed2e7e"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000022/reply.bin",
+      "identity": [
+        2064,
+        8527142,
+        33188,
+        1,
+        227,
+        1794385329105142790,
+        1794385329105142790
+      ],
+      "name": "mutex-attempt/wire/attempt-00000022/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000022/reply.bin",
+      "sha256": "c43e3c91f40f69f64ef4eab5f49855ac8b8469a5b670ddb4d4daf27eb490e851"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000022/request.bin",
+      "identity": [
+        2064,
+        8527139,
+        33188,
+        1,
+        72,
+        1794385329104042070,
+        1794385329104042070
+      ],
+      "name": "mutex-attempt/wire/attempt-00000022/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000022/request.bin",
+      "sha256": "dc8bde4ad1207cfa75666ee7a921f2261ea24e7b948b5e85c21a4af98a3ed243"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000022/request.json",
+      "identity": [
+        2064,
+        8527140,
+        33188,
+        1,
+        92,
+        1794385329104096117,
+        1794385329104096117
+      ],
+      "name": "mutex-attempt/wire/attempt-00000022/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000022/request.json",
+      "sha256": "2d56074c13b6f1083acbad231e195871dbbfb701e41d389b9b8b11d550f56da8"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000022/result.json",
+      "identity": [
+        2064,
+        8527143,
+        33188,
+        1,
+        186,
+        1794385329105227488,
+        1794385329105227488
+      ],
+      "name": "mutex-attempt/wire/attempt-00000022/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000022/result.json",
+      "sha256": "de320d6cdb3c0808eecba52570e65d13f0bceb53b4a81357e874ff636d607801"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000022/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527141,
+        33188,
+        1,
+        72,
+        1794385329105113145,
+        1794385329105113145
+      ],
+      "name": "mutex-attempt/wire/attempt-00000022/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000022/returned-envelope.bin",
+      "sha256": "e6bbb046fcd3c9408f74ca7be3f4438c9f2869f74f0be4b9347487a579ae31b2"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000023/reply.bin",
+      "identity": [
+        2064,
+        8527155,
+        33188,
+        1,
+        40,
+        1794385329228213502,
+        1794385329228213502
+      ],
+      "name": "mutex-attempt/wire/attempt-00000023/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000023/reply.bin",
+      "sha256": "9b6896420db35766b40cfcec40c625cd6062c0c12b02aedc9a01ce39b412d33b"
+    },
+    {
+      "bytes": 274059,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000023/request.bin",
+      "identity": [
+        2064,
+        8527152,
+        33188,
+        1,
+        274059,
+        1794385329227181339,
+        1794385329227181339
+      ],
+      "name": "mutex-attempt/wire/attempt-00000023/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000023/request.bin",
+      "sha256": "d1fb58e1dafb09da583bfdff6e9cb80bbc63568e9cbcfea478db1ed64c29a79e"
+    },
+    {
+      "bytes": 96,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000023/request.json",
+      "identity": [
+        2064,
+        8527153,
+        33188,
+        1,
+        96,
+        1794385329227583389,
+        1794385329227583389
+      ],
+      "name": "mutex-attempt/wire/attempt-00000023/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000023/request.json",
+      "sha256": "43afc487f3d351fb5781ddbc3e8e1099ac64794a5cbe8deb1005516e939d833a"
+    },
+    {
+      "bytes": 189,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000023/result.json",
+      "identity": [
+        2064,
+        8527156,
+        33188,
+        1,
+        189,
+        1794385329228265976,
+        1794385329228265976
+      ],
+      "name": "mutex-attempt/wire/attempt-00000023/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000023/result.json",
+      "sha256": "4fa1168b0754c54aef86a93b4fff1e67c51d8aeb2bad952bc1ab40283fb56eee"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000023/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527154,
+        33188,
+        1,
+        72,
+        1794385329228181398,
+        1794385329228181398
+      ],
+      "name": "mutex-attempt/wire/attempt-00000023/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000023/returned-envelope.bin",
+      "sha256": "c5195199de492373d3302b8e62034192fcf2dfbaa69012a6cda23f53ee0372eb"
+    },
+    {
+      "bytes": 176,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000024/reply.bin",
+      "identity": [
+        2064,
+        8527161,
+        33188,
+        1,
+        176,
+        1794385329238398417,
+        1794385329238398417
+      ],
+      "name": "mutex-attempt/wire/attempt-00000024/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000024/reply.bin",
+      "sha256": "78b40daf8b21db272bfff7841cb3f3168eb7d0a9e73b82695635aeca04109d3b"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000024/request.bin",
+      "identity": [
+        2064,
+        8527158,
+        33188,
+        1,
+        88,
+        1794385329228611874,
+        1794385329228611874
+      ],
+      "name": "mutex-attempt/wire/attempt-00000024/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000024/request.bin",
+      "sha256": "5d8b66b30be5fa0a7779d1f714c4d762492b2e821856a8bb2061d472c25ceef1"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000024/request.json",
+      "identity": [
+        2064,
+        8527159,
+        33188,
+        1,
+        92,
+        1794385329228680029,
+        1794385329228680029
+      ],
+      "name": "mutex-attempt/wire/attempt-00000024/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000024/request.json",
+      "sha256": "47ac46c36a9a9dfa05bc6963623aca87ee4e034cef7474da6ad3283bb1f26099"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000024/result.json",
+      "identity": [
+        2064,
+        8527162,
+        33188,
+        1,
+        186,
+        1794385329238487529,
+        1794385329238487529
+      ],
+      "name": "mutex-attempt/wire/attempt-00000024/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000024/result.json",
+      "sha256": "6a0da6bdcd10ec7013b326fd252f7cde2da8e53b6f8b319757cc2442912012ee"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000024/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527160,
+        33188,
+        1,
+        72,
+        1794385329238357690,
+        1794385329238357690
+      ],
+      "name": "mutex-attempt/wire/attempt-00000024/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000024/returned-envelope.bin",
+      "sha256": "9a6ba856fbb3f25bce636d7b26802469626fb579ba60e786dccb152985035be9"
+    },
+    {
+      "bytes": 104,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000025/reply.bin",
+      "identity": [
+        2064,
+        8527167,
+        33188,
+        1,
+        104,
+        1794385329239081655,
+        1794385329239081655
+      ],
+      "name": "mutex-attempt/wire/attempt-00000025/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000025/reply.bin",
+      "sha256": "09194bf1e5368b40e584e0c90962966aafcfee6cd5c4be733ff70ae88a6ce6ed"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000025/request.bin",
+      "identity": [
+        2064,
+        8527164,
+        33188,
+        1,
+        40,
+        1794385329238946825,
+        1794385329238946825
+      ],
+      "name": "mutex-attempt/wire/attempt-00000025/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000025/request.bin",
+      "sha256": "e67c68a54201983ab43750688db3a3218ab2f0fd3bd2e42f96ee6768ce3c1b31"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000025/request.json",
+      "identity": [
+        2064,
+        8527165,
+        33188,
+        1,
+        92,
+        1794385329239008055,
+        1794385329239008055
+      ],
+      "name": "mutex-attempt/wire/attempt-00000025/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000025/request.json",
+      "sha256": "09a56fff4926bd5e27762ce775ca34fe4efd1a5b9a20fe412e1acdcb932b17d0"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000025/result.json",
+      "identity": [
+        2064,
+        8527168,
+        33188,
+        1,
+        186,
+        1794385329239122290,
+        1794385329239122290
+      ],
+      "name": "mutex-attempt/wire/attempt-00000025/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000025/result.json",
+      "sha256": "c79d95ab682ff39c9846c0da23ac7ddc644a73285fdc7309998360a2e89df3ba"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000025/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527166,
+        33188,
+        1,
+        72,
+        1794385329239057202,
+        1794385329239057202
+      ],
+      "name": "mutex-attempt/wire/attempt-00000025/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000025/returned-envelope.bin",
+      "sha256": "8674b2aee714bb775c7217061d4cf90e5aaf7e5345a39e010455be5ea7b87927"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000026/reply.bin",
+      "identity": [
+        2064,
+        8527173,
+        33188,
+        1,
+        48,
+        1794385329239604597,
+        1794385329239604597
+      ],
+      "name": "mutex-attempt/wire/attempt-00000026/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000026/reply.bin",
+      "sha256": "564b0289e89ce95c5bd17a098eac064a351052dfbe9b616b4ee0cd950ce24148"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000026/request.bin",
+      "identity": [
+        2064,
+        8527170,
+        33188,
+        1,
+        48,
+        1794385329239424262,
+        1794385329239424262
+      ],
+      "name": "mutex-attempt/wire/attempt-00000026/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000026/request.bin",
+      "sha256": "564b0289e89ce95c5bd17a098eac064a351052dfbe9b616b4ee0cd950ce24148"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000026/request.json",
+      "identity": [
+        2064,
+        8527171,
+        33188,
+        1,
+        92,
+        1794385329239530715,
+        1794385329239530715
+      ],
+      "name": "mutex-attempt/wire/attempt-00000026/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000026/request.json",
+      "sha256": "602ac8952ade0b872571f8175fe211ac2db23005c56a17276ce1006048e160f0"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000026/result.json",
+      "identity": [
+        2064,
+        8527174,
+        33188,
+        1,
+        185,
+        1794385329239658446,
+        1794385329239658446
+      ],
+      "name": "mutex-attempt/wire/attempt-00000026/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000026/result.json",
+      "sha256": "d6b87f314d259b9a0e58cb14ee626c4ee43002388e9112f9bd050b192ff04ac8"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000026/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527172,
+        33188,
+        1,
+        72,
+        1794385329239580209,
+        1794385329239580209
+      ],
+      "name": "mutex-attempt/wire/attempt-00000026/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000026/returned-envelope.bin",
+      "sha256": "792c7e6665d83ed5b01170d576ff7ac085e5317f87b0e5e07af74607e3788feb"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000027/reply.bin",
+      "identity": [
+        2064,
+        8527187,
+        33188,
+        1,
+        266,
+        1794385329453261531,
+        1794385329453261531
+      ],
+      "name": "mutex-attempt/wire/attempt-00000027/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000027/reply.bin",
+      "sha256": "20a88d335ce28349a36ce994d66bb5c63433e25c0cc1932cebb7f7a671fa3f43"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000027/request.bin",
+      "identity": [
+        2064,
+        8527184,
+        33188,
+        1,
+        56,
+        1794385329453079516,
+        1794385329453079516
+      ],
+      "name": "mutex-attempt/wire/attempt-00000027/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000027/request.bin",
+      "sha256": "887036d4ab6666203fe3655daa169b9c87685ff6fbb4bb6736fb2d17070df142"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000027/request.json",
+      "identity": [
+        2064,
+        8527185,
+        33188,
+        1,
+        92,
+        1794385329453163036,
+        1794385329453163036
+      ],
+      "name": "mutex-attempt/wire/attempt-00000027/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000027/request.json",
+      "sha256": "7ab325d11516d3757680902b2f1a69d34795dbe9ee9c702611cc7b0381d5bc29"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000027/result.json",
+      "identity": [
+        2064,
+        8527188,
+        33188,
+        1,
+        186,
+        1794385329453315926,
+        1794385329453315926
+      ],
+      "name": "mutex-attempt/wire/attempt-00000027/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000027/result.json",
+      "sha256": "fa25fbefce39ebf4b128f796edeffd659730e74b109a4d9df716ba517f4173aa"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000027/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527186,
+        33188,
+        1,
+        72,
+        1794385329453225669,
+        1794385329453225669
+      ],
+      "name": "mutex-attempt/wire/attempt-00000027/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000027/returned-envelope.bin",
+      "sha256": "8048cfac78c27e957983ad7f79ccd2618435ed3b4707efabb6cf56f91a07aefc"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000028/reply.bin",
+      "identity": [
+        2064,
+        8527194,
+        33188,
+        1,
+        48,
+        1794385329454075029,
+        1794385329454075029
+      ],
+      "name": "mutex-attempt/wire/attempt-00000028/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000028/reply.bin",
+      "sha256": "a1a583d1b54db821f1d297c58efb82dfd4ebc13a372ffa221f57aedaf5e2e0c4"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000028/request.bin",
+      "identity": [
+        2064,
+        8527191,
+        33188,
+        1,
+        48,
+        1794385329453927097,
+        1794385329453927097
+      ],
+      "name": "mutex-attempt/wire/attempt-00000028/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000028/request.bin",
+      "sha256": "a1a583d1b54db821f1d297c58efb82dfd4ebc13a372ffa221f57aedaf5e2e0c4"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000028/request.json",
+      "identity": [
+        2064,
+        8527192,
+        33188,
+        1,
+        92,
+        1794385329453988519,
+        1794385329453988519
+      ],
+      "name": "mutex-attempt/wire/attempt-00000028/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000028/request.json",
+      "sha256": "ca61ab68ab735794832dda4753d4ce06db142e1574ee470641615c538e35550b"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000028/result.json",
+      "identity": [
+        2064,
+        8527195,
+        33188,
+        1,
+        185,
+        1794385329454138634,
+        1794385329454138634
+      ],
+      "name": "mutex-attempt/wire/attempt-00000028/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000028/result.json",
+      "sha256": "9beeb4582797237c19c5964160b7fd3969eaa0b8f1ddf0e5d062c3d6833ba2de"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000028/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527193,
+        33188,
+        1,
+        72,
+        1794385329454041743,
+        1794385329454041743
+      ],
+      "name": "mutex-attempt/wire/attempt-00000028/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000028/returned-envelope.bin",
+      "sha256": "f136228e1ee8d7e63cd19e07d2b689662a777d295893c538990630e12cd6020a"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000029/reply.bin",
+      "identity": [
+        2064,
+        8527200,
+        33188,
+        1,
+        40,
+        1794385329462290535,
+        1794385329462290535
+      ],
+      "name": "mutex-attempt/wire/attempt-00000029/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000029/reply.bin",
+      "sha256": "285ff24ceaf5be57316ce5e613bf91c77b897c096690b49c0b487494232e6bd9"
+    },
+    {
+      "bytes": 32,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000029/request.bin",
+      "identity": [
+        2064,
+        8527197,
+        33188,
+        1,
+        32,
+        1794385329455000000,
+        1794385329455000000
+      ],
+      "name": "mutex-attempt/wire/attempt-00000029/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000029/request.bin",
+      "sha256": "bad33eb94ee55a7729de94b24e3f610dd27152857d28d9608acb0090ef926ea5"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000029/request.json",
+      "identity": [
+        2064,
+        8527198,
+        33188,
+        1,
+        92,
+        1794385329455540829,
+        1794385329455540829
+      ],
+      "name": "mutex-attempt/wire/attempt-00000029/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000029/request.json",
+      "sha256": "188921961d4c19be509ff2dbc6d6d5321d37bbf515ad3665d6c0e8e8ccd50270"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000029/result.json",
+      "identity": [
+        2064,
+        8527201,
+        33188,
+        1,
+        185,
+        1794385329462358205,
+        1794385329462358205
+      ],
+      "name": "mutex-attempt/wire/attempt-00000029/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000029/result.json",
+      "sha256": "bbca5f39bba604c2749553cd81b0857a4101ffb9c098a071ba08d22efb1f1383"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000029/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527199,
+        33188,
+        1,
+        72,
+        1794385329462248562,
+        1794385329462248562
+      ],
+      "name": "mutex-attempt/wire/attempt-00000029/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000029/returned-envelope.bin",
+      "sha256": "db86257f124f674cfddc51c3bf333d0a181a226bca790a9c960fd51b366317a5"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000030/reply.bin",
+      "identity": [
+        2064,
+        8527206,
+        33188,
+        1,
+        266,
+        1794385329462807188,
+        1794385329462807188
+      ],
+      "name": "mutex-attempt/wire/attempt-00000030/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000030/reply.bin",
+      "sha256": "ada33bd97eb701e06954054ecc6cf03ffc94420b4c286ae463cf007f865e493b"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000030/request.bin",
+      "identity": [
+        2064,
+        8527203,
+        33188,
+        1,
+        56,
+        1794385329462660245,
+        1794385329462660245
+      ],
+      "name": "mutex-attempt/wire/attempt-00000030/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000030/request.bin",
+      "sha256": "e0ac28e768fc520566a13ccaef0186aa6ecd5820202e54c8dfa6916184f6c8aa"
+    },
+    {
+      "bytes": 93,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000030/request.json",
+      "identity": [
+        2064,
+        8527204,
+        33188,
+        1,
+        93,
+        1794385329462718587,
+        1794385329462718587
+      ],
+      "name": "mutex-attempt/wire/attempt-00000030/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000030/request.json",
+      "sha256": "d711711bb6efacc7cb983f4f261988f00e9b8d4bf19d1ee0b29241b09453c52c"
+    },
+    {
+      "bytes": 187,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000030/result.json",
+      "identity": [
+        2064,
+        8527207,
+        33188,
+        1,
+        187,
+        1794385329462896805,
+        1794385329462896805
+      ],
+      "name": "mutex-attempt/wire/attempt-00000030/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000030/result.json",
+      "sha256": "5e8c7a053b584ab8b59b108243789f8da5a55383728738cdfd005e81f31c1ccd"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000030/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527205,
+        33188,
+        1,
+        72,
+        1794385329462772849,
+        1794385329462772849
+      ],
+      "name": "mutex-attempt/wire/attempt-00000030/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000030/returned-envelope.bin",
+      "sha256": "248ac465d8e65885bc2f07529985c297702582bfca2a4a0aa7d55e662ec7c17c"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000031/reply.bin",
+      "identity": [
+        2064,
+        8527213,
+        33188,
+        1,
+        56,
+        1794385329472787272,
+        1794385329472787272
+      ],
+      "name": "mutex-attempt/wire/attempt-00000031/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000031/reply.bin",
+      "sha256": "b40ac2e4c9b4a65d4de2975618f8da9b57f24c2d996f9dab8c1744e9396449a4"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000031/request.bin",
+      "identity": [
+        2064,
+        8527210,
+        33188,
+        1,
+        88,
+        1794385329472594528,
+        1794385329472594528
+      ],
+      "name": "mutex-attempt/wire/attempt-00000031/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000031/request.bin",
+      "sha256": "15fbc2e32098bbe6bd5edfe4ccdb537eaa142d0d79a2900a413d329c642bc06a"
+    },
+    {
+      "bytes": 93,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000031/request.json",
+      "identity": [
+        2064,
+        8527211,
+        33188,
+        1,
+        93,
+        1794385329472691063,
+        1794385329472691063
+      ],
+      "name": "mutex-attempt/wire/attempt-00000031/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000031/request.json",
+      "sha256": "bd4f0fd2b199ae707f96a16f9be71567f3c0697612b1b003952bc6a0bea47d96"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000031/result.json",
+      "identity": [
+        2064,
+        8527214,
+        33188,
+        1,
+        186,
+        1794385329472839671,
+        1794385329472839671
+      ],
+      "name": "mutex-attempt/wire/attempt-00000031/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000031/result.json",
+      "sha256": "f5d0779203cd1192473ec9b597b0714b8ee731103f970b2ae83f76f658fcfd65"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000031/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527212,
+        33188,
+        1,
+        72,
+        1794385329472752605,
+        1794385329472752605
+      ],
+      "name": "mutex-attempt/wire/attempt-00000031/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000031/returned-envelope.bin",
+      "sha256": "89bc017cf8c03ce2cc2f4e17cc9e3f036955d632c3d50a1d170eaeb685a3c024"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000032/reply.bin",
+      "identity": [
+        2064,
+        8527219,
+        33188,
+        1,
+        48,
+        1794385329473268162,
+        1794385329473268162
+      ],
+      "name": "mutex-attempt/wire/attempt-00000032/reply.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000032/reply.bin",
+      "sha256": "dec3a316257f1f56566392b638f967616ea94f4f2e6cb0481104215d67916dd7"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000032/request.bin",
+      "identity": [
+        2064,
+        8527216,
+        33188,
+        1,
+        48,
+        1794385329473113787,
+        1794385329473113787
+      ],
+      "name": "mutex-attempt/wire/attempt-00000032/request.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000032/request.bin",
+      "sha256": "dec3a316257f1f56566392b638f967616ea94f4f2e6cb0481104215d67916dd7"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000032/request.json",
+      "identity": [
+        2064,
+        8527217,
+        33188,
+        1,
+        92,
+        1794385329473181448,
+        1794385329473181448
+      ],
+      "name": "mutex-attempt/wire/attempt-00000032/request.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000032/request.json",
+      "sha256": "e7b0d6fca0377ef3c12983b4634ac3051e38a20fa394a8072b18696905e74a7a"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000032/result.json",
+      "identity": [
+        2064,
+        8527220,
+        33188,
+        1,
+        185,
+        1794385329473326177,
+        1794385329473326177
+      ],
+      "name": "mutex-attempt/wire/attempt-00000032/result.json",
+      "path": "payload/mutex-attempt/wire/attempt-00000032/result.json",
+      "sha256": "545f4bb978c0e03e9343e369296070bf135d315469fb198f9490d68277b5bcd3"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-01/wire/attempt-00000032/returned-envelope.bin",
+      "identity": [
+        2064,
+        8527218,
+        33188,
+        1,
+        72,
+        1794385329473234040,
+        1794385329473234040
+      ],
+      "name": "mutex-attempt/wire/attempt-00000032/returned-envelope.bin",
+      "path": "payload/mutex-attempt/wire/attempt-00000032/returned-envelope.bin",
+      "sha256": "7fc01504a96fc3771763dc4d23064ff7d9c3e1ea826275d44190a95d569aebcd"
+    },
+    {
+      "bytes": 148,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-receipts-01/child-result.json",
+      "identity": [
+        2064,
+        8527224,
+        33188,
+        1,
+        148,
+        1794385329728048429,
+        1794385329728048429
+      ],
+      "name": "mutex-controller/child-result.json",
+      "path": "payload/mutex-controller/child-result.json",
+      "sha256": "42e35f8dd7b8e2610a0fa3a6045117dcb86cc0bee71c6cc76fcf2a794802025b"
+    },
+    {
+      "bytes": 63,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-receipts-01/child.json",
+      "identity": [
+        2064,
+        8526951,
+        33188,
+        1,
+        63,
+        1794385327473611700,
+        1794385327473611700
+      ],
+      "name": "mutex-controller/child.json",
+      "path": "payload/mutex-controller/child.json",
+      "sha256": "8e9cf3431e558d5ab8d70e2c023a113452924dbd755402eea838d5edc4abe8e4"
+    },
+    {
+      "bytes": 1702,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-receipts-01/command.json",
+      "identity": [
+        2064,
+        8526949,
+        33188,
+        1,
+        1702,
+        1794385327468330036,
+        1794385327468330036
+      ],
+      "name": "mutex-controller/command.json",
+      "path": "payload/mutex-controller/command.json",
+      "sha256": "14cf6c6fd7c386a72ebe424a9f8846b0d2e599d5536a46deddbf7b01d0cb18ec"
+    },
+    {
+      "bytes": 51763,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-receipts-01/dmesg-after.txt",
+      "identity": [
+        2064,
+        8527225,
+        33188,
+        1,
+        51763,
+        1794385329760742399,
+        1794385329760742399
+      ],
+      "name": "mutex-controller/dmesg-after.txt",
+      "path": "payload/mutex-controller/dmesg-after.txt",
+      "sha256": "c192b2321efeb20b8c7758b58b7436f8c1fc212d1c21955e50ace3c1348a6c3a"
+    },
+    {
+      "bytes": 51763,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-receipts-01/dmesg-before.txt",
+      "identity": [
+        2064,
+        8526948,
+        33188,
+        1,
+        51763,
+        1794385327468102807,
+        1794385327468102807
+      ],
+      "name": "mutex-controller/dmesg-before.txt",
+      "path": "payload/mutex-controller/dmesg-before.txt",
+      "sha256": "c192b2321efeb20b8c7758b58b7436f8c1fc212d1c21955e50ace3c1348a6c3a"
+    },
+    {
+      "bytes": 73157,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-receipts-01/result.json",
+      "identity": [
+        2064,
+        8527226,
+        33188,
+        1,
+        73157,
+        1794385330396302215,
+        1794385330396302215
+      ],
+      "name": "mutex-controller/result.json",
+      "path": "payload/mutex-controller/result.json",
+      "sha256": "4a1cece6922e82d403352486c35a2b66299af5884765682e3b3b610a7ee261b5"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-09834f09-rw-01/live-mutex-receipts-01/stdout.log",
+      "identity": [
+        2064,
+        8526950,
+        33188,
+        1,
+        0,
+        1794385327472000000,
+        1794385327472000000
+      ],
+      "name": "mutex-controller/stdout.log",
+      "path": "payload/mutex-controller/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "shared_full_index": "../module-reader-build-20261111/collection/copy-index.json"
+}

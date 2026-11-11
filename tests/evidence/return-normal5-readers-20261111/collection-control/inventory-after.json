@@ -1,0 +1,116 @@
+{
+  "bytes": 145068,
+  "collected_unix": 1794385994.544888,
+  "count": 5,
+  "directories": {
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild5-readers-01": {
+      "identity": [
+        2080,
+        2640731,
+        16832,
+        3,
+        4096,
+        1794385901137000000,
+        1794385901137000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild5-readers-01"
+    },
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild5-readers-01/post-normal": {
+      "identity": [
+        2080,
+        2640734,
+        16832,
+        2,
+        4096,
+        1794385901699000000,
+        1794385901699000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild5-readers-01/post-normal"
+    },
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal5-readers-helper-01": {
+      "identity": [
+        2080,
+        2640729,
+        16832,
+        2,
+        4096,
+        1794385827528000000,
+        1794385827528000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal5-readers-helper-01"
+    }
+  },
+  "files": {
+    "helper/return-normal.py": {
+      "bytes": 19103,
+      "identity": [
+        2080,
+        2640730,
+        33188,
+        1,
+        19103,
+        1794385827528859294,
+        1794385827528859294
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal5-readers-helper-01/return-normal.py",
+      "sha256": "cf98bf1ff0d3cff9f20b347110b35b96eee95487fca841a824d1ea1dd18c3d85"
+    },
+    "return/post-normal/result.json": {
+      "bytes": 38576,
+      "identity": [
+        2080,
+        2640736,
+        33188,
+        1,
+        38576,
+        1794385901700000000,
+        1794385901700000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild5-readers-01/post-normal/result.json",
+      "sha256": "a4632b593eb660f1402eaae78ec1f520394520c5dddc79fff01d7fac3b7b7a1f"
+    },
+    "return/post-normal/running-kernel-notes.bin": {
+      "bytes": 476,
+      "identity": [
+        2080,
+        2640735,
+        33188,
+        1,
+        476,
+        1794385901697434645,
+        1794385901697434645
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild5-readers-01/post-normal/running-kernel-notes.bin",
+      "sha256": "ff3f5318675db0cd606e636ef3a5b57272622ee4113ed9822328d64003aa54fe"
+    },
+    "return/pre-reboot.json": {
+      "bytes": 43408,
+      "identity": [
+        2080,
+        2640732,
+        33188,
+        1,
+        43408,
+        1794385827963000000,
+        1794385827963000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild5-readers-01/pre-reboot.json",
+      "sha256": "3fbc19894932b90a65f8656454da966f9d438258c67672a6139393da52d5249f"
+    },
+    "return/reboot-result.json": {
+      "bytes": 43505,
+      "identity": [
+        2080,
+        2640733,
+        33188,
+        1,
+        43505,
+        1794385827971000000,
+        1794385827971000000
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/return-normal-after-kdrebuild5-readers-01/reboot-result.json",
+      "sha256": "f1b8fb1b5d33a94ca176b92ac1208e36ef021bc8452390ce1eaf22b00f70965d"
+    }
+  },
+  "visited_paths": 9
+}

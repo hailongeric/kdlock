@@ -1,0 +1,10 @@
+{
+  "completed_response": true,
+  "operation": 5,
+  "output_capacity": 2097152,
+  "reply_bytes": 72,
+  "request_bytes": 40,
+  "returned_sequence": 6,
+  "sequence": 6,
+  "status": 0
+}
