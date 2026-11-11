@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""VM-only fresh source/O construction and directly affected compilation.
+
+No network, install, module load, boot or cleanup. Fresh caller-pinned inputs,
+recovery and budgets are required. Any failure retains all output for review.
+A timed-out child is not killed or retried. Do not rerun over partial output.
+"""
+import argparse,datetime,hashlib,json,os,re,shutil,subprocess,time
+from pathlib import Path
+CORE='0c97cd34cc6e3b75ac7ed0e233c813431264ef73'
+BOOT='afb0c5cd-96b7-488b-bcb4-4a31cbb4e50e'
+RELEASE='7.0.0-38-kdrebuild7'
+BASE=Path('/mnt/kdlock-builds2/kdlock-main-kernel7-0c97cd34-01')
+SOURCE,BUILD,OUT=BASE/'source',BASE/'build',BASE/'receipts/focused-01'
+NORMAL=Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1')
+OLD=Path('/mnt/kdlock-builds2/kdlock-main-kernel6-532b68a6-rwsem-04')
+NORMAL_BUNDLE=Path('/root/kdlock-kernel-baselines/linux70-kdlock1-20261027/manifest.json')
+NORMAL_MANIFEST_SHA='1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17'
+CONFIG_SHA='31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483'
+NORMAL_PINS={'Makefile': '7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32', 'include/linux/sched.h': 'aee5c39f6114cf358e28e64e7ce53c8358f0f90d70467f2c2e643d4128bfea2d', 'init/Kconfig': 'c94d452b20157fd93b4cdce2147d5f4c777f65b97ea7c98bddbd1a6a30c567a7', 'kernel/Makefile': '18ab5bdeb31f60dd99554e807be2042b2733451d3bd10b74c1e7ea8603c5eeda', 'kernel/exit.c': 'c409a652107d68488ffe1bee096025d6b224736c33dab04ea4441bbc88f63a2f', 'kernel/fork.c': '0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0', 'include/linux/rwsem.h': '4630401ebc68d2e4879e2513d8fd8d418ea7423503b2198fe1699914c2e3747c', 'kernel/locking/rwsem.c': '5d030b8ab20d775f3e3cf92d307b56e8309d0a6d9c9a4d626af91a3ccd53ea65'}
+OLD_CORE_PINS={'Kbuild': '63e09601f83dff10da0a51c920d44a3dac1a685c060fa0e8670d930c0f250cb7', 'Kconfig': 'f57bcb6c2e27799559fa139630b6090b0371c62119298b62429b006e5c788c29', 'include/asm_head.h': 'dcae354686db004a515957fb73f6645d19f98bbb1fe3a07f1b73dfaff318455c', 'include/kd_control.h': '403b7ef160f75b5f149abafd35da59bac89215a5f5e22c4138714d6b6dcbad6a', 'include/kd_linux_rwsem.h': '0eb04ce47d4b998593b75b8a10bf50cd6acd765f4e53923d23736559e7542966', 'include/kd_linux_rwsem_source.h': '088f544be510839a873e5013e5239d1caf2b110be9f7c6f7269b764e08e527d5', 'include/kd_mutex.h': '56b8541b70beb5c9b952d66b2eab8f89d57ea9e92bdec4617757fdf5eefdad3e', 'include/kd_mutex_api.h': '086a000a572c40b1657412c57e4cd5773c5efdd8b186dd1db2504a68df49b5f0', 'include/kd_regs.h': '72ee3d149d22570e960e536c6a8c2e1e1bae289b8a2c1c17bd2599e64aa4ca1a', 'include/kd_rwlock_api.h': '971e0cd072fe48f15a1dd21c6b3c89e40acbe3d16bdbcc80efadc77db4d759b3', 'include/kd_rwsem_api.h': 'ad85e2b7f1a41fd92db3998fbb12ffb45b289987dcc862c4f8a3acd22679cefa', 'include/kd_spin_api.h': 'bc34bd6327f35172d2671d11e98eab8a5e50b8aeb5508ad49dc095598a843908', 'include/mutex_api.S': '9957255e54a4f38eb7eb871c7fc30d1e78ce1f7c0dfa1233e586e0f60c20382e', 'include/mutex_entry.S': '6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108', 'include/native_resume.S': '6c57676d9194a2f2090d602fdf55bba891add8b6f8d560472bfb4fd7bbf4b0dd', 'include/wrapper.S': '42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5', 'kernel/channel.c': '17803ac448b5f836c311457451106df047fc73e2dd5a3aa32b837159e3c69b03', 'kernel/channel.h': '606ce81101fc1c53805dc22c870747b6faba3b931302fcf003a3b7bd2fd948f3', 'kernel/compiled_image.c': '0ef92a96b335041523341c2918641cef0c7aa7c0cbfc32e5f3ccd0484db47f2d', 'kernel/compiled_image.h': 'ec54afc42d2aa32079c2c28de7af7ba7141abbdece9c0c1e36361ea6ad2b29c9', 'kernel/control.c': 'c50a6de92ef238f387e023473937c418c02314bd7353082db69915a7fb79853d', 'kernel/control.h': '410021ca0e235e57e093b1056af2cb19d9d2199d679a3811efebaeef53002912', 'kernel/episode.c': 'c3d3bab879b2430fe32082d93a7e4558e2a3b26c76b3c69e93e37d26ca2a45ea', 'kernel/episode.h': '0ba636b0e61c051dfc2dacdd1167497066d13eb13a3644cd9141bd912d6951a7', 'kernel/exports.c': 'e71c6975df950562ae62f935f0d6992db6a2af0c9190342f329554cdc9ef373e', 'kernel/feedback.c': 'fb00418fd7443ff0cff4ab5af9d1a4ffe0fd691f29f0b17ae33d8baa653960f0', 'kernel/feedback.h': 'e65def1ab23fdc490a7ab0b18a2f1b8bc00f538c17e62e0f1cacbc6c809a0464', 'kernel/feedback_publish.c': 'eab297e4eb31259d1f0ca9b32be051c6604e2f80d5fe7a0c2fa7c89017c96104', 'kernel/feedback_publish.h': '04c14ae7abb8346230fbe2f6eeadf79c57f91be4cf8204676b7e79a1153d4066', 'kernel/image.c': '2045cb89d88175e9b73f7d3b247b72943fbcfa8eaaa3a2ffede0e670968e2bd3', 'kernel/image.h': '49b080029f0abc3ea87e6230cbb925a22f8dbdea50242b42664ce47b135044e5', 'kernel/image_inputs.h': 'a56154b1717dfa494c767a87355128d92f9f710c9bc4ebdc0729a4ca3f8bdc40', 'kernel/image_owner.c': 'c647127502b78d6a3d0d29040d98bf97bc87e666f5418755a876ff0a6b14ff15', 'kernel/image_owner.h': '0bdc71a22db182ee6ffc89834a30c28a348c1724c60ea6649ef53141380ffccb', 'kernel/integration/apply_target.py': 'ed9f1749a2056cf9fb184347faa3c49073b6b01286385548779e2aa9971b542a', 'kernel/jit.c': '9c4314c011f9144edd6f98bfd101452b736735ae005cb1754694367e59b9b5a9', 'kernel/jit.h': '66708e4141a3ae97fb848554862f19e390d6285e46538dba6dc142b0da24d5c3', 'kernel/lifecycle.c': '9b5df77328d25a90400c8e59a70620dcc15eac2c4717a2183f9538fce23ab0bf', 'kernel/lifecycle.h': '946cb5cad5e7a6895efb3617f935f8369a58e03bccf002ca4ed2bb24d02aafdc', 'kernel/linux_rwsem.c': 'a394711d25bab7e7f4d44c1a5db038fb49b19cf83081533c9f978c7b2c897640', 'kernel/mutex.c': 'c237a9d96076674374ea6b48644c7336c0bab43ab4c6f3aba58d06412781969d', 'kernel/mutex.h': '3fed923a11dadfc1aa171c5aea60cf6d7b003f4971309d48e758aa84934e6d1f', 'kernel/mutex_api.c': '501bd160e8405d993f2698688f93b9034e46b4f7df1bc674385c7a566de9481e', 'kernel/mutex_api.h': '822c098acdadaeb4963d6cfbc299598bba28cd7e204e900eab169e720c54fa6b', 'kernel/mutex_release.c': '2d9639fcf6688e0923b1fcc7f6475edff26957710984785212fe40dda5dcc7f8', 'kernel/mutex_release.h': 'a2805d3e5d1bdff89390c54f9ddf66ed02f5c470d07b5ee83ec51b9304a279ce', 'kernel/native_entry.c': '8d452d7c27a955dafe022af389ccf6b55520f8c69e23f35f9fd7c32f31708aa4', 'kernel/native_entry.h': '80d60672aaa65bb4cdf1884b5f25031571c1ab5e2d7f589cf2fce6524bb70c2e', 'kernel/observation.c': '1d9a4ac626de10516682680904c958bd0af1539eae0828b4236b5e0bea2b2e3a', 'kernel/observation.h': '9a2c1a5e30c76638c8a965d47bad32b3ecff3de2273f3defa4a52797f411b0a9', 'kernel/owner_progress.c': '8184208d878b467a7a269c2606029aa22cba64d4a45fd56026855b04171178d3', 'kernel/owner_progress.h': 'cc092ec0df8a74b6b993a6a3a7034ee713a896e0bf0f3a2ed32702692cea1052', 'kernel/request_pool.c': '1a058bfad5ea6440f3f2bdc513a266e84e4cbcf5aa5e61b4aeef2b22b41a1986', 'kernel/request_pool.h': 'f1450e3bc166f0a784809fd496d6471ef5ec13baa25c1e71ecf73e78cb6ecc90', 'kernel/runtime.c': 'dd25f9210604de7e5a00146aca7686d70b1171bb5442793ea917e74ee85f0c90', 'kernel/runtime.h': '2286ea3d88ab01021b8512e6c6971ec7fce2935d162dc28e1542e3c64202f983', 'kernel/rw.c': '55187a494bb894cd394f3a97bd42f759faf0fd4c9570f5c70c39d8b1a1b500dd', 'kernel/rw.h': '1e3d00529aafad8b49a26073cfd54c5280652deb67c8ce8cdfd0c39a153ce8d0', 'kernel/rw_native.c': '1a5dc3349dfd7d831c481b4a4862835798fb1a5eb725704dcc91ae42cc49afd0', 'kernel/rw_native.h': '5644c11916ee0861571d369dda7f50ec2f7da1a7367000827a65935d410dd01f', 'kernel/source_epoch.c': '2ef40e9ad005caf758c31f9947bf0b49b67f7bf19eae3a0ec8684090ebe8ff12', 'kernel/source_epoch.h': 'f1838dbd76af0232cbee8909f85dbefe2972bd8bce8271faf909a98ec05fe0bb', 'kernel/source_provider.c': 'c242e5bd9a091461a2c6f9d5d8907102d8986c62897959629c04789f8f0aa49e', 'kernel/source_provider.h': '0bde73385ec8620af476303299b559440d2da181797fb82a1d39a36a26c5f261', 'kernel/source_stack.c': '81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302', 'kernel/source_stack.h': '91458b0aa42309ebcf3c8b474bd2420f24574558e3362b1f993f21f0d7d4f16d', 'kernel/state.c': '859f024b50bdc2838f471df486f6e9a749723344018b87fcc85840b8ff7e2c34', 'kernel/state.h': '5d66a68e799d211b9d9ca9487648569ed9d46e93351eb63c2964085a6d36a6a7', 'kernel/target.h': '37c98012e3bca9db2ff3bac401bfb3eefe2c63b0625cb96ec67774bd8e3a225f', 'kernel/task_progress.c': '191d1cf54b30689fe7243e48bd7c3f6e6e34b63ccb3ff9bd2feff034ac307c9e', 'kernel/task_progress.h': 'e51bb0e84a9ce4aed2d575d59f09b3048b16bca4b0d8f8417711cd55635ad4c3', 'kernel/task_setup.c': 'a4a510f30b3dddeff1b9eb8d3f09f25bfd5b98529326aaa3628db7fc4160c30a', 'kernel/task_setup.h': 'bb1e830d13f49f6235dc0587a4828bb3ecf2307fa3a8901698c658399420f975', 'kernel/task_state.c': '393882b118b1af93cc79f289ab58e8a8ffea7206cf16bd917f6961a27f5c5db8', 'kernel/task_state.h': '54e9da3b6c7a58ee4042509a3ccfda25dcde8fcfa0d8a03bd712b19bc1c912de', 'kernel/task_storage.c': '19e6c702ce136a0cff67b905d7e4f7c4d049cf0f2bdbcfba6bbee262ac578caf', 'kernel/task_storage.h': '2f53c1f3899cf311cfc3d9bb6028180d2f40b295ff124ec23b1ccc6388b54b95'}
+OLD_FILES={'.config': '31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483', 'Module.symvers': 'dd74b5379d7a0ed6cf09f86bc39edcca3f30ee7e9a400c8e12c62317eeb285a9', 'System.map': '7853a104680d6e693d97a9eb927852376b10e27d6157adb5dedf512282dedb83', 'arch/x86/boot/bzImage': 'f283c3f4af86ee23c82e28e0e248f06f5452bf10eb83c2aa8b16429b7da124fe', 'certs/signing_key.x509': 'd48ed8042535acb22316fd3bae140a39acb0072691904188d5e110e313d66541', 'fs/nls/nls_iso8859-1.ko': '51609a0c2961f76253bc638f59c411bd5e40825c1c0fb7b1aec4f7188679abdd', 'include/config/auto.conf': 'd731f7137d4af0af8468041db3b03292d174ed184d3916fa9162a29cb8f63243', 'include/config/kernel.release': 'a503d22a03b6106e56209b05b4c73841599e56c15fbf362df8d411980d121541', 'include/generated/autoconf.h': 'ba620d16cd34149765ecae7223c519826d89e1bd51ef996f25af495b7cf18314', 'include/generated/utsrelease.h': 'a2720cad3eb89661bf3208bdfe2c67ca96bfe99224359cec13e12f71f57fdf36', 'include/generated/utsversion.h': '08a3653cd43588bfd9472b915d44ca5d139168974f3f8f1a89b6ee5cf5d944ff', 'modules.builtin': 'ef55d7bc5528d2c01f38fc0d8f6473c75e14ec62349898f6529be9bbac871366', 'modules.builtin.modinfo': 'f173376892f5d1a020884e4c6062b51e7cf26718928e1225be5e4fb507c34d0c', 'modules.order': '1677c25390fae9177f7760e08b471621e6c06b376705f1bd56232e071e32dcfe', 'vmlinux': 'a05068b9dfddd7ac6fc842b44ae97e29816a43c9c5870be188b9fe71ea5b759d', 'vmlinux.symvers': 'dd74b5379d7a0ed6cf09f86bc39edcca3f30ee7e9a400c8e12c62317eeb285a9'}
+BODY_PINS={'arch/x86/mm/fault.c': '20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73', 'include/linux/mm.h': '92c812f7d025c2edafba391fcbda7e2f62ff2763c0d2682dbb02696d194b1f59', 'include/linux/mm_types.h': '6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa', 'include/linux/mmap_lock.h': '4c10da7d1cf32d7ffc1f052d93c15403774ecb6a2b4dfd83cabb358d0bcea759', 'mm/memory.c': '8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127', 'mm/mmap.c': '26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b', 'mm/mmap_lock.c': '0694371fa007d5d88d512ce169a05085353f332c44c76eeb2b7b34c2e0b2a455', 'mm/mprotect.c': '982e96216c2e5e258aeba0d4dc891a4ba3567cc22aedd07ac32d814cc8eebaab', 'mm/util.c': 'dcd21ee1618380902d7217afc844dd810ec98213d2c71a225e3049993d551826', 'mm/vma.c': '8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05', 'mm/vma.h': 'c0ac05052b6359a80457f0c82c7037013c7e0c9bc1f687ff09ebed71772fd3bb'}
+UNITS=['kernel/mutex.o', 'kernel/rw.o', 'kernel/rw_native.o', 'kernel/linux_rwsem.o', 'kernel/mutex_release.o', 'kernel/state.o', 'kernel/task_state.o', 'kernel/request_pool.o', 'kernel/owner_progress.o', 'kernel/source_epoch.o', 'kernel/source_provider.o', 'kernel/feedback.o', 'kernel/feedback_publish.o', 'kernel/control.o', 'kernel/channel.o', 'kernel/compiled_image.o', 'kernel/runtime.o', 'kernel/exports.o', 'kernel/image.o', 'kernel/image_owner.o', 'kernel/jit.o', 'kernel/native_entry.o', 'kernel/observation.o', 'kernel/episode.o', 'kernel/mutex_api.o', 'kernel/task_progress.o', 'kernel/task_setup.o', 'kernel/task_storage.o', 'kernel/lifecycle.o', 'kernel/source_stack.o', 'include/mutex_api.o', 'include/mutex_entry.o', 'include/native_resume.o']
+ENV_KEYS=('KCFLAGS','KAFLAGS','KCPPFLAGS','CFLAGS_KERNEL','CFLAGS_MODULE','AFLAGS_KERNEL','AFLAGS_MODULE','LLVM','LLVM_IAS','CC','LD','HOSTCC','CROSS_COMPILE','KBUILD_OUTPUT','KBUILD_EXTMOD','KCONFIG_CONFIG','ARCH')
+record=None
+
+def require(v,m):
+ if not v:raise RuntimeError(m)
+def sha(p):
+ h=hashlib.sha256()
+ with Path(p).open('rb') as f:
+  for b in iter(lambda:f.read(1048576),b''):h.update(b)
+ return h.hexdigest()
+def put(name,value):
+ p=OUT/name;tmp=p.with_name('.'+p.name+'.new');data=(json.dumps(value,indent=2,sort_keys=True)+'\n').encode()
+ with tmp.open('xb') as f:f.write(data);f.flush();os.fsync(f.fileno())
+ os.replace(tmp,p);fd=os.open(OUT,os.O_RDONLY|os.O_DIRECTORY)
+ try:os.fsync(fd)
+ finally:os.close(fd)
+def hashes(root,pins):
+ out={}
+ for name,expected in pins.items():
+  p=root/name;require(p.is_file() and not p.is_symlink(),'missing/nonregular pinned file: '+str(p));s=p.stat();value=sha(p);t=p.stat();require((s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_ctime_ns)==(t.st_dev,t.st_ino,t.st_size,t.st_mtime_ns,t.st_ctime_ns),'changing pinned file');require(value==expected,'pinned byte mismatch: '+str(p));out[name]=value
+ return out
+def headroom(path):
+ s=os.statvfs(path);return s.f_bavail*s.f_frsize
+def idle():
+ value=dict(boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),release=os.uname().release,taint=Path('/proc/sys/kernel/tainted').read_text().strip(),busy=[],dthreads=[])
+ require((value['boot'],value['release'],value['taint'])==(BOOT,'7.0.0-38-kdlock1','0'),'normal guest identity differs')
+ require(not any('fixture' in s for s in Path('/proc/modules').read_text().splitlines()),'fixture module retained')
+ require(not any('fixture' in p.name for p in Path('/dev').iterdir()),'fixture controls retained')
+ for p in Path('/proc').iterdir():
+  if not p.name.isdigit() or int(p.name)==os.getpid():continue
+  try:
+   comm=(p/'comm').read_text().strip()
+   if comm in ('make','gmake','cc1','cc1plus','gcc','gcc-15','clang','ld','ld.bfd','as','objtool','fstrim','depmod','insmod','rmmod') or comm.startswith(('kd-fixture/','kd-scene/','kd-reader/')):value['busy'].append(dict(pid=int(p.name),comm=comm))
+   for t in (p/'task').iterdir():
+    status=(t/'status').read_text()
+    if '\nState:\tD ' in '\n'+status:value['dthreads'].append(dict(pid=int(p.name),tid=int(t.name),wchan=(t/'wchan').read_text().strip()))
+  except (FileNotFoundError,ProcessLookupError):pass
+ require(not value['busy'] and not value['dthreads'],'active build/workload or blocked task: '+json.dumps(value,sort_keys=True))
+ return value
+def recovery(path,expected,minimum):
+ require(sha(path)==expected,'recovery receipt SHA mismatch');v=json.loads(path.read_text());capture=v['capture'];space=v['headroom']
+ captured=datetime.datetime.fromisoformat(capture['captured_utc']).timestamp();captured_space=datetime.datetime.fromisoformat(space['utc']).timestamp()
+ require(0<=time.time()-captured<=900 and 0<=time.time()-captured_space<=900,'fresh recovery/headroom receipt required')
+ require(capture['pins_verified'] is True and capture['frequency_verified'] is True and capture['snapshot_listed'] is True and capture['recovery_snapshot']=='kdlock-builddisk-clean-20261031','actual recovery/pin/frequency gates failed')
+ listing=capture['snapshots'];marker='List of snapshots present on all disks:';require(marker in listing and 'kdlock-builddisk-clean-20261031' in listing.split(marker,1)[1].split('List of partial',1)[0],'complete all-disk recovery snapshot absent')
+ require(len(capture['qemu'])==1,'ambiguous actual QEMU process');require(space['host_free_bytes']>=minimum,'host free budget');return dict(captured_unix=captured,host_free_bytes=space['host_free_bytes'],raw=v)
+def execute(label,argv,deadline):
+ require(time.monotonic()<deadline,'deadline expired before dispatch');log=OUT/(label+'.log');row=dict(label=label,argv=argv,utc=time.time());record['commands'].append(row);put('result.json',record)
+ with log.open('xb') as output:
+  child=subprocess.Popen(argv,stdout=output,stderr=subprocess.STDOUT,env=dict(os.environ,LC_ALL='C',PYTHONDONTWRITEBYTECODE='1'));row['pid']=child.pid;put('result.json',record)
+  while child.poll() is None:
+   if time.monotonic()>deadline:
+    row['status']='TIMEOUT_CHILD_RETAINED';row['elapsed_seconds']=time.time()-row['utc'];put('result.json',record);raise TimeoutError('child retained; do not retry: '+str(child.pid))
+   time.sleep(.25)
+  row['returncode']=child.returncode;row['elapsed_seconds']=time.time()-row['utc'];row['log_sha256']=sha(log);put('result.json',record);require(child.returncode==0,label+' failed; retained output')
+ return log
+
+OUT=BASE/'receipts/focused-02'
+def main():
+ global record
+ require(os.geteuid()==0,'guest root required');require(not OUT.exists(),'fresh continuation receipt required')
+ require(not any(k in os.environ for k in ENV_KEYS) and not any(k.startswith(('CFLAGS','AFLAGS')) or k in ('MAKEFLAGS','MFLAGS') for k in os.environ),'compiler/build environment override present')
+ inp=Path('/mnt/kdlock-builds2/kdlock-main-kernel7-input-0c97cd34-01')
+ failed=BASE/'receipts/focused-01/result.json';application=BASE/'receipts/integration-application/manifest.json'
+ require(sha(failed)=='9d9401e01cc8597e081e81c9da2457e6ed0f9ab02ee992dc0bf3ca5359313e9a' and sha(application)=='658a05bd86b25cdeb4c08e854073e196bb6aef89e5793b2e93ae1e2a1defe7a3','original failure/application pins differ')
+ previous=json.loads(failed.read_text());require(previous['status']=='FAILED_OR_INCOMPLETE' and len(previous['commands'])==5 and [r['returncode'] for r in previous['commands']]==[0,0,0,0,1] and previous['commands'][-1]['label']=='integration-verify','unexpected previous stage')
+ require(sha(inp/'package.json')=='40122a5d8bad32dcca1e6bb9b706a85a807f8fa33dac2ce282ee31d55b7a8b07','package manifest pin differs');manifest=json.loads((inp/'package.json').read_text());require(manifest['core_git_head']==CORE and manifest['source_snapshot_git_head']==CORE and manifest['intended_kernelrelease']==RELEASE,'exact core/release required')
+ package=SOURCE/'kernel/kdlock';package_before=hashes(package,manifest['files']);hashes(inp/'package',manifest['files']);applied=json.loads(application.read_text());require(applied['format']=='kdlock.exact-target-integration.v2' and len(applied['after'])==7,'seven applied files required');hashes(SOURCE,applied['after']);hashes(SOURCE,BODY_PINS)
+ state=idle();require(headroom('/')>=1024**3 and headroom(BASE.parent)>=48*1024**3,'guest headroom floor');rec=recovery(inp/'recovery.json','218180babb75d5712dc39ac2bc5a95078713249b0c0b805425173e3a2e37db93',48*1024**3)
+ require(sha(NORMAL_BUNDLE)==NORMAL_MANIFEST_SHA,'normal bundle differs');normal_before=hashes(NORMAL/'source',NORMAL_PINS);old_core=hashes(OLD/'source/kernel/kdlock',OLD_CORE_PINS);old_before=hashes(OLD/'build',OLD_FILES);require(sha(BUILD/'.config')==CONFIG_SHA,'copied configuration differs')
+ OUT.mkdir(mode=0o700);record=dict(status='PREPARED',core_git_head=CORE,source_snapshot_git_head=CORE,kernelrelease=RELEASE,source=str(SOURCE),build=str(BUILD),normal_source=str(NORMAL/'source'),normal_manifest_sha256=NORMAL_MANIFEST_SHA,kernel6_preserved=str(OLD),normal_before=normal_before,kernel6_before=old_before,kernel6_core_before=old_core,package_before=package_before,identity_before=state,recovery_sha256=sha(inp/'recovery.json'),resumed_from=str(failed),original_failure_sha256=sha(failed),application_manifest_sha256=sha(application),commands=[],scope='Verify exact already-applied source then focused compile only; original failed attempt is immutable. No load/boot/behavioral test/full kernel build.');put('result.json',record);deadline=time.monotonic()+900
+ pins=json.loads((BASE/'receipts/focused-01/integration-inspect.log').read_text());require(pins['source_files']==NORMAL_PINS and pins['package_files']=={n:h for n,h in manifest['files'].items() if n!=manifest['installer']},'inspection lacks external byte agreement')
+ common=['--tree',str(SOURCE),'--build',str(BUILD),'--package',str(package),'--source-identity','Ubuntu linux=7.0.0-38.38 with protected kdlock1 source changes','--package-identity',CORE]
+ bound=[]
+ for name in ('source-fingerprint','config-sha256','package-fingerprint'):bound+=['--'+name,pins[name.replace('-','_')]]
+ execute('integration-verify',['python3','-B',str(package/manifest['installer']),'verify']+common+bound+['--receipt-dir',str(BASE/'receipts/integration-application')],deadline)
+ make=['make','-C',str(SOURCE),'O='+str(BUILD),'KERNELRELEASE='+RELEASE]
+ execute('olddefconfig',make+['olddefconfig'],deadline);require(sha(BUILD/'.config')==CONFIG_SHA,'olddefconfig changed reviewed configuration')
+ execute('focused-objects',make+['-j8','V=1']+['kernel/kdlock/'+u for u in UNITS]+['kernel/fork.o','kernel/exit.o','kernel/locking/rwsem.o','mm/mmap.o','mm/vma.o','mm/mmap_lock.o','mm/util.o','mm/memory.o'],deadline)
+ require((BUILD/'include/config/kernel.release').read_text().strip()==RELEASE,'output release differs');record['normal_after']=hashes(NORMAL/'source',NORMAL_PINS);record['kernel6_after']=hashes(OLD/'build',OLD_FILES);record['kernel6_core_after']=hashes(OLD/'source/kernel/kdlock',OLD_CORE_PINS);record['package_after']=hashes(package,manifest['files']);record['body_after']=hashes(SOURCE,BODY_PINS);record['applied_after']=hashes(SOURCE,applied['after']);record['identity_after']=idle();record['config_sha256']=sha(BUILD/'.config');record['target_units']=dict(core=len(UNITS),native=8);record['headroom_after']=dict(root=headroom('/'),builds2=headroom(BASE.parent));record['status']='FOCUSED_COMPILE_COMPLETE';put('result.json',record);print(json.dumps(dict(status=record['status'],receipt=str(OUT/'result.json'))))
+if __name__=='__main__':
+ try:main()
+ except Exception as error:
+  if record is not None:record['status']='FAILED_OR_INCOMPLETE';record['error']=repr(error);put('result.json',record)
+  raise

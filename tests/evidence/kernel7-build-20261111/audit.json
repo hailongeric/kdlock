@@ -1,0 +1,24 @@
+{
+  "all_seven_build_and_link_commands_rc0": true,
+  "collection_bytes": 34865280,
+  "collection_files": 141,
+  "copy_index_sha256": "513c7d011d582e0e4d12008d99506ccc0edc478b469000eb40775dc9725019db",
+  "core_commit": "0c97cd34cc6e3b75ac7ed0e233c813431264ef73",
+  "focused_receipt_sha256": "63db511cef8095f010e7d6117314f69d6b7c2480076c7fcb22c1d4fb12e83839",
+  "fortify_fixture_warning_rows": 20,
+  "full_original_failed_receipt_sha256": "7f07914093c65d58462e6d44290fbc204bfabf177f0a58d0726660c7b9caf878",
+  "gs_symbols": {
+    "__per_cpu_start": 18446744071633424384,
+    "const_current_task": 18446744071633522712,
+    "current_task": 18446744071633522712
+  },
+  "linked_build_id": "6195c94ad20aa3548344f27416b350cfde14ad6e",
+  "metadata_finalization_receipt_sha256": "748260acd8c4fd90e21071755571f0cf92365d9a9e7b2a98f20790921da97d4c",
+  "no_boot_or_behavior_result": true,
+  "scope": "Read-only saved-file hashing and receipt reconciliation on source host; no build, project import, test, module or VM action.",
+  "status": "SAVED_BYTES_AND_BUILD_RECEIPTS_VERIFIED",
+  "warning_rows": {
+    "kernel": 22,
+    "nls": 0
+  }
+}

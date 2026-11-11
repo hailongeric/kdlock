@@ -31,8 +31,10 @@ storage retirement. Legacy bindings keep killable macros native. Nested
 killable operations hand back before preparation; independent foreign nested
 signal notification is not implemented. An optional executor predicate adds a
 fragment-entry restriction, without proving general kernel context equivalence.
-These changes have independent static review only, with no new build, VM or
-MM-delegation receipt. The [generic integration guide](../../../kernel/integration/RWSEM.md#delegated-syscall-integration-in-progress)
+Integer/cancellation source `0c97cd34` now has separate
+[kernel7 focused/full build evidence](../../../tests/evidence/kernel7-build-20261111/README.md),
+with original failures retained. No kernel7 boot, behavioral or MM-delegation
+receipt is established by that build. The [generic integration guide](../../../kernel/integration/RWSEM.md#delegated-syscall-integration-in-progress)
 records the selected current-borrow drain policy, exact excluded read-holder
 cancellation dependency, retained queue actors and remaining owner-record,
 context and reached-frontier limits. The optional MM profile remains disabled

@@ -1,0 +1,10 @@
+{"phase":"PREPARED"}
+{"files":{"include/linux/rwsem.h":"/mnt/kdlock-builds2/kdlock-main-kernel7-0c97cd34-01/source/include/linux/.kdlock-apply-2264399fe3ab4b11b92f3b571ab2a081","include/linux/sched.h":"/mnt/kdlock-builds2/kdlock-main-kernel7-0c97cd34-01/source/include/linux/.kdlock-apply-8faa9fcb37374f1181fc47c7dc6527b9","init/Kconfig":"/mnt/kdlock-builds2/kdlock-main-kernel7-0c97cd34-01/source/init/.kdlock-apply-d28b264a18a946e5a4e1551ed2a87110","kernel/Makefile":"/mnt/kdlock-builds2/kdlock-main-kernel7-0c97cd34-01/source/kernel/.kdlock-apply-3a328173b3fc42c3a1f88d32c5343ad3","kernel/exit.c":"/mnt/kdlock-builds2/kdlock-main-kernel7-0c97cd34-01/source/kernel/.kdlock-apply-fa49f45ca320408281568d51563e9e06","kernel/fork.c":"/mnt/kdlock-builds2/kdlock-main-kernel7-0c97cd34-01/source/kernel/.kdlock-apply-5bfbb86743654b2e9dc6277e8edaa01d","kernel/locking/rwsem.c":"/mnt/kdlock-builds2/kdlock-main-kernel7-0c97cd34-01/source/kernel/locking/.kdlock-apply-abe20ac421d04502b5a872207acd4f82"},"phase":"STAGED"}
+{"file":"include/linux/sched.h","phase":"REPLACED","sha256":"c0ddfcc8be427faebb47d9807a891a650081e3bcd26e139253da9c8b67f264e8"}
+{"file":"kernel/fork.c","phase":"REPLACED","sha256":"330c947b46444b7eb4543febb26b16f80ce6e632de88af540c4f462844f05bb1"}
+{"file":"kernel/exit.c","phase":"REPLACED","sha256":"1bb762d02021af4d2d61945bc3deb01372d9468a7762acc6612e8ad43561e6cb"}
+{"file":"init/Kconfig","phase":"REPLACED","sha256":"4a715d514aadc22c22bacd33964596336ace7b0e18bc4ea55dcca6b53d29d872"}
+{"file":"kernel/Makefile","phase":"REPLACED","sha256":"81d7f2489749b47d6cc57735885c9a749dfe82ad120b73e8f9f5a298cdb8d6fb"}
+{"file":"include/linux/rwsem.h","phase":"REPLACED","sha256":"ecfb1e4d09a304184ea314a3818b334e75877315d83617c188cdf122184268dd"}
+{"file":"kernel/locking/rwsem.c","phase":"REPLACED","sha256":"05313c275f12547fb00d1576cfe9590ce41c5bdd7db2bc9d9ec5650779bb9de7"}
+{"phase":"COMMITTED"}

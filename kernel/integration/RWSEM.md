@@ -8,6 +8,10 @@ The exact [kernel6 boot](../../tests/evidence/kernel6-boot-20261111/README.md) a
 passed. These bounded checks use the ordinary task-context contract below; they
 supply no broader context, MM JIT or performance claim. Private reader fixtures
 provide separate generated-execution mechanism evidence.
+The later integer/cancellation source `0c97cd34` has separate
+[kernel7 focused and full build evidence](../../tests/evidence/kernel7-build-20261111/README.md),
+including retained preparation and final-idle failures. Kernel7 has no boot or
+behavioral result here. The subsequent v3 typed-query source remains unbuilt.
 
 ## One selected object and one gate
 
@@ -78,8 +82,8 @@ GS lowering and current-state handback remain unchanged.
 The C eligibility, prepare and query helpers and normal callable symbols remain
 permanent SPECIAL frontiers. They are never reclassified as ordinary code by
 learning or inferred to be typed entries from names or DI shape. This new
-boundary-routing source has independent static review but no build or runtime
-receipt; the kernel6 evidence below covers its earlier source identity.
+boundary-routing source is included in the kernel7 focused/full build receipt,
+with no runtime receipt for that image. Kernel6 covers its earlier source identity.
 
 Callable signalable read/write and try APIs use their normal C result ABI and
 execute locally on the same KD gate. Legacy bindings also keep the killable
@@ -142,8 +146,9 @@ run, broader context/progress obligations and the full acceptance matrix.
 
 Actual delegated/JIT mmap/munmap remains unvalidated. Source changes after the
 kernel6 receipts add integer capture, managed cancellation and queue-only
-storage retirement. These changes have independent source review only: no new
-build, boot, mechanism result or real-MM JIT result is recorded here.
+storage retirement. Source `0c97cd34` has independent source review and the
+separate kernel7 focused/full build receipt. No kernel7 boot, mechanism result
+or real-MM JIT result is recorded here.
 
 `kd_linux_rwsem_bind` always sets `killable_source_calls=false`, preserving the
 interim original-task native route. The new cold
