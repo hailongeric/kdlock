@@ -1,0 +1,102 @@
+[
+  {
+    "bytes": 66800,
+    "path": "source/include/linux/pgtable.h",
+    "sha256": "681e25b6c9cea9dfc72324654355c1526fd2f06d9c42d944b0e61e0dc83de5fb"
+  },
+  {
+    "bytes": 6156,
+    "path": "source/include/linux/spinlock_api_smp.h",
+    "sha256": "69a7b2867e99c726a3ea633e164e682686303b783678c6a092f8789bc70be30b"
+  },
+  {
+    "bytes": 23565,
+    "path": "source/include/linux/spinlock.h",
+    "sha256": "66efd3c65e5d83b93748c6adfb09f20103398e7a8649b1a303f3ac502cc5f93b"
+  },
+  {
+    "bytes": 15978,
+    "path": "source/include/linux/preempt.h",
+    "sha256": "f576bf81e5fcdcd3ea97ee423a162343f766cf00456514a0c281744c007a269b"
+  },
+  {
+    "bytes": 44398,
+    "path": "source/include/linux/rcupdate.h",
+    "sha256": "5d0f4e706a89f56a3b52065ebca78cb90fe5245bf6b44afbdee4116defd9e49c"
+  },
+  {
+    "bytes": 43108,
+    "path": "source/arch/x86/include/asm/pgtable.h",
+    "sha256": "a446d8a1a09eda4d8a34895562a75897126913b07b8dd21504902c8ea4eafbbc"
+  },
+  {
+    "bytes": 13827,
+    "path": "source/arch/x86/include/asm/tlbflush.h",
+    "sha256": "b59125eecb76bf5c9a204ea39a2fdede9e37d90f72fe0c987effb0dc3f497d9c"
+  },
+  {
+    "bytes": 13535,
+    "path": "source/mm/pgtable-generic.c",
+    "sha256": "f394c7f283fd45beb61d517e4fe0f7766af3d14d9289c3b711e55ef4a35ff137"
+  },
+  {
+    "bytes": 944,
+    "path": "disassembly/__rcu_read_lock.txt",
+    "sha256": "c54e103e8cded8544876ea99ed41391427e3e5cb57eadae520aa927d86a898a4"
+  },
+  {
+    "bytes": 1414,
+    "path": "disassembly/__rcu_read_unlock.txt",
+    "sha256": "da0420864bc5d5b77deeeff6e4f11bc422f86f2cb489b8776f35a247e905729b"
+  },
+  {
+    "bytes": 13642,
+    "path": "disassembly/vm_mmap_pgoff.txt",
+    "sha256": "23c4f6a38b2f86ca943665862a8ca291b218b46743b31f473723cb186f02e090"
+  },
+  {
+    "bytes": 115932,
+    "path": "disassembly/unmap_page_range.txt",
+    "sha256": "f1308edf173133275cb6d2fe616f43553ad7d2326e69c147c72f44079f7bbd39"
+  },
+  {
+    "bytes": 7002,
+    "path": "disassembly/unmap_vmas.txt",
+    "sha256": "bf3fc8dcb031130b9ccb5eff903fdb234ce4143e03c7452900285f857769c62c"
+  },
+  {
+    "bytes": 26262,
+    "path": "disassembly/do_mmap.txt",
+    "sha256": "0ac9f278ffe26a199c0ca8b1dd29be1b1c86781303e5ab26242a592318ef7f7c"
+  },
+  {
+    "bytes": 5390,
+    "path": "disassembly/__pte_offset_map.txt",
+    "sha256": "62bfa7baa6a5d46e1032f8339cb8c5863a28bde42bd3c407f67949c6ddaa4f9a"
+  },
+  {
+    "bytes": 5352,
+    "path": "disassembly/pte_offset_map_lock.txt",
+    "sha256": "fcd41da1bed8d86531a188c8539a38eb5df324b5670b32e92feefaec79e8e096"
+  },
+  {
+    "bytes": 4521,
+    "path": "disassembly/unmap_region.txt",
+    "sha256": "588c2609c78d2b102893c8070ee9a844e15e81fdab73803ebdf1c1f56f3ce113"
+  },
+  {
+    "bytes": 11497,
+    "path": "disassembly/__vm_munmap.txt",
+    "sha256": "4a0f1892845c20153fb10ce2e9e86bdbdcdb91d5421c9ef5e8199081ebfdc08f"
+  },
+  {
+    "bytes": 2134,
+    "path": "disassembly/_raw_spin_lock.txt",
+    "sha256": "4e3d3c63f83d7afa506ac5493366acfc206569c5faf8a254d4e48655c96b8f46"
+  },
+  {
+    "bytes": 1597,
+    "path": "disassembly/_raw_spin_unlock.txt",
+    "sha256": "aa41dcaa6a97c057f26f31fceab058b4f8bf51a11f0f0e0deb56b863777247df"
+  }
+]

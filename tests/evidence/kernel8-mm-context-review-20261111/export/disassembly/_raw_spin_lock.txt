@@ -1,0 +1,38 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/vmlinux:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+ffffffff8276ccf0 <_raw_spin_lock>:
+ffffffff8276ccf0:	e8 8b 8b c9 fe       	call   ffffffff81405880 <__fentry__>
+ffffffff8276ccf5:	65 ff 05 34 83 cb 01 	inc    DWORD PTR gs:[rip+0x1cb8334]        # ffffffff84425030 <__preempt_count>
+ffffffff8276ccfc:	31 c0                	xor    eax,eax
+ffffffff8276ccfe:	ba 01 00 00 00       	mov    edx,0x1
+ffffffff8276cd03:	f0 0f b1 17          	lock cmpxchg DWORD PTR [rdi],edx
+ffffffff8276cd07:	75 1b                	jne    ffffffff8276cd24 <_raw_spin_lock+0x34>
+ffffffff8276cd09:	31 c0                	xor    eax,eax
+ffffffff8276cd0b:	31 d2                	xor    edx,edx
+ffffffff8276cd0d:	31 c9                	xor    ecx,ecx
+ffffffff8276cd0f:	31 f6                	xor    esi,esi
+ffffffff8276cd11:	31 ff                	xor    edi,edi
+ffffffff8276cd13:	45 31 c0             	xor    r8d,r8d
+ffffffff8276cd16:	45 31 c9             	xor    r9d,r9d
+ffffffff8276cd19:	45 31 d2             	xor    r10d,r10d
+ffffffff8276cd1c:	45 31 db             	xor    r11d,r11d
+ffffffff8276cd1f:	e9 cc 21 00 00       	jmp    ffffffff8276eef0 <__pi___x86_return_thunk>
+ffffffff8276cd24:	55                   	push   rbp
+ffffffff8276cd25:	89 c6                	mov    esi,eax
+ffffffff8276cd27:	48 89 e5             	mov    rbp,rsp
+ffffffff8276cd2a:	ff 15 b0 ad 2f 01    	call   QWORD PTR [rip+0x12fadb0]        # ffffffff83a67ae0 <pv_ops_lock>
+ffffffff8276cd30:	5d                   	pop    rbp
+ffffffff8276cd31:	31 c0                	xor    eax,eax
+ffffffff8276cd33:	31 d2                	xor    edx,edx
+ffffffff8276cd35:	31 c9                	xor    ecx,ecx
+ffffffff8276cd37:	31 f6                	xor    esi,esi
+ffffffff8276cd39:	31 ff                	xor    edi,edi
+ffffffff8276cd3b:	45 31 c0             	xor    r8d,r8d
+ffffffff8276cd3e:	45 31 c9             	xor    r9d,r9d
+ffffffff8276cd41:	45 31 d2             	xor    r10d,r10d
+ffffffff8276cd44:	45 31 db             	xor    r11d,r11d
+ffffffff8276cd47:	e9 a4 21 00 00       	jmp    ffffffff8276eef0 <__pi___x86_return_thunk>

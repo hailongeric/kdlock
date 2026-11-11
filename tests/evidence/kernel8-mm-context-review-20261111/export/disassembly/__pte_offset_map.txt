@@ -1,0 +1,86 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/vmlinux:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+ffffffff81841220 <__pte_offset_map>:
+ffffffff81841220:	e8 5b 46 bc ff       	call   ffffffff81405880 <__fentry__>
+ffffffff81841225:	55                   	push   rbp
+ffffffff81841226:	48 89 e5             	mov    rbp,rsp
+ffffffff81841229:	41 55                	push   r13
+ffffffff8184122b:	49 89 d5             	mov    r13,rdx
+ffffffff8184122e:	41 54                	push   r12
+ffffffff81841230:	49 89 fc             	mov    r12,rdi
+ffffffff81841233:	53                   	push   rbx
+ffffffff81841234:	48 89 f3             	mov    rbx,rsi
+ffffffff81841237:	e8 f4 5c d2 ff       	call   ffffffff81566f30 <__rcu_read_lock>
+ffffffff8184123c:	4d 8b 04 24          	mov    r8,QWORD PTR [r12]
+ffffffff81841240:	4d 85 ed             	test   r13,r13
+ffffffff81841243:	74 04                	je     ffffffff81841249 <__pte_offset_map+0x29>
+ffffffff81841245:	4d 89 45 00          	mov    QWORD PTR [r13+0x0],r8
+ffffffff81841249:	49 f7 c0 9f ff ff ff 	test   r8,0xffffffffffffff9f
+ffffffff81841250:	0f 84 c7 00 00 00    	je     ffffffff8184131d <__pte_offset_map+0xfd>
+ffffffff81841256:	4d 89 c1             	mov    r9,r8
+ffffffff81841259:	41 81 e1 80 00 00 00 	and    r9d,0x80
+ffffffff81841260:	0f 84 aa 00 00 00    	je     ffffffff81841310 <__pte_offset_map+0xf0>
+ffffffff81841266:	4c 89 c7             	mov    rdi,r8
+ffffffff81841269:	ff 15 f1 67 22 02    	call   QWORD PTR [rip+0x22267f1]        # ffffffff83a67a60 <pv_ops+0x200>
+ffffffff8184126f:	a8 80                	test   al,0x80
+ffffffff81841271:	0f 85 a6 00 00 00    	jne    ffffffff8184131d <__pte_offset_map+0xfd>
+ffffffff81841277:	48 8b 15 b2 36 82 01 	mov    rdx,QWORD PTR [rip+0x18236b2]        # ffffffff83064930 <__pi_physical_mask>
+ffffffff8184127e:	48 89 d0             	mov    rax,rdx
+ffffffff81841281:	48 81 e2 00 f0 ff ff 	and    rdx,0xfffffffffffff000
+ffffffff81841288:	48 25 00 00 e0 ff    	and    rax,0xffffffffffe00000
+ffffffff8184128e:	4d 85 c9             	test   r9,r9
+ffffffff81841291:	48 0f 45 d0          	cmovne rdx,rax
+ffffffff81841295:	48 8b 05 3c a6 23 02 	mov    rax,QWORD PTR [rip+0x223a63c]        # ffffffff83a7b8d8 <__pi_sme_me_mask>
+ffffffff8184129c:	48 f7 d2             	not    rdx
+ffffffff8184129f:	48 83 e0 9c          	and    rax,0xffffffffffffff9c
+ffffffff818412a3:	4c 21 c2             	and    rdx,r8
+ffffffff818412a6:	48 83 c8 43          	or     rax,0x43
+ffffffff818412aa:	48 83 e2 db          	and    rdx,0xffffffffffffffdb
+ffffffff818412ae:	48 39 c2             	cmp    rdx,rax
+ffffffff818412b1:	0f 85 86 00 00 00    	jne    ffffffff8184133d <__pte_offset_map+0x11d>
+ffffffff818412b7:	48 c1 eb 09          	shr    rbx,0x9
+ffffffff818412bb:	4c 89 c7             	mov    rdi,r8
+ffffffff818412be:	81 e3 f8 0f 00 00    	and    ebx,0xff8
+ffffffff818412c4:	ff 15 96 67 22 02    	call   QWORD PTR [rip+0x2226796]        # ffffffff83a67a60 <pv_ops+0x200>
+ffffffff818412ca:	48 8b 15 5f 36 82 01 	mov    rdx,QWORD PTR [rip+0x182365f]        # ffffffff83064930 <__pi_physical_mask>
+ffffffff818412d1:	48 89 d1             	mov    rcx,rdx
+ffffffff818412d4:	48 81 e2 00 f0 ff ff 	and    rdx,0xfffffffffffff000
+ffffffff818412db:	48 81 e1 00 00 e0 ff 	and    rcx,0xffffffffffe00000
+ffffffff818412e2:	4d 85 c9             	test   r9,r9
+ffffffff818412e5:	48 0f 45 d1          	cmovne rdx,rcx
+ffffffff818412e9:	48 03 1d b8 23 80 01 	add    rbx,QWORD PTR [rip+0x18023b8]        # ffffffff830436a8 <page_offset_base>
+ffffffff818412f0:	48 21 c2             	and    rdx,rax
+ffffffff818412f3:	48 8d 04 13          	lea    rax,[rbx+rdx*1]
+ffffffff818412f7:	5b                   	pop    rbx
+ffffffff818412f8:	41 5c                	pop    r12
+ffffffff818412fa:	41 5d                	pop    r13
+ffffffff818412fc:	5d                   	pop    rbp
+ffffffff818412fd:	31 d2                	xor    edx,edx
+ffffffff818412ff:	31 c9                	xor    ecx,ecx
+ffffffff81841301:	31 f6                	xor    esi,esi
+ffffffff81841303:	31 ff                	xor    edi,edi
+ffffffff81841305:	45 31 c0             	xor    r8d,r8d
+ffffffff81841308:	45 31 c9             	xor    r9d,r9d
+ffffffff8184130b:	e9 e0 db f2 00       	jmp    ffffffff8276eef0 <__pi___x86_return_thunk>
+ffffffff81841310:	41 f7 c0 81 01 00 00 	test   r8d,0x181
+ffffffff81841317:	0f 85 49 ff ff ff    	jne    ffffffff81841266 <__pte_offset_map+0x46>
+ffffffff8184131d:	e8 9e eb d2 ff       	call   ffffffff8156fec0 <__rcu_read_unlock>
+ffffffff81841322:	31 c0                	xor    eax,eax
+ffffffff81841324:	5b                   	pop    rbx
+ffffffff81841325:	41 5c                	pop    r12
+ffffffff81841327:	41 5d                	pop    r13
+ffffffff81841329:	5d                   	pop    rbp
+ffffffff8184132a:	31 d2                	xor    edx,edx
+ffffffff8184132c:	31 c9                	xor    ecx,ecx
+ffffffff8184132e:	31 f6                	xor    esi,esi
+ffffffff81841330:	31 ff                	xor    edi,edi
+ffffffff81841332:	45 31 c0             	xor    r8d,r8d
+ffffffff81841335:	45 31 c9             	xor    r9d,r9d
+ffffffff81841338:	e9 b3 db f2 00       	jmp    ffffffff8276eef0 <__pi___x86_return_thunk>
+ffffffff8184133d:	4c 89 e7             	mov    rdi,r12
+ffffffff81841340:	e8 cb f8 ff ff       	call   ffffffff81840c10 <pmd_clear_bad>
+ffffffff81841345:	eb d6                	jmp    ffffffff8184131d <__pte_offset_map+0xfd>

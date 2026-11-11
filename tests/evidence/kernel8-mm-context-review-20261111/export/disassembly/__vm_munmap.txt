@@ -1,0 +1,171 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/vmlinux:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+ffffffff8185ae30 <__vm_munmap>:
+ffffffff8185ae30:	e8 4b aa ba ff       	call   ffffffff81405880 <__fentry__>
+ffffffff8185ae35:	55                   	push   rbp
+ffffffff8185ae36:	48 89 e5             	mov    rbp,rsp
+ffffffff8185ae39:	41 57                	push   r15
+ffffffff8185ae3b:	41 56                	push   r14
+ffffffff8185ae3d:	48 8d 8d 68 ff ff ff 	lea    rcx,[rbp-0x98]
+ffffffff8185ae44:	41 55                	push   r13
+ffffffff8185ae46:	41 54                	push   r12
+ffffffff8185ae48:	53                   	push   rbx
+ffffffff8185ae49:	48 89 fb             	mov    rbx,rdi
+ffffffff8185ae4c:	48 81 ec 98 00 00 00 	sub    rsp,0x98
+ffffffff8185ae53:	48 89 bd 58 ff ff ff 	mov    QWORD PTR [rbp-0xa8],rdi
+ffffffff8185ae5a:	48 8d 7d 88          	lea    rdi,[rbp-0x78]
+ffffffff8185ae5e:	48 89 b5 50 ff ff ff 	mov    QWORD PTR [rbp-0xb0],rsi
+ffffffff8185ae65:	89 95 4c ff ff ff    	mov    DWORD PTR [rbp-0xb4],edx
+ffffffff8185ae6b:	65 48 8b 15 a5 a1 bc 	mov    rdx,QWORD PTR gs:[rip+0x2bca1a5]        # ffffffff84425018 <current_task>
+ffffffff8185ae72:	02 
+ffffffff8185ae73:	48 8b b2 b8 0a 00 00 	mov    rsi,QWORD PTR [rdx+0xab8]
+ffffffff8185ae7a:	65 48 8b 05 86 a1 bc 	mov    rax,QWORD PTR gs:[rip+0x2bca186]        # ffffffff84425008 <__stack_chk_guard>
+ffffffff8185ae81:	02 
+ffffffff8185ae82:	48 89 45 d0          	mov    QWORD PTR [rbp-0x30],rax
+ffffffff8185ae86:	31 c0                	xor    eax,eax
+ffffffff8185ae88:	48 89 8d 68 ff ff ff 	mov    QWORD PTR [rbp-0x98],rcx
+ffffffff8185ae8f:	48 89 8d 70 ff ff ff 	mov    QWORD PTR [rbp-0x90],rcx
+ffffffff8185ae96:	b9 09 00 00 00       	mov    ecx,0x9
+ffffffff8185ae9b:	48 89 b5 60 ff ff ff 	mov    QWORD PTR [rbp-0xa0],rsi
+ffffffff8185aea2:	48 89 5d 80          	mov    QWORD PTR [rbp-0x80],rbx
+ffffffff8185aea6:	f3 48 ab             	rep stos QWORD PTR [rdi],rax
+ffffffff8185aea9:	48 8d 46 40          	lea    rax,[rsi+0x40]
+ffffffff8185aead:	c7 45 c0 01 00 00 00 	mov    DWORD PTR [rbp-0x40],0x1
+ffffffff8185aeb4:	48 89 85 78 ff ff ff 	mov    QWORD PTR [rbp-0x88],rax
+ffffffff8185aebb:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+ffffffff8185aec0:	48 8b 85 60 ff ff ff 	mov    rax,QWORD PTR [rbp-0xa0]
+ffffffff8185aec7:	48 8d 90 90 01 00 00 	lea    rdx,[rax+0x190]
+ffffffff8185aece:	48 8b 98 90 01 00 00 	mov    rbx,QWORD PTR [rax+0x190]
+ffffffff8185aed5:	48 89 95 40 ff ff ff 	mov    QWORD PTR [rbp-0xc0],rdx
+ffffffff8185aedc:	48 85 db             	test   rbx,rbx
+ffffffff8185aedf:	74 19                	je     ffffffff8185aefa <__vm_munmap+0xca>
+ffffffff8185aee1:	44 0f b6 63 11       	movzx  r12d,BYTE PTR [rbx+0x11]
+ffffffff8185aee6:	41 80 fc 01          	cmp    r12b,0x1
+ffffffff8185aeea:	0f 87 64 11 9f ff    	ja     ffffffff8124c054 <__vm_munmap.cold+0x2a>
+ffffffff8185aef0:	41 83 e4 01          	and    r12d,0x1
+ffffffff8185aef4:	0f 85 fe 00 00 00    	jne    ffffffff8185aff8 <__vm_munmap+0x1c8>
+ffffffff8185aefa:	48 8b bd 40 ff ff ff 	mov    rdi,QWORD PTR [rbp-0xc0]
+ffffffff8185af01:	e8 8a c1 f0 00       	call   ffffffff82767090 <down_write_killable>
+ffffffff8185af06:	89 c3                	mov    ebx,eax
+ffffffff8185af08:	85 db                	test   ebx,ebx
+ffffffff8185af0a:	75 0e                	jne    ffffffff8185af1a <__vm_munmap+0xea>
+ffffffff8185af0c:	48 8b 85 60 ff ff ff 	mov    rax,QWORD PTR [rbp-0xa0]
+ffffffff8185af13:	83 80 d8 01 00 00 01 	add    DWORD PTR [rax+0x1d8],0x1
+ffffffff8185af1a:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+ffffffff8185af1f:	85 db                	test   ebx,ebx
+ffffffff8185af21:	0f 85 df 01 00 00    	jne    ffffffff8185b106 <__vm_munmap+0x2d6>
+ffffffff8185af27:	8b 9d 4c ff ff ff    	mov    ebx,DWORD PTR [rbp-0xb4]
+ffffffff8185af2d:	48 8b 8d 50 ff ff ff 	mov    rcx,QWORD PTR [rbp-0xb0]
+ffffffff8185af34:	48 8d bd 78 ff ff ff 	lea    rdi,[rbp-0x88]
+ffffffff8185af3b:	4c 8d 85 68 ff ff ff 	lea    r8,[rbp-0x98]
+ffffffff8185af42:	48 8b 95 58 ff ff ff 	mov    rdx,QWORD PTR [rbp-0xa8]
+ffffffff8185af49:	48 8b b5 60 ff ff ff 	mov    rsi,QWORD PTR [rbp-0xa0]
+ffffffff8185af50:	44 0f b6 cb          	movzx  r9d,bl
+ffffffff8185af54:	e8 d7 d4 ff ff       	call   ffffffff81858430 <do_vmi_munmap>
+ffffffff8185af59:	89 85 58 ff ff ff    	mov    DWORD PTR [rbp-0xa8],eax
+ffffffff8185af5f:	85 c0                	test   eax,eax
+ffffffff8185af61:	0f 85 ae 00 00 00    	jne    ffffffff8185b015 <__vm_munmap+0x1e5>
+ffffffff8185af67:	80 fb 01             	cmp    bl,0x1
+ffffffff8185af6a:	0f 85 a5 00 00 00    	jne    ffffffff8185b015 <__vm_munmap+0x1e5>
+ffffffff8185af70:	48 8b bd 60 ff ff ff 	mov    rdi,QWORD PTR [rbp-0xa0]
+ffffffff8185af77:	48 8d b5 68 ff ff ff 	lea    rsi,[rbp-0x98]
+ffffffff8185af7e:	e8 dd 4c 15 00       	call   ffffffff819afc60 <userfaultfd_unmap_complete>
+ffffffff8185af83:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+ffffffff8185af87:	65 48 2b 05 79 a0 bc 	sub    rax,QWORD PTR gs:[rip+0x2bca079]        # ffffffff84425008 <__stack_chk_guard>
+ffffffff8185af8e:	02 
+ffffffff8185af8f:	0f 85 80 01 00 00    	jne    ffffffff8185b115 <__vm_munmap+0x2e5>
+ffffffff8185af95:	8b 85 58 ff ff ff    	mov    eax,DWORD PTR [rbp-0xa8]
+ffffffff8185af9b:	48 81 c4 98 00 00 00 	add    rsp,0x98
+ffffffff8185afa2:	5b                   	pop    rbx
+ffffffff8185afa3:	41 5c                	pop    r12
+ffffffff8185afa5:	41 5d                	pop    r13
+ffffffff8185afa7:	41 5e                	pop    r14
+ffffffff8185afa9:	41 5f                	pop    r15
+ffffffff8185afab:	5d                   	pop    rbp
+ffffffff8185afac:	31 d2                	xor    edx,edx
+ffffffff8185afae:	31 c9                	xor    ecx,ecx
+ffffffff8185afb0:	31 f6                	xor    esi,esi
+ffffffff8185afb2:	31 ff                	xor    edi,edi
+ffffffff8185afb4:	45 31 c0             	xor    r8d,r8d
+ffffffff8185afb7:	45 31 c9             	xor    r9d,r9d
+ffffffff8185afba:	45 31 d2             	xor    r10d,r10d
+ffffffff8185afbd:	45 31 db             	xor    r11d,r11d
+ffffffff8185afc0:	e9 2b 3f f1 00       	jmp    ffffffff8276eef0 <__pi___x86_return_thunk>
+ffffffff8185afc5:	48 8b bd 60 ff ff ff 	mov    rdi,QWORD PTR [rbp-0xa0]
+ffffffff8185afcc:	be 01 00 00 00       	mov    esi,0x1
+ffffffff8185afd1:	e8 9a ca fb ff       	call   ffffffff81817a70 <__mmap_lock_do_trace_start_locking>
+ffffffff8185afd6:	e9 e5 fe ff ff       	jmp    ffffffff8185aec0 <__vm_munmap+0x90>
+ffffffff8185afdb:	31 d2                	xor    edx,edx
+ffffffff8185afdd:	48 8b bd 60 ff ff ff 	mov    rdi,QWORD PTR [rbp-0xa0]
+ffffffff8185afe4:	85 db                	test   ebx,ebx
+ffffffff8185afe6:	be 01 00 00 00       	mov    esi,0x1
+ffffffff8185afeb:	0f 94 c2             	sete   dl
+ffffffff8185afee:	e8 bd c9 fb ff       	call   ffffffff818179b0 <__mmap_lock_do_trace_acquire_returned>
+ffffffff8185aff3:	e9 27 ff ff ff       	jmp    ffffffff8185af1f <__vm_munmap+0xef>
+ffffffff8185aff8:	48 8b 7b 08          	mov    rdi,QWORD PTR [rbx+0x8]
+ffffffff8185affc:	48 89 e6             	mov    rsi,rsp
+ffffffff8185afff:	48 8d 15 08 00 00 00 	lea    rdx,[rip+0x8]        # ffffffff8185b00e <__vm_munmap+0x1de>
+ffffffff8185b006:	48 89 e9             	mov    rcx,rbp
+ffffffff8185b009:	e8 02 47 cd ff       	call   ffffffff8152f710 <kd_linux_rwsem_down_write_killable_entry_asm>
+ffffffff8185b00e:	89 c3                	mov    ebx,eax
+ffffffff8185b010:	e9 f3 fe ff ff       	jmp    ffffffff8185af08 <__vm_munmap+0xd8>
+ffffffff8185b015:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+ffffffff8185b01a:	48 8b 85 60 ff ff ff 	mov    rax,QWORD PTR [rbp-0xa0]
+ffffffff8185b021:	48 8b 98 90 01 00 00 	mov    rbx,QWORD PTR [rax+0x190]
+ffffffff8185b028:	48 85 db             	test   rbx,rbx
+ffffffff8185b02b:	0f 84 97 00 00 00    	je     ffffffff8185b0c8 <__vm_munmap+0x298>
+ffffffff8185b031:	44 0f b6 63 10       	movzx  r12d,BYTE PTR [rbx+0x10]
+ffffffff8185b036:	41 80 fc 01          	cmp    r12b,0x1
+ffffffff8185b03a:	0f 87 ff 0f 9f ff    	ja     ffffffff8124c03f <__vm_munmap.cold+0x15>
+ffffffff8185b040:	41 83 e4 01          	and    r12d,0x1
+ffffffff8185b044:	0f 84 a5 00 00 00    	je     ffffffff8185b0ef <__vm_munmap+0x2bf>
+ffffffff8185b04a:	48 8b 7b 08          	mov    rdi,QWORD PTR [rbx+0x8]
+ffffffff8185b04e:	48 89 e6             	mov    rsi,rsp
+ffffffff8185b051:	48 8d 15 08 00 00 00 	lea    rdx,[rip+0x8]        # ffffffff8185b060 <__vm_munmap+0x230>
+ffffffff8185b058:	48 89 e9             	mov    rcx,rbp
+ffffffff8185b05b:	e8 b0 47 cd ff       	call   ffffffff8152f810 <kd_linux_rwsem_is_write_locked_entry_asm>
+ffffffff8185b060:	85 c0                	test   eax,eax
+ffffffff8185b062:	0f 84 97 00 00 00    	je     ffffffff8185b0ff <__vm_munmap+0x2cf>
+ffffffff8185b068:	48 8b 85 60 ff ff ff 	mov    rax,QWORD PTR [rbp-0xa0]
+ffffffff8185b06f:	83 80 d8 01 00 00 01 	add    DWORD PTR [rax+0x1d8],0x1
+ffffffff8185b076:	48 8b 98 90 01 00 00 	mov    rbx,QWORD PTR [rax+0x190]
+ffffffff8185b07d:	48 85 db             	test   rbx,rbx
+ffffffff8185b080:	74 5c                	je     ffffffff8185b0de <__vm_munmap+0x2ae>
+ffffffff8185b082:	44 0f b6 63 10       	movzx  r12d,BYTE PTR [rbx+0x10]
+ffffffff8185b087:	41 80 fc 01          	cmp    r12b,0x1
+ffffffff8185b08b:	0f 87 99 0f 9f ff    	ja     ffffffff8124c02a <__vm_munmap.cold>
+ffffffff8185b091:	41 83 e4 01          	and    r12d,0x1
+ffffffff8185b095:	74 47                	je     ffffffff8185b0de <__vm_munmap+0x2ae>
+ffffffff8185b097:	48 8b 7b 08          	mov    rdi,QWORD PTR [rbx+0x8]
+ffffffff8185b09b:	48 89 e6             	mov    rsi,rsp
+ffffffff8185b09e:	48 8d 15 08 00 00 00 	lea    rdx,[rip+0x8]        # ffffffff8185b0ad <__vm_munmap+0x27d>
+ffffffff8185b0a5:	48 89 e9             	mov    rcx,rbp
+ffffffff8185b0a8:	e8 a3 46 cd ff       	call   ffffffff8152f750 <kd_linux_rwsem_up_write_entry_asm>
+ffffffff8185b0ad:	e9 be fe ff ff       	jmp    ffffffff8185af70 <__vm_munmap+0x140>
+ffffffff8185b0b2:	48 8b bd 60 ff ff ff 	mov    rdi,QWORD PTR [rbp-0xa0]
+ffffffff8185b0b9:	be 01 00 00 00       	mov    esi,0x1
+ffffffff8185b0be:	e8 5d ca fb ff       	call   ffffffff81817b20 <__mmap_lock_do_trace_released>
+ffffffff8185b0c3:	e9 52 ff ff ff       	jmp    ffffffff8185b01a <__vm_munmap+0x1ea>
+ffffffff8185b0c8:	48 8b 85 60 ff ff ff 	mov    rax,QWORD PTR [rbp-0xa0]
+ffffffff8185b0cf:	48 8b 80 98 01 00 00 	mov    rax,QWORD PTR [rax+0x198]
+ffffffff8185b0d6:	a8 01                	test   al,0x1
+ffffffff8185b0d8:	75 8e                	jne    ffffffff8185b068 <__vm_munmap+0x238>
+ffffffff8185b0da:	0f 0b                	ud2
+ffffffff8185b0dc:	eb 8a                	jmp    ffffffff8185b068 <__vm_munmap+0x238>
+ffffffff8185b0de:	48 8b bd 40 ff ff ff 	mov    rdi,QWORD PTR [rbp-0xc0]
+ffffffff8185b0e5:	e8 36 ba ca ff       	call   ffffffff81506b20 <up_write>
+ffffffff8185b0ea:	e9 81 fe ff ff       	jmp    ffffffff8185af70 <__vm_munmap+0x140>
+ffffffff8185b0ef:	48 89 df             	mov    rdi,rbx
+ffffffff8185b0f2:	e8 29 45 cb ff       	call   ffffffff8150f620 <kd_linux_rwsem_is_write_locked>
+ffffffff8185b0f7:	84 c0                	test   al,al
+ffffffff8185b0f9:	0f 85 69 ff ff ff    	jne    ffffffff8185b068 <__vm_munmap+0x238>
+ffffffff8185b0ff:	0f 0b                	ud2
+ffffffff8185b101:	e9 62 ff ff ff       	jmp    ffffffff8185b068 <__vm_munmap+0x238>
+ffffffff8185b106:	c7 85 58 ff ff ff fc 	mov    DWORD PTR [rbp-0xa8],0xfffffffc
+ffffffff8185b10d:	ff ff ff 
+ffffffff8185b110:	e9 6e fe ff ff       	jmp    ffffffff8185af83 <__vm_munmap+0x153>
+ffffffff8185b115:	e8 b6 d9 ef 00       	call   ffffffff82758ad0 <__stack_chk_fail>
