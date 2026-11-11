@@ -315,7 +315,8 @@ def main():
     wire = output / "wire"
     wire.mkdir()
     transport = child = client = None
-    sessions, event_rows, roots = [], [], set()
+    sessions, event_rows, roots, reentries = [], [], set(), set()
+    reentry_candidates_seen = set()
     event_prefix = b""
     command_number = signal_number = snapshot_number = 0
 
@@ -580,6 +581,131 @@ def main():
                               "reserve": opening, "grant": grants[0], "forward": row})
         return found
 
+    def entry_sites():
+        sites = roots | reentries
+        if len(sites) > native["entry_capacity"]:
+            raise ValueError("observed acquisition/reentry union exceeds explicit entry capacity")
+        return tuple(sorted(sites))
+
+    def discover_reentries(calls, gate):
+        """Admit only observed returns in one root slot/grant incarnation.
+
+        Query completion supplies the canonical post-CALL cursor directly.
+        A retained downgrade also needs its following empty entry lookup so
+        stale IO fields cannot turn a later native observation into a reentry.
+        """
+        candidates = []
+        by_site = {call["site"]: call for call in calls
+                   if call.get("operation") in ("query", "mode_change")}
+        controls = {KINDS[name] for name in ("JIT_ENTER", "JIT_EXIT", "JIT_OPERATION", "QUERY_RESULT",
+                                            "WRITE_DOWNGRADE_RETAINED", "FORWARD", "EPISODE_DONE")}
+        for row in event_rows:
+            query = row["kind"] == KINDS["QUERY_RESULT"]
+            if (not query and not (row["kind"] == KINDS["JIT_OPERATION"] and row["result"] == 10)):
+                continue
+            if row["index"] in reentry_candidates_seen:
+                continue
+            reentry_candidates_seen.add(row["index"])
+            candidate = {"observation": row, "accepted": False, "new_entry": False}
+            candidates.append(candidate)
+
+            def require(condition, reason):
+                if not condition:
+                    raise ValueError(reason)
+
+            try:
+                call = by_site.get(row["ip"])
+                candidate["call"] = call
+                require(call is not None and not call["indirect"] and
+                        call["operation"] == ("query" if query else "mode_change"),
+                        "observation is not this exported typed source CALL")
+                after_call = call["site"] + call["length"]
+                require(row["image"] == old and old and row["task"] != row["origin"] and
+                        row["object"] == gate and row["cursor"] == after_call,
+                        "operation lacks the current image/foreign executor/gate/post-CALL cursor")
+                same = lambda item: all(item[key] == row[key] for key in
+                                        ("state", "node", "acquisition", "origin"))
+                openings = [item for item in event_rows[:row["index"]]
+                            if item["kind"] == KINDS["SLOT_RESERVE"] and same(item)]
+                require(bool(openings), "exact slot reservation missing")
+                opening = openings[-1]
+                require(opening["parent"] and opening["owner"] and opening["related"] and
+                        opening["task"] == row["origin"], "reservation lacks its original claim/pool/slot")
+                end = next((item["index"] for item in event_rows[opening["index"] + 1:]
+                            if item["kind"] in (KINDS["SLOT_RESERVE"], KINDS["SLOT_FREE"]) and
+                            item["owner"] == opening["owner"] and item["related"] == opening["related"]),
+                           len(event_rows))
+                require(row["index"] < end, "slot incarnation ended before operation")
+                scope = [item for item in event_rows[opening["index"] + 1:end] if same(item)]
+                before = [item for item in scope if item["index"] < row["index"]]
+                prepared = [item for item in before if item["kind"] == KINDS["FRAME_PREPARE"]]
+                grants = [item for item in before if item["kind"] == KINDS["GRANT"]]
+                entered = [item for item in before if item["kind"] == KINDS["JIT_ENTER"]]
+                require(len(prepared) == len(grants) == 1 and bool(entered),
+                        "one root frame/grant and preceding generated entry required")
+                prepared, grant, entered = prepared[0], grants[0], entered[-1]
+                candidate.update(reserve=opening, frame=prepared, grant=grant, enter=entered)
+                require(not row["parent"] and not prepared["parent"] and
+                        prepared["task"] == row["origin"] and prepared["image"] == row["image"] and
+                        grant["object"] == gate and grant["owner"] and grant["owner_task"] == row["task"] and
+                        entered["task"] == row["task"] and entered["image"] == row["image"] and
+                        entered["related"], "root frame/current physical executor/image identity differs")
+                active = [item for item in before if item["index"] > entered["index"] and
+                          item["kind"] in controls]
+                if query:
+                    require(row["related"] in (16, 17) and row["result"] in (0, 1) and row["phase"] == 5,
+                            "query result lacks exact Boolean/resumable operation")
+                    require(len(active) == 2 and active[0]["kind"] == KINDS["JIT_EXIT"] and
+                            active[1]["kind"] == KINDS["JIT_OPERATION"],
+                            "query did not follow its immediate generated exit and prepared operation")
+                    exited, operation = active
+                    candidate.update(exit=exited, operation=operation)
+                    require(operation["result"] == row["related"] and operation["ip"] == call["site"] and
+                            operation["object"] == gate and operation["phase"] == 2,
+                            "prepared query operation differs")
+                else:
+                    require(row["phase"] == 5 and row["related"] == row["node"] and
+                            len(active) == 1 and active[0]["kind"] == KINDS["JIT_EXIT"],
+                            "retained downgrade lacks its exact resumable root operation")
+                    exited = active[0]
+                    following = [item for item in scope if item["index"] > row["index"] and item["kind"] in controls]
+                    require(len(following) >= 3, "retained downgrade/lookup/forward observations incomplete")
+                    retained, lookup, forwarded = following[:3]
+                    candidate.update(exit=exited, retained=retained, lookup=lookup, forward=forwarded)
+                    require(retained["kind"] == KINDS["WRITE_DOWNGRADE_RETAINED"] and
+                            retained["object"] == gate and retained["owner"] == grant["owner"] and
+                            retained["related"] == entered["related"] and retained["phase"] == 2 and
+                            retained["result"] == 0 and retained["cursor"] == after_call,
+                            "same writer grant did not retain physical WRITE through downgrade")
+                    require(lookup["kind"] == KINDS["JIT_ENTER"] and lookup["cursor"] == after_call and
+                            lookup["related"] == entered["related"] and
+                            forwarded["kind"] == KINDS["FORWARD"] and
+                            forwarded["result"] == (1 << 64) - errno.ENOENT and
+                            forwarded["cursor"] == after_call and forwarded["ip"] == call["site"] and
+                            forwarded["related"] == call["target"] and not forwarded["phase"] and
+                            not forwarded["flags"], "post-downgrade first-unexecuted lookup failure differs")
+                    require(all(item["task"] == row["task"] and item["image"] == row["image"]
+                                for item in (lookup, forwarded)), "post-downgrade executor/image changed")
+                require(exited["task"] == row["task"] and exited["image"] == row["image"] and
+                        exited["ip"] == call["site"] and exited["related"] == call["target"] and
+                        ((exited["result"] == 1 and exited["phase"] == 1 and
+                          exited["flags"] == (4 if query else 3)) or
+                         (exited["result"] == 3 and exited["phase"] == 2)),
+                        "operation lacks the exact source CALL target/typed exit phase")
+                if query:
+                    require(operation["task"] == row["task"] and operation["image"] == row["image"],
+                            "prepared query executor/image changed")
+                candidate["entry"] = after_call
+                new_entry = after_call not in roots | reentries
+                if new_entry and len(roots | reentries) >= native["entry_capacity"]:
+                    candidate["capacity_refused"] = True
+                    raise ValueError("new observed reentry exceeds explicit entry capacity")
+                candidate.update(accepted=True, new_entry=new_entry)
+                reentries.add(after_call)
+            except ValueError as error:
+                candidate["reason"] = str(error)
+        return candidates
+
     try:
         module_name = paths["provider_module"].stem
         if (Path("/sys/module") / module_name).exists() or Path("/dev/kd_mmap_api").exists():
@@ -628,6 +754,7 @@ def main():
             cycle_number += 1
             if cycle_number > native["cycle_capacity"] or not roots:
                 raise ValueError("finite cycle capacity or actual acquisition roots unavailable")
+            entries = entry_sites()
             directory = output / f"cycle-{cycle_number:04d}"
             directory.mkdir()
             builder = GNUImageBuilder(Toolchain(tools["cpp"], tools["as"], tools["ld"], tools["objcopy"],
@@ -638,7 +765,7 @@ def main():
             workflow = FeedbackSession(transport, coordinator, producers, SessionConfig(
                 exported.slot_identity, old, 0x1000 + cycle_number, native["claim_capacity"], min(roots),
                 DiscoveryLimits(*(bounds[key] for key in ("decode_sites", "decode_window_bytes", "cfg_work_steps", "direct_call_edges"))),
-                EntryMetadata("kd_mm_entry", tuple(sorted(roots)), native["current_task_gs_offset"]),
+                EntryMetadata("kd_mm_entry", entries, native["current_task_gs_offset"]),
                 CodegenLimits(bounds["lowered_sites"], bounds["lowered_text_bytes"], bounds["runtime_block_visits"])), builder)
             sessions.append(workflow)
             drive(workflow, SessionPhase.BUILD_START)
@@ -666,10 +793,12 @@ def main():
                 durable(directory / "ack.bin", completed.raw_ack)
                 old = token_word(completed.candidate.binding.image_identity)
             result["cycles"].append({"cycle": cycle_number, "image": old, "roots": sorted(roots),
+                "reentries": sorted(reentries), "entry_sites": list(entries),
                 "published": completed.publication is not None,
                 "acknowledged": len(completed.acknowledgment.keys) if completed.acknowledgment else 0})
 
         for number in range(1, workload["rounds"] + 1):
+            entry_sites()
             advance(signal.SIGUSR2, "round-" + str(number))
             finished = phase("jit_round_complete")
             round_effects(finished, number)
@@ -679,8 +808,14 @@ def main():
             # Client schema is checked before permitting another round below.
             fresh = discover_roots(calls, current_profile["native"]["gate_identity"])
             document(output / f"roots-{number:04d}.json", fresh)
+            candidates = discover_reentries(calls, current_profile["native"]["gate_identity"])
+            document(output / f"reentries-{number:04d}.json", candidates)
+            result.setdefault("reentry_candidates", []).extend(candidates)
+            if any(item.get("capacity_refused") for item in candidates):
+                raise ValueError("reentry admission refused capacity; original owner retained")
+            result["entry_sites"] = list(entry_sites())
             if number < workload["rounds"]:
-                compile_cycle(bool(fresh) or not old)
+                compile_cycle(bool(fresh) or any(item["new_entry"] for item in candidates) or not old)
         publications = {item["image"] for item in result["cycles"] if item["published"]}
         before_leave = joined_execution(publications, initial["native"]["gate_identity"])
         result["borrowed_jit_evidence_before_leave"] = before_leave
