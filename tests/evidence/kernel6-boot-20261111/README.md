@@ -46,3 +46,17 @@ kmod aliases and hashes of their resolved executable bytes. They are subsequent
 test inputs, separate from kernel or module identity. This record establishes
 installation and boot only. Native API/MM completion and private generated
 execution have their own evidence; boot supplies no performance result.
+
+After the native API/MM and both private regressions completed with ordinary
+unload, the [pre-return check](normal-return/payload/return/pre.json) verified
+idle actors, recovery, the consumed one-shot and all preservation inputs. One
+ordinary reboot returned 0. The [normal proof](normal-return/payload/return/post.json),
+SHA `807395f1b46856ae51e0d66c87ee2e429d0233b48fbccbcdd4e185c787d52cf0`,
+returned 0 with `NORMAL_IDENTITY_VERIFIED`: release `7.0.0-38-kdlock1`, boot
+`afb0c5cd-96b7-488b-bcb4-4a31cbb4e50e`, Build ID
+`b61c7bef25d2068f2a05ca3c31a5714c20c4aa62`, taint 0 and 54 ordinary modules.
+No experimental module, control, worker, build/test actor or D-state task
+remained. All sixteen candidate build files, thirty-two retained boot files,
+the complete candidate module namespace and both GRUB files/default matched.
+The final collection also retains five exact module/client binaries matched to
+their prior build receipts. VM access closed after this read-only collection.

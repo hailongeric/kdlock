@@ -1,0 +1,20 @@
+[
+  {
+    "argv": [
+      "ssh",
+      "-T",
+      "-p",
+      "2222",
+      "-oBatchMode=yes",
+      "-oConnectTimeout=8",
+      "-oServerAliveInterval=10",
+      "-oServerAliveCountMax=3",
+      "root@10.176.26.71",
+      "cat /proc/sys/kernel/random/boot_id; uname -r"
+    ],
+    "returncode": 0,
+    "stdout": "afb0c5cd-96b7-488b-bcb4-4a31cbb4e50e\n7.0.0-38-kdlock1\n",
+    "stderr": "",
+    "elapsed": 0.648378336802125
+  }
+]

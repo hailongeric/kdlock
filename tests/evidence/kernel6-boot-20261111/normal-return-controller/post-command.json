@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-oBatchMode=yes",
+    "-oConnectTimeout=8",
+    "-oServerAliveInterval=10",
+    "-oServerAliveCountMax=3",
+    "root@10.176.26.71",
+    "RETURN_MODE=post python3 -B -"
+  ],
+  "input_sha256": "a79e8c73cc08b7dc855d9e191cf2c060b4ea0e6ccc6a89c7dac7a9de9668384e",
+  "dispatch_unix": 1794408857.551038
+}
