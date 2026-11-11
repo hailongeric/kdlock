@@ -2,7 +2,7 @@
 /* Ordinary source-operation entries. No source is lent before the prepared
  * task-owned auxiliary switch. The four scalars are original declared inputs,
  * not a packet copy or native waiter-body execution engine. Admission performs
- * no allocation. A NULL descriptor reports completed native unlock work; a
+ * no allocation. A NULL descriptor reports a completed native operation; a
  * prepared descriptor selects the auxiliary route before any source lending.
  * Its transient source-stack frames are fully unwound before the switch.
  */
@@ -59,6 +59,11 @@
 	KD_MUTEX_SOURCE_ENTRY kd_rwsem_down_write_entry_asm, kd_rwsem_prepare_down_write_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwsem_up_write_entry_asm, kd_rwsem_prepare_up_write_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwsem_downgrade_write_entry_asm, kd_rwsem_prepare_downgrade_write_current
+	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_down_read_entry_asm, kd_linux_rwsem_prepare_down_read_current
+	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_up_read_entry_asm, kd_linux_rwsem_prepare_up_read_current
+	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_down_write_entry_asm, kd_linux_rwsem_prepare_down_write_current
+	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_up_write_entry_asm, kd_linux_rwsem_prepare_up_write_current
+	KD_MUTEX_SOURCE_ENTRY kd_linux_rwsem_downgrade_write_entry_asm, kd_linux_rwsem_prepare_downgrade_write_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwlock_read_lock_entry_asm, kd_rwlock_prepare_read_lock_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwlock_read_unlock_entry_asm, kd_rwlock_prepare_read_unlock_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwlock_write_lock_entry_asm, kd_rwlock_prepare_write_lock_current

@@ -56,16 +56,30 @@ Nonowner credits remain object-owned and can outlive their acquiring task.
 
 ## API and continuation behavior
 
-Ordinary prepared source macros can use the existing private clobber entries
-when `source_calls` is explicitly selected and the original task is eligible.
-Active nested requests still obtain W's canonical state from their direct
-`node->state`. The existing task-owned auxiliary stack, original UB-derived JIT,
-GS lowering, recursive delegation and exact current-state handback are retained.
-The entry helpers require original-task context; reached helper calls and
-normal Linux callable symbols are permanent SPECIAL frontiers. They return to
-W before the operation, with its exact CALL/RET state and no replay. They are
-never reclassified as ordinary code by learning or mistaken for private typed
-clobber entries simply because their names or DI argument look similar.
+Ordinary void source macros acquire-load the immutable binding and test
+`source_calls` before reaching five distinct generic clobber entries. DI is the
+actual KD lock pointer. Original-task eligibility and managed/native credit
+selection run inside the native bootstrap, before source lending. Unprepared,
+source-closed or native-credit-blocked acquisition uses the same KD native gate.
+Unbound and source-disabled objects retain their normal callable route.
+
+Active nested requests obtain W's canonical state from their direct
+`node->state`. Before preparing a generic operation, the driver validates that
+current JIT binding and the retained origin header's exact core identity.
+It preserves source-closing/native-credit admission and latest-owned READ
+ordering. An operation requiring native execution returns to W before executing
+the operation, preserving its exact CALL phase; W then reaches the same alias's
+native bootstrap. W's occupied
+auxiliary entry is expected during borrowed execution and is not a refusal.
+The exact root entry address is retained as small frame metadata. Private entry
+identities, one canonical packet, auxiliary switching, the original UB backend,
+GS lowering and current-state handback remain unchanged.
+
+The C eligibility, prepare and query helpers and normal callable symbols remain
+permanent SPECIAL frontiers. They are never reclassified as ordinary code by
+learning or inferred to be typed entries from names or DI shape. This new
+boundary-routing source has independent static review but no build or runtime
+receipt; the kernel6 evidence below covers its earlier source identity.
 
 Signalable read/write and try APIs initially use their normal C result ABI and
 execute locally on the same KD gate. Successful signalable acquisition returns
@@ -121,3 +135,42 @@ They retain the original backend and GS lowering, fixed-image continuation,
 retained-writer handback and exact physical release/retirement checks. These
 private mechanism results remain separate from the original-task native MM
 run, broader context/progress obligations and the full acceptance matrix.
+
+## Delegated syscall integration in progress
+
+Actual delegated/JIT mmap/munmap remains unimplemented and unvalidated. The
+ordinary void-entry routing above removes an early eligibility-helper frontier;
+it does not enable the syscall roots' integer `down_write_killable` entry.
+The next package needs a declared integer capture/return ABI, managed
+cancel/grant arbitration, managed parent/child enrollment and complete immutable
+source/dependency/native leases. The current MM provider remains
+`source_calls=false`; killable operations execute on the original task through
+the same KD gate with their existing native result and signal semantics. This
+is an interim route, not the final delegation design. Query/assert frontiers,
+executor context and source lifetime remain separate reached constraints.
+
+The selected cancellation policy distinguishes an ungranted requester C from
+an already-granted W. Selection or an MCS turn is not a grant. Actual grant
+readiness wins over signal cancellation at admission; a committed acquisition
+returns 0 before body effects and cannot later become `-EINTR`. If C has no own
+grant but is serving W, C stops accepting new borrowers, finishes the current
+W and its exact physical/release duties, and lets the existing lock-owned queue
+pass subsequent service to another eligible combiner before C returns
+`-EINTR`. The signal response is intentionally delayed; source effects are not
+undone, replayed or interrupted through a guessed continuation.
+
+The current supported workload excludes this specific circular dependency:
+R retains a READ grant until C reports cancellation, while ungranted C is
+serving W whose WRITE admission waits for R. No additional handling is selected
+for that excluded pattern. This usage assumption is not general progress proof
+and waives no grant, result, handback, task/object/storage or reclamation duty.
+Other dependency and context limits remain explicit.
+
+The selected storage direction allows task exit after `-EINTR` while exact
+remaining queue users retain the existing core/register packet, request/control
+backing and required task/stack/source/image references. This is not permission
+to exit with an executable continuation or an outstanding physical owner duty.
+Current managed exit still requires full drain: a new metadata-only detach and
+finalization authority, requester-only cleanup before exit and callback-return
+code retention need implementation and proof. No second packet or generic RCU
+delay substitutes for those last-user obligations.

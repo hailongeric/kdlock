@@ -10,6 +10,7 @@
 #include <asm/processor.h>
 
 #include "episode.h"
+#include "mutex_api.h"
 #include "observation.h"
 
 static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
@@ -54,6 +55,7 @@ static void frame_init(struct kd_episode_frame *frame,
 	frame->parent = parent;
 	frame->operation = resources->config.atomic_spin ? KD_OPERATION_SPIN_LOCK :
 		KD_OPERATION_MUTEX_LOCK;
+	frame->source_target = 0;
 	INIT_LIST_HEAD(&frame->children);
 	INIT_LIST_HEAD(&frame->child_link);
 	INIT_LIST_HEAD(&frame->deferred);
@@ -744,6 +746,19 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 		if (cached.kind != KD_OPERATION_NONE &&
 		    kd_operation_family(cached.kind) != resources->config.family)
 			return forward(frame, binding, image, -EOPNOTSUPP);
+		if (cached.kind != KD_OPERATION_NONE) {
+			bool ready = kd_linux_rwsem_source_operation_ready(state, *binding,
+				cached.target);
+
+			/* The node's current S_W decides generic eligibility, including
+			 * the exact native/managed credit order. Decline before preparing
+			 * an operation or consuming any source CALL effect.
+			 */
+			if (!kd_state_is_jit_current(state, *binding))
+				return KD_MUTEX_OUTCOME_UNSET;
+			if (!ready)
+				return forward(frame, binding, image, -EOPNOTSUPP);
+		}
 		if (kd_operation_is_lock(cached.kind)) {
 			struct kd_episode_frame *child;
 			struct kd_execution_binding *child_binding = *binding;

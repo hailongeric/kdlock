@@ -61,6 +61,8 @@ struct kd_episode_frame {
 	struct kd_episode_frame *root;
 	struct kd_episode_frame *parent;
 	enum kd_operation_kind operation;
+	/* Exact native source entry; recursive boundaries use their exit target. */
+	unsigned long source_target;
 
 	struct list_head children;
 	struct list_head child_link;

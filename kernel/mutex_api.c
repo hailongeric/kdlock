@@ -68,6 +68,11 @@ static const struct rw_entry rw_entries[] = {
 	{ KD_OPERATION_RWSEM_DOWN_WRITE, (unsigned long)kd_rwsem_down_write_entry_asm },
 	{ KD_OPERATION_RWSEM_UP_WRITE, (unsigned long)kd_rwsem_up_write_entry_asm },
 	{ KD_OPERATION_RWSEM_DOWNGRADE_WRITE, (unsigned long)kd_rwsem_downgrade_write_entry_asm },
+	{ KD_OPERATION_RWSEM_DOWN_READ, (unsigned long)kd_linux_rwsem_down_read_entry_asm },
+	{ KD_OPERATION_RWSEM_UP_READ, (unsigned long)kd_linux_rwsem_up_read_entry_asm },
+	{ KD_OPERATION_RWSEM_DOWN_WRITE, (unsigned long)kd_linux_rwsem_down_write_entry_asm },
+	{ KD_OPERATION_RWSEM_UP_WRITE, (unsigned long)kd_linux_rwsem_up_write_entry_asm },
+	{ KD_OPERATION_RWSEM_DOWNGRADE_WRITE, (unsigned long)kd_linux_rwsem_downgrade_write_entry_asm },
 	{ KD_OPERATION_RWLOCK_READ_LOCK, (unsigned long)kd_rwlock_read_lock_entry_asm },
 	{ KD_OPERATION_RWLOCK_READ_UNLOCK, (unsigned long)kd_rwlock_read_unlock_entry_asm },
 	{ KD_OPERATION_RWLOCK_WRITE_LOCK, (unsigned long)kd_rwlock_write_lock_entry_asm },
@@ -84,18 +89,15 @@ enum kd_operation_kind kd_rw_resolve_entry_operation(unsigned long target)
 	return KD_OPERATION_NONE;
 }
 
-static unsigned long operation_target(enum kd_operation_kind operation)
+static enum kd_operation_kind resolve_source_target(unsigned long target)
 {
-	unsigned int index;
+	enum kd_operation_kind operation = kd_mutex_resolve_entry_operation(NULL, target);
 
-	if (operation == KD_OPERATION_MUTEX_LOCK)
-		return (unsigned long)kd_mutex_lock_entry_asm;
-	if (operation == KD_OPERATION_SPIN_LOCK)
-		return (unsigned long)kd_spin_lock_entry_asm;
-	for (index = 0; index < ARRAY_SIZE(rw_entries); ++index)
-		if (rw_entries[index].kind == operation)
-			return rw_entries[index].target;
-	return 0;
+	if (operation == KD_OPERATION_NONE)
+		operation = kd_spin_resolve_entry_operation(target);
+	if (operation == KD_OPERATION_NONE)
+		operation = kd_rw_resolve_entry_operation(target);
+	return operation;
 }
 
 void kd_spin_init(struct kd_spinlock *lock)
@@ -118,8 +120,8 @@ static void run_native(struct kd_mutex_entry *entry, struct kd_mutex *lock,
 	 */
 	native = kd_state_current_binding(frame->slot->pool->state);
 	BUG_ON(!kd_operation_is_lock(frame->operation));
-	api_target = operation_target(frame->operation);
-	BUG_ON(!api_target);
+	api_target = frame->source_target;
+	BUG_ON(!api_target || resolve_source_target(api_target) != frame->operation);
 	result = kd_episode_acquire_root(frame, native, lock, source_sp,
 		continuation_ip, source_bp, api_target, &outcome);
 	BUG_ON(result || outcome != KD_MUTEX_PROXY_ORIGIN_SUFFIX);
@@ -133,7 +135,8 @@ static void run_native(struct kd_mutex_entry *entry, struct kd_mutex *lock,
 }
 
 static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
-					      enum kd_operation_kind operation)
+					      enum kd_operation_kind operation,
+					      unsigned long api_target)
 {
 	struct kd_task_root_context *root = kd_task_root_context_current();
 	struct kd_execution_binding *native;
@@ -150,7 +153,8 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 	       root->aux_entry || !root->mutex_resources ||
 	       (kd_operation_is_lock(operation) && root->source_closing) ||
 	       kd_operation_family(operation) != root->mutex_resources->config.family ||
-	       root->owners.atomic_spin != atomic_context);
+	       root->owners.atomic_spin != atomic_context ||
+	       !api_target || resolve_source_target(api_target) != operation);
 	if (atomic_context) {
 		BUG_ON(!in_task() || irqs_disabled() ||
 		       preempt_count() != root->native_spin_depth * PREEMPT_OFFSET);
@@ -185,6 +189,7 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 	result = kd_episode_prepare_root(root->mutex_resources, native,
 					 operation, &frame);
 	BUG_ON(result);
+	frame->source_target = api_target;
 	result = kd_mutex_prepare_entry(&frame->slot->entry, native, run_native,
 					frame, root->mutex_control_bytes);
 	BUG_ON(result);
@@ -193,65 +198,85 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 
 struct kd_mutex_entry *kd_mutex_prepare_lock_current(struct kd_mutex *lock)
 {
-	return prepare_current(lock, KD_OPERATION_MUTEX_LOCK);
+	return prepare_current(lock, KD_OPERATION_MUTEX_LOCK,
+		(unsigned long)kd_mutex_lock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_mutex_prepare_unlock_current(struct kd_mutex *lock)
 {
-	return prepare_current(lock, KD_OPERATION_MUTEX_UNLOCK);
+	return prepare_current(lock, KD_OPERATION_MUTEX_UNLOCK,
+		(unsigned long)kd_mutex_unlock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_spin_prepare_lock_current(struct kd_spinlock *lock)
 {
-	return prepare_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_LOCK);
+	return prepare_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_LOCK,
+		(unsigned long)kd_spin_lock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_spin_prepare_unlock_current(struct kd_spinlock *lock)
 {
-	return prepare_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_UNLOCK);
+	return prepare_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_UNLOCK,
+		(unsigned long)kd_spin_unlock_entry_asm);
+}
+
+struct kd_mutex_entry *kd_rwsem_prepare_source_current(struct kd_rwsem *lock,
+		enum kd_operation_kind operation, unsigned long api_target)
+{
+	BUG_ON(kd_operation_family(operation) != KD_LOCK_FAMILY_RWSEM);
+	return prepare_current(lock ? &lock->core.queue : NULL, operation, api_target);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_down_read_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWN_READ);
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWN_READ,
+		(unsigned long)kd_rwsem_down_read_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_up_read_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_UP_READ);
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_UP_READ,
+		(unsigned long)kd_rwsem_up_read_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_down_write_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWN_WRITE);
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWN_WRITE,
+		(unsigned long)kd_rwsem_down_write_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_up_write_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_UP_WRITE);
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_UP_WRITE,
+		(unsigned long)kd_rwsem_up_write_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_downgrade_write_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWNGRADE_WRITE);
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWNGRADE_WRITE,
+		(unsigned long)kd_rwsem_downgrade_write_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwlock_prepare_read_lock_current(struct kd_rwlock *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_READ_LOCK);
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_READ_LOCK,
+		(unsigned long)kd_rwlock_read_lock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwlock_prepare_read_unlock_current(struct kd_rwlock *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_READ_UNLOCK);
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_READ_UNLOCK,
+		(unsigned long)kd_rwlock_read_unlock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwlock_prepare_write_lock_current(struct kd_rwlock *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_WRITE_LOCK);
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_WRITE_LOCK,
+		(unsigned long)kd_rwlock_write_lock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwlock_prepare_write_unlock_current(struct kd_rwlock *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_WRITE_UNLOCK);
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_WRITE_UNLOCK,
+		(unsigned long)kd_rwlock_write_unlock_entry_asm);
 }

@@ -26,18 +26,20 @@ static struct kd_task_root_context *native_root(void)
 	return root;
 }
 
-bool kd_linux_rwsem_source_ready(const struct kd_linux_rwsem_binding *binding)
+static bool source_root_ready(void)
 {
-	struct kd_task_root_context *root;
+	struct kd_task_root_context *root = native_root();
 
-	if (!binding->source_calls)
-		return false;
-	root = native_root();
 	return root && !root->source_closing && list_empty(&root->native_grants);
 }
 
+bool kd_linux_rwsem_source_ready(const struct kd_linux_rwsem_binding *binding)
+{
+	return binding->source_calls && source_root_ready();
+}
+
 static struct kd_source_grant *managed_grant(
-		const struct kd_linux_rwsem_binding *binding, bool read)
+		struct kd_rwsem *lock, bool read)
 {
 	struct kd_task_root_context *root = native_root();
 	struct kd_source_grant *grant;
@@ -46,7 +48,7 @@ static struct kd_source_grant *managed_grant(
 	if (!root)
 		return NULL;
 	grant = kd_state_find_operation_grant(&root->core,
-		kd_state_current_binding(&root->core), &binding->lock->core.queue,
+		kd_state_current_binding(&root->core), &lock->core.queue,
 		read ? KD_OPERATION_RWSEM_UP_READ : KD_OPERATION_RWSEM_UP_WRITE);
 	if (IS_ERR(grant))
 		return NULL;
@@ -54,7 +56,7 @@ static struct kd_source_grant *managed_grant(
 		/* The current original task retains its own still-held credit across
 		 * this snapshot. No other actor may consume an owned read grant.
 		 */
-		if (kd_rw_last_owned_read(&binding->lock->core, current, &credit) !=
+		if (kd_rw_last_owned_read(&lock->core, current, &credit) !=
 		    KD_RW_READ_MANAGED || credit != grant->read_credit)
 			return NULL;
 	}
@@ -64,7 +66,105 @@ static struct kd_source_grant *managed_grant(
 bool kd_linux_rwsem_source_release(const struct kd_linux_rwsem_binding *binding,
 		bool read)
 {
-	return managed_grant(binding, read) != NULL;
+	return managed_grant(binding->lock, read) != NULL;
+}
+
+/* Reached generic aliases use the current borrowed S_W, not the physical
+ * executor's native root. Its source/grant users retain origin and root while
+ * this read-only pre-operation decision is made; occupied auxiliary control is
+ * expected here. A declined operation keeps its source CALL/cursor unchanged.
+ */
+bool kd_linux_rwsem_source_operation_ready(struct kd_thread_state *state,
+		struct kd_execution_binding *binding, unsigned long target)
+{
+	struct kd_task_root_context *root;
+	struct kd_source_grant *grant;
+	struct kd_rwsem *lock;
+	const void *credit;
+	enum kd_operation_kind operation;
+
+	if (target == (unsigned long)kd_linux_rwsem_down_read_entry_asm)
+		operation = KD_OPERATION_RWSEM_DOWN_READ;
+	else if (target == (unsigned long)kd_linux_rwsem_up_read_entry_asm)
+		operation = KD_OPERATION_RWSEM_UP_READ;
+	else if (target == (unsigned long)kd_linux_rwsem_down_write_entry_asm)
+		operation = KD_OPERATION_RWSEM_DOWN_WRITE;
+	else if (target == (unsigned long)kd_linux_rwsem_up_write_entry_asm)
+		operation = KD_OPERATION_RWSEM_UP_WRITE;
+	else if (target == (unsigned long)kd_linux_rwsem_downgrade_write_entry_asm)
+		operation = KD_OPERATION_RWSEM_DOWNGRADE_WRITE;
+	else
+		return true;
+	if (!state || !kd_state_is_jit_current(state, binding))
+		return false;
+	root = smp_load_acquire(&state->origin->kd_root_context);
+	if (!root || !root->attached || root->task != state->origin ||
+	    &root->core != state || !root->mutex_resources ||
+	    root->mutex_resources->config.family != KD_LOCK_FAMILY_RWSEM)
+		return false;
+	if (kd_operation_is_lock(operation))
+		return !root->source_closing && list_empty(&root->native_grants);
+	lock = (struct kd_rwsem *)state->regs.di;
+	if (!lock)
+		return false;
+	grant = kd_state_find_operation_grant(state, binding, &lock->core.queue,
+		operation);
+	if (IS_ERR(grant))
+		return false;
+	if (grant->mode == KD_GRANT_MODE_READ)
+		return kd_rw_last_owned_read(&lock->core, state->origin, &credit) ==
+			KD_RW_READ_MANAGED && credit == grant->read_credit;
+	return true;
+}
+
+/* The source macro selects an immutable source-enabled binding before this
+ * target. Only original-task assembly executes these C helpers; borrowed source
+ * reaches the distinct typed target and uses its explicit node/S_W instead.
+ * An unprepared or source-closed acquisition remains native on the same gate.
+ */
+struct kd_mutex_entry *kd_linux_rwsem_prepare_down_read_current(struct kd_rwsem *lock)
+{
+	if (source_root_ready())
+		return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_DOWN_READ,
+			(unsigned long)kd_linux_rwsem_down_read_entry_asm);
+	(void)kd_rw_native_read_lock(&lock->core, TASK_UNINTERRUPTIBLE, false);
+	return NULL;
+}
+
+struct kd_mutex_entry *kd_linux_rwsem_prepare_down_write_current(struct kd_rwsem *lock)
+{
+	if (source_root_ready())
+		return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_DOWN_WRITE,
+			(unsigned long)kd_linux_rwsem_down_write_entry_asm);
+	(void)kd_rw_native_write_lock(&lock->core, TASK_UNINTERRUPTIBLE);
+	return NULL;
+}
+
+struct kd_mutex_entry *kd_linux_rwsem_prepare_up_read_current(struct kd_rwsem *lock)
+{
+	if (managed_grant(lock, true))
+		return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_UP_READ,
+			(unsigned long)kd_linux_rwsem_up_read_entry_asm);
+	(void)kd_rw_native_read_unlock(&lock->core, false);
+	return NULL;
+}
+
+struct kd_mutex_entry *kd_linux_rwsem_prepare_up_write_current(struct kd_rwsem *lock)
+{
+	if (managed_grant(lock, false))
+		return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_UP_WRITE,
+			(unsigned long)kd_linux_rwsem_up_write_entry_asm);
+	(void)kd_rw_native_write_unlock(&lock->core);
+	return NULL;
+}
+
+struct kd_mutex_entry *kd_linux_rwsem_prepare_downgrade_write_current(struct kd_rwsem *lock)
+{
+	if (managed_grant(lock, false))
+		return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_DOWNGRADE_WRITE,
+			(unsigned long)kd_linux_rwsem_downgrade_write_entry_asm);
+	(void)kd_rw_native_downgrade_write(&lock->core);
+	return NULL;
 }
 
 int kd_linux_rwsem_bind(struct rw_semaphore *object,
@@ -143,7 +243,7 @@ void kd_linux_rwsem_up_read(struct kd_linux_rwsem_binding *binding)
 {
 	struct kd_task_root_context *root;
 
-	if (managed_grant(binding, true)) {
+	if (managed_grant(binding->lock, true)) {
 		root = native_root();
 		(void)kd_episode_unlock_native(root->mutex_resources, root,
 			kd_state_current_binding(&root->core), &binding->lock->core.queue,
@@ -156,7 +256,7 @@ void kd_linux_rwsem_up_write(struct kd_linux_rwsem_binding *binding)
 {
 	struct kd_task_root_context *root;
 
-	if (managed_grant(binding, false)) {
+	if (managed_grant(binding->lock, false)) {
 		root = native_root();
 		(void)kd_episode_unlock_native(root->mutex_resources, root,
 			kd_state_current_binding(&root->core), &binding->lock->core.queue,
@@ -169,7 +269,7 @@ void kd_linux_rwsem_downgrade_write(struct kd_linux_rwsem_binding *binding)
 {
 	struct kd_task_root_context *root;
 
-	if (managed_grant(binding, false)) {
+	if (managed_grant(binding->lock, false)) {
 		root = native_root();
 		(void)kd_episode_downgrade_native(root->mutex_resources, root,
 			kd_state_current_binding(&root->core), &binding->lock->core.queue,
@@ -236,6 +336,13 @@ static const unsigned long native_targets[] = {
 	(unsigned long)kd_linux_rwsem_owner,
 	(unsigned long)kd_linux_rwsem_source_ready,
 	(unsigned long)kd_linux_rwsem_source_release,
+	(unsigned long)kd_linux_rwsem_source_operation_ready,
+	(unsigned long)kd_linux_rwsem_prepare_down_read_current,
+	(unsigned long)kd_linux_rwsem_prepare_up_read_current,
+	(unsigned long)kd_linux_rwsem_prepare_down_write_current,
+	(unsigned long)kd_linux_rwsem_prepare_up_write_current,
+	(unsigned long)kd_linux_rwsem_prepare_downgrade_write_current,
+	(unsigned long)kd_rwsem_prepare_source_current,
 #if defined(CONFIG_DEBUG_RWSEMS) || defined(CONFIG_DETECT_HUNG_TASK_BLOCKER)
 	(unsigned long)rwsem_owner, (unsigned long)is_rwsem_reader_owned,
 #endif
