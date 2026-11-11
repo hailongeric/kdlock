@@ -1,0 +1,198 @@
+{
+  "bytes": 572238,
+  "count": 12,
+  "files": [
+    {
+      "bytes": 2,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-01/builtin-source-elf.bin",
+      "identity": [
+        2064,
+        8525789,
+        33188,
+        1,
+        2,
+        1794384005772416892,
+        1794384005772416892
+      ],
+      "name": "attempt/builtin-source-elf.bin",
+      "path": "payload/attempt/builtin-source-elf.bin",
+      "sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+    },
+    {
+      "bytes": 2087,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-01/identity.json",
+      "identity": [
+        2064,
+        8525790,
+        33188,
+        1,
+        2087,
+        1794384005772584507,
+        1794384005772584507
+      ],
+      "name": "attempt/identity.json",
+      "path": "payload/attempt/identity.json",
+      "sha256": "9c5fb3994320bb9c2b5fd2cf7765f60f2b14c42dbe333c7bcdfb80eb99b66dc6"
+    },
+    {
+      "bytes": 2305,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-01/managed-child-record.bin",
+      "identity": [
+        2064,
+        8525793,
+        33188,
+        1,
+        2305,
+        1794384005847312744,
+        1794384005847312744
+      ],
+      "name": "attempt/managed-child-record.bin",
+      "path": "payload/attempt/managed-child-record.bin",
+      "sha256": "50d9007c81429b3eadafa44377ca1009ebdfeefb2a366d9b31e7ac66f3b07a52"
+    },
+    {
+      "bytes": 319266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-01/module.disassembly.txt",
+      "identity": [
+        2064,
+        8525791,
+        33188,
+        1,
+        319266,
+        1794384005790650520,
+        1794384005790650520
+      ],
+      "name": "attempt/module.disassembly.txt",
+      "path": "payload/attempt/module.disassembly.txt",
+      "sha256": "699032c9acdf86297e7dbf6453ffa37b9599a04b3d05f54662d7839e517f850a"
+    },
+    {
+      "bytes": 104520,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-01/observations-failure.bin",
+      "identity": [
+        2064,
+        8525794,
+        33188,
+        1,
+        104520,
+        1794384006088009503,
+        1794384006088009503
+      ],
+      "name": "attempt/observations-failure.bin",
+      "path": "payload/attempt/observations-failure.bin",
+      "sha256": "98081f6dd92907dc09a5d1ad198ebe17f842224b699b47557b81b9ea0ac79fba"
+    },
+    {
+      "bytes": 48047,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-01/result.json",
+      "identity": [
+        2064,
+        8525795,
+        33188,
+        1,
+        48047,
+        1794384006088718859,
+        1794384006088718859
+      ],
+      "name": "attempt/result.json",
+      "path": "payload/attempt/result.json",
+      "sha256": "8c3dfcfc87215e2827621cdfa66745bce92fb7cf2434d85215c0354931db052d"
+    },
+    {
+      "bytes": 147,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-receipts-01/child-result.json",
+      "identity": [
+        2064,
+        8525796,
+        33188,
+        1,
+        147,
+        1794384006194230921,
+        1794384006194230921
+      ],
+      "name": "controller/child-result.json",
+      "path": "payload/controller/child-result.json",
+      "sha256": "50316b1c84e6be1ff17c8ad8d9b164cfd28734cd76d263df5587e4536a183530"
+    },
+    {
+      "bytes": 63,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-receipts-01/child.json",
+      "identity": [
+        2064,
+        8525787,
+        33188,
+        1,
+        63,
+        1794384004690341196,
+        1794384004690341196
+      ],
+      "name": "controller/child.json",
+      "path": "payload/controller/child.json",
+      "sha256": "11d847c3db87c2e3de36388dc252be61fe1a4683abcfc2e984231028c5836da0"
+    },
+    {
+      "bytes": 1952,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-receipts-01/command.json",
+      "identity": [
+        2064,
+        8525785,
+        33188,
+        1,
+        1952,
+        1794384004682327980,
+        1794384004682327980
+      ],
+      "name": "controller/command.json",
+      "path": "payload/controller/command.json",
+      "sha256": "f16594bc9f0b767c76f2a532e18c77c415ed57b987f8ec7e9d3a7f2c8b5f100b"
+    },
+    {
+      "bytes": 53953,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-receipts-01/dmesg-before.txt",
+      "identity": [
+        2064,
+        8525784,
+        33188,
+        1,
+        53953,
+        1794384004682000000,
+        1794384004682000000
+      ],
+      "name": "controller/dmesg-before.txt",
+      "path": "payload/controller/dmesg-before.txt",
+      "sha256": "15d885f2f5feae93435301472102d73aef5cd8444de45a855186bea39ce46b51"
+    },
+    {
+      "bytes": 38890,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-receipts-01/result.json",
+      "identity": [
+        2064,
+        8525797,
+        33188,
+        1,
+        38890,
+        1794384006200782682,
+        1794384006200782682
+      ],
+      "name": "controller/result.json",
+      "path": "payload/controller/result.json",
+      "sha256": "0d49a3883d69ee35c33c5a6a1b1afd6bb4777eafe69984952589187d9d28720e"
+    },
+    {
+      "bytes": 1006,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-receipts-01/stdout.log",
+      "identity": [
+        2064,
+        8525786,
+        33188,
+        1,
+        1006,
+        1794384006091000000,
+        1794384006091000000
+      ],
+      "name": "controller/stdout.log",
+      "path": "payload/controller/stdout.log",
+      "sha256": "cc5997c0409f7d60f4366237f47b8a7789886c5eb8a760a27ef8a37b5ba96186"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "all_wire_status_zero": true,
+  "archive_sha256": "c69d76e52b05158f28795714a0208917bea518313529f3c61b98977f96d89a59",
+  "compiler_cycles": 16,
+  "coverage_ACK_keys": 14,
+  "module_sha256": "b0d8cb0d3a3d641caedd5fff7ff41cb80f61262a28c3a0483bc9d204ebfb6759",
+  "observation_overflow": 0,
+  "observation_records": 7147,
+  "publications": 13,
+  "reader_bounds": {
+    "coordination_spins": 1000000,
+    "cycle_capacity": 104,
+    "holder_timeout_ms": 20000,
+    "image_capacity": 102,
+    "learning_passes": 16,
+    "runtime_block_visits": 16000000
+  },
+  "settled_keys": 4,
+  "status": "protected_rwsem_jit_reader_mechanism_pass",
+  "warm_claim_empty": false,
+  "warm_claim_no_new_facts": true,
+  "warm_image_identity": 18379471558722427192,
+  "wire_log": {
+    "byte_limit": 268435456,
+    "reservations": 90,
+    "reserved_bytes": 200920084
+  }
+}

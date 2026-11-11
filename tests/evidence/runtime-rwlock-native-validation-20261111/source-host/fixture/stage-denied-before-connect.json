@@ -1,0 +1,8 @@
+{
+  "action": "python3 /tmp/kdlock-rw-stage-fixtures-e5b78520.py",
+  "execution_context": "default sandbox, before user renewed network approval",
+  "returncode": 255,
+  "stderr": "socket: Operation not permitted\r\nssh: connect to host 10.176.26.71 port 2222: failure\r\n",
+  "remote_connection_established": false,
+  "source": "Tool response70db2b, original stage logs subsequently replaced by explicitly approved retry; this record preserves the observed failure without claiming original log-byte retention."
+}

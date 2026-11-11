@@ -1,0 +1,10 @@
+{
+  "copied_count": 678,
+  "guest_payload_bytes": 45123642,
+  "guest_payload_count": 638,
+  "scope": "Only local saved-file copies, hashes, lossless gzip and read-only source-tar member verification. No project imports, AST, tests, builds, guest or network calls.",
+  "source_copied_bytes": 93605960,
+  "source_snapshot_files": 121,
+  "status": "SOURCE_HOST_OFFLINE_COPIES_VERIFIED",
+  "stored_copied_bytes": 50911605
+}

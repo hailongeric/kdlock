@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 680 python3 /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/fixture-controller.py --input /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/input --manifest /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/source-manifest.json --manifest-sha256 ba08aa68deadfed9162d3d47107eb4031d250108f1c137eb9107237cb25994f9 --state /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/source-state.json --state-sha256 10b7583aab1936b3f8114e015a976d93fc1de7db3a1f496c70f864e27faa0785 --build-inputs /mnt/kdlock-builds/kdlock-main-work/kernel5-core-1114b41e-rw-01/build-inputs.json --build-inputs-sha256 7f0ced9701d43f6dabe6e23488f38107bb59accab3230cd8e30a97d8369ab1ea --kernel-source /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/source --kernel-build /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/build --kernel-pins /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/kernel-pins.json --kernel-pins-sha256 70da8215fb1ddecef5a5cd245f63b5154425bfefc365a53d307b3ea9ca4bae78 --output /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwsem-01 --receipts /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwsem-receipts-01 --expected-boot b827f92c-254a-4cd3-a989-c6ea32c74605 --source-commit e5b78520b5098565d1ef9955eb1ed8f9f838bd0f --core-commit 1114b41ea0f6ecf92f2c9af2904a4218bb344829 --package-source-commit 1114b41ea0f6ecf92f2c9af2904a4218bb344829 --space-floor 4000000000 --root-floor 1073741824 --seconds 660 live rwsem --postboot /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild5-learning-proof-01/result.json --postboot-sha256 1ed2e32161e02339f16d6bc9f2bcfe28a3cb5548db94afc3b2541bebdecbca91 --gs-proof /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/postboot-kdrebuild5-learning-proof-01/gs-proof.json --gs-proof-sha256 cd013a714bb2217a08193da2b45ae0df518392cc423f592c8e27fb6d2046ecfd --module-result /mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/module-build-receipts/result.json --module-result-sha256 7c9be0511082f516c057c035e3fb5ec57596d3e11da9f79255369693c694f888 --python /mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3 --build-id a0314627518435aa4e937dae6741de947c9cf864 --recovery-tag kdlock-builddisk-clean-20261031 --dependency-page-limit 16 --total-source-byte-limit 131072 --wire-log-byte-limit 268435456 --event-capacity 65536 --workers 4 --iterations 8 --deadline 600 --builtin-source-start 0xffffffff8271fe20 --builtin-source-size 2 --holder-timeout-ms 20000 --runtime-block-visits 16000000 --reader-learning-passes 16 --coordination-spins 1000000"
+  ],
+  "start_unix": 1794383884.7880661
+}

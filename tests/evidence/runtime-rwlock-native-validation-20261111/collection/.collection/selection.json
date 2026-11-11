@@ -1,0 +1,37 @@
+{
+  "argv": [
+    "/tmp/kdlock-rw-collect5.py",
+    "--output",
+    "/tmp/kdlock-rwlock-first-attempt-collection-01",
+    "--tree",
+    "attempt",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-01",
+    "--tree",
+    "controller",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-receipts-01",
+    "--max-files",
+    "10240",
+    "--max-paths",
+    "40960",
+    "--max-total-bytes",
+    "268435456",
+    "--max-file-bytes",
+    "50331648",
+    "--max-metadata-bytes",
+    "16777216",
+    "--inventory-seconds",
+    "90",
+    "--copy-seconds",
+    "180"
+  ],
+  "files": {},
+  "max_file_bytes": 50331648,
+  "max_files": 10240,
+  "max_metadata_bytes": 16777216,
+  "max_paths": 40960,
+  "max_total_bytes": 268435456,
+  "trees": {
+    "attempt": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-01",
+    "controller": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/live-rwlock-receipts-01"
+  }
+}

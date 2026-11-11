@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/input/tests/kernel/rwlock/run_rwlock_runtime_fixture.py", line 8, in <module>
+    raise SystemExit(main(family="rwlock"))
+                     ~~~~^^^^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/input/tests/kernel/run_runtime_fixture.py", line 930, in main
+    scene_case(3, 0)
+    ~~~~~~~~~~^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/input/tests/kernel/run_runtime_fixture.py", line 801, in scene_case
+    proof = validate_spin_suffix(rows, root, final, tasks, image)
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/input/tests/kernel/run_runtime_fixture.py", line 729, in validate_spin_suffix
+    raise AssertionError("native spin suffix lacks the original task's synchronous source unlock")
+AssertionError: native spin suffix lacks the original task's synchronous source unlock
