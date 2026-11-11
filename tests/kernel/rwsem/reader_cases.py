@@ -88,6 +88,8 @@ class ReaderCases:
             raise AssertionError("reader effects/context or physical cleanup differ")
         if self.atomic:
             self.check_atomic(values, workers)
+        elif self.family == "rwsem" and int(values["q_invalid"]):
+            raise AssertionError("a physical query returned an int outside exact 0/1")
 
     def native_scene(self, mode):
         begin = len(self.observations())
@@ -150,6 +152,10 @@ class ReaderCases:
                 raise AssertionError("local writer was retained through its logical read tail")
         proof = {"name": ("concurrent-readers", "local-real-downgrade", "writer-first-readers")[mode],
                  "overlap_status": overlap_raw, "final_status": raw, "credits": credits}
+        if self.family == "rwsem" and mode == 1:
+            proof["native_queries"] = self.query_counts(final, {4: (1, 0)}, 0)
+            if any(self.has(row, "QUERY_RESULT") or self.has(row, "JIT_ENTER") for row in rows):
+                raise AssertionError("the native real-downgrade scene unexpectedly entered generated query code")
         self.proofs.append(proof)
 
     def native(self):
@@ -418,8 +424,124 @@ class ReaderCases:
             if outer is None or selected is None or not outer["acquire"]["index"] < selected["index"] < outer["release"]["index"]:
                 raise AssertionError("nested writer did not retain the outer read credit")
             proof.update(outer_read=outer, nested_writer=selected)
+        if self.family == "rwsem" and mode in (6, 9):
+            proof["queries"] = self.query_scene(proof, rows, final)
         self.proofs.append(proof)
         return proof
+
+    def query_counts(self, final, expected, role):
+        if int(final["q_role"]) != role or int(final["q_invalid"]):
+            raise AssertionError("query counters lack the exact original worker or contain non-Boolean ints")
+        result = {}
+        for point in range(5):
+            prefix = f"q{point}_"
+            values = {name: int(final[prefix + name]) for name in
+                      ("visits", "locked", "write", "invalid", "last_locked", "last_write")}
+            visits = int(point in expected)
+            locked, write = expected.get(point, (0, 0))
+            if (values["visits"] != visits or values["invalid"] or values["locked"] != visits * locked
+                    or values["write"] != visits * write or
+                    (visits and (values["last_locked"], values["last_write"]) != (locked, write))):
+                raise AssertionError(f"query point {point} repeated, disappeared or returned the wrong physical predicate")
+            result[point] = values
+        return result
+
+    def query_scene(self, proof, rows, final):
+        image, state, origin = proof["fixed_image"], proof["state"], proof["roles"][4]
+        object_a, object_b = int(final["object_a"], 16), int(final["object_b"], 16)
+        unused = int(final["q_unlocked_object"], 16)
+        if not unused or unused in (object_a, object_b):
+            raise AssertionError("the unused B1 query object is not distinct")
+        expected = {2: (1, 0)} if proof["mode"] == 6 else {0: (0, 0), 1: (1, 1), 3: (1, 1)}
+        counters = self.query_counts(final, expected, 4)
+        targets = {16: int(final["q_locked_target"], 16), 17: int(final["q_write_target"], 16)}
+        if not all(targets.values()) or targets[16] == targets[17]:
+            raise AssertionError("two distinct actual typed query targets are required")
+        queries = [row for row in rows if self.has(row, "QUERY_RESULT") and row["state"] == state]
+        if len(queries) != 2 * len(expected):
+            raise AssertionError("fixed-image query results are missing or repeated")
+        by_site = {call["site"]: call for call in self.calls if call.get("operation") == "query"}
+        observations = []
+        forbidden = ("GRANT", "ENQUEUE", "READ_ACQUIRE", "READ_RELEASE", "WRITE_DOWNGRADE_REAL",
+                     "WRITE_DOWNGRADE_RETAINED")
+        control = ("JIT_EXIT", "JIT_OPERATION", "QUERY_RESULT", "FORWARD", "EPISODE_DONE")
+        for offset, (point, values) in enumerate(expected.items()):
+            obj = object_b if point == 2 else unused if point == 0 else object_a
+            for position, operation_kind in enumerate((16, 17)):
+                row = queries[2 * offset + position]
+                call = by_site.get(row["ip"])
+                if (call is None or call["indirect"] or not call["raw_hex"] or
+                        call["target"] != targets[operation_kind] or row["related"] != operation_kind or
+                        row["object"] != obj or row["result"] != values[position] or row["phase"] != 5 or
+                        row["cursor"] != call["site"] + call["length"] or row["image"] != image or
+                        row["origin"] != origin or row["task"] == origin):
+                    raise AssertionError("query result does not match its actual typed CALL/result/foreign executor")
+                same = lambda item: all(item[name] == row[name] for name in
+                                        ("state", "node", "acquisition", "origin"))
+                reserves = [item for item in rows if item["index"] < row["index"] and
+                            self.has(item, "SLOT_RESERVE") and same(item)]
+                if not reserves:
+                    raise AssertionError("query lost its exact request reservation")
+                reserve = reserves[-1]
+                end = next((item["index"] for item in rows if item["index"] > reserve["index"] and
+                            (self.has(item, "SLOT_RESERVE") or self.has(item, "SLOT_FREE")) and
+                            item["owner"] == reserve["owner"] and item["related"] == reserve["related"]),
+                           float("inf"))
+                if not reserve["parent"] or not reserve["owner"] or not reserve["related"] or row["index"] >= end:
+                    raise AssertionError("query crossed a pool slot/claim incarnation")
+                scope = [item for item in rows if reserve["index"] < item["index"] < end and same(item)]
+                before = [item for item in scope if item["index"] < row["index"]]
+                prepared = [item for item in before if self.has(item, "FRAME_PREPARE")]
+                entered = [item for item in before if self.has(item, "JIT_ENTER")]
+                if len(prepared) != 1 or not entered:
+                    raise AssertionError("query has no unique frame and current generated entry")
+                frame, entered = prepared[0], entered[-1]
+                if (frame["image"] != image or frame["parent"] != row["parent"] or
+                        entered["image"] != image or entered["task"] != row["task"] or not entered["related"]):
+                    raise AssertionError("query frame/current image/binding differs")
+                active = [item for item in before if item["index"] > entered["index"] and
+                          any(self.has(item, name) for name in control)]
+                if len(active) != 2 or not self.has(active[0], "JIT_EXIT") or not self.has(active[1], "JIT_OPERATION"):
+                    raise AssertionError("query lacks its immediate source exit and prepared operation")
+                exited, operation = active
+                if (exited["result"] != 1 or exited["flags"] != 4 or exited["phase"] != 1 or
+                        exited["ip"] != call["site"] or exited["cursor"] != call["site"] or
+                        exited["related"] != call["target"] or operation["result"] != operation_kind or
+                        operation["phase"] != 2 or operation["ip"] != call["site"] or
+                        operation["cursor"] != call["target"] or operation["object"] != obj or operation["related"] or
+                        any(item["task"] != row["task"] or item["image"] != image for item in active)):
+                    raise AssertionError("query did not preserve the exact pre-CALL and entered-target phases")
+                if any(item["state"] == state and exited["index"] < item["index"] < row["index"] and
+                       any(self.has(item, name) for name in forbidden) for item in rows):
+                    raise AssertionError("a query created or changed a source grant, queue or credit")
+                resumed = next((item for item in scope if item["index"] > row["index"] and
+                                self.has(item, "JIT_ENTER")), None)
+                if (resumed is None or resumed["task"] != row["task"] or resumed["image"] != image or
+                        resumed["related"] != entered["related"] or resumed["cursor"] != row["cursor"]):
+                    raise AssertionError("query did not reenter at its exact current post-CALL continuation")
+                if point == 2:
+                    credit = proof["shared"]
+                    support = credit["acquire"]
+                    if (credit["reserve"]["node"] != row["node"] or support["acquisition"] != row["acquisition"] or
+                            not support["index"] < row["index"] < credit["release"]["index"]):
+                        raise AssertionError("shared-B query escaped its actual exact READ credit")
+                else:
+                    support = proof["writer_grant"]
+                    if (support["node"] != row["node"] or support["acquisition"] != row["acquisition"] or
+                            support["owner_task"] != row["task"] or support["index"] >= row["index"]):
+                        raise AssertionError("writer query escaped its exact current physical owner")
+                    retained = proof["retained"]
+                    if point in (0, 1) and row["index"] >= retained["index"]:
+                        raise AssertionError("write/unlocked query ran after logical downgrade")
+                    if point == 3 and not retained["index"] < row["index"] < proof["physical"]["index"]:
+                        raise AssertionError("retained-read query lost its physical writer")
+                observations.append({"point": point, "reserve": reserve, "frame": frame,
+                                     "enter": entered, "exit": exited, "operation": operation,
+                                     "query": row, "resumed": resumed, "support": support, "call": call})
+        if proof["mode"] == 9 and any(item["object"] == unused and
+                any(self.has(item, name) for name in forbidden) for item in rows):
+            raise AssertionError("the other B1 object was physically used during the controlled scene")
+        return {"counters": counters, "observations": observations, "unused_object": unused}
 
     def record_miss(self, proof, rows, state, target):
         exited = next((row for row in rows if self.has(row, "JIT_EXIT") and row["state"] == state

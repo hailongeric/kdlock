@@ -17,6 +17,30 @@ MODULE_PARM_DESC(coordination_spins, "Explicit finite source-reader coordination
 #endif
 
 
+#ifdef KD_FIXTURE_RWSEM
+/* Test points name physical states, not source operations or helper models. */
+enum fixture_query_point {
+	QUERY_UNUSED_B, QUERY_WRITE_A, QUERY_SHARED_B, QUERY_RETAINED_A, QUERY_REAL_READ_A,
+};
+
+static __always_inline void fixture_query_point(struct fixture_worker *worker,
+		unsigned int point, struct kd_rwsem *lock)
+{
+	int locked = KD_SOURCE_CALL_INT(lock, struct kd_rwsem, kd_linux_rwsem_is_locked_entry_asm);
+	int write = KD_SOURCE_CALL_INT(lock, struct kd_rwsem, kd_linux_rwsem_is_write_locked_entry_asm);
+
+	/* Keep the actual int before Boolean comparisons. A damaged result must
+	 * remain visible instead of becoming true through an early bool cast.
+	 */
+	worker->query_last_locked[point] = locked;
+	worker->query_last_write[point] = write;
+	worker->query_invalid[point] += (locked != 0 && locked != 1) + (write != 0 && write != 1);
+	worker->query_locked_true[point] += locked == 1;
+	worker->query_write_true[point] += write == 1;
+	worker->query_visits[point]++;
+}
+#endif
+
 static void notrace rw_native_context(struct fixture_worker *worker, unsigned int held)
 {
 #ifdef KD_FIXTURE_ATOMIC
@@ -66,6 +90,9 @@ static __always_inline void fixture_rw_source(struct fixture_worker *worker)
 		READ_ONCE(step_entry)(worker);
 		worker->rw_read_attempts++;
 		fixture_read_acquire(&lock_b[index]);
+#ifdef KD_FIXTURE_RWSEM
+		fixture_query_point(worker, QUERY_SHARED_B, &lock_b[index]);
+#endif
 		worker->rw_effects++;
 		READ_ONCE(step_entry)(worker);
 		fixture_read_release(&lock_b[index]);
@@ -97,6 +124,13 @@ static __always_inline void fixture_rw_source(struct fixture_worker *worker)
 	} else {
 		fixture_lock_acquire(&lock_a[index]);
 		WRITE_ONCE(protected_a[index], READ_ONCE(protected_a[index]) + 1);
+		if (worker->mode == RW_DOWNGRADE) {
+			/* Controlled scene actors use only A0/B0. B1 stays physically
+			 * unused, independently of C_B's own native B0 acquisition.
+			 */
+			fixture_query_point(worker, QUERY_UNUSED_B, &lock_b[1]);
+			fixture_query_point(worker, QUERY_WRITE_A, &lock_a[index]);
+		}
 		READ_ONCE(step_entry)(worker);
 		if (worker->mode == RW_NESTED_DOWNGRADE) {
 			fixture_lock_acquire(&lock_b[index]);
@@ -106,6 +140,8 @@ static __always_inline void fixture_rw_source(struct fixture_worker *worker)
 		} else {
 			fixture_downgrade(&lock_a[index]);
 		}
+		if (worker->mode == RW_DOWNGRADE)
+			fixture_query_point(worker, QUERY_RETAINED_A, &lock_a[index]);
 		worker->rw_effects++;
 		WRITE_ONCE(rw_downgraded, true);
 		if (worker->mode == RW_DOWNGRADE_MISS)
@@ -171,6 +207,7 @@ static void notrace fixture_rw_native_scene(struct fixture_worker *worker)
 			rw_wait_flag(worker, &rw_convert);
 			WRITE_ONCE(rw_writer, 0);
 			fixture_downgrade(&lock_a[0]);
+			fixture_query_point(worker, QUERY_REAL_READ_A, &lock_a[0]);
 			WRITE_ONCE(rw_inside[role], true);
 			smp_store_release(&rw_stage[role], 2);
 			rw_wait_flag(worker, &rw_release[role]);

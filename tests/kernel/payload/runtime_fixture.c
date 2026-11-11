@@ -53,6 +53,7 @@ MODULE_PARM_DESC(spin_cpus, "Distinct online CPUs for the five atomic roles");
 #endif
 #if defined(KD_FIXTURE_RWSEM)
 #include "include/kd_rwsem_api.h"
+#include "include/kd_linux_rwsem_query.h"
 typedef struct kd_rwsem fixture_lock_t;
 #define fixture_lock_init kd_rwsem_init
 #define fixture_lock_acquire kd_rwsem_down_write
@@ -69,6 +70,8 @@ static const struct kd_jit_runtime_boundary reader_boundaries[] = {
  { (unsigned long)kd_rwsem_down_write_entry_asm, KD_JIT_RUNTIME_LOCK },
  { (unsigned long)kd_rwsem_up_write_entry_asm, KD_JIT_RUNTIME_UNLOCK },
  { (unsigned long)kd_rwsem_downgrade_write_entry_asm, KD_JIT_RUNTIME_MODE_CHANGE },
+ { (unsigned long)kd_linux_rwsem_is_locked_entry_asm, KD_JIT_RUNTIME_QUERY },
+ { (unsigned long)kd_linux_rwsem_is_write_locked_entry_asm, KD_JIT_RUNTIME_QUERY },
 };
 static struct kd_mutex *fixture_queue(fixture_lock_t *lock) { return &lock->core.queue; }
 #elif defined(KD_FIXTURE_RWLOCK)
@@ -134,6 +137,9 @@ static struct kd_mutex *fixture_queue(fixture_lock_t *lock)
 #define FIXTURE_AUXILIARY_BYTES (128UL * 1024)
 #define FIXTURE_CONTROL_BYTES (32UL * 1024)
 #define FIXTURE_HOLD_ITERATIONS 65536U
+#ifdef KD_FIXTURE_RWSEM
+#define FIXTURE_QUERY_POINTS 5U
+#endif
 
 static unsigned long gs_offset;
 static bool gs_verified;
@@ -197,6 +203,14 @@ struct fixture_worker {
 #ifdef KD_FIXTURE_READERS
 	unsigned long rw_effects, rw_post_effects, rw_native_checks, rw_errors, rw_read_attempts;
 	bool rw_scene;
+#endif
+#ifdef KD_FIXTURE_RWSEM
+	unsigned long query_visits[FIXTURE_QUERY_POINTS];
+	unsigned long query_locked_true[FIXTURE_QUERY_POINTS];
+	unsigned long query_write_true[FIXTURE_QUERY_POINTS];
+	unsigned long query_invalid[FIXTURE_QUERY_POINTS];
+	int query_last_locked[FIXTURE_QUERY_POINTS];
+	int query_last_write[FIXTURE_QUERY_POINTS];
 #endif
 	bool scene;
 	bool scene_ready;
@@ -680,6 +694,11 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 	char buffer[2048];
 #endif
 	unsigned int index, finished = 0;
+#ifdef KD_FIXTURE_RWSEM
+	unsigned int point, query_role;
+	unsigned long query_invalid = 0;
+	const struct fixture_worker *query_worker;
+#endif
 	unsigned long trace_flags, queued, held, child, events, overflow, ready = 0;
 	unsigned long completed = 0, calls = 0, errors = 0, core_errors = 0, origin_errors = 0;
 	unsigned long total_a = 0, total_b = 0;
@@ -718,6 +737,10 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 		rw_post += READ_ONCE(workers[index].rw_post_effects);
 		rw_native += READ_ONCE(workers[index].rw_native_checks);
 		rw_errors += READ_ONCE(workers[index].rw_errors);
+#endif
+#ifdef KD_FIXTURE_RWSEM
+		for (point = 0; point < FIXTURE_QUERY_POINTS; ++point)
+			query_invalid += READ_ONCE(workers[index].query_invalid[point]);
 #endif
 #ifdef KD_FIXTURE_ATOMIC
 		pin_checks += READ_ONCE(workers[index].pin_checks);
@@ -762,6 +785,27 @@ static ssize_t notrace control_read(struct file *file, char __user *output, size
 		READ_ONCE(rw_attempt[0]), READ_ONCE(rw_attempt[1]), READ_ONCE(rw_attempt[2]),
 		READ_ONCE(rw_probe_attempted), READ_ONCE(rw_downgraded),
 		READ_ONCE(workers[SCENE_W].rw_read_attempts), fixture_rw_native_checkpoint);
+#endif
+#ifdef KD_FIXTURE_RWSEM
+	/* W and C_A share source bytes but retain their own result counters. The
+	 * selected W's retained-read predicate must not mix with C_A's real read.
+	 */
+	query_role = scene_active ? SCENE_W : 0;
+	query_worker = &workers[query_role];
+	length += scnprintf(buffer + length, sizeof(buffer) - length,
+		"q_role=%u q_invalid=%lu q_unlocked_object=%lx q_locked_target=%lx q_write_target=%lx\n",
+		query_role, query_invalid, (unsigned long)fixture_queue(&lock_b[1]),
+		(unsigned long)kd_linux_rwsem_is_locked_entry_asm,
+		(unsigned long)kd_linux_rwsem_is_write_locked_entry_asm);
+	for (point = 0; point < FIXTURE_QUERY_POINTS; ++point)
+		length += scnprintf(buffer + length, sizeof(buffer) - length,
+			"q%u_visits=%lu q%u_locked=%lu q%u_write=%lu q%u_invalid=%lu q%u_last_locked=%d q%u_last_write=%d\n",
+			point, READ_ONCE(query_worker->query_visits[point]),
+			point, READ_ONCE(query_worker->query_locked_true[point]),
+			point, READ_ONCE(query_worker->query_write_true[point]),
+			point, READ_ONCE(query_worker->query_invalid[point]),
+			point, READ_ONCE(query_worker->query_last_locked[point]),
+			point, READ_ONCE(query_worker->query_last_write[point]));
 #endif
 	mutex_unlock(&control_mutex);
 	return simple_read_from_buffer(output, size, position, buffer, length);
