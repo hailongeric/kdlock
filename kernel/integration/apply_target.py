@@ -184,8 +184,8 @@ EDITS["kernel/locking/rwsem.c"] = (
      b"struct task_struct *rwsem_owner(struct rw_semaphore *sem)\n{\n"
      b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding))\n"
      b"\t\treturn kd_linux_rwsem_owner(READ_ONCE(sem->kd_binding));\n#endif\n"),
-    (b"bool is_rwsem_reader_owned(struct rw_semaphore *sem)\n{\n",
-     b"bool is_rwsem_reader_owned(struct rw_semaphore *sem)\n{\n"
+    (b"\nbool is_rwsem_reader_owned(struct rw_semaphore *sem)\n{\n",
+     b"\nbool is_rwsem_reader_owned(struct rw_semaphore *sem)\n{\n"
      b"#ifdef CONFIG_KDLOCK_REBUILD\n\tif (READ_ONCE(sem->kd_binding))\n"
      b"\t\treturn kd_linux_rwsem_is_reader_owned(READ_ONCE(sem->kd_binding));\n#endif\n"),
 ) + tuple(rwsem_dispatch(name, kind) for name, kind in (
