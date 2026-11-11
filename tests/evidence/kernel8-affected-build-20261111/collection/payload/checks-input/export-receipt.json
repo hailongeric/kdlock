@@ -1,0 +1,26 @@
+{
+  "boundary_test_cases": 8,
+  "changed_from_140aecc4": [
+    "tests/test_source_boundaries.py"
+  ],
+  "files": 140,
+  "format": "kdlock.regular-only-host-export.v1",
+  "git_status": "",
+  "kernel_package_files": 78,
+  "source_git_head": "4cc53e09594efbdf9388488bde4fc507717cb260",
+  "transfer_bytes": 1535363,
+  "transport": {
+    "source-sha256.json": {
+      "bytes": 19337,
+      "sha256": "f51979c2f8488407f329dbfc65dc351bc859322910fc5c6cfd71cbc1dc55f201"
+    },
+    "source-state.json": {
+      "bytes": 133,
+      "sha256": "3d7738192d2c47c27981b1721e98ae7bfee558ca66cc1f558c039f195381ce72"
+    },
+    "source.tar": {
+      "bytes": 1648640,
+      "sha256": "f7f701f9e62649e2fd8d99046b7f0c9b0d96d7904d5bd734c5d2f46412c5a25e"
+    }
+  }
+}

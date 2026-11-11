@@ -1,0 +1,4 @@
+# Metadata-only provider; all mapping bodies run through actual user syscalls.
+obj-m += kd_mmap_api_provider.o
+kd_mmap_api_provider-y := provider.o
+ccflags-y += -I$(src)/../../../..

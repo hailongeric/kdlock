@@ -1,0 +1,14 @@
+test_indirect_call_has_no_invented_target_or_call_site_cut (test_source_boundaries.SourceBoundaryTests.test_indirect_call_has_no_invented_target_or_call_site_cut) ... ok
+test_native_query_cannot_be_reclassified_as_a_typed_query_by_name (test_source_boundaries.SourceBoundaryTests.test_native_query_cannot_be_reclassified_as_a_typed_query_by_name) ... ok
+test_native_query_name_remains_special_before_actual_call (test_source_boundaries.SourceBoundaryTests.test_native_query_name_remains_special_before_actual_call) ... ok
+test_prefixed_native_call_stops_before_call_and_preserves_bytes (test_source_boundaries.SourceBoundaryTests.test_prefixed_native_call_stops_before_call_and_preserves_bytes) ... ok
+test_private_clobber_call_keeps_typed_operation (test_source_boundaries.SourceBoundaryTests.test_private_clobber_call_keeps_typed_operation) ... ok
+test_query_clobber_preserves_call_and_emits_query_without_lock_semantics (test_source_boundaries.SourceBoundaryTests.test_query_clobber_preserves_call_and_emits_query_without_lock_semantics) ... ok
+test_source_export_appended_query_kind_keeps_scalar_layout (test_source_boundaries.SourceBoundaryTests.test_source_export_appended_query_kind_keeps_scalar_layout) ... ok
+test_version_and_budget_refusal_preserve_original_input (test_source_boundaries.SourceBoundaryTests.test_version_and_budget_refusal_preserve_original_input) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.006s
+
+OK
+SOURCE_BOUNDARIES_COMPLETE 8

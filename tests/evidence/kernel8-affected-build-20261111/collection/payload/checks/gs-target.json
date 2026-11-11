@@ -1,0 +1,11 @@
+{
+  "current_task": "0xffffffff84425018",
+  "instruction_hex": "65488b056545f102",
+  "kernel_config": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/.config",
+  "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "site": "0xffffffff81510aab",
+  "system_map": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/System.map",
+  "system_map_sha256": "5f29d44f58e215bf1b056cfb60c4bcc31c43aadcc406d6fba633587dcafefc9b",
+  "vmlinux": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/vmlinux",
+  "vmlinux_sha256": "4441e45c27f9300a4cd19739c917458308581472604c3b75d8ffba9fec493be1"
+}

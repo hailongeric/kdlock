@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/transport/build.py",
+    "--config",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/transport/config.json",
+    "--config-sha",
+    "0b05f626d707f27243176e0a262bf79913cadc77b62147bc6f535ed777ce738f"
+  ],
+  "config_sha256": "0b05f626d707f27243176e0a262bf79913cadc77b62147bc6f535ed777ce738f",
+  "recovery_sha256": "d51b71b388a7a939f91ca553385b7edf4f55f4ceba5bd6eb194177bf8a019401"
+}

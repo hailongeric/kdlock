@@ -1,0 +1,35 @@
+test_indirect_call_has_no_invented_target_or_call_site_cut (test_source_boundaries.SourceBoundaryTests.test_indirect_call_has_no_invented_target_or_call_site_cut) ... ok
+test_native_query_cannot_be_reclassified_as_a_typed_query_by_name (test_source_boundaries.SourceBoundaryTests.test_native_query_cannot_be_reclassified_as_a_typed_query_by_name) ... ok
+test_native_query_name_remains_special_before_actual_call (test_source_boundaries.SourceBoundaryTests.test_native_query_name_remains_special_before_actual_call) ... ok
+test_prefixed_native_call_stops_before_call_and_preserves_bytes (test_source_boundaries.SourceBoundaryTests.test_prefixed_native_call_stops_before_call_and_preserves_bytes) ... ok
+test_private_clobber_call_keeps_typed_operation (test_source_boundaries.SourceBoundaryTests.test_private_clobber_call_keeps_typed_operation) ... ok
+test_query_clobber_preserves_call_and_emits_query_without_lock_semantics (test_source_boundaries.SourceBoundaryTests.test_query_clobber_preserves_call_and_emits_query_without_lock_semantics) ... ERROR
+test_source_export_appended_query_kind_keeps_scalar_layout (test_source_boundaries.SourceBoundaryTests.test_source_export_appended_query_kind_keeps_scalar_layout) ... ok
+test_version_and_budget_refusal_preserve_original_input (test_source_boundaries.SourceBoundaryTests.test_version_and_budget_refusal_preserve_original_input) ... ok
+
+======================================================================
+ERROR: test_query_clobber_preserves_call_and_emits_query_without_lock_semantics (test_source_boundaries.SourceBoundaryTests.test_query_clobber_preserves_call_and_emits_query_without_lock_semantics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/input/tests/test_source_boundaries.py", line 65, in test_query_clobber_preserves_call_and_emits_query_without_lock_semantics
+    disposition = adapt_runtime_exit(RuntimeExit(ExitKind.LOCK_OPERATION, 4, 0x1000, 0x3000,
+                                     ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                                0x1000, ExitPhase.TARGET_READY),
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 9, in __init__
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/input/disassem/feedback.py", line 138, in __post_init__
+    _word(value)
+    ~~~~~^^^^^^^
+  File "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/input/disassem/feedback.py", line 122, in _word
+    raise ValueError("runtime exit fields must be unsigned 64-bit integers")
+ValueError: runtime exit fields must be unsigned 64-bit integers
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.007s
+
+FAILED (errors=1)
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pathlib,sys,unittest; root=pathlib.Path(sys.argv[1]); loader=unittest.TestLoader(); suite=loader.discover(str(root/"tests"),pattern="test_source_boundaries.py"); assert suite.countTestCases()==8, (suite.countTestCases(),loader.errors); result=unittest.TextTestRunner(verbosity=2).run(suite); assert result.testsRun==8 and not result.skipped and result.wasSuccessful(); print("SOURCE_BOUNDARIES_COMPLETE 8")
+                                                                                                                                                                                                                                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
