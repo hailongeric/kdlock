@@ -109,7 +109,7 @@ def main():
     from disassem.learning import LearningCoordinator, LearningLimits, MergeDisposition
     from disassem.lowering import CodegenLimits, EntryMetadata
     from disassem.session import ChannelStatusError, FeedbackSession, FdTransport, ProducerCatalog, SessionConfig, SessionPhase, SourceExportSession
-    from disassem.wire import SourceExportLimits, WireLimits, token_word
+    from disassem.wire import SourceExportLimits, WireLimits, decode_source as decode_source_frame, token_word
     proof = json.loads(args.gs_proof_json.read_text())
     if (proof.get("verified_for_running_kernel") is not True or proof.get("kernel_release") != args.expected_release
             or proof.get("boot_id") != Path("/proc/sys/kernel/random/boot_id").read_text().strip()
@@ -412,20 +412,40 @@ def main():
         limits = WireLimits(bounds["frame_capacity"], bounds["wire_rows"], bounds["wire_version_bytes"],
                             bounds["wire_symbol_bytes"], bounds["wire_artifact_bytes"])
         transport = RecordedTransport.open(f"/dev/{NAME}", limits, bounds["recovery_bytes"])
-        exported = drive(SourceExportSession(transport, SourceExportLimits(
-            3 + bounds["dependency_page_limit"], bounds["entry_capacity"], bounds["total_source_byte_limit"])))
+        source_bounds = SourceExportLimits(
+            3 + bounds["dependency_page_limit"], bounds["entry_capacity"], bounds["total_source_byte_limit"])
+        exported = drive(SourceExportSession(transport, source_bounds))
         supplied = [region for region in exported.snapshot.regions if region.start == args.builtin_source_start
                     and len(region.data) == args.builtin_source_size]
         if len(supplied) != 1 or supplied[0].data != builtin:
             raise ValueError("actual built-in dependency differs from linked ELF bytes")
         durable(args.output / "source-export.bin", exported.raw_reply)
+        # The wire preserves provider declaration order, while SourceSnapshot
+        # sorts by address. Join exact first-three body rows before naming them;
+        # a low-address built-in dependency is not a fixture body.
+        source_frame = decode_source_frame(exported.raw_reply, source_bounds, limits)
+        body_rows = source_frame.regions[:3]
+        if len(body_rows) != 3 or len({start for start, data in body_rows}) != 3:
+            raise ValueError("source export lacks three unique declared body rows")
+        named_spans = {}
+        for (name, size_name), (start, data) in zip(
+                (("killable", "killable_size"), ("writer", "writer_size"), ("step", "step_size")), body_rows):
+            matches = [region for region in exported.snapshot.regions
+                       if region.start == start and region.data == data]
+            if len(data) != sizes[size_name] or len(matches) != 1:
+                raise ValueError("declared source body span differs from its exact symbol/export: " + name)
+            named_spans[name] = matches[0]
+        killable_span, writer_span = named_spans["killable"], named_spans["writer"]
+        results["source_spans"] = {name:{"provider_row": index, "start": region.start,
+            "length": len(region.data), "sha256": hashlib.sha256(region.data).hexdigest()}
+            for index, (name, region) in enumerate(named_spans.items())}
         snapshot, roots, calls, indirect = scan_operation_calls(exported, tools["objdump"], args.output, args.deadline)
         document(args.output / "source-metadata.json", {"version": snapshot.version,
                  "regions": [{"start": region.start, "length": len(region.data)} for region in snapshot.regions],
                  "calls": calls, "roots": roots, "near_indirect_call_sites": indirect,
                  "slot": exported.slot_identity, "old": exported.expected_old_image_identity,
-                 "builtin_sha256": hashlib.sha256(builtin).hexdigest(), "builtin_matches_elf": True})
-        killable_span = exported.snapshot.regions[0]
+                 "builtin_sha256": hashlib.sha256(builtin).hexdigest(), "builtin_matches_elf": True,
+                 "named_source_spans": results["source_spans"]})
         killable_returns = {call["site"] + call["length"] for call in calls
                             if killable_span.start <= call["site"] < killable_span.end
                             and call.get("operation") == "lock"}
@@ -517,7 +537,6 @@ def main():
             wg = success(W, begin, final)
             if final["roles"][W]["helper_returned"] != 1:
                 raise AssertionError("native completion helper ran more than once or did not return")
-            writer_span = exported.snapshot.regions[1]
             return_ip = final["roles"][W]["helper_return_ip"]
             actual_calls = [call for call in calls if writer_span.start <= call["site"] < writer_span.end
                             and call["site"] + call["length"] == return_ip]
