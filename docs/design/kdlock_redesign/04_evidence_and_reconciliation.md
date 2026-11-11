@@ -41,13 +41,32 @@ context and reached-frontier limits. The optional MM profile remains disabled
 by default and unvalidated. Kernel6's native MM and private JIT receipts retain
 their recorded earlier source scope.
 
-A subsequent unbuilt generic query source lane appends physical locked and
+The subsequent generic query core `0d42063e` appends physical locked and
 write-locked predicates as explicit typed operations. It preserves native C
 query frontiers, assertion behavior, existing identifiers/layouts, and every
-grant/queue/mode obligation. The fresh v3 installer keeps kernel7's v2 source
-and receipts separate. Source review and eight proposed boundary cases are not
-query runtime evidence. Meaningful MM protected completion and task/context
-limits remain distinct from any returned generated prefix.
+grant/queue/mode obligation. Its fresh v3 installer and kernel8 have separate
+[build](../../../tests/evidence/kernel8-build-20261111/README.md),
+[boot](../../../tests/evidence/kernel8-boot-20261111/README.md) and
+[native API/real syscall](../../../tests/evidence/kernel8-native-api-mm-20261111/README.md)
+receipts. The syscall checks retain `source_calls=false`; they supply no
+generated MM completion or typed query reentry result. The
+[eight boundary cases and linked GS checks](../../../tests/evidence/kernel8-affected-build-20261111/README.md)
+passed after the separately retained test-input correction. Kernel7's v2
+source and receipts remain distinct.
+
+Later MM metadata adds generic RCU/plain-spin SPECIAL entries and shared
+pre-CALL propagation. The
+[completion and boundary checker receipts](../../../tests/evidence/kernel8-host-completion-boundaries-20261111/README.md)
+record synthetic tests and syntax checks only. The
+[linked MM context review](../../../tests/evidence/kernel8-mm-context-review-20261111/README.md)
+identifies RCU entry before PTL acquisition, without observed generated reach.
+The [pinned TCLock comparison](../../../tests/evidence/kernel8-tclock-context-comparison-20261111/README.md)
+distinguishes native borrowed-stack execution from current KD immediate
+handback to actual W. CPU reservation, native-context service and an alternate
+continuation engine remain unselected and unimplemented. Safe handback before
+unsupported context effects remains in force. Meaningful protected MM
+completion and physical task/context obligations are not established by a
+returned prefix, same-mm placement or a stack switch.
 
 ## 1 Active authority and scope
 
