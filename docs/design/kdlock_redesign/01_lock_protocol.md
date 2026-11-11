@@ -584,8 +584,8 @@ before writer exclusion ends. Its later up_read releases that credit. It uses
 native hardware CALL/RET without importing an old canonical cursor. Ordinary
 inner shared-read release returns to the enclosing proxy instead of forcing
 terminal origin ownership. Rwlock has no downgrade. These selections establish
-source scope. Compilation has completed. Runtime evidence and native
-concurrency-equivalence remain pending for the retained-writer route.
+source scope. Compilation has completed. Runtime validation is pending, with no
+native concurrency-equivalence claim for the retained-writer route.
 [Historical downgrade evidence](04_evidence_and_reconciliation.md#27-newer-proxy-downgrade-and-flags-stack-evidence).
 
 Trylock failure and interrupted acquisition create no successful grant. Temporary queue/reservation claims still need cleanup. Signalable APIs must observe W's intended signals/results rather than silently substituting C's signals.
