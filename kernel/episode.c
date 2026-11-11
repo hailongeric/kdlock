@@ -1102,7 +1102,7 @@ int kd_episode_downgrade_native(struct kd_episode_resources *resources,
 	BUG_ON(result);
 	observe_frame(frame, KD_OBS_NATIVE_MODE, .object = (unsigned long)lock,
 		.related = (unsigned long)native_binding, .phase = frame->slot->call.grant.mode,
-		.result = frame->slot->call.grant.physical);
+		.result = operation, .flags = frame->slot->call.grant.physical);
 	result = pump();
 	BUG_ON(result);
 	result = kd_episode_collect(resources, native_binding);

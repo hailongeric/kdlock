@@ -14,6 +14,7 @@
  * JIT_EXIT: ip/source, cursor/current, related/target, phase/IO phase,
  * result/exit kind, flags/detail. JIT_OPERATION: related/operation request,
  * object/argument, result/operation kind, phase/lock recipe or unlock action.
+ * NATIVE_MODE: result/exact API kind, phase/logical mode, flags/physical mode.
  * CHILD_RETURN: related/child node, source_user/previous endpoint,
  * return_user/returned endpoint, result/raw outcome; CURRENT_JIT validates
  * the returned cursor. EPISODE_DONE is the original positive driver outcome,
