@@ -27,6 +27,15 @@ checks supplement that proof; they do not supply it. No automatic allocation,
 selection, global task registry or mmap-specific lock protocol is introduced.
 The actual Linux owner-query symbols also have GPL exports in the rebuilt
 configuration, so module callers observe the same generic dispatch.
+Every user of a selected object, including try and query callers, must remain
+in the selected IRQ-enabled ordinary-task lane for its entire bound lifetime.
+Objects with atomic, IRQ or NMI users or implicit perf observers are outside
+this binding contract. Thread-count and quiescence checks cannot establish that
+object-wide exclusion. Internal context errors describe a violated precondition;
+a nonzero negative value is not a supported boolean try failure or safe runtime
+refusal. Native Linux try/query interfaces have wider context behavior, which
+this lane does not claim. Unselected objects retain those native interfaces.
+
 Selected bindings currently refuse lockdep, DEBUG_LOCK_ALLOC and DEBUG_RWSEMS;
 these configurations have no supported bound-object lane.
 

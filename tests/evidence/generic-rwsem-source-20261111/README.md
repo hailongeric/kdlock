@@ -15,8 +15,9 @@ archive-loop insertion, unavailable per-gate JIT event attribution, and cleanup
 of an unexpected successful try on the original calling task. None of these
 reviews is a build, test, API acceptance or performance result.
 
-The [native compatibility fixture](../../kernel/rwsem_api/README.md) has eleven
-bounded scenes. The [real syscall fixture](../../kernel/mmap_api/README.md)
+At fixture source checkpoint `fdfb5127`, the [native compatibility fixture](../../kernel/rwsem_api/README.md) had eleven
+bounded scenes. Source commit `0d0b52c0` adds the twelfth scene for cancellation
+after taking an MCS turn while draining existing readers; it is also unrun. The [real syscall fixture](../../kernel/mmap_api/README.md)
 invokes mmap/munmap through actual userspace syscalls and uses its control ioctl
 only for binding/query/lifetime glue. Initial real-MM binding explicitly uses
 `source_calls=false`; no dummy source provider or source packet is created.

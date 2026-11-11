@@ -76,8 +76,11 @@ The caller starts this dedicated process with one thread before pthread creation
 and guarantees that all mm-lock traffic and external users are quiescent across
 selection changes. It excludes other mm users for this scoped check. The
 `--quiescent-mm` option explicitly supplies that contract. A thread count, an
-unlocked count or an idle snapshot cannot establish it. The provider requires
-privileged control and an exclusive open file. Native capacity is the explicit
+unlocked count or an idle snapshot cannot establish it. Every selected-object caller, including implicit perf, IRQ or NMI readers and
+queries, must satisfy the ordinary IRQ-enabled task-context lane throughout the
+selected interval. Such asynchronous users are excluded from this dedicated
+workload contract; a single-thread/current-mm check does not prove their absence.
+The provider requires privileged control and an exclusive open file. Native capacity is the explicit
 finite count covering held credits, waiters and canceled queue/control users,
 not just the thread count. It selects no default or exhaustion recovery.
 
