@@ -105,6 +105,7 @@ def main():
     from run_runtime_fixture import command, digest, executable_elf_bytes, scan_operation_calls, symbol_size
     from disassem.archive import ArchiveConfig, ShutdownSession
     from disassem.compiler import DiscoveryLimits
+    from disassem.feedback import DispositionKind, TargetClassification
     from disassem.image_builder import BuildLimits, GNUImageBuilder, Toolchain
     from disassem.learning import LearningCoordinator, LearningLimits, MergeDisposition
     from disassem.lowering import CodegenLimits, EntryMetadata
@@ -495,6 +496,62 @@ def main():
         producers = ProducerCatalog(bounds["image_capacity"], ())
         old = exported.expected_old_image_identity
         cycle_number = 0
+        native_frontiers = []
+        frontier_keys = {}
+        previous_claim_cut = 0
+
+        def exact_key(key):
+            return {"epoch": key.epoch_identity.hex(), "record": key.record_identity.hex(),
+                    "incarnation": key.incarnation}
+
+        def frontier_signature(fact):
+            value = fact.exit
+            return (fact.epoch, fact.producer_identity, fact.image_identity, value.kind, value.detail,
+                    value.source_ip, value.target, value.cursor, value.phase,
+                    fact.classification, fact.entry_result)
+
+        def reconcile_frontiers(claim, prior_keys, claim_cut):
+            nonlocal previous_claim_cut
+            # A fresh reservation can describe an unchanged intentional exit.
+            # Match only completed invocations since the preceding claim cut.
+            expected = [item for item in native_frontiers
+                        if previous_claim_cut <= item["exit"]["index"] < claim_cut]
+            remaining = list(expected)
+            states = {state.recorded.fact.key: state for state in coordinator.facts()}
+            for fact in claim.records:
+                if fact.key in prior_keys:
+                    continue
+                state = states[fact.key]
+                if state.recorded.feedback.observation is not None:
+                    continue
+                value = fact.exit
+                metadata = producers.resolve(token_word(fact.producer_identity),
+                                             token_word(fact.image_identity), token_word(fact.epoch.identity))
+                matches = [item for item in remaining
+                           if (token_word(fact.image_identity), value.kind, value.detail, value.source_ip,
+                               value.target, value.cursor, value.phase)
+                           == (item["exit"]["image"], 3, 10, item["call"]["site"],
+                               item["forward"]["related"], item["call"]["site"], 1)]
+                if (len(matches) != 1 or fact.epoch != exported.epoch or claim.epoch != exported.epoch
+                        or metadata.epoch != exported.epoch or metadata.image is not fact.producer
+                        or metadata.producer_identity != fact.producer_identity
+                        or metadata.image_identity != fact.image_identity
+                        or fact.producer.source_version.encode("utf-8") != exported.epoch.version
+                        or fact.classification is not TargetClassification.UNCLASSIFIED or fact.entry_result
+                        or state.recorded.feedback.kind is not DispositionKind.UNCLASSIFIED_TARGET
+                        or state.recorded.merge is not MergeDisposition.NON_OBSERVATION
+                        or state.acknowledgment_identities or fact.key in frontier_keys):
+                    raise AssertionError("pending nonobservation lacks one exact native-frontier invocation")
+                item = matches[0]
+                remaining.remove(item)
+                frontier_keys[fact.key] = item
+                item["fact"] = {**exact_key(fact.key), "producer": fact.producer_identity.hex(),
+                                "image": fact.image_identity.hex(), "claim": claim.identity.hex(),
+                                "claim_cycle": cycle_number, "claim_event_cut": claim_cut}
+            if remaining:
+                raise AssertionError("observed native frontiers lack their distinct copied reservations")
+            previous_claim_cut = claim_cut
+            results["native_frontiers"] = native_frontiers
 
         def cycle(force=False, claim_only=False):
             nonlocal old, cycle_number
@@ -515,6 +572,8 @@ def main():
                               for call in calls if call.get("operation") in
                               ("lock", "unlock", "mode_change", "query")})), gs),
                 CodegenLimits(bounds["lowered_sites"], bounds["lowered_text_bytes"], bounds["runtime_block_visits"])), builder)
+            prior_keys = {state.recorded.fact.key for state in coordinator.facts()}
+            claim_cut = len(observe())
             session.advance(); session.advance()
             if session.phase is not SessionPhase.BUILD_START:
                 raise AssertionError("claim did not reach pre-build state")
@@ -535,6 +594,7 @@ def main():
             results.setdefault("cycles", []).append({"number": cycle_number, "image": old,
                 "published": result.publication is not None,
                 "acknowledged": len(result.acknowledgment.keys) if result.acknowledgment else 0})
+            reconcile_frontiers(result.claim, prior_keys, claim_cut)
             return result
 
         def proxy_scene(kill_candidate, name):
@@ -648,6 +708,47 @@ def main():
                 value["d_grant"] = dg
             else:
                 value["c_grant"] = success(C, begin, final)
+            if forwards:
+                if len(forwards) != 1:
+                    raise AssertionError("native completion has multiple source handbacks")
+                forward, call = forwards[0], actual_calls[0]
+                identity = dict(node=wg["node"], state=wg["state"], acquisition=wg["acquisition"], origin=wt)
+                reserves = matching("SLOT_RESERVE", begin, **identity, task=wt, phase=1)
+                frames = matching("FRAME_PREPARE", begin, **identity, task=wt, parent=0, phase=3, image=old)
+                enters = matching("JIT_ENTER", begin, **identity, task=ct, parent=0, image=old)
+                exits = matching("JIT_EXIT", begin, **identity, task=ct, parent=0, image=old,
+                                 result=3, flags=10, phase=1, ip=call["site"], cursor=call["site"],
+                                 related=final["native_helper"])
+                retirement = [item for item in results["retirement"] if item["grant"] == wg]
+                source = next((region for region in snapshot.regions
+                               if region.start <= call["site"] and call["site"] + call["length"] <= region.end), None)
+                if (any(len(found) != 1 for found in (reserves, frames, enters, exits, retirement))
+                        or source is None or not call["indirect"] or call.get("operation") is not None
+                        or bytes.fromhex(call["raw_hex"]) != source.data[
+                            call["site"] - source.start:call["site"] - source.start + call["length"]]
+                        or any(region.start <= final["native_helper"] < region.end for region in snapshot.regions)
+                        or any(forward[key] != number for key, number in identity.items())
+                        or forward["task"] != ct or forward["parent"] or forward["result"]
+                        or forward["phase"] != 1 or forward["ip"] != call["site"]
+                        or forward["cursor"] != call["site"] or forward["flags"] != 3):
+                    raise AssertionError("native frontier differs from its exact original CALL/root/image")
+                reserve, frame, enter, exited = reserves[0], frames[0], enters[0], exits[0]
+                retired = retirement[0]
+                freed = retired["slot_free"]
+                reused = [row for row in matching("SLOT_RESERVE", reserve["index"] + 1,
+                                                owner=reserve["owner"], related=reserve["related"])
+                          if row["index"] <= freed["index"]]
+                if (reused or freed["related"] != reserve["related"] or freed["owner"] != reserve["owner"]
+                        or not reserve["index"] < frame["index"] < wg["index"] < enter["index"]
+                        < exited["index"] < forward["index"] < retired["physical_end"]["index"]
+                        < retired["source_drop"]["index"] < retired["release_retire"]["index"]
+                        < retired["node_ready"]["index"] < freed["index"]):
+                    raise AssertionError("native frontier crosses a root reservation or its retirement")
+                frontier = {"name": name, "start": begin, "end": len(observe()), "reserve": reserve,
+                            "frame": frame, "grant": wg, "enter": enter, "exit": exited,
+                            "forward": forward, "call": call, "slot_free": freed}
+                native_frontiers.append(frontier)
+                value["native_frontier"] = frontier
             return save_case(name, begin, final, **value)
 
         cycle(force=True)
@@ -663,7 +764,13 @@ def main():
             raise AssertionError("finite learning passes did not establish ordinary-edge ACK")
         fixed = old
         baseline = set(coordinator.pending_keys())
+        baseline_facts = {state.recorded.fact.key: state.recorded.fact for state in coordinator.facts()
+                          if state.recorded.fact.key in baseline}
+        if not baseline or baseline != set(frontier_keys):
+            raise AssertionError("fixed-image baseline contains an unexpected pending reservation")
+        fixed_snapshot = coordinator.snapshot
         results["fixed_image"] = fixed
+        results["fixed_pending_baseline"] = [exact_key(key) for key in baseline_facts]
 
         begin = len(observe())
         spawn(R, 3); ioctl(GO, R)
@@ -690,16 +797,37 @@ def main():
                   actual_exit=exited, **remote_proof)
         proxy_scene(True, "candidate-cancel-drains-current-w")
         final_claim = cycle(claim_only=True)
-        if old != fixed or final_claim.publication is not None or set(coordinator.pending_keys()) != baseline:
-            raise AssertionError("fixed-image checks added an unlearned fact or replaced the image")
-        results["fixed_claim_no_new_facts"] = True
-        results["pending_before_shutdown"] = len(coordinator.pending_keys())
+        pending = set(coordinator.pending_keys())
+        claimed = {fact.key for fact in final_claim.claim.records}
+        states = {state.recorded.fact.key: state for state in coordinator.facts()}
+        if (old != fixed or final_claim.publication is not None or coordinator.snapshot != fixed_snapshot
+                or not baseline <= pending or pending != claimed or pending != set(frontier_keys)
+                or any(states[key].recorded.feedback.observation is not None
+                       or states[key].acknowledgment_identities for key in pending)
+                or any(not any(fact.producer is previous.producer
+                               and frontier_signature(fact) == frontier_signature(previous)
+                               for previous in baseline_facts.values())
+                       for key in pending - baseline for fact in (states[key].recorded.fact,))):
+            raise AssertionError("fixed-image claim changed ordinary learning or contains an unexpected frontier")
+        results["fixed_claim_no_new_facts"] = pending == baseline
+        results["fixed_claim_no_new_ordinary_learning"] = True
+        results["fixed_claim_only_expected_native_frontiers"] = True
+        results["fixed_image_unchanged"] = True
+        results["fixed_snapshot_unchanged"] = True
+        results["fixed_claim_published"] = final_claim.publication is not None
+        results["fixed_pending_keys"] = [exact_key(key) for key in frontier_keys]
+        results["pending_before_shutdown"] = len(pending)
         archive_config = ArchiveConfig(
             0x2000, bounds["claim_capacity"], str(args.output / "shutdown-archive.json"), bounds["archive_bytes"], 0o600,
             (("scope", "private-managed-killable-mechanism"), ("module_sha256", results["module_sha256"])))
         archive = drive(ShutdownSession(transport, coordinator, producers, archive_config))
+        if ({fact.key for fact in archive.claim.records} != pending or set(archive.settlement.keys) != pending
+                or any(state.acknowledgment_identities for state in coordinator.facts()
+                       if state.recorded.fact.key in pending)):
+            raise AssertionError("exact pending native frontiers lack archive claim and settlement coverage")
         results["archive_sha256"] = archive.archive.identity.hex()
         results["settled_keys"] = len(archive.settlement.keys)
+        results["native_frontier_archive_keys"] = [exact_key(key) for key in frontier_keys]
         results["facts"] = [{"record": state.recorded.fact.record_identity.hex(), "incarnation": state.recorded.fact.incarnation,
             "source_ip": state.recorded.fact.exit.source_ip, "target": state.recorded.fact.exit.target,
             "phase": state.recorded.fact.exit.phase, "acknowledged": bool(state.acknowledgment_identities)} for state in coordinator.facts()]
