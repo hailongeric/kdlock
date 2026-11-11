@@ -1,0 +1,342 @@
+{
+  "actual_kbuild_target": "kd_mmap_api_provider.ko",
+  "artifact_checks": [
+    "Fresh canonical output outside source/build; input unpack uses only exact143 regular source members",
+    "Require exactly one local *.ko named kd_mmap_api_provider.ko",
+    "Retain full V=1 build/sign/modinfo logs and actual diagnostics",
+    "Record distinct unsigned and signed bytes/sha256; sign only exclusive copied file",
+    "Require exact current release/vermagic and matching existing signer/key/hash algorithm, empty depends",
+    "Any observer/command/hash failure preserves child/partial output and returns incomplete; no automatic make retry or kill"
+  ],
+  "bounds": {
+    "check_seconds": 60,
+    "client_seconds": 60,
+    "jobs": 8,
+    "log_bytes": 536870912,
+    "module_seconds": 180,
+    "output_floor_bytes": 4294967296,
+    "root_floor_bytes": 1073741824,
+    "source_bytes": 2097152,
+    "total_seconds": 900
+  },
+  "build_id": "a33dd4d11d0f0c6649107507e685b6e86e716c1a",
+  "candidate_idle_policy": {
+    "boot_id": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+    "expected_taint": 4096,
+    "modules": [
+      "nls_iso8859_1"
+    ],
+    "note": "Use reviewed candidate idle function plus managed-K/RWS/mutex devices/actors; old main idle requires normal54 and must not be called.",
+    "release": "7.0.0-38-kdrebuild8",
+    "require_no_control_devices_no_build_test_or_fixture_actors_no_D_tasks": true
+  },
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build",
+        "M=/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/input/tests/kernel/mmap_api/payload",
+        "MO=/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/mmap-build",
+        "KERNELRELEASE=7.0.0-38-kdrebuild8",
+        "-j8",
+        "V=1",
+        "modules"
+      ],
+      "label": "mmap-build",
+      "seconds": 180
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/scripts/sign-file",
+        "sha512",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/certs/signing_key.pem",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/certs/signing_key.x509",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/signed/kd_mmap_api_provider.ko"
+      ],
+      "label": "mmap-sign",
+      "seconds": 60
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/signed/kd_mmap_api_provider.ko"
+      ],
+      "label": "mmap-vermagic",
+      "seconds": 60
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/signed/kd_mmap_api_provider.ko"
+      ],
+      "label": "mmap-signer",
+      "seconds": 60
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/signed/kd_mmap_api_provider.ko"
+      ],
+      "label": "mmap-sig_key",
+      "seconds": 60
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/signed/kd_mmap_api_provider.ko"
+      ],
+      "label": "mmap-sig_hashalgo",
+      "seconds": 60
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/signed/kd_mmap_api_provider.ko"
+      ],
+      "label": "mmap-depends",
+      "seconds": 60
+    }
+  ],
+  "copy_between_commands": {
+    "after": "mmap-build",
+    "before": "mmap-sign",
+    "destination": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/signed/kd_mmap_api_provider.ko",
+    "exclusive_create": true,
+    "fsync": true,
+    "require_unsigned_hash_unchanged_after_sign": true,
+    "source": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/mmap-build/kd_mmap_api_provider.ko"
+  },
+  "environment_policy": {
+    "KBUILD_EXTRA_SYMBOLS": "absent",
+    "KCFLAGS": "absent",
+    "LC_ALL": "C",
+    "PATH": "/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "no_additional_compiler_assembler_linker_or_modpost_overrides": true,
+    "note": "Reject existing ENV_KEYS and CFLAGS/AFLAGS/KBUILD_/INSTALL_MOD_ prefixes plus the same Python/compiler path overrides; preserve modinfo invocation alias.",
+    "use_existing_helper_environment_function": true
+  },
+  "expected_modinfo": {
+    "depends": "",
+    "sig_hashalgo": "sha512",
+    "sig_key": "01:B2:96:BB:D3:61:02:82:99:E7:55:3C:53:F4:0A:B8:2A:5D:C4:85",
+    "signer": "Build time autogenerated kernel key",
+    "vermagic": "7.0.0-38-kdrebuild8 SMP preempt mod_unload modversions"
+  },
+  "final_identity_sha256": "febcb85c90aa7e406a0fcb47aa080252e6f7ba9e3625a266e4e540de01d781db",
+  "fresh_recovery_policy": {
+    "exe": "/usr/bin/qemu-system-x86_64",
+    "host_floor_bytes": 8589934592,
+    "hostname": "Super-Server",
+    "image_paths": [
+      "/home/eric/vm/qemu-disks/ubuntu22.04.img",
+      "/home/eric/vm/qemu-disks/sda.qcow2",
+      "/home/eric/vm/qemu-disks/kdlock-builds2-20261031/builds.qcow2"
+    ],
+    "maximum_age_seconds": 900,
+    "pid": 257489,
+    "tag": "kdlock-builddisk-clean-20261031"
+  },
+  "host_source": {
+    "files": 143,
+    "source_git_head": "de76da8aa2031d73f185f5864071f316c1150c08",
+    "sourcehost_root": "/tmp/kdlock-kernel8-fixture-source-de76da8a-01",
+    "transfer_bytes": 1594299,
+    "transport": {
+      "source-sha256.json": {
+        "bytes": 19793,
+        "sha256": "71d4362e06dd6e4c3ecbb1c7b42e8d859b3c1c76d1ef4c44767b1e874e04fa60"
+      },
+      "source-state.json": {
+        "bytes": 133,
+        "sha256": "3d396f46e1a26618f1afd6e5dd9480ca9f0c3cb88d54851600e032851846d01f"
+      },
+      "source.tar": {
+        "bytes": 1710080,
+        "sha256": "ac7e533e1b3cefef7a78d9cdcbe48dbc53fc759bb577d36f7b1335f4ba0863c9"
+      }
+    }
+  },
+  "input": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/input",
+  "kernel_build": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build",
+  "kernel_core_git_head": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+  "kernel_files": {
+    ".config": {
+      "bytes": 308548,
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+    },
+    "Module.symvers": {
+      "bytes": 953755,
+      "sha256": "ae12c954017277f2c9d87205f916167d8461955d957d3d1c99a30cd75ba2c43a"
+    },
+    "System.map": {
+      "bytes": 10618921,
+      "sha256": "5f29d44f58e215bf1b056cfb60c4bcc31c43aadcc406d6fba633587dcafefc9b"
+    },
+    "arch/x86/boot/bzImage": {
+      "bytes": 17334784,
+      "sha256": "6c6e7a1fe9deda428da52bbe7cd50338744c9e0e187bf2e970c12124d57d797d"
+    },
+    "certs/signing_key.x509": {
+      "bytes": 1324,
+      "sha256": "8fbea2fa0d83d1480bc9504ac991b80317c4fda040e127839d029dbee1e790dd"
+    },
+    "fs/nls/nls_iso8859-1.ko": {
+      "bytes": 336464,
+      "sha256": "8fbdf2c67dc4e19dfaef743bd659adf3335f640e91fbdadb143ecc0038bb8ebb"
+    },
+    "include/config/auto.conf": {
+      "bytes": 251819,
+      "sha256": "d731f7137d4af0af8468041db3b03292d174ed184d3916fa9162a29cb8f63243"
+    },
+    "include/config/kernel.release": {
+      "bytes": 20,
+      "sha256": "ca9399ae5c95a79df0dc77678fe0ddae158044bd2652a13f2db916a379ada3a6"
+    },
+    "include/generated/autoconf.h": {
+      "bytes": 381211,
+      "sha256": "ba620d16cd34149765ecae7223c519826d89e1bd51ef996f25af495b7cf18314"
+    },
+    "include/generated/utsrelease.h": {
+      "bytes": 42,
+      "sha256": "e758187fc20bdbe079468c93ef080886113918c19e4958ed22e4a92d6729a696"
+    },
+    "include/generated/utsversion.h": {
+      "bytes": 74,
+      "sha256": "5163fa2d5d632cd7307b85a909e80dc052879bca9ecc361e130ca15db8cb123d"
+    },
+    "modules.builtin": {
+      "bytes": 10431,
+      "sha256": "ef55d7bc5528d2c01f38fc0d8f6473c75e14ec62349898f6529be9bbac871366"
+    },
+    "modules.builtin.modinfo": {
+      "bytes": 159067,
+      "sha256": "f173376892f5d1a020884e4c6062b51e7cf26718928e1225be5e4fb507c34d0c"
+    },
+    "modules.order": {
+      "bytes": 23,
+      "sha256": "1677c25390fae9177f7760e08b471621e6c06b376705f1bd56232e071e32dcfe"
+    },
+    "vmlinux": {
+      "bytes": 511421424,
+      "sha256": "4441e45c27f9300a4cd19739c917458308581472604c3b75d8ffba9fec493be1"
+    },
+    "vmlinux.symvers": {
+      "bytes": 953755,
+      "sha256": "ae12c954017277f2c9d87205f916167d8461955d957d3d1c99a30cd75ba2c43a"
+    }
+  },
+  "kernel_full_receipt": {
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/full-01/result.json",
+    "sha256": "024f19157ed85228fc9dccde8009936b25def135b3f0cd1c77c6204c68e57ba5"
+  },
+  "kernel_source": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source",
+  "kernelrelease": "7.0.0-38-kdrebuild8",
+  "module_output": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/mmap-build",
+  "output": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01",
+  "protected_before_after": [
+    "All143 copied source files equal frozen manifest/state",
+    "All78 source package inputs equal linked kernel8 focused package",
+    "All16 linked kernel8 output files equal final identity",
+    "Kernel source pins from focused receipt equal full source_after",
+    "Protected normal/kernel6/kernel7 files from focused receipt equal full protected_after",
+    "Boot files/GRUB/default/installed module namespaces unchanged",
+    "All previously built five unsigned/signed modules and reused client retain their existing hashes"
+  ],
+  "relevant_source_files": {
+    "tests/kernel/mmap_api/abi.h": {
+      "bytes": 6742,
+      "sha256": "79eb6ef99d48fd07053061f66303b8afe25f8602ccc6af4370963cb3fba36ea4"
+    },
+    "tests/kernel/mmap_api/payload/Kbuild": {
+      "bytes": 182,
+      "sha256": "3108e0d9b531252a0b9f4a86ae87cb88e9eb4ac8b96284568191057b278a96a1"
+    },
+    "tests/kernel/mmap_api/payload/mmap_jit_profile.inc": {
+      "bytes": 22080,
+      "sha256": "f35523a305972b1e5299d4a026ad7e47d8d75dce8fefa478897c96f7b482876d"
+    },
+    "tests/kernel/mmap_api/payload/provider.c": {
+      "bytes": 12331,
+      "sha256": "ef02241e92a74f7f306ae8fcf3bf60fac4a2e52978337960215bcd1cfe92c858"
+    },
+    "tests/kernel/payload/native_context_boundaries.inc": {
+      "bytes": 1270,
+      "sha256": "53532e54139c87deeaeeeaff67a0b4a06ea067edf053461d81452e795f239a93"
+    }
+  },
+  "required_later_values": [
+    "Actual fresh all-three-image recovery receipt and SHA",
+    "Final reviewed module-only controller/config paths and hashes",
+    "Actual new unsigned/signed module hashes after build"
+  ],
+  "reuse_seam": {
+    "do_not_call": "main(), its five-module loop, normal-profile idle, client reuse/build, AST/unit/GS checks or syscall baseline",
+    "helper": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/transport/build.py",
+    "helper_sha256": "56f289a956e6ac301afe41321a5de7f41c18c8bee119881e4bad1a72733922cb",
+    "one_module_body_lines": "561..594, set(label,relative,name)=(mmap,tests/kernel/mmap_api/payload,kd_mmap_api_provider.ko)",
+    "safe_functions": [
+      "environment",
+      "canonical",
+      "checked_json",
+      "source_files",
+      "unpack",
+      "pins",
+      "protected",
+      "source_pins",
+      "boot_files",
+      "available",
+      "facts",
+      "diagnostic_rows",
+      "atomic_json",
+      "dispatch",
+      "fresh_recovery"
+    ]
+  },
+  "scope": "One metadata-provider rebuild/sign/modinfo only. No kernel rebuild, other module/client/check rebuild, install, load, runtime or performance result.",
+  "signed_output": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-context-build-de76da8a-01/signed/kd_mmap_api_provider.ko",
+  "signing": {
+    "certificate_sha256": "8fbea2fa0d83d1480bc9504ac991b80317c4fda040e127839d029dbee1e790dd",
+    "private_key": "Existing canonical build/certs/signing_key.pem consumed by normal sign-file only. Never copy, hash or print key bytes.",
+    "sign_file_sha256": "08610fe49bec7150cafa7018abb52ae1cc50b86d8f88b35f19a9e45b4052fe01"
+  },
+  "source_delta_from_compiled140": [
+    "NEW tests/kernel/payload/native_context_boundaries.inc",
+    "tests/kernel/mmap_api/payload/mmap_jit_profile.inc includes it and sets runtime boundaries/count"
+  ],
+  "status": "SOURCE_ONLY_BUILD_PROPOSAL_NOT_EXECUTED",
+  "tools": {
+    "gcc": {
+      "path": "/usr/bin/gcc",
+      "resolved_path": "/usr/bin/x86_64-linux-gnu-gcc-15",
+      "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88"
+    },
+    "make": {
+      "path": "/usr/bin/make",
+      "resolved_path": "/usr/bin/make",
+      "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49"
+    },
+    "modinfo": {
+      "path": "/usr/sbin/modinfo",
+      "resolved_path": "/usr/bin/kmod",
+      "sha256": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7"
+    },
+    "python": {
+      "path": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+      "resolved_path": "/usr/bin/python3.14",
+      "sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41"
+    }
+  }
+}
