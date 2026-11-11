@@ -11,6 +11,7 @@ struct kd_thread_state;
 struct kd_jit_image;
 struct kd_jit_image_use;
 struct kd_request_pool;
+struct kd_rw_read_credit;
 
 /* These small records live in existing request/role storage, never a packet. */
 enum kd_execution_kind {
@@ -26,28 +27,112 @@ struct kd_execution_binding {
 	enum kd_execution_kind kind;
 };
 
+/* Existing operation IDs 0..5 remain stable. Source IO carries direction,
+ * while exact registered targets select these family/API kinds in lock code.
+ */
 enum kd_operation_kind {
-	KD_OPERATION_NONE,
-	KD_OPERATION_MUTEX_LOCK,
-	KD_OPERATION_MUTEX_UNLOCK,
-	KD_OPERATION_MODE_CHANGE,
-	KD_OPERATION_SPIN_LOCK,
-	KD_OPERATION_SPIN_UNLOCK,
+	KD_OPERATION_NONE = 0,
+	KD_OPERATION_MUTEX_LOCK = 1,
+	KD_OPERATION_MUTEX_UNLOCK = 2,
+	KD_OPERATION_MODE_CHANGE = 3,
+	KD_OPERATION_SPIN_LOCK = 4,
+	KD_OPERATION_SPIN_UNLOCK = 5,
+	KD_OPERATION_RWSEM_DOWN_READ,
+	KD_OPERATION_RWSEM_UP_READ,
+	KD_OPERATION_RWSEM_DOWN_WRITE,
+	KD_OPERATION_RWSEM_UP_WRITE,
+	KD_OPERATION_RWSEM_DOWNGRADE_WRITE,
+	KD_OPERATION_RWLOCK_READ_LOCK,
+	KD_OPERATION_RWLOCK_READ_UNLOCK,
+	KD_OPERATION_RWLOCK_WRITE_LOCK,
+	KD_OPERATION_RWLOCK_WRITE_UNLOCK,
+};
+
+enum kd_lock_family {
+	KD_LOCK_FAMILY_MUTEX,
+	KD_LOCK_FAMILY_SPIN,
+	KD_LOCK_FAMILY_RWSEM,
+	KD_LOCK_FAMILY_RWLOCK,
+	KD_LOCK_FAMILY_COUNT,
+};
+
+/* RETAINED_READ is a logical read tail of the same delegated writer
+ * acquisition. Its physical writer duty remains distinct from a READ credit.
+ */
+enum kd_grant_mode {
+	KD_GRANT_MODE_WRITE,
+	KD_GRANT_MODE_READ,
+	KD_GRANT_MODE_RETAINED_READ,
+};
+
+enum kd_grant_physical {
+	KD_GRANT_PHYSICAL_WRITE,
+	KD_GRANT_PHYSICAL_READ,
 };
 
 static inline bool kd_operation_is_lock(enum kd_operation_kind kind)
 {
-	return kind == KD_OPERATION_MUTEX_LOCK || kind == KD_OPERATION_SPIN_LOCK;
+	return kind == KD_OPERATION_MUTEX_LOCK || kind == KD_OPERATION_SPIN_LOCK ||
+	       kind == KD_OPERATION_RWSEM_DOWN_READ || kind == KD_OPERATION_RWSEM_DOWN_WRITE ||
+	       kind == KD_OPERATION_RWLOCK_READ_LOCK || kind == KD_OPERATION_RWLOCK_WRITE_LOCK;
 }
 
 static inline bool kd_operation_is_unlock(enum kd_operation_kind kind)
 {
-	return kind == KD_OPERATION_MUTEX_UNLOCK || kind == KD_OPERATION_SPIN_UNLOCK;
+	return kind == KD_OPERATION_MUTEX_UNLOCK || kind == KD_OPERATION_SPIN_UNLOCK ||
+	       kind == KD_OPERATION_RWSEM_UP_READ || kind == KD_OPERATION_RWSEM_UP_WRITE ||
+	       kind == KD_OPERATION_RWLOCK_READ_UNLOCK || kind == KD_OPERATION_RWLOCK_WRITE_UNLOCK;
+}
+
+static inline bool kd_operation_is_mode_change(enum kd_operation_kind kind)
+{
+	return kind == KD_OPERATION_RWSEM_DOWNGRADE_WRITE;
 }
 
 static inline bool kd_operation_is_spin(enum kd_operation_kind kind)
 {
 	return kind == KD_OPERATION_SPIN_LOCK || kind == KD_OPERATION_SPIN_UNLOCK;
+}
+
+static inline enum kd_lock_family kd_operation_family(enum kd_operation_kind kind)
+{
+	switch (kind) {
+	case KD_OPERATION_MUTEX_LOCK:
+	case KD_OPERATION_MUTEX_UNLOCK:
+		return KD_LOCK_FAMILY_MUTEX;
+	case KD_OPERATION_SPIN_LOCK:
+	case KD_OPERATION_SPIN_UNLOCK:
+		return KD_LOCK_FAMILY_SPIN;
+	case KD_OPERATION_RWSEM_DOWN_READ:
+	case KD_OPERATION_RWSEM_UP_READ:
+	case KD_OPERATION_RWSEM_DOWN_WRITE:
+	case KD_OPERATION_RWSEM_UP_WRITE:
+	case KD_OPERATION_RWSEM_DOWNGRADE_WRITE:
+		return KD_LOCK_FAMILY_RWSEM;
+	case KD_OPERATION_RWLOCK_READ_LOCK:
+	case KD_OPERATION_RWLOCK_READ_UNLOCK:
+	case KD_OPERATION_RWLOCK_WRITE_LOCK:
+	case KD_OPERATION_RWLOCK_WRITE_UNLOCK:
+		return KD_LOCK_FAMILY_RWLOCK;
+	default:
+		return KD_LOCK_FAMILY_COUNT;
+	}
+}
+
+static inline bool kd_lock_family_is_atomic(enum kd_lock_family family)
+{
+	return family == KD_LOCK_FAMILY_SPIN || family == KD_LOCK_FAMILY_RWLOCK;
+}
+
+static inline bool kd_operation_is_atomic(enum kd_operation_kind kind)
+{
+	return kd_lock_family_is_atomic(kd_operation_family(kind));
+}
+
+static inline bool kd_operation_is_read(enum kd_operation_kind kind)
+{
+	return kind == KD_OPERATION_RWSEM_DOWN_READ || kind == KD_OPERATION_RWSEM_UP_READ ||
+	       kind == KD_OPERATION_RWLOCK_READ_LOCK || kind == KD_OPERATION_RWLOCK_READ_UNLOCK;
 }
 
 enum kd_operation_form {
@@ -89,6 +174,10 @@ struct kd_source_grant {
 	void *object;
 	const void *acquisition;
 	struct kd_mutex_release *release;
+	struct kd_rw_read_credit *read_credit;
+	enum kd_lock_family family;
+	enum kd_grant_mode mode;
+	enum kd_grant_physical physical;
 	const void *user;
 	int (*drop)(void *control, const void *user);
 	void *control;
@@ -212,6 +301,21 @@ int kd_state_link_grant(struct kd_thread_state *state,
 struct kd_source_grant *kd_state_find_grant(struct kd_thread_state *state,
 					   struct kd_execution_binding *binding,
 					   void *object);
+/* READ lookup walks newest-first. READ matches ordinary and retained read
+ * modes; their distinct physical custody remains in the returned exact grant.
+ */
+struct kd_source_grant *kd_state_find_grant_typed(struct kd_thread_state *state,
+		struct kd_execution_binding *binding, void *object,
+		enum kd_lock_family family, enum kd_grant_mode mode);
+struct kd_source_grant *kd_state_find_operation_grant(struct kd_thread_state *state,
+		struct kd_execution_binding *binding, void *object,
+		enum kd_operation_kind operation);
+/* Called after exact physical validation/conversion, while the original writer
+ * acquisition and every existing user remain retained. It never changes cursor.
+ */
+int kd_state_downgrade_grant(struct kd_thread_state *state,
+		struct kd_execution_binding *binding, struct kd_source_grant *grant,
+		struct kd_rw_read_credit *credit, bool retained);
 int kd_state_close_grant(struct kd_thread_state *state,
 			 struct kd_execution_binding *binding,
 			 struct kd_source_grant *grant);

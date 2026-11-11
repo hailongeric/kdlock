@@ -12,6 +12,7 @@ struct kd_mutex_batch;
 struct kd_owner_progress {
 	struct list_head batches;
 	struct task_struct *task;
+	/* Context/polling only; the batch owns its separate service policy. */
 	bool atomic_spin;
 };
 
@@ -24,6 +25,9 @@ struct kd_owner_progress {
  * control_stopped records that the driver exported or stopped its source.
  * For a mutex batch this enables physical finish after owner handling of its
  * releases. A spin batch can release its sole grant before control stops.
+ * A writer cohort can close synchronously during a nested source callback.
+ * Its separate cohort_active actor prevents reaping until the whole cohort
+ * driver stops, independent of any individual callback's exported marker.
  * The backend retains its callback separately until it returns, and reaping
  * waits for both actors. terminal_foreign keeps
  * this task's own source pending until that physical duty completes. Later

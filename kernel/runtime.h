@@ -50,6 +50,8 @@ struct kd_jit_runtime_config {
 	unsigned long required_control_bytes;
 	unsigned int proxy_limit;
 	bool atomic_spin;
+	/* Default MUTEX plus atomic_spin keeps the existing spin configuration. */
+	enum kd_lock_family family;
 };
 
 struct kd_jit_runtime;

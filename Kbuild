@@ -9,6 +9,7 @@ asflags-y += -I$(src)/include
 # Keep this explicit list in sync with the private runtime C units.
 kdlock_rebuild-y := \
 	kernel/mutex.o \
+	kernel/rw.o \
 	kernel/mutex_release.o \
 	kernel/state.o \
 	kernel/task_state.o \

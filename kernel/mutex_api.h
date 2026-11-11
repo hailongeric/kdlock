@@ -4,6 +4,8 @@
 
 #include "episode.h"
 #include "../include/kd_spin_api.h"
+#include "../include/kd_rwsem_api.h"
+#include "../include/kd_rwlock_api.h"
 
 /* Current-task setup only, before first source admission. Caller owns immutable
  * resources/configuration, explicit request and complete control-stack bounds,
@@ -21,6 +23,7 @@ enum kd_operation_kind kd_mutex_resolve_entry_operation(void *context,
 						unsigned long target);
 
 enum kd_operation_kind kd_spin_resolve_entry_operation(unsigned long target);
+enum kd_operation_kind kd_rw_resolve_entry_operation(unsigned long target);
 
 /* Assembly-only native bootstrap endpoints; ordinary callers use the macros.
  * NULL means a native unlock completed through its exact retained acquisition.
@@ -32,5 +35,15 @@ struct kd_mutex_entry *kd_mutex_prepare_lock_current(struct kd_mutex *lock);
 struct kd_mutex_entry *kd_mutex_prepare_unlock_current(struct kd_mutex *lock);
 struct kd_mutex_entry *kd_spin_prepare_lock_current(struct kd_spinlock *lock);
 struct kd_mutex_entry *kd_spin_prepare_unlock_current(struct kd_spinlock *lock);
+
+struct kd_mutex_entry *kd_rwsem_prepare_down_read_current(struct kd_rwsem *lock);
+struct kd_mutex_entry *kd_rwsem_prepare_up_read_current(struct kd_rwsem *lock);
+struct kd_mutex_entry *kd_rwsem_prepare_down_write_current(struct kd_rwsem *lock);
+struct kd_mutex_entry *kd_rwsem_prepare_up_write_current(struct kd_rwsem *lock);
+struct kd_mutex_entry *kd_rwsem_prepare_downgrade_write_current(struct kd_rwsem *lock);
+struct kd_mutex_entry *kd_rwlock_prepare_read_lock_current(struct kd_rwlock *lock);
+struct kd_mutex_entry *kd_rwlock_prepare_read_unlock_current(struct kd_rwlock *lock);
+struct kd_mutex_entry *kd_rwlock_prepare_write_lock_current(struct kd_rwlock *lock);
+struct kd_mutex_entry *kd_rwlock_prepare_write_unlock_current(struct kd_rwlock *lock);
 
 #endif

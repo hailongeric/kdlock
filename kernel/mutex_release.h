@@ -23,6 +23,7 @@ enum kd_mutex_unlock_route {
 	KD_MUTEX_UNLOCK_ROUTE_OWNER,
 	KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER,
 	KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC,
+	KD_MUTEX_UNLOCK_ROUTE_SYNC,
 };
 
 enum kd_mutex_unlock_phase {
@@ -48,12 +49,18 @@ struct kd_mutex_release_owner {
 	struct list_head obligations;
 	enum kd_mutex_owner_phase phase;
 	bool atomic_spin;
+	/* Independent physical-owner policies: polling context does not imply
+	 * a single grant, and synchronous closure does not imply atomic waiting.
+	 */
+	bool single_grant;
+	bool early_release;
+	bool close_requested;
 };
 
 /*
  * One logical acquisition within that physical batch. All records refer
  * directly to the original thread's one canonical state; no packet lives here.
- * Non-NULL source_user, return_user and notifier are exact outstanding users.
+ * Non-NULL source_user, return_user, notifier and ack_task are exact users.
  * acquisition names this live acquisition, not a lock address or source site.
  * The caller keeps their identities, this record, the owner and state alive.
  */
@@ -65,6 +72,10 @@ struct kd_mutex_release {
 	const void *source_user;
 	const void *return_user;
 	const void *notifier;
+	/* Sleepable synchronous requester may be a child executor rather than
+	 * node.requester. Its independent task reference ends after ACK wakeup.
+	 */
+	struct task_struct *ack_task;
 	enum kd_mutex_unlock_phase phase;
 	enum kd_mutex_unlock_route route;
 	bool deferred;

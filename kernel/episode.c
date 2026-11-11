@@ -91,6 +91,7 @@ int kd_episode_resources_init(struct kd_episode_resources *resources,
 		 struct kd_request_pool *pool, struct kd_episode_frame *frames,
 		 unsigned int capacity, const struct kd_episode_config *config)
 {
+	enum kd_lock_family family;
 	unsigned int index;
 
 	if (!resources || !pool || !pool->state || !config || capacity != pool->capacity ||
@@ -98,11 +99,19 @@ int kd_episode_resources_init(struct kd_episode_resources *resources,
 	     !config->stack->read_word || !config->stack->write_word ||
 	     !config->resolve || !config->classify_target || !config->report)))
 		return -EINVAL;
+	family = config->family;
+	if (family == KD_LOCK_FAMILY_MUTEX && config->atomic_spin)
+		family = KD_LOCK_FAMILY_SPIN;
+	if ((unsigned int)family >= KD_LOCK_FAMILY_COUNT ||
+	    (config->atomic_spin && !kd_lock_family_is_atomic(family)))
+		return -EINVAL;
 	/* Private setup only; no live frame or previous observer may exist. */
 	resources->pool = pool;
 	resources->frames = frames;
 	resources->capacity = capacity;
 	resources->config = *config;
+	resources->config.family = family;
+	resources->config.atomic_spin = kd_lock_family_is_atomic(family);
 	for (index = 0; index < capacity; ++index)
 		frame_init(&frames[index], resources, &pool->slots[index], NULL);
 	return 0;
@@ -412,7 +421,8 @@ static int cancel_private(struct kd_episode_frame *frame, bool prepared)
 
 static int prepare(struct kd_episode_resources *resources,
 		   struct kd_execution_binding *binding,
-		   struct kd_episode_frame *parent, struct kd_episode_frame **result)
+		   struct kd_episode_frame *parent, enum kd_operation_kind operation,
+		   struct kd_episode_frame **result)
 {
 	struct kd_request_slot *slot;
 	struct kd_episode_frame *frame;
@@ -426,6 +436,7 @@ static int prepare(struct kd_episode_resources *resources,
 		return error;
 	frame = &resources->frames[slot - resources->pool->slots];
 	frame_init(frame, resources, slot, parent);
+	frame->operation = operation;
 	error = hold_user(frame, &frame->control_user, &frame->control_held,
 			  KD_REQUEST_USER_CONTROL);
 	if (error)
@@ -475,6 +486,8 @@ static int prepare(struct kd_episode_resources *resources,
 		goto failed;
 	driver = (struct kd_jit_mutex_driver) {
 		.atomic_spin = resources->config.atomic_spin,
+		.family = resources->config.family,
+		.mode = kd_operation_is_read(operation) ? KD_GRANT_MODE_READ : KD_GRANT_MODE_WRITE,
 		.selected_local = selected_local, .wait_progress = wait_progress,
 		.wait_ready = wait_ready, .run = run, .exported = exported,
 		.stack = resources->config.stack,
@@ -502,7 +515,7 @@ int kd_episode_prepare_root(struct kd_episode_resources *resources,
 	int result;
 
 	if (!resources || !frame || !kd_operation_is_lock(operation) ||
-	    kd_operation_is_spin(operation) != resources->config.atomic_spin)
+	    kd_operation_family(operation) != resources->config.family)
 		return -EINVAL;
 	*frame = NULL;
 	if (!kd_state_is_current(resources->pool->state, native_binding) ||
@@ -511,7 +524,7 @@ int kd_episode_prepare_root(struct kd_episode_resources *resources,
 	result = kd_episode_collect(resources, native_binding);
 	if (result)
 		return result;
-	return prepare(resources, native_binding, NULL, frame);
+	return prepare(resources, native_binding, NULL, operation, frame);
 }
 
 int kd_episode_cancel_root(struct kd_episode_frame *frame,
@@ -547,7 +560,7 @@ static unsigned int local_service_limit(struct kd_episode_resources *resources,
 
 	BUG_ON(!kd_state_is_current(state, binding));
 	/* Do not start unrelated inner source batching before the new local
-	 * head's grant while this source still holds another logical mutex.
+	 * head's grant while this source still holds another logical grant.
 	 * Remote selection and the unified MCS queue remain unchanged.
 	 */
 	list_for_each_entry(grant, &state->grants, state_link)
@@ -726,7 +739,7 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 		if (!operation_exit)
 			return forward(frame, binding, image, 0);
 		if (cached.kind != KD_OPERATION_NONE &&
-		    kd_operation_is_spin(cached.kind) != resources->config.atomic_spin)
+		    kd_operation_family(cached.kind) != resources->config.family)
 			return forward(frame, binding, image, -EOPNOTSUPP);
 		if (kd_operation_is_lock(cached.kind)) {
 			struct kd_episode_frame *child;
@@ -735,7 +748,7 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			unsigned long operation_ip = state->io.source_ip;
 			unsigned long object = state->regs.di;
 
-			result = prepare(resources, *binding, frame, &child);
+			result = prepare(resources, *binding, frame, cached.kind, &child);
 			BUG_ON(result);
 			result = kd_mutex_hold_return(&call->node, &child->return_identity);
 			BUG_ON(result);
@@ -762,8 +775,8 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 				.cursor = state->regs.ip, .object = object,
 				.related = (unsigned long)&child->slot->call.node,
 				.phase = state->operation.phase, .result = cached.kind);
-			result = kd_jit_mutex_acquire(&child->slot->call,
-				(struct kd_mutex *)state->regs.di, &child_binding,
+			result = kd_jit_acquire(&child->slot->call,
+				(void *)state->regs.di, &child_binding,
 				local_service_limit(resources, child_binding), &outcome);
 			BUG_ON(result);
 			if (outcome == KD_MUTEX_LOCAL_GRANTED) {
@@ -800,12 +813,12 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			continue;
 		}
 		if (kd_operation_is_unlock(cached.kind)) {
-			struct kd_source_grant *grant = kd_state_find_grant(state, *binding,
-								 (void *)state->regs.di);
+			struct kd_source_grant *grant = kd_state_find_operation_grant(state, *binding,
+				(void *)state->regs.di, cached.kind);
 			struct kd_episode_frame *target;
 			struct kd_mutex_batch *active = call->node.batch;
 			enum kd_mutex_unlock_action action;
-			bool deferred;
+			bool deferred, retained_read;
 			unsigned long operation_ip = state->io.source_ip;
 			unsigned long object = state->regs.di;
 
@@ -813,7 +826,8 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			target = grant_frame(grant);
 			BUG_ON(IS_ERR(target));
 			BUG_ON(target->slot->call.node.atomic_spin != resources->config.atomic_spin);
-			deferred = !resources->config.atomic_spin &&
+			retained_read = grant->mode == KD_GRANT_MODE_RETAINED_READ;
+			deferred = resources->config.family == KD_LOCK_FAMILY_MUTEX &&
 				active != target->slot->call.node.batch;
 			if (deferred) {
 				result = queue_deferred(frame, target);
@@ -832,7 +846,7 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 				return forward(frame, binding, image, result);
 			}
 			frame->exit_pending = false;
-			result = kd_jit_mutex_unlock(&target->slot->call, *binding, active,
+			result = kd_jit_unlock(&target->slot->call, *binding, active,
 				deferred ? &target->notifier_user : NULL, &action);
 			BUG_ON(result);
 			target->source_closed = true;
@@ -841,6 +855,45 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 				.cursor = state->regs.ip, .object = object,
 				.related = (unsigned long)&target->slot->call.node,
 				.phase = action, .result = cached.kind);
+			/* A retained writer's read tail ends at this exact API return.
+			 * Terminal propagation stops every ancestor source endpoint;
+			 * their still-open physical duties remain exact native grants.
+			 */
+			if (retained_read)
+				return forward(frame, binding, image, 0);
+			continue;
+		}
+		if (kd_operation_is_mode_change(cached.kind)) {
+			struct kd_source_grant *grant = kd_state_find_operation_grant(state, *binding,
+				(void *)state->regs.di, cached.kind);
+			struct kd_episode_frame *target;
+			unsigned long operation_ip = state->io.source_ip;
+			unsigned long object = state->regs.di;
+
+			BUG_ON(IS_ERR(grant));
+			target = grant_frame(grant);
+			BUG_ON(IS_ERR(target));
+			result = kd_jit_prepare_operation(image, state, *binding,
+				&target->slot->call.mode_identity, cached_resolve, &cached,
+				resources->config.stack);
+			if (result) {
+				if (!operation_declined(result, state, *binding))
+					return KD_MUTEX_OUTCOME_UNSET;
+				return forward(frame, binding, image, result);
+			}
+			frame->exit_pending = false;
+			result = kd_jit_downgrade(&target->slot->call, *binding, true);
+			BUG_ON(result);
+			observe_frame(frame, KD_OBS_JIT_OPERATION,
+				.image = (unsigned long)image, .ip = operation_ip,
+				.cursor = state->regs.ip, .object = object,
+				.related = (unsigned long)&target->slot->call.node,
+				.phase = state->operation.phase, .result = cached.kind);
+			observe_frame(target, KD_OBS_WRITE_DOWNGRADE_RETAINED,
+				.object = object, .cursor = state->regs.ip,
+				.owner = (unsigned long)target->slot->call.node.release.owner,
+				.related = (unsigned long)*binding,
+				.phase = grant->mode, .result = grant->physical);
 			continue;
 		}
 		return forward(frame, binding, image, 0);
@@ -883,11 +936,11 @@ int kd_episode_acquire_root(struct kd_episode_frame *frame,
 	if (!frame || !outcome || frame->parent)
 		return -EINVAL;
 	binding = &frame->slot->capture;
-	result = kd_jit_capture_mutex_lock(&frame->slot->call, native_binding, binding,
-		lock, source_sp, continuation_ip, source_bp, api_target);
+	result = kd_jit_capture_lock(&frame->slot->call, native_binding, binding,
+		lock, frame->operation, source_sp, continuation_ip, source_bp, api_target);
 	if (result)
 		return result;
-	result = kd_jit_mutex_acquire(&frame->slot->call, lock, &binding,
+	result = kd_jit_acquire(&frame->slot->call, lock, &binding,
 				    local_service_limit(frame->resources, binding), outcome);
 	if (result)
 		return result;
@@ -949,70 +1002,110 @@ void kd_episode_native_done(void *context)
 	BUG_ON(result);
 }
 
-int kd_episode_unlock_native(struct kd_episode_resources *resources,
-		 struct kd_task_root_context *root,
-		 struct kd_execution_binding *native_binding, struct kd_mutex *lock,
-		 enum kd_operation_kind operation)
+/* Native CALL/RET paths retain the exact frame while a physical owner may
+ * publish ACK or retire other completed source grants during progress.
+ */
+static int native_grant(struct kd_episode_resources **resources,
+		struct kd_task_root_context *root,
+		struct kd_execution_binding *native_binding, struct kd_mutex *lock,
+		enum kd_operation_kind operation, struct kd_episode_frame **result)
 {
 	struct kd_source_grant *grant;
 	struct kd_episode_frame *frame;
-	struct kd_request_user user;
-	struct kd_mutex_release_owner *owner;
-	struct kd_mutex_batch *active;
-	enum kd_mutex_unlock_action action;
-	int result;
 
 	if (!root || !root->attached || root != kd_task_root_context_current() ||
-	    root->task != current || root->aux_entry ||
-	    !in_task() || irqs_disabled() || !kd_operation_is_unlock(operation) ||
-	    (in_atomic() && !kd_operation_is_spin(operation)) ||
+	    root->task != current || root->aux_entry || !in_task() || irqs_disabled() ||
+	    (in_atomic() && !kd_operation_is_atomic(operation)) ||
 	    !kd_state_is_current(&root->core, native_binding) ||
 	    native_binding->kind != KD_EXECUTION_NATIVE)
 		return -EPERM;
-	grant = kd_state_find_grant(&root->core, native_binding, lock);
+	grant = kd_state_find_operation_grant(&root->core, native_binding, lock, operation);
 	if (IS_ERR(grant))
 		return PTR_ERR(grant);
 	frame = grant_frame(grant);
 	if (IS_ERR(frame))
 		return PTR_ERR(frame);
-	if ((resources && resources != frame->resources) ||
-	    frame->slot->call.node.atomic_spin != kd_operation_is_spin(operation))
+	if ((*resources && *resources != frame->resources) ||
+	    frame->slot->call.node.atomic_spin != kd_operation_is_atomic(operation) ||
+	    frame->resources->config.family != kd_operation_family(operation))
 		return -ESTALE;
-	resources = frame->resources;
+	*resources = frame->resources;
+	*result = frame;
+	return 0;
+}
+
+int kd_episode_unlock_native(struct kd_episode_resources *resources,
+		 struct kd_task_root_context *root,
+		 struct kd_execution_binding *native_binding, struct kd_mutex *lock,
+		 enum kd_operation_kind operation)
+{
+	struct kd_episode_frame *frame;
+	struct kd_request_user user;
+	struct kd_mutex_release_owner *owner;
+	enum kd_mutex_unlock_action action;
+	int result;
+
+	if (!kd_operation_is_unlock(operation))
+		return -EINVAL;
+	result = native_grant(&resources, root, native_binding, lock, operation, &frame);
+	if (result)
+		return result;
 	kd_request_user_init(&user);
 	result = kd_request_user_hold(frame->slot, frame->claim, &user, &user,
 				      KD_REQUEST_USER_CONTROL);
 	if (result)
 		return result;
-	owner = frame->slot->call.node.release.owner;
-	active = owner->task == current ? frame->slot->call.node.batch : NULL;
-	result = kd_mutex_source_unlock(&frame->slot->call.node, &root->core,
-					active, &user, &action);
-	BUG_ON(result);
-	result = kd_state_close_grant(&root->core, native_binding, grant);
+	result = kd_jit_unlock_native(&frame->slot->call, native_binding, operation, &user, &action);
 	BUG_ON(result);
 	frame->source_closed = true;
 	observe_frame(frame, KD_OBS_NATIVE_UNLOCK, .object = (unsigned long)lock,
 		.related = (unsigned long)native_binding, .phase = action,
-		.flags = KD_OBS_FLAG_SOURCE_CLOSED);
+		.result = operation, .flags = KD_OBS_FLAG_SOURCE_CLOSED);
 	if (action == KD_MUTEX_UNLOCK_DEFERRED_PARENT) {
 		result = kd_mutex_publish_outer_unwind(&frame->slot->call.node, &user, &owner);
 		BUG_ON(result);
 		result = kd_mutex_outer_notification_done(&frame->slot->call.node, &user);
 		BUG_ON(result);
 	}
-	/* A native actor has already received the terminal source handoff. The
-	 * original JIT B's deferred list can now close when B itself unlocks.
-	 */
 	result = flush_deferred(frame);
 	BUG_ON(result);
 	result = pump();
 	BUG_ON(result);
 	result = kd_episode_collect(resources, native_binding);
 	BUG_ON(result);
-	/* Hardware CALL/RET completes this ordinary source operation. Canonical
-	 * regs.ip/SP may be old native materialization and are never imported.
-	 * This temporary actor's stack is never lent while its user is linked.
+	/* Canonical IP/SP can be old native materialization; hardware CALL/RET
+	 * completes this operation without importing that saved cursor.
 	 */
+	return kd_request_user_finish(&user, &user);
+}
+
+int kd_episode_downgrade_native(struct kd_episode_resources *resources,
+		struct kd_task_root_context *root,
+		struct kd_execution_binding *native_binding, struct kd_mutex *lock,
+		enum kd_operation_kind operation)
+{
+	struct kd_episode_frame *frame;
+	struct kd_request_user user;
+	int result;
+
+	if (operation != KD_OPERATION_RWSEM_DOWNGRADE_WRITE)
+		return -EINVAL;
+	result = native_grant(&resources, root, native_binding, lock, operation, &frame);
+	if (result)
+		return result;
+	kd_request_user_init(&user);
+	result = kd_request_user_hold(frame->slot, frame->claim, &user, &user,
+				      KD_REQUEST_USER_CONTROL);
+	if (result)
+		return result;
+	result = kd_jit_downgrade_native(&frame->slot->call, native_binding);
+	BUG_ON(result);
+	observe_frame(frame, KD_OBS_NATIVE_MODE, .object = (unsigned long)lock,
+		.related = (unsigned long)native_binding, .phase = frame->slot->call.grant.mode,
+		.result = frame->slot->call.grant.physical);
+	result = pump();
+	BUG_ON(result);
+	result = kd_episode_collect(resources, native_binding);
+	BUG_ON(result);
 	return kd_request_user_finish(&user, &user);
 }

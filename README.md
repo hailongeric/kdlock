@@ -10,6 +10,17 @@ non-PREEMPT_RT**.
 
 ## Current state
 
+The current source adds ordinary sleepable rwsem read/write operations and
+`downgrade_write`, plus plain rwlock read/write operations in IRQ-enabled task
+context. Each family has its own runtime. A proxy can take a real concurrent
+read credit and return an inner read scope to its enclosing proxy. A selected
+rwsem downgrade retains the same physical writer through its logical read tail;
+matching `up_read` returns the exact continuation to W, including from a nested
+scope. A generated miss can return the exact native suffix with that writer
+still retained. An ordinary native downgrade creates a real read credit
+continuously. These new paths have source review only; build and behavioral
+validation are pending. The earlier spin/mutex receipts below remain separate.
+
 The [fixed-image recursive fixture](tests/evidence/runtime-recursive-20261110/README.md)
 returned `protected_jit_recursive_mechanism_pass` on kernel3. It records complete
 protected JIT episodes, actual CA → CB → CA execution on one canonical S_W,

@@ -24,6 +24,7 @@
 #include "mutex.h"
 #include "observation.h"
 #include "state.h"
+#include "rw.h"
 
 static unsigned long node_observation_flags(struct kd_mutex_node *node)
 {
@@ -175,6 +176,8 @@ static void mcs_physical_unlock(void *object)
 	BUG_ON(!batch || batch->release_owner.task != current);
 	head = batch->head;
 	BUG_ON(!head);
+	if (batch->rw)
+		kd_rw_writer_exit(batch->rw, batch, batch->conversion);
 	next = smp_load_acquire(&head->next);
 	WRITE_ONCE(lock->owner, NULL);
 	if (!next && cmpxchg(&lock->tail, head, NULL) == head) {
@@ -214,6 +217,9 @@ void kd_mutex_batch_init(struct kd_mutex_batch *batch)
 	batch->proxy_served = 0;
 	batch->initialized = false;
 	batch->head_retired = false;
+	batch->cohort_active = false;
+	batch->rw = NULL;
+	batch->conversion = NULL;
 }
 
 int kd_mutex_node_init(struct kd_mutex_node *node,
@@ -240,6 +246,12 @@ int kd_mutex_node_init(struct kd_mutex_node *node,
 	node->source_granted = false;
 	node->ready = ready;
 	node->atomic_spin = false;
+	node->service_policy = KD_MUTEX_SERVICE_DEFAULT;
+	node->synchronous_outer = false;
+	node->rw = NULL;
+	node->shared_read = false;
+	atomic_set(&node->read_users, 0);
+	node->read_return_user = NULL;
 	node->requester = current;
 	get_task_struct(node->requester);
 	node->state = state;
@@ -263,7 +275,8 @@ int kd_mutex_node_discard(struct kd_mutex_node *node)
 
 	if (node->requester != current)
 		return -EPERM;
-	if (node->enqueued || atomic_read(&node->selection) != KD_MUTEX_PRIVATE)
+	if (node->shared_read || node->enqueued ||
+	    atomic_read(&node->selection) != KD_MUTEX_PRIVATE)
 		return -EBUSY;
 	task = node->requester;
 	node->requester = NULL;
@@ -271,6 +284,20 @@ int kd_mutex_node_discard(struct kd_mutex_node *node)
 	observe_node(KD_OBS_NODE_RETIRE_READY, node, NULL, NULL, KD_MUTEX_PRIVATE, 0);
 	smp_store_release(&node->retirable, 1);
 	put_task_struct(task);
+	return 0;
+}
+
+int kd_mutex_read_granted(struct kd_mutex_node *node)
+{
+	if (!node || node->requester != current || node->enqueued ||
+	    node->shared_read || node->source_granted ||
+	    atomic_read(&node->selection) != KD_MUTEX_PRIVATE)
+		return -EINVAL;
+	node->shared_read = true;
+	node->source_granted = true;
+	atomic_set(&node->read_users, 2);
+	node->outcome = KD_MUTEX_LOCAL_GRANTED;
+	smp_store_release(&node->result_ready, 1);
 	return 0;
 }
 
@@ -301,9 +328,11 @@ int kd_mutex_enqueue(struct kd_mutex *lock, struct kd_mutex_node *node)
 
 	if (node->requester != current || (node->atomic_spin && !spin_context()))
 		return -EPERM;
-	if (!lock || (node->atomic_spin && !node->possible_batch))
+	if (!lock || ((node->atomic_spin ||
+	    node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT) && !node->possible_batch))
 		return -EINVAL;
-	if (node->atomic_spin && node->possible_batch->initialized)
+	if ((node->atomic_spin || node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT) &&
+	    node->possible_batch->initialized)
 		return -EBUSY;
 	if (node->enqueued || atomic_read(&node->selection) != KD_MUTEX_PRIVATE)
 		return -EALREADY;
@@ -421,10 +450,17 @@ static void start_batch(struct kd_mutex_node *node, struct kd_mutex_batch *batch
 	batch->proxy_limit = proxy_limit;
 	batch->proxy_served = 0;
 	batch->head_retired = false;
+	batch->rw = node->rw;
+	batch->conversion = NULL;
+	if (batch->rw)
+		kd_rw_writer_enter(batch->rw, batch, node);
 	result = kd_mutex_release_owner_init(&batch->release_owner,
 					     mcs_physical_unlock, batch->lock,
 					     node->atomic_spin);
 	BUG_ON(result || READ_ONCE(batch->lock->owner));
+	batch->release_owner.single_grant = node->atomic_spin &&
+		node->service_policy == KD_MUTEX_SERVICE_DEFAULT;
+	batch->release_owner.early_release = node->atomic_spin || node->synchronous_outer;
 	WRITE_ONCE(batch->lock->owner, batch);
 	batch->initialized = true;
 	node->batch = batch;
@@ -484,6 +520,123 @@ static bool spin_serve_successor(struct kd_mutex_node *local)
 	return true;
 }
 
+static bool cohort_open(struct kd_mutex_batch *batch)
+{
+	struct kd_mutex_release_owner *owner = &batch->release_owner;
+	bool open;
+
+	raw_spin_lock(&owner->guard);
+	open = owner->phase == KD_MUTEX_OWNER_OPEN && !owner->close_requested;
+	raw_spin_unlock(&owner->guard);
+	return open;
+}
+
+/* A source callback may return with a live native tail. Publish that result
+ * before waiting, and keep the ungranted candidate off the writer queue.
+ * Each wait also services this physical task's unrelated exact owner duties.
+ */
+static void wait_cohort_release(struct kd_mutex_node *node)
+{
+	struct kd_mutex_node *head = node->batch->head;
+
+	for (;;) {
+		bool blocked = progress_wait(head);
+		enum kd_mutex_unlock_phase phase = release_phase(node);
+
+		if ((phase == KD_MUTEX_UNLOCK_OWNER_HANDLED ||
+		     phase == KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED) && !blocked)
+			break;
+		if (head->atomic_spin) {
+			cpu_relax();
+			continue;
+		}
+		set_current_state(TASK_UNINTERRUPTIBLE);
+		phase = release_phase(node);
+		if ((phase == KD_MUTEX_UNLOCK_OWNER_HANDLED ||
+		     phase == KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED) && !blocked)
+			break;
+		if (!progress_ready(head))
+			schedule();
+	}
+	if (!head->atomic_spin)
+		__set_current_state(TASK_RUNNING);
+}
+
+/* Unlike a mutex head, the candidate has no pending physical grant of its
+ * own. First W supplies persistent cohort storage and becomes the MCS head.
+ * An outer synchronous release closes this cohort even during a later body;
+ * no following writer is granted after that closure. Each callback has its
+ * own result/source users, while cohort_active retains the overall driver.
+ */
+static bool serve_writer_cohort(struct kd_mutex_node *local, unsigned int limit)
+{
+	struct kd_mutex_node *node = smp_load_acquire(&local->next);
+	struct kd_mutex_batch *batch;
+	unsigned int served = 0;
+
+	if (!node || node->service_policy != KD_MUTEX_SERVICE_WRITER_COHORT ||
+	    atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
+			   KD_MUTEX_SELECTED_PROXY) != KD_MUTEX_OFFERED)
+		return false;
+	BUG_ON(!node->ready || !node->possible_batch || !node->ops ||
+	       !node->ops->execute_proxy || node->lock != local->lock ||
+	       node->atomic_spin != local->atomic_spin || node->rw != local->rw);
+	WRITE_ONCE(local->next, NULL);
+	WRITE_ONCE(local->turn, 0);
+	batch = node->possible_batch;
+	start_batch(node, batch, limit);
+	batch->cohort_active = true;
+	for (;;) {
+		struct kd_thread_state *state = node->state;
+		struct task_struct *origin = state->origin;
+		enum kd_mutex_outcome outcome;
+
+		observe_node(KD_OBS_SELECT_PROXY, node, batch, local,
+			     KD_MUTEX_SELECTED_PROXY, 0);
+		bind_grant(batch, node);
+		batch->serving = node;
+		batch->proxy_served++;
+		outcome = node->ops->execute_proxy(node, node->context);
+		BUG_ON(outcome < KD_MUTEX_PROXY_OPERATION_DONE ||
+		       outcome > KD_MUTEX_PROXY_UNWIND_PARENT);
+		node->outcome = outcome;
+		kd_observe(KD_OBS_PROXY_RETURN, .state = (unsigned long)state,
+			.origin = (unsigned long)origin, .node = (unsigned long)node,
+			.acquisition = (unsigned long)node->acquisition,
+			.owner = (unsigned long)&batch->release_owner,
+			.owner_task = (unsigned long)batch->release_owner.task,
+			.object = (unsigned long)node->lock, .related = (unsigned long)local,
+			.phase = KD_MUTEX_SELECTED_PROXY, .result = outcome,
+			.flags = node_observation_flags(node));
+		batch->serving = NULL;
+		publish_condition(node, &node->result_ready);
+		wait_cohort_release(node);
+		served++;
+		if (served == limit || !cohort_open(batch))
+			break;
+		node = smp_load_acquire(&batch->head->next);
+		if (!node || node->service_policy != KD_MUTEX_SERVICE_WRITER_COHORT ||
+		    atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
+				   KD_MUTEX_SELECTED_PROXY) != KD_MUTEX_OFFERED)
+			break;
+		detach_proxy(batch, node);
+	}
+	if (batch->release_owner.phase == KD_MUTEX_OWNER_OPEN) {
+		int result = kd_mutex_finish_batch(batch);
+
+		BUG_ON(result);
+	}
+	/* No batch/head access follows the last backend actor's departure. */
+	batch->cohort_active = false;
+	while (progress_wait(local)) {
+		cpu_relax();
+		if (!local->atomic_spin)
+			cond_resched();
+	}
+	link_request(local->lock, local, KD_MUTEX_SELECTED_LOCAL);
+	return true;
+}
+
 int kd_mutex_combine(struct kd_mutex_batch *batch, unsigned int proxy_limit,
 		     unsigned int *served)
 {
@@ -498,7 +651,7 @@ int kd_mutex_combine(struct kd_mutex_batch *batch, unsigned int proxy_limit,
 	if (batch->release_owner.phase != KD_MUTEX_OWNER_OPEN || batch->serving)
 		return -EBUSY;
 	head = batch->head;
-	if (head->atomic_spin)
+	if (head->atomic_spin || head->service_policy != KD_MUTEX_SERVICE_DEFAULT)
 		return -EINVAL;
 	if (head->source_granted &&
 	    release_phase(head) != KD_MUTEX_UNLOCK_OWNER_HANDLED)
@@ -583,7 +736,11 @@ int kd_mutex_await(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 				  KD_MUTEX_SELECTED_LOCAL);
 	BUG_ON(selection != KD_MUTEX_OFFERED &&
 	       selection != KD_MUTEX_SELECTED_LOCAL);
-	if (node->atomic_spin && proxy_limit && spin_serve_successor(node))
+	if (node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT && proxy_limit &&
+	    serve_writer_cohort(node, proxy_limit))
+		wait_request(node);
+	else if (node->atomic_spin && node->service_policy == KD_MUTEX_SERVICE_DEFAULT &&
+		 proxy_limit && spin_serve_successor(node))
 		wait_request(node);
 	start_batch(node, batch, node->atomic_spin ? 0 : proxy_limit);
 	/* Actual MCS turn and physical-owner publication, not a local preclaim. */
@@ -593,7 +750,7 @@ int kd_mutex_await(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 		result = node->ops->selected_local(node, node->context);
 		BUG_ON(result);
 	}
-	if (!node->atomic_spin) {
+	if (!node->atomic_spin && node->service_policy == KD_MUTEX_SERVICE_DEFAULT) {
 		/* Its local source acquisition remains pending while it serves others. */
 		result = kd_mutex_combine(batch, proxy_limit, &served);
 		BUG_ON(result);
@@ -652,6 +809,52 @@ static int spin_source_unlock(struct kd_mutex_node *node,
 	return 0;
 }
 
+int kd_mutex_source_release_sync(struct kd_mutex_node *node,
+		struct kd_thread_state *state, enum kd_mutex_unlock_action *action)
+{
+	struct kd_mutex_batch *batch;
+	struct task_struct *task;
+	int result;
+
+	if (!node || !action || !node->source_granted || node->state != state ||
+	    !node->synchronous_outer || !node->batch)
+		return -EINVAL;
+	if (node->atomic_spin ? !spin_context() : !in_task() || irqs_disabled() || in_atomic())
+		return -EPERM;
+	batch = node->batch;
+	result = kd_mutex_release_request(&node->release, state, node->acquisition,
+					 KD_MUTEX_UNLOCK_ROUTE_SYNC);
+	if (result)
+		return result;
+	if (batch->release_owner.task == current) {
+		result = kd_mutex_release_owner_handle(&node->release);
+		BUG_ON(result);
+		result = kd_mutex_finish_batch(batch);
+		BUG_ON(result);
+	} else {
+		task = retain_owner_task(node);
+		wake_retained_task(task);
+		for (;;) {
+			progress_wait(node);
+			if (release_phase(node) == KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED)
+				break;
+			if (node->atomic_spin) {
+				cpu_relax();
+				continue;
+			}
+			set_current_state(TASK_UNINTERRUPTIBLE);
+			if (release_phase(node) == KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED)
+				break;
+			if (!progress_ready(node))
+				schedule();
+		}
+		if (!node->atomic_spin)
+			__set_current_state(TASK_RUNNING);
+	}
+	*action = KD_MUTEX_UNLOCK_SYNC;
+	return 0;
+}
+
 int kd_mutex_source_unlock(struct kd_mutex_node *node,
 			   struct kd_thread_state *state,
 			   struct kd_mutex_batch *active_batch,
@@ -663,7 +866,9 @@ int kd_mutex_source_unlock(struct kd_mutex_node *node,
 
 	if (!action || !READ_ONCE(node->source_granted) || node->state != state)
 		return -EINVAL;
-	if (node->atomic_spin)
+	if (node->synchronous_outer && active_batch != node->batch)
+		return kd_mutex_source_release_sync(node, state, action);
+	if (node->atomic_spin && node->service_policy == KD_MUTEX_SERVICE_DEFAULT)
 		return spin_source_unlock(node, state, action);
 	route = active_batch == node->batch ? KD_MUTEX_UNLOCK_ROUTE_OWNER :
 		KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER;
@@ -716,8 +921,36 @@ int kd_mutex_outer_notification_done(struct kd_mutex_node *node,
 	return result;
 }
 
+static void read_actor_finish(struct kd_mutex_node *node)
+{
+	struct task_struct *task = node->requester;
+	bool wake = !node->atomic_spin;
+
+	if (!atomic_dec_and_test(&node->read_users))
+		return;
+	kd_observe(KD_OBS_NODE_RETIRE_READY, .state = (unsigned long)node->state,
+		.origin = (unsigned long)node->state->origin,
+		.node = (unsigned long)node, .acquisition = (unsigned long)node->acquisition,
+		.phase = KD_MUTEX_PRIVATE, .flags = node_observation_flags(node));
+	smp_store_release(&node->retirable, 1);
+	if (wake)
+		wake_up_process(task);
+	put_task_struct(task);
+}
+
 int kd_mutex_hold_return(struct kd_mutex_node *node, const void *return_user)
 {
+	if (node->shared_read) {
+		if (!return_user || !READ_ONCE(node->grant_user))
+			return -ESTALE;
+		/* Current source custody retains the grant actor through this add. */
+		atomic_inc(&node->read_users);
+		if (cmpxchg(&node->read_return_user, NULL, return_user)) {
+			read_actor_finish(node);
+			return -EBUSY;
+		}
+		return 0;
+	}
 	return kd_mutex_release_hold_return(&node->release, return_user);
 }
 
@@ -726,6 +959,12 @@ int kd_mutex_drop_return(struct kd_mutex_node *node, const void *return_user)
 	struct task_struct *task;
 	int result;
 
+	if (node->shared_read) {
+		if (!return_user || cmpxchg(&node->read_return_user, return_user, NULL) != return_user)
+			return -ESTALE;
+		read_actor_finish(node);
+		return 0;
+	}
 	if (!return_user || READ_ONCE(node->release.return_user) != return_user)
 		return -ESTALE;
 	task = retain_owner_task(node);
@@ -744,11 +983,13 @@ int kd_mutex_result_consumed(struct kd_mutex_node *node, const void *result_user
 		return -EAGAIN;
 	if (READ_ONCE(node->result_user) != result_user)
 		return -ESTALE;
-	task = retain_owner_task(node);
+	task = node->shared_read ? NULL : retain_owner_task(node);
 	if (cmpxchg(&node->result_user, result_user, NULL) != result_user) {
 		wake_retained_task(task);
 		return -ESTALE;
 	}
+	if (node->shared_read)
+		read_actor_finish(node);
 	/* No node access after dropping this result user. */
 	wake_retained_task(task);
 	return 0;
@@ -759,6 +1000,12 @@ int kd_mutex_grant_unlinked(struct kd_mutex_node *node, const void *grant_user)
 	struct task_struct *task;
 	int result;
 
+	if (node->shared_read) {
+		if (!grant_user || cmpxchg(&node->grant_user, grant_user, NULL) != grant_user)
+			return -ESTALE;
+		read_actor_finish(node);
+		return 0;
+	}
 	if (!grant_user || READ_ONCE(node->release.source_user) != grant_user)
 		return -ESTALE;
 	if (release_phase(node) != KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED)
@@ -775,7 +1022,9 @@ int kd_mutex_finish_batch(struct kd_mutex_batch *batch)
 
 	if (!batch->initialized || !batch->head->source_granted)
 		return -EINVAL;
-	if (batch->serving && (!batch->head->atomic_spin || batch->serving != batch->head))
+	if (batch->serving &&
+	    !(batch->release_owner.early_release && batch->release_owner.close_requested) &&
+	    (!batch->head->atomic_spin || batch->serving != batch->head))
 		return -EBUSY;
 	if (batch->head->atomic_spin && !spin_context())
 		return -EPERM;
@@ -817,7 +1066,7 @@ int kd_mutex_reap_batch(struct kd_mutex_batch *batch)
 
 	if (!batch->initialized || owner->task != current)
 		return -EPERM;
-	if (batch->serving)
+	if (batch->serving || batch->cohort_active)
 		return -EBUSY;
 	if (owner->phase != KD_MUTEX_OWNER_PHYSICALLY_RELEASED)
 		return -EAGAIN;

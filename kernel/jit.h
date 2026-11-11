@@ -6,6 +6,7 @@
 #include "state.h"
 #include "task_state.h"
 #include "image.h"
+#include "rw.h"
 
 /* All addresses describe one retained source/configuration identity. */
 enum kd_jit_site_kind {
@@ -125,6 +126,11 @@ struct kd_jit_mutex_call;
 
 struct kd_jit_mutex_driver {
 	bool atomic_spin;
+	/* Zero/default family preserves mutex callers; atomic_spin is the legacy
+	 * spin shorthand. New callers select family and acquisition mode exactly.
+	 */
+	enum kd_lock_family family;
+	enum kd_grant_mode mode;
 	/* Initialize every field, including absent hooks, before call_init. Keep
 	 * driver/context/callback code through all request/owner wait callbacks and
 	 * final exported return. Selection and export are committed: callbacks
@@ -180,6 +186,7 @@ struct kd_jit_mutex_call {
 	struct kd_mutex_node node;
 	struct kd_mutex_batch possible_batch;
 	struct kd_source_grant grant;
+	struct kd_rw_read_credit read_credit;
 	struct kd_execution_binding offer;
 	struct kd_execution_binding execution;
 	struct kd_execution_binding returned;
@@ -188,6 +195,7 @@ struct kd_jit_mutex_call {
 	bool drive_started;
 	char acquisition_identity;
 	char unlock_identity;
+	char mode_identity;
 	char result_identity;
 };
 
@@ -225,6 +233,34 @@ int kd_jit_capture_mutex_unlock(struct kd_jit_mutex_call *control,
 		 struct kd_execution_binding *capture_binding, struct kd_mutex *lock,
 		 unsigned long source_sp, unsigned long continuation_ip,
 		 unsigned long source_bp, unsigned long api_target);
+/* Family-neutral source paths share the same packet, operation forms and
+ * stopped-return bridge. Reader acquisition runs on the current executor with
+ * an exact concurrent credit; writer requests retain MCS optional selection.
+ */
+int kd_jit_capture_lock(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *native_binding,
+		struct kd_execution_binding *capture_binding, void *object,
+		enum kd_operation_kind operation, unsigned long source_sp,
+		unsigned long continuation_ip, unsigned long source_bp,
+		unsigned long api_target);
+int kd_jit_acquire(struct kd_jit_mutex_call *call, void *object,
+		struct kd_execution_binding **binding, unsigned int proxy_limit,
+		enum kd_mutex_outcome *outcome);
+int kd_jit_unlock(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *binding,
+		struct kd_mutex_batch *active_batch, const void *notifier,
+		enum kd_mutex_unlock_action *action);
+/* The native hardware CALL/RET owns its source effects. These helpers inspect
+ * only the exact grant/control and binding, never canonical native registers.
+ */
+int kd_jit_unlock_native(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *native_binding,
+		enum kd_operation_kind operation, const void *notifier,
+		enum kd_mutex_unlock_action *action);
+int kd_jit_downgrade(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *binding, bool retained);
+int kd_jit_downgrade_native(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *native_binding);
 int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,
 		 struct kd_mutex *lock, struct kd_execution_binding **binding,
 		 unsigned int proxy_limit, enum kd_mutex_outcome *outcome);

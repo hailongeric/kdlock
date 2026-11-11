@@ -2,6 +2,7 @@
 /* Concrete finite compiler runtime over immutable source and executable images. */
 #include <linux/compiler.h>
 #include <linux/errno.h>
+#include <linux/kernel.h>
 #include <linux/overflow.h>
 #include <linux/slab.h>
 #include <linux/string.h>
@@ -233,7 +234,11 @@ static enum kd_operation_kind resolve_operation(void *context, unsigned long tar
 {
 	enum kd_operation_kind kind = kd_mutex_resolve_entry_operation(context, target);
 
-	return kind != KD_OPERATION_NONE ? kind : kd_spin_resolve_entry_operation(target);
+	if (kind == KD_OPERATION_NONE)
+		kind = kd_spin_resolve_entry_operation(target);
+	if (kind == KD_OPERATION_NONE)
+		kind = kd_rw_resolve_entry_operation(target);
+	return kind;
 }
 
 static enum kd_jit_feedback_target_class classify_target(void *context, unsigned long target)
@@ -317,7 +322,7 @@ int kd_jit_runtime_episode_config(struct kd_jit_runtime *runtime, struct kd_epis
 		return -EINVAL;
 	*config = (struct kd_episode_config) {
 		.image_slot = &runtime->slot, .feedback = &runtime->feedback, .stack = NULL,
-		.atomic_spin = runtime->config.atomic_spin,
+		.atomic_spin = runtime->config.atomic_spin, .family = runtime->config.family,
 		.resolve = resolve_operation, .resolve_context = NULL,
 		.classify_target = classify_target, .classify_context = runtime,
 		.proxy_limit = runtime->config.proxy_limit, .report = report_exit, .report_context = runtime,
@@ -344,6 +349,8 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 {
 	struct kd_jit_runtime *runtime;
 	struct kd_episode_config episode;
+	enum kd_lock_family family;
+	bool atomic_context;
 	size_t cells, total;
 	unsigned int index, other;
 	int result;
@@ -355,10 +362,17 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 	    (config->boundary_count && !config->boundaries))
 		return -EINVAL;
 	*out = NULL;
+	family = config->family;
+	if (family == KD_LOCK_FAMILY_MUTEX && config->atomic_spin)
+		family = KD_LOCK_FAMILY_SPIN;
+	if ((unsigned int)family >= KD_LOCK_FAMILY_COUNT ||
+	    (config->atomic_spin && !kd_lock_family_is_atomic(family)))
+		return -EINVAL;
+	atomic_context = kd_lock_family_is_atomic(family);
 	/* The active call-depth return thunk changes native-escape flags. */
 	if (cpu_feature_enabled(X86_FEATURE_CALL_DEPTH))
 		return -EOPNOTSUPP;
-	if (config->atomic_spin && (!IS_ENABLED(CONFIG_PREEMPT_COUNT) ||
+	if (atomic_context && (!IS_ENABLED(CONFIG_PREEMPT_COUNT) ||
 	    IS_ENABLED(CONFIG_DEBUG_SPINLOCK) || IS_ENABLED(CONFIG_DEBUG_MUTEXES) ||
 	    IS_ENABLED(CONFIG_DEBUG_LOCK_ALLOC) || IS_ENABLED(CONFIG_LOCKDEP)))
 		return -EOPNOTSUPP;
@@ -373,7 +387,8 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 			return -EINVAL;
 
 		if ((kd_operation_is_lock(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_LOCK) ||
-		    (kd_operation_is_unlock(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_UNLOCK))
+		    (kd_operation_is_unlock(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_UNLOCK) ||
+		    (kd_operation_is_mode_change(kind) && config->boundaries[index].kind != KD_JIT_RUNTIME_MODE_CHANGE))
 			return -EINVAL;
 		for (other = 0; other < index; ++other)
 			if (config->boundaries[other].site == config->boundaries[index].site)
@@ -383,6 +398,8 @@ int kd_jit_runtime_create(const struct kd_jit_runtime_config *config,
 	if (!runtime)
 		return -ENOMEM;
 	runtime->config = *config;
+	runtime->config.family = family;
+	runtime->config.atomic_spin = atomic_context;
 	/* Cold arrays need stable virtual storage, not contiguous physical pages. */
 	runtime->records = kvcalloc(config->feedback_capacity, sizeof(*runtime->records), GFP_KERNEL);
 	runtime->cycles = kvcalloc(config->cycle_capacity, sizeof(*runtime->cycles), GFP_KERNEL);
@@ -510,17 +527,42 @@ static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input
 	struct rt_writer writer;
 	size_t total = 32 + 7 * 8;
 	const struct kd_jit_image *lookup_image;
-	unsigned int index;
+	static const struct kd_jit_runtime_boundary entries[] = {
+		{ (unsigned long)kd_mutex_lock_entry_asm, KD_JIT_RUNTIME_LOCK },
+		{ (unsigned long)kd_mutex_unlock_entry_asm, KD_JIT_RUNTIME_UNLOCK },
+		{ (unsigned long)kd_spin_lock_entry_asm, KD_JIT_RUNTIME_LOCK },
+		{ (unsigned long)kd_spin_unlock_entry_asm, KD_JIT_RUNTIME_UNLOCK },
+		{ (unsigned long)kd_rwsem_down_read_entry_asm, KD_JIT_RUNTIME_LOCK },
+		{ (unsigned long)kd_rwsem_up_read_entry_asm, KD_JIT_RUNTIME_UNLOCK },
+		{ (unsigned long)kd_rwsem_down_write_entry_asm, KD_JIT_RUNTIME_LOCK },
+		{ (unsigned long)kd_rwsem_up_write_entry_asm, KD_JIT_RUNTIME_UNLOCK },
+		{ (unsigned long)kd_rwsem_downgrade_write_entry_asm, KD_JIT_RUNTIME_MODE_CHANGE },
+		{ (unsigned long)kd_rwlock_read_lock_entry_asm, KD_JIT_RUNTIME_LOCK },
+		{ (unsigned long)kd_rwlock_read_unlock_entry_asm, KD_JIT_RUNTIME_UNLOCK },
+		{ (unsigned long)kd_rwlock_write_lock_entry_asm, KD_JIT_RUNTIME_LOCK },
+		{ (unsigned long)kd_rwlock_write_unlock_entry_asm, KD_JIT_RUNTIME_UNLOCK },
+	};
+	bool append[ARRAY_SIZE(entries)] = {};
+	unsigned int index, other;
 	unsigned int boundaries = runtime->config.boundary_count;
-	bool lock_present = false, unlock_present = false;
 
 	if (rows || input->left) return -EINVAL;
-	for (index = 0; index < runtime->config.boundary_count; ++index) {
-		lock_present |= runtime->config.boundaries[index].site == (unsigned long)kd_mutex_lock_entry_asm;
-		unlock_present |= runtime->config.boundaries[index].site == (unsigned long)kd_mutex_unlock_entry_asm;
+	/* Public family APIs are pre-operation cuts even when the provider only
+	 * supplies additional source-specific boundaries. Keep exact API kinds.
+	 */
+	for (index = 0; index < ARRAY_SIZE(entries); ++index) {
+		if (kd_operation_family(resolve_operation(NULL, entries[index].site)) !=
+		    runtime->config.family)
+			continue;
+		append[index] = true;
+		for (other = 0; other < runtime->config.boundary_count; ++other)
+			if (runtime->config.boundaries[other].site == entries[index].site) {
+				append[index] = false;
+				break;
+			}
+		if (append[index] && check_add_overflow(boundaries, 1U, &boundaries))
+			return -EOVERFLOW;
 	}
-	if (boundaries > ~0U - (!lock_present + !unlock_present)) return -EOVERFLOW;
-	boundaries += !lock_present + !unlock_present;
 	for (index = 0; index < source->region_count; ++index)
 		if (!rt_add(&total, 16) || !rt_add(&total, source->regions[index].length)) return -EOVERFLOW;
 	if (!rt_add(&total, (size_t)boundaries * 16) ||
@@ -546,12 +588,11 @@ static int export_source(struct kd_jit_runtime *runtime, struct rt_reader *input
 		rt_put(&writer, runtime->config.boundaries[index].site);
 		rt_put(&writer, runtime->config.boundaries[index].kind);
 	}
-	if (!lock_present) {
-		rt_put(&writer, (unsigned long)kd_mutex_lock_entry_asm); rt_put(&writer, KD_JIT_RUNTIME_LOCK);
-	}
-	if (!unlock_present) {
-		rt_put(&writer, (unsigned long)kd_mutex_unlock_entry_asm); rt_put(&writer, KD_JIT_RUNTIME_UNLOCK);
-	}
+	for (index = 0; index < ARRAY_SIZE(entries); ++index)
+		if (append[index]) {
+			rt_put(&writer, entries[index].site);
+			rt_put(&writer, entries[index].kind);
+		}
 	rt_blob(&writer, source->version, source->version_length);
 	rt_finish(&writer, length);
 	return 0;

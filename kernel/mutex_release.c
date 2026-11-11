@@ -14,6 +14,7 @@
 #include <linux/compiler.h>
 #include <linux/errno.h>
 #include <linux/sched.h>
+#include <linux/sched/task.h>
 
 #include "mutex_release.h"
 #include "observation.h"
@@ -65,6 +66,9 @@ int kd_mutex_release_owner_init(struct kd_mutex_release_owner *owner,
 	INIT_LIST_HEAD(&owner->obligations);
 	owner->phase = KD_MUTEX_OWNER_OPEN;
 	owner->atomic_spin = atomic_spin;
+	owner->single_grant = atomic_spin;
+	owner->early_release = atomic_spin;
+	owner->close_requested = false;
 	return 0;
 }
 
@@ -83,7 +87,8 @@ int kd_mutex_release_bind(struct kd_mutex_release_owner *owner,
 		result = -EPERM;
 	else if (owner->phase != KD_MUTEX_OWNER_OPEN)
 		result = -EBUSY;
-	else if (owner->atomic_spin && !list_empty(&owner->obligations))
+	else if (owner->close_requested ||
+		 (owner->single_grant && !list_empty(&owner->obligations)))
 		result = -EBUSY;
 	else {
 		list_for_each_entry(existing, &owner->obligations, owner_link) {
@@ -101,6 +106,7 @@ int kd_mutex_release_bind(struct kd_mutex_release_owner *owner,
 		release->source_user = source_user;
 		release->return_user = NULL;
 		release->notifier = NULL;
+		release->ack_task = NULL;
 		release->phase = KD_MUTEX_UNLOCK_HELD;
 		release->route = KD_MUTEX_UNLOCK_ROUTE_UNSET;
 		release->deferred = false;
@@ -127,9 +133,13 @@ int kd_mutex_release_request(struct kd_mutex_release *release,
 		result = -ESTALE;
 	else if (route != KD_MUTEX_UNLOCK_ROUTE_OWNER &&
 		 route != KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER &&
-		 route != KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC)
+		 route != KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC &&
+		 route != KD_MUTEX_UNLOCK_ROUTE_SYNC)
 		result = -EINVAL;
-	else if (owner->atomic_spin != (route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC))
+	else if ((route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC &&
+		  (!owner->atomic_spin || !owner->single_grant)) ||
+		 (route == KD_MUTEX_UNLOCK_ROUTE_SYNC && !owner->early_release) ||
+		 (owner->single_grant && route != KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC))
 		result = -EINVAL;
 	else if (route == KD_MUTEX_UNLOCK_ROUTE_OWNER && owner->task != current)
 		result = -EPERM;
@@ -138,6 +148,13 @@ int kd_mutex_release_request(struct kd_mutex_release *release,
 	else {
 		release->route = route;
 		release->phase = KD_MUTEX_UNLOCK_REQUESTED;
+		if (route == KD_MUTEX_UNLOCK_ROUTE_SYNC && !owner->atomic_spin) {
+			get_task_struct(current);
+			release->ack_task = current;
+		}
+		if (route == KD_MUTEX_UNLOCK_ROUTE_SYNC ||
+		    route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC)
+			owner->close_requested = true;
 		observe_release(KD_OBS_RELEASE_REQUEST, release, owner, release->source_user,
 				release->return_user, release->notifier);
 	}
@@ -231,7 +248,8 @@ int kd_mutex_release_owner_handle(struct kd_mutex_release *release)
 		result = -EPERM;
 	else if ((release->phase == KD_MUTEX_UNLOCK_REQUESTED &&
 		  (release->route == KD_MUTEX_UNLOCK_ROUTE_OWNER ||
-		   release->route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC)) ||
+		   release->route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC ||
+		   release->route == KD_MUTEX_UNLOCK_ROUTE_SYNC)) ||
 		 (release->phase == KD_MUTEX_UNLOCK_UNWIND_READY &&
 		  release->route == KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER)) {
 		release->phase = KD_MUTEX_UNLOCK_OWNER_HANDLED;
@@ -354,6 +372,28 @@ static int mark_physical(struct kd_mutex_release_owner *owner,
 			.related = (unsigned long)unlock, .phase = owner->phase);
 	}
 	raw_spin_unlock(&owner->guard);
+	/* Wake the exact synchronous executor, not an origin inferred from a
+	 * queue node. Cache and clear each retained task before its final wake.
+	 */
+	if (!result) {
+		for (;;) {
+			struct task_struct *task = NULL;
+
+			raw_spin_lock(&owner->guard);
+			list_for_each_entry(release, &owner->obligations, owner_link) {
+				if (release->ack_task) {
+					task = release->ack_task;
+					release->ack_task = NULL;
+					break;
+				}
+			}
+			raw_spin_unlock(&owner->guard);
+			if (!task)
+				break;
+			wake_up_process(task);
+			put_task_struct(task);
+		}
+	}
 	return result;
 }
 
@@ -383,7 +423,8 @@ int kd_mutex_release_retire(struct kd_mutex_release *release)
 	if (owner->task != current)
 		result = -EPERM;
 	else if (release->phase != KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED ||
-		 release->source_user || release->return_user || release->notifier)
+		 release->source_user || release->return_user || release->notifier ||
+		 release->ack_task)
 		result = -EBUSY;
 	else {
 		struct kd_thread_state *state = release->state;

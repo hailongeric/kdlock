@@ -143,10 +143,11 @@ static bool reconcile_spin_depth(struct kd_task_root_context *root)
 	unsigned int depth = 0, wanted;
 
 	list_for_each_entry(grant, &state->grants, state_link)
-		if (grant->logical_open)
+		if (grant->logical_open && kd_lock_family_is_atomic(grant->family))
 			depth++;
 	BUG_ON(depth > PREEMPT_MASK / PREEMPT_OFFSET);
-	BUG_ON(!depth && (state->operation.kind != KD_OPERATION_SPIN_UNLOCK ||
+	BUG_ON(!depth && (!kd_operation_is_unlock(state->operation.kind) ||
+		!kd_operation_is_atomic(state->operation.kind) ||
 		state->operation.phase != KD_OPERATION_RESUMABLE));
 	wanted = depth ? depth : 1;
 	while (count < wanted) {

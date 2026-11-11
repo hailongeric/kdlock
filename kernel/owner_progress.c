@@ -81,8 +81,9 @@ int kd_owner_progress_control_stopped(struct kd_owner_batch *item,
 	if (!item->batch->head ||
 	    !READ_ONCE(item->batch->head->source_granted))
 		return -EBUSY;
-	if (item->batch->serving && (!item->batch->head->atomic_spin ||
-	    item->batch->serving != item->batch->head))
+	if (item->batch->serving && !item->batch->cohort_active &&
+	    (!item->batch->head->atomic_spin ||
+	     item->batch->serving != item->batch->head))
 		return -EBUSY;
 	item->terminal_foreign = terminal_foreign;
 	item->control_stopped = true;
@@ -102,7 +103,8 @@ static bool handle_ready(const struct kd_mutex_release *release)
 {
 	return (release->phase == KD_MUTEX_UNLOCK_REQUESTED &&
 		(release->route == KD_MUTEX_UNLOCK_ROUTE_OWNER ||
-		 release->route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC)) ||
+		 release->route == KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC ||
+		 release->route == KD_MUTEX_UNLOCK_ROUTE_SYNC)) ||
 	       (release->phase == KD_MUTEX_UNLOCK_UNWIND_READY &&
 		release->route == KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER);
 }
@@ -134,7 +136,10 @@ static bool finish_ready_locked(struct kd_owner_batch *item)
 	if (batch->release_owner.phase != KD_MUTEX_OWNER_OPEN ||
 	    !batch->head || !READ_ONCE(batch->head->source_granted))
 		return false;
-	if (!batch->head->atomic_spin && (!item->control_stopped || batch->serving))
+	if (batch->cohort_active && !batch->release_owner.close_requested)
+		return false;
+	if (!batch->release_owner.early_release &&
+	    (!item->control_stopped || batch->serving))
 		return false;
 	list_for_each_entry(release, &batch->release_owner.obligations, owner_link)
 		if (release->phase != KD_MUTEX_UNLOCK_OWNER_HANDLED)
@@ -147,7 +152,7 @@ static bool reap_ready_locked(struct kd_owner_batch *item)
 	struct kd_mutex_release_owner *owner = &item->batch->release_owner;
 	struct kd_mutex_release *release;
 
-	if (!item->control_stopped || item->batch->serving ||
+	if (!item->control_stopped || item->batch->serving || item->batch->cohort_active ||
 	    owner->phase != KD_MUTEX_OWNER_PHYSICALLY_RELEASED)
 		return false;
 	if (list_empty(&owner->obligations))
@@ -158,7 +163,7 @@ static bool reap_ready_locked(struct kd_owner_batch *item)
 
 		if (smp_load_acquire(&node->queue_done) &&
 		    !smp_load_acquire(&node->result_user) && !release->source_user &&
-		    !release->return_user && !release->notifier)
+		    !release->return_user && !release->notifier && !release->ack_task)
 			return true;
 	}
 	return false;

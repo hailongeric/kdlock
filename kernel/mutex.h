@@ -9,6 +9,8 @@ struct kd_thread_state;
 struct kd_mutex_node;
 struct kd_mutex_batch;
 struct task_struct;
+struct kd_rw;
+struct kd_rw_read_credit;
 
 /* Private source-rebuilt object layout; no old binary/layout compatibility. */
 struct kd_mutex {
@@ -47,6 +49,12 @@ enum kd_mutex_unlock_action {
 	KD_MUTEX_UNLOCK_BATCH_HEAD,
 	KD_MUTEX_UNLOCK_DEFERRED_PARENT,
 	KD_MUTEX_UNLOCK_ATOMIC,
+	KD_MUTEX_UNLOCK_SYNC,
+};
+
+enum kd_mutex_service_policy {
+	KD_MUTEX_SERVICE_DEFAULT,
+	KD_MUTEX_SERVICE_WRITER_COHORT,
 };
 
 struct kd_mutex_ops {
@@ -76,6 +84,8 @@ struct kd_mutex_ops {
 	 * route before returning. The mutex callback runs in sleepable task
 	 * context. The spin callback runs with preemption disabled and IRQs
 	 * enabled. It may release its single physical grant before it returns.
+	 * Writer cohorts independently choose wait context and may close physical
+	 * exclusion during a nested callback after an exact synchronous request.
 	 * Neither callback reenters combining of its own batch. A live-grant
 	 * result must enable a retained origin/outer actor to reach its unlock.
 	 * A deferred mutex release also needs its own unwind notification.
@@ -109,6 +119,15 @@ struct kd_mutex_node {
 	bool source_granted;
 	bool ready;
 	bool atomic_spin;
+	/* Wait context, service grouping and outer release are independent. The
+	 * legacy default preserves mutex cohorts and one-grant spin turns.
+	 */
+	enum kd_mutex_service_policy service_policy;
+	bool synchronous_outer;
+	struct kd_rw *rw;
+	bool shared_read;
+	atomic_t read_users;
+	const void *read_return_user;
 	struct task_struct *requester;
 	struct kd_thread_state *state;
 	const void *acquisition;
@@ -143,6 +162,12 @@ struct kd_mutex_batch {
 	unsigned int proxy_served;
 	bool initialized;
 	bool head_retired;
+	/* This backend actor outlives individual source exports in a writer
+	 * cohort. Reaping cannot publish its head reusable until it stops.
+	 */
+	bool cohort_active;
+	struct kd_rw *rw;
+	struct kd_rw_read_credit *conversion;
 };
 
 void kd_mutex_init(struct kd_mutex *lock);
@@ -155,6 +180,10 @@ int kd_mutex_node_init(struct kd_mutex_node *node,
 		       bool ready, const struct kd_mutex_ops *ops, void *context);
 /* Release private initialized storage that was never enqueued; no cancellation. */
 int kd_mutex_node_discard(struct kd_mutex_node *node);
+/* A shared credit has no MCS membership or exclusive release owner. These
+ * two exact result/grant actors retain its initialized node independently.
+ */
+int kd_mutex_read_granted(struct kd_mutex_node *node);
 
 /*
  * Split enqueue/await permits a ready publisher to claim local before a
@@ -171,6 +200,10 @@ int kd_mutex_node_discard(struct kd_mutex_node *node);
  * rejoins the tail once as a local selection after the callback returns and
  * its terminal foreign physical duties drain. The pending caller retains
  * the lock object across both queue memberships.
+	 * Writer-cohort requests also withdraw the ungranted candidate, but first W
+	 * supplies a multi-grant physical head. Cohort closure forbids further grants;
+	 * the candidate rejoins only after the whole service driver and its terminal
+	 * foreign duties stop. atomic_spin selects waiting, not cohort membership.
  */
 int kd_mutex_enqueue(struct kd_mutex *lock, struct kd_mutex_node *node);
 bool kd_mutex_choose_local(struct kd_mutex_node *node);
@@ -202,6 +235,11 @@ int kd_mutex_source_unlock(struct kd_mutex_node *node,
 			   struct kd_mutex_batch *active_batch,
 			   const void *notifier,
 			   enum kd_mutex_unlock_action *action);
+/* Exact physical ACK, with sleepable or atomic waiting chosen by the node.
+ * Writer outer unlock and native downgrade close the current cohort here.
+ */
+int kd_mutex_source_release_sync(struct kd_mutex_node *node,
+		struct kd_thread_state *state, enum kd_mutex_unlock_action *action);
 int kd_mutex_publish_outer_unwind(struct kd_mutex_node *node,
 				   const void *notifier,
 				   struct kd_mutex_release_owner **target);
@@ -224,8 +262,9 @@ int kd_mutex_grant_unlinked(struct kd_mutex_node *node, const void *grant_user);
  * It does not wait for core collection or retire context. reap is owner-only,
  * returns -EBUSY while exact result/core/return/notifier users remain, and must
  * be retried while the context stays retained. It never dereferences lock.
- * A spin batch can release its sole grant while its callback runs. Reaping
- * still waits for the callback to return and for the other exact users.
+ * A spin batch can release its sole grant while its callback runs. A writer
+ * cohort can close synchronously during a nested callback. Reaping still waits
+ * for callback/cohort actors and the other exact users.
  */
 int kd_mutex_finish_batch(struct kd_mutex_batch *batch);
 int kd_mutex_reap_batch(struct kd_mutex_batch *batch);

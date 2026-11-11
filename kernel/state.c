@@ -7,6 +7,7 @@
 #include <linux/sched.h>
 
 #include "state.h"
+#include "rw.h"
 
 int kd_execution_binding_init(struct kd_execution_binding *binding,
 			      struct kd_thread_state *state,
@@ -146,7 +147,8 @@ int kd_operation_begin(struct kd_thread_state *state,
 	if (!kd_state_is_jit_current(state, binding))
 		return -EPERM;
 	if (!identity || !target ||
-	    (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind)) ||
+	    (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind) &&
+	     !kd_operation_is_mode_change(kind)) ||
 	    (form != KD_OPERATION_NEW_CALL && form != KD_OPERATION_EXISTING_CALL &&
 	     form != KD_OPERATION_EXISTING_FRAME &&
 	     form != KD_OPERATION_CAPTURED_CONTINUATION))
@@ -265,11 +267,29 @@ void kd_source_grant_init(struct kd_source_grant *grant,
 	grant->object = object;
 	grant->acquisition = acquisition;
 	grant->release = release;
+	grant->read_credit = NULL;
+	grant->family = KD_LOCK_FAMILY_MUTEX;
+	grant->mode = KD_GRANT_MODE_WRITE;
+	grant->physical = KD_GRANT_PHYSICAL_WRITE;
 	grant->user = user;
 	grant->drop = drop;
 	grant->control = control;
 	grant->linked = false;
 	grant->logical_open = false;
+}
+
+static bool grant_modes_valid(const struct kd_source_grant *grant)
+{
+	if ((unsigned int)grant->family >= KD_LOCK_FAMILY_COUNT)
+		return false;
+	if (grant->physical == KD_GRANT_PHYSICAL_READ)
+		return (grant->family == KD_LOCK_FAMILY_RWSEM ||
+			grant->family == KD_LOCK_FAMILY_RWLOCK) &&
+		       grant->mode == KD_GRANT_MODE_READ && grant->read_credit;
+	return grant->physical == KD_GRANT_PHYSICAL_WRITE && !grant->read_credit &&
+	       (grant->mode == KD_GRANT_MODE_WRITE ||
+		(grant->family == KD_LOCK_FAMILY_RWSEM &&
+		 grant->mode == KD_GRANT_MODE_RETAINED_READ));
 }
 
 int kd_state_link_grant(struct kd_thread_state *state,
@@ -283,25 +303,43 @@ int kd_state_link_grant(struct kd_thread_state *state,
 	if (!kd_state_is_current(state, binding))
 		return -EPERM;
 	if (!grant || grant->state != state || !grant->object || !grant->acquisition ||
-	    !grant->release || !grant->user || !grant->drop || grant->linked)
+	    !grant->user || !grant->drop || grant->linked || !grant_modes_valid(grant) ||
+	    grant->mode == KD_GRANT_MODE_RETAINED_READ)
 		return -EINVAL;
 	list_for_each_entry(existing, &state->grants, state_link) {
-		if (existing->acquisition == grant->acquisition ||
-		    (existing->object == grant->object && existing->logical_open))
+		if (existing->acquisition == grant->acquisition)
+			return -EEXIST;
+		/* Real shared credits may repeat. A writer or retained writer never
+		 * becomes a second shared acquisition of the same source object.
+		 */
+		if (existing->object == grant->object && existing->logical_open &&
+		    !(existing->family == grant->family &&
+		      existing->mode == KD_GRANT_MODE_READ && grant->mode == KD_GRANT_MODE_READ &&
+		      existing->physical == KD_GRANT_PHYSICAL_READ &&
+		      grant->physical == KD_GRANT_PHYSICAL_READ))
 			return -EEXIST;
 	}
-	owner = READ_ONCE(grant->release->owner);
-	if (!owner)
-		return -ESTALE;
-	raw_spin_lock(&owner->guard);
-	if (grant->release->owner != owner || grant->release->state != state ||
-	    grant->release->acquisition != grant->acquisition ||
-	    grant->release->source_user != grant->user ||
-	    grant->release->phase != KD_MUTEX_UNLOCK_HELD)
-		result = -ESTALE;
-	raw_spin_unlock(&owner->guard);
-	if (result)
-		return result;
+	if (grant->physical == KD_GRANT_PHYSICAL_READ) {
+		result = kd_rw_read_credit_check(grant->read_credit, state,
+			grant->acquisition, grant->user, true);
+		if (result)
+			return result;
+	} else {
+		if (!grant->release)
+			return -EINVAL;
+		owner = READ_ONCE(grant->release->owner);
+		if (!owner)
+			return -ESTALE;
+		raw_spin_lock(&owner->guard);
+		if (grant->release->owner != owner || grant->release->state != state ||
+		    grant->release->acquisition != grant->acquisition ||
+		    grant->release->source_user != grant->user ||
+		    grant->release->phase != KD_MUTEX_UNLOCK_HELD)
+			result = -ESTALE;
+		raw_spin_unlock(&owner->guard);
+		if (result)
+			return result;
+	}
 	list_add_tail(&grant->state_link, &state->grants);
 	grant->linked = true;
 	grant->logical_open = true;
@@ -326,6 +364,80 @@ struct kd_source_grant *kd_state_find_grant(struct kd_thread_state *state,
 	return found ? found : ERR_PTR(-ENOENT);
 }
 
+struct kd_source_grant *kd_state_find_grant_typed(struct kd_thread_state *state,
+		struct kd_execution_binding *binding, void *object,
+		enum kd_lock_family family, enum kd_grant_mode mode)
+{
+	struct kd_source_grant *grant;
+
+	if (!kd_state_is_current(state, binding))
+		return ERR_PTR(-EPERM);
+	if (!object || (unsigned int)family >= KD_LOCK_FAMILY_COUNT ||
+	    (unsigned int)mode > KD_GRANT_MODE_RETAINED_READ)
+		return ERR_PTR(-EINVAL);
+	list_for_each_entry_reverse(grant, &state->grants, state_link) {
+		if (grant->object != object || grant->family != family || !grant->logical_open)
+			continue;
+		if (grant->mode == mode || (mode == KD_GRANT_MODE_READ &&
+					   grant->mode == KD_GRANT_MODE_RETAINED_READ))
+			return grant;
+	}
+	return ERR_PTR(-ENOENT);
+}
+
+struct kd_source_grant *kd_state_find_operation_grant(struct kd_thread_state *state,
+		struct kd_execution_binding *binding, void *object,
+		enum kd_operation_kind operation)
+{
+	if (!kd_operation_is_unlock(operation) && !kd_operation_is_mode_change(operation))
+		return ERR_PTR(-EINVAL);
+	return kd_state_find_grant_typed(state, binding, object, kd_operation_family(operation),
+		kd_operation_is_read(operation) ? KD_GRANT_MODE_READ : KD_GRANT_MODE_WRITE);
+}
+
+int kd_state_downgrade_grant(struct kd_thread_state *state,
+		struct kd_execution_binding *binding, struct kd_source_grant *grant,
+		struct kd_rw_read_credit *credit, bool retained)
+{
+	struct kd_mutex_release_owner *owner;
+	enum kd_mutex_unlock_phase phase;
+	int result;
+
+	if (!kd_state_is_current(state, binding))
+		return -EPERM;
+	if (!grant || grant->state != state || !grant->linked || !grant->logical_open ||
+	    grant->family != KD_LOCK_FAMILY_RWSEM || grant->mode != KD_GRANT_MODE_WRITE ||
+	    grant->physical != KD_GRANT_PHYSICAL_WRITE || !grant->release || grant->read_credit)
+		return -ESTALE;
+	if (retained ? credit != NULL : credit == NULL)
+		return -EINVAL;
+	owner = READ_ONCE(grant->release->owner);
+	if (!owner)
+		return -ESTALE;
+	raw_spin_lock(&owner->guard);
+	phase = grant->release->phase;
+	result = grant->release->owner == owner && grant->release->state == state &&
+		 grant->release->acquisition == grant->acquisition &&
+		 grant->release->source_user == grant->user ? 0 : -ESTALE;
+	raw_spin_unlock(&owner->guard);
+	if (result)
+		return result;
+	if (phase != (retained ? KD_MUTEX_UNLOCK_HELD : KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED))
+		return -EAGAIN;
+	if (!retained) {
+		result = kd_rw_read_credit_check(credit, state, grant->acquisition, grant->user, true);
+		if (result)
+			return result;
+	}
+	/* Preserve the original acquisition and source membership through its read
+	 * tail. Only current source changes logical custody after owner ACK.
+	 */
+	grant->mode = retained ? KD_GRANT_MODE_RETAINED_READ : KD_GRANT_MODE_READ;
+	grant->physical = retained ? KD_GRANT_PHYSICAL_WRITE : KD_GRANT_PHYSICAL_READ;
+	grant->read_credit = credit;
+	return 0;
+}
+
 int kd_state_close_grant(struct kd_thread_state *state,
 			 struct kd_execution_binding *binding,
 			 struct kd_source_grant *grant)
@@ -336,8 +448,18 @@ int kd_state_close_grant(struct kd_thread_state *state,
 
 	if (!kd_state_is_current(state, binding))
 		return -EPERM;
-	if (!grant || grant->state != state || !grant->linked || !grant->logical_open)
+	if (!grant || grant->state != state || !grant->linked || !grant->logical_open ||
+	    !grant_modes_valid(grant))
 		return -ESTALE;
+	if (grant->physical == KD_GRANT_PHYSICAL_READ) {
+		int result = kd_rw_read_credit_check(grant->read_credit, state,
+			grant->acquisition, grant->user, false);
+
+		if (result)
+			return result;
+		grant->logical_open = false;
+		return 0;
+	}
 	owner = READ_ONCE(grant->release->owner);
 	if (!owner)
 		return -ESTALE;
@@ -345,6 +467,14 @@ int kd_state_close_grant(struct kd_thread_state *state,
 	phase = grant->release->phase;
 	route = grant->release->route;
 	raw_spin_unlock(&owner->guard);
+	/* A normal active writer-cohort member can finish its source scope
+	 * before the cohort's physical end. A foreign/outer synchronous release
+	 * needs the physical ACK, and only that later end permits unlink.
+	 */
+	if ((grant->family == KD_LOCK_FAMILY_RWSEM || grant->family == KD_LOCK_FAMILY_RWLOCK) &&
+	    phase != KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED &&
+	    !(route == KD_MUTEX_UNLOCK_ROUTE_OWNER && phase == KD_MUTEX_UNLOCK_OWNER_HANDLED))
+		return -EAGAIN;
 	if (!((route == KD_MUTEX_UNLOCK_ROUTE_DEFERRED_OUTER &&
 	       (phase == KD_MUTEX_UNLOCK_DEFERRED ||
 		phase == KD_MUTEX_UNLOCK_UNWIND_READY)) ||
@@ -365,16 +495,24 @@ int kd_state_unlink_grant(struct kd_thread_state *state,
 
 	if (!kd_state_is_current(state, binding))
 		return -EPERM;
-	if (!grant || grant->state != state || !grant->linked || grant->logical_open)
+	if (!grant || grant->state != state || !grant->linked || grant->logical_open ||
+	    !grant_modes_valid(grant))
 		return -ESTALE;
-	owner = READ_ONCE(grant->release->owner);
-	if (!owner)
-		return -ESTALE;
-	raw_spin_lock(&owner->guard);
-	physical = grant->release->phase == KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED;
-	raw_spin_unlock(&owner->guard);
-	if (!physical)
-		return -EAGAIN;
+	if (grant->physical == KD_GRANT_PHYSICAL_READ) {
+		result = kd_rw_read_credit_check(grant->read_credit, state,
+			grant->acquisition, grant->user, false);
+		if (result)
+			return result;
+	} else {
+		owner = READ_ONCE(grant->release->owner);
+		if (!owner)
+			return -ESTALE;
+		raw_spin_lock(&owner->guard);
+		physical = grant->release->phase == KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED;
+		raw_spin_unlock(&owner->guard);
+		if (!physical)
+			return -EAGAIN;
+	}
 	list_del_init(&grant->state_link);
 	grant->linked = false;
 	/* Success can allow owner reaping: no later grant access is permitted. */

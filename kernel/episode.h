@@ -23,6 +23,7 @@ struct kd_episode_config {
 	 * run with preemption disabled and IRQs enabled, without sleeping.
 	 */
 	bool atomic_spin;
+	enum kd_lock_family family;
 	struct kd_jit_image_slot *image_slot;
 	struct kd_jit_feedback_pool *feedback;
 	const struct kd_source_stack_ops *stack;
@@ -137,5 +138,11 @@ int kd_episode_unlock_native(struct kd_episode_resources *resources,
 		 struct kd_task_root_context *root,
 		 struct kd_execution_binding *native_binding, struct kd_mutex *lock,
 		 enum kd_operation_kind operation);
+
+/* Native mode API operates on the exact existing writer acquisition. */
+int kd_episode_downgrade_native(struct kd_episode_resources *resources,
+		struct kd_task_root_context *root,
+		struct kd_execution_binding *native_binding, struct kd_mutex *lock,
+		enum kd_operation_kind operation);
 
 #endif

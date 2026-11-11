@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Original-backend invocation and exact ordinary-mutex source-operation bridge. */
+/* Original-backend invocation and exact typed source-operation bridges. */
 #include <linux/bug.h>
 #include <linux/compiler.h>
 #include <linux/err.h>
@@ -225,12 +225,13 @@ int kd_jit_prepare_operation(const struct kd_jit_image *image,
 		return -ESTALE;
 	if (kind == KD_OPERATION_NONE)
 		return -ENOENT;
-	if (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind))
+	if (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind) &&
+	    !kd_operation_is_mode_change(kind))
 		return -EOPNOTSUPP;
 	if (state->io.kind == KD_JIT_EXIT_LOCK_OPERATION &&
 	    ((state->io.detail == KD_JIT_OP_LOCK && !kd_operation_is_lock(kind)) ||
 	     (state->io.detail == KD_JIT_OP_UNLOCK && !kd_operation_is_unlock(kind)) ||
-	     state->io.detail == KD_JIT_OP_MODE_CHANGE))
+	     (state->io.detail == KD_JIT_OP_MODE_CHANGE && !kd_operation_is_mode_change(kind))))
 		return -EOPNOTSUPP;
 	result = kd_operation_begin(state, binding, identity, kind, form,
 				    state->io.source_ip, target, return_ip);
@@ -351,9 +352,22 @@ int kd_jit_resume_origin(struct kd_thread_state *state,
 static int drop_grant(void *control, const void *user)
 {
 	struct kd_jit_mutex_call *call = control;
+	struct kd_mutex_node *node = &call->node;
+	struct kd_rw_read_credit *credit = call->grant.read_credit;
+	struct kd_thread_state *state = node->state;
+	const void *acquisition = call->grant.acquisition;
+	int result;
 
+	if (credit) {
+		/* Released-credit validation owns no hidden finalizer. Its immutable
+		 * history remains if the exact node source-user drop reports failure.
+		 */
+		result = kd_rw_read_credit_unlink(credit, state, acquisition, user);
+		if (result)
+			return result;
+	}
 	/* Success can permit call retirement; do not access call afterward. */
-	return kd_mutex_grant_unlinked(&call->node, user);
+	return kd_mutex_grant_unlinked(node, user);
 }
 
 struct kd_jit_mutex_call *kd_jit_mutex_grant_call(const struct kd_source_grant *grant)
@@ -371,7 +385,8 @@ struct kd_jit_mutex_call *kd_jit_mutex_grant_call(const struct kd_source_grant *
 	    grant->release != &call->node.release ||
 	    grant->acquisition != &call->acquisition_identity ||
 	    call->node.acquisition != grant->acquisition ||
-	    grant->user != grant || call->node.grant_user != grant)
+	    grant->user != grant || call->node.grant_user != grant ||
+	    (grant->read_credit && grant->read_credit != &call->read_credit))
 		return ERR_PTR(-ESTALE);
 	return call;
 }
@@ -430,7 +445,8 @@ static int finish_acquisition(struct kd_jit_mutex_call *call,
 	if (!kd_state_is_jit_current(state, binding))
 		return -EPERM;
 	if (!kd_operation_is_lock(state->operation.kind) ||
-	    kd_operation_is_spin(state->operation.kind) != call->node.atomic_spin ||
+	    kd_operation_family(state->operation.kind) != call->grant.family ||
+	    kd_operation_is_read(state->operation.kind) != (call->grant.mode == KD_GRANT_MODE_READ) ||
 	    state->operation.identity != &call->acquisition_identity ||
 	    state->operation.phase != KD_OPERATION_ENTERED)
 		return -ESTALE;
@@ -495,10 +511,10 @@ static enum kd_mutex_outcome execute_selected(struct kd_mutex_node *node,
 
 	result = accept_selected(node, context);
 	BUG_ON(result);
-	/* A spin proxy owns this request's sole physical turn. A mutex proxy
-	 * belongs to the combiner's existing physical batch.
+	/* Register a newly owned physical head once. A later cohort request
+	 * belongs to that existing head and must not register unused storage.
 	 */
-	if (node->atomic_spin && call->driver->selected_local) {
+	if (node->batch && node->batch->head == node && call->driver->selected_local) {
 		result = call->driver->selected_local(call, call->driver->context);
 		BUG_ON(result);
 	}
@@ -520,11 +536,23 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 		 struct kd_thread_state *state,
 		 const struct kd_jit_mutex_driver *driver, bool ready)
 {
+	enum kd_lock_family family;
+	bool atomic_context;
 	int result;
 
-	if (!call || !state || !driver || !driver->run || !driver->stack ||
+	if (!call || !state || !driver)
+		return -EINVAL;
+	family = driver->family;
+	if (family == KD_LOCK_FAMILY_MUTEX && driver->atomic_spin)
+		family = KD_LOCK_FAMILY_SPIN;
+	atomic_context = kd_lock_family_is_atomic(family);
+	if ((unsigned int)family >= KD_LOCK_FAMILY_COUNT ||
+	    (driver->mode != KD_GRANT_MODE_WRITE && driver->mode != KD_GRANT_MODE_READ) ||
+	    (driver->mode == KD_GRANT_MODE_READ && family != KD_LOCK_FAMILY_RWSEM &&
+	     family != KD_LOCK_FAMILY_RWLOCK) ||
+	    !driver->run || !driver->stack ||
 	    (!!driver->wait_progress != !!driver->wait_ready) ||
-	    (driver->atomic_spin && (!driver->selected_local || !driver->wait_progress ||
+	    (atomic_context && (!driver->selected_local || !driver->wait_progress ||
 	     !driver->exported)) ||
 	    !driver->stack->read_word || !driver->stack->write_word ||
 	    !driver->origin_binding || driver->origin_binding->state != state ||
@@ -536,6 +564,7 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 	call->driver = driver;
 	call->drive_started = false;
 	kd_mutex_batch_init(&call->possible_batch);
+	kd_rw_read_credit_init(&call->read_credit);
 	result = kd_execution_binding_init(&call->offer, state, NULL, call,
 					   KD_EXECUTION_OFFER);
 	if (result)
@@ -547,11 +576,16 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 	kd_source_grant_init(&call->grant, state, NULL,
 		&call->acquisition_identity, &call->node.release, &call->grant,
 		drop_grant, call);
+	call->grant.family = family;
+	call->grant.mode = driver->mode;
+	call->grant.physical = driver->mode == KD_GRANT_MODE_READ ?
+		KD_GRANT_PHYSICAL_READ : KD_GRANT_PHYSICAL_WRITE;
+	call->grant.read_credit = driver->mode == KD_GRANT_MODE_READ ? &call->read_credit : NULL;
 	result = kd_mutex_node_init(&call->node, state, &call->acquisition_identity,
 		&call->acquisition_identity, &call->grant, &call->result_identity,
 		ready, &source_ops, call);
 	if (!result) {
-		call->node.atomic_spin = driver->atomic_spin;
+		call->node.atomic_spin = atomic_context;
 		call->node.possible_batch = &call->possible_batch;
 	}
 	return result;
@@ -560,7 +594,7 @@ int kd_jit_mutex_call_init(struct kd_jit_mutex_call *call,
 static int capture_mutex_operation(struct kd_jit_mutex_call *call,
 		 const void *identity, enum kd_operation_kind kind,
 		 struct kd_execution_binding *native_binding,
-		 struct kd_execution_binding *capture_binding, struct kd_mutex *lock,
+		 struct kd_execution_binding *capture_binding, void *object,
 		 unsigned long source_sp, unsigned long continuation_ip,
 		 unsigned long source_bp, unsigned long api_target)
 {
@@ -574,7 +608,7 @@ static int capture_mutex_operation(struct kd_jit_mutex_call *call,
 	if (kd_task_state_own() != state)
 		return -ESTALE;
 	if (!identity || (!kd_operation_is_lock(kind) && !kd_operation_is_unlock(kind)) ||
-	    kd_operation_is_spin(kind) != call->node.atomic_spin || !capture_binding || !lock ||
+	    kd_operation_family(kind) != call->grant.family || !capture_binding || !object ||
 	    !api_target || !continuation_ip ||
 	    call->node.enqueued || call->node.requester != current ||
 	    capture_binding == native_binding ||
@@ -591,8 +625,8 @@ static int capture_mutex_operation(struct kd_jit_mutex_call *call,
 	if (result)
 		return result;
 	/* Capture this publication's active kernel GS, not attachment-time CPU
-	 * state. The short non-sleeping interval ends before mutex arbitration.
-	 * It grants no per-CPU exclusion or episode-wide migration guarantee.
+	 * state. This short non-sleeping interval ends before lock arbitration;
+	 * it grants no episode-wide migration or per-CPU exclusion guarantee.
 	 */
 	preempt_disable();
 	rdmsrl(MSR_GS_BASE, origin_gs);
@@ -601,19 +635,33 @@ static int capture_mutex_operation(struct kd_jit_mutex_call *call,
 		preempt_enable();
 		return result;
 	}
-	/* The compiler-clobber prefix declares only these source inputs. The
-	 * C argument DI is the lock pointer for the source operation bridge.
-	 * Other packet GPRs are not reconstructed from the executor's registers.
+	/* The compiler-clobber prefix declares SP/IP/BP and DI object. Other
+	 * source GPRs are not reconstructed from the executor's registers.
 	 */
 	state->origin_gs = origin_gs;
 	state->regs.sp = source_sp;
 	state->regs.ip = continuation_ip;
 	state->regs.bp = source_bp;
-	state->regs.di = (unsigned long)lock;
+	state->regs.di = (unsigned long)object;
 	result = kd_operation_begin(state, capture_binding, identity, kind,
 		KD_OPERATION_CAPTURED_CONTINUATION, 0, api_target, continuation_ip);
 	preempt_enable();
 	return result;
+}
+
+int kd_jit_capture_lock(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *native_binding,
+		struct kd_execution_binding *capture_binding, void *object,
+		enum kd_operation_kind operation, unsigned long source_sp,
+		unsigned long continuation_ip, unsigned long source_bp,
+		unsigned long api_target)
+{
+	if (!call || !kd_operation_is_lock(operation) ||
+	    kd_operation_is_read(operation) != (call->grant.mode == KD_GRANT_MODE_READ))
+		return -EINVAL;
+	return capture_mutex_operation(call, &call->acquisition_identity, operation,
+		native_binding, capture_binding, object, source_sp, continuation_ip,
+		source_bp, api_target);
 }
 
 int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
@@ -622,9 +670,8 @@ int kd_jit_capture_mutex_lock(struct kd_jit_mutex_call *call,
 		 unsigned long source_sp, unsigned long continuation_ip,
 		 unsigned long source_bp, unsigned long api_target)
 {
-	return capture_mutex_operation(call, &call->acquisition_identity,
+	return kd_jit_capture_lock(call, native_binding, capture_binding, lock,
 		call->node.atomic_spin ? KD_OPERATION_SPIN_LOCK : KD_OPERATION_MUTEX_LOCK,
-		native_binding, capture_binding, lock,
 		source_sp, continuation_ip, source_bp, api_target);
 }
 
@@ -635,9 +682,6 @@ int kd_jit_capture_mutex_unlock(struct kd_jit_mutex_call *control,
 		 unsigned long source_sp, unsigned long continuation_ip,
 		 unsigned long source_bp, unsigned long api_target)
 {
-	/* The exact open source grant retains acquisition through the operation;
-	 * the independent control entry owns the fresh capture/return endpoints.
-	 */
 	if (!control || !acquisition || control == acquisition ||
 	    control->node.state != acquisition->node.state)
 		return -EINVAL;
@@ -647,47 +691,175 @@ int kd_jit_capture_mutex_unlock(struct kd_jit_mutex_call *control,
 		source_sp, continuation_ip, source_bp, api_target);
 }
 
-int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,
-		 struct kd_mutex *lock, struct kd_execution_binding **binding,
-		 unsigned int proxy_limit, enum kd_mutex_outcome *outcome)
+static struct kd_rw *call_rw(struct kd_jit_mutex_call *call, void *object)
 {
-	struct kd_thread_state *state = call->node.state;
+	if (call->grant.family == KD_LOCK_FAMILY_RWSEM)
+		return &((struct kd_rwsem *)object)->core;
+	if (call->grant.family == KD_LOCK_FAMILY_RWLOCK)
+		return &((struct kd_rwlock *)object)->core;
+	return NULL;
+}
+
+static int read_progress(void *context, bool *blocked)
+{
+	struct kd_jit_mutex_call *call = context;
+
+	return progress_wait(&call->node, call, blocked);
+}
+
+static bool read_ready(void *context)
+{
+	struct kd_jit_mutex_call *call = context;
+
+	return progress_ready(&call->node, call);
+}
+
+static const struct kd_rw_wait_ops read_wait_ops = {
+	.progress = read_progress,
+	.ready = read_ready,
+};
+
+int kd_jit_acquire(struct kd_jit_mutex_call *call, void *object,
+		struct kd_execution_binding **binding, unsigned int proxy_limit,
+		enum kd_mutex_outcome *outcome)
+{
+	struct kd_thread_state *state;
+	struct kd_rw *rw;
 	int result;
 
-	if (!binding || !kd_state_is_jit_current(state, *binding))
+	if (!call || !binding || !outcome || !object)
+		return -EINVAL;
+	state = call->node.state;
+	if (!kd_state_is_jit_current(state, *binding))
 		return -EPERM;
-	if (!outcome || !lock || call->node.enqueued ||
-	    (void *)state->regs.di != lock ||
+	if (call->node.enqueued || call->node.source_granted ||
+	    (void *)state->regs.di != object ||
 	    state->operation.identity != &call->acquisition_identity ||
 	    !kd_operation_is_lock(state->operation.kind) ||
-	    kd_operation_is_spin(state->operation.kind) != call->node.atomic_spin)
+	    kd_operation_family(state->operation.kind) != call->grant.family ||
+	    kd_operation_is_read(state->operation.kind) != (call->grant.mode == KD_GRANT_MODE_READ))
 		return -EINVAL;
+	rw = call_rw(call, object);
+	if (call->grant.mode == KD_GRANT_MODE_READ && !rw)
+		return -EINVAL;
+	if (rw && call->grant.mode == KD_GRANT_MODE_WRITE) {
+		result = kd_rw_write_prepare(rw, &call->node, call->node.atomic_spin);
+		if (result)
+			return result;
+	}
 	result = kd_operation_enter(state, *binding, &call->acquisition_identity);
 	if (result)
 		return result;
-	call->grant.object = lock;
+	call->grant.object = object;
+	if (call->grant.mode == KD_GRANT_MODE_READ) {
+		/* Shared acquisition stays on the current executor. There is no
+		 * reader MCS offer or invented exclusive physical owner.
+		 */
+		result = kd_rw_read_acquire(rw, &call->read_credit, state, *binding,
+			&call->acquisition_identity, &call->grant, call->node.atomic_spin,
+			&read_wait_ops, call);
+		if (result)
+			return result;
+		result = kd_mutex_read_granted(&call->node);
+		BUG_ON(result);
+		result = kd_execution_binding_init(&call->execution, state, current,
+			call, KD_EXECUTION_JIT);
+		BUG_ON(result);
+		result = kd_state_transfer(state, *binding, &call->execution);
+		BUG_ON(result);
+		*binding = &call->execution;
+		result = finish_acquisition(call, *binding);
+		if (!result)
+			*outcome = KD_MUTEX_LOCAL_GRANTED;
+		return result;
+	}
 	result = kd_state_publish(state, *binding, &call->offer);
 	BUG_ON(result);
-	/* All storage/forward-route resources were reserved before publication. */
-	result = kd_mutex_acquire(lock, &call->node, &call->possible_batch,
-				  proxy_limit, outcome);
+	/* All storage/forward-route resources preceded this stopped offer. */
+	result = rw ? kd_rw_write_acquire(rw, &call->node, &call->possible_batch,
+					proxy_limit, outcome) :
+		kd_mutex_acquire(object, &call->node, &call->possible_batch, proxy_limit, outcome);
 	BUG_ON(result);
 	if (*outcome == KD_MUTEX_LOCAL_GRANTED) {
 		*binding = &call->execution;
 		return finish_acquisition(call, *binding);
 	}
 	if (*outcome == KD_MUTEX_PROXY_ORIGIN_SUFFIX) {
-		/* W may already advance after the terminal transfer. Its completed
-		 * return protocol, not a later snapshot of state.binding, is proof.
-		 */
 		*binding = NULL;
 		return 0;
 	}
-	/* Proxy source may have completed many newer operations. Never finish the
-	 * old lock again or import its saved operation into the canonical core.
-	 */
+	/* A proxy may already have completed newer source operations. */
 	*binding = &call->returned;
 	return kd_state_is_jit_current(state, *binding) ? 0 : -ESTALE;
+}
+
+int kd_jit_mutex_acquire(struct kd_jit_mutex_call *call,
+		 struct kd_mutex *lock, struct kd_execution_binding **binding,
+		 unsigned int proxy_limit, enum kd_mutex_outcome *outcome)
+{
+	return kd_jit_acquire(call, lock, binding, proxy_limit, outcome);
+}
+
+static int release_grant(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *binding, enum kd_operation_kind operation,
+		struct kd_mutex_batch *active_batch, const void *notifier,
+		enum kd_mutex_unlock_action *action)
+{
+	struct kd_thread_state *state = call->node.state;
+	struct kd_source_grant *grant;
+	int result;
+
+	if (!action || !kd_state_is_current(state, binding))
+		return -EPERM;
+	if (!kd_operation_is_unlock(operation) || kd_operation_family(operation) != call->grant.family)
+		return -ESTALE;
+	grant = kd_state_find_operation_grant(state, binding, call->grant.object, operation);
+	if (IS_ERR(grant))
+		return PTR_ERR(grant);
+	if (grant != &call->grant)
+		return -ESTALE;
+	if (grant->physical == KD_GRANT_PHYSICAL_READ) {
+		result = kd_rw_read_release(grant->read_credit, state, binding,
+			grant->acquisition, grant->user);
+		if (result)
+			return result;
+		*action = kd_operation_is_atomic(operation) ? KD_MUTEX_UNLOCK_ATOMIC : KD_MUTEX_UNLOCK_SYNC;
+	} else {
+		result = kd_mutex_source_unlock(&call->node, state, active_batch, notifier, action);
+		if (result)
+			return result;
+	}
+	return kd_state_close_grant(state, binding, grant);
+}
+
+int kd_jit_unlock(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *binding,
+		struct kd_mutex_batch *active_batch, const void *notifier,
+		enum kd_mutex_unlock_action *action)
+{
+	struct kd_thread_state *state;
+	int result;
+
+	if (!call || !action)
+		return -EINVAL;
+	state = call->node.state;
+	if (!kd_state_is_jit_current(state, binding))
+		return -EPERM;
+	if (state->operation.identity != &call->unlock_identity ||
+	    !kd_operation_is_unlock(state->operation.kind) ||
+	    kd_operation_family(state->operation.kind) != call->grant.family ||
+	    (void *)state->regs.di != call->grant.object)
+		return -ESTALE;
+	result = kd_operation_enter(state, binding, &call->unlock_identity);
+	if (result)
+		return result;
+	result = release_grant(call, binding, state->operation.kind, active_batch, notifier, action);
+	if (result)
+		return result;
+	result = kd_operation_complete(state, binding, &call->unlock_identity);
+	if (result)
+		return result;
+	return kd_operation_return(state, binding, &call->unlock_identity, call->driver->stack);
 }
 
 int kd_jit_mutex_unlock(struct kd_jit_mutex_call *call,
@@ -695,36 +867,89 @@ int kd_jit_mutex_unlock(struct kd_jit_mutex_call *call,
 		 struct kd_mutex_batch *active_batch, const void *notifier,
 		 enum kd_mutex_unlock_action *action)
 {
+	return kd_jit_unlock(call, binding, active_batch, notifier, action);
+}
+
+int kd_jit_unlock_native(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *native_binding,
+		enum kd_operation_kind operation, const void *notifier,
+		enum kd_mutex_unlock_action *action)
+{
+	struct kd_mutex_batch *active = NULL;
+	struct kd_mutex_release_owner *owner;
+
+	if (!call || !kd_state_is_current(call->node.state, native_binding) ||
+	    native_binding->kind != KD_EXECUTION_NATIVE)
+		return -EPERM;
+	if (call->grant.physical == KD_GRANT_PHYSICAL_WRITE) {
+		owner = READ_ONCE(call->node.release.owner);
+		if (!owner)
+			return -ESTALE;
+		if (owner->task == current)
+			active = call->node.batch;
+	}
+	/* The actual native source CALL/RET and registers remain untouched. */
+	return release_grant(call, native_binding, operation, active, notifier, action);
+}
+
+static int downgrade_grant(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *binding, bool retained)
+{
 	struct kd_thread_state *state = call->node.state;
 	struct kd_source_grant *grant;
 	int result;
 
-	if (!kd_state_is_jit_current(state, binding))
-		return -EPERM;
-	if (state->operation.identity != &call->unlock_identity ||
-	    !kd_operation_is_unlock(state->operation.kind) ||
-	    kd_operation_is_spin(state->operation.kind) != call->node.atomic_spin)
-		return -ESTALE;
-	grant = kd_state_find_grant(state, binding, (void *)state->regs.di);
+	grant = kd_state_find_grant_typed(state, binding, call->grant.object,
+		KD_LOCK_FAMILY_RWSEM, KD_GRANT_MODE_WRITE);
 	if (IS_ERR(grant))
 		return PTR_ERR(grant);
-	if (grant != &call->grant)
+	if (grant != &call->grant || grant->physical != KD_GRANT_PHYSICAL_WRITE)
 		return -ESTALE;
-	result = kd_operation_enter(state, binding, &call->unlock_identity);
+	if (retained)
+		result = kd_rw_write_held(&call->node, state);
+	else
+		result = kd_rw_write_downgrade(&call->node, &call->read_credit, state, binding,
+			grant->acquisition, grant->user);
 	if (result)
 		return result;
-	result = kd_mutex_source_unlock(&call->node, state, active_batch,
-					notifier, action);
+	return kd_state_downgrade_grant(state, binding, grant,
+		retained ? NULL : &call->read_credit, retained);
+}
+
+int kd_jit_downgrade(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *binding, bool retained)
+{
+	struct kd_thread_state *state;
+	int result;
+
+	if (!call)
+		return -EINVAL;
+	state = call->node.state;
+	if (!kd_state_is_jit_current(state, binding))
+		return -EPERM;
+	if (state->operation.identity != &call->mode_identity ||
+	    state->operation.kind != KD_OPERATION_RWSEM_DOWNGRADE_WRITE ||
+	    (void *)state->regs.di != call->grant.object)
+		return -ESTALE;
+	result = kd_operation_enter(state, binding, &call->mode_identity);
 	if (result)
 		return result;
-	result = kd_state_close_grant(state, binding, grant);
+	result = downgrade_grant(call, binding, retained);
 	if (result)
 		return result;
-	result = kd_operation_complete(state, binding, &call->unlock_identity);
+	result = kd_operation_complete(state, binding, &call->mode_identity);
 	if (result)
 		return result;
-	return kd_operation_return(state, binding, &call->unlock_identity,
-				   call->driver->stack);
+	return kd_operation_return(state, binding, &call->mode_identity, call->driver->stack);
+}
+
+int kd_jit_downgrade_native(struct kd_jit_mutex_call *call,
+		struct kd_execution_binding *native_binding)
+{
+	if (!call || !kd_state_is_current(call->node.state, native_binding) ||
+	    native_binding->kind != KD_EXECUTION_NATIVE)
+		return -EPERM;
+	return downgrade_grant(call, native_binding, false);
 }
 
 int kd_jit_collect_grants(struct kd_thread_state *state,
