@@ -697,7 +697,7 @@ def main():
         archive = drive(ShutdownSession(transport, coordinator, producers, ArchiveConfig(
             0x1000 + native["cycle_capacity"], native["claim_capacity"], str(output / "shutdown-archive.json"),
             bounds["archive_bytes"], 0o600, (("boot_id", boot), ("kernel_elf", config["sha256"]["kernel_elf"]),
-                                         ("runner_config", result["config_sha256"]))))
+                                         ("runner_config", result["config_sha256"])))))
         result["archive_sha256"] = archive.archive.identity.hex()
         result["settled_keys"] = len(archive.settlement.keys)
         transport.close(); transport = None
