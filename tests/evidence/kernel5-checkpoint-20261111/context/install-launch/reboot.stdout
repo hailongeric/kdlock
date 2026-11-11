@@ -1,0 +1,1 @@
+{"before_release": "7.0.0-38-kdlock1", "grubenv": "next_entry=gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdrebuild5-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961\n", "action": "ordinary_systemctl_reboot_to_checked_one_shot"}

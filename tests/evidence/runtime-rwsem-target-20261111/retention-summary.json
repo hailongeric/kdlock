@@ -1,0 +1,14 @@
+{
+  "copied_count": 405,
+  "guest_payload_bytes": 22953832,
+  "guest_payload_count": 361,
+  "notes": [
+    "No guest/network commands, project imports, AST, builds or tests ran.",
+    "Original collection copy.tar is retained losslessly as copy.tar.gz; source archive hash remains exact.",
+    "Source tar members were read only and matched the exact source manifest; nothing was extracted or executed."
+  ],
+  "source_copied_bytes": 48357582,
+  "source_snapshot_files": 121,
+  "status": "SOURCE_HOST_OFFLINE_COPIES_VERIFIED",
+  "stored_copied_bytes": 26660079
+}

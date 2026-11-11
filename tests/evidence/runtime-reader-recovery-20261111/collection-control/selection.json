@@ -1,0 +1,41 @@
+{
+  "argv": [
+    "/tmp/kdlock-rw-collect5.py",
+    "--output",
+    "/tmp/kdlock-rw-recoveries-collection-01",
+    "--max-files",
+    "10240",
+    "--max-paths",
+    "40960",
+    "--max-file-bytes",
+    "50331648",
+    "--max-metadata-bytes",
+    "16777216",
+    "--inventory-seconds",
+    "90",
+    "--copy-seconds",
+    "180",
+    "--max-total-bytes",
+    "268435456",
+    "--tree",
+    "rwsem-capacity",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/recovery-rwsem-capacity-01",
+    "--tree",
+    "rwsem-learning",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/recovery-rwsem-learning-01",
+    "--tree",
+    "rwlock-native",
+    "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/recovery-rwlock-native-01"
+  ],
+  "files": {},
+  "max_file_bytes": 50331648,
+  "max_files": 10240,
+  "max_metadata_bytes": 16777216,
+  "max_paths": 40960,
+  "max_total_bytes": 268435456,
+  "trees": {
+    "rwlock-native": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/recovery-rwlock-native-01",
+    "rwsem-capacity": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/recovery-rwsem-capacity-01",
+    "rwsem-learning": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/recovery-rwsem-learning-01"
+  }
+}

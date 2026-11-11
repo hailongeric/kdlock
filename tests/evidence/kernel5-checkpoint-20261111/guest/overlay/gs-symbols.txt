@@ -1,0 +1,3 @@
+ffffffff843f7000 D __per_cpu_start
+ffffffff8440f018 D const_current_task
+ffffffff8440f018 D current_task

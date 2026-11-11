@@ -1,0 +1,8 @@
+{
+  "branch": "main",
+  "commit": "e990fde36cd5089fdb7a58d9d96d977a002f8c7b",
+  "core_commit": "1114b41ea0f6ecf92f2c9af2904a4218bb344829",
+  "snapshot": "Exact Git objects at the committed fixture revision; no evidence trees or uncommitted docs included.",
+  "source_host_status": " M docs/design/kdlock_redesign/00_overview.md\n M docs/design/kdlock_redesign/01_lock_protocol.md\n M docs/design/kdlock_redesign/02_jit_contract.md\n M docs/design/kdlock_redesign/03_implementation_plan.md\n M docs/design/kdlock_redesign/04_evidence_and_reconciliation.md\n",
+  "unix": 1794375182.3031862
+}

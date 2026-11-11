@@ -1,0 +1,22 @@
+{"phase": "ALREADY_JOINED_PRECHECK", "unix": 1794379447.3838341}
+{"phase": "QUERY_EXACT_STAGE4_ENOSPC", "unix": 1794379447.4244826}
+{"phase": "ACTUAL_STAGE4_ENOSPC_ADOPTED", "unix": 1794379447.446824}
+{"operation": 7, "phase": "COMMAND_DISPATCHING", "sequence": 5, "unix": 1794379447.448611}
+{"operation": 7, "phase": "COMMAND_RETURNED_ZERO", "sequence": 5, "unix": 1794379447.4668293}
+{"operation": 6, "phase": "COMMAND_DISPATCHING", "sequence": 6, "unix": 1794379447.468631}
+{"operation": 6, "phase": "COMMAND_RETURNED_ZERO", "sequence": 6, "unix": 1794379447.4843388}
+{"operation": 9, "phase": "COMMAND_DISPATCHING", "sequence": 7, "unix": 1794379447.4860556}
+{"operation": 9, "phase": "COMMAND_RETURNED_ZERO", "sequence": 7, "unix": 1794379447.5006275}
+{"phase": "ACTUAL_SOURCE_IMAGE_NATIVE_DRAIN_CONFIRMED", "unix": 1794379447.5023215}
+{"operation": 10, "phase": "COMMAND_DISPATCHING", "sequence": 8, "unix": 1794379447.504054}
+{"operation": 10, "phase": "COMMAND_RETURNED_ZERO", "sequence": 8, "unix": 1794379447.5185158}
+{"claim_rows": 0, "phase": "EXACT_RAW_ARCHIVE_WRITING", "unix": 1794379447.5202768}
+{"archive": {"bytes": 4187139, "claim": 18379471558730711960, "holder": 36865, "keys": [], "path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/recovery-rwsem-capacity-01/shutdown-raw-archive.json", "sha256": "2bf0ad97e9055bbbcf1ed7998571f8471d91a14464c32add8beeeaef1237f8c0"}, "phase": "EXACT_RAW_ARCHIVE_FSYNCED", "unix": 1794379447.5632293}
+{"operation": 11, "phase": "COMMAND_DISPATCHING", "sequence": 9, "unix": 1794379447.564966}
+{"operation": 11, "phase": "COMMAND_RETURNED_ZERO", "sequence": 9, "unix": 1794379447.580556}
+{"operation": 6, "phase": "COMMAND_DISPATCHING", "sequence": 10, "unix": 1794379447.5823116}
+{"operation": 6, "phase": "COMMAND_RETURNED_ZERO", "sequence": 10, "unix": 1794379447.5967467}
+{"phase": "EXACT_ARCHIVE_SETTLEMENT_END_AND_CHANNEL_CLOSE_COMPLETE", "settled_rows": 0, "unix": 1794379447.59848}
+{"phase": "ORDINARY_DESTROY_DISPATCHING", "unix": 1794379447.6026506}
+{"phase": "ORDINARY_RMMOD_DISPATCHING", "unix": 1794379447.6540258}
+{"phase": "ORDINARY_UNLOAD_VERIFIED", "unix": 1794379447.7149885}

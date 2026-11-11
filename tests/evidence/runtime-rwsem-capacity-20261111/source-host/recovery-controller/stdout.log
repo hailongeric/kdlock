@@ -1,0 +1,84 @@
+{"phase": "ALREADY_JOINED_PRECHECK"}
+{"phase": "QUERY_EXACT_STAGE4_ENOSPC"}
+{"phase": "ACTUAL_STAGE4_ENOSPC_ADOPTED"}
+{"operation": 7, "phase": "COMMAND_DISPATCHING", "sequence": 5}
+{"operation": 7, "phase": "COMMAND_RETURNED_ZERO", "sequence": 5}
+{"operation": 6, "phase": "COMMAND_DISPATCHING", "sequence": 6}
+{"operation": 6, "phase": "COMMAND_RETURNED_ZERO", "sequence": 6}
+{"operation": 9, "phase": "COMMAND_DISPATCHING", "sequence": 7}
+{"operation": 9, "phase": "COMMAND_RETURNED_ZERO", "sequence": 7}
+{"phase": "ACTUAL_SOURCE_IMAGE_NATIVE_DRAIN_CONFIRMED"}
+{"operation": 10, "phase": "COMMAND_DISPATCHING", "sequence": 8}
+{"operation": 10, "phase": "COMMAND_RETURNED_ZERO", "sequence": 8}
+{"claim_rows": 0, "phase": "EXACT_RAW_ARCHIVE_WRITING"}
+{"archive": {"bytes": 4187139, "claim": 18379471558730711960, "holder": 36865, "keys": [], "path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/recovery-rwsem-capacity-01/shutdown-raw-archive.json", "sha256": "2bf0ad97e9055bbbcf1ed7998571f8471d91a14464c32add8beeeaef1237f8c0"}, "phase": "EXACT_RAW_ARCHIVE_FSYNCED"}
+{"operation": 11, "phase": "COMMAND_DISPATCHING", "sequence": 9}
+{"operation": 11, "phase": "COMMAND_RETURNED_ZERO", "sequence": 9}
+{"operation": 6, "phase": "COMMAND_DISPATCHING", "sequence": 10}
+{"operation": 6, "phase": "COMMAND_RETURNED_ZERO", "sequence": 10}
+{"phase": "EXACT_ARCHIVE_SETTLEMENT_END_AND_CHANNEL_CLOSE_COMPLETE", "settled_rows": 0}
+{"phase": "ORDINARY_DESTROY_DISPATCHING"}
+{"phase": "ORDINARY_RMMOD_DISPATCHING"}
+{"phase": "ORDINARY_UNLOAD_VERIFIED"}
+{
+  "archive": {
+    "bytes": 4187139,
+    "claim": 18379471558730711960,
+    "holder": 36865,
+    "keys": [],
+    "path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/recovery-rwsem-capacity-01/shutdown-raw-archive.json",
+    "sha256": "2bf0ad97e9055bbbcf1ed7998571f8471d91a14464c32add8beeeaef1237f8c0"
+  },
+  "claim_rows": 0,
+  "dmesg_unchanged": true,
+  "exchanges": [
+    {
+      "operation": 7,
+      "reply_bytes": 56,
+      "sequence": 5,
+      "status": 0
+    },
+    {
+      "operation": 6,
+      "reply_bytes": 48,
+      "sequence": 6,
+      "status": 0
+    },
+    {
+      "operation": 9,
+      "reply_bytes": 40,
+      "sequence": 7,
+      "status": 0
+    },
+    {
+      "operation": 10,
+      "reply_bytes": 266,
+      "sequence": 8,
+      "status": 0
+    },
+    {
+      "operation": 11,
+      "reply_bytes": 56,
+      "sequence": 9,
+      "status": 0
+    },
+    {
+      "operation": 6,
+      "reply_bytes": 48,
+      "sequence": 10,
+      "status": 0
+    }
+  ],
+  "finished_unix": 1794379447.716683,
+  "new_dmesg_bytes": 0,
+  "operation": 6,
+  "original_controller_sha256": "e0c1d9665dab3a562c90112558efa082b33c39cfce0a11788de5a5fa935ace72",
+  "original_history_bytes": 2077767,
+  "original_result_sha256": "f108689ebdc7eaaac94e49a110f1feabd5ef3467835816505be07d93fa0cec1f",
+  "phase": "ORDINARY_UNLOAD_VERIFIED",
+  "sequence": 10,
+  "settled_rows": 0,
+  "source_epoch": 18379471558908188288,
+  "started_unix": 1794379447.0410693,
+  "status": "EXACT_ORDINARY_RECOVERY_COMPLETE"
+}

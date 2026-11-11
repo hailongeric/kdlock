@@ -1,0 +1,17 @@
+{
+  "available": "Exact local recovery stdout, outer command/result, staged helper hash and matching helper source are retained.",
+  "guest_archive": {
+    "bytes": 4187139,
+    "claim": 18379471558730711960,
+    "holder": 36865,
+    "keys": [],
+    "path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/recovery-rwsem-capacity-01/shutdown-raw-archive.json",
+    "sha256": "2bf0ad97e9055bbbcf1ed7998571f8471d91a14464c32add8beeeaef1237f8c0"
+  },
+  "guest_recovery_directory": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/recovery-rwsem-capacity-01",
+  "scope": "Not collected by this source-host-only retention task.",
+  "unavailable": [
+    "Guest recovery raw wire packets/envelopes, poststate and dmesg files",
+    "The guest shutdown-raw-archive.json bytes; its actual hash and size are retained from controller stdout"
+  ]
+}

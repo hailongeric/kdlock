@@ -1,0 +1,62 @@
+{
+  "archive": {
+    "bytes": 4187139,
+    "claim": 18379471558730711960,
+    "holder": 36865,
+    "keys": [],
+    "path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/recovery-rwsem-capacity-01/shutdown-raw-archive.json",
+    "sha256": "2bf0ad97e9055bbbcf1ed7998571f8471d91a14464c32add8beeeaef1237f8c0"
+  },
+  "claim_rows": 0,
+  "dmesg_unchanged": true,
+  "exchanges": [
+    {
+      "operation": 7,
+      "reply_bytes": 56,
+      "sequence": 5,
+      "status": 0
+    },
+    {
+      "operation": 6,
+      "reply_bytes": 48,
+      "sequence": 6,
+      "status": 0
+    },
+    {
+      "operation": 9,
+      "reply_bytes": 40,
+      "sequence": 7,
+      "status": 0
+    },
+    {
+      "operation": 10,
+      "reply_bytes": 266,
+      "sequence": 8,
+      "status": 0
+    },
+    {
+      "operation": 11,
+      "reply_bytes": 56,
+      "sequence": 9,
+      "status": 0
+    },
+    {
+      "operation": 6,
+      "reply_bytes": 48,
+      "sequence": 10,
+      "status": 0
+    }
+  ],
+  "finished_unix": 1794379447.716683,
+  "new_dmesg_bytes": 0,
+  "operation": 6,
+  "original_controller_sha256": "e0c1d9665dab3a562c90112558efa082b33c39cfce0a11788de5a5fa935ace72",
+  "original_history_bytes": 2077767,
+  "original_result_sha256": "f108689ebdc7eaaac94e49a110f1feabd5ef3467835816505be07d93fa0cec1f",
+  "phase": "ORDINARY_UNLOAD_VERIFIED",
+  "sequence": 10,
+  "settled_rows": 0,
+  "source_epoch": 18379471558908188288,
+  "started_unix": 1794379447.0410693,
+  "status": "EXACT_ORDINARY_RECOVERY_COMPLETE"
+}

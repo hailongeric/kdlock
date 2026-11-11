@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/input/tests/kernel/rwsem/run_rwsem_runtime_fixture.py", line 8, in <module>
+    raise SystemExit(main(family="rwsem"))
+                     ~~~~^^^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/input/tests/kernel/run_runtime_fixture.py", line 992, in main
+    compiler_cycle(force=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/input/tests/kernel/run_runtime_fixture.py", line 977, in compiler_cycle
+    result = drive(session)
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/input/tests/kernel/run_runtime_fixture.py", line 870, in drive
+    workflow.advance()
+    ~~~~~~~~~~~~~~~~^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/input/disassem/session.py", line 601, in advance
+    self._send(Operation.STAGE_LOAD, self._frame(Operation.STAGE_LOAD,
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               (token_word(self._binding.identity),), blobs=blobs,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               bounds=((limits.artifact_bytes,) * 3
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                       + (self.builder.limits.machine_bytes, self.builder.limits.metadata_bytes))),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               SessionPhase.STAGE_REPLY)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/input/disassem/session.py", line 393, in _send
+    self._accept(step, result)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/input/disassem/session.py", line 400, in _accept
+    raise ChannelStatusError(step.operation, result.sequence, result.status)
+disassem.session.ChannelStatusError: channel STAGE_LOAD sequence=4 status=-28

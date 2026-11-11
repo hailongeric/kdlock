@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 610 python3 /mnt/kdlock-builds/kdlock-main-work/kernel5-core-1114b41e-rw-01/retain-kernel4.py --recovery /mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/kernel5-retention-preflight-rw-01/recovery.json --recovery-sha256 c13ae044a62f58127ca4b894eea3e9081de13af849f216fcaff9474e31575c0b --receipt-directory install-kdrebuild4-spin-01 --receipt-directory postboot-kdrebuild4-spin-01"
+  ],
+  "start_unix": 1794374520.944362
+}

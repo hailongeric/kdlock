@@ -1,0 +1,9 @@
+{
+  "boot_bytes": 28098560,
+  "initrd_bytes": 30887936,
+  "limited_namespace_bytes": 643072,
+  "needed": 1150148608,
+  "root_free": 1211789312,
+  "root_reserve_bytes": 1073741824,
+  "root_working_bytes": 16777216
+}

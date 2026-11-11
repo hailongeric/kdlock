@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "df",
+    "-B1",
+    "/",
+    "/boot",
+    "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f"
+  ],
+  "elapsed_seconds": 0.005204181999943103,
+  "log": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/install-kdrebuild5-rw-01/arm-disk-usage.log",
+  "log_sha256": "f6f8edf1fe16c5569f354e0515fac9c1ae81e2bfe56597838b5747331817b5fc",
+  "returncode": 0,
+  "timed_out": false
+}

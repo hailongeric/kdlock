@@ -1,0 +1,5782 @@
+{
+  "bytes": 22953832,
+  "count": 361,
+  "files": [
+    {
+      "bytes": 2,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/builtin-source-elf.bin",
+      "identity": [
+        2064,
+        8524271,
+        33188,
+        1,
+        2,
+        1794380073888655075,
+        1794380073888655075
+      ],
+      "name": "attempt/builtin-source-elf.bin",
+      "path": "payload/attempt/builtin-source-elf.bin",
+      "sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/ack.bin",
+      "identity": [
+        2064,
+        8524347,
+        33188,
+        1,
+        72,
+        1794380074611502694,
+        1794380074611502694
+      ],
+      "name": "attempt/cycle-1/ack.bin",
+      "path": "payload/attempt/cycle-1/ack.bin",
+      "sha256": "3c84a3107b2c4e09a0e2f5e009c4cee87ec2b7a11056b29eff35f4d24c5dc18a"
+    },
+    {
+      "bytes": 208162,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/build/image.S",
+      "identity": [
+        2064,
+        8524313,
+        33188,
+        1,
+        208162,
+        1794380074489600963,
+        1794380074489600963
+      ],
+      "name": "attempt/cycle-1/build/image.S",
+      "path": "payload/attempt/cycle-1/build/image.S",
+      "sha256": "5673e1daf0f18a875d5bfc3cfa14597dcf149a14c78b8c8e08acb66d3b79b0d6"
+    },
+    {
+      "bytes": 37785,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/build/image.bin",
+      "identity": [
+        2064,
+        8524318,
+        33261,
+        1,
+        37785,
+        1794380074593258566,
+        1794380074593296952
+      ],
+      "name": "attempt/cycle-1/build/image.bin",
+      "path": "payload/attempt/cycle-1/build/image.bin",
+      "sha256": "cde5e3f0222105a6fac2dc687f343b0755aabb127cf2b228bcdb249f2d484c50"
+    },
+    {
+      "bytes": 42312,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/build/image.elf",
+      "identity": [
+        2064,
+        8524317,
+        33261,
+        1,
+        42312,
+        1794380074588000000,
+        1794380074588257512
+      ],
+      "name": "attempt/cycle-1/build/image.elf",
+      "path": "payload/attempt/cycle-1/build/image.elf",
+      "sha256": "3b9988cf10a939d6e2ea0f6845a0a7c8c0b2641ca388dff7810e05d78da579da"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/build/image.ld",
+      "identity": [
+        2064,
+        8524314,
+        33188,
+        1,
+        112,
+        1794380074489718106,
+        1794380074489718106
+      ],
+      "name": "attempt/cycle-1/build/image.ld",
+      "path": "payload/attempt/cycle-1/build/image.ld",
+      "sha256": "2d647229dd253c385c73089a3a34a20e46bb7969897b172279578a16d7a7c47e"
+    },
+    {
+      "bytes": 38496,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/build/image.o",
+      "identity": [
+        2064,
+        8524316,
+        33188,
+        1,
+        38496,
+        1794380074577000000,
+        1794380074577000000
+      ],
+      "name": "attempt/cycle-1/build/image.o",
+      "path": "payload/attempt/cycle-1/build/image.o",
+      "sha256": "69b0f95ebe1e6af3986742742be908517b4f9af643713cac1695459ab916a219"
+    },
+    {
+      "bytes": 200103,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/build/image.s",
+      "identity": [
+        2064,
+        8524315,
+        33188,
+        1,
+        200103,
+        1794380074555000000,
+        1794380074555000000
+      ],
+      "name": "attempt/cycle-1/build/image.s",
+      "path": "payload/attempt/cycle-1/build/image.s",
+      "sha256": "b1d62c918b64d60ac42e9a6206b6b6ec0f6e83bc67d5bcf6635f23bc2fa86df2"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/claim.bin",
+      "identity": [
+        2064,
+        8524305,
+        33188,
+        1,
+        266,
+        1794380074253772972,
+        1794380074253772972
+      ],
+      "name": "attempt/cycle-1/claim.bin",
+      "path": "payload/attempt/cycle-1/claim.bin",
+      "sha256": "1b701a72ce83d2bdd4afc1a58f70202424f78f78fb86cb878a74858de6ed4379"
+    },
+    {
+      "bytes": 144,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/commit.bin",
+      "identity": [
+        2064,
+        8524346,
+        33188,
+        1,
+        144,
+        1794380074611477403,
+        1794380074611477403
+      ],
+      "name": "attempt/cycle-1/commit.bin",
+      "path": "payload/attempt/cycle-1/commit.bin",
+      "sha256": "b24a0e656baff1cc584856880fb833beaeb6c441a336efed9734b093d3db0863"
+    },
+    {
+      "bytes": 208162,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/image.S",
+      "identity": [
+        2064,
+        8524343,
+        33188,
+        1,
+        208162,
+        1794380074611000000,
+        1794380074611000000
+      ],
+      "name": "attempt/cycle-1/image.S",
+      "path": "payload/attempt/cycle-1/image.S",
+      "sha256": "5673e1daf0f18a875d5bfc3cfa14597dcf149a14c78b8c8e08acb66d3b79b0d6"
+    },
+    {
+      "bytes": 141855,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/manifest.json",
+      "identity": [
+        2064,
+        8524345,
+        33188,
+        1,
+        141855,
+        1794380074611401171,
+        1794380074611401171
+      ],
+      "name": "attempt/cycle-1/manifest.json",
+      "path": "payload/attempt/cycle-1/manifest.json",
+      "sha256": "f8de14ebc487e927b3ba644f81816448a9c904721253e65a3c5ed21ff6248b39"
+    },
+    {
+      "bytes": 232613,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-1/metadata.c",
+      "identity": [
+        2064,
+        8524344,
+        33188,
+        1,
+        232613,
+        1794380074611259434,
+        1794380074611259434
+      ],
+      "name": "attempt/cycle-1/metadata.c",
+      "path": "payload/attempt/cycle-1/metadata.c",
+      "sha256": "6cb6cc9fc8c35ed707c20360529af4dafa2d3dcf0fb04a3bade02fb13d49d5ff"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/ack.bin",
+      "identity": [
+        2064,
+        8524689,
+        33188,
+        1,
+        88,
+        1794380076779043702,
+        1794380076779043702
+      ],
+      "name": "attempt/cycle-10/ack.bin",
+      "path": "payload/attempt/cycle-10/ack.bin",
+      "sha256": "7efebaa0cefcd0d19911d90d7fee814d89180348272118c3c4c04199e226c33b"
+    },
+    {
+      "bytes": 282061,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/build/image.S",
+      "identity": [
+        2064,
+        8524655,
+        33188,
+        1,
+        282061,
+        1794380076706829610,
+        1794380076706829610
+      ],
+      "name": "attempt/cycle-10/build/image.S",
+      "path": "payload/attempt/cycle-10/build/image.S",
+      "sha256": "2e94f1c8ab6da050601a805c1d71b897fe94beb8a06b2bb9291617e9134e7808"
+    },
+    {
+      "bytes": 51333,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/build/image.bin",
+      "identity": [
+        2064,
+        8524660,
+        33261,
+        1,
+        51333,
+        1794380076758764867,
+        1794380076758807668
+      ],
+      "name": "attempt/cycle-10/build/image.bin",
+      "path": "payload/attempt/cycle-10/build/image.bin",
+      "sha256": "83748e7a4accc520219600f9de4e84cd16a242b38a0dda1fb326f10907abc9a6"
+    },
+    {
+      "bytes": 55856,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/build/image.elf",
+      "identity": [
+        2064,
+        8524659,
+        33261,
+        1,
+        55856,
+        1794380076754104972,
+        1794380076754227066
+      ],
+      "name": "attempt/cycle-10/build/image.elf",
+      "path": "payload/attempt/cycle-10/build/image.elf",
+      "sha256": "ca1caaaa38a8b0d0bd9253a2e2e89f9b04b01d7d5bc98f2eae5217aa4d462f1f"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/build/image.ld",
+      "identity": [
+        2064,
+        8524656,
+        33188,
+        1,
+        112,
+        1794380076707175662,
+        1794380076707175662
+      ],
+      "name": "attempt/cycle-10/build/image.ld",
+      "path": "payload/attempt/cycle-10/build/image.ld",
+      "sha256": "2d647229dd253c385c73089a3a34a20e46bb7969897b172279578a16d7a7c47e"
+    },
+    {
+      "bytes": 52040,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/build/image.o",
+      "identity": [
+        2064,
+        8524658,
+        33188,
+        1,
+        52040,
+        1794380076746000000,
+        1794380076746000000
+      ],
+      "name": "attempt/cycle-10/build/image.o",
+      "path": "payload/attempt/cycle-10/build/image.o",
+      "sha256": "ee29fd1ec6e27186294c74e9a192a5543c0475b165ac2438b6116ac8fe73723e"
+    },
+    {
+      "bytes": 272083,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/build/image.s",
+      "identity": [
+        2064,
+        8524657,
+        33188,
+        1,
+        272083,
+        1794380076722000000,
+        1794380076722000000
+      ],
+      "name": "attempt/cycle-10/build/image.s",
+      "path": "payload/attempt/cycle-10/build/image.s",
+      "sha256": "e5c2894ef8422c8a0962c9b4980fecf93b26e26ed0598471190227f5ee283ef8"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/claim.bin",
+      "identity": [
+        2064,
+        8524647,
+        33188,
+        1,
+        362,
+        1794380076447505092,
+        1794380076447505092
+      ],
+      "name": "attempt/cycle-10/claim.bin",
+      "path": "payload/attempt/cycle-10/claim.bin",
+      "sha256": "230747dd735b914f5af94886dcd5b4468480b6266f7fdc4eb110c56d88369f1f"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/commit.bin",
+      "identity": [
+        2064,
+        8524688,
+        33188,
+        1,
+        160,
+        1794380076779001705,
+        1794380076779001705
+      ],
+      "name": "attempt/cycle-10/commit.bin",
+      "path": "payload/attempt/cycle-10/commit.bin",
+      "sha256": "c25e16f31086f32a57e3329f3067687924001669b30b77f54d9df6e91493ad63"
+    },
+    {
+      "bytes": 282061,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/image.S",
+      "identity": [
+        2064,
+        8524685,
+        33188,
+        1,
+        282061,
+        1794380076778348584,
+        1794380076778348584
+      ],
+      "name": "attempt/cycle-10/image.S",
+      "path": "payload/attempt/cycle-10/image.S",
+      "sha256": "2e94f1c8ab6da050601a805c1d71b897fe94beb8a06b2bb9291617e9134e7808"
+    },
+    {
+      "bytes": 155014,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/manifest.json",
+      "identity": [
+        2064,
+        8524687,
+        33188,
+        1,
+        155014,
+        1794380076778825597,
+        1794380076778825597
+      ],
+      "name": "attempt/cycle-10/manifest.json",
+      "path": "payload/attempt/cycle-10/manifest.json",
+      "sha256": "e1418436576bad05dec38939cb8c5929651c676c00cbacda0d2426d56ccb0f90"
+    },
+    {
+      "bytes": 245094,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-10/metadata.c",
+      "identity": [
+        2064,
+        8524686,
+        33188,
+        1,
+        245094,
+        1794380076778703736,
+        1794380076778703736
+      ],
+      "name": "attempt/cycle-10/metadata.c",
+      "path": "payload/attempt/cycle-10/metadata.c",
+      "sha256": "77e6f703829a380a804ee74daafa3c83a045f37bacd48d7da54367230a8e9659"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/ack.bin",
+      "identity": [
+        2064,
+        8524397,
+        33188,
+        1,
+        88,
+        1794380074967958273,
+        1794380074967958273
+      ],
+      "name": "attempt/cycle-2/ack.bin",
+      "path": "payload/attempt/cycle-2/ack.bin",
+      "sha256": "6c70294250ab78fff67e5641ca6074b9f27f686de2bfb9a880215715feca1d0a"
+    },
+    {
+      "bytes": 232615,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/build/image.S",
+      "identity": [
+        2064,
+        8524363,
+        33188,
+        1,
+        232615,
+        1794380074898467962,
+        1794380074898467962
+      ],
+      "name": "attempt/cycle-2/build/image.S",
+      "path": "payload/attempt/cycle-2/build/image.S",
+      "sha256": "08ae1007f8627f933035df394b37700a84eaa2fe9fff04eacaef16e12b7a6ca1"
+    },
+    {
+      "bytes": 42252,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/build/image.bin",
+      "identity": [
+        2064,
+        8524368,
+        33261,
+        1,
+        42252,
+        1794380074948400321,
+        1794380074948440095
+      ],
+      "name": "attempt/cycle-2/build/image.bin",
+      "path": "payload/attempt/cycle-2/build/image.bin",
+      "sha256": "0d5839039549aaab2eba2abc5c450998785db4e9d680a25092ecd5ca07e7ad0b"
+    },
+    {
+      "bytes": 46776,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/build/image.elf",
+      "identity": [
+        2064,
+        8524367,
+        33261,
+        1,
+        46776,
+        1794380074944014527,
+        1794380074944132387
+      ],
+      "name": "attempt/cycle-2/build/image.elf",
+      "path": "payload/attempt/cycle-2/build/image.elf",
+      "sha256": "aa92745415240a70754936040c51b9f34a805f5f2ff1653948eafc8cadf519ec"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/build/image.ld",
+      "identity": [
+        2064,
+        8524364,
+        33188,
+        1,
+        112,
+        1794380074898631500,
+        1794380074898631500
+      ],
+      "name": "attempt/cycle-2/build/image.ld",
+      "path": "payload/attempt/cycle-2/build/image.ld",
+      "sha256": "34d166fedc79474c38ac533fcc6fc4f48db02a6453845a28ddb9ae5b177bcae5"
+    },
+    {
+      "bytes": 42960,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/build/image.o",
+      "identity": [
+        2064,
+        8524366,
+        33188,
+        1,
+        42960,
+        1794380074936000000,
+        1794380074936000000
+      ],
+      "name": "attempt/cycle-2/build/image.o",
+      "path": "payload/attempt/cycle-2/build/image.o",
+      "sha256": "def444fbd6b1e5b1c274fe25a32e8911d6dc8d35f93f18bc174036b5006c7f5d"
+    },
+    {
+      "bytes": 223906,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/build/image.s",
+      "identity": [
+        2064,
+        8524365,
+        33188,
+        1,
+        223906,
+        1794380074916000000,
+        1794380074916000000
+      ],
+      "name": "attempt/cycle-2/build/image.s",
+      "path": "payload/attempt/cycle-2/build/image.s",
+      "sha256": "6efc028a71f15d472b40b85d5108d93acca0d6f9324f0fa0c495dbf717e2abe2"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/claim.bin",
+      "identity": [
+        2064,
+        8524355,
+        33188,
+        1,
+        362,
+        1794380074655000000,
+        1794380074655000000
+      ],
+      "name": "attempt/cycle-2/claim.bin",
+      "path": "payload/attempt/cycle-2/claim.bin",
+      "sha256": "bb8853d9ad53c3c905dd85daaedcbd5ce9e009d730e1881c874ffa4c1a0240dd"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/commit.bin",
+      "identity": [
+        2064,
+        8524396,
+        33188,
+        1,
+        160,
+        1794380074967933417,
+        1794380074967933417
+      ],
+      "name": "attempt/cycle-2/commit.bin",
+      "path": "payload/attempt/cycle-2/commit.bin",
+      "sha256": "a3baddef86c11a00ffb71755e74672ab35fb7205fefaec2344be44a48579037f"
+    },
+    {
+      "bytes": 232615,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/image.S",
+      "identity": [
+        2064,
+        8524393,
+        33188,
+        1,
+        232615,
+        1794380074967577184,
+        1794380074967577184
+      ],
+      "name": "attempt/cycle-2/image.S",
+      "path": "payload/attempt/cycle-2/image.S",
+      "sha256": "08ae1007f8627f933035df394b37700a84eaa2fe9fff04eacaef16e12b7a6ca1"
+    },
+    {
+      "bytes": 150060,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/manifest.json",
+      "identity": [
+        2064,
+        8524395,
+        33188,
+        1,
+        150060,
+        1794380074967845119,
+        1794380074967845119
+      ],
+      "name": "attempt/cycle-2/manifest.json",
+      "path": "payload/attempt/cycle-2/manifest.json",
+      "sha256": "dcf9b77230e7ac46d383b9ac86655867110cc0dc7d511d96da27c67431f2285e"
+    },
+    {
+      "bytes": 244314,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-2/metadata.c",
+      "identity": [
+        2064,
+        8524394,
+        33188,
+        1,
+        244314,
+        1794380074967720538,
+        1794380074967720538
+      ],
+      "name": "attempt/cycle-2/metadata.c",
+      "path": "payload/attempt/cycle-2/metadata.c",
+      "sha256": "a92fa7cba0c7ee0333aeb2fdfe1db7c66fd5ca70f114bf127ebfff144de9ba41"
+    },
+    {
+      "bytes": 104,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/ack.bin",
+      "identity": [
+        2064,
+        8524447,
+        33188,
+        1,
+        104,
+        1794380075310595955,
+        1794380075310595955
+      ],
+      "name": "attempt/cycle-3/ack.bin",
+      "path": "payload/attempt/cycle-3/ack.bin",
+      "sha256": "cbd43d0a1675ee256ad3859794672094ba66e23103f4593e80070856327be829"
+    },
+    {
+      "bytes": 245340,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/build/image.S",
+      "identity": [
+        2064,
+        8524413,
+        33188,
+        1,
+        245340,
+        1794380075236002048,
+        1794380075236002048
+      ],
+      "name": "attempt/cycle-3/build/image.S",
+      "path": "payload/attempt/cycle-3/build/image.S",
+      "sha256": "48e48439e2cf5ab187663c05730b121d03153604ca7f43764314896b3f68c4a6"
+    },
+    {
+      "bytes": 44601,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/build/image.bin",
+      "identity": [
+        2064,
+        8524418,
+        33261,
+        1,
+        44601,
+        1794380075288414141,
+        1794380075288493458
+      ],
+      "name": "attempt/cycle-3/build/image.bin",
+      "path": "payload/attempt/cycle-3/build/image.bin",
+      "sha256": "b6fbc196ef0a01f0dd29d5ae74efff9dd739af99a298529f43a4e50e73880b8f"
+    },
+    {
+      "bytes": 49128,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/build/image.elf",
+      "identity": [
+        2064,
+        8524417,
+        33261,
+        1,
+        49128,
+        1794380075283952759,
+        1794380075284086807
+      ],
+      "name": "attempt/cycle-3/build/image.elf",
+      "path": "payload/attempt/cycle-3/build/image.elf",
+      "sha256": "eedcf5f7450ffc40eee9c3bbdfd3324cd9332b783a24b8ccd1559cd1363fc3d6"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/build/image.ld",
+      "identity": [
+        2064,
+        8524414,
+        33188,
+        1,
+        112,
+        1794380075236174750,
+        1794380075236174750
+      ],
+      "name": "attempt/cycle-3/build/image.ld",
+      "path": "payload/attempt/cycle-3/build/image.ld",
+      "sha256": "2d647229dd253c385c73089a3a34a20e46bb7969897b172279578a16d7a7c47e"
+    },
+    {
+      "bytes": 45312,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/build/image.o",
+      "identity": [
+        2064,
+        8524416,
+        33188,
+        1,
+        45312,
+        1794380075276000000,
+        1794380075276000000
+      ],
+      "name": "attempt/cycle-3/build/image.o",
+      "path": "payload/attempt/cycle-3/build/image.o",
+      "sha256": "af0ef07c8f643c88822c73c1e2688d8844eb96aa0c195d27a55ac77b17296686"
+    },
+    {
+      "bytes": 236349,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/build/image.s",
+      "identity": [
+        2064,
+        8524415,
+        33188,
+        1,
+        236349,
+        1794380075251000000,
+        1794380075251000000
+      ],
+      "name": "attempt/cycle-3/build/image.s",
+      "path": "payload/attempt/cycle-3/build/image.s",
+      "sha256": "e6398469ef1be81e909a1002e7c929c82e642b418717ce8dfd7a17015583c590"
+    },
+    {
+      "bytes": 458,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/claim.bin",
+      "identity": [
+        2064,
+        8524405,
+        33188,
+        1,
+        458,
+        1794380074990573456,
+        1794380074990573456
+      ],
+      "name": "attempt/cycle-3/claim.bin",
+      "path": "payload/attempt/cycle-3/claim.bin",
+      "sha256": "fa67af5c71451b8a0c3ca54e33e6c938a3553b8b06474580d9704b90d57b2834"
+    },
+    {
+      "bytes": 176,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/commit.bin",
+      "identity": [
+        2064,
+        8524446,
+        33188,
+        1,
+        176,
+        1794380075310561164,
+        1794380075310561164
+      ],
+      "name": "attempt/cycle-3/commit.bin",
+      "path": "payload/attempt/cycle-3/commit.bin",
+      "sha256": "40123a66887661c491d97429bf785559c7bc1124a11129c4497309e48c8dad26"
+    },
+    {
+      "bytes": 245340,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/image.S",
+      "identity": [
+        2064,
+        8524443,
+        33188,
+        1,
+        245340,
+        1794380075309767442,
+        1794380075309767442
+      ],
+      "name": "attempt/cycle-3/image.S",
+      "path": "payload/attempt/cycle-3/image.S",
+      "sha256": "48e48439e2cf5ab187663c05730b121d03153604ca7f43764314896b3f68c4a6"
+    },
+    {
+      "bytes": 151286,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/manifest.json",
+      "identity": [
+        2064,
+        8524445,
+        33188,
+        1,
+        151286,
+        1794380075310382581,
+        1794380075310382581
+      ],
+      "name": "attempt/cycle-3/manifest.json",
+      "path": "payload/attempt/cycle-3/manifest.json",
+      "sha256": "7b0c2f04fbb3a18484054bd24335bdadd9dc86e72cfdb6d989308f9fa93efd00"
+    },
+    {
+      "bytes": 244470,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-3/metadata.c",
+      "identity": [
+        2064,
+        8524444,
+        33188,
+        1,
+        244470,
+        1794380075310079434,
+        1794380075310079434
+      ],
+      "name": "attempt/cycle-3/metadata.c",
+      "path": "payload/attempt/cycle-3/metadata.c",
+      "sha256": "d97b5380bb9f32c450f22fbc2ca1a3bd6e6258091be7db4be64d7ade42cea226"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/ack.bin",
+      "identity": [
+        2064,
+        8524497,
+        33188,
+        1,
+        88,
+        1794380075670383302,
+        1794380075670383302
+      ],
+      "name": "attempt/cycle-4/ack.bin",
+      "path": "payload/attempt/cycle-4/ack.bin",
+      "sha256": "e75bc78b75c0244f97ef20ca495143a79ae7397ad96e36f4f982184905524b94"
+    },
+    {
+      "bytes": 251907,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/build/image.S",
+      "identity": [
+        2064,
+        8524463,
+        33188,
+        1,
+        251907,
+        1794380075597235108,
+        1794380075597235108
+      ],
+      "name": "attempt/cycle-4/build/image.S",
+      "path": "payload/attempt/cycle-4/build/image.S",
+      "sha256": "9726a6c39dcf71f224aa008d4c23eb233f9e9240efb4b1e830d369b4ca13ae3b"
+    },
+    {
+      "bytes": 45801,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/build/image.bin",
+      "identity": [
+        2064,
+        8524468,
+        33261,
+        1,
+        45801,
+        1794380075646633973,
+        1794380075646705877
+      ],
+      "name": "attempt/cycle-4/build/image.bin",
+      "path": "payload/attempt/cycle-4/build/image.bin",
+      "sha256": "fca578a4a66050085e88603dc70cc65d769bb71030a142141101005e98eed8d7"
+    },
+    {
+      "bytes": 50328,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/build/image.elf",
+      "identity": [
+        2064,
+        8524467,
+        33261,
+        1,
+        50328,
+        1794380075642032665,
+        1794380075642192572
+      ],
+      "name": "attempt/cycle-4/build/image.elf",
+      "path": "payload/attempt/cycle-4/build/image.elf",
+      "sha256": "2aed0e151ccab5069f538ba9c5ee135cc06e24ecd01ca4a846cda15373ed162d"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/build/image.ld",
+      "identity": [
+        2064,
+        8524464,
+        33188,
+        1,
+        112,
+        1794380075597558790,
+        1794380075597558790
+      ],
+      "name": "attempt/cycle-4/build/image.ld",
+      "path": "payload/attempt/cycle-4/build/image.ld",
+      "sha256": "34d166fedc79474c38ac533fcc6fc4f48db02a6453845a28ddb9ae5b177bcae5"
+    },
+    {
+      "bytes": 46512,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/build/image.o",
+      "identity": [
+        2064,
+        8524466,
+        33188,
+        1,
+        46512,
+        1794380075634000000,
+        1794380075634000000
+      ],
+      "name": "attempt/cycle-4/build/image.o",
+      "path": "payload/attempt/cycle-4/build/image.o",
+      "sha256": "fcb9ce7247d285483f066c0d3fe18217597be1fcec56801c554efdaab860c395"
+    },
+    {
+      "bytes": 242724,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/build/image.s",
+      "identity": [
+        2064,
+        8524465,
+        33188,
+        1,
+        242724,
+        1794380075612000000,
+        1794380075612000000
+      ],
+      "name": "attempt/cycle-4/build/image.s",
+      "path": "payload/attempt/cycle-4/build/image.s",
+      "sha256": "4deb7d9de0f314de02e20772a7c48b72df56fc67df51b2aa42e66f9ff9ce2aa2"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/claim.bin",
+      "identity": [
+        2064,
+        8524455,
+        33188,
+        1,
+        362,
+        1794380075332984999,
+        1794380075332984999
+      ],
+      "name": "attempt/cycle-4/claim.bin",
+      "path": "payload/attempt/cycle-4/claim.bin",
+      "sha256": "66d984aa0ccd634f6ac72f3c41a2f78eb30d6597088d9a0b46da8c102e6bc0b9"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/commit.bin",
+      "identity": [
+        2064,
+        8524496,
+        33188,
+        1,
+        160,
+        1794380075670336898,
+        1794380075670336898
+      ],
+      "name": "attempt/cycle-4/commit.bin",
+      "path": "payload/attempt/cycle-4/commit.bin",
+      "sha256": "e9c46226318ddeb8389e567115f3a83f43fde6eee3c00486124909317215d7cc"
+    },
+    {
+      "bytes": 251907,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/image.S",
+      "identity": [
+        2064,
+        8524493,
+        33188,
+        1,
+        251907,
+        1794380075669522211,
+        1794380075669522211
+      ],
+      "name": "attempt/cycle-4/image.S",
+      "path": "payload/attempt/cycle-4/image.S",
+      "sha256": "9726a6c39dcf71f224aa008d4c23eb233f9e9240efb4b1e830d369b4ca13ae3b"
+    },
+    {
+      "bytes": 152057,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/manifest.json",
+      "identity": [
+        2064,
+        8524495,
+        33188,
+        1,
+        152057,
+        1794380075670000000,
+        1794380075670000000
+      ],
+      "name": "attempt/cycle-4/manifest.json",
+      "path": "payload/attempt/cycle-4/manifest.json",
+      "sha256": "b0eeaec93bc2b2857bad65a25fbae46bcafd40c00e0d52f1d6716aef2177b192"
+    },
+    {
+      "bytes": 244626,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-4/metadata.c",
+      "identity": [
+        2064,
+        8524494,
+        33188,
+        1,
+        244626,
+        1794380075669843248,
+        1794380075669843248
+      ],
+      "name": "attempt/cycle-4/metadata.c",
+      "path": "payload/attempt/cycle-4/metadata.c",
+      "sha256": "cb76b70db5b8d4aa7eb1161c37d08282687f82fdb2fb90a2d1da231ca9caf534"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-5/claim.bin",
+      "identity": [
+        2064,
+        8524505,
+        33188,
+        1,
+        266,
+        1794380075692531961,
+        1794380075692531961
+      ],
+      "name": "attempt/cycle-5/claim.bin",
+      "path": "payload/attempt/cycle-5/claim.bin",
+      "sha256": "3313ab34994ab5061e6732314faa0faa9162ce8a27d53a4106a6e72f8cccfa70"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/ack.bin",
+      "identity": [
+        2064,
+        8524561,
+        33188,
+        1,
+        88,
+        1794380076032783566,
+        1794380076032783566
+      ],
+      "name": "attempt/cycle-6/ack.bin",
+      "path": "payload/attempt/cycle-6/ack.bin",
+      "sha256": "85ffb58a16143580aa8ac898f4b79c1f02da066636ca418d3d918d1125dd7e75"
+    },
+    {
+      "bytes": 260601,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/build/image.S",
+      "identity": [
+        2064,
+        8524527,
+        33188,
+        1,
+        260601,
+        1794380075965062512,
+        1794380075965062512
+      ],
+      "name": "attempt/cycle-6/build/image.S",
+      "path": "payload/attempt/cycle-6/build/image.S",
+      "sha256": "f4eb131e7530cf961a018dc13eac904da03709c45b2e536a525beeda67c5f84a"
+    },
+    {
+      "bytes": 47391,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/build/image.bin",
+      "identity": [
+        2064,
+        8524532,
+        33261,
+        1,
+        47391,
+        1794380076016912045,
+        1794380076016953191
+      ],
+      "name": "attempt/cycle-6/build/image.bin",
+      "path": "payload/attempt/cycle-6/build/image.bin",
+      "sha256": "c58cc90de4bf6fac577eebc8e7e892daa485e5e5252edc88f6cb24cfe22743ca"
+    },
+    {
+      "bytes": 51912,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/build/image.elf",
+      "identity": [
+        2064,
+        8524531,
+        33261,
+        1,
+        51912,
+        1794380076012000000,
+        1794380076012509083
+      ],
+      "name": "attempt/cycle-6/build/image.elf",
+      "path": "payload/attempt/cycle-6/build/image.elf",
+      "sha256": "bc1ad0c61c49adfb8da535f440cca60305c4837efb8a40701821aeb86a58e2a9"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/build/image.ld",
+      "identity": [
+        2064,
+        8524528,
+        33188,
+        1,
+        112,
+        1794380075965406757,
+        1794380075965406757
+      ],
+      "name": "attempt/cycle-6/build/image.ld",
+      "path": "payload/attempt/cycle-6/build/image.ld",
+      "sha256": "2d647229dd253c385c73089a3a34a20e46bb7969897b172279578a16d7a7c47e"
+    },
+    {
+      "bytes": 48096,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/build/image.o",
+      "identity": [
+        2064,
+        8524530,
+        33188,
+        1,
+        48096,
+        1794380076004000000,
+        1794380076004000000
+      ],
+      "name": "attempt/cycle-6/build/image.o",
+      "path": "payload/attempt/cycle-6/build/image.o",
+      "sha256": "38e61c012dc2a3fe1d13f57cea5593fb4e433f45413005ef9841d90f7bff3ae8"
+    },
+    {
+      "bytes": 251178,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/build/image.s",
+      "identity": [
+        2064,
+        8524529,
+        33188,
+        1,
+        251178,
+        1794380075980000000,
+        1794380075980000000
+      ],
+      "name": "attempt/cycle-6/build/image.s",
+      "path": "payload/attempt/cycle-6/build/image.s",
+      "sha256": "c0309321c18d6c5c98653b927b39952ed75dd71d2a2e2fc0dbd22174b81ebc12"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/claim.bin",
+      "identity": [
+        2064,
+        8524519,
+        33188,
+        1,
+        362,
+        1794380075715876080,
+        1794380075715876080
+      ],
+      "name": "attempt/cycle-6/claim.bin",
+      "path": "payload/attempt/cycle-6/claim.bin",
+      "sha256": "8767d0c8dfa067bbe1fea4876fc890c8675efa02ee83af81dc3f9dca9f6013ff"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/commit.bin",
+      "identity": [
+        2064,
+        8524560,
+        33188,
+        1,
+        160,
+        1794380076032754771,
+        1794380076032754771
+      ],
+      "name": "attempt/cycle-6/commit.bin",
+      "path": "payload/attempt/cycle-6/commit.bin",
+      "sha256": "2e51b17c7d0b2e9efe1c950631d6913715739eae50fd20742be990a8dccbc60e"
+    },
+    {
+      "bytes": 260601,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/image.S",
+      "identity": [
+        2064,
+        8524557,
+        33188,
+        1,
+        260601,
+        1794380076032000000,
+        1794380076032000000
+      ],
+      "name": "attempt/cycle-6/image.S",
+      "path": "payload/attempt/cycle-6/image.S",
+      "sha256": "f4eb131e7530cf961a018dc13eac904da03709c45b2e536a525beeda67c5f84a"
+    },
+    {
+      "bytes": 152930,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/manifest.json",
+      "identity": [
+        2064,
+        8524559,
+        33188,
+        1,
+        152930,
+        1794380076032575173,
+        1794380076032575173
+      ],
+      "name": "attempt/cycle-6/manifest.json",
+      "path": "payload/attempt/cycle-6/manifest.json",
+      "sha256": "12fdda8dc99529b22da0bb65f6ec89ba0a15b92b621aecbdcfebb1de374b550b"
+    },
+    {
+      "bytes": 244782,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-6/metadata.c",
+      "identity": [
+        2064,
+        8524558,
+        33188,
+        1,
+        244782,
+        1794380076032374307,
+        1794380076032374307
+      ],
+      "name": "attempt/cycle-6/metadata.c",
+      "path": "payload/attempt/cycle-6/metadata.c",
+      "sha256": "10c250c58e786a9dc186cb3779fef54e085d6de3260da358c1647ae298a19607"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-7/claim.bin",
+      "identity": [
+        2064,
+        8524569,
+        33188,
+        1,
+        266,
+        1794380076054936700,
+        1794380076054936700
+      ],
+      "name": "attempt/cycle-7/claim.bin",
+      "path": "payload/attempt/cycle-7/claim.bin",
+      "sha256": "80e254fd891fb72c518daf9f2484e4b474b2427cb9c3c23f867bd001dc3d35ac"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-8/claim.bin",
+      "identity": [
+        2064,
+        8524583,
+        33188,
+        1,
+        266,
+        1794380076076834729,
+        1794380076076834729
+      ],
+      "name": "attempt/cycle-8/claim.bin",
+      "path": "payload/attempt/cycle-8/claim.bin",
+      "sha256": "5344afe415622062ecce8a4200e32c1f822024741b40b6dc3a9f53d64b6329a7"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/ack.bin",
+      "identity": [
+        2064,
+        8524639,
+        33188,
+        1,
+        88,
+        1794380076425050200,
+        1794380076425050200
+      ],
+      "name": "attempt/cycle-9/ack.bin",
+      "path": "payload/attempt/cycle-9/ack.bin",
+      "sha256": "23eb15c7099b3cb6b57487a5ab107e078a3b4690ff4fcba0bb76690e0c7142b3"
+    },
+    {
+      "bytes": 275494,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/build/image.S",
+      "identity": [
+        2064,
+        8524605,
+        33188,
+        1,
+        275494,
+        1794380076355257324,
+        1794380076355257324
+      ],
+      "name": "attempt/cycle-9/build/image.S",
+      "path": "payload/attempt/cycle-9/build/image.S",
+      "sha256": "c137521ef176f3a37314e99d0709aea373c93676ee23b46a9b55de1f51c7f68c"
+    },
+    {
+      "bytes": 50133,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/build/image.bin",
+      "identity": [
+        2064,
+        8524610,
+        33261,
+        1,
+        50133,
+        1794380076409800525,
+        1794380076409872757
+      ],
+      "name": "attempt/cycle-9/build/image.bin",
+      "path": "payload/attempt/cycle-9/build/image.bin",
+      "sha256": "eed335e0967b4548abaecc30131e6ee7e3ab0aa6861ee3c270f574cd8bbd60f7"
+    },
+    {
+      "bytes": 54656,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/build/image.elf",
+      "identity": [
+        2064,
+        8524609,
+        33261,
+        1,
+        54656,
+        1794380076405000000,
+        1794380076405406498
+      ],
+      "name": "attempt/cycle-9/build/image.elf",
+      "path": "payload/attempt/cycle-9/build/image.elf",
+      "sha256": "97caf2d25753d14130063b8af0e72d509718ceebae826a232d2aedd6ac8234ae"
+    },
+    {
+      "bytes": 112,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/build/image.ld",
+      "identity": [
+        2064,
+        8524606,
+        33188,
+        1,
+        112,
+        1794380076355599980,
+        1794380076355599980
+      ],
+      "name": "attempt/cycle-9/build/image.ld",
+      "path": "payload/attempt/cycle-9/build/image.ld",
+      "sha256": "34d166fedc79474c38ac533fcc6fc4f48db02a6453845a28ddb9ae5b177bcae5"
+    },
+    {
+      "bytes": 50840,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/build/image.o",
+      "identity": [
+        2064,
+        8524608,
+        33188,
+        1,
+        50840,
+        1794380076397000000,
+        1794380076397000000
+      ],
+      "name": "attempt/cycle-9/build/image.o",
+      "path": "payload/attempt/cycle-9/build/image.o",
+      "sha256": "39a1886a9417820355cb9837210cdc09442e2a06fdd1957c2fad4789752f6015"
+    },
+    {
+      "bytes": 265708,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/build/image.s",
+      "identity": [
+        2064,
+        8524607,
+        33188,
+        1,
+        265708,
+        1794380076370000000,
+        1794380076370000000
+      ],
+      "name": "attempt/cycle-9/build/image.s",
+      "path": "payload/attempt/cycle-9/build/image.s",
+      "sha256": "b234052c1ed2990429d9996777d6d143ebb73d9e529dd7de1fc454b3e137fb55"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/claim.bin",
+      "identity": [
+        2064,
+        8524597,
+        33188,
+        1,
+        362,
+        1794380076099833518,
+        1794380076099833518
+      ],
+      "name": "attempt/cycle-9/claim.bin",
+      "path": "payload/attempt/cycle-9/claim.bin",
+      "sha256": "c824b930019feb1c4c6a646007af89cdc163dbd3374e88d43a9b501f7f06c347"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/commit.bin",
+      "identity": [
+        2064,
+        8524638,
+        33188,
+        1,
+        160,
+        1794380076425017173,
+        1794380076425017173
+      ],
+      "name": "attempt/cycle-9/commit.bin",
+      "path": "payload/attempt/cycle-9/commit.bin",
+      "sha256": "5ee10d7f2dad7ec008df50ca7fd05eb64e62ea7521090cbd2cf3b6a14ae8b08d"
+    },
+    {
+      "bytes": 275494,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/image.S",
+      "identity": [
+        2064,
+        8524635,
+        33188,
+        1,
+        275494,
+        1794380076424202159,
+        1794380076424202159
+      ],
+      "name": "attempt/cycle-9/image.S",
+      "path": "payload/attempt/cycle-9/image.S",
+      "sha256": "c137521ef176f3a37314e99d0709aea373c93676ee23b46a9b55de1f51c7f68c"
+    },
+    {
+      "bytes": 154238,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/manifest.json",
+      "identity": [
+        2064,
+        8524637,
+        33188,
+        1,
+        154238,
+        1794380076424825786,
+        1794380076424825786
+      ],
+      "name": "attempt/cycle-9/manifest.json",
+      "path": "payload/attempt/cycle-9/manifest.json",
+      "sha256": "7fbc5be1baea26e3f29abd58a5b7523e5ac574a660ac8da78b79dfa853eb7b57"
+    },
+    {
+      "bytes": 244938,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/cycle-9/metadata.c",
+      "identity": [
+        2064,
+        8524636,
+        33188,
+        1,
+        244938,
+        1794380076424544822,
+        1794380076424544822
+      ],
+      "name": "attempt/cycle-9/metadata.c",
+      "path": "payload/attempt/cycle-9/metadata.c",
+      "sha256": "90682fbf863366634a1ba83d529a6dd7dc2a5d872b09cad41f752c0044ae3298"
+    },
+    {
+      "bytes": 1941,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/identity.json",
+      "identity": [
+        2064,
+        8524272,
+        33188,
+        1,
+        1941,
+        1794380073888803657,
+        1794380073888803657
+      ],
+      "name": "attempt/identity.json",
+      "path": "payload/attempt/identity.json",
+      "sha256": "05366b74314d42e1285206fa77a639af11dc49c6c36163bb182feb65ab75b439"
+    },
+    {
+      "bytes": 2004,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/managed-child-record.bin",
+      "identity": [
+        2064,
+        8524275,
+        33188,
+        1,
+        2004,
+        1794380073964327589,
+        1794380073964327589
+      ],
+      "name": "attempt/managed-child-record.bin",
+      "path": "payload/attempt/managed-child-record.bin",
+      "sha256": "e884f154d33796885927e52cf6a03b52d68d9cc12ea4fb0e9cba9af9594dcd29"
+    },
+    {
+      "bytes": 316923,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/module.disassembly.txt",
+      "identity": [
+        2064,
+        8524273,
+        33188,
+        1,
+        316923,
+        1794380073907000055,
+        1794380073907000055
+      ],
+      "name": "attempt/module.disassembly.txt",
+      "path": "payload/attempt/module.disassembly.txt",
+      "sha256": "1b97708406d8f984e612f9d92db29f3a95647e81a0aff2e0be36eb8b4d7e1585"
+    },
+    {
+      "bytes": 1458280,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/observations-before-shutdown.bin",
+      "identity": [
+        2064,
+        8524690,
+        33188,
+        1,
+        1458280,
+        1794380076973917259,
+        1794380076973917259
+      ],
+      "name": "attempt/observations-before-shutdown.bin",
+      "path": "payload/attempt/observations-before-shutdown.bin",
+      "sha256": "3cc434d17f5b36dfecba204fbb65b48b90cf1a2731fd5dd313fa924c05cf154c"
+    },
+    {
+      "bytes": 5112240,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/observations-before-shutdown.json",
+      "identity": [
+        2064,
+        8524691,
+        33188,
+        1,
+        5112240,
+        1794380077027789762,
+        1794380077027789762
+      ],
+      "name": "attempt/observations-before-shutdown.json",
+      "path": "payload/attempt/observations-before-shutdown.json",
+      "sha256": "71d8e98a4b406f6017609c567dee5cc62eb4cfc572bf82e2ddfe7b5f0089459c"
+    },
+    {
+      "bytes": 1478600,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/observations-failure.bin",
+      "identity": [
+        2064,
+        8524692,
+        33188,
+        1,
+        1478600,
+        1794380077136931945,
+        1794380077136931945
+      ],
+      "name": "attempt/observations-failure.bin",
+      "path": "payload/attempt/observations-failure.bin",
+      "sha256": "6c859d65dc27634826270f0870233be4ebc8394cd78b657c532329336f1b0225"
+    },
+    {
+      "bytes": 109987,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/result.json",
+      "identity": [
+        2064,
+        8524693,
+        33188,
+        1,
+        109987,
+        1794380077138610542,
+        1794380077138610542
+      ],
+      "name": "attempt/result.json",
+      "path": "payload/attempt/result.json",
+      "sha256": "46370340ca992216316034beade0de68d55ae74c51ef9d4a872763d2b5a1fa33"
+    },
+    {
+      "bytes": 2,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-0.bin",
+      "identity": [
+        2064,
+        8524288,
+        33188,
+        1,
+        2,
+        1794380074221332524,
+        1794380074221332524
+      ],
+      "name": "attempt/source-0.bin",
+      "path": "payload/attempt/source-0.bin",
+      "sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+    },
+    {
+      "bytes": 322,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-0.disassembly.txt",
+      "identity": [
+        2064,
+        8524289,
+        33188,
+        1,
+        322,
+        1794380074223569037,
+        1794380074223569037
+      ],
+      "name": "attempt/source-0.disassembly.txt",
+      "path": "payload/attempt/source-0.disassembly.txt",
+      "sha256": "29a199e8fb9362d0cd1b1ba1f9d2601cdfb1227a4e1e3dac28c95759f2bb7584"
+    },
+    {
+      "bytes": 116,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-1.bin",
+      "identity": [
+        2064,
+        8524290,
+        33188,
+        1,
+        116,
+        1794380074223647357,
+        1794380074223647357
+      ],
+      "name": "attempt/source-1.bin",
+      "path": "payload/attempt/source-1.bin",
+      "sha256": "f444b40834056d570940ad2836f4fe436bbf92350898c382d982bd78e5525ded"
+    },
+    {
+      "bytes": 3485,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-1.disassembly.txt",
+      "identity": [
+        2064,
+        8524291,
+        33188,
+        1,
+        3485,
+        1794380074225916712,
+        1794380074225916712
+      ],
+      "name": "attempt/source-1.disassembly.txt",
+      "path": "payload/attempt/source-1.disassembly.txt",
+      "sha256": "73d5111678cb80736c99129f565175cee3682a564d75c5a00cd7dd181fdbd4fe"
+    },
+    {
+      "bytes": 3322,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-2.bin",
+      "identity": [
+        2064,
+        8524292,
+        33188,
+        1,
+        3322,
+        1794380074226689338,
+        1794380074226689338
+      ],
+      "name": "attempt/source-2.bin",
+      "path": "payload/attempt/source-2.bin",
+      "sha256": "2f959c9b1779420c362d90196ab25302dd97b5170aa19c4d418fbefc3c51b3a8"
+    },
+    {
+      "bytes": 65068,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-2.disassembly.txt",
+      "identity": [
+        2064,
+        8524293,
+        33188,
+        1,
+        65068,
+        1794380074230367730,
+        1794380074230367730
+      ],
+      "name": "attempt/source-2.disassembly.txt",
+      "path": "payload/attempt/source-2.disassembly.txt",
+      "sha256": "91c176c23d3e806f56701576a8ba641adb3251efd39901cf81a38826ab5f735c"
+    },
+    {
+      "bytes": 4096,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-3.bin",
+      "identity": [
+        2064,
+        8524294,
+        33188,
+        1,
+        4096,
+        1794380074241648726,
+        1794380074241648726
+      ],
+      "name": "attempt/source-3.bin",
+      "path": "payload/attempt/source-3.bin",
+      "sha256": "1e3c36cd2f0cd3fd6493acd7e33956541d141489d9612bbbe9fcda95bfbbc1dc"
+    },
+    {
+      "bytes": 294643,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-3.disassembly.txt",
+      "identity": [
+        2064,
+        8524295,
+        33188,
+        1,
+        294643,
+        1794380074248364814,
+        1794380074248364814
+      ],
+      "name": "attempt/source-3.disassembly.txt",
+      "path": "payload/attempt/source-3.disassembly.txt",
+      "sha256": "4663edda670c348d9029bd13827c4fe61ae2c7fc21a01c9b40730c7d26c3a8e9"
+    },
+    {
+      "bytes": 7978,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-export.bin",
+      "identity": [
+        2064,
+        8524296,
+        33188,
+        1,
+        7978,
+        1794380074252457605,
+        1794380074252457605
+      ],
+      "name": "attempt/source-export.bin",
+      "path": "payload/attempt/source-export.bin",
+      "sha256": "b62e55a08879a35aa6ea32ddf66964ace089396eab54e441c8901c73688ed5ac"
+    },
+    {
+      "bytes": 2928,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/source-metadata.json",
+      "identity": [
+        2064,
+        8524297,
+        33188,
+        1,
+        2928,
+        1794380074252634614,
+        1794380074252634614
+      ],
+      "name": "attempt/source-metadata.json",
+      "path": "payload/attempt/source-metadata.json",
+      "sha256": "783c68294fc3dda1f1dbf0a7c381f151bb29fde0424652c6265c8ee81c8c36fe"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000001/reply.bin",
+      "identity": [
+        2064,
+        8524280,
+        33188,
+        1,
+        48,
+        1794380074218813605,
+        1794380074218813605
+      ],
+      "name": "attempt/wire/attempt-00000001/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000001/reply.bin",
+      "sha256": "64f58d44a1f7be92f26abe823e9839a126656a63df1eb249ed6c2c9ccc75daf8"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000001/request.bin",
+      "identity": [
+        2064,
+        8524277,
+        33188,
+        1,
+        0,
+        1794380074218000000,
+        1794380074218000000
+      ],
+      "name": "attempt/wire/attempt-00000001/request.bin",
+      "path": "payload/attempt/wire/attempt-00000001/request.bin",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 90,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000001/request.json",
+      "identity": [
+        2064,
+        8524278,
+        33188,
+        1,
+        90,
+        1794380074218705580,
+        1794380074218705580
+      ],
+      "name": "attempt/wire/attempt-00000001/request.json",
+      "path": "payload/attempt/wire/attempt-00000001/request.json",
+      "sha256": "a74b499fe36857aa54809859b474e30a74ddff2eab88db5f6b835d3e20403f68"
+    },
+    {
+      "bytes": 182,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000001/result.json",
+      "identity": [
+        2064,
+        8524281,
+        33188,
+        1,
+        182,
+        1794380074218868657,
+        1794380074218868657
+      ],
+      "name": "attempt/wire/attempt-00000001/result.json",
+      "path": "payload/attempt/wire/attempt-00000001/result.json",
+      "sha256": "45bcea1df28c7d7b951e74872eed3084a5a3b75470205c321f5ea9042f0b1f2d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000001/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524279,
+        33188,
+        1,
+        72,
+        1794380074218784296,
+        1794380074218784296
+      ],
+      "name": "attempt/wire/attempt-00000001/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000001/returned-envelope.bin",
+      "sha256": "ece57154322c478b9e8869813e6f0a1b03249ea0eafa3f16ccc0cd183b6b0e83"
+    },
+    {
+      "bytes": 7978,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000002/reply.bin",
+      "identity": [
+        2064,
+        8524286,
+        33188,
+        1,
+        7978,
+        1794380074220599900,
+        1794380074220599900
+      ],
+      "name": "attempt/wire/attempt-00000002/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000002/reply.bin",
+      "sha256": "b62e55a08879a35aa6ea32ddf66964ace089396eab54e441c8901c73688ed5ac"
+    },
+    {
+      "bytes": 32,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000002/request.bin",
+      "identity": [
+        2064,
+        8524283,
+        33188,
+        1,
+        32,
+        1794380074220450254,
+        1794380074220450254
+      ],
+      "name": "attempt/wire/attempt-00000002/request.bin",
+      "path": "payload/attempt/wire/attempt-00000002/request.bin",
+      "sha256": "8820465cd3023f7864c0b641c7f65d2fd6d7dada86df40a627ebcd2f43bd6011"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000002/request.json",
+      "identity": [
+        2064,
+        8524284,
+        33188,
+        1,
+        91,
+        1794380074220506290,
+        1794380074220506290
+      ],
+      "name": "attempt/wire/attempt-00000002/request.json",
+      "path": "payload/attempt/wire/attempt-00000002/request.json",
+      "sha256": "32121ab6d6f8fc8a7a1c212beeb8f94367f72d82fd573d9bca014250da958222"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000002/result.json",
+      "identity": [
+        2064,
+        8524287,
+        33188,
+        1,
+        185,
+        1794380074220645268,
+        1794380074220645268
+      ],
+      "name": "attempt/wire/attempt-00000002/result.json",
+      "path": "payload/attempt/wire/attempt-00000002/result.json",
+      "sha256": "d10f08dc8d91a8646a47e3900c00ae564ba6737783b2c53fb254edcd04068ef5"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000002/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524285,
+        33188,
+        1,
+        72,
+        1794380074220571718,
+        1794380074220571718
+      ],
+      "name": "attempt/wire/attempt-00000002/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000002/returned-envelope.bin",
+      "sha256": "a60cacdd85d4bab895b6b41ca99e7f528a8d2297ef825007856cc64729316a22"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000003/reply.bin",
+      "identity": [
+        2064,
+        8524303,
+        33188,
+        1,
+        266,
+        1794380074253550837,
+        1794380074253550837
+      ],
+      "name": "attempt/wire/attempt-00000003/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000003/reply.bin",
+      "sha256": "1b701a72ce83d2bdd4afc1a58f70202424f78f78fb86cb878a74858de6ed4379"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000003/request.bin",
+      "identity": [
+        2064,
+        8524300,
+        33188,
+        1,
+        56,
+        1794380074253406083,
+        1794380074253406083
+      ],
+      "name": "attempt/wire/attempt-00000003/request.bin",
+      "path": "payload/attempt/wire/attempt-00000003/request.bin",
+      "sha256": "e930d3450aefc1a2220d41a3c140aff30c02d2a6910437abe3e27a075fb7b8bd"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000003/request.json",
+      "identity": [
+        2064,
+        8524301,
+        33188,
+        1,
+        91,
+        1794380074253472957,
+        1794380074253472957
+      ],
+      "name": "attempt/wire/attempt-00000003/request.json",
+      "path": "payload/attempt/wire/attempt-00000003/request.json",
+      "sha256": "6e215ff2b422863ce4640ba69340f5d33138972077381d1df97762163845bd78"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000003/result.json",
+      "identity": [
+        2064,
+        8524304,
+        33188,
+        1,
+        184,
+        1794380074253593503,
+        1794380074253593503
+      ],
+      "name": "attempt/wire/attempt-00000003/result.json",
+      "path": "payload/attempt/wire/attempt-00000003/result.json",
+      "sha256": "500bcba88f94f5af8de55f0f6af692c2d494a9587ce488fc01fef9f64508706b"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000003/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524302,
+        33188,
+        1,
+        72,
+        1794380074253525638,
+        1794380074253525638
+      ],
+      "name": "attempt/wire/attempt-00000003/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000003/returned-envelope.bin",
+      "sha256": "cb24b0f563c3cecd4ea410e6e2700d33c454865d410d1140cadbf9d1b8845c68"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000004/reply.bin",
+      "identity": [
+        2064,
+        8524310,
+        33188,
+        1,
+        227,
+        1794380074259092224,
+        1794380074259092224
+      ],
+      "name": "attempt/wire/attempt-00000004/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000004/reply.bin",
+      "sha256": "2e1badfdc09e71ea9cd9c2b1fabbe93534281af3a280c00c917037ae692d87ba"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000004/request.bin",
+      "identity": [
+        2064,
+        8524307,
+        33188,
+        1,
+        72,
+        1794380074257517042,
+        1794380074257517042
+      ],
+      "name": "attempt/wire/attempt-00000004/request.bin",
+      "path": "payload/attempt/wire/attempt-00000004/request.bin",
+      "sha256": "ddbf9be9b9e70adf5e9d7cc7990ce2f380c1fca2efc5782e7cc2bcf43475cde8"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000004/request.json",
+      "identity": [
+        2064,
+        8524308,
+        33188,
+        1,
+        91,
+        1794380074257581978,
+        1794380074257581978
+      ],
+      "name": "attempt/wire/attempt-00000004/request.json",
+      "path": "payload/attempt/wire/attempt-00000004/request.json",
+      "sha256": "2ea05114bd30bb8eb797b8e28b1a7729bee084e8f5abc758e394fbd77edd4c82"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000004/result.json",
+      "identity": [
+        2064,
+        8524311,
+        33188,
+        1,
+        184,
+        1794380074259161549,
+        1794380074259161549
+      ],
+      "name": "attempt/wire/attempt-00000004/result.json",
+      "path": "payload/attempt/wire/attempt-00000004/result.json",
+      "sha256": "8392bfe7d32f894232c809f595cfa5094b90c7fe49ccf5f59cc249336c26b06d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000004/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524309,
+        33188,
+        1,
+        72,
+        1794380074259061342,
+        1794380074259061342
+      ],
+      "name": "attempt/wire/attempt-00000004/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000004/returned-envelope.bin",
+      "sha256": "21a1ca05fe5e07ea117cf830fa34e52ed660fe091652ebfe0468eb7d8e8f9972"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000005/reply.bin",
+      "identity": [
+        2064,
+        8524323,
+        33188,
+        1,
+        40,
+        1794380074598088410,
+        1794380074598088410
+      ],
+      "name": "attempt/wire/attempt-00000005/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000005/reply.bin",
+      "sha256": "4d07a83fbe6d6367ff738959baad658133d8403674063724be98cafef04aa4cb"
+    },
+    {
+      "bytes": 643258,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000005/request.bin",
+      "identity": [
+        2064,
+        8524320,
+        33188,
+        1,
+        643258,
+        1794380074596707507,
+        1794380074596707507
+      ],
+      "name": "attempt/wire/attempt-00000005/request.bin",
+      "path": "payload/attempt/wire/attempt-00000005/request.bin",
+      "sha256": "5ccb7161c7d03160c613735549de962bd2f0c05ffb771c7a29a0376a75d52bc4"
+    },
+    {
+      "bytes": 95,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000005/request.json",
+      "identity": [
+        2064,
+        8524321,
+        33188,
+        1,
+        95,
+        1794380074597091200,
+        1794380074597091200
+      ],
+      "name": "attempt/wire/attempt-00000005/request.json",
+      "path": "payload/attempt/wire/attempt-00000005/request.json",
+      "sha256": "6f20f28b30a1146918a5346494b7c7543fcd266e9fe4cb10dbdf8ad745c2bd3a"
+    },
+    {
+      "bytes": 187,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000005/result.json",
+      "identity": [
+        2064,
+        8524324,
+        33188,
+        1,
+        187,
+        1794380074598167015,
+        1794380074598167015
+      ],
+      "name": "attempt/wire/attempt-00000005/result.json",
+      "path": "payload/attempt/wire/attempt-00000005/result.json",
+      "sha256": "082c913ae8a8410d0904350014b4e1045c589e85d6c1a3f1b9cb5f84b3198a60"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000005/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524322,
+        33188,
+        1,
+        72,
+        1794380074598053456,
+        1794380074598053456
+      ],
+      "name": "attempt/wire/attempt-00000005/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000005/returned-envelope.bin",
+      "sha256": "84f6ca86920e135778cf66e85f1255067b5207a7229decdd49e0a681ebe42700"
+    },
+    {
+      "bytes": 144,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000006/reply.bin",
+      "identity": [
+        2064,
+        8524329,
+        33188,
+        1,
+        144,
+        1794380074609220269,
+        1794380074609220269
+      ],
+      "name": "attempt/wire/attempt-00000006/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000006/reply.bin",
+      "sha256": "b24a0e656baff1cc584856880fb833beaeb6c441a336efed9734b093d3db0863"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000006/request.bin",
+      "identity": [
+        2064,
+        8524326,
+        33188,
+        1,
+        56,
+        1794380074598566012,
+        1794380074598566012
+      ],
+      "name": "attempt/wire/attempt-00000006/request.bin",
+      "path": "payload/attempt/wire/attempt-00000006/request.bin",
+      "sha256": "ae0f4684ba5a276e6e91aef0c1fba03119cacf83edb025dcbd5d8426ab670fd4"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000006/request.json",
+      "identity": [
+        2064,
+        8524327,
+        33188,
+        1,
+        91,
+        1794380074598623040,
+        1794380074598623040
+      ],
+      "name": "attempt/wire/attempt-00000006/request.json",
+      "path": "payload/attempt/wire/attempt-00000006/request.json",
+      "sha256": "d7bb09be3e349aeb56fb712a228998146e838fd483148287f671a6a6f073f8d9"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000006/result.json",
+      "identity": [
+        2064,
+        8524330,
+        33188,
+        1,
+        184,
+        1794380074609266949,
+        1794380074609266949
+      ],
+      "name": "attempt/wire/attempt-00000006/result.json",
+      "path": "payload/attempt/wire/attempt-00000006/result.json",
+      "sha256": "84dbc0d445962afc7f0476206334f171940ba9ac1057000dc1698c6de45dcd48"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000006/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524328,
+        33188,
+        1,
+        72,
+        1794380074609181505,
+        1794380074609181505
+      ],
+      "name": "attempt/wire/attempt-00000006/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000006/returned-envelope.bin",
+      "sha256": "f593fbabf62e1ad6638972127a46a5246df7d7a0377dfe9fd2cb0ae3d9aa1074"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000007/reply.bin",
+      "identity": [
+        2064,
+        8524335,
+        33188,
+        1,
+        72,
+        1794380074610395686,
+        1794380074610395686
+      ],
+      "name": "attempt/wire/attempt-00000007/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000007/reply.bin",
+      "sha256": "3c84a3107b2c4e09a0e2f5e009c4cee87ec2b7a11056b29eff35f4d24c5dc18a"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000007/request.bin",
+      "identity": [
+        2064,
+        8524332,
+        33188,
+        1,
+        40,
+        1794380074609714669,
+        1794380074609714669
+      ],
+      "name": "attempt/wire/attempt-00000007/request.bin",
+      "path": "payload/attempt/wire/attempt-00000007/request.bin",
+      "sha256": "9ddd7666f67757a32e86f110d5712befb4d26f189ff1f8419a2eb5a9e356ec0f"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000007/request.json",
+      "identity": [
+        2064,
+        8524333,
+        33188,
+        1,
+        91,
+        1794380074609766952,
+        1794380074609766952
+      ],
+      "name": "attempt/wire/attempt-00000007/request.json",
+      "path": "payload/attempt/wire/attempt-00000007/request.json",
+      "sha256": "1f3a88735c5baf002fb1fccc1e71258f6109f05ab57f90d99de2f0a4e20d212b"
+    },
+    {
+      "bytes": 183,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000007/result.json",
+      "identity": [
+        2064,
+        8524336,
+        33188,
+        1,
+        183,
+        1794380074610441381,
+        1794380074610441381
+      ],
+      "name": "attempt/wire/attempt-00000007/result.json",
+      "path": "payload/attempt/wire/attempt-00000007/result.json",
+      "sha256": "9f036592f9ff2af5b3b90a158e14394ba9af9a4330c1378ad3a34f6a88a9f1b8"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000007/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524334,
+        33188,
+        1,
+        72,
+        1794380074610359878,
+        1794380074610359878
+      ],
+      "name": "attempt/wire/attempt-00000007/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000007/returned-envelope.bin",
+      "sha256": "93b509b399e4cbaac657473a76090437e0cf6eec3061e53026f8f646231bbbde"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000008/reply.bin",
+      "identity": [
+        2064,
+        8524341,
+        33188,
+        1,
+        48,
+        1794380074610904234,
+        1794380074610904234
+      ],
+      "name": "attempt/wire/attempt-00000008/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000008/reply.bin",
+      "sha256": "024abb7db6aeafb0a65d910a181c6bbb395e1eeb16dc297e2fcd863455441eab"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000008/request.bin",
+      "identity": [
+        2064,
+        8524338,
+        33188,
+        1,
+        48,
+        1794380074610787352,
+        1794380074610787352
+      ],
+      "name": "attempt/wire/attempt-00000008/request.bin",
+      "path": "payload/attempt/wire/attempt-00000008/request.bin",
+      "sha256": "024abb7db6aeafb0a65d910a181c6bbb395e1eeb16dc297e2fcd863455441eab"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000008/request.json",
+      "identity": [
+        2064,
+        8524339,
+        33188,
+        1,
+        91,
+        1794380074610835561,
+        1794380074610835561
+      ],
+      "name": "attempt/wire/attempt-00000008/request.json",
+      "path": "payload/attempt/wire/attempt-00000008/request.json",
+      "sha256": "8000b0581c776fe7baf7f4c07be4fa63e05bba6aff5c32b71bb743e330e2247f"
+    },
+    {
+      "bytes": 183,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000008/result.json",
+      "identity": [
+        2064,
+        8524342,
+        33188,
+        1,
+        183,
+        1794380074610964853,
+        1794380074610964853
+      ],
+      "name": "attempt/wire/attempt-00000008/result.json",
+      "path": "payload/attempt/wire/attempt-00000008/result.json",
+      "sha256": "d513fb532f1029a9f5e658e37035aac212f41c31e2621e9ad6b54dde6f5ad377"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000008/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524340,
+        33188,
+        1,
+        72,
+        1794380074610878563,
+        1794380074610878563
+      ],
+      "name": "attempt/wire/attempt-00000008/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000008/returned-envelope.bin",
+      "sha256": "ec98ed3ac57c722b9361d21968121656cec8c5b03b55376dd2105eefe13add6a"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000009/reply.bin",
+      "identity": [
+        2064,
+        8524353,
+        33188,
+        1,
+        362,
+        1794380074633801800,
+        1794380074633801800
+      ],
+      "name": "attempt/wire/attempt-00000009/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000009/reply.bin",
+      "sha256": "bb8853d9ad53c3c905dd85daaedcbd5ce9e009d730e1881c874ffa4c1a0240dd"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000009/request.bin",
+      "identity": [
+        2064,
+        8524350,
+        33188,
+        1,
+        56,
+        1794380074633640240,
+        1794380074633640240
+      ],
+      "name": "attempt/wire/attempt-00000009/request.bin",
+      "path": "payload/attempt/wire/attempt-00000009/request.bin",
+      "sha256": "1d8ede807e5e8087f0b5fd0b72eba34848bbaba00b11ad07f2c7727ee3afaada"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000009/request.json",
+      "identity": [
+        2064,
+        8524351,
+        33188,
+        1,
+        91,
+        1794380074633714182,
+        1794380074633714182
+      ],
+      "name": "attempt/wire/attempt-00000009/request.json",
+      "path": "payload/attempt/wire/attempt-00000009/request.json",
+      "sha256": "cf146e5287ef66231d5abf17ebcc4ffdaa11a10f39c2fce3ffc1282a87ffdfb8"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000009/result.json",
+      "identity": [
+        2064,
+        8524354,
+        33188,
+        1,
+        184,
+        1794380074633848246,
+        1794380074633848246
+      ],
+      "name": "attempt/wire/attempt-00000009/result.json",
+      "path": "payload/attempt/wire/attempt-00000009/result.json",
+      "sha256": "60173b3d64fefc3ed866f4d0896aa45af37de49718a8bfebd5575482d7e4de1d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000009/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524352,
+        33188,
+        1,
+        72,
+        1794380074633770665,
+        1794380074633770665
+      ],
+      "name": "attempt/wire/attempt-00000009/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000009/returned-envelope.bin",
+      "sha256": "2de07641fb4a6c6f7220d016a95d843a8abba33ca7918f03e90dfc5858ea2b64"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000010/reply.bin",
+      "identity": [
+        2064,
+        8524360,
+        33188,
+        1,
+        227,
+        1794380074657645113,
+        1794380074657645113
+      ],
+      "name": "attempt/wire/attempt-00000010/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000010/reply.bin",
+      "sha256": "2bfeec41ba70740802a11f145729145fc4f8d2901d9c03ee0a89dce32378f89e"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000010/request.bin",
+      "identity": [
+        2064,
+        8524357,
+        33188,
+        1,
+        72,
+        1794380074655487954,
+        1794380074655487954
+      ],
+      "name": "attempt/wire/attempt-00000010/request.bin",
+      "path": "payload/attempt/wire/attempt-00000010/request.bin",
+      "sha256": "1531a51e92e8119cb00adad625d20294bdb9ff9fca3abbf88483b7953fc05142"
+    },
+    {
+      "bytes": 91,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000010/request.json",
+      "identity": [
+        2064,
+        8524358,
+        33188,
+        1,
+        91,
+        1794380074655555929,
+        1794380074655555929
+      ],
+      "name": "attempt/wire/attempt-00000010/request.json",
+      "path": "payload/attempt/wire/attempt-00000010/request.json",
+      "sha256": "5a2c8b02e5f5b61c7c64e0e0b284a5c75a532cca127e7fcda3fc72c050b3c191"
+    },
+    {
+      "bytes": 184,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000010/result.json",
+      "identity": [
+        2064,
+        8524361,
+        33188,
+        1,
+        184,
+        1794380074657715816,
+        1794380074657715816
+      ],
+      "name": "attempt/wire/attempt-00000010/result.json",
+      "path": "payload/attempt/wire/attempt-00000010/result.json",
+      "sha256": "8229519324fb0699032035eac81096733c48447d7c976a54e54b83d401517818"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000010/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524359,
+        33188,
+        1,
+        72,
+        1794380074657609477,
+        1794380074657609477
+      ],
+      "name": "attempt/wire/attempt-00000010/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000010/returned-envelope.bin",
+      "sha256": "c2aa98b81ccd8f1aeebb80372c23cc0fd87c3cd0fb97586b0ee6ef03ca8f5053"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000011/reply.bin",
+      "identity": [
+        2064,
+        8524373,
+        33188,
+        1,
+        40,
+        1794380074953542757,
+        1794380074953542757
+      ],
+      "name": "attempt/wire/attempt-00000011/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000011/reply.bin",
+      "sha256": "c266084c980e8a300043b1952e2b0bf98b17a54450464ef5aaed1a068cb927c5"
+    },
+    {
+      "bytes": 693216,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000011/request.bin",
+      "identity": [
+        2064,
+        8524370,
+        33188,
+        1,
+        693216,
+        1794380074952096182,
+        1794380074952096182
+      ],
+      "name": "attempt/wire/attempt-00000011/request.bin",
+      "path": "payload/attempt/wire/attempt-00000011/request.bin",
+      "sha256": "9ac5592bf72f41bad3d15e4afd912a5f749c0844f84d48f25c1b2ffff4795366"
+    },
+    {
+      "bytes": 96,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000011/request.json",
+      "identity": [
+        2064,
+        8524371,
+        33188,
+        1,
+        96,
+        1794380074952466282,
+        1794380074952466282
+      ],
+      "name": "attempt/wire/attempt-00000011/request.json",
+      "path": "payload/attempt/wire/attempt-00000011/request.json",
+      "sha256": "dd196fc83c76d49a794f57d988abda450dbe34179d7fbd14fa52db6635b57fb6"
+    },
+    {
+      "bytes": 189,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000011/result.json",
+      "identity": [
+        2064,
+        8524374,
+        33188,
+        1,
+        189,
+        1794380074953604140,
+        1794380074953604140
+      ],
+      "name": "attempt/wire/attempt-00000011/result.json",
+      "path": "payload/attempt/wire/attempt-00000011/result.json",
+      "sha256": "a5d9f5e2c4f2e30392bc5296f76b88c96cde1c4a1a405abe4933fe27bb35f0f8"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000011/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524372,
+        33188,
+        1,
+        72,
+        1794380074953507176,
+        1794380074953507176
+      ],
+      "name": "attempt/wire/attempt-00000011/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000011/returned-envelope.bin",
+      "sha256": "8377794ded20a10b11e4b01a02d11ebc2fe6339896eb46ef6c3765874490053b"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000012/reply.bin",
+      "identity": [
+        2064,
+        8524379,
+        33188,
+        1,
+        160,
+        1794380074965958125,
+        1794380074965958125
+      ],
+      "name": "attempt/wire/attempt-00000012/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000012/reply.bin",
+      "sha256": "a3baddef86c11a00ffb71755e74672ab35fb7205fefaec2344be44a48579037f"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000012/request.bin",
+      "identity": [
+        2064,
+        8524376,
+        33188,
+        1,
+        72,
+        1794380074954021122,
+        1794380074954021122
+      ],
+      "name": "attempt/wire/attempt-00000012/request.bin",
+      "path": "payload/attempt/wire/attempt-00000012/request.bin",
+      "sha256": "e4b03c779352a231be3909a49a158e297f0238fb67f7efe8541e94ec4c22a1e8"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000012/request.json",
+      "identity": [
+        2064,
+        8524377,
+        33188,
+        1,
+        92,
+        1794380074954092365,
+        1794380074954092365
+      ],
+      "name": "attempt/wire/attempt-00000012/request.json",
+      "path": "payload/attempt/wire/attempt-00000012/request.json",
+      "sha256": "efa9807e31260945684bc917ec859902059cb11a199591ed032813be4e16dac9"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000012/result.json",
+      "identity": [
+        2064,
+        8524380,
+        33188,
+        1,
+        186,
+        1794380074966015878,
+        1794380074966015878
+      ],
+      "name": "attempt/wire/attempt-00000012/result.json",
+      "path": "payload/attempt/wire/attempt-00000012/result.json",
+      "sha256": "f4c458362ba2fb745f6f47240ab9bb179002419f18097dc98469ed78b26a2029"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000012/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524378,
+        33188,
+        1,
+        72,
+        1794380074965918088,
+        1794380074965918088
+      ],
+      "name": "attempt/wire/attempt-00000012/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000012/returned-envelope.bin",
+      "sha256": "459a0522a6cb2f3601be1292e2324eed015fd020357344601e55014a75013777"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000013/reply.bin",
+      "identity": [
+        2064,
+        8524385,
+        33188,
+        1,
+        88,
+        1794380074966646262,
+        1794380074966646262
+      ],
+      "name": "attempt/wire/attempt-00000013/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000013/reply.bin",
+      "sha256": "6c70294250ab78fff67e5641ca6074b9f27f686de2bfb9a880215715feca1d0a"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000013/request.bin",
+      "identity": [
+        2064,
+        8524382,
+        33188,
+        1,
+        40,
+        1794380074966511734,
+        1794380074966511734
+      ],
+      "name": "attempt/wire/attempt-00000013/request.bin",
+      "path": "payload/attempt/wire/attempt-00000013/request.bin",
+      "sha256": "e3dba90c8f3fe5e2a9da71aedab7b3c2faa85b671961a823f650850ca2742bec"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000013/request.json",
+      "identity": [
+        2064,
+        8524383,
+        33188,
+        1,
+        92,
+        1794380074966566972,
+        1794380074966566972
+      ],
+      "name": "attempt/wire/attempt-00000013/request.json",
+      "path": "payload/attempt/wire/attempt-00000013/request.json",
+      "sha256": "55fb7e2f01fd529accc8c5dd94170dc3c0ea75a2d73e6e7affb7bf390260721b"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000013/result.json",
+      "identity": [
+        2064,
+        8524386,
+        33188,
+        1,
+        185,
+        1794380074966688517,
+        1794380074966688517
+      ],
+      "name": "attempt/wire/attempt-00000013/result.json",
+      "path": "payload/attempt/wire/attempt-00000013/result.json",
+      "sha256": "cf56d9345d351af36ef66559af0da9bbc37585c850ad299e30b5c7af5954f4d3"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000013/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524384,
+        33188,
+        1,
+        72,
+        1794380074966617216,
+        1794380074966617216
+      ],
+      "name": "attempt/wire/attempt-00000013/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000013/returned-envelope.bin",
+      "sha256": "2553cf25e0a768670e765e5e509ec4db0f23afcaddc006cc451ebb446770198f"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000014/reply.bin",
+      "identity": [
+        2064,
+        8524391,
+        33188,
+        1,
+        48,
+        1794380074967176080,
+        1794380074967176080
+      ],
+      "name": "attempt/wire/attempt-00000014/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000014/reply.bin",
+      "sha256": "b4a264d4ce1f19c1e3f05aa0377311c7d4f58902a6ad2ac369dd80a1694fb7ef"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000014/request.bin",
+      "identity": [
+        2064,
+        8524388,
+        33188,
+        1,
+        48,
+        1794380074967038050,
+        1794380074967038050
+      ],
+      "name": "attempt/wire/attempt-00000014/request.bin",
+      "path": "payload/attempt/wire/attempt-00000014/request.bin",
+      "sha256": "b4a264d4ce1f19c1e3f05aa0377311c7d4f58902a6ad2ac369dd80a1694fb7ef"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000014/request.json",
+      "identity": [
+        2064,
+        8524389,
+        33188,
+        1,
+        92,
+        1794380074967084251,
+        1794380074967084251
+      ],
+      "name": "attempt/wire/attempt-00000014/request.json",
+      "path": "payload/attempt/wire/attempt-00000014/request.json",
+      "sha256": "1d5338a3cb98302865cb3a324cbc221ba16096b4a77b3fe419f5abed4c1624ac"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000014/result.json",
+      "identity": [
+        2064,
+        8524392,
+        33188,
+        1,
+        185,
+        1794380074967228143,
+        1794380074967228143
+      ],
+      "name": "attempt/wire/attempt-00000014/result.json",
+      "path": "payload/attempt/wire/attempt-00000014/result.json",
+      "sha256": "ec5777ae56472fb2632edc696e38c417d42b26e1d43c7cafe6ae7b6788c934cb"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000014/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524390,
+        33188,
+        1,
+        72,
+        1794380074967150511,
+        1794380074967150511
+      ],
+      "name": "attempt/wire/attempt-00000014/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000014/returned-envelope.bin",
+      "sha256": "1c6cbc093862ae0193a691edc3e0f7e58f892ee893081ca3d4962c15c557153e"
+    },
+    {
+      "bytes": 458,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000015/reply.bin",
+      "identity": [
+        2064,
+        8524403,
+        33188,
+        1,
+        458,
+        1794380074989889118,
+        1794380074989889118
+      ],
+      "name": "attempt/wire/attempt-00000015/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000015/reply.bin",
+      "sha256": "fa67af5c71451b8a0c3ca54e33e6c938a3553b8b06474580d9704b90d57b2834"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000015/request.bin",
+      "identity": [
+        2064,
+        8524400,
+        33188,
+        1,
+        56,
+        1794380074989731863,
+        1794380074989731863
+      ],
+      "name": "attempt/wire/attempt-00000015/request.bin",
+      "path": "payload/attempt/wire/attempt-00000015/request.bin",
+      "sha256": "fd3eac1eec0a1f406cb922f44e33c8d314a816c1c97d3ea084336076f654bfda"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000015/request.json",
+      "identity": [
+        2064,
+        8524401,
+        33188,
+        1,
+        92,
+        1794380074989806967,
+        1794380074989806967
+      ],
+      "name": "attempt/wire/attempt-00000015/request.json",
+      "path": "payload/attempt/wire/attempt-00000015/request.json",
+      "sha256": "0404e444c3a82102839f90416a318a16336a234ebf1de9ab2ddcc3a7e921810c"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000015/result.json",
+      "identity": [
+        2064,
+        8524404,
+        33188,
+        1,
+        186,
+        1794380074989934190,
+        1794380074989934190
+      ],
+      "name": "attempt/wire/attempt-00000015/result.json",
+      "path": "payload/attempt/wire/attempt-00000015/result.json",
+      "sha256": "6de07c9fdb2c102265b48410ae6f9cfceab2e18ca86e9ed1aa6db0bc90b1290a"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000015/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524402,
+        33188,
+        1,
+        72,
+        1794380074989863725,
+        1794380074989863725
+      ],
+      "name": "attempt/wire/attempt-00000015/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000015/returned-envelope.bin",
+      "sha256": "dabc36239f381111f1732d4f565ac6691ec5c932b9621fdc495250a8e0be6efd"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000016/reply.bin",
+      "identity": [
+        2064,
+        8524410,
+        33188,
+        1,
+        227,
+        1794380074993833199,
+        1794380074993833199
+      ],
+      "name": "attempt/wire/attempt-00000016/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000016/reply.bin",
+      "sha256": "cde7f3327e3e30b26fb75ef96af11d38988fb408fcd84e325155208a5db4a9b9"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000016/request.bin",
+      "identity": [
+        2064,
+        8524407,
+        33188,
+        1,
+        72,
+        1794380074990899419,
+        1794380074990899419
+      ],
+      "name": "attempt/wire/attempt-00000016/request.bin",
+      "path": "payload/attempt/wire/attempt-00000016/request.bin",
+      "sha256": "0b10a0040442f13d8aa2f5131925a2d1814a7c31ac2be57fc2e4e63a1a672b9e"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000016/request.json",
+      "identity": [
+        2064,
+        8524408,
+        33188,
+        1,
+        92,
+        1794380074990958640,
+        1794380074990958640
+      ],
+      "name": "attempt/wire/attempt-00000016/request.json",
+      "path": "payload/attempt/wire/attempt-00000016/request.json",
+      "sha256": "24115362874f6fab0adc7f6c56f72e9d718c3bcd7155158fdf7f039e60ee0931"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000016/result.json",
+      "identity": [
+        2064,
+        8524411,
+        33188,
+        1,
+        186,
+        1794380074993882091,
+        1794380074993882091
+      ],
+      "name": "attempt/wire/attempt-00000016/result.json",
+      "path": "payload/attempt/wire/attempt-00000016/result.json",
+      "sha256": "36dcd9e9a1d65fb7d588eedc57b7ba4db7eeb1378a419b3c8f49dc329ba483a1"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000016/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524409,
+        33188,
+        1,
+        72,
+        1794380074993795896,
+        1794380074993795896
+      ],
+      "name": "attempt/wire/attempt-00000016/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000016/returned-envelope.bin",
+      "sha256": "3424b00432b51f765fb586c5076947e5d1e4d131e5d14c0676f315c85bfb0fee"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000017/reply.bin",
+      "identity": [
+        2064,
+        8524423,
+        33188,
+        1,
+        40,
+        1794380075293599071,
+        1794380075293599071
+      ],
+      "name": "attempt/wire/attempt-00000017/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000017/reply.bin",
+      "sha256": "94465992bd21efd82f3da2b88f51a6477ee44464389f1f98904d94e4909a9a3e"
+    },
+    {
+      "bytes": 709704,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000017/request.bin",
+      "identity": [
+        2064,
+        8524420,
+        33188,
+        1,
+        709704,
+        1794380075291759875,
+        1794380075291759875
+      ],
+      "name": "attempt/wire/attempt-00000017/request.bin",
+      "path": "payload/attempt/wire/attempt-00000017/request.bin",
+      "sha256": "3446548f1c9c1ad2d3b7afb3116b2ed691fa18c65a53539e9f1803d3ab925da1"
+    },
+    {
+      "bytes": 96,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000017/request.json",
+      "identity": [
+        2064,
+        8524421,
+        33188,
+        1,
+        96,
+        1794380075292593551,
+        1794380075292593551
+      ],
+      "name": "attempt/wire/attempt-00000017/request.json",
+      "path": "payload/attempt/wire/attempt-00000017/request.json",
+      "sha256": "e534d4313445695576f734df1207d0e6b1d7b66465b7be5d92488e5b622c45bc"
+    },
+    {
+      "bytes": 189,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000017/result.json",
+      "identity": [
+        2064,
+        8524424,
+        33188,
+        1,
+        189,
+        1794380075293672595,
+        1794380075293672595
+      ],
+      "name": "attempt/wire/attempt-00000017/result.json",
+      "path": "payload/attempt/wire/attempt-00000017/result.json",
+      "sha256": "9ad75af365db95fd770d157e1508243b2a205181b413ba2dac92f31ea1ef664a"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000017/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524422,
+        33188,
+        1,
+        72,
+        1794380075293553680,
+        1794380075293553680
+      ],
+      "name": "attempt/wire/attempt-00000017/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000017/returned-envelope.bin",
+      "sha256": "d0d875a4b00fe593127ad446127a354bdc65f314dc079c2f951f4bdae6abcd1f"
+    },
+    {
+      "bytes": 176,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000018/reply.bin",
+      "identity": [
+        2064,
+        8524429,
+        33188,
+        1,
+        176,
+        1794380075304979373,
+        1794380075304979373
+      ],
+      "name": "attempt/wire/attempt-00000018/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000018/reply.bin",
+      "sha256": "40123a66887661c491d97429bf785559c7bc1124a11129c4497309e48c8dad26"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000018/request.bin",
+      "identity": [
+        2064,
+        8524426,
+        33188,
+        1,
+        88,
+        1794380075294069746,
+        1794380075294069746
+      ],
+      "name": "attempt/wire/attempt-00000018/request.bin",
+      "path": "payload/attempt/wire/attempt-00000018/request.bin",
+      "sha256": "978ee9ec109f3c2a99608cbf726a512646642fceb8be449c012962215d33814d"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000018/request.json",
+      "identity": [
+        2064,
+        8524427,
+        33188,
+        1,
+        92,
+        1794380075294145273,
+        1794380075294145273
+      ],
+      "name": "attempt/wire/attempt-00000018/request.json",
+      "path": "payload/attempt/wire/attempt-00000018/request.json",
+      "sha256": "3666d0ced46f691c470341829ecfd8569495f79f32bd7f32e356de6ed5efa1b1"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000018/result.json",
+      "identity": [
+        2064,
+        8524430,
+        33188,
+        1,
+        186,
+        1794380075305040630,
+        1794380075305040630
+      ],
+      "name": "attempt/wire/attempt-00000018/result.json",
+      "path": "payload/attempt/wire/attempt-00000018/result.json",
+      "sha256": "9ebc7c21af3ab95503ebcc19a6c9a6f030a8bc17309697a1ccee1388e0140a06"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000018/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524428,
+        33188,
+        1,
+        72,
+        1794380075304938213,
+        1794380075304938213
+      ],
+      "name": "attempt/wire/attempt-00000018/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000018/returned-envelope.bin",
+      "sha256": "8fd50087558a9e12e087064ffe93fe77e3394cccb1caa7fc39842e35f9768f16"
+    },
+    {
+      "bytes": 104,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000019/reply.bin",
+      "identity": [
+        2064,
+        8524435,
+        33188,
+        1,
+        104,
+        1794380075308957183,
+        1794380075308957183
+      ],
+      "name": "attempt/wire/attempt-00000019/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000019/reply.bin",
+      "sha256": "cbd43d0a1675ee256ad3859794672094ba66e23103f4593e80070856327be829"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000019/request.bin",
+      "identity": [
+        2064,
+        8524432,
+        33188,
+        1,
+        40,
+        1794380075305526877,
+        1794380075305526877
+      ],
+      "name": "attempt/wire/attempt-00000019/request.bin",
+      "path": "payload/attempt/wire/attempt-00000019/request.bin",
+      "sha256": "ff4c2098562e8fc89fa8d62903997acd63ff129777b25b7ba50f7aa7e98eceeb"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000019/request.json",
+      "identity": [
+        2064,
+        8524433,
+        33188,
+        1,
+        92,
+        1794380075305600874,
+        1794380075305600874
+      ],
+      "name": "attempt/wire/attempt-00000019/request.json",
+      "path": "payload/attempt/wire/attempt-00000019/request.json",
+      "sha256": "64c8a38128b41da7726858c6a3abdd43df93ff451e9bdb1f7bb3c9a00c753d3e"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000019/result.json",
+      "identity": [
+        2064,
+        8524436,
+        33188,
+        1,
+        186,
+        1794380075309017845,
+        1794380075309017845
+      ],
+      "name": "attempt/wire/attempt-00000019/result.json",
+      "path": "payload/attempt/wire/attempt-00000019/result.json",
+      "sha256": "2f49e1b617a21ff788ea60f38479b7d457559fc1a352a394d6f567152beb9d4a"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000019/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524434,
+        33188,
+        1,
+        72,
+        1794380075305655657,
+        1794380075305655657
+      ],
+      "name": "attempt/wire/attempt-00000019/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000019/returned-envelope.bin",
+      "sha256": "e4352730115e20dd99886ce5779b557a96ee4e11c0f0f8782c42e0e3fcab58ca"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000020/reply.bin",
+      "identity": [
+        2064,
+        8524441,
+        33188,
+        1,
+        48,
+        1794380075309553230,
+        1794380075309553230
+      ],
+      "name": "attempt/wire/attempt-00000020/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000020/reply.bin",
+      "sha256": "f1833d9e6a414b06b7912d039293e315c93459b291d78012be903685a138e96d"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000020/request.bin",
+      "identity": [
+        2064,
+        8524438,
+        33188,
+        1,
+        48,
+        1794380075309405815,
+        1794380075309405815
+      ],
+      "name": "attempt/wire/attempt-00000020/request.bin",
+      "path": "payload/attempt/wire/attempt-00000020/request.bin",
+      "sha256": "f1833d9e6a414b06b7912d039293e315c93459b291d78012be903685a138e96d"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000020/request.json",
+      "identity": [
+        2064,
+        8524439,
+        33188,
+        1,
+        92,
+        1794380075309465020,
+        1794380075309465020
+      ],
+      "name": "attempt/wire/attempt-00000020/request.json",
+      "path": "payload/attempt/wire/attempt-00000020/request.json",
+      "sha256": "4490f000817b6f87b2c8dd56a6f4496f899df3a4efd83e7bc1502307159c54ce"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000020/result.json",
+      "identity": [
+        2064,
+        8524442,
+        33188,
+        1,
+        185,
+        1794380075309602810,
+        1794380075309602810
+      ],
+      "name": "attempt/wire/attempt-00000020/result.json",
+      "path": "payload/attempt/wire/attempt-00000020/result.json",
+      "sha256": "77f555970002d62b933d281282b52b60d1fd400972ef16fd7d88f12126d553ed"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000020/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524440,
+        33188,
+        1,
+        72,
+        1794380075309519745,
+        1794380075309519745
+      ],
+      "name": "attempt/wire/attempt-00000020/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000020/returned-envelope.bin",
+      "sha256": "84b138743629bf244fed5f6d5dd4d0f5c28f78a6dc1629c00396be32620d7178"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000021/reply.bin",
+      "identity": [
+        2064,
+        8524453,
+        33188,
+        1,
+        362,
+        1794380075332535132,
+        1794380075332535132
+      ],
+      "name": "attempt/wire/attempt-00000021/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000021/reply.bin",
+      "sha256": "66d984aa0ccd634f6ac72f3c41a2f78eb30d6597088d9a0b46da8c102e6bc0b9"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000021/request.bin",
+      "identity": [
+        2064,
+        8524450,
+        33188,
+        1,
+        56,
+        1794380075332364898,
+        1794380075332364898
+      ],
+      "name": "attempt/wire/attempt-00000021/request.bin",
+      "path": "payload/attempt/wire/attempt-00000021/request.bin",
+      "sha256": "fef50d26742ae104ae6235828c3231f05b37d0bb330c5b3f1660b615053fb827"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000021/request.json",
+      "identity": [
+        2064,
+        8524451,
+        33188,
+        1,
+        92,
+        1794380075332440682,
+        1794380075332440682
+      ],
+      "name": "attempt/wire/attempt-00000021/request.json",
+      "path": "payload/attempt/wire/attempt-00000021/request.json",
+      "sha256": "0b7697d4e20f939ea934e95f3db48bfd85a4424006fe93315ce27c1c78ca8df7"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000021/result.json",
+      "identity": [
+        2064,
+        8524454,
+        33188,
+        1,
+        186,
+        1794380075332588389,
+        1794380075332588389
+      ],
+      "name": "attempt/wire/attempt-00000021/result.json",
+      "path": "payload/attempt/wire/attempt-00000021/result.json",
+      "sha256": "39c5d19673bc8a38292917bef8364677f8f56101bd20ffacd7e1487a530ab39d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000021/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524452,
+        33188,
+        1,
+        72,
+        1794380075332500867,
+        1794380075332500867
+      ],
+      "name": "attempt/wire/attempt-00000021/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000021/returned-envelope.bin",
+      "sha256": "be647a17cd3efe4666e8af0abd0c4ebf975fbb1eead601c7d46ff6898b815803"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000022/reply.bin",
+      "identity": [
+        2064,
+        8524460,
+        33188,
+        1,
+        227,
+        1794380075336655129,
+        1794380075336655129
+      ],
+      "name": "attempt/wire/attempt-00000022/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000022/reply.bin",
+      "sha256": "8268a9ce82642843c5a0aa1758022bf171a411e512c30e844f64aecd9476a28d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000022/request.bin",
+      "identity": [
+        2064,
+        8524457,
+        33188,
+        1,
+        72,
+        1794380075333405933,
+        1794380075333405933
+      ],
+      "name": "attempt/wire/attempt-00000022/request.bin",
+      "path": "payload/attempt/wire/attempt-00000022/request.bin",
+      "sha256": "c6fe7bcb130507b0c180661e69c1d3fe73bfc301730d1c0eabeb27bf44c9ab5c"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000022/request.json",
+      "identity": [
+        2064,
+        8524458,
+        33188,
+        1,
+        92,
+        1794380075333472055,
+        1794380075333472055
+      ],
+      "name": "attempt/wire/attempt-00000022/request.json",
+      "path": "payload/attempt/wire/attempt-00000022/request.json",
+      "sha256": "2d56074c13b6f1083acbad231e195871dbbfb701e41d389b9b8b11d550f56da8"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000022/result.json",
+      "identity": [
+        2064,
+        8524461,
+        33188,
+        1,
+        186,
+        1794380075336716544,
+        1794380075336716544
+      ],
+      "name": "attempt/wire/attempt-00000022/result.json",
+      "path": "payload/attempt/wire/attempt-00000022/result.json",
+      "sha256": "de320d6cdb3c0808eecba52570e65d13f0bceb53b4a81357e874ff636d607801"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000022/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524459,
+        33188,
+        1,
+        72,
+        1794380075336606517,
+        1794380075336606517
+      ],
+      "name": "attempt/wire/attempt-00000022/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000022/returned-envelope.bin",
+      "sha256": "72d5b7509cd15ffbe7123f9d2ada6cc61f1cfe418cd69e38cc0bc5c1ea8f3a0a"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000023/reply.bin",
+      "identity": [
+        2064,
+        8524473,
+        33188,
+        1,
+        40,
+        1794380075652235597,
+        1794380075652235597
+      ],
+      "name": "attempt/wire/attempt-00000023/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000023/reply.bin",
+      "sha256": "a2870111988a99b7470bd199fa36bfed344193b13636b132450c3253227e65c6"
+    },
+    {
+      "bytes": 718430,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000023/request.bin",
+      "identity": [
+        2064,
+        8524470,
+        33188,
+        1,
+        718430,
+        1794380075650338735,
+        1794380075650338735
+      ],
+      "name": "attempt/wire/attempt-00000023/request.bin",
+      "path": "payload/attempt/wire/attempt-00000023/request.bin",
+      "sha256": "5ac7f34b53b2dd317b2d15d7594a6817cf2e17677cde863f3eb393e545825204"
+    },
+    {
+      "bytes": 96,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000023/request.json",
+      "identity": [
+        2064,
+        8524471,
+        33188,
+        1,
+        96,
+        1794380075651190385,
+        1794380075651190385
+      ],
+      "name": "attempt/wire/attempt-00000023/request.json",
+      "path": "payload/attempt/wire/attempt-00000023/request.json",
+      "sha256": "b52da344963b27dcf3eba1a3e4f29cee9936a251b5982333df0be40da9622e6f"
+    },
+    {
+      "bytes": 189,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000023/result.json",
+      "identity": [
+        2064,
+        8524474,
+        33188,
+        1,
+        189,
+        1794380075652301283,
+        1794380075652301283
+      ],
+      "name": "attempt/wire/attempt-00000023/result.json",
+      "path": "payload/attempt/wire/attempt-00000023/result.json",
+      "sha256": "2f34349b7e8ba1bca1be0b4268dc34a8ebe1d8a7da80a2f84f69f5f5d1931598"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000023/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524472,
+        33188,
+        1,
+        72,
+        1794380075652180992,
+        1794380075652180992
+      ],
+      "name": "attempt/wire/attempt-00000023/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000023/returned-envelope.bin",
+      "sha256": "c48156663b79ccde0def48ecc12e6b96cf684117d4956eb643a9a8cda04b442e"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000024/reply.bin",
+      "identity": [
+        2064,
+        8524479,
+        33188,
+        1,
+        160,
+        1794380075667962174,
+        1794380075667962174
+      ],
+      "name": "attempt/wire/attempt-00000024/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000024/reply.bin",
+      "sha256": "e9c46226318ddeb8389e567115f3a83f43fde6eee3c00486124909317215d7cc"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000024/request.bin",
+      "identity": [
+        2064,
+        8524476,
+        33188,
+        1,
+        72,
+        1794380075652709054,
+        1794380075652709054
+      ],
+      "name": "attempt/wire/attempt-00000024/request.bin",
+      "path": "payload/attempt/wire/attempt-00000024/request.bin",
+      "sha256": "b978a31cb3efc4fe8092adbfdf543d2e9a70527d11b8e8adbecb0a18dc28f31a"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000024/request.json",
+      "identity": [
+        2064,
+        8524477,
+        33188,
+        1,
+        92,
+        1794380075652771913,
+        1794380075652771913
+      ],
+      "name": "attempt/wire/attempt-00000024/request.json",
+      "path": "payload/attempt/wire/attempt-00000024/request.json",
+      "sha256": "2a3acf2c46ef1ba90e4a126017d7b399643058e9a0d4029e34af6c110a4df7fd"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000024/result.json",
+      "identity": [
+        2064,
+        8524480,
+        33188,
+        1,
+        186,
+        1794380075668035934,
+        1794380075668035934
+      ],
+      "name": "attempt/wire/attempt-00000024/result.json",
+      "path": "payload/attempt/wire/attempt-00000024/result.json",
+      "sha256": "36588c62f664f6bd617cbfd919220cae555e34059169b876bbb7feb91db24751"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000024/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524478,
+        33188,
+        1,
+        72,
+        1794380075667920864,
+        1794380075667920864
+      ],
+      "name": "attempt/wire/attempt-00000024/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000024/returned-envelope.bin",
+      "sha256": "7ad89d4a31fb684b7176dfd251242602f4e04f1434319e7cdb4c30763cb149c9"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000025/reply.bin",
+      "identity": [
+        2064,
+        8524485,
+        33188,
+        1,
+        88,
+        1794380075668699207,
+        1794380075668699207
+      ],
+      "name": "attempt/wire/attempt-00000025/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000025/reply.bin",
+      "sha256": "e75bc78b75c0244f97ef20ca495143a79ae7397ad96e36f4f982184905524b94"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000025/request.bin",
+      "identity": [
+        2064,
+        8524482,
+        33188,
+        1,
+        40,
+        1794380075668530475,
+        1794380075668530475
+      ],
+      "name": "attempt/wire/attempt-00000025/request.bin",
+      "path": "payload/attempt/wire/attempt-00000025/request.bin",
+      "sha256": "0614d2eea3eace8bed3f8fe7e499078c4ba72403a9111f7252e036ad2ddbd9a9"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000025/request.json",
+      "identity": [
+        2064,
+        8524483,
+        33188,
+        1,
+        92,
+        1794380075668592578,
+        1794380075668592578
+      ],
+      "name": "attempt/wire/attempt-00000025/request.json",
+      "path": "payload/attempt/wire/attempt-00000025/request.json",
+      "sha256": "09a56fff4926bd5e27762ce775ca34fe4efd1a5b9a20fe412e1acdcb932b17d0"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000025/result.json",
+      "identity": [
+        2064,
+        8524486,
+        33188,
+        1,
+        185,
+        1794380075668749164,
+        1794380075668749164
+      ],
+      "name": "attempt/wire/attempt-00000025/result.json",
+      "path": "payload/attempt/wire/attempt-00000025/result.json",
+      "sha256": "e41cd55422719332072abbaa7d6217f73e6b0c016c28bba4cae3c4dd664cac5f"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000025/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524484,
+        33188,
+        1,
+        72,
+        1794380075668653800,
+        1794380075668653800
+      ],
+      "name": "attempt/wire/attempt-00000025/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000025/returned-envelope.bin",
+      "sha256": "4a8fd0234ee7768c00d77d13ce9d564abb93fc01fd067c043541666515eb7b85"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000026/reply.bin",
+      "identity": [
+        2064,
+        8524491,
+        33188,
+        1,
+        48,
+        1794380075669308685,
+        1794380075669308685
+      ],
+      "name": "attempt/wire/attempt-00000026/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000026/reply.bin",
+      "sha256": "e1fe53b0616f7ce484258a53bf1ca98b6aafbe16abc6af26ebcedac15041365f"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000026/request.bin",
+      "identity": [
+        2064,
+        8524488,
+        33188,
+        1,
+        48,
+        1794380075669154884,
+        1794380075669154884
+      ],
+      "name": "attempt/wire/attempt-00000026/request.bin",
+      "path": "payload/attempt/wire/attempt-00000026/request.bin",
+      "sha256": "e1fe53b0616f7ce484258a53bf1ca98b6aafbe16abc6af26ebcedac15041365f"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000026/request.json",
+      "identity": [
+        2064,
+        8524489,
+        33188,
+        1,
+        92,
+        1794380075669212397,
+        1794380075669212397
+      ],
+      "name": "attempt/wire/attempt-00000026/request.json",
+      "path": "payload/attempt/wire/attempt-00000026/request.json",
+      "sha256": "602ac8952ade0b872571f8175fe211ac2db23005c56a17276ce1006048e160f0"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000026/result.json",
+      "identity": [
+        2064,
+        8524492,
+        33188,
+        1,
+        185,
+        1794380075669358425,
+        1794380075669358425
+      ],
+      "name": "attempt/wire/attempt-00000026/result.json",
+      "path": "payload/attempt/wire/attempt-00000026/result.json",
+      "sha256": "d6b87f314d259b9a0e58cb14ee626c4ee43002388e9112f9bd050b192ff04ac8"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000026/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524490,
+        33188,
+        1,
+        72,
+        1794380075669275133,
+        1794380075669275133
+      ],
+      "name": "attempt/wire/attempt-00000026/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000026/returned-envelope.bin",
+      "sha256": "4896f622acabdca663cacfcd5952a69b7c45b639d7a689ae4d08d260b2001373"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000027/reply.bin",
+      "identity": [
+        2064,
+        8524503,
+        33188,
+        1,
+        266,
+        1794380075692305513,
+        1794380075692305513
+      ],
+      "name": "attempt/wire/attempt-00000027/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000027/reply.bin",
+      "sha256": "3313ab34994ab5061e6732314faa0faa9162ce8a27d53a4106a6e72f8cccfa70"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000027/request.bin",
+      "identity": [
+        2064,
+        8524500,
+        33188,
+        1,
+        56,
+        1794380075692102013,
+        1794380075692102013
+      ],
+      "name": "attempt/wire/attempt-00000027/request.bin",
+      "path": "payload/attempt/wire/attempt-00000027/request.bin",
+      "sha256": "6e41deb5c3db9847c289ef28fd1fadeac6f31ff88abbefe7429d6c908c179c48"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000027/request.json",
+      "identity": [
+        2064,
+        8524501,
+        33188,
+        1,
+        92,
+        1794380075692196311,
+        1794380075692196311
+      ],
+      "name": "attempt/wire/attempt-00000027/request.json",
+      "path": "payload/attempt/wire/attempt-00000027/request.json",
+      "sha256": "7ab325d11516d3757680902b2f1a69d34795dbe9ee9c702611cc7b0381d5bc29"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000027/result.json",
+      "identity": [
+        2064,
+        8524504,
+        33188,
+        1,
+        186,
+        1794380075692358958,
+        1794380075692358958
+      ],
+      "name": "attempt/wire/attempt-00000027/result.json",
+      "path": "payload/attempt/wire/attempt-00000027/result.json",
+      "sha256": "fa25fbefce39ebf4b128f796edeffd659730e74b109a4d9df716ba517f4173aa"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000027/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524502,
+        33188,
+        1,
+        72,
+        1794380075692269545,
+        1794380075692269545
+      ],
+      "name": "attempt/wire/attempt-00000027/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000027/returned-envelope.bin",
+      "sha256": "4052dd06796cb69a3bf16b20f0a441306b1ee2abd738f2bb5f598ddfb2529aa2"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000028/reply.bin",
+      "identity": [
+        2064,
+        8524510,
+        33188,
+        1,
+        48,
+        1794380075693052024,
+        1794380075693052024
+      ],
+      "name": "attempt/wire/attempt-00000028/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000028/reply.bin",
+      "sha256": "63662506ffa87ce921709762a949f2eddc74ba43a21bc0d4b072f7056f7ab102"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000028/request.bin",
+      "identity": [
+        2064,
+        8524507,
+        33188,
+        1,
+        48,
+        1794380075692899736,
+        1794380075692899736
+      ],
+      "name": "attempt/wire/attempt-00000028/request.bin",
+      "path": "payload/attempt/wire/attempt-00000028/request.bin",
+      "sha256": "63662506ffa87ce921709762a949f2eddc74ba43a21bc0d4b072f7056f7ab102"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000028/request.json",
+      "identity": [
+        2064,
+        8524508,
+        33188,
+        1,
+        92,
+        1794380075692959128,
+        1794380075692959128
+      ],
+      "name": "attempt/wire/attempt-00000028/request.json",
+      "path": "payload/attempt/wire/attempt-00000028/request.json",
+      "sha256": "ca61ab68ab735794832dda4753d4ce06db142e1574ee470641615c538e35550b"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000028/result.json",
+      "identity": [
+        2064,
+        8524511,
+        33188,
+        1,
+        185,
+        1794380075693102801,
+        1794380075693102801
+      ],
+      "name": "attempt/wire/attempt-00000028/result.json",
+      "path": "payload/attempt/wire/attempt-00000028/result.json",
+      "sha256": "9beeb4582797237c19c5964160b7fd3969eaa0b8f1ddf0e5d062c3d6833ba2de"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000028/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524509,
+        33188,
+        1,
+        72,
+        1794380075693013079,
+        1794380075693013079
+      ],
+      "name": "attempt/wire/attempt-00000028/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000028/returned-envelope.bin",
+      "sha256": "0329894d104499eeb946a2f4d126558f07a6346fb550ef754f8b23ce0f4fadd6"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000029/reply.bin",
+      "identity": [
+        2064,
+        8524517,
+        33188,
+        1,
+        362,
+        1794380075715452970,
+        1794380075715452970
+      ],
+      "name": "attempt/wire/attempt-00000029/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000029/reply.bin",
+      "sha256": "8767d0c8dfa067bbe1fea4876fc890c8675efa02ee83af81dc3f9dca9f6013ff"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000029/request.bin",
+      "identity": [
+        2064,
+        8524514,
+        33188,
+        1,
+        56,
+        1794380075715274024,
+        1794380075715274024
+      ],
+      "name": "attempt/wire/attempt-00000029/request.bin",
+      "path": "payload/attempt/wire/attempt-00000029/request.bin",
+      "sha256": "2a70f516b66d8fbff8c889ab93fa512b52d274170d570625355416c993c5785b"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000029/request.json",
+      "identity": [
+        2064,
+        8524515,
+        33188,
+        1,
+        92,
+        1794380075715353345,
+        1794380075715353345
+      ],
+      "name": "attempt/wire/attempt-00000029/request.json",
+      "path": "payload/attempt/wire/attempt-00000029/request.json",
+      "sha256": "a8ce16d9e2d0be6471533be1eb980c99fe028e04a039aabded729621bfa1011c"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000029/result.json",
+      "identity": [
+        2064,
+        8524518,
+        33188,
+        1,
+        186,
+        1794380075715505944,
+        1794380075715505944
+      ],
+      "name": "attempt/wire/attempt-00000029/result.json",
+      "path": "payload/attempt/wire/attempt-00000029/result.json",
+      "sha256": "53cecbd89b340e3f8f67f23188b1cbb65f30c887e3c940f25f3ec88b360ed467"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000029/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524516,
+        33188,
+        1,
+        72,
+        1794380075715413622,
+        1794380075715413622
+      ],
+      "name": "attempt/wire/attempt-00000029/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000029/returned-envelope.bin",
+      "sha256": "c8f8e9dc792e2c0e0584158d646ba37512a99601a8c0d59d2c2b758fe9668dd6"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000030/reply.bin",
+      "identity": [
+        2064,
+        8524524,
+        33188,
+        1,
+        227,
+        1794380075719103852,
+        1794380075719103852
+      ],
+      "name": "attempt/wire/attempt-00000030/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000030/reply.bin",
+      "sha256": "4ed236a787f13cb071fb1229b56277b10d52bdcdff87eaea8ba53f1668c1e2cc"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000030/request.bin",
+      "identity": [
+        2064,
+        8524521,
+        33188,
+        1,
+        72,
+        1794380075716251752,
+        1794380075716251752
+      ],
+      "name": "attempt/wire/attempt-00000030/request.bin",
+      "path": "payload/attempt/wire/attempt-00000030/request.bin",
+      "sha256": "d77df949180a71cb50ba8c5bb1c2b389748186d70a7ae205a0c77907f769675b"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000030/request.json",
+      "identity": [
+        2064,
+        8524522,
+        33188,
+        1,
+        92,
+        1794380075716317178,
+        1794380075716317178
+      ],
+      "name": "attempt/wire/attempt-00000030/request.json",
+      "path": "payload/attempt/wire/attempt-00000030/request.json",
+      "sha256": "2d3c4de17fa2d701af8869acbe5370f63fa585b9a8be9b7bc88811c5007ac04d"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000030/result.json",
+      "identity": [
+        2064,
+        8524525,
+        33188,
+        1,
+        186,
+        1794380075719175572,
+        1794380075719175572
+      ],
+      "name": "attempt/wire/attempt-00000030/result.json",
+      "path": "payload/attempt/wire/attempt-00000030/result.json",
+      "sha256": "8eadaf3b365a3347b952c5c48a88f79e6e78025f447e2da9006f51a618f3b685"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000030/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524523,
+        33188,
+        1,
+        72,
+        1794380075719063725,
+        1794380075719063725
+      ],
+      "name": "attempt/wire/attempt-00000030/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000030/returned-envelope.bin",
+      "sha256": "13f7e71346c1e948df27d38ebc6512baab62c110000d677a06473999eecb845a"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000031/reply.bin",
+      "identity": [
+        2064,
+        8524537,
+        33188,
+        1,
+        40,
+        1794380076021799589,
+        1794380076021799589
+      ],
+      "name": "attempt/wire/attempt-00000031/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000031/reply.bin",
+      "sha256": "0f14ac2ba327ef1bfe63e468d7bb66b80055966f2786b5e4c767e14d674e726a"
+    },
+    {
+      "bytes": 729775,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000031/request.bin",
+      "identity": [
+        2064,
+        8524534,
+        33188,
+        1,
+        729775,
+        1794380076020397505,
+        1794380076020397505
+      ],
+      "name": "attempt/wire/attempt-00000031/request.bin",
+      "path": "payload/attempt/wire/attempt-00000031/request.bin",
+      "sha256": "d11059a1a36f200d77e045ea9415381b18722879596ebe25b8460ecd7f3107ae"
+    },
+    {
+      "bytes": 96,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000031/request.json",
+      "identity": [
+        2064,
+        8524535,
+        33188,
+        1,
+        96,
+        1794380076020772192,
+        1794380076020772192
+      ],
+      "name": "attempt/wire/attempt-00000031/request.json",
+      "path": "payload/attempt/wire/attempt-00000031/request.json",
+      "sha256": "c1ec5d9ebd444b147a653cc277642ed16f5804223424b573f339d47a8c522f78"
+    },
+    {
+      "bytes": 189,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000031/result.json",
+      "identity": [
+        2064,
+        8524538,
+        33188,
+        1,
+        189,
+        1794380076021859826,
+        1794380076021859826
+      ],
+      "name": "attempt/wire/attempt-00000031/result.json",
+      "path": "payload/attempt/wire/attempt-00000031/result.json",
+      "sha256": "0bdfd2430f230f407bd4cbe6e599675161a6f6ba66dcd6f8dd2924e9525172c3"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000031/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524536,
+        33188,
+        1,
+        72,
+        1794380076021765272,
+        1794380076021765272
+      ],
+      "name": "attempt/wire/attempt-00000031/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000031/returned-envelope.bin",
+      "sha256": "f49ac3b9a744d87549cd20f02c0e80bbd25ef506a8398e3e8810ed606ceeef84"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000032/reply.bin",
+      "identity": [
+        2064,
+        8524543,
+        33188,
+        1,
+        160,
+        1794380076030810244,
+        1794380076030810244
+      ],
+      "name": "attempt/wire/attempt-00000032/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000032/reply.bin",
+      "sha256": "2e51b17c7d0b2e9efe1c950631d6913715739eae50fd20742be990a8dccbc60e"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000032/request.bin",
+      "identity": [
+        2064,
+        8524540,
+        33188,
+        1,
+        72,
+        1794380076022246939,
+        1794380076022246939
+      ],
+      "name": "attempt/wire/attempt-00000032/request.bin",
+      "path": "payload/attempt/wire/attempt-00000032/request.bin",
+      "sha256": "b823eb915f7156ac52ad6a0a653a5b37a3ce38b6d1ebda05f459e7ef1ed61efe"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000032/request.json",
+      "identity": [
+        2064,
+        8524541,
+        33188,
+        1,
+        92,
+        1794380076022303155,
+        1794380076022303155
+      ],
+      "name": "attempt/wire/attempt-00000032/request.json",
+      "path": "payload/attempt/wire/attempt-00000032/request.json",
+      "sha256": "f53cf862724bcf4b2740e7923dcd8f3656e4073aca3ee9d24c0ab849697ebf6d"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000032/result.json",
+      "identity": [
+        2064,
+        8524544,
+        33188,
+        1,
+        186,
+        1794380076030877493,
+        1794380076030877493
+      ],
+      "name": "attempt/wire/attempt-00000032/result.json",
+      "path": "payload/attempt/wire/attempt-00000032/result.json",
+      "sha256": "4d6741d2e076c5528ccd9c585301a516b3ce8700957c134bb622b54d8af2fc78"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000032/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524542,
+        33188,
+        1,
+        72,
+        1794380076030780640,
+        1794380076030780640
+      ],
+      "name": "attempt/wire/attempt-00000032/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000032/returned-envelope.bin",
+      "sha256": "8f75affda87e0f2b2f5a48eb5f0972a31301fd8841a7f226c52ba11cf701edca"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000033/reply.bin",
+      "identity": [
+        2064,
+        8524549,
+        33188,
+        1,
+        88,
+        1794380076031452132,
+        1794380076031452132
+      ],
+      "name": "attempt/wire/attempt-00000033/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000033/reply.bin",
+      "sha256": "85ffb58a16143580aa8ac898f4b79c1f02da066636ca418d3d918d1125dd7e75"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000033/request.bin",
+      "identity": [
+        2064,
+        8524546,
+        33188,
+        1,
+        40,
+        1794380076031330384,
+        1794380076031330384
+      ],
+      "name": "attempt/wire/attempt-00000033/request.bin",
+      "path": "payload/attempt/wire/attempt-00000033/request.bin",
+      "sha256": "2976ac7f81b68b263228b10274123f8ddca11ed66816936f7387064e8b0f7d8f"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000033/request.json",
+      "identity": [
+        2064,
+        8524547,
+        33188,
+        1,
+        92,
+        1794380076031384101,
+        1794380076031384101
+      ],
+      "name": "attempt/wire/attempt-00000033/request.json",
+      "path": "payload/attempt/wire/attempt-00000033/request.json",
+      "sha256": "13cb15b212b8a2fe08d6be728d2e1ca75d43ef09b85c6186c4832b4266add730"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000033/result.json",
+      "identity": [
+        2064,
+        8524550,
+        33188,
+        1,
+        185,
+        1794380076031490733,
+        1794380076031490733
+      ],
+      "name": "attempt/wire/attempt-00000033/result.json",
+      "path": "payload/attempt/wire/attempt-00000033/result.json",
+      "sha256": "7fbba58a8e0eb0b5b3b1a588071f9b55034c06cd37c8d32f88cb57e69ef30039"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000033/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524548,
+        33188,
+        1,
+        72,
+        1794380076031428567,
+        1794380076031428567
+      ],
+      "name": "attempt/wire/attempt-00000033/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000033/returned-envelope.bin",
+      "sha256": "27a0edff2423af934c2078c8f87b05ba6ef59b81889423f4aa77b82e5c0a3b96"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000034/reply.bin",
+      "identity": [
+        2064,
+        8524555,
+        33188,
+        1,
+        48,
+        1794380076031929739,
+        1794380076031929739
+      ],
+      "name": "attempt/wire/attempt-00000034/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000034/reply.bin",
+      "sha256": "6388629bfd2cd457b189faccdb6dea4d795964dbb6d38a8348dd6de65b203b3a"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000034/request.bin",
+      "identity": [
+        2064,
+        8524552,
+        33188,
+        1,
+        48,
+        1794380076031817969,
+        1794380076031817969
+      ],
+      "name": "attempt/wire/attempt-00000034/request.bin",
+      "path": "payload/attempt/wire/attempt-00000034/request.bin",
+      "sha256": "6388629bfd2cd457b189faccdb6dea4d795964dbb6d38a8348dd6de65b203b3a"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000034/request.json",
+      "identity": [
+        2064,
+        8524553,
+        33188,
+        1,
+        92,
+        1794380076031863213,
+        1794380076031863213
+      ],
+      "name": "attempt/wire/attempt-00000034/request.json",
+      "path": "payload/attempt/wire/attempt-00000034/request.json",
+      "sha256": "a5ef51c51e55e9d882234275635cf38ae5274c3e6f5fc00173d7be16b32c6df9"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000034/result.json",
+      "identity": [
+        2064,
+        8524556,
+        33188,
+        1,
+        185,
+        1794380076031965999,
+        1794380076031965999
+      ],
+      "name": "attempt/wire/attempt-00000034/result.json",
+      "path": "payload/attempt/wire/attempt-00000034/result.json",
+      "sha256": "7371ff8b73ec10792468d0b5a36cf10ce1a1f40883242921ee50b2dbd2ae9149"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000034/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524554,
+        33188,
+        1,
+        72,
+        1794380076031905417,
+        1794380076031905417
+      ],
+      "name": "attempt/wire/attempt-00000034/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000034/returned-envelope.bin",
+      "sha256": "1218d85f59c14e66158a27db81fac6fb504f98e1e831930081d5791a0debb68c"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000035/reply.bin",
+      "identity": [
+        2064,
+        8524567,
+        33188,
+        1,
+        266,
+        1794380076054711441,
+        1794380076054711441
+      ],
+      "name": "attempt/wire/attempt-00000035/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000035/reply.bin",
+      "sha256": "80e254fd891fb72c518daf9f2484e4b474b2427cb9c3c23f867bd001dc3d35ac"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000035/request.bin",
+      "identity": [
+        2064,
+        8524564,
+        33188,
+        1,
+        56,
+        1794380076054545774,
+        1794380076054545774
+      ],
+      "name": "attempt/wire/attempt-00000035/request.bin",
+      "path": "payload/attempt/wire/attempt-00000035/request.bin",
+      "sha256": "a79af32417b04ad9b8ddd2d9603b75bd3959b32d884a21986300e8b5f710b70c"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000035/request.json",
+      "identity": [
+        2064,
+        8524565,
+        33188,
+        1,
+        92,
+        1794380076054619875,
+        1794380076054619875
+      ],
+      "name": "attempt/wire/attempt-00000035/request.json",
+      "path": "payload/attempt/wire/attempt-00000035/request.json",
+      "sha256": "a9b00ff8450e11b7383a49855a48747d18ddc62c119143e3a37c61edf1ce57ce"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000035/result.json",
+      "identity": [
+        2064,
+        8524568,
+        33188,
+        1,
+        186,
+        1794380076054761362,
+        1794380076054761362
+      ],
+      "name": "attempt/wire/attempt-00000035/result.json",
+      "path": "payload/attempt/wire/attempt-00000035/result.json",
+      "sha256": "d7d44301e2f63bedae363f50f8a4b009ee34b94dce6205f669b2da3469055804"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000035/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524566,
+        33188,
+        1,
+        72,
+        1794380076054674965,
+        1794380076054674965
+      ],
+      "name": "attempt/wire/attempt-00000035/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000035/returned-envelope.bin",
+      "sha256": "cd8c17a67defe5bff6f94f55397dd84b4813208e6e78f72b19b6bff333f5bcda"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000036/reply.bin",
+      "identity": [
+        2064,
+        8524574,
+        33188,
+        1,
+        48,
+        1794380076055466732,
+        1794380076055466732
+      ],
+      "name": "attempt/wire/attempt-00000036/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000036/reply.bin",
+      "sha256": "a513ec5bbfe1c83dde8da657ee2b08b533fe58c5f41b58f18e9f83953df65023"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000036/request.bin",
+      "identity": [
+        2064,
+        8524571,
+        33188,
+        1,
+        48,
+        1794380076055344554,
+        1794380076055344554
+      ],
+      "name": "attempt/wire/attempt-00000036/request.bin",
+      "path": "payload/attempt/wire/attempt-00000036/request.bin",
+      "sha256": "a513ec5bbfe1c83dde8da657ee2b08b533fe58c5f41b58f18e9f83953df65023"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000036/request.json",
+      "identity": [
+        2064,
+        8524572,
+        33188,
+        1,
+        92,
+        1794380076055399099,
+        1794380076055399099
+      ],
+      "name": "attempt/wire/attempt-00000036/request.json",
+      "path": "payload/attempt/wire/attempt-00000036/request.json",
+      "sha256": "2397e5d871a574f0b6143968867dd8a2165140eb2c7542068f1c533ca0bcc86c"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000036/result.json",
+      "identity": [
+        2064,
+        8524575,
+        33188,
+        1,
+        185,
+        1794380076055506599,
+        1794380076055506599
+      ],
+      "name": "attempt/wire/attempt-00000036/result.json",
+      "path": "payload/attempt/wire/attempt-00000036/result.json",
+      "sha256": "c9883cc24f576c6b68c23a6a6c68b7d084a4b82d8d3d686f11226e23e35f5db4"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000036/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524573,
+        33188,
+        1,
+        72,
+        1794380076055443425,
+        1794380076055443425
+      ],
+      "name": "attempt/wire/attempt-00000036/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000036/returned-envelope.bin",
+      "sha256": "d7e14cef9a6e8ee51f070aa20b315c3741ea65f343c589de90c8f1a12afd0ccc"
+    },
+    {
+      "bytes": 266,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000037/reply.bin",
+      "identity": [
+        2064,
+        8524581,
+        33188,
+        1,
+        266,
+        1794380076076671395,
+        1794380076076671395
+      ],
+      "name": "attempt/wire/attempt-00000037/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000037/reply.bin",
+      "sha256": "5344afe415622062ecce8a4200e32c1f822024741b40b6dc3a9f53d64b6329a7"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000037/request.bin",
+      "identity": [
+        2064,
+        8524578,
+        33188,
+        1,
+        56,
+        1794380076076521130,
+        1794380076076521130
+      ],
+      "name": "attempt/wire/attempt-00000037/request.bin",
+      "path": "payload/attempt/wire/attempt-00000037/request.bin",
+      "sha256": "408376794d3da36ee94466396c1788fb7bd4dbf4c027e508c28c3528b2bef40e"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000037/request.json",
+      "identity": [
+        2064,
+        8524579,
+        33188,
+        1,
+        92,
+        1794380076076592789,
+        1794380076076592789
+      ],
+      "name": "attempt/wire/attempt-00000037/request.json",
+      "path": "payload/attempt/wire/attempt-00000037/request.json",
+      "sha256": "25e1fcbc243beb7ebc075c2b7180673a4358b82b8feab512185319f2dc51a89e"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000037/result.json",
+      "identity": [
+        2064,
+        8524582,
+        33188,
+        1,
+        186,
+        1794380076076717117,
+        1794380076076717117
+      ],
+      "name": "attempt/wire/attempt-00000037/result.json",
+      "path": "payload/attempt/wire/attempt-00000037/result.json",
+      "sha256": "4e954b702a5a18ee6bca4108a0c2aa05b3be2145a1964fc9235937a0ab2d983e"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000037/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524580,
+        33188,
+        1,
+        72,
+        1794380076076645537,
+        1794380076076645537
+      ],
+      "name": "attempt/wire/attempt-00000037/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000037/returned-envelope.bin",
+      "sha256": "297f14db8d32c12a9797a6453376c3dd858691f041d556e199eaa1eee1aacf91"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000038/reply.bin",
+      "identity": [
+        2064,
+        8524588,
+        33188,
+        1,
+        48,
+        1794380076077310328,
+        1794380076077310328
+      ],
+      "name": "attempt/wire/attempt-00000038/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000038/reply.bin",
+      "sha256": "abf36eb7b19b6760767f90697ce1f03d500bacc59908144fa3c3ba65a1643a5f"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000038/request.bin",
+      "identity": [
+        2064,
+        8524585,
+        33188,
+        1,
+        48,
+        1794380076077170104,
+        1794380076077170104
+      ],
+      "name": "attempt/wire/attempt-00000038/request.bin",
+      "path": "payload/attempt/wire/attempt-00000038/request.bin",
+      "sha256": "abf36eb7b19b6760767f90697ce1f03d500bacc59908144fa3c3ba65a1643a5f"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000038/request.json",
+      "identity": [
+        2064,
+        8524586,
+        33188,
+        1,
+        92,
+        1794380076077225799,
+        1794380076077225799
+      ],
+      "name": "attempt/wire/attempt-00000038/request.json",
+      "path": "payload/attempt/wire/attempt-00000038/request.json",
+      "sha256": "660395a8c0825e732b068557def9b311cb4093eb8d4fe117a12779c14d26659f"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000038/result.json",
+      "identity": [
+        2064,
+        8524589,
+        33188,
+        1,
+        185,
+        1794380076077356212,
+        1794380076077356212
+      ],
+      "name": "attempt/wire/attempt-00000038/result.json",
+      "path": "payload/attempt/wire/attempt-00000038/result.json",
+      "sha256": "83050908bf4f7f54a70cafab8d4eb75c391c50a9ef2f58831c39456c73e8e6c2"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000038/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524587,
+        33188,
+        1,
+        72,
+        1794380076077286006,
+        1794380076077286006
+      ],
+      "name": "attempt/wire/attempt-00000038/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000038/returned-envelope.bin",
+      "sha256": "9f7a137358e848d67b38c315a0bc65c6cc59410196f9b3cfa05f78e23a784611"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000039/reply.bin",
+      "identity": [
+        2064,
+        8524595,
+        33188,
+        1,
+        362,
+        1794380076099460100,
+        1794380076099460100
+      ],
+      "name": "attempt/wire/attempt-00000039/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000039/reply.bin",
+      "sha256": "c824b930019feb1c4c6a646007af89cdc163dbd3374e88d43a9b501f7f06c347"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000039/request.bin",
+      "identity": [
+        2064,
+        8524592,
+        33188,
+        1,
+        56,
+        1794380076099301503,
+        1794380076099301503
+      ],
+      "name": "attempt/wire/attempt-00000039/request.bin",
+      "path": "payload/attempt/wire/attempt-00000039/request.bin",
+      "sha256": "881fa6c627eaafc4a88e3f393ad6d940df6bb877fee64f04a7d56b4a5630e9c7"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000039/request.json",
+      "identity": [
+        2064,
+        8524593,
+        33188,
+        1,
+        92,
+        1794380076099381449,
+        1794380076099381449
+      ],
+      "name": "attempt/wire/attempt-00000039/request.json",
+      "path": "payload/attempt/wire/attempt-00000039/request.json",
+      "sha256": "38737da12e92213938f53c95c0095d4559b669cb16612599c5e821459ceac39b"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000039/result.json",
+      "identity": [
+        2064,
+        8524596,
+        33188,
+        1,
+        186,
+        1794380076099505402,
+        1794380076099505402
+      ],
+      "name": "attempt/wire/attempt-00000039/result.json",
+      "path": "payload/attempt/wire/attempt-00000039/result.json",
+      "sha256": "75b5aeedf13e6410285a0b5c79513a97bff941d4a9c09c76d86f456a7c734b1e"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000039/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524594,
+        33188,
+        1,
+        72,
+        1794380076099434404,
+        1794380076099434404
+      ],
+      "name": "attempt/wire/attempt-00000039/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000039/returned-envelope.bin",
+      "sha256": "5665920c6e2b91eb8c98ee4ea4d76285ecb94712540e344ce1b9fe5733d9d908"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000040/reply.bin",
+      "identity": [
+        2064,
+        8524602,
+        33188,
+        1,
+        227,
+        1794380076103098086,
+        1794380076103098086
+      ],
+      "name": "attempt/wire/attempt-00000040/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000040/reply.bin",
+      "sha256": "02384226c99009b01322fb11f4e235f27585e33b812eac7969d9b32baa501445"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000040/request.bin",
+      "identity": [
+        2064,
+        8524599,
+        33188,
+        1,
+        72,
+        1794380076100191694,
+        1794380076100191694
+      ],
+      "name": "attempt/wire/attempt-00000040/request.bin",
+      "path": "payload/attempt/wire/attempt-00000040/request.bin",
+      "sha256": "bdd9063e906e16b1a6279e401db74fc5a8f80e7b4f66e1807be01de7b71ecd70"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000040/request.json",
+      "identity": [
+        2064,
+        8524600,
+        33188,
+        1,
+        92,
+        1794380076100261141,
+        1794380076100261141
+      ],
+      "name": "attempt/wire/attempt-00000040/request.json",
+      "path": "payload/attempt/wire/attempt-00000040/request.json",
+      "sha256": "6428831d15c5cd6510ff15ab18addd14e0d794999880d089a5f70990185c94ea"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000040/result.json",
+      "identity": [
+        2064,
+        8524603,
+        33188,
+        1,
+        186,
+        1794380076103165242,
+        1794380076103165242
+      ],
+      "name": "attempt/wire/attempt-00000040/result.json",
+      "path": "payload/attempt/wire/attempt-00000040/result.json",
+      "sha256": "38df3ee5c738cb063d061a83e9c8dd1fb9b49b0569a4b48d14b4d52bb8400100"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000040/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524601,
+        33188,
+        1,
+        72,
+        1794380076103054345,
+        1794380076103054345
+      ],
+      "name": "attempt/wire/attempt-00000040/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000040/returned-envelope.bin",
+      "sha256": "0a98b717e68dbf707bfb8480018f45c6687f13fec11ad25edf19c74b3868cfe3"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000041/reply.bin",
+      "identity": [
+        2064,
+        8524615,
+        33188,
+        1,
+        40,
+        1794380076415652891,
+        1794380076415652891
+      ],
+      "name": "attempt/wire/attempt-00000041/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000041/reply.bin",
+      "sha256": "a21a4b164f3199376f63e558d86e468ee47156b5da4fab7f587d64edc2a64ed5"
+    },
+    {
+      "bytes": 748906,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000041/request.bin",
+      "identity": [
+        2064,
+        8524612,
+        33188,
+        1,
+        748906,
+        1794380076413648381,
+        1794380076413648381
+      ],
+      "name": "attempt/wire/attempt-00000041/request.bin",
+      "path": "payload/attempt/wire/attempt-00000041/request.bin",
+      "sha256": "caedfcd486210e2e81de970ca19cc4f450bec4aa6dfdbb4f8b78d54de625ed37"
+    },
+    {
+      "bytes": 96,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000041/request.json",
+      "identity": [
+        2064,
+        8524613,
+        33188,
+        1,
+        96,
+        1794380076414529020,
+        1794380076414529020
+      ],
+      "name": "attempt/wire/attempt-00000041/request.json",
+      "path": "payload/attempt/wire/attempt-00000041/request.json",
+      "sha256": "b2585996ca4a2a294f74e6002742ed4e8c833a76aa8e1a2a762fb8b249f0f9ae"
+    },
+    {
+      "bytes": 189,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000041/result.json",
+      "identity": [
+        2064,
+        8524616,
+        33188,
+        1,
+        189,
+        1794380076415720812,
+        1794380076415720812
+      ],
+      "name": "attempt/wire/attempt-00000041/result.json",
+      "path": "payload/attempt/wire/attempt-00000041/result.json",
+      "sha256": "042391c8d51d9ca91ce2bb6c38a2043263d98e1bf3dde7ec8e59801cb4788b88"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000041/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524614,
+        33188,
+        1,
+        72,
+        1794380076415605571,
+        1794380076415605571
+      ],
+      "name": "attempt/wire/attempt-00000041/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000041/returned-envelope.bin",
+      "sha256": "6049efe0b706208368c295832a10f1580932bb63aa598fa1c0724bb98e321e5d"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000042/reply.bin",
+      "identity": [
+        2064,
+        8524621,
+        33188,
+        1,
+        160,
+        1794380076422817536,
+        1794380076422817536
+      ],
+      "name": "attempt/wire/attempt-00000042/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000042/reply.bin",
+      "sha256": "5ee10d7f2dad7ec008df50ca7fd05eb64e62ea7521090cbd2cf3b6a14ae8b08d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000042/request.bin",
+      "identity": [
+        2064,
+        8524618,
+        33188,
+        1,
+        72,
+        1794380076416070441,
+        1794380076416070441
+      ],
+      "name": "attempt/wire/attempt-00000042/request.bin",
+      "path": "payload/attempt/wire/attempt-00000042/request.bin",
+      "sha256": "ae72854f500fabc1c6cd02f712880863cb6c2ba40305dca15c49f1d1102a61d8"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000042/request.json",
+      "identity": [
+        2064,
+        8524619,
+        33188,
+        1,
+        92,
+        1794380076416146703,
+        1794380076416146703
+      ],
+      "name": "attempt/wire/attempt-00000042/request.json",
+      "path": "payload/attempt/wire/attempt-00000042/request.json",
+      "sha256": "69dbce24aeefffde5ca7ba629196d0d3cddfd196d7ee2c78b3defe1ba9441db2"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000042/result.json",
+      "identity": [
+        2064,
+        8524622,
+        33188,
+        1,
+        186,
+        1794380076422876017,
+        1794380076422876017
+      ],
+      "name": "attempt/wire/attempt-00000042/result.json",
+      "path": "payload/attempt/wire/attempt-00000042/result.json",
+      "sha256": "9881e8e0b399f5c6768dda4aec513e6908c9072508ff013fc7ea503073852b18"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000042/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524620,
+        33188,
+        1,
+        72,
+        1794380076422776828,
+        1794380076422776828
+      ],
+      "name": "attempt/wire/attempt-00000042/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000042/returned-envelope.bin",
+      "sha256": "f408d37e3723af88ebc18578d2d6b3c8549c0040b50903d8aaba100fe9d9c116"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000043/reply.bin",
+      "identity": [
+        2064,
+        8524627,
+        33188,
+        1,
+        88,
+        1794380076423488468,
+        1794380076423488468
+      ],
+      "name": "attempt/wire/attempt-00000043/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000043/reply.bin",
+      "sha256": "23eb15c7099b3cb6b57487a5ab107e078a3b4690ff4fcba0bb76690e0c7142b3"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000043/request.bin",
+      "identity": [
+        2064,
+        8524624,
+        33188,
+        1,
+        40,
+        1794380076423331700,
+        1794380076423331700
+      ],
+      "name": "attempt/wire/attempt-00000043/request.bin",
+      "path": "payload/attempt/wire/attempt-00000043/request.bin",
+      "sha256": "d3b966c0a5bf50b8eb3fd16243054b9de0dd0815922e69450014d00ce1af20e8"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000043/request.json",
+      "identity": [
+        2064,
+        8524625,
+        33188,
+        1,
+        92,
+        1794380076423401587,
+        1794380076423401587
+      ],
+      "name": "attempt/wire/attempt-00000043/request.json",
+      "path": "payload/attempt/wire/attempt-00000043/request.json",
+      "sha256": "ccc9ac1df5ee6a9847f968c8d03eccc573582c2e803c8e1697e5e0a3f709f09c"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000043/result.json",
+      "identity": [
+        2064,
+        8524628,
+        33188,
+        1,
+        185,
+        1794380076423535280,
+        1794380076423535280
+      ],
+      "name": "attempt/wire/attempt-00000043/result.json",
+      "path": "payload/attempt/wire/attempt-00000043/result.json",
+      "sha256": "c51ec2f6f48b9b0b72db20ffb8cecd057accafda46989218fe42e2b8c7645d99"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000043/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524626,
+        33188,
+        1,
+        72,
+        1794380076423456011,
+        1794380076423456011
+      ],
+      "name": "attempt/wire/attempt-00000043/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000043/returned-envelope.bin",
+      "sha256": "e303c94f7f00a81238bc11a2febf48ac71eb36a13dad937c1ae2da806c35ad40"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000044/reply.bin",
+      "identity": [
+        2064,
+        8524633,
+        33188,
+        1,
+        48,
+        1794380076423977679,
+        1794380076423977679
+      ],
+      "name": "attempt/wire/attempt-00000044/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000044/reply.bin",
+      "sha256": "84376b0b387e7ddf3a079905e7c152e658f1ec105dacbcd06feaa0ee2e353c0e"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000044/request.bin",
+      "identity": [
+        2064,
+        8524630,
+        33188,
+        1,
+        48,
+        1794380076423835479,
+        1794380076423835479
+      ],
+      "name": "attempt/wire/attempt-00000044/request.bin",
+      "path": "payload/attempt/wire/attempt-00000044/request.bin",
+      "sha256": "84376b0b387e7ddf3a079905e7c152e658f1ec105dacbcd06feaa0ee2e353c0e"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000044/request.json",
+      "identity": [
+        2064,
+        8524631,
+        33188,
+        1,
+        92,
+        1794380076423894090,
+        1794380076423894090
+      ],
+      "name": "attempt/wire/attempt-00000044/request.json",
+      "path": "payload/attempt/wire/attempt-00000044/request.json",
+      "sha256": "043a58c13da949a94e36b53be003854932c40cbcd734c9304d201db9b4d568f7"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000044/result.json",
+      "identity": [
+        2064,
+        8524634,
+        33188,
+        1,
+        185,
+        1794380076424024228,
+        1794380076424024228
+      ],
+      "name": "attempt/wire/attempt-00000044/result.json",
+      "path": "payload/attempt/wire/attempt-00000044/result.json",
+      "sha256": "900abb855debfaa6dbc118d2979d9ba091fcbc6375546664e524ea78ca5481b9"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000044/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524632,
+        33188,
+        1,
+        72,
+        1794380076423944519,
+        1794380076423944519
+      ],
+      "name": "attempt/wire/attempt-00000044/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000044/returned-envelope.bin",
+      "sha256": "bb5f1f918dd63bd48cf1b885757143e41147a748a825fd0c9e1d9cda1c32640a"
+    },
+    {
+      "bytes": 362,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000045/reply.bin",
+      "identity": [
+        2064,
+        8524645,
+        33188,
+        1,
+        362,
+        1794380076446974792,
+        1794380076446974792
+      ],
+      "name": "attempt/wire/attempt-00000045/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000045/reply.bin",
+      "sha256": "230747dd735b914f5af94886dcd5b4468480b6266f7fdc4eb110c56d88369f1f"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000045/request.bin",
+      "identity": [
+        2064,
+        8524642,
+        33188,
+        1,
+        56,
+        1794380076446788104,
+        1794380076446788104
+      ],
+      "name": "attempt/wire/attempt-00000045/request.bin",
+      "path": "payload/attempt/wire/attempt-00000045/request.bin",
+      "sha256": "d19a8e76e8d13eabc2987e43385320e7a2b53c76ab603a0bad7e5b481d395abf"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000045/request.json",
+      "identity": [
+        2064,
+        8524643,
+        33188,
+        1,
+        92,
+        1794380076446885046,
+        1794380076446885046
+      ],
+      "name": "attempt/wire/attempt-00000045/request.json",
+      "path": "payload/attempt/wire/attempt-00000045/request.json",
+      "sha256": "360264970446a78c054d381503f97e4f2726f666558cb1bc7bd391243520864a"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000045/result.json",
+      "identity": [
+        2064,
+        8524646,
+        33188,
+        1,
+        186,
+        1794380076447025929,
+        1794380076447025929
+      ],
+      "name": "attempt/wire/attempt-00000045/result.json",
+      "path": "payload/attempt/wire/attempt-00000045/result.json",
+      "sha256": "290763e76b19a83d50ef63baf945eb471a61f4c35f6117aeb660336cec9f5f6d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000045/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524644,
+        33188,
+        1,
+        72,
+        1794380076446940543,
+        1794380076446940543
+      ],
+      "name": "attempt/wire/attempt-00000045/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000045/returned-envelope.bin",
+      "sha256": "2a99e67b854743ac9f8f887fc5b75a61ba7cb118a2eefb5859a7f61e91a9845f"
+    },
+    {
+      "bytes": 227,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000046/reply.bin",
+      "identity": [
+        2064,
+        8524652,
+        33188,
+        1,
+        227,
+        1794380076450897199,
+        1794380076450897199
+      ],
+      "name": "attempt/wire/attempt-00000046/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000046/reply.bin",
+      "sha256": "c8e7cffdc0b3ca317f8b539289f1d8a187bd24c296dd9f3211e80fd4496ae4a2"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000046/request.bin",
+      "identity": [
+        2064,
+        8524649,
+        33188,
+        1,
+        72,
+        1794380076447924397,
+        1794380076447924397
+      ],
+      "name": "attempt/wire/attempt-00000046/request.bin",
+      "path": "payload/attempt/wire/attempt-00000046/request.bin",
+      "sha256": "b076f0bd83a7d9324767957da69415aaeecacf384376d3fc1439446fd65ebb24"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000046/request.json",
+      "identity": [
+        2064,
+        8524650,
+        33188,
+        1,
+        92,
+        1794380076447991230,
+        1794380076447991230
+      ],
+      "name": "attempt/wire/attempt-00000046/request.json",
+      "path": "payload/attempt/wire/attempt-00000046/request.json",
+      "sha256": "4d7449762ab0fb9092e4dc02bda6a49ebc10c9f8b9889a384aaf10f1a285581a"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000046/result.json",
+      "identity": [
+        2064,
+        8524653,
+        33188,
+        1,
+        186,
+        1794380076450955754,
+        1794380076450955754
+      ],
+      "name": "attempt/wire/attempt-00000046/result.json",
+      "path": "payload/attempt/wire/attempt-00000046/result.json",
+      "sha256": "352d926676e9f37881b9e4735bcfb176f3a88bc6fb4bf623158f6b0f8d12b053"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000046/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524651,
+        33188,
+        1,
+        72,
+        1794380076450857095,
+        1794380076450857095
+      ],
+      "name": "attempt/wire/attempt-00000046/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000046/returned-envelope.bin",
+      "sha256": "e4e27335395c6de1bf268b281e01f726085a45a6630471e470fc3ff322fe31bf"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000047/reply.bin",
+      "identity": [
+        2064,
+        8524665,
+        33188,
+        1,
+        40,
+        1794380076764322051,
+        1794380076764322051
+      ],
+      "name": "attempt/wire/attempt-00000047/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000047/reply.bin",
+      "sha256": "d0290fe78d22415c197d6e50a5f2b5340747260169df24e1fa6d159f32008def"
+    },
+    {
+      "bytes": 757637,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000047/request.bin",
+      "identity": [
+        2064,
+        8524662,
+        33188,
+        1,
+        757637,
+        1794380076762521235,
+        1794380076762521235
+      ],
+      "name": "attempt/wire/attempt-00000047/request.bin",
+      "path": "payload/attempt/wire/attempt-00000047/request.bin",
+      "sha256": "12688a0562e4f95a010330c124247bab66712832567cb27b9f7e348a3c6f8122"
+    },
+    {
+      "bytes": 96,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000047/request.json",
+      "identity": [
+        2064,
+        8524663,
+        33188,
+        1,
+        96,
+        1794380076763268568,
+        1794380076763268568
+      ],
+      "name": "attempt/wire/attempt-00000047/request.json",
+      "path": "payload/attempt/wire/attempt-00000047/request.json",
+      "sha256": "305e27f88a211881e483045c57bd89353bcff2bfc9b64e50d3c1281def0b7fb3"
+    },
+    {
+      "bytes": 189,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000047/result.json",
+      "identity": [
+        2064,
+        8524666,
+        33188,
+        1,
+        189,
+        1794380076764390056,
+        1794380076764390056
+      ],
+      "name": "attempt/wire/attempt-00000047/result.json",
+      "path": "payload/attempt/wire/attempt-00000047/result.json",
+      "sha256": "9d77e2b40855bda6eeee66da7fdfcd5fcd9dde1051fce1e38cafc514c31baf61"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000047/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524664,
+        33188,
+        1,
+        72,
+        1794380076764276367,
+        1794380076764276367
+      ],
+      "name": "attempt/wire/attempt-00000047/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000047/returned-envelope.bin",
+      "sha256": "44cdfeca10a3e70bbc256c27b72b389c4fef4b2688e13a368b19ab0e4bcd6856"
+    },
+    {
+      "bytes": 160,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000048/reply.bin",
+      "identity": [
+        2064,
+        8524671,
+        33188,
+        1,
+        160,
+        1794380076776963342,
+        1794380076776963342
+      ],
+      "name": "attempt/wire/attempt-00000048/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000048/reply.bin",
+      "sha256": "c25e16f31086f32a57e3329f3067687924001669b30b77f54d9df6e91493ad63"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000048/request.bin",
+      "identity": [
+        2064,
+        8524668,
+        33188,
+        1,
+        72,
+        1794380076764737099,
+        1794380076764737099
+      ],
+      "name": "attempt/wire/attempt-00000048/request.bin",
+      "path": "payload/attempt/wire/attempt-00000048/request.bin",
+      "sha256": "f824dcaf4c2b78ab24f318b80f1a14b5bb68f99d556622e49b0dc1190a9a2f95"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000048/request.json",
+      "identity": [
+        2064,
+        8524669,
+        33188,
+        1,
+        92,
+        1794380076764796737,
+        1794380076764796737
+      ],
+      "name": "attempt/wire/attempt-00000048/request.json",
+      "path": "payload/attempt/wire/attempt-00000048/request.json",
+      "sha256": "e05b9b47a712e4c8880175a72705a22a1e9ddc5aefcee75e380061a7b7e27009"
+    },
+    {
+      "bytes": 186,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000048/result.json",
+      "identity": [
+        2064,
+        8524672,
+        33188,
+        1,
+        186,
+        1794380076777020761,
+        1794380076777020761
+      ],
+      "name": "attempt/wire/attempt-00000048/result.json",
+      "path": "payload/attempt/wire/attempt-00000048/result.json",
+      "sha256": "699119bf6e0f5455362ebe84e51fa118a027d6a6c783d0a63b8fec3c03c9036d"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000048/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524670,
+        33188,
+        1,
+        72,
+        1794380076776890484,
+        1794380076776890484
+      ],
+      "name": "attempt/wire/attempt-00000048/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000048/returned-envelope.bin",
+      "sha256": "9d3904b8bdc6d02d8c34e606db5cbc0bcd965ff034e5c58458998f00122643b9"
+    },
+    {
+      "bytes": 88,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000049/reply.bin",
+      "identity": [
+        2064,
+        8524677,
+        33188,
+        1,
+        88,
+        1794380076777635951,
+        1794380076777635951
+      ],
+      "name": "attempt/wire/attempt-00000049/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000049/reply.bin",
+      "sha256": "7efebaa0cefcd0d19911d90d7fee814d89180348272118c3c4c04199e226c33b"
+    },
+    {
+      "bytes": 40,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000049/request.bin",
+      "identity": [
+        2064,
+        8524674,
+        33188,
+        1,
+        40,
+        1794380076777482722,
+        1794380076777482722
+      ],
+      "name": "attempt/wire/attempt-00000049/request.bin",
+      "path": "payload/attempt/wire/attempt-00000049/request.bin",
+      "sha256": "64de3d8fcd7a7fbf2965936230a4c4c14bf269d3fed454466f54f205e4d9222f"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000049/request.json",
+      "identity": [
+        2064,
+        8524675,
+        33188,
+        1,
+        92,
+        1794380076777540721,
+        1794380076777540721
+      ],
+      "name": "attempt/wire/attempt-00000049/request.json",
+      "path": "payload/attempt/wire/attempt-00000049/request.json",
+      "sha256": "92b6fe52615f2172391adda82402a700904be35ce91a385d6a3d5f026653338c"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000049/result.json",
+      "identity": [
+        2064,
+        8524678,
+        33188,
+        1,
+        185,
+        1794380076777684623,
+        1794380076777684623
+      ],
+      "name": "attempt/wire/attempt-00000049/result.json",
+      "path": "payload/attempt/wire/attempt-00000049/result.json",
+      "sha256": "9eb11806fc3f972b070dee84d1e2b5b6bbdae293ad8402bfe8f06849d88685be"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000049/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524676,
+        33188,
+        1,
+        72,
+        1794380076777602508,
+        1794380076777602508
+      ],
+      "name": "attempt/wire/attempt-00000049/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000049/returned-envelope.bin",
+      "sha256": "e1ed442a536488f054227c4d9b14509dcc8e53321386ccd5ce4b984e0a7ff5d6"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000050/reply.bin",
+      "identity": [
+        2064,
+        8524683,
+        33188,
+        1,
+        48,
+        1794380076778126354,
+        1794380076778126354
+      ],
+      "name": "attempt/wire/attempt-00000050/reply.bin",
+      "path": "payload/attempt/wire/attempt-00000050/reply.bin",
+      "sha256": "0b5dfa7588227d5173610ddde01980056a6f7aa11e6dae3ffa5d8cbc9bc4f56d"
+    },
+    {
+      "bytes": 48,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000050/request.bin",
+      "identity": [
+        2064,
+        8524680,
+        33188,
+        1,
+        48,
+        1794380076777974353,
+        1794380076777974353
+      ],
+      "name": "attempt/wire/attempt-00000050/request.bin",
+      "path": "payload/attempt/wire/attempt-00000050/request.bin",
+      "sha256": "0b5dfa7588227d5173610ddde01980056a6f7aa11e6dae3ffa5d8cbc9bc4f56d"
+    },
+    {
+      "bytes": 92,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000050/request.json",
+      "identity": [
+        2064,
+        8524681,
+        33188,
+        1,
+        92,
+        1794380076778027778,
+        1794380076778027778
+      ],
+      "name": "attempt/wire/attempt-00000050/request.json",
+      "path": "payload/attempt/wire/attempt-00000050/request.json",
+      "sha256": "35524aa563b83b1650271ae3b1a14c706f8307097804ff7fe4c5900d0eba7f35"
+    },
+    {
+      "bytes": 185,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000050/result.json",
+      "identity": [
+        2064,
+        8524684,
+        33188,
+        1,
+        185,
+        1794380076778171388,
+        1794380076778171388
+      ],
+      "name": "attempt/wire/attempt-00000050/result.json",
+      "path": "payload/attempt/wire/attempt-00000050/result.json",
+      "sha256": "609e310af8a1cc07aa98b81331e5ad990812a146a8a25310024ac84b9c39f3e8"
+    },
+    {
+      "bytes": 72,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-01/wire/attempt-00000050/returned-envelope.bin",
+      "identity": [
+        2064,
+        8524682,
+        33188,
+        1,
+        72,
+        1794380076778077403,
+        1794380076778077403
+      ],
+      "name": "attempt/wire/attempt-00000050/returned-envelope.bin",
+      "path": "payload/attempt/wire/attempt-00000050/returned-envelope.bin",
+      "sha256": "cb81407da19cae9c56b1f729b15265e0fd30535a1fb76200e8478c7dc19070ee"
+    },
+    {
+      "bytes": 147,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-receipts-01/child-result.json",
+      "identity": [
+        2064,
+        8524694,
+        33188,
+        1,
+        147,
+        1794380077333845427,
+        1794380077333845427
+      ],
+      "name": "controller/child-result.json",
+      "path": "payload/controller/child-result.json",
+      "sha256": "7a0795020a4d2d0c8b3bb558e379f58b558b482c1bdb1d959805fc0e0ec41874"
+    },
+    {
+      "bytes": 63,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-receipts-01/child.json",
+      "identity": [
+        2064,
+        8524269,
+        33188,
+        1,
+        63,
+        1794380072827918597,
+        1794380072827918597
+      ],
+      "name": "controller/child.json",
+      "path": "payload/controller/child.json",
+      "sha256": "87b9564b019b76cd5115bad2171f665df96a75f8bda7dfaee36474b15ff6de7b"
+    },
+    {
+      "bytes": 1845,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-receipts-01/command.json",
+      "identity": [
+        2064,
+        8524267,
+        33188,
+        1,
+        1845,
+        1794380072820358888,
+        1794380072820358888
+      ],
+      "name": "controller/command.json",
+      "path": "payload/controller/command.json",
+      "sha256": "f31b9107ed9253f27c43529b72478786ae55b7bceca37804062ddcf6c374417e"
+    },
+    {
+      "bytes": 52165,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-receipts-01/dmesg-before.txt",
+      "identity": [
+        2064,
+        8524266,
+        33188,
+        1,
+        52165,
+        1794380072820000000,
+        1794380072820000000
+      ],
+      "name": "controller/dmesg-before.txt",
+      "path": "payload/controller/dmesg-before.txt",
+      "sha256": "44e285f9d5527b2be0a031efdde6a2f767065e2e7c9fd18236e24fc3fc027053"
+    },
+    {
+      "bytes": 37394,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-receipts-01/result.json",
+      "identity": [
+        2064,
+        8524695,
+        33188,
+        1,
+        37394,
+        1794380077342689642,
+        1794380077342689642
+      ],
+      "name": "controller/result.json",
+      "path": "payload/controller/result.json",
+      "sha256": "041725d983857104eaa3cc43c394e8e79fe20ef11a307e446787716c3634f857"
+    },
+    {
+      "bytes": 991,
+      "guest_path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/live-rwsem-receipts-01/stdout.log",
+      "identity": [
+        2064,
+        8524268,
+        33188,
+        1,
+        991,
+        1794380077144000000,
+        1794380077144000000
+      ],
+      "name": "controller/stdout.log",
+      "path": "payload/controller/stdout.log",
+      "sha256": "f65f397903c69c2fbba88a358cb529d3506d989db50d0dd369f57b2feee31b49"
+    }
+  ]
+}

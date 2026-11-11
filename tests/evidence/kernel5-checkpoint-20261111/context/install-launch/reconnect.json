@@ -1,0 +1,16 @@
+{
+  "attempts": [
+    {
+      "returncode": 0,
+      "stdout": "{\"release\": \"7.0.0-38-kdrebuild5\", \"boot_id\": \"6f99fdb9-8d47-46dd-9e72-dfa6ecd774f4\", \"taint\": 0}\n",
+      "stderr": "",
+      "unix": 1794376805.8457742
+    }
+  ],
+  "connected": {
+    "release": "7.0.0-38-kdrebuild5",
+    "boot_id": "6f99fdb9-8d47-46dd-9e72-dfa6ecd774f4",
+    "taint": 0
+  },
+  "elapsed_seconds": 0.6647691521793604
+}

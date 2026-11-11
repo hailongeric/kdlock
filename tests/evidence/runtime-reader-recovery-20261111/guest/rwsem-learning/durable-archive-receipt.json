@@ -1,0 +1,13 @@
+{
+  "bytes": 46010268,
+  "claim": 18379471558726362096,
+  "holder": 36865,
+  "keys": [
+    [
+      18379471558854838132,
+      1
+    ]
+  ],
+  "path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01/recovery-rwsem-learning-01/shutdown-raw-archive.json",
+  "sha256": "980f532169b1eb5073b2a40a274d7f7385f47f6538e7e5008c500df0e208e9c9"
+}

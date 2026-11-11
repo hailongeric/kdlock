@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=8",
+    "root@10.176.26.71",
+    "timeout 25 python3 -"
+  ],
+  "returncode": 0,
+  "script_sha256": "54a7f0d3168c2d4f99a41d0bb2107be96c82be7a508060e016ee00cccc1d58ca",
+  "unix": 1794374712.9709601
+}
