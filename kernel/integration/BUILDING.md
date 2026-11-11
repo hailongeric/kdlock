@@ -34,11 +34,15 @@ earlier 12 host-pipeline checks.
 
 Kernel4 installation and boot cover a limited module closure containing the
 checked signed `nls_iso8859-1.ko` and the declared built-in boot/network
-dependencies. The booted kernel4 spin fixture subsequently stopped at a source
-frontier. Its built-in-span source correction awaits rebuilding and live
-verification. Recovery and later execution await explicit user approval.
+dependencies. The first spin fixture stopped at a source frontier, then
+renewed ordinary recovery archived and SETTLED its five remaining facts before
+normal destroy/unload. Corrected `db7d7d6e` modules built successfully and ran on
+a fresh kernel4 boot. Separate spin and mutex receipts record scoped protected
+recursion, with physical release and final retirement checked independently.
+Full mitigation and auxiliary-stack unwind coverage remain outstanding.
 [Kernel4 installation](../../tests/evidence/kernel-install4-20261111/README.md),
-[spin attempt and retained state](../../tests/evidence/runtime-spin-frontier-20261111/README.md).
+[corrected module builds](../../tests/evidence/module-spin-db7-build-20261111/README.md),
+[current checkpoint](../../docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
 
 All authorized builds, modules, tests and timing run only in the development VM.
 Source edits and static inspection remain on the source host.
@@ -99,8 +103,8 @@ source tree, retaining its internal relative paths:
    have distinct objects, initialization and source macros. Audit initialization,
    all call sites and context/lifetime use together, preserving native protected
    bodies and surrounding semantics. Plain spin source requires IRQ-enabled task
-   context and preemption pins through matching source unlock. The current spin
-   fixture still awaits acceptance after its source frontier. Callable,
+   context and preemption pins through matching source unlock. The corrected
+   fixture records scoped protected completion for that lane. Callable,
    signalable, trylock, I/O, reader, mode and IRQ lanes retain their own scope.
    [Mutex source API](../../include/kd_mutex_api.h),
    [plain-spin source API](../../include/kd_spin_api.h).

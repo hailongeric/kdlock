@@ -16,8 +16,9 @@ The independent source-rebuilt C12 route is selected, with fresh private layouts
 and no old binary lock/object-layout compatibility promise. C01 starts with
 ordinary mutex lock/unlock in sleepable task context. The later selected
 plain-spin source extension at `2d0ad60b` uses task context with IRQs enabled and
-preemption pinned across the source acquisition/unlock interval. Its kernel4
-attempt and pending source-dependency correction are recorded below. C03 subsequently selects TCLock-style out-of-order outer-mutex unlock
+preemption pinned across the source acquisition/unlock interval. Its first
+kernel4 frontier, ordinary recovery and corrected scoped execution are recorded
+below. C03 subsequently selects TCLock-style out-of-order outer-mutex unlock
 deferral with responsible physical-owner context retained. The earlier
 transferable-grant recommendation is superseded. C11 now selects an MCS queue
 and C04 retains the KD physical-R11 canonical-packet-base mapping. Optional
@@ -79,10 +80,11 @@ The selected ordinary source path has exact-target build/boot, scoped generated
 prefix execution and cumulative ordinary-JMP learning through actual publication
 and ACK. The later kernel3 fixed-image fixture records protected JIT completion
 and actual two-combiner recursion, with physical release and final retirement
-observed separately. The later plain-spin kernel4 attempt failed at a source
-frontier during its first warm recursive scene. Its source-span correction has
-source review, with rebuilding and live verification pending. The checkpoint
-retains each attempt's exact inputs and result.
+observed separately. The first plain-spin kernel4 attempt failed at a source
+frontier. After renewed ordinary recovery, corrected fixture `db7d7d6e` records
+protected spin recursion and a separate mutex regression on fresh kernel4 boot
+`1b3b298f-051b-42ea-a53b-429c16f4e114`. The checkpoint retains each attempt's exact
+inputs, result and later operational return.
 
 | Stage | Actual result and evidence boundary |
 | --- | --- |
@@ -101,9 +103,15 @@ retains each attempt's exact inputs and result.
 | Operational return after live5 | The [separate normal-return receipt](../../../tests/evidence/return-normal5-20261110/README.md) records one ordinary return to `7.0.0-38-kdlock1`, fresh boot `884c4a65-4f4c-4a6b-89a3-cefd65221615`, expected normal Build ID and taint 0. The fixture/devices/workers are absent, eight normal/recovery boot files are unchanged, and the normal GRUB default/configuration is retained. This later boot does not replace live5's kernel3 execution identity. |
 | Kernel4 plain-spin source build and boot | Core `2d0ad60b` compiled 27 C and three assembly units with 67 exact package inputs. The core and full-kernel commands returned 0. Release `7.0.0-38-kdrebuild4` booted as `84e4ba94-b616-4b65-9efe-820921f36c16`, Build ID `f3caad92c0cdc5f955a2410f3ec3ec0e5ccad053`, with entry taint 0. Installation uses the declared limited closure containing one checked signed NLS module and built-in boot dependencies. Exact warning and installation scope are retained in the [build receipt](../../../tests/evidence/kernel-build4-20261111/README.md) and [installation/boot receipt](../../../tests/evidence/kernel-install4-20261111/README.md). |
 | Spin and mutex fixture compilation | Both separate module builds returned 0 and both runner AST parses passed for fixture `0a07f678` against core `2d0ad60b`. The spin and mutex logs retain their 2,288-byte and 2,264-byte frame warnings. This build window ran under normal `7.0.0-38-kdlock1`, boot `884c4a65-4f4c-4a6b-89a3-cefd65221615`, taint 0. The [fixture build receipt](../../../tests/evidence/module-spin-build-20261111/README.md) keeps these compilation results separate from the later runtime attempt. |
-| Spin source frontier | Fixture `0a07f678` returned `failed_or_incomplete` after 122.858 seconds. Three exported regions total 5,113 bytes. Four cycles produce three publications with ACK counts 0/1/1/0, and all 22 wire attempts return status 0. Its first warm recursive scene reached CA atomic JIT entry at row 4866, then COVERAGE_MISS/SOURCE_UNAVAILABLE/JUMP_RESOLVED at helper `0xffffffffc000b0de` to `0xffffffff8271be20`. W continued natively and enqueued B at row 4873, so `child=0` is correct. After the holder timeout all five workers finished with A=2, B=1, three helper effects, one worker error and zero pin/core/origin errors. The 4,949-record buffer has zero overflow. Recursive spin acceptance remains unmet in the [retained attempt](../../../tests/evidence/runtime-spin-frontier-20261111/README.md). |
-| Built-in source-span correction | The target is the actual kernel ELF's two-byte `its_return_thunk` span, `c3 cc`. Reviewed fixture correction `db7d7d6e` accepts an explicit ordinary built-in span under the existing bounds and immutable-source contract, then compares retained export bytes with executable ELF bytes before compilation. The next supplied span is `0xffffffff8271be20` with length 2. Module rebuilding and live verification are pending in the [follow-up record](../../../tests/evidence/runtime-spin-frontier-20261111/README.md#follow-up-and-retained-state). |
-| Retained spin state and pending approval | Automatic approval review rejected recovery before SSH dispatch, citing missing trusted user authorization in the child transcript for feedback settlement and module unload. Explicit user confirmation is pending. Runtime controls, the published image and five parked workers remain retained. Ordinary recovery, the mutex regression and operational return remain pending in the [retained-state record](../../../tests/evidence/runtime-spin-frontier-20261111/README.md#follow-up-and-retained-state). |
+| Spin source frontier | Fixture `0a07f678` returned `failed_or_incomplete` after 122.858 seconds. Three exported regions total 5,113 bytes. Four cycles produce three publications with ACK counts 0/1/1/0, and all 22 wire attempts return status 0. Its first warm recursive scene reached CA atomic JIT entry at row 4866, then COVERAGE_MISS/SOURCE_UNAVAILABLE/JUMP_RESOLVED at helper `0xffffffffc000b0de` to `0xffffffff8271be20`. W continued natively and enqueued B at row 4873, so `child=0` is correct. After the holder timeout all five workers finished with A=2, B=1, three helper effects, one worker error and zero pin/core/origin errors. The 4,949-record buffer has zero overflow. That attempt establishes no recursive spin completion in the [retained attempt](../../../tests/evidence/runtime-spin-frontier-20261111/README.md). |
+| Built-in source-span correction | Fixture `db7d7d6e` accepts an explicit ordinary built-in span under the existing bounds and immutable-source contract. Both corrected runs retain the actual ELF's two-byte `its_return_thunk` span at `0xffffffff8271be20`, `c3 cc`, and verify exact exported bytes before compilation. The existing backend handles its source RET and matched source CALL words. The [spin receipt](../../../tests/evidence/runtime-spin-recursive-20261111/README.md) and [mutex regression](../../../tests/evidence/runtime-mutex-regression-20261111/README.md) retain these inputs separately. |
+| Initial rejected spin recovery request | Automatic approval review rejected recovery before SSH dispatch, citing missing trusted user authorization in the child transcript for feedback settlement and module unload. The runtime, image and five parked workers were retained until renewed user authorization. The rejection and then-current state remain in the [first attempt](../../../tests/evidence/runtime-spin-frontier-20261111/README.md#follow-up-and-retained-state). |
+| Renewed ordinary spin recovery | After renewed authorization, exact cached END and shutdown/archive/SETTLE/END completed. Five facts were durably archived and SETTLED without coverage ACK. All old workers joined and locks cleared before ordinary destroy/rmmod, with no fixture/devices left and no dmesg change. The recovery retained the earlier `84e4ba94-b616-4b65-9efe-820921f36c16` boot and taint 12288 in its [separate receipt](../../../tests/evidence/runtime-spin-recovery-20261111/README.md). |
+| Corrected fixture compilation and fresh kernel4 boot | Both `db7d7d6e` modules built with return 0 against unchanged core `2d0ad60b`. The [module receipt](../../../tests/evidence/module-spin-db7-build-20261111/README.md) retains exact inputs, flags and diagnostics. A separate ordinary repeat boot verified `7.0.0-38-kdrebuild4`, boot `1b3b298f-051b-42ea-a53b-429c16f4e114`, Build ID `f3caad92c0cdc5f955a2410f3ec3ec0e5ccad053`, taint 0 and full GS correspondence in the [repeat-boot receipt](../../../tests/evidence/kernel-repeatboot4-db7-20261111/README.md). |
+| Corrected protected spin recursion | The [spin receipt](../../../tests/evidence/runtime-spin-recursive-20261111/README.md) records controller and runner return 0, 5,190 events and zero overflow. Four source regions total 5,115 bytes. One warm plain proxy lifetime and both recursive scenes complete protected JIT episodes with one canonical S_W, distinct acquisitions and CA → CB → CA current-state return. Both child/root outcomes are DONE3. In mode 2, A's physical callback completes before accepted A unlock and the next B fragment. Four publications ACK 0/1/2/1 exact ordinary facts. A deliberate CALL_STAGED miss resumes native W with one checkpoint effect and matching pin checks, then its one pending fact is archived and SETTLED. All 32 wire exchanges return status 0 before ordinary destroy/unload. |
+| Mutex regression on kernel4 | The [mutex receipt](../../../tests/evidence/runtime-mutex-regression-20261111/README.md) records controller and runner return 0, 4,691 events and zero overflow. Four regions total 5,079 bytes. Two warm plain proxy lifetimes and both recursive scenes complete on one canonical S_W with distinct acquisitions. Mode 1 has child/root DONE3. Mode 2 has child UNWIND_PARENT5 and root DONE3, with responsible-owner deferred physical release and final retirement recorded separately. Four publications ACK 0/2/4/2 exact facts, all 32 wire exchanges return status 0, and pending/SETTLED counts are zero before ordinary destroy/unload. |
+| Independent saved-record audits | The first `a0ad2c4d` audit invocations returned 1 at a nonexistent per-runtime poststate path, after their earlier relation checks. Both failures are retained. Peer-reviewed schema correction `3fea6dab` reads the actual combined poststate and each controller's own idle/identity capture. Both corrected audits return 0 with `SAVED_RUNTIME_RELATIONS_VERIFIED`, retaining all event, physical, wire, fact and archive assertions in the [spin](../../../tests/evidence/runtime-spin-recursive-20261111/README.md) and [mutex](../../../tests/evidence/runtime-mutex-regression-20261111/README.md) receipts. |
+| Operational return after corrected kernel4 runs | The [normal-return receipt](../../../tests/evidence/return-normal4-db7-20261111/README.md) records one ordinary return with `NORMAL_IDENTITY_VERIFIED`, release `7.0.0-38-kdlock1`, boot `eefccc16-4d98-4834-b551-45767e83e442`, Build ID `b61c7bef25d2068f2a05ca3c31a5714c20c4aa62` and taint 0. |
 
 Kernel4's full-link log retains five handwritten-return diagnostics, one
 indirect-call diagnostic, the function-fallthrough diagnostic and the
@@ -111,6 +119,17 @@ indirect-call diagnostic, the function-fallthrough diagnostic and the
 and Perl locale warnings are also preserved. The build and boot leave complete
 mitigation and auxiliary-context acceptance outstanding.
 [Kernel4 build receipt](../../../tests/evidence/kernel-build4-20261111/README.md).
+
+The corrected spin witnesses establish actual physical preemption pins in
+IRQ-enabled task context. Native samples check W's numerical nesting depth.
+Source context APIs expose physical numerical preemption depth during generated
+execution. The caller admits source valid under that context. Arbitrary
+context-changing APIs remain outside this evidence. Protected completion ends at the matching
+source unlock, while the unprotected C function epilogue remains native. These
+scoped fixtures establish no performance, general progress, complete mitigation
+or full auxiliary-stack unwind result. T01–T56 remain unrun.
+[Spin receipt](../../../tests/evidence/runtime-spin-recursive-20261111/README.md),
+[mutex regression](../../../tests/evidence/runtime-mutex-regression-20261111/README.md).
 
 Live4's saved source CALL/JMP correlation places reached generated checkpoints
 before B, under B, and after A's logical unlock while B remains open. Those are

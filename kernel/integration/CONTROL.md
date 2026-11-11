@@ -22,15 +22,17 @@ prefixes or establish general runtime support.
 
 The selected plain-spin source extension at `2d0ad60b` uses the same compiler
 channel and typed lock/unlock directions. Runtime target resolution identifies
-the operation family. Kernel4 built and booted, then fixture `0a07f678` failed
-at an unsupplied built-in return-thunk span during its first warm recursive
-scene. Reviewed correction `db7d7d6e` adds a generic caller-supplied source span,
-with rebuilding and live verification pending. The rejected recovery attempt
-reached no SSH dispatch. Ordinary recovery, the mutex regression and operational
-return await explicit user approval.
-[Build receipt](../../tests/evidence/kernel-build4-20261111/README.md),
-[installation receipt](../../tests/evidence/kernel-install4-20261111/README.md),
-[spin frontier and retained state](../../tests/evidence/runtime-spin-frontier-20261111/README.md).
+the operation family. The first kernel4 fixture `0a07f678` failed at an
+unsupplied built-in return-thunk span. Its first recovery request was rejected
+before SSH dispatch. Renewed user authorization then permitted ordinary
+recovery, including durable archival and exact settlement of five pending facts.
+Corrected fixture `db7d7d6e` includes the explicit ordinary source span and records
+protected spin recursion plus a separate mutex regression. Both complete normal
+shutdown and unload. Their publication, ACK and settlement results remain
+distinct in the current checkpoint.
+[First spin frontier](../../tests/evidence/runtime-spin-frontier-20261111/README.md),
+[ordinary recovery](../../tests/evidence/runtime-spin-recovery-20261111/README.md),
+[current checkpoint](../../docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
 
 ## Cold source and task admission
 
@@ -44,9 +46,11 @@ The fixture's optional built-in span is ordinary source input under that same
 contract. It counts against the supplied dependency/source-byte bounds and
 retains built-in kernel residency. The host compares the actual retained export
 with its exact executable mapping in the pinned ELF before compiling. The
-reviewed follow-up supplies the two bytes at `0xffffffff8271be20`. Verification
-of that corrected fixture remains pending.
-[Source-span follow-up](../../tests/evidence/runtime-spin-frontier-20261111/README.md#follow-up-and-retained-state).
+corrected runs supply the two bytes `c3 cc` at `0xffffffff8271be20` and retain
+matching ELF/export hashes. This adds an ordinary RET path through the existing
+backend and preserves its exact source CALL/RET words and return routing.
+[Spin receipt](../../tests/evidence/runtime-spin-recursive-20261111/README.md),
+[mutex regression](../../tests/evidence/runtime-mutex-regression-20261111/README.md).
 
 `kd_jit_runtime_create` composes source, image slot, feedback, durable cycle/image
 controls and one fd channel. Caller inputs explicitly bound requests, facts,

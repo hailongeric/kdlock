@@ -1,8 +1,9 @@
 # kdlock implementation plan and decisions
 
-Current build/boot, native checks, the earlier construction failure/recovery and
-later returned generated prefix are scoped in the [current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
-Design requirements below do not establish complete generated-body or support evidence.
+Current build/boot, native checks, protected mutex and plain-spin recursion,
+retained failures and ordinary recovery are scoped in the current checkpoint.
+Design requirements below establish no broader support or performance result.
+[Current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
 
 The [fixed-image fixture](../../../tests/evidence/runtime-recursive-20261110/README.md)
 now records protected JIT completion across two distinct physical combiners,
@@ -47,10 +48,13 @@ recursion, with separate release/retirement events. General support and the
 T01-T56 matrix remain unvalidated. Live3's early prefix and later exact
 learning/ACK stages keep their separate receipts in the current checkpoint.
 
-The plain-spin extension is connected in source through the same compiler,
-task, image and request interfaces. Its atomic queue, release and native
-resume paths have separate context and progress requirements. Exact target
-build and live evidence are recorded separately in the current checkpoint.
+The plain-spin extension uses the same compiler, task, image and request
+interfaces. The corrected kernel4 fixture `db7d7d6e` records protected recursive
+completion with synchronous physical-release ACKs, followed by a separate mutex
+regression on the same core. Saved-record audits check their exact source,
+acquisition, current-return, physical-release and retirement relationships.
+The first spin frontier and renewed recovery keep separate receipts.
+[Current evidence checkpoint](04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
 
 Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins). This plan implements the target semantic model; historical mechanisms are optional reuse evidence. Operational repository rules still govern any later authorized work.
 
@@ -185,8 +189,9 @@ The latest C02 correction keeps every active/nested request on its direct
 node->state pointer. No external registry or redundant borrowed-S_W task field
 is selected. Initial native entry uses one stable task-owned root/auxiliary
 header containing the sole own core. The one-field/fork/failure/exit integration
-artifact and exact-target installer remain unapplied; managed child and exit
-implementations are present in `lifecycle.[ch]`.
+artifact and exact-target installer have exact-target application/build receipts.
+Managed child and exit implementations in `lifecycle.[ch]` have scoped fork/exit
+observations. Broader deployment and lifecycle proof remain outstanding.
 
 C05 follows TCLock's task-owned auxiliary wait stack while retaining the UB
 JIT/GS engine. Prepared source SP/IP/BP capture precedes the switch; source
@@ -241,9 +246,15 @@ The existing preallocated request-capacity contract applies. Atomic progress
 requires a runnable CPU route for every necessary actor while other actors
 remain pinned. Mixed families, IRQ/BH/NMI variants, trylocks, unrelated
 preemption guards and RT/debug configurations are outside this lane.
-Acceptance needs separate target evidence for pinning, native and JIT
-continuations, exact owner release and retirement. Source review supplies
-no scheduling, throughput or broader progress result.
+The corrected kernel4 fixture records native and generated continuations,
+exact synchronous owner-release ACKs and final retirement on its two recursive
+scenes. Native samples check W's numerical preemption depth. The generated
+witness establishes physical preemption pins in IRQ-enabled task context.
+Source context APIs expose physical numerical preemption depth during generated
+execution. The caller admits source valid under that context. The C function
+epilogue remains native. Scheduling, throughput, full auxiliary-stack
+unwind behavior and broader progress remain unproved.
+[Spin fixture receipt](../../../tests/evidence/runtime-spin-recursive-20261111/README.md).
 
 ## 3 Work packages
 
@@ -370,9 +381,9 @@ Cumulatively merge valid same-version observations into compiler input BEFORE ca
 
 ### P7 Enable additional families and modes one at a time
 
-The plain-spin extension has source code under the scope in section 2.5.
-Keep its atomic context and synchronous release evidence separate from
-sleepable mutex deferral.
+The plain-spin extension has scoped kernel4 protected-recursion evidence
+under section 2.5. Keep its atomic context and synchronous release observations
+separate from sleepable mutex deferral and broader unrun context/progress work.
 
 Select additional reader/writer, signalable, mode, mixed-family and context/configuration lanes under C01/C10. Origin-local readers are the conservative proposed initial lane, not a fixed rewrite restriction. Remote reader placement, debug/lockdep configurations and IRQ-related extensions remain unselected/unvalidated until explicitly scoped and proved; the current support exclusions do not permanently decide the target.
 
@@ -404,7 +415,7 @@ AS01 is a user-selected design assumption/scope, not a verified behavior row: ge
 
 | API/context lane | Required behavior (S) | Initial proposal (P) | Open choice / enabling evidence |
 | --- | --- | --- | --- |
-| Plain spinlock | Native atomicity/context and exact physical release | IRQ-enabled task-context spin runtime with preemption pins and preallocated persistent requests. Source present | Target execution and guard checks, synchronous release and final retirement, off-queue drain and scoped topology progress |
+| Plain spinlock | Native atomicity/context and exact physical release | IRQ-enabled task-context spin runtime with preemption pins and preallocated persistent requests. Kernel4 records scoped protected recursion, synchronous ACKs and final retirement | Broader context/progress proof, off-queue scheduling and auxiliary-stack/mitigation coverage remain outstanding |
 | rwlock/rwsem writers | Write exclusion, API result and interaction with readers | Choose initial family in C01 | C03 authority/composite contract; no inherited writer-first order |
 | rwlock/rwsem readers | Concurrent reader/mode/API/context semantics | Origin-local on W | C10 placement; C_A-local is still remote relative to W; no remote lane authorized yet |
 | Mutex | Sleepable ordinary API lane with exact owner/release/lifetime phases; selected outer-unlock deferral accepts extra waiting | Owner-retained deferred outer unlock and MCS queue selected; ordinary source/native bootstrap, recursive episodes and progress connected in source at ce423858; managed task/provider/compiler source connected through c6becf81; target build/boot and bounded native checks recorded, with kernel3 fixed-image protected recursion observed | Distinct marker/unwind/handling/physical release, retained owner and exact users. Stable object storage through actual physical release selected; separate later control/notifier/code retention remains required; no native timing/progress parity |

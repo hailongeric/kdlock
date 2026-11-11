@@ -48,14 +48,26 @@ Reviewed commit `db7d7d6e` adds an optional caller-supplied built-in source span
 to the fixture. The runner compares actual exported bytes with the pinned
 executable kernel ELF before compilation. The next invocation supplies
 `0xffffffff8271be20` with length 2. The existing compiler handles that ordinary
-source span. The correction awaits module rebuilding and live verification.
+source span. The corrected fixture later completed its separate build and live validation.
+The successful spin and mutex runs retain their own source versions and boot
+identity. [Corrected spin](../runtime-spin-recursive-20261111/README.md),
+[mutex regression](../runtime-mutex-regression-20261111/README.md).
 
-Automatic approval review rejected execution of the reviewed recovery helper.
-Its stated reason was missing trusted user authorization in the child
-transcript for root feedback settlement and module unload. The rejection
-occurred before SSH dispatch. Explicit user confirmation is pending. Runtime
-controls, the published image and five parked workers remain retained.
-The mutex regression and operational return remain pending.
+Automatic approval review initially rejected execution of the reviewed recovery
+helper because the child transcript lacked trusted user authorization for root
+feedback settlement and module unload. The rejection occurred before SSH
+dispatch. The runtime controls, published image and five parked workers were
+retained at that boundary.
+
+Renewed explicit user authorization allowed one ordinary recovery attempt.
+The recorded stop error was errno110, followed by five joined workers and clear
+physical locks. Actual shutdown, archive claim, SETTLE and END returned zero.
+Five pending facts were preserved in an 8,824,917-byte fsynced and reread archive
+with SHA256 `21328862c8fb47dd8ad4b7842c5b766e169c6a027aee964a458d9b78b66a678d`
+before settlement, destroy and ordinary module unload completed. The guest
+later returned to its normal kernel after the corrected tests.
+[Exact recovery](../runtime-spin-recovery-20261111/README.md),
+[normal return](../return-normal4-db7-20261111/README.md).
 
 ## Retained files
 
