@@ -1,0 +1,18 @@
+import hashlib,json,shlex,subprocess,sys,time
+from pathlib import Path
+family=sys.argv[1];assert family in {'rwsem','rwlock','spin','mutex'}
+work='/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-68a2e5ed-rw-01'
+base='/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f'
+local=Path('/tmp/kdlock-kernel5-'+family+'-live-68a2-01');local.mkdir(exist_ok=False)
+args=['python3',work+'/fixture-controller.py','--input',work+'/input','--manifest',work+'/source-manifest.json','--manifest-sha256','c55be3d3586178783e749431f549dbbd804fae7fc7f7a6f1f9d252c0eff8d91c','--state',work+'/source-state.json','--state-sha256','e2e76d4c0d23b8a837053ae2811ed3615a30cc49003938c65611ed9d8259f158','--build-inputs','/mnt/kdlock-builds/kdlock-main-work/kernel5-core-1114b41e-rw-01/build-inputs.json','--build-inputs-sha256','7f0ced9701d43f6dabe6e23488f38107bb59accab3230cd8e30a97d8369ab1ea','--kernel-source',base+'/source','--kernel-build',base+'/build','--kernel-pins',work+'/kernel-pins.json','--kernel-pins-sha256','70da8215fb1ddecef5a5cd245f63b5154425bfefc365a53d307b3ea9ca4bae78','--output',work+'/live-'+family+'-01','--receipts',work+'/live-'+family+'-receipts-01','--expected-boot','9336b735-78f0-4f9c-9d9e-f04677f8d6bc','--source-commit','68a2e5ede135429e63cb6547055f310152118917','--core-commit','1114b41ea0f6ecf92f2c9af2904a4218bb344829','--package-source-commit','1114b41ea0f6ecf92f2c9af2904a4218bb344829','--space-floor','4000000000','--root-floor','1073741824','--seconds','240','live',family,'--postboot',base+'/receipts/postboot-kdrebuild5-capacity-01/result.json','--postboot-sha256','527820179edf2ab9f48954ff4e735bab20c959548109d27e7fa701c711c03183','--gs-proof',base+'/receipts/postboot-kdrebuild5-capacity-01/gs-proof.json','--gs-proof-sha256','404b8827763ae0272b750d2093dfe2a62d88e3c970d1ad9407e46a50a30bfe1b','--module-result',work+'/module-build-receipts/result.json','--module-result-sha256','b9c674dc0d5cd3feb7eff45dc35abddc784dcd1df461dc290616fe9271cf1bef','--python','/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3','--build-id','a0314627518435aa4e937dae6741de947c9cf864','--recovery-tag','kdlock-builddisk-clean-20261031','--dependency-page-limit','16','--total-source-byte-limit','131072','--wire-log-byte-limit','268435456','--event-capacity','65536','--workers','4','--iterations','8','--deadline','180','--builtin-source-start','0xffffffff8271fe20','--builtin-source-size','2']
+if family in {'rwsem','rwlock','spin'}:args+=['--holder-timeout-ms','20000']
+if family in {'rwsem','rwlock'}:args+=['--runtime-block-visits','16000000']
+if family=='rwsem':args+=['--coordination-spins','1000000']
+if len(sys.argv)>2:
+ prior=sys.argv[2];pin=sys.argv[3];assert prior in {'rwsem','rwlock','spin','mutex'} and len(pin)==64
+ args+=['--prior-result',work+'/live-'+prior+'-receipts-01/result.json','--prior-result-sha256',pin]
+a=['ssh','-p','2222','-o','BatchMode=yes','-o','ConnectTimeout=8','root@10.176.26.71','timeout 260 '+shlex.join(args)]
+(local/'command.json').write_text(json.dumps({'argv':a,'start_unix':time.time()},indent=2)+'\n');start=time.monotonic()
+with (local/'stdout.log').open('xb') as log,(local/'stderr.log').open('xb') as err:x=subprocess.run(a,stdout=log,stderr=err,timeout=280)
+(local/'controller-result.json').write_text(json.dumps({'returncode':x.returncode,'elapsed_seconds':time.monotonic()-start,'unix':time.time()},indent=2)+'\n')
+print(family,'returncode',x.returncode,'elapsed',time.monotonic()-start);print((local/'stdout.log').read_text()[-2600:]);print((local/'stderr.log').read_text()[-2600:]);raise SystemExit(x.returncode)

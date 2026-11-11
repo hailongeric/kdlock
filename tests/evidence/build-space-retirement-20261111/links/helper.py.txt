@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""Exact four-link cleanup with a source-host recovery record before unlink."""
+import base64,hashlib,json,os,pathlib,stat,subprocess,sys,time
+OUT=pathlib.Path('/tmp/kdlock-scope234-links-20261111-01')
+SSH=['ssh','-p','2222','-o','BatchMode=yes','-o','ConnectTimeout=8','root@10.176.26.71','python3 -']
+REMOTE=r'''import base64,hashlib,json,os,pathlib,signal,stat,sys,time
+signal.alarm(180)
+TARGETS={'/lib/modules/7.0.0-38-kdscope2/build':'/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build','/lib/modules/7.0.0-38-kdscope2/source':'/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/source','/lib/modules/7.0.0-38-kdscope3/build':'/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build','/lib/modules/7.0.0-38-kdscope4/build':'/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build'}
+def need(v,m):
+ if not v:raise RuntimeError(m)
+def meta(p):
+ s=os.lstat(p)
+ return dict(dev=s.st_dev,inode=s.st_ino,mode=s.st_mode,uid=s.st_uid,gid=s.st_gid,nlink=s.st_nlink,size=s.st_size,mtime_ns=s.st_mtime_ns,ctime_ns=s.st_ctime_ns)
+def absent(p):
+ try:os.lstat(p)
+ except FileNotFoundError:return True
+ return False
+def dangling(p):
+ try:os.stat(p)
+ except FileNotFoundError:return True
+ return False
+def row(p):
+ m=meta(p)
+ if stat.S_ISLNK(m['mode']):m['target']=os.readlink(p)
+ return m
+def links():
+ out={}
+ for p,target in TARGETS.items():
+  m=row(p);need(stat.S_ISLNK(m['mode']) and m['target']==target,'link type/target mismatch: '+p)
+  need(dangling(p),'link resolves: '+p)
+  root=str(pathlib.PurePosixPath(target).parent)
+  need(absent(root),'deleted target root reappeared: '+root)
+  out[p]=m
+ return out
+def parents():
+ return {p:dict(metadata=meta(p),entries={e.name:row(e.path) for e in os.scandir(p)}) for p in sorted({str(pathlib.PurePosixPath(p).parent) for p in TARGETS})}
+def protected():
+ selected={};stack=['/boot','/etc/default/grub.d','/etc/grub.d'];count=0;total=0
+ for p in ['/etc/default/grub']:
+  if not absent(p):stack.append(p)
+ while stack:
+  p=stack.pop();m=row(p);count+=1;need(count<=4096,'protected entry bound')
+  if stat.S_ISDIR(m['mode']):stack.extend(sorted((e.path for e in os.scandir(p)),reverse=True))
+  elif stat.S_ISREG(m['mode']):
+   total+=m['size'];need(total<=8*1024**3,'protected byte bound')
+   h=hashlib.sha256();fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW)
+   with os.fdopen(fd,'rb') as f:
+    s=os.fstat(f.fileno());need((s.st_dev,s.st_ino)==(m['dev'],m['inode']),'protected open identity')
+    for b in iter(lambda:f.read(1048576),b''):h.update(b)
+   need(meta(p)==m,'protected file changed during read: '+p);m['sha256']=h.hexdigest()
+  else:need(stat.S_ISLNK(m['mode']),'unexpected protected type: '+p)
+  selected[p]=m
+ return selected
+def activity():
+ release=os.uname().release;boot=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip();taint=pathlib.Path('/proc/sys/kernel/tainted').read_text().strip()
+ need(release=='7.0.0-38-kdrebuild5' and boot=='9336b735-78f0-4f9c-9d9e-f04677f8d6bc','current kernel/boot mismatch')
+ modules=pathlib.Path('/proc/modules').read_text();need(not any('fixture' in line.split()[0] for line in modules.splitlines()),'fixture module active')
+ devices=[p.name for p in pathlib.Path('/dev').iterdir() if p.name.startswith(('kd_runtime_fixture','kd_spin_runtime_fixture','kd_rwsem_runtime_fixture','kd_rwlock_runtime_fixture'))];need(not devices,'fixture device active')
+ refs=[];workers=[];errors=[];builds=[]
+ needles=tuple(TARGETS)+tuple(TARGETS.values())+tuple(str(pathlib.PurePosixPath(p).parent) for p in TARGETS.values())
+ for proc in pathlib.Path('/proc').iterdir():
+  if not proc.name.isdigit() or int(proc.name)==os.getpid():continue
+  try:
+   comm=(proc/'comm').read_text().strip();cmd=(proc/'cmdline').read_bytes().replace(b'\0',b' ').decode(errors='replace')
+   if comm.startswith(('kd-scene/','kd-reader/','kd-fixture/')):workers.append(dict(pid=int(proc.name),comm=comm))
+   if comm in ('make','cc1','cc1plus','gcc','clang','ld','ld.bfd','as'):builds.append(dict(pid=int(proc.name),comm=comm,cmd=cmd))
+   if any(n in cmd for n in needles):refs.append(dict(pid=int(proc.name),kind='cmdline',value=cmd))
+   maps=(proc/'maps').read_text()
+   if any(n in maps for n in needles):refs.append(dict(pid=int(proc.name),kind='maps'))
+   for name in ('cwd','root','exe'):
+    try:value=os.readlink(proc/name)
+    except FileNotFoundError:continue
+    if any(value==n or value.startswith(n+'/') for n in needles):refs.append(dict(pid=int(proc.name),kind=name,value=value))
+   for fd in (proc/'fd').iterdir():
+    try:value=os.readlink(fd)
+    except FileNotFoundError:continue
+    if any(value==n or value.startswith(n+'/') for n in needles):refs.append(dict(pid=int(proc.name),kind='fd',value=value))
+  except (FileNotFoundError,ProcessLookupError):continue
+  except OSError as e:errors.append(dict(pid=int(proc.name),error=repr(e)))
+ need(not refs and not workers and not errors,'active reference/worker or inaccessible process: '+repr((refs,workers,errors)))
+ return dict(release=release,boot=boot,taint=taint,devices=devices,workers=workers,references=refs,access_errors=errors,other_build_processes=builds)
+def emit(kind,**kw):print(json.dumps(dict(kind=kind,unix=time.time(),**kw),sort_keys=True),flush=True)
+expected=json.loads(base64.b64decode(EXPECTED)) if EXPECTED else None
+try:
+ state=activity();before_links=links();before_parents=parents();before_protected=protected()
+ if expected is None:
+  emit('PREFLIGHT_COMPLETE',links=before_links,parents=before_parents,protected=before_protected,state=state)
+ else:
+  need(before_links==expected['links'] and before_parents==expected['parents'] and before_protected==expected['protected'],'preflight metadata/protection changed')
+  need(all(state[k]==expected['state'][k] for k in ('release','boot','taint')),'kernel changed after recovery copy')
+  # All four gates pass before the first unlink. Open exact parent descriptors.
+  fds={p:os.open(p,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW) for p in before_parents}
+  try:
+   need(links()==before_links and parents()==before_parents,'last metadata recheck failed')
+   for p in TARGETS:
+    parent=str(pathlib.PurePosixPath(p).parent);name=pathlib.PurePosixPath(p).name
+    need(row(p)==before_links[p] and dangling(p),'immediate link recheck failed: '+p)
+    os.unlink(name,dir_fd=fds[parent]);os.fsync(fds[parent]);emit('UNLINKED',path=p,target=TARGETS[p])
+  finally:
+   for fd in fds.values():os.close(fd)
+  need(all(absent(p) for p in TARGETS),'unlinked name remains')
+  after_parents=parents()
+  for p,before in before_parents.items():
+   after=after_parents[p];remaining={n:r for n,r in before['entries'].items() if p+'/'+n not in TARGETS}
+   need(after['entries']==remaining,'parent siblings changed: '+p)
+   need(all(after['metadata'][k]==before['metadata'][k] for k in ('dev','inode','mode','uid','gid','nlink')),'parent identity/ownership changed: '+p)
+  need(protected()==before_protected,'boot/GRUB protection changed')
+  after_state=activity();need(all(after_state[k]==state[k] for k in ('release','boot','taint')),'kernel changed after cleanup')
+  emit('COMPLETE',unlinked_count=4,absent=list(TARGETS),parents_after=after_parents,state_after=after_state,protected_count=len(before_protected),exceptions=[])
+except BaseException as error:
+ emit('FAILED_RETAIN_RECORDS',error=repr(error));raise
+'''
+def syncdir(p):
+ fd=os.open(p,os.O_RDONLY|os.O_DIRECTORY)
+ try:os.fsync(fd)
+ finally:os.close(fd)
+def write(p,data):
+ with p.open('xb') as f:f.write(data);f.flush();os.fsync(f.fileno())
+ syncdir(p.parent)
+def run(phase,expected=None):
+ encoded=base64.b64encode(json.dumps(expected).encode()).decode() if expected else ''
+ code=REMOTE.replace('EXPECTED',repr(encoded));write(OUT/(phase+'-guest.py.txt'),code.encode())
+ write(OUT/(phase+'-command.json'),json.dumps(dict(argv=SSH,guest_script_sha256=hashlib.sha256(code.encode()).hexdigest(),timeout_seconds=200,unix=time.time()),indent=2).encode())
+ result=subprocess.run(SSH,input=code.encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=200)
+ write(OUT/(phase+'-stdout.jsonl'),result.stdout);write(OUT/(phase+'-stderr.log'),result.stderr)
+ write(OUT/(phase+'-result.json'),json.dumps(dict(returncode=result.returncode,unix=time.time()),indent=2).encode())
+ if result.returncode:raise RuntimeError(phase+' remote returned '+str(result.returncode))
+ return [json.loads(line) for line in result.stdout.splitlines()]
+def main():
+ phase=sys.argv[1]
+ if phase=='preflight':
+  OUT.mkdir(mode=0o700);syncdir(OUT.parent)
+  write(OUT/'helper.py.txt',pathlib.Path(__file__).read_bytes())
+  old=pathlib.Path('/tmp/kdlock-scope234-deletion-20261111-01/summary.json').read_bytes()
+  write(OUT/'prior-deletion-summary.json',old)
+  rows=run('preflight');assert len(rows)==1 and rows[0]['kind']=='PREFLIGHT_COMPLETE'
+  saved=(json.dumps(rows[0],sort_keys=True,indent=2)+'\n').encode();write(OUT/'recovery.json',saved)
+  assert (OUT/'recovery.json').read_bytes()==saved
+  print(json.dumps(dict(phase='RECOVERY_READY',path=str(OUT/'recovery.json'),sha256=hashlib.sha256(saved).hexdigest(),links=rows[0]['links']),indent=2))
+ elif phase=='unlink':
+  raw=(OUT/'recovery.json').read_bytes();expected=json.loads(raw)
+  assert expected['kind']=='PREFLIGHT_COMPLETE' and len(expected['links'])==4
+  rows=run('unlink',expected);assert rows[-1]['kind']=='COMPLETE' and rows[-1]['unlinked_count']==4
+  print(json.dumps(rows[-1],indent=2))
+ else:raise ValueError('exact phase preflight or unlink required')
+if __name__=='__main__':main()

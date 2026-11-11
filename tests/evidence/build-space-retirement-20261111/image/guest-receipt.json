@@ -1,0 +1,19 @@
+{
+  "label": "guest",
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "timeout 25s python3 -"
+  ],
+  "returncode": 0,
+  "script_sha256": "61ff5cdc2083f686df70bed5d954ff4a538a604c7c4d8c203960ee99307dcfce",
+  "stdout_sha256": "71e329778e5ba7ec7be74b67a4343085d89a81d1732131e2a2d086857024a31a",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "utc": "2026-11-11T07:47:26.315253+00:00"
+}

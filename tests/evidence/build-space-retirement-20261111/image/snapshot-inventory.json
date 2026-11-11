@@ -1,0 +1,59 @@
+{
+  "backing_dependencies": "Unverified: ordinary qemu-img info refused live-image shared-write lock; no bypass or further host/guest access",
+  "changes": "Only this source-host summary/listing created; no host/guest/snapshot access or changes in this follow-up",
+  "count": 5,
+  "listing": "/tmp/kdlock-host-image-size-20261111-01/snapshot-listing.txt",
+  "listing_sha256": "cd0136e08eef13f2507a9fbd32d2e2247e08b88e57750e6c36ad44e72db04821",
+  "observation_sha256": "580af1a51539b3233956f4364d082b93f1d21b80c4569f9c2039bf69c6962ff6",
+  "observation_source": "/tmp/kdlock-host-image-size-20261111-01/host-stdout.jsonl",
+  "partial_interpretation": "Missing member relative to current three-disk topology; not by itself corruption or uselessness",
+  "rows": [
+    {
+      "coverage": "drive_system + drive_data1 only; partial/non-loadable with current three attached disks",
+      "hmp_date": "2026-10-27 08:31:29",
+      "purpose": "Historical Ubuntu22.04/Linux6.1 recovery with former32GiB data disk",
+      "risk": "Historical OS/disk state lost; restore rolls back later contents and saved data-disk size",
+      "source": "/home/eric/vm/vm-shared/kdlock/docs/operations/VM.md:182; docs/history/vm-ubuntu2604-migration-20261027.md:77-84",
+      "tag": "legacy-kdclobber2-20261027",
+      "vm_state_printed": "23.4 GiB"
+    },
+    {
+      "coverage": "drive_system + drive_data1 only; partial/non-loadable with current three attached disks",
+      "hmp_date": "2026-10-27 14:12:19",
+      "purpose": "Signed clean normal Linux7 and schema2 identity checkpoint",
+      "risk": "Loss of that clean historical Linux7 recovery/reference state",
+      "source": "/home/eric/vm/vm-shared/kdlock/docs/operations/VM.md:180; bench/results/10.176.26.71/tests/linux70-port-20261027/README.md:178-183",
+      "tag": "linux70-kdlock1-clean-20261027",
+      "vm_state_printed": "23.6 GiB"
+    },
+    {
+      "coverage": "drive_system + drive_data1 only; partial/non-loadable with current three attached disks",
+      "hmp_date": "2026-10-28 00:01:50",
+      "purpose": "Clean enabled-MM Native boot before correctness probes; tag keeps campaign date",
+      "risk": "Loss of that clean Native-MM campaign checkpoint; no restore drill established",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md:64-70",
+      "tag": "linux70-kdmm1-native-clean-20261027",
+      "vm_state_printed": "23.6 GiB"
+    },
+    {
+      "coverage": "drive_system + drive_data1 only; partial/non-loadable with current three attached disks",
+      "hmp_date": "2026-10-29 05:27:47",
+      "purpose": "Preserved nondrained role-exchange failure state",
+      "risk": "Original failure memory/tmp state lost; recovered disk archives do not establish an equivalent snapshot copy",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/tests/mutex-roleswap-20261029/README.md:29-34,125-132",
+      "tag": "kdlock-roleswap-failure-20261029",
+      "vm_state_printed": "22.9 GiB"
+    },
+    {
+      "coverage": "All current attached disks: drive_system, drive_data1, drive_kdlock_builds2",
+      "hmp_date": "2026-10-31 02:24:27",
+      "purpose": "Current selected operational recovery set; original creation contents/health not independently audited here",
+      "risk": "Only currently listed complete three-disk recovery set and required recovery tag for current kernel5 test workflow",
+      "source": "/tmp/kdlock-kernel5-live-family-68a2.py:7; /tmp/kdlock-main-kernel5-fixture.py:305-312,356-357; /home/eric/vm/vm-shared/kdlock-main/tests/evidence/build-space-20261110/README.md:30-32",
+      "tag": "kdlock-builddisk-clean-20261031",
+      "vm_state_printed": "23.5 GiB"
+    }
+  ],
+  "snapshot_date_timezone": "Not established by retained HMP output; dates copied exactly, not labelled UTC",
+  "vm_size_scope": "HMP VM SIZE is the printed VM-state value, not guest disk usage or exclusive reclaimable snapshot allocation; drive_data1 prints0B for the partial tags"
+}
