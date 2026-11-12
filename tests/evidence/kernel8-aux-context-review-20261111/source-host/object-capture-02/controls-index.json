@@ -1,0 +1,76 @@
+{
+  "bytes": 161533,
+  "count": 14,
+  "files": [
+    {
+      "bytes": 16183,
+      "name": "capture.py",
+      "sha256": "b34d306a14ebdb6c493f857dce86b6589141874486ebda17e883f5d876e2bf6c"
+    },
+    {
+      "bytes": 738,
+      "name": "collect.py",
+      "sha256": "7f890aadbae69f65d0a8b16dceba39525e04c530954a5efd8f8bcf1fa1010716"
+    },
+    {
+      "bytes": 658,
+      "name": "collection-command.json",
+      "sha256": "2fd4c95c7377c92d9c6486d684ca1e6efd8e8486cf0af98c0de2137f583851df"
+    },
+    {
+      "bytes": 56,
+      "name": "collection-return.json",
+      "sha256": "8ff92fa080fe1156bb6aa7518186326aeba209d8108e85e7a15463b0110e811e"
+    },
+    {
+      "bytes": 0,
+      "name": "collection.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 140,
+      "name": "collection.stdout",
+      "sha256": "5d2169b044b869bad857b007f6a10859de3b31848fbee0f6984b0d3cbc34b0e0"
+    },
+    {
+      "bytes": 77552,
+      "name": "dispatch-command.json",
+      "sha256": "2dceaccd4b22d2c425d582f866103bf18da99c9bb931c5784e76ae406819ebc2"
+    },
+    {
+      "bytes": 21,
+      "name": "dispatch-pid.json",
+      "sha256": "e3cf4a4d006263672096d34c8da59df6c9d499dbc04fae4f7403a86a8eafc777"
+    },
+    {
+      "bytes": 63,
+      "name": "dispatch-return.json",
+      "sha256": "11d67280db877e3c8172670e6c9a276dbd68cfa92a2228af1abc3a143323527c"
+    },
+    {
+      "bytes": 1645,
+      "name": "dispatch.py",
+      "sha256": "b02a507534cf1a76f57aca37f4947b5c47cc269ac2da0cde6da09da40e685f65"
+    },
+    {
+      "bytes": 0,
+      "name": "dispatch.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 196,
+      "name": "dispatch.stdout",
+      "sha256": "1b37391b84864e503571fee9a2e5bb0860ee2596edf69dccb454083cc2aca4d8"
+    },
+    {
+      "bytes": 57800,
+      "name": "frozen-plan.json",
+      "sha256": "af42fd1972f7809deec96ecb763b8fd898fb72e55f5023d4650996d1ece3e505"
+    },
+    {
+      "bytes": 6481,
+      "name": "planning-identities.json",
+      "sha256": "56a37cae05148685fc7474a8b262dae9f490546ee2fd1d9ad27b0a87fa4fcf8f"
+    }
+  ]
+}

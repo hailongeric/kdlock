@@ -1,0 +1,1173 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/mutex_api.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <resolve_source_target-0x10>:
+   0:	90                   	nop
+   1:	90                   	nop
+   2:	90                   	nop
+   3:	90                   	nop
+   4:	90                   	nop
+   5:	90                   	nop
+   6:	90                   	nop
+   7:	90                   	nop
+   8:	90                   	nop
+   9:	90                   	nop
+   a:	90                   	nop
+   b:	90                   	nop
+   c:	90                   	nop
+   d:	90                   	nop
+   e:	90                   	nop
+   f:	90                   	nop
+
+0000000000000010 <resolve_source_target>:
+  10:	e8 00 00 00 00       	call   15 <resolve_source_target+0x5>	11: R_X86_64_PLT32	__fentry__-0x4
+  15:	b8 01 00 00 00       	mov    eax,0x1
+  1a:	48 81 ff 00 00 00 00 	cmp    rdi,0x0	1d: R_X86_64_32S	kd_mutex_lock_entry_asm
+  21:	0f 84 97 00 00 00    	je     be <resolve_source_target+0xae>
+  27:	48 81 ff 00 00 00 00 	cmp    rdi,0x0	2a: R_X86_64_32S	kd_mutex_unlock_entry_asm
+  2e:	0f 84 9a 00 00 00    	je     ce <resolve_source_target+0xbe>
+  34:	48 81 ff 00 00 00 00 	cmp    rdi,0x0	37: R_X86_64_32S	kd_spin_lock_entry_asm
+  3b:	0f 84 a2 00 00 00    	je     e3 <resolve_source_target+0xd3>
+  41:	48 81 ff 00 00 00 00 	cmp    rdi,0x0	44: R_X86_64_32S	kd_spin_unlock_entry_asm
+  48:	0f 84 aa 00 00 00    	je     f8 <resolve_source_target+0xe8>
+  4e:	55                   	push   rbp
+  4f:	48 89 fa             	mov    rdx,rdi
+  52:	31 c0                	xor    eax,eax
+  54:	48 89 e5             	mov    rbp,rsp
+  57:	48 83 ec 18          	sub    rsp,0x18
+  5b:	41 89 c0             	mov    r8d,eax
+  5e:	89 c6                	mov    esi,eax
+  60:	83 f8 11             	cmp    eax,0x11
+  63:	0f 87 a4 00 00 00    	ja     10d <resolve_source_target+0xfd>
+  69:	48 89 c1             	mov    rcx,rax
+  6c:	48 c1 e1 04          	shl    rcx,0x4
+  70:	48 3b 91 00 00 00 00 	cmp    rdx,QWORD PTR [rcx+0x0]	73: R_X86_64_32S	.rodata+0x68
+  77:	74 1d                	je     96 <resolve_source_target+0x86>
+  79:	48 83 c0 01          	add    rax,0x1
+  7d:	48 83 f8 12          	cmp    rax,0x12
+  81:	75 d8                	jne    5b <resolve_source_target+0x4b>
+  83:	c9                   	leave
+  84:	31 c0                	xor    eax,eax
+  86:	31 d2                	xor    edx,edx
+  88:	31 c9                	xor    ecx,ecx
+  8a:	31 f6                	xor    esi,esi
+  8c:	31 ff                	xor    edi,edi
+  8e:	45 31 c0             	xor    r8d,r8d
+  91:	e9 00 00 00 00       	jmp    96 <resolve_source_target+0x86>	92: R_X86_64_PLT32	__x86_return_thunk-0x4
+  96:	44 89 c0             	mov    eax,r8d
+  99:	41 83 f8 11          	cmp    r8d,0x11
+  9d:	0f 87 92 00 00 00    	ja     135 <resolve_source_target+0x125>
+  a3:	48 c1 e0 04          	shl    rax,0x4
+  a7:	8b 80 00 00 00 00    	mov    eax,DWORD PTR [rax+0x0]	a9: R_X86_64_32S	.rodata+0x60
+  ad:	c9                   	leave
+  ae:	31 d2                	xor    edx,edx
+  b0:	31 c9                	xor    ecx,ecx
+  b2:	31 f6                	xor    esi,esi
+  b4:	31 ff                	xor    edi,edi
+  b6:	45 31 c0             	xor    r8d,r8d
+  b9:	e9 00 00 00 00       	jmp    be <resolve_source_target+0xae>	ba: R_X86_64_PLT32	__x86_return_thunk-0x4
+  be:	31 d2                	xor    edx,edx
+  c0:	31 c9                	xor    ecx,ecx
+  c2:	31 f6                	xor    esi,esi
+  c4:	31 ff                	xor    edi,edi
+  c6:	45 31 c0             	xor    r8d,r8d
+  c9:	e9 00 00 00 00       	jmp    ce <resolve_source_target+0xbe>	ca: R_X86_64_PLT32	__x86_return_thunk-0x4
+  ce:	b8 02 00 00 00       	mov    eax,0x2
+  d3:	31 d2                	xor    edx,edx
+  d5:	31 c9                	xor    ecx,ecx
+  d7:	31 f6                	xor    esi,esi
+  d9:	31 ff                	xor    edi,edi
+  db:	45 31 c0             	xor    r8d,r8d
+  de:	e9 00 00 00 00       	jmp    e3 <resolve_source_target+0xd3>	df: R_X86_64_PLT32	__x86_return_thunk-0x4
+  e3:	b8 04 00 00 00       	mov    eax,0x4
+  e8:	31 d2                	xor    edx,edx
+  ea:	31 c9                	xor    ecx,ecx
+  ec:	31 f6                	xor    esi,esi
+  ee:	31 ff                	xor    edi,edi
+  f0:	45 31 c0             	xor    r8d,r8d
+  f3:	e9 00 00 00 00       	jmp    f8 <resolve_source_target+0xe8>	f4: R_X86_64_PLT32	__x86_return_thunk-0x4
+  f8:	b8 05 00 00 00       	mov    eax,0x5
+  fd:	31 d2                	xor    edx,edx
+  ff:	31 c9                	xor    ecx,ecx
+ 101:	31 f6                	xor    esi,esi
+ 103:	31 ff                	xor    edi,edi
+ 105:	45 31 c0             	xor    r8d,r8d
+ 108:	e9 00 00 00 00       	jmp    10d <resolve_source_target+0xfd>	109: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 10d:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	110: R_X86_64_32S	.data+0x60
+ 114:	48 89 55 e8          	mov    QWORD PTR [rbp-0x18],rdx
+ 118:	48 89 45 f0          	mov    QWORD PTR [rbp-0x10],rax
+ 11c:	89 45 f8             	mov    DWORD PTR [rbp-0x8],eax
+ 11f:	e8 00 00 00 00       	call   124 <resolve_source_target+0x114>	120: R_X86_64_PLT32	__ubsan_handle_out_of_bounds-0x4
+ 124:	48 8b 55 e8          	mov    rdx,QWORD PTR [rbp-0x18]
+ 128:	48 8b 45 f0          	mov    rax,QWORD PTR [rbp-0x10]
+ 12c:	44 8b 45 f8          	mov    r8d,DWORD PTR [rbp-0x8]
+ 130:	e9 34 ff ff ff       	jmp    69 <resolve_source_target+0x59>
+ 135:	48 89 c6             	mov    rsi,rax
+ 138:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	13b: R_X86_64_32S	.data+0x40
+ 13f:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+ 143:	e8 00 00 00 00       	call   148 <resolve_source_target+0x138>	144: R_X86_64_PLT32	__ubsan_handle_out_of_bounds-0x4
+ 148:	48 8b 45 f8          	mov    rax,QWORD PTR [rbp-0x8]
+ 14c:	e9 52 ff ff ff       	jmp    a3 <resolve_source_target+0x93>
+ 151:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+ 155:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+ 160:	90                   	nop
+ 161:	90                   	nop
+ 162:	90                   	nop
+ 163:	90                   	nop
+ 164:	90                   	nop
+ 165:	90                   	nop
+ 166:	90                   	nop
+ 167:	90                   	nop
+ 168:	90                   	nop
+ 169:	90                   	nop
+ 16a:	90                   	nop
+ 16b:	90                   	nop
+ 16c:	90                   	nop
+ 16d:	90                   	nop
+ 16e:	90                   	nop
+ 16f:	90                   	nop
+
+0000000000000170 <run_native>:
+ 170:	e8 00 00 00 00       	call   175 <run_native+0x5>	171: R_X86_64_PLT32	__fentry__-0x4
+ 175:	55                   	push   rbp
+ 176:	48 89 e5             	mov    rbp,rsp
+ 179:	41 57                	push   r15
+ 17b:	41 56                	push   r14
+ 17d:	49 89 ce             	mov    r14,rcx
+ 180:	41 55                	push   r13
+ 182:	41 54                	push   r12
+ 184:	49 89 fc             	mov    r12,rdi
+ 187:	53                   	push   rbx
+ 188:	48 83 ec 28          	sub    rsp,0x28
+ 18c:	48 8b 5f 38          	mov    rbx,QWORD PTR [rdi+0x38]
+ 190:	48 89 75 c0          	mov    QWORD PTR [rbp-0x40],rsi
+ 194:	48 89 55 b8          	mov    QWORD PTR [rbp-0x48],rdx
+ 198:	48 8b 43 08          	mov    rax,QWORD PTR [rbx+0x8]
+ 19c:	65 4c 8b 3d 00 00 00 00 	mov    r15,QWORD PTR gs:[rip+0x0]        # 1a4 <run_native+0x34>	1a0: R_X86_64_PC32	__ref_stack_chk_guard-0x4
+ 1a4:	4c 89 7d d0          	mov    QWORD PTR [rbp-0x30],r15
+ 1a8:	4d 89 c7             	mov    r15,r8
+ 1ab:	48 8b 40 10          	mov    rax,QWORD PTR [rax+0x10]
+ 1af:	c7 45 cc 00 00 00 00 	mov    DWORD PTR [rbp-0x34],0x0
+ 1b6:	48 8b 78 08          	mov    rdi,QWORD PTR [rax+0x8]
+ 1ba:	e8 00 00 00 00       	call   1bf <run_native+0x4f>	1bb: R_X86_64_PLT32	kd_state_current_binding-0x4
+ 1bf:	48 89 45 b0          	mov    QWORD PTR [rbp-0x50],rax
+ 1c3:	8b 43 30             	mov    eax,DWORD PTR [rbx+0x30]
+ 1c6:	83 f8 0f             	cmp    eax,0xf
+ 1c9:	77 7a                	ja     245 <run_native+0xd5>
+ 1cb:	ba 52 a9 00 00       	mov    edx,0xa952
+ 1d0:	48 0f a3 c2          	bt     rdx,rax
+ 1d4:	73 6f                	jae    245 <run_native+0xd5>
+ 1d6:	4c 8b 6b 38          	mov    r13,QWORD PTR [rbx+0x38]
+ 1da:	4d 85 ed             	test   r13,r13
+ 1dd:	74 68                	je     247 <run_native+0xd7>
+ 1df:	4c 89 ef             	mov    rdi,r13
+ 1e2:	e8 29 fe ff ff       	call   10 <resolve_source_target>
+ 1e7:	3b 43 30             	cmp    eax,DWORD PTR [rbx+0x30]
+ 1ea:	75 5b                	jne    247 <run_native+0xd7>
+ 1ec:	48 8d 45 cc          	lea    rax,[rbp-0x34]
+ 1f0:	48 8b 4d b8          	mov    rcx,QWORD PTR [rbp-0x48]
+ 1f4:	48 8b 55 c0          	mov    rdx,QWORD PTR [rbp-0x40]
+ 1f8:	4d 89 f9             	mov    r9,r15
+ 1fb:	50                   	push   rax
+ 1fc:	48 8b 75 b0          	mov    rsi,QWORD PTR [rbp-0x50]
+ 200:	4d 89 f0             	mov    r8,r14
+ 203:	48 89 df             	mov    rdi,rbx
+ 206:	41 55                	push   r13
+ 208:	e8 00 00 00 00       	call   20d <run_native+0x9d>	209: R_X86_64_PLT32	kd_episode_acquire_root-0x4
+ 20d:	5a                   	pop    rdx
+ 20e:	59                   	pop    rcx
+ 20f:	85 c0                	test   eax,eax
+ 211:	75 36                	jne    249 <run_native+0xd9>
+ 213:	83 7d cc 04          	cmp    DWORD PTR [rbp-0x34],0x4
+ 217:	75 30                	jne    249 <run_native+0xd9>
+ 219:	48 89 df             	mov    rdi,rbx
+ 21c:	e8 00 00 00 00       	call   221 <run_native+0xb1>	21d: R_X86_64_PLT32	kd_episode_native_binding-0x4
+ 221:	48 89 df             	mov    rdi,rbx
+ 224:	49 89 c5             	mov    r13,rax
+ 227:	e8 00 00 00 00       	call   22c <run_native+0xbc>	228: R_X86_64_PLT32	kd_episode_root_done-0x4
+ 22c:	85 c0                	test   eax,eax
+ 22e:	75 1b                	jne    24b <run_native+0xdb>
+ 230:	48 89 d9             	mov    rcx,rbx
+ 233:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	236: R_X86_64_32S	kd_episode_native_done
+ 23a:	4c 89 ee             	mov    rsi,r13
+ 23d:	4c 89 e7             	mov    rdi,r12
+ 240:	e8 00 00 00 00       	call   245 <run_native+0xd5>	241: R_X86_64_PLT32	kd_mutex_resume_entry-0x4
+ 245:	0f 0b                	ud2
+ 247:	0f 0b                	ud2
+ 249:	0f 0b                	ud2
+ 24b:	0f 0b                	ud2
+ 24d:	0f 1f 00             	nop    DWORD PTR [rax]
+ 250:	90                   	nop
+ 251:	90                   	nop
+ 252:	90                   	nop
+ 253:	90                   	nop
+ 254:	90                   	nop
+ 255:	90                   	nop
+ 256:	90                   	nop
+ 257:	90                   	nop
+ 258:	90                   	nop
+ 259:	90                   	nop
+ 25a:	90                   	nop
+ 25b:	90                   	nop
+ 25c:	90                   	nop
+ 25d:	90                   	nop
+ 25e:	90                   	nop
+ 25f:	90                   	nop
+
+0000000000000260 <prepare_current>:
+ 260:	e8 00 00 00 00       	call   265 <prepare_current+0x5>	261: R_X86_64_PLT32	__fentry__-0x4
+ 265:	55                   	push   rbp
+ 266:	48 89 e5             	mov    rbp,rsp
+ 269:	41 57                	push   r15
+ 26b:	49 89 ff             	mov    r15,rdi
+ 26e:	41 56                	push   r14
+ 270:	41 55                	push   r13
+ 272:	41 89 f5             	mov    r13d,esi
+ 275:	41 54                	push   r12
+ 277:	53                   	push   rbx
+ 278:	48 83 ec 38          	sub    rsp,0x38
+ 27c:	48 89 55 b8          	mov    QWORD PTR [rbp-0x48],rdx
+ 280:	65 48 8b 05 00 00 00 00 	mov    rax,QWORD PTR gs:[rip+0x0]        # 288 <prepare_current+0x28>	284: R_X86_64_PC32	__ref_stack_chk_guard-0x4
+ 288:	48 89 45 d0          	mov    QWORD PTR [rbp-0x30],rax
+ 28c:	31 c0                	xor    eax,eax
+ 28e:	e8 00 00 00 00       	call   293 <prepare_current+0x33>	28f: R_X86_64_PLT32	kd_task_root_context_current-0x4
+ 293:	48 c7 45 c8 00 00 00 00 	mov    QWORD PTR [rbp-0x38],0x0
+ 29b:	48 89 c3             	mov    rbx,rax
+ 29e:	41 8d 45 ff          	lea    eax,[r13-0x1]
+ 2a2:	83 f8 10             	cmp    eax,0x10
+ 2a5:	0f 87 23 02 00 00    	ja     4ce <prepare_current+0x26e>
+ 2ab:	8b 0c 85 00 00 00 00 	mov    ecx,DWORD PTR [rax*4+0x0]	2ae: R_X86_64_32S	.rodata
+ 2b2:	41 89 ce             	mov    r14d,ecx
+ 2b5:	41 83 e6 fd          	and    r14d,0xfffffffd
+ 2b9:	41 83 fe 01          	cmp    r14d,0x1
+ 2bd:	0f 94 c2             	sete   dl
+ 2c0:	c6 45 c7 00          	mov    BYTE PTR [rbp-0x39],0x0
+ 2c4:	48 85 db             	test   rbx,rbx
+ 2c7:	0f 84 ff 01 00 00    	je     4cc <prepare_current+0x26c>
+ 2cd:	44 0f b6 a3 e8 01 00 00 	movzx  r12d,BYTE PTR [rbx+0x1e8]
+ 2d5:	41 80 fc 01          	cmp    r12b,0x1
+ 2d9:	0f 87 00 00 00 00    	ja     2df <prepare_current+0x7f>	2db: R_X86_64_PC32	.text.unlikely+0x24
+ 2df:	41 83 e4 01          	and    r12d,0x1
+ 2e3:	0f 84 e3 01 00 00    	je     4cc <prepare_current+0x26c>
+ 2e9:	65 48 8b 05 00 00 00 00 	mov    rax,QWORD PTR gs:[rip+0x0]        # 2f1 <prepare_current+0x91>	2ed: R_X86_64_PC32	const_current_task-0x4
+ 2f1:	48 39 83 78 01 00 00 	cmp    QWORD PTR [rbx+0x178],rax
+ 2f8:	41 0f 95 c4          	setne  r12b
+ 2fc:	4d 85 ff             	test   r15,r15
+ 2ff:	0f 94 c0             	sete   al
+ 302:	41 08 c4             	or     r12b,al
+ 305:	0f 85 c1 01 00 00    	jne    4cc <prepare_current+0x26c>
+ 30b:	48 8b 83 e0 01 00 00 	mov    rax,QWORD PTR [rbx+0x1e0]
+ 312:	48 89 45 b0          	mov    QWORD PTR [rbp-0x50],rax
+ 316:	48 85 c0             	test   rax,rax
+ 319:	0f 85 ad 01 00 00    	jne    4cc <prepare_current+0x26c>
+ 31f:	48 8b 83 b0 01 00 00 	mov    rax,QWORD PTR [rbx+0x1b0]
+ 326:	48 85 c0             	test   rax,rax
+ 329:	0f 84 9d 01 00 00    	je     4cc <prepare_current+0x26c>
+ 32f:	41 83 fd 0f          	cmp    r13d,0xf
+ 333:	77 30                	ja     365 <prepare_current+0x105>
+ 335:	be 52 a9 00 00       	mov    esi,0xa952
+ 33a:	4c 0f a3 ee          	bt     rsi,r13
+ 33e:	41 0f 92 c4          	setb   r12b
+ 342:	45 84 e4             	test   r12b,r12b
+ 345:	74 1e                	je     365 <prepare_current+0x105>
+ 347:	0f b6 83 00 02 00 00 	movzx  eax,BYTE PTR [rbx+0x200]
+ 34e:	3c 01                	cmp    al,0x1
+ 350:	0f 87 00 00 00 00    	ja     356 <prepare_current+0xf6>	352: R_X86_64_PC32	.text.unlikely-0x4
+ 356:	a8 01                	test   al,0x1
+ 358:	0f 85 6e 01 00 00    	jne    4cc <prepare_current+0x26c>
+ 35e:	48 8b 83 b0 01 00 00 	mov    rax,QWORD PTR [rbx+0x1b0]
+ 365:	39 48 1c             	cmp    DWORD PTR [rax+0x1c],ecx
+ 368:	0f 85 5e 01 00 00    	jne    4cc <prepare_current+0x26c>
+ 36e:	0f b6 83 98 01 00 00 	movzx  eax,BYTE PTR [rbx+0x198]
+ 375:	3c 01                	cmp    al,0x1
+ 377:	0f 87 00 00 00 00    	ja     37d <prepare_current+0x11d>	379: R_X86_64_PC32	.text.unlikely+0x46
+ 37d:	83 e0 01             	and    eax,0x1
+ 380:	38 d0                	cmp    al,dl
+ 382:	0f 85 44 01 00 00    	jne    4cc <prepare_current+0x26c>
+ 388:	48 8b 45 b8          	mov    rax,QWORD PTR [rbp-0x48]
+ 38c:	48 85 c0             	test   rax,rax
+ 38f:	0f 84 37 01 00 00    	je     4cc <prepare_current+0x26c>
+ 395:	48 89 c7             	mov    rdi,rax
+ 398:	e8 73 fc ff ff       	call   10 <resolve_source_target>
+ 39d:	44 39 e8             	cmp    eax,r13d
+ 3a0:	0f 85 26 01 00 00    	jne    4cc <prepare_current+0x26c>
+ 3a6:	41 83 fe 01          	cmp    r14d,0x1
+ 3aa:	75 56                	jne    402 <prepare_current+0x1a2>
+ 3ac:	65 66 f7 05 00 00 00 00 01 ff 	test   WORD PTR gs:[rip+0x0],0xff01        # 3b6 <prepare_current+0x156>	3b0: R_X86_64_PC32	__preempt_count-0x5
+ 3b6:	0f 85 24 01 00 00    	jne    4e0 <prepare_current+0x280>
+ 3bc:	ff 15 00 00 00 00    	call   QWORD PTR [rip+0x0]        # 3c2 <prepare_current+0x162>	3be: R_X86_64_PC32	pv_ops+0xe4
+ 3c2:	f6 c4 02             	test   ah,0x2
+ 3c5:	0f 84 15 01 00 00    	je     4e0 <prepare_current+0x280>
+ 3cb:	65 8b 05 00 00 00 00 	mov    eax,DWORD PTR gs:[rip+0x0]        # 3d2 <prepare_current+0x172>	3ce: R_X86_64_PC32	__preempt_count-0x4
+ 3d2:	8b 8b c0 01 00 00    	mov    ecx,DWORD PTR [rbx+0x1c0]
+ 3d8:	25 ff ff ff 7f       	and    eax,0x7fffffff
+ 3dd:	48 39 c8             	cmp    rax,rcx
+ 3e0:	0f 85 fa 00 00 00    	jne    4e0 <prepare_current+0x280>
+ 3e6:	45 84 e4             	test   r12b,r12b
+ 3e9:	0f 84 4e 01 00 00    	je     53d <prepare_current+0x2dd>
+ 3ef:	81 f9 fe 00 00 00    	cmp    ecx,0xfe
+ 3f5:	0f 87 76 01 00 00    	ja     571 <prepare_current+0x311>
+ 3fb:	65 ff 05 00 00 00 00 	inc    DWORD PTR gs:[rip+0x0]        # 402 <prepare_current+0x1a2>	3fe: R_X86_64_PC32	__preempt_count-0x4
+ 402:	48 89 df             	mov    rdi,rbx
+ 405:	e8 00 00 00 00       	call   40a <prepare_current+0x1aa>	406: R_X86_64_PLT32	kd_state_current_binding-0x4
+ 40a:	48 89 df             	mov    rdi,rbx
+ 40d:	48 89 c6             	mov    rsi,rax
+ 410:	49 89 c4             	mov    r12,rax
+ 413:	e8 00 00 00 00       	call   418 <prepare_current+0x1b8>	414: R_X86_64_PLT32	kd_state_is_current-0x4
+ 418:	84 c0                	test   al,al
+ 41a:	0f 84 27 01 00 00    	je     547 <prepare_current+0x2e7>
+ 420:	41 8b 44 24 18       	mov    eax,DWORD PTR [r12+0x18]
+ 425:	85 c0                	test   eax,eax
+ 427:	0f 85 1a 01 00 00    	jne    547 <prepare_current+0x2e7>
+ 42d:	48 8d 55 c7          	lea    rdx,[rbp-0x39]
+ 431:	4c 89 e6             	mov    rsi,r12
+ 434:	48 89 df             	mov    rdi,rbx
+ 437:	e8 00 00 00 00       	call   43c <prepare_current+0x1dc>	438: R_X86_64_PLT32	kd_task_progress_native-0x4
+ 43c:	85 c0                	test   eax,eax
+ 43e:	0f 85 05 01 00 00    	jne    549 <prepare_current+0x2e9>
+ 444:	48 8b bb b0 01 00 00 	mov    rdi,QWORD PTR [rbx+0x1b0]
+ 44b:	41 83 fd 0e          	cmp    r13d,0xe
+ 44f:	0f 87 8d 00 00 00    	ja     4e2 <prepare_current+0x282>
+ 455:	b8 a4 52 00 00       	mov    eax,0x52a4
+ 45a:	4c 0f a3 e8          	bt     rax,r13
+ 45e:	0f 83 e7 00 00 00    	jae    54b <prepare_current+0x2eb>
+ 464:	45 89 e8             	mov    r8d,r13d
+ 467:	4c 89 f9             	mov    rcx,r15
+ 46a:	4c 89 e2             	mov    rdx,r12
+ 46d:	48 89 de             	mov    rsi,rbx
+ 470:	e8 00 00 00 00       	call   475 <prepare_current+0x215>	471: R_X86_64_PLT32	kd_episode_unlock_native-0x4
+ 475:	85 c0                	test   eax,eax
+ 477:	0f 85 f8 00 00 00    	jne    575 <prepare_current+0x315>
+ 47d:	41 83 fe 01          	cmp    r14d,0x1
+ 481:	75 15                	jne    498 <prepare_current+0x238>
+ 483:	83 ab c0 01 00 00 01 	sub    DWORD PTR [rbx+0x1c0],0x1
+ 48a:	65 ff 0d 00 00 00 00 	dec    DWORD PTR gs:[rip+0x0]        # 491 <prepare_current+0x231>	48d: R_X86_64_PC32	__preempt_count-0x4
+ 491:	75 05                	jne    498 <prepare_current+0x238>
+ 493:	e8 00 00 00 00       	call   498 <prepare_current+0x238>	494: R_X86_64_PLT32	__SCT__preempt_schedule-0x4
+ 498:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+ 49c:	65 48 2b 05 00 00 00 00 	sub    rax,QWORD PTR gs:[rip+0x0]        # 4a4 <prepare_current+0x244>	4a0: R_X86_64_PC32	__ref_stack_chk_guard-0x4
+ 4a4:	0f 85 cd 00 00 00    	jne    577 <prepare_current+0x317>
+ 4aa:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+ 4ae:	48 83 c4 38          	add    rsp,0x38
+ 4b2:	5b                   	pop    rbx
+ 4b3:	41 5c                	pop    r12
+ 4b5:	41 5d                	pop    r13
+ 4b7:	41 5e                	pop    r14
+ 4b9:	41 5f                	pop    r15
+ 4bb:	5d                   	pop    rbp
+ 4bc:	31 d2                	xor    edx,edx
+ 4be:	31 c9                	xor    ecx,ecx
+ 4c0:	31 f6                	xor    esi,esi
+ 4c2:	31 ff                	xor    edi,edi
+ 4c4:	45 31 c0             	xor    r8d,r8d
+ 4c7:	e9 00 00 00 00       	jmp    4cc <prepare_current+0x26c>	4c8: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 4cc:	0f 0b                	ud2
+ 4ce:	31 d2                	xor    edx,edx
+ 4d0:	41 be 04 00 00 00    	mov    r14d,0x4
+ 4d6:	b9 04 00 00 00       	mov    ecx,0x4
+ 4db:	e9 e0 fd ff ff       	jmp    2c0 <prepare_current+0x60>
+ 4e0:	0f 0b                	ud2
+ 4e2:	48 8d 4d c8          	lea    rcx,[rbp-0x38]
+ 4e6:	44 89 ea             	mov    edx,r13d
+ 4e9:	4c 89 e6             	mov    rsi,r12
+ 4ec:	e8 00 00 00 00       	call   4f1 <prepare_current+0x291>	4ed: R_X86_64_PLT32	kd_episode_prepare_root-0x4
+ 4f1:	85 c0                	test   eax,eax
+ 4f3:	75 7a                	jne    56f <prepare_current+0x30f>
+ 4f5:	48 8b 4d c8          	mov    rcx,QWORD PTR [rbp-0x38]
+ 4f9:	48 8b 45 b8          	mov    rax,QWORD PTR [rbp-0x48]
+ 4fd:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	500: R_X86_64_32S	.text+0x170
+ 504:	4c 89 e6             	mov    rsi,r12
+ 507:	48 89 41 38          	mov    QWORD PTR [rcx+0x38],rax
+ 50b:	48 8b 41 08          	mov    rax,QWORD PTR [rcx+0x8]
+ 50f:	4c 8b 83 b8 01 00 00 	mov    r8,QWORD PTR [rbx+0x1b8]
+ 516:	48 8d b8 d0 04 00 00 	lea    rdi,[rax+0x4d0]
+ 51d:	e8 00 00 00 00       	call   522 <prepare_current+0x2c2>	51e: R_X86_64_PLT32	kd_mutex_prepare_entry-0x4
+ 522:	85 c0                	test   eax,eax
+ 524:	75 4d                	jne    573 <prepare_current+0x313>
+ 526:	48 8b 45 c8          	mov    rax,QWORD PTR [rbp-0x38]
+ 52a:	48 8b 40 08          	mov    rax,QWORD PTR [rax+0x8]
+ 52e:	48 05 d0 04 00 00    	add    rax,0x4d0
+ 534:	48 89 45 b0          	mov    QWORD PTR [rbp-0x50],rax
+ 538:	e9 5b ff ff ff       	jmp    498 <prepare_current+0x238>
+ 53d:	85 c9                	test   ecx,ecx
+ 53f:	0f 85 bd fe ff ff    	jne    402 <prepare_current+0x1a2>
+ 545:	0f 0b                	ud2
+ 547:	0f 0b                	ud2
+ 549:	0f 0b                	ud2
+ 54b:	41 83 fd 0a          	cmp    r13d,0xa
+ 54f:	75 91                	jne    4e2 <prepare_current+0x282>
+ 551:	41 b8 0a 00 00 00    	mov    r8d,0xa
+ 557:	4c 89 f9             	mov    rcx,r15
+ 55a:	4c 89 e2             	mov    rdx,r12
+ 55d:	48 89 de             	mov    rsi,rbx
+ 560:	e8 00 00 00 00       	call   565 <prepare_current+0x305>	561: R_X86_64_PLT32	kd_episode_downgrade_native-0x4
+ 565:	85 c0                	test   eax,eax
+ 567:	0f 84 2b ff ff ff    	je     498 <prepare_current+0x238>
+ 56d:	0f 0b                	ud2
+ 56f:	0f 0b                	ud2
+ 571:	0f 0b                	ud2
+ 573:	0f 0b                	ud2
+ 575:	0f 0b                	ud2
+ 577:	e8 00 00 00 00       	call   57c <prepare_current+0x31c>	578: R_X86_64_PLT32	__stack_chk_fail-0x4
+ 57c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+ 580:	90                   	nop
+ 581:	90                   	nop
+ 582:	90                   	nop
+ 583:	90                   	nop
+ 584:	90                   	nop
+ 585:	90                   	nop
+ 586:	90                   	nop
+ 587:	90                   	nop
+ 588:	90                   	nop
+ 589:	90                   	nop
+ 58a:	90                   	nop
+ 58b:	90                   	nop
+ 58c:	90                   	nop
+ 58d:	90                   	nop
+ 58e:	90                   	nop
+ 58f:	90                   	nop
+
+0000000000000590 <kd_mutex_bind_current>:
+ 590:	e8 00 00 00 00       	call   595 <kd_mutex_bind_current+0x5>	591: R_X86_64_PLT32	__fentry__-0x4
+ 595:	55                   	push   rbp
+ 596:	48 89 e5             	mov    rbp,rsp
+ 599:	41 56                	push   r14
+ 59b:	41 55                	push   r13
+ 59d:	49 89 f5             	mov    r13,rsi
+ 5a0:	41 54                	push   r12
+ 5a2:	49 89 fc             	mov    r12,rdi
+ 5a5:	53                   	push   rbx
+ 5a6:	e8 00 00 00 00       	call   5ab <kd_mutex_bind_current+0x1b>	5a7: R_X86_64_PLT32	kd_task_root_context_current-0x4
+ 5ab:	48 85 c0             	test   rax,rax
+ 5ae:	0f 84 d7 00 00 00    	je     68b <kd_mutex_bind_current+0xfb>
+ 5b4:	44 0f b6 b0 e8 01 00 00 	movzx  r14d,BYTE PTR [rax+0x1e8]
+ 5bc:	48 89 c3             	mov    rbx,rax
+ 5bf:	41 80 fe 01          	cmp    r14b,0x1
+ 5c3:	0f 87 00 00 00 00    	ja     5c9 <kd_mutex_bind_current+0x39>	5c5: R_X86_64_PC32	.text.unlikely+0x68
+ 5c9:	41 83 e6 01          	and    r14d,0x1
+ 5cd:	0f 84 b8 00 00 00    	je     68b <kd_mutex_bind_current+0xfb>
+ 5d3:	65 48 8b 05 00 00 00 00 	mov    rax,QWORD PTR gs:[rip+0x0]        # 5db <kd_mutex_bind_current+0x4b>	5d7: R_X86_64_PC32	const_current_task-0x4
+ 5db:	48 39 83 78 01 00 00 	cmp    QWORD PTR [rbx+0x178],rax
+ 5e2:	0f 85 a3 00 00 00    	jne    68b <kd_mutex_bind_current+0xfb>
+ 5e8:	4d 85 e4             	test   r12,r12
+ 5eb:	0f 84 9a 00 00 00    	je     68b <kd_mutex_bind_current+0xfb>
+ 5f1:	49 83 fd 07          	cmp    r13,0x7
+ 5f5:	0f 86 90 00 00 00    	jbe    68b <kd_mutex_bind_current+0xfb>
+ 5fb:	48 83 bb e0 01 00 00 00 	cmp    QWORD PTR [rbx+0x1e0],0x0
+ 603:	0f 85 98 00 00 00    	jne    6a1 <kd_mutex_bind_current+0x111>
+ 609:	48 83 bb b0 01 00 00 00 	cmp    QWORD PTR [rbx+0x1b0],0x0
+ 611:	0f 85 8a 00 00 00    	jne    6a1 <kd_mutex_bind_current+0x111>
+ 617:	48 8b bb 30 01 00 00 	mov    rdi,QWORD PTR [rbx+0x130]
+ 61e:	49 39 3c 24          	cmp    QWORD PTR [r12],rdi
+ 622:	75 67                	jne    68b <kd_mutex_bind_current+0xfb>
+ 624:	e8 00 00 00 00       	call   629 <kd_mutex_bind_current+0x99>	625: R_X86_64_PLT32	kd_request_pool_empty-0x4
+ 629:	84 c0                	test   al,al
+ 62b:	74 5e                	je     68b <kd_mutex_bind_current+0xfb>
+ 62d:	48 89 df             	mov    rdi,rbx
+ 630:	e8 00 00 00 00       	call   635 <kd_mutex_bind_current+0xa5>	631: R_X86_64_PLT32	kd_state_current_binding-0x4
+ 635:	48 89 df             	mov    rdi,rbx
+ 638:	48 89 c6             	mov    rsi,rax
+ 63b:	49 89 c6             	mov    r14,rax
+ 63e:	e8 00 00 00 00       	call   643 <kd_mutex_bind_current+0xb3>	63f: R_X86_64_PLT32	kd_state_is_current-0x4
+ 643:	84 c0                	test   al,al
+ 645:	74 61                	je     6a8 <kd_mutex_bind_current+0x118>
+ 647:	41 8b 46 18          	mov    eax,DWORD PTR [r14+0x18]
+ 64b:	85 c0                	test   eax,eax
+ 64d:	75 59                	jne    6a8 <kd_mutex_bind_current+0x118>
+ 64f:	4c 89 ab b8 01 00 00 	mov    QWORD PTR [rbx+0x1b8],r13
+ 656:	4c 89 a3 b0 01 00 00 	mov    QWORD PTR [rbx+0x1b0],r12
+ 65d:	45 0f b6 64 24 18    	movzx  r12d,BYTE PTR [r12+0x18]
+ 663:	41 80 fc 01          	cmp    r12b,0x1
+ 667:	0f 87 00 00 00 00    	ja     66d <kd_mutex_bind_current+0xdd>	669: R_X86_64_PC32	.text.unlikely+0x7d
+ 66d:	41 83 e4 01          	and    r12d,0x1
+ 671:	31 c0                	xor    eax,eax
+ 673:	44 88 a3 98 01 00 00 	mov    BYTE PTR [rbx+0x198],r12b
+ 67a:	5b                   	pop    rbx
+ 67b:	41 5c                	pop    r12
+ 67d:	41 5d                	pop    r13
+ 67f:	41 5e                	pop    r14
+ 681:	5d                   	pop    rbp
+ 682:	31 f6                	xor    esi,esi
+ 684:	31 ff                	xor    edi,edi
+ 686:	e9 00 00 00 00       	jmp    68b <kd_mutex_bind_current+0xfb>	687: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 68b:	5b                   	pop    rbx
+ 68c:	b8 ea ff ff ff       	mov    eax,0xffffffea
+ 691:	41 5c                	pop    r12
+ 693:	41 5d                	pop    r13
+ 695:	41 5e                	pop    r14
+ 697:	5d                   	pop    rbp
+ 698:	31 f6                	xor    esi,esi
+ 69a:	31 ff                	xor    edi,edi
+ 69c:	e9 00 00 00 00       	jmp    6a1 <kd_mutex_bind_current+0x111>	69d: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 6a1:	b8 f0 ff ff ff       	mov    eax,0xfffffff0
+ 6a6:	eb d2                	jmp    67a <kd_mutex_bind_current+0xea>
+ 6a8:	b8 ff ff ff ff       	mov    eax,0xffffffff
+ 6ad:	eb cb                	jmp    67a <kd_mutex_bind_current+0xea>
+ 6af:	90                   	nop
+ 6b0:	90                   	nop
+ 6b1:	90                   	nop
+ 6b2:	90                   	nop
+ 6b3:	90                   	nop
+ 6b4:	90                   	nop
+ 6b5:	90                   	nop
+ 6b6:	90                   	nop
+ 6b7:	90                   	nop
+ 6b8:	90                   	nop
+ 6b9:	90                   	nop
+ 6ba:	90                   	nop
+ 6bb:	90                   	nop
+ 6bc:	90                   	nop
+ 6bd:	90                   	nop
+ 6be:	90                   	nop
+ 6bf:	90                   	nop
+
+00000000000006c0 <kd_mutex_resolve_entry_operation>:
+ 6c0:	e8 00 00 00 00       	call   6c5 <kd_mutex_resolve_entry_operation+0x5>	6c1: R_X86_64_PLT32	__fentry__-0x4
+ 6c5:	55                   	push   rbp
+ 6c6:	b8 01 00 00 00       	mov    eax,0x1
+ 6cb:	48 89 e5             	mov    rbp,rsp
+ 6ce:	48 81 fe 00 00 00 00 	cmp    rsi,0x0	6d1: R_X86_64_32S	kd_mutex_lock_entry_asm
+ 6d5:	74 0e                	je     6e5 <kd_mutex_resolve_entry_operation+0x25>
+ 6d7:	31 c0                	xor    eax,eax
+ 6d9:	48 81 fe 00 00 00 00 	cmp    rsi,0x0	6dc: R_X86_64_32S	kd_mutex_unlock_entry_asm
+ 6e0:	0f 94 c0             	sete   al
+ 6e3:	01 c0                	add    eax,eax
+ 6e5:	5d                   	pop    rbp
+ 6e6:	31 f6                	xor    esi,esi
+ 6e8:	e9 00 00 00 00       	jmp    6ed <kd_mutex_resolve_entry_operation+0x2d>	6e9: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 6ed:	0f 1f 00             	nop    DWORD PTR [rax]
+ 6f0:	90                   	nop
+ 6f1:	90                   	nop
+ 6f2:	90                   	nop
+ 6f3:	90                   	nop
+ 6f4:	90                   	nop
+ 6f5:	90                   	nop
+ 6f6:	90                   	nop
+ 6f7:	90                   	nop
+ 6f8:	90                   	nop
+ 6f9:	90                   	nop
+ 6fa:	90                   	nop
+ 6fb:	90                   	nop
+ 6fc:	90                   	nop
+ 6fd:	90                   	nop
+ 6fe:	90                   	nop
+ 6ff:	90                   	nop
+
+0000000000000700 <kd_spin_resolve_entry_operation>:
+ 700:	e8 00 00 00 00       	call   705 <kd_spin_resolve_entry_operation+0x5>	701: R_X86_64_PLT32	__fentry__-0x4
+ 705:	55                   	push   rbp
+ 706:	48 89 e5             	mov    rbp,rsp
+ 709:	48 81 ff 00 00 00 00 	cmp    rdi,0x0	70c: R_X86_64_32S	kd_spin_lock_entry_asm
+ 710:	74 17                	je     729 <kd_spin_resolve_entry_operation+0x29>
+ 712:	31 c0                	xor    eax,eax
+ 714:	48 81 ff 00 00 00 00 	cmp    rdi,0x0	717: R_X86_64_32S	kd_spin_unlock_entry_asm
+ 71b:	5d                   	pop    rbp
+ 71c:	0f 94 c0             	sete   al
+ 71f:	8d 04 80             	lea    eax,[rax+rax*4]
+ 722:	31 ff                	xor    edi,edi
+ 724:	e9 00 00 00 00       	jmp    729 <kd_spin_resolve_entry_operation+0x29>	725: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 729:	b8 04 00 00 00       	mov    eax,0x4
+ 72e:	5d                   	pop    rbp
+ 72f:	31 ff                	xor    edi,edi
+ 731:	e9 00 00 00 00       	jmp    736 <kd_spin_resolve_entry_operation+0x36>	732: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 736:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ 740:	90                   	nop
+ 741:	90                   	nop
+ 742:	90                   	nop
+ 743:	90                   	nop
+ 744:	90                   	nop
+ 745:	90                   	nop
+ 746:	90                   	nop
+ 747:	90                   	nop
+ 748:	90                   	nop
+ 749:	90                   	nop
+ 74a:	90                   	nop
+ 74b:	90                   	nop
+ 74c:	90                   	nop
+ 74d:	90                   	nop
+ 74e:	90                   	nop
+ 74f:	90                   	nop
+
+0000000000000750 <kd_rw_resolve_entry_operation>:
+ 750:	e8 00 00 00 00       	call   755 <kd_rw_resolve_entry_operation+0x5>	751: R_X86_64_PLT32	__fentry__-0x4
+ 755:	55                   	push   rbp
+ 756:	49 89 f8             	mov    r8,rdi
+ 759:	31 c0                	xor    eax,eax
+ 75b:	48 89 e5             	mov    rbp,rsp
+ 75e:	48 83 ec 18          	sub    rsp,0x18
+ 762:	89 c1                	mov    ecx,eax
+ 764:	89 c6                	mov    esi,eax
+ 766:	83 f8 11             	cmp    eax,0x11
+ 769:	77 4f                	ja     7ba <kd_rw_resolve_entry_operation+0x6a>
+ 76b:	48 89 c2             	mov    rdx,rax
+ 76e:	48 c1 e2 04          	shl    rdx,0x4
+ 772:	4c 39 82 00 00 00 00 	cmp    QWORD PTR [rdx+0x0],r8	775: R_X86_64_32S	.rodata+0x68
+ 779:	74 1d                	je     798 <kd_rw_resolve_entry_operation+0x48>
+ 77b:	48 83 c0 01          	add    rax,0x1
+ 77f:	48 83 f8 12          	cmp    rax,0x12
+ 783:	75 dd                	jne    762 <kd_rw_resolve_entry_operation+0x12>
+ 785:	c9                   	leave
+ 786:	31 c0                	xor    eax,eax
+ 788:	31 d2                	xor    edx,edx
+ 78a:	31 c9                	xor    ecx,ecx
+ 78c:	31 f6                	xor    esi,esi
+ 78e:	31 ff                	xor    edi,edi
+ 790:	45 31 c0             	xor    r8d,r8d
+ 793:	e9 00 00 00 00       	jmp    798 <kd_rw_resolve_entry_operation+0x48>	794: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 798:	89 c8                	mov    eax,ecx
+ 79a:	83 f9 11             	cmp    ecx,0x11
+ 79d:	77 3f                	ja     7de <kd_rw_resolve_entry_operation+0x8e>
+ 79f:	48 c1 e0 04          	shl    rax,0x4
+ 7a3:	8b 80 00 00 00 00    	mov    eax,DWORD PTR [rax+0x0]	7a5: R_X86_64_32S	.rodata+0x60
+ 7a9:	c9                   	leave
+ 7aa:	31 d2                	xor    edx,edx
+ 7ac:	31 c9                	xor    ecx,ecx
+ 7ae:	31 f6                	xor    esi,esi
+ 7b0:	31 ff                	xor    edi,edi
+ 7b2:	45 31 c0             	xor    r8d,r8d
+ 7b5:	e9 00 00 00 00       	jmp    7ba <kd_rw_resolve_entry_operation+0x6a>	7b6: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 7ba:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	7bd: R_X86_64_32S	.data+0x20
+ 7c1:	4c 89 45 e8          	mov    QWORD PTR [rbp-0x18],r8
+ 7c5:	89 45 f4             	mov    DWORD PTR [rbp-0xc],eax
+ 7c8:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+ 7cc:	e8 00 00 00 00       	call   7d1 <kd_rw_resolve_entry_operation+0x81>	7cd: R_X86_64_PLT32	__ubsan_handle_out_of_bounds-0x4
+ 7d1:	4c 8b 45 e8          	mov    r8,QWORD PTR [rbp-0x18]
+ 7d5:	8b 4d f4             	mov    ecx,DWORD PTR [rbp-0xc]
+ 7d8:	48 8b 45 f8          	mov    rax,QWORD PTR [rbp-0x8]
+ 7dc:	eb 8d                	jmp    76b <kd_rw_resolve_entry_operation+0x1b>
+ 7de:	48 89 c6             	mov    rsi,rax
+ 7e1:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	7e4: R_X86_64_32S	.data
+ 7e8:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+ 7ec:	e8 00 00 00 00       	call   7f1 <kd_rw_resolve_entry_operation+0xa1>	7ed: R_X86_64_PLT32	__ubsan_handle_out_of_bounds-0x4
+ 7f1:	48 8b 45 f8          	mov    rax,QWORD PTR [rbp-0x8]
+ 7f5:	eb a8                	jmp    79f <kd_rw_resolve_entry_operation+0x4f>
+ 7f7:	66 0f 1f 84 00 00 00 00 00 	nop    WORD PTR [rax+rax*1+0x0]
+ 800:	90                   	nop
+ 801:	90                   	nop
+ 802:	90                   	nop
+ 803:	90                   	nop
+ 804:	90                   	nop
+ 805:	90                   	nop
+ 806:	90                   	nop
+ 807:	90                   	nop
+ 808:	90                   	nop
+ 809:	90                   	nop
+ 80a:	90                   	nop
+ 80b:	90                   	nop
+ 80c:	90                   	nop
+ 80d:	90                   	nop
+ 80e:	90                   	nop
+ 80f:	90                   	nop
+
+0000000000000810 <kd_spin_init>:
+ 810:	e8 00 00 00 00       	call   815 <kd_spin_init+0x5>	811: R_X86_64_PLT32	__fentry__-0x4
+ 815:	55                   	push   rbp
+ 816:	48 89 e5             	mov    rbp,rsp
+ 819:	e8 00 00 00 00       	call   81e <kd_spin_init+0xe>	81a: R_X86_64_PLT32	kd_mutex_init-0x4
+ 81e:	5d                   	pop    rbp
+ 81f:	31 ff                	xor    edi,edi
+ 821:	e9 00 00 00 00       	jmp    826 <kd_spin_init+0x16>	822: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 826:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ 830:	90                   	nop
+ 831:	90                   	nop
+ 832:	90                   	nop
+ 833:	90                   	nop
+ 834:	90                   	nop
+ 835:	90                   	nop
+ 836:	90                   	nop
+ 837:	90                   	nop
+ 838:	90                   	nop
+ 839:	90                   	nop
+ 83a:	90                   	nop
+ 83b:	90                   	nop
+ 83c:	90                   	nop
+ 83d:	90                   	nop
+ 83e:	90                   	nop
+ 83f:	90                   	nop
+
+0000000000000840 <kd_mutex_prepare_lock_current>:
+ 840:	e8 00 00 00 00       	call   845 <kd_mutex_prepare_lock_current+0x5>	841: R_X86_64_PLT32	__fentry__-0x4
+ 845:	55                   	push   rbp
+ 846:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	849: R_X86_64_32S	kd_mutex_lock_entry_asm
+ 84d:	be 01 00 00 00       	mov    esi,0x1
+ 852:	48 89 e5             	mov    rbp,rsp
+ 855:	e8 06 fa ff ff       	call   260 <prepare_current>
+ 85a:	5d                   	pop    rbp
+ 85b:	31 d2                	xor    edx,edx
+ 85d:	31 f6                	xor    esi,esi
+ 85f:	31 ff                	xor    edi,edi
+ 861:	e9 00 00 00 00       	jmp    866 <kd_mutex_prepare_lock_current+0x26>	862: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 866:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ 870:	90                   	nop
+ 871:	90                   	nop
+ 872:	90                   	nop
+ 873:	90                   	nop
+ 874:	90                   	nop
+ 875:	90                   	nop
+ 876:	90                   	nop
+ 877:	90                   	nop
+ 878:	90                   	nop
+ 879:	90                   	nop
+ 87a:	90                   	nop
+ 87b:	90                   	nop
+ 87c:	90                   	nop
+ 87d:	90                   	nop
+ 87e:	90                   	nop
+ 87f:	90                   	nop
+
+0000000000000880 <kd_mutex_prepare_unlock_current>:
+ 880:	e8 00 00 00 00       	call   885 <kd_mutex_prepare_unlock_current+0x5>	881: R_X86_64_PLT32	__fentry__-0x4
+ 885:	55                   	push   rbp
+ 886:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	889: R_X86_64_32S	kd_mutex_unlock_entry_asm
+ 88d:	be 02 00 00 00       	mov    esi,0x2
+ 892:	48 89 e5             	mov    rbp,rsp
+ 895:	e8 c6 f9 ff ff       	call   260 <prepare_current>
+ 89a:	5d                   	pop    rbp
+ 89b:	31 d2                	xor    edx,edx
+ 89d:	31 f6                	xor    esi,esi
+ 89f:	31 ff                	xor    edi,edi
+ 8a1:	e9 00 00 00 00       	jmp    8a6 <kd_mutex_prepare_unlock_current+0x26>	8a2: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 8a6:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ 8b0:	90                   	nop
+ 8b1:	90                   	nop
+ 8b2:	90                   	nop
+ 8b3:	90                   	nop
+ 8b4:	90                   	nop
+ 8b5:	90                   	nop
+ 8b6:	90                   	nop
+ 8b7:	90                   	nop
+ 8b8:	90                   	nop
+ 8b9:	90                   	nop
+ 8ba:	90                   	nop
+ 8bb:	90                   	nop
+ 8bc:	90                   	nop
+ 8bd:	90                   	nop
+ 8be:	90                   	nop
+ 8bf:	90                   	nop
+
+00000000000008c0 <kd_spin_prepare_lock_current>:
+ 8c0:	e8 00 00 00 00       	call   8c5 <kd_spin_prepare_lock_current+0x5>	8c1: R_X86_64_PLT32	__fentry__-0x4
+ 8c5:	55                   	push   rbp
+ 8c6:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	8c9: R_X86_64_32S	kd_spin_lock_entry_asm
+ 8cd:	be 04 00 00 00       	mov    esi,0x4
+ 8d2:	48 89 e5             	mov    rbp,rsp
+ 8d5:	e8 86 f9 ff ff       	call   260 <prepare_current>
+ 8da:	5d                   	pop    rbp
+ 8db:	31 d2                	xor    edx,edx
+ 8dd:	31 f6                	xor    esi,esi
+ 8df:	31 ff                	xor    edi,edi
+ 8e1:	e9 00 00 00 00       	jmp    8e6 <kd_spin_prepare_lock_current+0x26>	8e2: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 8e6:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ 8f0:	90                   	nop
+ 8f1:	90                   	nop
+ 8f2:	90                   	nop
+ 8f3:	90                   	nop
+ 8f4:	90                   	nop
+ 8f5:	90                   	nop
+ 8f6:	90                   	nop
+ 8f7:	90                   	nop
+ 8f8:	90                   	nop
+ 8f9:	90                   	nop
+ 8fa:	90                   	nop
+ 8fb:	90                   	nop
+ 8fc:	90                   	nop
+ 8fd:	90                   	nop
+ 8fe:	90                   	nop
+ 8ff:	90                   	nop
+
+0000000000000900 <kd_spin_prepare_unlock_current>:
+ 900:	e8 00 00 00 00       	call   905 <kd_spin_prepare_unlock_current+0x5>	901: R_X86_64_PLT32	__fentry__-0x4
+ 905:	55                   	push   rbp
+ 906:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	909: R_X86_64_32S	kd_spin_unlock_entry_asm
+ 90d:	be 05 00 00 00       	mov    esi,0x5
+ 912:	48 89 e5             	mov    rbp,rsp
+ 915:	e8 46 f9 ff ff       	call   260 <prepare_current>
+ 91a:	5d                   	pop    rbp
+ 91b:	31 d2                	xor    edx,edx
+ 91d:	31 f6                	xor    esi,esi
+ 91f:	31 ff                	xor    edi,edi
+ 921:	e9 00 00 00 00       	jmp    926 <kd_spin_prepare_unlock_current+0x26>	922: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 926:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ 930:	90                   	nop
+ 931:	90                   	nop
+ 932:	90                   	nop
+ 933:	90                   	nop
+ 934:	90                   	nop
+ 935:	90                   	nop
+ 936:	90                   	nop
+ 937:	90                   	nop
+ 938:	90                   	nop
+ 939:	90                   	nop
+ 93a:	90                   	nop
+ 93b:	90                   	nop
+ 93c:	90                   	nop
+ 93d:	90                   	nop
+ 93e:	90                   	nop
+ 93f:	90                   	nop
+
+0000000000000940 <kd_rwsem_prepare_source_current>:
+ 940:	e8 00 00 00 00       	call   945 <kd_rwsem_prepare_source_current+0x5>	941: R_X86_64_PLT32	__fentry__-0x4
+ 945:	8d 46 ff             	lea    eax,[rsi-0x1]
+ 948:	83 f8 10             	cmp    eax,0x10
+ 94b:	77 1f                	ja     96c <kd_rwsem_prepare_source_current+0x2c>
+ 94d:	83 3c 85 00 00 00 00 02 	cmp    DWORD PTR [rax*4+0x0],0x2	950: R_X86_64_32S	.rodata
+ 955:	75 15                	jne    96c <kd_rwsem_prepare_source_current+0x2c>
+ 957:	55                   	push   rbp
+ 958:	48 89 e5             	mov    rbp,rsp
+ 95b:	e8 00 f9 ff ff       	call   260 <prepare_current>
+ 960:	5d                   	pop    rbp
+ 961:	31 d2                	xor    edx,edx
+ 963:	31 f6                	xor    esi,esi
+ 965:	31 ff                	xor    edi,edi
+ 967:	e9 00 00 00 00       	jmp    96c <kd_rwsem_prepare_source_current+0x2c>	968: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 96c:	0f 0b                	ud2
+ 96e:	66 90                	xchg   ax,ax
+ 970:	90                   	nop
+ 971:	90                   	nop
+ 972:	90                   	nop
+ 973:	90                   	nop
+ 974:	90                   	nop
+ 975:	90                   	nop
+ 976:	90                   	nop
+ 977:	90                   	nop
+ 978:	90                   	nop
+ 979:	90                   	nop
+ 97a:	90                   	nop
+ 97b:	90                   	nop
+ 97c:	90                   	nop
+ 97d:	90                   	nop
+ 97e:	90                   	nop
+ 97f:	90                   	nop
+
+0000000000000980 <kd_rwsem_prepare_down_read_current>:
+ 980:	e8 00 00 00 00       	call   985 <kd_rwsem_prepare_down_read_current+0x5>	981: R_X86_64_PLT32	__fentry__-0x4
+ 985:	55                   	push   rbp
+ 986:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	989: R_X86_64_32S	kd_rwsem_down_read_entry_asm
+ 98d:	be 06 00 00 00       	mov    esi,0x6
+ 992:	48 89 e5             	mov    rbp,rsp
+ 995:	e8 c6 f8 ff ff       	call   260 <prepare_current>
+ 99a:	5d                   	pop    rbp
+ 99b:	31 d2                	xor    edx,edx
+ 99d:	31 f6                	xor    esi,esi
+ 99f:	31 ff                	xor    edi,edi
+ 9a1:	e9 00 00 00 00       	jmp    9a6 <kd_rwsem_prepare_down_read_current+0x26>	9a2: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 9a6:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ 9b0:	90                   	nop
+ 9b1:	90                   	nop
+ 9b2:	90                   	nop
+ 9b3:	90                   	nop
+ 9b4:	90                   	nop
+ 9b5:	90                   	nop
+ 9b6:	90                   	nop
+ 9b7:	90                   	nop
+ 9b8:	90                   	nop
+ 9b9:	90                   	nop
+ 9ba:	90                   	nop
+ 9bb:	90                   	nop
+ 9bc:	90                   	nop
+ 9bd:	90                   	nop
+ 9be:	90                   	nop
+ 9bf:	90                   	nop
+
+00000000000009c0 <kd_rwsem_prepare_up_read_current>:
+ 9c0:	e8 00 00 00 00       	call   9c5 <kd_rwsem_prepare_up_read_current+0x5>	9c1: R_X86_64_PLT32	__fentry__-0x4
+ 9c5:	55                   	push   rbp
+ 9c6:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	9c9: R_X86_64_32S	kd_rwsem_up_read_entry_asm
+ 9cd:	be 07 00 00 00       	mov    esi,0x7
+ 9d2:	48 89 e5             	mov    rbp,rsp
+ 9d5:	e8 86 f8 ff ff       	call   260 <prepare_current>
+ 9da:	5d                   	pop    rbp
+ 9db:	31 d2                	xor    edx,edx
+ 9dd:	31 f6                	xor    esi,esi
+ 9df:	31 ff                	xor    edi,edi
+ 9e1:	e9 00 00 00 00       	jmp    9e6 <kd_rwsem_prepare_up_read_current+0x26>	9e2: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 9e6:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ 9f0:	90                   	nop
+ 9f1:	90                   	nop
+ 9f2:	90                   	nop
+ 9f3:	90                   	nop
+ 9f4:	90                   	nop
+ 9f5:	90                   	nop
+ 9f6:	90                   	nop
+ 9f7:	90                   	nop
+ 9f8:	90                   	nop
+ 9f9:	90                   	nop
+ 9fa:	90                   	nop
+ 9fb:	90                   	nop
+ 9fc:	90                   	nop
+ 9fd:	90                   	nop
+ 9fe:	90                   	nop
+ 9ff:	90                   	nop
+
+0000000000000a00 <kd_rwsem_prepare_down_write_current>:
+ a00:	e8 00 00 00 00       	call   a05 <kd_rwsem_prepare_down_write_current+0x5>	a01: R_X86_64_PLT32	__fentry__-0x4
+ a05:	55                   	push   rbp
+ a06:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	a09: R_X86_64_32S	kd_rwsem_down_write_entry_asm
+ a0d:	be 08 00 00 00       	mov    esi,0x8
+ a12:	48 89 e5             	mov    rbp,rsp
+ a15:	e8 46 f8 ff ff       	call   260 <prepare_current>
+ a1a:	5d                   	pop    rbp
+ a1b:	31 d2                	xor    edx,edx
+ a1d:	31 f6                	xor    esi,esi
+ a1f:	31 ff                	xor    edi,edi
+ a21:	e9 00 00 00 00       	jmp    a26 <kd_rwsem_prepare_down_write_current+0x26>	a22: R_X86_64_PLT32	__x86_return_thunk-0x4
+ a26:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ a30:	90                   	nop
+ a31:	90                   	nop
+ a32:	90                   	nop
+ a33:	90                   	nop
+ a34:	90                   	nop
+ a35:	90                   	nop
+ a36:	90                   	nop
+ a37:	90                   	nop
+ a38:	90                   	nop
+ a39:	90                   	nop
+ a3a:	90                   	nop
+ a3b:	90                   	nop
+ a3c:	90                   	nop
+ a3d:	90                   	nop
+ a3e:	90                   	nop
+ a3f:	90                   	nop
+
+0000000000000a40 <kd_rwsem_prepare_down_write_killable_current>:
+ a40:	e8 00 00 00 00       	call   a45 <kd_rwsem_prepare_down_write_killable_current+0x5>	a41: R_X86_64_PLT32	__fentry__-0x4
+ a45:	55                   	push   rbp
+ a46:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	a49: R_X86_64_32S	kd_rwsem_down_write_killable_entry_asm
+ a4d:	be 0f 00 00 00       	mov    esi,0xf
+ a52:	48 89 e5             	mov    rbp,rsp
+ a55:	e8 06 f8 ff ff       	call   260 <prepare_current>
+ a5a:	31 d2                	xor    edx,edx
+ a5c:	5d                   	pop    rbp
+ a5d:	31 f6                	xor    esi,esi
+ a5f:	31 ff                	xor    edi,edi
+ a61:	e9 00 00 00 00       	jmp    a66 <kd_rwsem_prepare_down_write_killable_current+0x26>	a62: R_X86_64_PLT32	__x86_return_thunk-0x4
+ a66:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ a70:	90                   	nop
+ a71:	90                   	nop
+ a72:	90                   	nop
+ a73:	90                   	nop
+ a74:	90                   	nop
+ a75:	90                   	nop
+ a76:	90                   	nop
+ a77:	90                   	nop
+ a78:	90                   	nop
+ a79:	90                   	nop
+ a7a:	90                   	nop
+ a7b:	90                   	nop
+ a7c:	90                   	nop
+ a7d:	90                   	nop
+ a7e:	90                   	nop
+ a7f:	90                   	nop
+
+0000000000000a80 <kd_rwsem_prepare_up_write_current>:
+ a80:	e8 00 00 00 00       	call   a85 <kd_rwsem_prepare_up_write_current+0x5>	a81: R_X86_64_PLT32	__fentry__-0x4
+ a85:	55                   	push   rbp
+ a86:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	a89: R_X86_64_32S	kd_rwsem_up_write_entry_asm
+ a8d:	be 09 00 00 00       	mov    esi,0x9
+ a92:	48 89 e5             	mov    rbp,rsp
+ a95:	e8 c6 f7 ff ff       	call   260 <prepare_current>
+ a9a:	5d                   	pop    rbp
+ a9b:	31 d2                	xor    edx,edx
+ a9d:	31 f6                	xor    esi,esi
+ a9f:	31 ff                	xor    edi,edi
+ aa1:	e9 00 00 00 00       	jmp    aa6 <kd_rwsem_prepare_up_write_current+0x26>	aa2: R_X86_64_PLT32	__x86_return_thunk-0x4
+ aa6:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ ab0:	90                   	nop
+ ab1:	90                   	nop
+ ab2:	90                   	nop
+ ab3:	90                   	nop
+ ab4:	90                   	nop
+ ab5:	90                   	nop
+ ab6:	90                   	nop
+ ab7:	90                   	nop
+ ab8:	90                   	nop
+ ab9:	90                   	nop
+ aba:	90                   	nop
+ abb:	90                   	nop
+ abc:	90                   	nop
+ abd:	90                   	nop
+ abe:	90                   	nop
+ abf:	90                   	nop
+
+0000000000000ac0 <kd_rwsem_prepare_downgrade_write_current>:
+ ac0:	e8 00 00 00 00       	call   ac5 <kd_rwsem_prepare_downgrade_write_current+0x5>	ac1: R_X86_64_PLT32	__fentry__-0x4
+ ac5:	55                   	push   rbp
+ ac6:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	ac9: R_X86_64_32S	kd_rwsem_downgrade_write_entry_asm
+ acd:	be 0a 00 00 00       	mov    esi,0xa
+ ad2:	48 89 e5             	mov    rbp,rsp
+ ad5:	e8 86 f7 ff ff       	call   260 <prepare_current>
+ ada:	5d                   	pop    rbp
+ adb:	31 d2                	xor    edx,edx
+ add:	31 f6                	xor    esi,esi
+ adf:	31 ff                	xor    edi,edi
+ ae1:	e9 00 00 00 00       	jmp    ae6 <kd_rwsem_prepare_downgrade_write_current+0x26>	ae2: R_X86_64_PLT32	__x86_return_thunk-0x4
+ ae6:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ af0:	90                   	nop
+ af1:	90                   	nop
+ af2:	90                   	nop
+ af3:	90                   	nop
+ af4:	90                   	nop
+ af5:	90                   	nop
+ af6:	90                   	nop
+ af7:	90                   	nop
+ af8:	90                   	nop
+ af9:	90                   	nop
+ afa:	90                   	nop
+ afb:	90                   	nop
+ afc:	90                   	nop
+ afd:	90                   	nop
+ afe:	90                   	nop
+ aff:	90                   	nop
+
+0000000000000b00 <kd_rwlock_prepare_read_lock_current>:
+ b00:	e8 00 00 00 00       	call   b05 <kd_rwlock_prepare_read_lock_current+0x5>	b01: R_X86_64_PLT32	__fentry__-0x4
+ b05:	55                   	push   rbp
+ b06:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	b09: R_X86_64_32S	kd_rwlock_read_lock_entry_asm
+ b0d:	be 0b 00 00 00       	mov    esi,0xb
+ b12:	48 89 e5             	mov    rbp,rsp
+ b15:	e8 46 f7 ff ff       	call   260 <prepare_current>
+ b1a:	5d                   	pop    rbp
+ b1b:	31 d2                	xor    edx,edx
+ b1d:	31 f6                	xor    esi,esi
+ b1f:	31 ff                	xor    edi,edi
+ b21:	e9 00 00 00 00       	jmp    b26 <kd_rwlock_prepare_read_lock_current+0x26>	b22: R_X86_64_PLT32	__x86_return_thunk-0x4
+ b26:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ b30:	90                   	nop
+ b31:	90                   	nop
+ b32:	90                   	nop
+ b33:	90                   	nop
+ b34:	90                   	nop
+ b35:	90                   	nop
+ b36:	90                   	nop
+ b37:	90                   	nop
+ b38:	90                   	nop
+ b39:	90                   	nop
+ b3a:	90                   	nop
+ b3b:	90                   	nop
+ b3c:	90                   	nop
+ b3d:	90                   	nop
+ b3e:	90                   	nop
+ b3f:	90                   	nop
+
+0000000000000b40 <kd_rwlock_prepare_read_unlock_current>:
+ b40:	e8 00 00 00 00       	call   b45 <kd_rwlock_prepare_read_unlock_current+0x5>	b41: R_X86_64_PLT32	__fentry__-0x4
+ b45:	55                   	push   rbp
+ b46:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	b49: R_X86_64_32S	kd_rwlock_read_unlock_entry_asm
+ b4d:	be 0c 00 00 00       	mov    esi,0xc
+ b52:	48 89 e5             	mov    rbp,rsp
+ b55:	e8 06 f7 ff ff       	call   260 <prepare_current>
+ b5a:	5d                   	pop    rbp
+ b5b:	31 d2                	xor    edx,edx
+ b5d:	31 f6                	xor    esi,esi
+ b5f:	31 ff                	xor    edi,edi
+ b61:	e9 00 00 00 00       	jmp    b66 <kd_rwlock_prepare_read_unlock_current+0x26>	b62: R_X86_64_PLT32	__x86_return_thunk-0x4
+ b66:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ b70:	90                   	nop
+ b71:	90                   	nop
+ b72:	90                   	nop
+ b73:	90                   	nop
+ b74:	90                   	nop
+ b75:	90                   	nop
+ b76:	90                   	nop
+ b77:	90                   	nop
+ b78:	90                   	nop
+ b79:	90                   	nop
+ b7a:	90                   	nop
+ b7b:	90                   	nop
+ b7c:	90                   	nop
+ b7d:	90                   	nop
+ b7e:	90                   	nop
+ b7f:	90                   	nop
+
+0000000000000b80 <kd_rwlock_prepare_write_lock_current>:
+ b80:	e8 00 00 00 00       	call   b85 <kd_rwlock_prepare_write_lock_current+0x5>	b81: R_X86_64_PLT32	__fentry__-0x4
+ b85:	55                   	push   rbp
+ b86:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	b89: R_X86_64_32S	kd_rwlock_write_lock_entry_asm
+ b8d:	be 0d 00 00 00       	mov    esi,0xd
+ b92:	48 89 e5             	mov    rbp,rsp
+ b95:	e8 c6 f6 ff ff       	call   260 <prepare_current>
+ b9a:	5d                   	pop    rbp
+ b9b:	31 d2                	xor    edx,edx
+ b9d:	31 f6                	xor    esi,esi
+ b9f:	31 ff                	xor    edi,edi
+ ba1:	e9 00 00 00 00       	jmp    ba6 <kd_rwlock_prepare_write_lock_current+0x26>	ba2: R_X86_64_PLT32	__x86_return_thunk-0x4
+ ba6:	66 2e 0f 1f 84 00 00 00 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ bb0:	90                   	nop
+ bb1:	90                   	nop
+ bb2:	90                   	nop
+ bb3:	90                   	nop
+ bb4:	90                   	nop
+ bb5:	90                   	nop
+ bb6:	90                   	nop
+ bb7:	90                   	nop
+ bb8:	90                   	nop
+ bb9:	90                   	nop
+ bba:	90                   	nop
+ bbb:	90                   	nop
+ bbc:	90                   	nop
+ bbd:	90                   	nop
+ bbe:	90                   	nop
+ bbf:	90                   	nop
+
+0000000000000bc0 <kd_rwlock_prepare_write_unlock_current>:
+ bc0:	e8 00 00 00 00       	call   bc5 <kd_rwlock_prepare_write_unlock_current+0x5>	bc1: R_X86_64_PLT32	__fentry__-0x4
+ bc5:	55                   	push   rbp
+ bc6:	48 c7 c2 00 00 00 00 	mov    rdx,0x0	bc9: R_X86_64_32S	kd_rwlock_write_unlock_entry_asm
+ bcd:	be 0e 00 00 00       	mov    esi,0xe
+ bd2:	48 89 e5             	mov    rbp,rsp
+ bd5:	e8 86 f6 ff ff       	call   260 <prepare_current>
+ bda:	5d                   	pop    rbp
+ bdb:	31 d2                	xor    edx,edx
+ bdd:	31 f6                	xor    esi,esi
+ bdf:	31 ff                	xor    edi,edi
+ be1:	e9 00 00 00 00       	jmp    be6 <kd_rwlock_prepare_write_unlock_current+0x26>	be2: R_X86_64_PLT32	__x86_return_thunk-0x4
+
+Disassembly of section .text.unlikely:
+
+0000000000000000 <prepare_current.cold>:
+   0:	0f b6 f0             	movzx  esi,al
+   3:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	6: R_X86_64_32S	.data+0xd0
+   a:	89 4d a4             	mov    DWORD PTR [rbp-0x5c],ecx
+   d:	88 55 ab             	mov    BYTE PTR [rbp-0x55],dl
+  10:	88 45 ac             	mov    BYTE PTR [rbp-0x54],al
+  13:	e8 00 00 00 00       	call   18 <prepare_current.cold+0x18>	14: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  18:	0f b6 45 ac          	movzx  eax,BYTE PTR [rbp-0x54]
+  1c:	0f b6 55 ab          	movzx  edx,BYTE PTR [rbp-0x55]
+  20:	8b 4d a4             	mov    ecx,DWORD PTR [rbp-0x5c]
+  23:	e9 00 00 00 00       	jmp    28 <prepare_current.cold+0x28>	24: R_X86_64_PC32	.text+0x352
+  28:	41 0f b6 f4          	movzx  esi,r12b
+  2c:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	2f: R_X86_64_32S	.data+0xf0
+  33:	89 4d ac             	mov    DWORD PTR [rbp-0x54],ecx
+  36:	88 55 b0             	mov    BYTE PTR [rbp-0x50],dl
+  39:	e8 00 00 00 00       	call   3e <prepare_current.cold+0x3e>	3a: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  3e:	0f b6 55 b0          	movzx  edx,BYTE PTR [rbp-0x50]
+  42:	8b 4d ac             	mov    ecx,DWORD PTR [rbp-0x54]
+  45:	e9 00 00 00 00       	jmp    4a <prepare_current.cold+0x4a>	46: R_X86_64_PC32	.text+0x2db
+  4a:	0f b6 f0             	movzx  esi,al
+  4d:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	50: R_X86_64_32S	.data+0xb0
+  54:	88 55 ab             	mov    BYTE PTR [rbp-0x55],dl
+  57:	88 45 ac             	mov    BYTE PTR [rbp-0x54],al
+  5a:	e8 00 00 00 00       	call   5f <prepare_current.cold+0x5f>	5b: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  5f:	0f b6 45 ac          	movzx  eax,BYTE PTR [rbp-0x54]
+  63:	0f b6 55 ab          	movzx  edx,BYTE PTR [rbp-0x55]
+  67:	e9 00 00 00 00       	jmp    6c <kd_mutex_bind_current.cold>	68: R_X86_64_PC32	.text+0x379
+
+000000000000006c <kd_mutex_bind_current.cold>:
+  6c:	41 0f b6 f6          	movzx  esi,r14b
+  70:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	73: R_X86_64_32S	.data+0x130
+  77:	e8 00 00 00 00       	call   7c <kd_mutex_bind_current.cold+0x10>	78: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  7c:	e9 00 00 00 00       	jmp    81 <kd_mutex_bind_current.cold+0x15>	7d: R_X86_64_PC32	.text+0x5c5
+  81:	41 0f b6 f4          	movzx  esi,r12b
+  85:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	88: R_X86_64_32S	.data+0x110
+  8c:	e8 00 00 00 00       	call   91 <kd_mutex_bind_current.cold+0x25>	8d: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  91:	e9 00 00 00 00       	jmp    96 <kd_mutex_bind_current.cold+0x2a>	92: R_X86_64_PC32	.text+0x669
+
+Disassembly of section .altinstr_replacement:
+
+0000000000000000 <.altinstr_replacement>:
+   0:	e8 00 00 00 00       	call   5 <.altinstr_replacement+0x5>	1: R_X86_64_PLT32	BUG_func-0x4
+   5:	9c                   	pushf
+   6:	58                   	pop    rax

@@ -1,0 +1,50 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/task_state.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 task_state.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000000 l    d  .text.unlikely	0000000000000000 .text.unlikely
+0000000000000010 l     F .text	0000000000000221 attach_task
+0000000000000000 l     F .text.unlikely	0000000000000015 attach_task.cold
+0000000000000015 l     F .text.unlikely	000000000000001b kd_task_root_detach_unpublished.cold
+0000000000000030 l     F .text.unlikely	000000000000001b kd_task_root_detach.cold
+000000000000004b l     F .text.unlikely	0000000000000046 kd_task_root_revoke_cancelled.cold
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 kd_execution_binding_init
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000000         *UND*	0000000000000000 kd_state_init
+0000000000000000         *UND*	0000000000000000 kd_request_pool_init
+0000000000000000         *UND*	0000000000000000 kd_owner_progress_init
+0000000000000000         *UND*	0000000000000000 refcount_warn_saturate
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_load_invalid_value
+0000000000000250 g     F .text	00000000000000b8 kd_task_root_context_init
+0000000000000320 g     F .text	000000000000001b kd_task_root_context_current
+0000000000000000         *UND*	0000000000000000 const_current_task
+0000000000000350 g     F .text	000000000000001b kd_task_state_own
+0000000000000380 g     F .text	000000000000003f kd_task_root_attach
+00000000000003d0 g     F .text	0000000000000057 kd_task_root_attach_unpublished
+0000000000000440 g     F .text	0000000000000258 kd_task_root_detach_unpublished
+0000000000000000         *UND*	0000000000000000 kd_request_pool_empty
+0000000000000000         *UND*	0000000000000000 __put_task_struct_rcu_cb
+0000000000000000         *UND*	0000000000000000 call_rcu
+00000000000006b0 g     F .text	0000000000000019 kd_task_root_reset_unpublished
+00000000000006e0 g     F .text	0000000000000292 kd_task_root_detach
+0000000000000000         *UND*	0000000000000000 kd_state_current_binding
+0000000000000000         *UND*	0000000000000000 kd_request_pool_collect
+0000000000000000         *UND*	0000000000000000 kd_request_pool_detach
+0000000000000990 g     F .text	00000000000001d3 kd_task_root_revoke_cancelled
+0000000000000000         *UND*	0000000000000000 kd_state_is_current
+0000000000000000         *UND*	0000000000000000 kd_request_pool_revoke_cancelled
+
+

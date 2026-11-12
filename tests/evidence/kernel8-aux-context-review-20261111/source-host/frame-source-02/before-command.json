@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "/tmp/kdlock-kernel8-aux-context-controls-20261111-02/pins-stdin.py",
+  "stdin_sha256": "61c8bcef06412405108de19f5078a6f911254dcca3123c430c3409cfa19d006b",
+  "timeout_seconds": 60
+}

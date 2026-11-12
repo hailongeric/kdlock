@@ -1,0 +1,43 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/observation.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 observation.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .static_call.text	0000000000000000 .static_call.text
+0000000000000000 l       .export_symbol	0000000000000000 __export_symbol___tracepoint_kdlock_observe_tp
+0000000000000010 l       .export_symbol	0000000000000000 __export_symbol___traceiter_kdlock_observe_tp
+0000000000000020 l       .export_symbol	0000000000000000 __export_symbol___SCK__tp_func_kdlock_observe_tp
+0000000000000030 l       .export_symbol	0000000000000000 __export_symbol___SCT__tp_func_kdlock_observe_tp
+0000000000000000 l    d  .discard.gendwarfksyms	0000000000000000 .discard.gendwarfksyms
+0000000000000000 l     O .discard.gendwarfksyms	0000000000000008 __gendwarfksyms_ptr___SCT__tp_func_kdlock_observe_tp
+0000000000000000 l    d  .discard.addressable	0000000000000000 .discard.addressable
+0000000000000000 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___SCT__tp_func_kdlock_observe_tp_467
+0000000000000008 l     O .discard.gendwarfksyms	0000000000000008 __gendwarfksyms_ptr___SCK__tp_func_kdlock_observe_tp
+0000000000000008 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___SCK__tp_func_kdlock_observe_tp_466
+0000000000000010 l     O .discard.gendwarfksyms	0000000000000008 __gendwarfksyms_ptr___traceiter_kdlock_observe_tp
+0000000000000010 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___traceiter_kdlock_observe_tp_465
+0000000000000018 l     O .discard.gendwarfksyms	0000000000000008 __gendwarfksyms_ptr___tracepoint_kdlock_observe_tp
+0000000000000018 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___tracepoint_kdlock_observe_tp_464
+0000000000000000 l    d  __tracepoint_check	0000000000000000 __tracepoint_check
+0000000000000000 l     O __tracepoint_check	0000000000000012 __trace_check_kdlock_observe_tp
+0000000000000000 l     O __tracepoints_strings	0000000000000012 __tpstrtab_kdlock_observe_tp
+0000000000000000 l    d  __tracepoints_strings	0000000000000000 __tracepoints_strings
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000 g     O __tracepoints	0000000000000048 __tracepoint_kdlock_observe_tp
+0000000000000000 g     F .static_call.text	0000000000000008 __SCT__tp_func_kdlock_observe_tp
+0000000000000010 g     F .text	0000000000000043 __traceiter_kdlock_observe_tp
+0000000000000000 g     O .data	0000000000000010 __SCK__tp_func_kdlock_observe_tp
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 __x86_indirect_thunk_rax
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000070 g     F .text	000000000000000f __probestub_kdlock_observe_tp
+
+

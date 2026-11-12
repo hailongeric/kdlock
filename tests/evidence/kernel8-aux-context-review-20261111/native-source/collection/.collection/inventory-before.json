@@ -1,0 +1,163 @@
+{
+  "bytes": 693911,
+  "collected_unix": 1794441442.44274,
+  "count": 11,
+  "directories": {},
+  "files": {
+    "build/.config": {
+      "bytes": 308548,
+      "identity": [
+        2080,
+        7386612,
+        33188,
+        1,
+        308548,
+        1794423333369340133,
+        1794423333369340133
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/.config",
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+    },
+    "source/arch/x86/include/asm/irq_stack.h": {
+      "bytes": 7626,
+      "identity": [
+        2080,
+        7369779,
+        33188,
+        1,
+        7626,
+        1776026886000000000,
+        1794423329037632345
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/include/asm/irq_stack.h",
+      "sha256": "d6c553b18dd5352dd7286ac75dd66fcf6e952c8229ed405c0248586d01e03fbe"
+    },
+    "source/arch/x86/include/asm/processor.h": {
+      "bytes": 20113,
+      "identity": [
+        2080,
+        7370025,
+        33188,
+        1,
+        20113,
+        1793074875000000000,
+        1794423329051063579
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/include/asm/processor.h",
+      "sha256": "6cdba5b7859679b77ba6ffe0a7e4949c02f9c76165117262dac0c226283e35a2"
+    },
+    "source/arch/x86/include/asm/stacktrace.h": {
+      "bytes": 2850,
+      "identity": [
+        2080,
+        7369928,
+        33188,
+        1,
+        2850,
+        1776026886000000000,
+        1794423329045559309
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/include/asm/stacktrace.h",
+      "sha256": "8c8d8da57a3407f9757f7714bb549fe37c7c431506d8a88ee32a4e942c9cbff7"
+    },
+    "source/arch/x86/include/asm/switch_to.h": {
+      "bytes": 2482,
+      "identity": [
+        2080,
+        7369937,
+        33188,
+        1,
+        2482,
+        1776026886000000000,
+        1794423329046011664
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/include/asm/switch_to.h",
+      "sha256": "c7f63059d7a8fe43c8c6654e9993cae2144fea8ea00c4338fd13e7f197757549"
+    },
+    "source/arch/x86/kernel/irq_64.c": {
+      "bytes": 2048,
+      "identity": [
+        2080,
+        7370271,
+        33188,
+        1,
+        2048,
+        1776026886000000000,
+        1794423329064509707
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/irq_64.c",
+      "sha256": "209f4f63639f1c85f9dcdc2ddd2a9c45f8599728a4e8f9de5f58d4d46bc528dd"
+    },
+    "source/arch/x86/kernel/process_64.c": {
+      "bytes": 26494,
+      "identity": [
+        2080,
+        7370310,
+        33188,
+        1,
+        26494,
+        1776026886000000000,
+        1794423329066643654
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/process_64.c",
+      "sha256": "7e55717f367a36818c48d305a25b265aad83cd76aa74751249e7c84da05ac302"
+    },
+    "source/arch/x86/kernel/stacktrace.c": {
+      "bytes": 2924,
+      "identity": [
+        2080,
+        7370326,
+        33188,
+        1,
+        2924,
+        1776026886000000000,
+        1794423329067585510
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/stacktrace.c",
+      "sha256": "6b292b8fb4f4ef462b3043d7fe906deaef299785e654896c4a927801c5848aea"
+    },
+    "source/arch/x86/kernel/unwind_orc.c": {
+      "bytes": 20391,
+      "identity": [
+        2080,
+        7370343,
+        33188,
+        1,
+        20391,
+        1776026886000000000,
+        1794423329068563844
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/unwind_orc.c",
+      "sha256": "bcfdf68f0854cdcc273db08f5ee07a5ad789276ebdfa0eefa568a05003921dde"
+    },
+    "source/kernel/entry/common.c": {
+      "bytes": 8245,
+      "identity": [
+        2080,
+        7505238,
+        33188,
+        1,
+        8245,
+        1776026886000000000,
+        1794423332303875529
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/kernel/entry/common.c",
+      "sha256": "898b4d839464609e6a1ac5f58e20e459393a3f7a40ea83539460d8bf8b1edd63"
+    },
+    "source/kernel/sched/core.c": {
+      "bytes": 292190,
+      "identity": [
+        2080,
+        7505543,
+        33188,
+        1,
+        292190,
+        1793075717271057007,
+        1794423332322821233
+      ],
+      "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/kernel/sched/core.c",
+      "sha256": "7d6a2601752ebd0424be5936db9b2705cae17389b51a4c16e6dc846b2cfd4e3f"
+    }
+  },
+  "visited_paths": 0
+}

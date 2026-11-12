@@ -1,0 +1,53 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/image.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 image.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000000 l    d  .text.unlikely	0000000000000000 .text.unlikely
+0000000000000010 l     F .text	0000000000000070 exit_matches_locked
+0000000000000000 l     F .text.unlikely	0000000000000099 exit_matches_locked.cold
+0000000000000090 l     F .text	00000000000000e5 link_use_locked
+0000000000000099 l     F .text.unlikely	000000000000005b link_use_locked.cold
+00000000000000f4 l     F .text.unlikely	000000000000001b kd_jit_image_lookup.cold
+000000000000010f l     F .text.unlikely	000000000000001b kd_jit_image_use_extend.cold
+000000000000012a l     F .text.unlikely	000000000000001b kd_jit_image_use_prepare_exit.cold
+0000000000000145 l     F .text.unlikely	000000000000000d kd_jit_image_use_finish_exit.cold
+0000000000000152 l     F .text.unlikely	0000000000000028 kd_jit_image_use_put.cold
+000000000000017a l     F .text.unlikely	000000000000001b kd_jit_image_update_begin.cold
+0000000000000195 l     F .text.unlikely	0000000000000036 kd_jit_image_update_try_commit.cold
+00000000000001cb l     F .text.unlikely	000000000000001b kd_jit_image_update_abort.cold
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_load_invalid_value
+0000000000000000         *UND*	0000000000000000 __list_add_valid_or_report
+0000000000000190 g     F .text	0000000000000037 kd_jit_image_slot_init
+00000000000001e0 g     F .text	000000000000004b kd_jit_image_use_init
+0000000000000240 g     F .text	0000000000000037 kd_jit_image_update_init
+0000000000000290 g     F .text	00000000000000eb kd_jit_image_lookup
+0000000000000000         *UND*	0000000000000000 __rcu_read_lock
+0000000000000000         *UND*	0000000000000000 _raw_spin_lock
+0000000000000000         *UND*	0000000000000000 _raw_spin_unlock
+0000000000000000         *UND*	0000000000000000 __rcu_read_unlock
+0000000000000390 g     F .text	0000000000000102 kd_jit_image_use_extend
+00000000000004b0 g     F .text	0000000000000148 kd_jit_image_use_prepare_exit
+0000000000000610 g     F .text	00000000000000a4 kd_jit_image_use_check_exit
+00000000000006d0 g     F .text	00000000000000f9 kd_jit_image_use_finish_exit
+0000000000000000         *UND*	0000000000000000 __list_del_entry_valid_or_report
+00000000000007e0 g     F .text	0000000000000107 kd_jit_image_use_put
+0000000000000900 g     F .text	00000000000000f3 kd_jit_image_update_begin
+0000000000000a10 g     F .text	00000000000001ce kd_jit_image_update_try_commit
+0000000000000000         *UND*	0000000000000000 synchronize_rcu
+0000000000000bf0 g     F .text	00000000000000c8 kd_jit_image_update_abort
+
+

@@ -1,0 +1,41 @@
+{
+  "argv": [
+    "/tmp/kdlock-rw-collect5.py",
+    "--output",
+    "/tmp/kdlock-kernel8-aux-context-source-20261111-02",
+    "--file",
+    "source/arch/x86/kernel/unwind_frame.c",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/unwind_frame.c",
+    "--file",
+    "source/arch/x86/kernel/dumpstack_64.c",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/dumpstack_64.c",
+    "--file",
+    "source/arch/x86/entry/entry_64.S",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/entry/entry_64.S",
+    "--max-files",
+    "3",
+    "--max-paths",
+    "32",
+    "--max-total-bytes",
+    "1048576",
+    "--max-file-bytes",
+    "1048576",
+    "--max-metadata-bytes",
+    "1048576",
+    "--inventory-seconds",
+    "60",
+    "--copy-seconds",
+    "90"
+  ],
+  "files": {
+    "source/arch/x86/entry/entry_64.S": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/entry/entry_64.S",
+    "source/arch/x86/kernel/dumpstack_64.c": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/dumpstack_64.c",
+    "source/arch/x86/kernel/unwind_frame.c": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/unwind_frame.c"
+  },
+  "max_file_bytes": 1048576,
+  "max_files": 3,
+  "max_metadata_bytes": 1048576,
+  "max_paths": 32,
+  "max_total_bytes": 1048576,
+  "trees": {}
+}

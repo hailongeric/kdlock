@@ -1,0 +1,67 @@
+import base64,hashlib,json,os,pathlib,signal,stat,sys,tarfile,io,time
+C=json.loads(base64.b64decode('eyJ0cmVlcyI6IHt9LCAiZmlsZXMiOiB7InNvdXJjZS9hcmNoL3g4Ni9rZXJuZWwvaXJxXzY0LmMiOiAiL21udC9rZGxvY2stYnVpbGRzMi9rZGxvY2stbWFpbi1rZXJuZWw4LTBkNDIwNjNlLTAxL3NvdXJjZS9hcmNoL3g4Ni9rZXJuZWwvaXJxXzY0LmMiLCAic291cmNlL2FyY2gveDg2L2tlcm5lbC9zdGFja3RyYWNlLmMiOiAiL21udC9rZGxvY2stYnVpbGRzMi9rZGxvY2stbWFpbi1rZXJuZWw4LTBkNDIwNjNlLTAxL3NvdXJjZS9hcmNoL3g4Ni9rZXJuZWwvc3RhY2t0cmFjZS5jIiwgInNvdXJjZS9hcmNoL3g4Ni9rZXJuZWwvdW53aW5kX29yYy5jIjogIi9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsOC0wZDQyMDYzZS0wMS9zb3VyY2UvYXJjaC94ODYva2VybmVsL3Vud2luZF9vcmMuYyIsICJzb3VyY2UvYXJjaC94ODYva2VybmVsL3Byb2Nlc3NfNjQuYyI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2FyY2gveDg2L2tlcm5lbC9wcm9jZXNzXzY0LmMiLCAic291cmNlL2FyY2gveDg2L2luY2x1ZGUvYXNtL2lycV9zdGFjay5oIjogIi9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsOC0wZDQyMDYzZS0wMS9zb3VyY2UvYXJjaC94ODYvaW5jbHVkZS9hc20vaXJxX3N0YWNrLmgiLCAic291cmNlL2FyY2gveDg2L2luY2x1ZGUvYXNtL3N3aXRjaF90by5oIjogIi9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsOC0wZDQyMDYzZS0wMS9zb3VyY2UvYXJjaC94ODYvaW5jbHVkZS9hc20vc3dpdGNoX3RvLmgiLCAic291cmNlL2FyY2gveDg2L2luY2x1ZGUvYXNtL3Byb2Nlc3Nvci5oIjogIi9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsOC0wZDQyMDYzZS0wMS9zb3VyY2UvYXJjaC94ODYvaW5jbHVkZS9hc20vcHJvY2Vzc29yLmgiLCAic291cmNlL2FyY2gveDg2L2luY2x1ZGUvYXNtL3N0YWNrdHJhY2UuaCI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2FyY2gveDg2L2luY2x1ZGUvYXNtL3N0YWNrdHJhY2UuaCIsICJzb3VyY2Uva2VybmVsL3NjaGVkL2NvcmUuYyI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2tlcm5lbC9zY2hlZC9jb3JlLmMiLCAic291cmNlL2tlcm5lbC9lbnRyeS9jb21tb24uYyI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2tlcm5lbC9lbnRyeS9jb21tb24uYyIsICJidWlsZC8uY29uZmlnIjogIi9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsOC0wZDQyMDYzZS0wMS9idWlsZC8uY29uZmlnIn0sICJtYXhfZmlsZXMiOiAxMSwgIm1heF9wYXRocyI6IDY0LCAibWF4X2ZpbGVfYnl0ZXMiOiAyMDk3MTUyLCAibWF4X3RvdGFsX2J5dGVzIjogNDE5NDMwNCwgIm1heF9tZXRhZGF0YV9ieXRlcyI6IDQxOTQzMDQsICJvcGVyYXRpb24iOiAiY29weSIsICJpbnZlbnRvcnkiOiB7ImJ5dGVzIjogNjkzOTExLCAiY29sbGVjdGVkX3VuaXgiOiAxNzk0NDQxNDQyLjQ0Mjc0LCAiY291bnQiOiAxMSwgImRpcmVjdG9yaWVzIjoge30sICJmaWxlcyI6IHsiYnVpbGQvLmNvbmZpZyI6IHsiYnl0ZXMiOiAzMDg1NDgsICJpZGVudGl0eSI6IFsyMDgwLCA3Mzg2NjEyLCAzMzE4OCwgMSwgMzA4NTQ4LCAxNzk0NDIzMzMzMzY5MzQwMTMzLCAxNzk0NDIzMzMzMzY5MzQwMTMzXSwgInBhdGgiOiAiL21udC9rZGxvY2stYnVpbGRzMi9rZGxvY2stbWFpbi1rZXJuZWw4LTBkNDIwNjNlLTAxL2J1aWxkLy5jb25maWciLCAic2hhMjU2IjogIjMxZDk3MDFlNzM5YTFmNmE1OTZlY2NhMGE3NmZhOTEzZTM5MzhlYzgwZTkwNTYwYjY4YTcyZDBiZjE2Mjg0ODMifSwgInNvdXJjZS9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9pcnFfc3RhY2suaCI6IHsiYnl0ZXMiOiA3NjI2LCAiaWRlbnRpdHkiOiBbMjA4MCwgNzM2OTc3OSwgMzMxODgsIDEsIDc2MjYsIDE3NzYwMjY4ODYwMDAwMDAwMDAsIDE3OTQ0MjMzMjkwMzc2MzIzNDVdLCAicGF0aCI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2FyY2gveDg2L2luY2x1ZGUvYXNtL2lycV9zdGFjay5oIiwgInNoYTI1NiI6ICJkNmM1NTNiMThkZDUzNTJkZDcyODZhYzc1ZGQ2NmZjZjZlOTUyYzgyMjllZDQwNWMwMjQ4NTg2ZDAxZTAzZmJlIn0sICJzb3VyY2UvYXJjaC94ODYvaW5jbHVkZS9hc20vcHJvY2Vzc29yLmgiOiB7ImJ5dGVzIjogMjAxMTMsICJpZGVudGl0eSI6IFsyMDgwLCA3MzcwMDI1LCAzMzE4OCwgMSwgMjAxMTMsIDE3OTMwNzQ4NzUwMDAwMDAwMDAsIDE3OTQ0MjMzMjkwNTEwNjM1NzldLCAicGF0aCI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2FyY2gveDg2L2luY2x1ZGUvYXNtL3Byb2Nlc3Nvci5oIiwgInNoYTI1NiI6ICI2Y2RiYTViNzg1OTY3OWI3N2JhNmZmZTBhN2U0OTQ5YzAyZjljNzYxNjUxMTcyNjJkYWMwYzIyNjI4M2UzNWEyIn0sICJzb3VyY2UvYXJjaC94ODYvaW5jbHVkZS9hc20vc3RhY2t0cmFjZS5oIjogeyJieXRlcyI6IDI4NTAsICJpZGVudGl0eSI6IFsyMDgwLCA3MzY5OTI4LCAzMzE4OCwgMSwgMjg1MCwgMTc3NjAyNjg4NjAwMDAwMDAwMCwgMTc5NDQyMzMyOTA0NTU1OTMwOV0sICJwYXRoIjogIi9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsOC0wZDQyMDYzZS0wMS9zb3VyY2UvYXJjaC94ODYvaW5jbHVkZS9hc20vc3RhY2t0cmFjZS5oIiwgInNoYTI1NiI6ICI4YzhkOGRhNTdhMzQwN2Y5NzU3Zjc3MTRiYjU0OWZlMzdjN2M0MzE1MDZkOGE4OGVlMzJhNGU5NDJjOWNiZmY3In0sICJzb3VyY2UvYXJjaC94ODYvaW5jbHVkZS9hc20vc3dpdGNoX3RvLmgiOiB7ImJ5dGVzIjogMjQ4MiwgImlkZW50aXR5IjogWzIwODAsIDczNjk5MzcsIDMzMTg4LCAxLCAyNDgyLCAxNzc2MDI2ODg2MDAwMDAwMDAwLCAxNzk0NDIzMzI5MDQ2MDExNjY0XSwgInBhdGgiOiAiL21udC9rZGxvY2stYnVpbGRzMi9rZGxvY2stbWFpbi1rZXJuZWw4LTBkNDIwNjNlLTAxL3NvdXJjZS9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9zd2l0Y2hfdG8uaCIsICJzaGEyNTYiOiAiYzdmNjMwNTlkN2E4ZmU0M2M4YzY2NTRlOTk5M2NhZTIxNDRmZWE4ZWEwMGM0MzM4ZmQxM2U3ZjE5Nzc1NzU0OSJ9LCAic291cmNlL2FyY2gveDg2L2tlcm5lbC9pcnFfNjQuYyI6IHsiYnl0ZXMiOiAyMDQ4LCAiaWRlbnRpdHkiOiBbMjA4MCwgNzM3MDI3MSwgMzMxODgsIDEsIDIwNDgsIDE3NzYwMjY4ODYwMDAwMDAwMDAsIDE3OTQ0MjMzMjkwNjQ1MDk3MDddLCAicGF0aCI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2FyY2gveDg2L2tlcm5lbC9pcnFfNjQuYyIsICJzaGEyNTYiOiAiMjA5ZjRmNjM2MzlmMWM4NWY5ZGNkYzJkZGQyYTljNDVmODU5OTcyOGE0ZThmOWRlNWY1OGQ0ZDQ2YmM1MjhkZCJ9LCAic291cmNlL2FyY2gveDg2L2tlcm5lbC9wcm9jZXNzXzY0LmMiOiB7ImJ5dGVzIjogMjY0OTQsICJpZGVudGl0eSI6IFsyMDgwLCA3MzcwMzEwLCAzMzE4OCwgMSwgMjY0OTQsIDE3NzYwMjY4ODYwMDAwMDAwMDAsIDE3OTQ0MjMzMjkwNjY2NDM2NTRdLCAicGF0aCI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2FyY2gveDg2L2tlcm5lbC9wcm9jZXNzXzY0LmMiLCAic2hhMjU2IjogIjdlNTU3MTdmMzY3YTM2ODE4YzQ4ZDMwNWEyNWIyNjVhYWQ4M2NkNzZhYTc0NzUxMjQ5ZTdjODRkYTA1YWMzMDIifSwgInNvdXJjZS9hcmNoL3g4Ni9rZXJuZWwvc3RhY2t0cmFjZS5jIjogeyJieXRlcyI6IDI5MjQsICJpZGVudGl0eSI6IFsyMDgwLCA3MzcwMzI2LCAzMzE4OCwgMSwgMjkyNCwgMTc3NjAyNjg4NjAwMDAwMDAwMCwgMTc5NDQyMzMyOTA2NzU4NTUxMF0sICJwYXRoIjogIi9tbnQva2Rsb2NrLWJ1aWxkczIva2Rsb2NrLW1haW4ta2VybmVsOC0wZDQyMDYzZS0wMS9zb3VyY2UvYXJjaC94ODYva2VybmVsL3N0YWNrdHJhY2UuYyIsICJzaGEyNTYiOiAiNmIyOTJiOGZiNGY0ZWY0NjJiMzA0M2Q3ZmU5MDZkZWFlZjI5OTc4NWU2NTQ4OTZjNGE5Mjc4MDFjNTg0OGFlYSJ9LCAic291cmNlL2FyY2gveDg2L2tlcm5lbC91bndpbmRfb3JjLmMiOiB7ImJ5dGVzIjogMjAzOTEsICJpZGVudGl0eSI6IFsyMDgwLCA3MzcwMzQzLCAzMzE4OCwgMSwgMjAzOTEsIDE3NzYwMjY4ODYwMDAwMDAwMDAsIDE3OTQ0MjMzMjkwNjg1NjM4NDRdLCAicGF0aCI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2FyY2gveDg2L2tlcm5lbC91bndpbmRfb3JjLmMiLCAic2hhMjU2IjogImJjZmRmNjhmMDg1NGNkY2MyNzNkYjA4ZjVlZTA3YTVhZDc4OTI3NmViZGZhMGVlZmE1NjhhMDUwMDM5MjFkZGUifSwgInNvdXJjZS9rZXJuZWwvZW50cnkvY29tbW9uLmMiOiB7ImJ5dGVzIjogODI0NSwgImlkZW50aXR5IjogWzIwODAsIDc1MDUyMzgsIDMzMTg4LCAxLCA4MjQ1LCAxNzc2MDI2ODg2MDAwMDAwMDAwLCAxNzk0NDIzMzMyMzAzODc1NTI5XSwgInBhdGgiOiAiL21udC9rZGxvY2stYnVpbGRzMi9rZGxvY2stbWFpbi1rZXJuZWw4LTBkNDIwNjNlLTAxL3NvdXJjZS9rZXJuZWwvZW50cnkvY29tbW9uLmMiLCAic2hhMjU2IjogIjg5OGI0ZDgzOTQ2NDYwOWU2YTFhYzVmNThlMjBlNDU5MzkzYTNmN2E0MGVhODM1Mzk0NjBkOGJmOGIxZWRkNjMifSwgInNvdXJjZS9rZXJuZWwvc2NoZWQvY29yZS5jIjogeyJieXRlcyI6IDI5MjE5MCwgImlkZW50aXR5IjogWzIwODAsIDc1MDU1NDMsIDMzMTg4LCAxLCAyOTIxOTAsIDE3OTMwNzU3MTcyNzEwNTcwMDcsIDE3OTQ0MjMzMzIzMjI4MjEyMzNdLCAicGF0aCI6ICIvbW50L2tkbG9jay1idWlsZHMyL2tkbG9jay1tYWluLWtlcm5lbDgtMGQ0MjA2M2UtMDEvc291cmNlL2tlcm5lbC9zY2hlZC9jb3JlLmMiLCAic2hhMjU2IjogIjdkNmEyNjAxNzUyZWJkMDQyNGJlNTkzNmRiOWIyNzA1Y2FlMTczODliNTFhNGMxNmU2ZGM4NDZiMmNmZDRlM2YifX0sICJ2aXNpdGVkX3BhdGhzIjogMH0sICJzZWNvbmRzIjogOTB9'))
+signal.alarm(C['seconds'])
+def need(value,message):
+ if not value:raise RuntimeError(message)
+def ident(s):
+ return [s.st_dev,s.st_ino,s.st_mode,s.st_nlink,s.st_size,s.st_mtime_ns,s.st_ctime_ns]
+def regular(name,expected=None):
+ p=pathlib.Path(name);before=p.lstat()
+ need(p.resolve(strict=True)==p and stat.S_ISREG(before.st_mode),'nonregular/canonical file: '+name)
+ need(before.st_size<=C['max_file_bytes'],'per-file byte bound: '+name)
+ if expected is not None:need(ident(before)==expected['identity'],'file identity before copy: '+name)
+ fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW)
+ h=hashlib.sha256();data=bytearray();count=0
+ with os.fdopen(fd,'rb') as f:
+  need(ident(os.fstat(f.fileno()))==ident(before),'opened file identity: '+name)
+  while True:
+   block=f.read(min(1048576,C['max_file_bytes']+1-count))
+   if not block:break
+   count+=len(block);need(count<=C['max_file_bytes'],'growing file exceeds bound')
+   h.update(block)
+   if C['operation']=='copy':data.extend(block)
+  need(ident(os.fstat(f.fileno()))==ident(before),'file changed during read: '+name)
+ need(ident(p.lstat())==ident(before),'file changed after read: '+name)
+ row=dict(path=name,bytes=count,sha256=h.hexdigest(),identity=ident(before))
+ need(count==before.st_size,'file length changed: '+name)
+ if expected is not None:need(row==expected,'file bytes differ from inventory: '+name)
+ return row,bytes(data)
+def directory(name):
+ p=pathlib.Path(name);s=p.lstat()
+ need(p.resolve(strict=True)==p and stat.S_ISDIR(s.st_mode),'noncanonical directory: '+name)
+ return dict(path=name,identity=ident(s))
+if C['operation']=='inventory':
+ selected=dict(C['files']);dirs={};visited=0
+ for label,root in C['trees'].items():
+  stack=[(label,root)]
+  while stack:
+   prefix,name=stack.pop();dirs[name]=directory(name);visited+=1
+   need(visited<=C['max_paths'],'visited-path bound')
+   with os.scandir(name) as entries:
+    for entry in entries:
+     visited+=1;need(visited<=C['max_paths'],'visited-path bound')
+     p=pathlib.Path(entry.path);s=p.lstat();member=prefix+'/'+entry.name
+     if stat.S_ISDIR(s.st_mode):stack.append((member,str(p)))
+     else:
+      need(stat.S_ISREG(s.st_mode),'nonregular selected entry: '+str(p))
+      need(member not in selected,'duplicate selected name: '+member)
+      selected[member]=str(p);need(len(selected)<=C['max_files'],'file-count bound')
+ need(len(selected)<=C['max_files'],'file-count bound')
+ rows={};total=0
+ for member,name in sorted(selected.items()):
+  row,_=regular(name);total+=row['bytes'];need(total<=C['max_total_bytes'],'total byte bound')
+  rows[member]=row
+ for name,row in dirs.items():need(directory(name)==row,'directory changed during inventory')
+ report=dict(files=rows,directories=dirs,count=len(rows),bytes=total,visited_paths=visited,collected_unix=time.time())
+ encoded=(json.dumps(report,sort_keys=True,indent=2)+'\n').encode()
+ need(len(encoded)<=C['max_metadata_bytes'],'inventory metadata bound')
+ sys.stdout.buffer.write(encoded)
+else:
+ index=C['inventory']
+ for name,row in index['directories'].items():need(directory(name)==row,'directory changed before transport')
+ with tarfile.open(fileobj=sys.stdout.buffer,mode='w|',format=tarfile.PAX_FORMAT) as archive:
+  for member,row in sorted(index['files'].items()):
+   actual,data=regular(row['path'],row)
+   item=tarfile.TarInfo(member);item.size=len(data);item.mode=0o644
+   archive.addfile(item,io.BytesIO(data))
+ for name,row in index['directories'].items():need(directory(name)==row,'directory changed after transport')

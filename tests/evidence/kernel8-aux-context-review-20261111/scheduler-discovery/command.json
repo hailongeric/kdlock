@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "/tmp/kdlock-kernel8-aux-object-discovery-20261111-02/discovery-stdin.py",
+  "stdin_sha256": "3bdddc3f35c94de5f79ddf68144b107a24df46b9f5558119bd1e2b0acbbf17f6",
+  "timeout_seconds": 90
+}

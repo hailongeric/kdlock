@@ -1,0 +1,535 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/include/mutex_api.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <kd_mutex_lock_entry_asm>:
+   0:	f3 0f 1e fa          	endbr64
+   4:	57                   	push   rdi
+   5:	56                   	push   rsi
+   6:	52                   	push   rdx
+   7:	51                   	push   rcx
+   8:	48 89 e0             	mov    rax,rsp
+   b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+   f:	48 83 ec 10          	sub    rsp,0x10
+  13:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+  17:	e8 00 00 00 00       	call   1c <kd_mutex_lock_entry_asm+0x1c>	18: R_X86_64_PLT32	kd_mutex_prepare_lock_current-0x4
+  1c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+  20:	49 89 c0             	mov    r8,rax
+  23:	59                   	pop    rcx
+  24:	5a                   	pop    rdx
+  25:	5e                   	pop    rsi
+  26:	5f                   	pop    rdi
+  27:	4d 85 c0             	test   r8,r8
+  2a:	74 05                	je     31 <kd_mutex_lock_entry_asm+0x31>
+  2c:	e9 00 00 00 00       	jmp    31 <kd_mutex_lock_entry_asm+0x31>	2d: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+  31:	c3                   	ret
+  32:	0f 1f 00             	nop    DWORD PTR [rax]
+  35:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000040 <kd_mutex_unlock_entry_asm>:
+  40:	f3 0f 1e fa          	endbr64
+  44:	57                   	push   rdi
+  45:	56                   	push   rsi
+  46:	52                   	push   rdx
+  47:	51                   	push   rcx
+  48:	48 89 e0             	mov    rax,rsp
+  4b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+  4f:	48 83 ec 10          	sub    rsp,0x10
+  53:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+  57:	e8 00 00 00 00       	call   5c <kd_mutex_unlock_entry_asm+0x1c>	58: R_X86_64_PLT32	kd_mutex_prepare_unlock_current-0x4
+  5c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+  60:	49 89 c0             	mov    r8,rax
+  63:	59                   	pop    rcx
+  64:	5a                   	pop    rdx
+  65:	5e                   	pop    rsi
+  66:	5f                   	pop    rdi
+  67:	4d 85 c0             	test   r8,r8
+  6a:	74 05                	je     71 <kd_mutex_unlock_entry_asm+0x31>
+  6c:	e9 00 00 00 00       	jmp    71 <kd_mutex_unlock_entry_asm+0x31>	6d: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+  71:	c3                   	ret
+  72:	0f 1f 00             	nop    DWORD PTR [rax]
+  75:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000080 <kd_spin_lock_entry_asm>:
+  80:	f3 0f 1e fa          	endbr64
+  84:	57                   	push   rdi
+  85:	56                   	push   rsi
+  86:	52                   	push   rdx
+  87:	51                   	push   rcx
+  88:	48 89 e0             	mov    rax,rsp
+  8b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+  8f:	48 83 ec 10          	sub    rsp,0x10
+  93:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+  97:	e8 00 00 00 00       	call   9c <kd_spin_lock_entry_asm+0x1c>	98: R_X86_64_PLT32	kd_spin_prepare_lock_current-0x4
+  9c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+  a0:	49 89 c0             	mov    r8,rax
+  a3:	59                   	pop    rcx
+  a4:	5a                   	pop    rdx
+  a5:	5e                   	pop    rsi
+  a6:	5f                   	pop    rdi
+  a7:	4d 85 c0             	test   r8,r8
+  aa:	74 05                	je     b1 <kd_spin_lock_entry_asm+0x31>
+  ac:	e9 00 00 00 00       	jmp    b1 <kd_spin_lock_entry_asm+0x31>	ad: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+  b1:	c3                   	ret
+  b2:	0f 1f 00             	nop    DWORD PTR [rax]
+  b5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+00000000000000c0 <kd_spin_unlock_entry_asm>:
+  c0:	f3 0f 1e fa          	endbr64
+  c4:	57                   	push   rdi
+  c5:	56                   	push   rsi
+  c6:	52                   	push   rdx
+  c7:	51                   	push   rcx
+  c8:	48 89 e0             	mov    rax,rsp
+  cb:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+  cf:	48 83 ec 10          	sub    rsp,0x10
+  d3:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+  d7:	e8 00 00 00 00       	call   dc <kd_spin_unlock_entry_asm+0x1c>	d8: R_X86_64_PLT32	kd_spin_prepare_unlock_current-0x4
+  dc:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+  e0:	49 89 c0             	mov    r8,rax
+  e3:	59                   	pop    rcx
+  e4:	5a                   	pop    rdx
+  e5:	5e                   	pop    rsi
+  e6:	5f                   	pop    rdi
+  e7:	4d 85 c0             	test   r8,r8
+  ea:	74 05                	je     f1 <kd_spin_unlock_entry_asm+0x31>
+  ec:	e9 00 00 00 00       	jmp    f1 <kd_spin_unlock_entry_asm+0x31>	ed: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+  f1:	c3                   	ret
+  f2:	0f 1f 00             	nop    DWORD PTR [rax]
+  f5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000100 <kd_rwsem_down_read_entry_asm>:
+ 100:	f3 0f 1e fa          	endbr64
+ 104:	57                   	push   rdi
+ 105:	56                   	push   rsi
+ 106:	52                   	push   rdx
+ 107:	51                   	push   rcx
+ 108:	48 89 e0             	mov    rax,rsp
+ 10b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 10f:	48 83 ec 10          	sub    rsp,0x10
+ 113:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 117:	e8 00 00 00 00       	call   11c <kd_rwsem_down_read_entry_asm+0x1c>	118: R_X86_64_PLT32	kd_rwsem_prepare_down_read_current-0x4
+ 11c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 120:	49 89 c0             	mov    r8,rax
+ 123:	59                   	pop    rcx
+ 124:	5a                   	pop    rdx
+ 125:	5e                   	pop    rsi
+ 126:	5f                   	pop    rdi
+ 127:	4d 85 c0             	test   r8,r8
+ 12a:	74 05                	je     131 <kd_rwsem_down_read_entry_asm+0x31>
+ 12c:	e9 00 00 00 00       	jmp    131 <kd_rwsem_down_read_entry_asm+0x31>	12d: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 131:	c3                   	ret
+ 132:	0f 1f 00             	nop    DWORD PTR [rax]
+ 135:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000140 <kd_rwsem_up_read_entry_asm>:
+ 140:	f3 0f 1e fa          	endbr64
+ 144:	57                   	push   rdi
+ 145:	56                   	push   rsi
+ 146:	52                   	push   rdx
+ 147:	51                   	push   rcx
+ 148:	48 89 e0             	mov    rax,rsp
+ 14b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 14f:	48 83 ec 10          	sub    rsp,0x10
+ 153:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 157:	e8 00 00 00 00       	call   15c <kd_rwsem_up_read_entry_asm+0x1c>	158: R_X86_64_PLT32	kd_rwsem_prepare_up_read_current-0x4
+ 15c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 160:	49 89 c0             	mov    r8,rax
+ 163:	59                   	pop    rcx
+ 164:	5a                   	pop    rdx
+ 165:	5e                   	pop    rsi
+ 166:	5f                   	pop    rdi
+ 167:	4d 85 c0             	test   r8,r8
+ 16a:	74 05                	je     171 <kd_rwsem_up_read_entry_asm+0x31>
+ 16c:	e9 00 00 00 00       	jmp    171 <kd_rwsem_up_read_entry_asm+0x31>	16d: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 171:	c3                   	ret
+ 172:	0f 1f 00             	nop    DWORD PTR [rax]
+ 175:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000180 <kd_rwsem_down_write_entry_asm>:
+ 180:	f3 0f 1e fa          	endbr64
+ 184:	57                   	push   rdi
+ 185:	56                   	push   rsi
+ 186:	52                   	push   rdx
+ 187:	51                   	push   rcx
+ 188:	48 89 e0             	mov    rax,rsp
+ 18b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 18f:	48 83 ec 10          	sub    rsp,0x10
+ 193:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 197:	e8 00 00 00 00       	call   19c <kd_rwsem_down_write_entry_asm+0x1c>	198: R_X86_64_PLT32	kd_rwsem_prepare_down_write_current-0x4
+ 19c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 1a0:	49 89 c0             	mov    r8,rax
+ 1a3:	59                   	pop    rcx
+ 1a4:	5a                   	pop    rdx
+ 1a5:	5e                   	pop    rsi
+ 1a6:	5f                   	pop    rdi
+ 1a7:	4d 85 c0             	test   r8,r8
+ 1aa:	74 05                	je     1b1 <kd_rwsem_down_write_entry_asm+0x31>
+ 1ac:	e9 00 00 00 00       	jmp    1b1 <kd_rwsem_down_write_entry_asm+0x31>	1ad: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 1b1:	c3                   	ret
+ 1b2:	0f 1f 00             	nop    DWORD PTR [rax]
+ 1b5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+00000000000001c0 <kd_rwsem_down_write_killable_entry_asm>:
+ 1c0:	f3 0f 1e fa          	endbr64
+ 1c4:	57                   	push   rdi
+ 1c5:	56                   	push   rsi
+ 1c6:	52                   	push   rdx
+ 1c7:	51                   	push   rcx
+ 1c8:	48 89 e0             	mov    rax,rsp
+ 1cb:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 1cf:	48 83 ec 10          	sub    rsp,0x10
+ 1d3:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 1d7:	e8 00 00 00 00       	call   1dc <kd_rwsem_down_write_killable_entry_asm+0x1c>	1d8: R_X86_64_PLT32	kd_rwsem_prepare_down_write_killable_current-0x4
+ 1dc:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 1e0:	49 89 c0             	mov    r8,rax
+ 1e3:	49 89 d1             	mov    r9,rdx
+ 1e6:	59                   	pop    rcx
+ 1e7:	5a                   	pop    rdx
+ 1e8:	5e                   	pop    rsi
+ 1e9:	5f                   	pop    rdi
+ 1ea:	4d 85 c0             	test   r8,r8
+ 1ed:	74 05                	je     1f4 <kd_rwsem_down_write_killable_entry_asm+0x34>
+ 1ef:	e9 00 00 00 00       	jmp    1f4 <kd_rwsem_down_write_killable_entry_asm+0x34>	1f0: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 1f4:	44 89 c8             	mov    eax,r9d
+ 1f7:	c3                   	ret
+ 1f8:	0f 1f 84 00 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+
+0000000000000200 <kd_rwsem_up_write_entry_asm>:
+ 200:	f3 0f 1e fa          	endbr64
+ 204:	57                   	push   rdi
+ 205:	56                   	push   rsi
+ 206:	52                   	push   rdx
+ 207:	51                   	push   rcx
+ 208:	48 89 e0             	mov    rax,rsp
+ 20b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 20f:	48 83 ec 10          	sub    rsp,0x10
+ 213:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 217:	e8 00 00 00 00       	call   21c <kd_rwsem_up_write_entry_asm+0x1c>	218: R_X86_64_PLT32	kd_rwsem_prepare_up_write_current-0x4
+ 21c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 220:	49 89 c0             	mov    r8,rax
+ 223:	59                   	pop    rcx
+ 224:	5a                   	pop    rdx
+ 225:	5e                   	pop    rsi
+ 226:	5f                   	pop    rdi
+ 227:	4d 85 c0             	test   r8,r8
+ 22a:	74 05                	je     231 <kd_rwsem_up_write_entry_asm+0x31>
+ 22c:	e9 00 00 00 00       	jmp    231 <kd_rwsem_up_write_entry_asm+0x31>	22d: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 231:	c3                   	ret
+ 232:	0f 1f 00             	nop    DWORD PTR [rax]
+ 235:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000240 <kd_rwsem_downgrade_write_entry_asm>:
+ 240:	f3 0f 1e fa          	endbr64
+ 244:	57                   	push   rdi
+ 245:	56                   	push   rsi
+ 246:	52                   	push   rdx
+ 247:	51                   	push   rcx
+ 248:	48 89 e0             	mov    rax,rsp
+ 24b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 24f:	48 83 ec 10          	sub    rsp,0x10
+ 253:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 257:	e8 00 00 00 00       	call   25c <kd_rwsem_downgrade_write_entry_asm+0x1c>	258: R_X86_64_PLT32	kd_rwsem_prepare_downgrade_write_current-0x4
+ 25c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 260:	49 89 c0             	mov    r8,rax
+ 263:	59                   	pop    rcx
+ 264:	5a                   	pop    rdx
+ 265:	5e                   	pop    rsi
+ 266:	5f                   	pop    rdi
+ 267:	4d 85 c0             	test   r8,r8
+ 26a:	74 05                	je     271 <kd_rwsem_downgrade_write_entry_asm+0x31>
+ 26c:	e9 00 00 00 00       	jmp    271 <kd_rwsem_downgrade_write_entry_asm+0x31>	26d: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 271:	c3                   	ret
+ 272:	0f 1f 00             	nop    DWORD PTR [rax]
+ 275:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000280 <kd_linux_rwsem_down_read_entry_asm>:
+ 280:	f3 0f 1e fa          	endbr64
+ 284:	57                   	push   rdi
+ 285:	56                   	push   rsi
+ 286:	52                   	push   rdx
+ 287:	51                   	push   rcx
+ 288:	48 89 e0             	mov    rax,rsp
+ 28b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 28f:	48 83 ec 10          	sub    rsp,0x10
+ 293:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 297:	e8 00 00 00 00       	call   29c <kd_linux_rwsem_down_read_entry_asm+0x1c>	298: R_X86_64_PLT32	kd_linux_rwsem_prepare_down_read_current-0x4
+ 29c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 2a0:	49 89 c0             	mov    r8,rax
+ 2a3:	59                   	pop    rcx
+ 2a4:	5a                   	pop    rdx
+ 2a5:	5e                   	pop    rsi
+ 2a6:	5f                   	pop    rdi
+ 2a7:	4d 85 c0             	test   r8,r8
+ 2aa:	74 05                	je     2b1 <kd_linux_rwsem_down_read_entry_asm+0x31>
+ 2ac:	e9 00 00 00 00       	jmp    2b1 <kd_linux_rwsem_down_read_entry_asm+0x31>	2ad: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 2b1:	c3                   	ret
+ 2b2:	0f 1f 00             	nop    DWORD PTR [rax]
+ 2b5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+00000000000002c0 <kd_linux_rwsem_up_read_entry_asm>:
+ 2c0:	f3 0f 1e fa          	endbr64
+ 2c4:	57                   	push   rdi
+ 2c5:	56                   	push   rsi
+ 2c6:	52                   	push   rdx
+ 2c7:	51                   	push   rcx
+ 2c8:	48 89 e0             	mov    rax,rsp
+ 2cb:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 2cf:	48 83 ec 10          	sub    rsp,0x10
+ 2d3:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 2d7:	e8 00 00 00 00       	call   2dc <kd_linux_rwsem_up_read_entry_asm+0x1c>	2d8: R_X86_64_PLT32	kd_linux_rwsem_prepare_up_read_current-0x4
+ 2dc:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 2e0:	49 89 c0             	mov    r8,rax
+ 2e3:	59                   	pop    rcx
+ 2e4:	5a                   	pop    rdx
+ 2e5:	5e                   	pop    rsi
+ 2e6:	5f                   	pop    rdi
+ 2e7:	4d 85 c0             	test   r8,r8
+ 2ea:	74 05                	je     2f1 <kd_linux_rwsem_up_read_entry_asm+0x31>
+ 2ec:	e9 00 00 00 00       	jmp    2f1 <kd_linux_rwsem_up_read_entry_asm+0x31>	2ed: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 2f1:	c3                   	ret
+ 2f2:	0f 1f 00             	nop    DWORD PTR [rax]
+ 2f5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000300 <kd_linux_rwsem_down_write_entry_asm>:
+ 300:	f3 0f 1e fa          	endbr64
+ 304:	57                   	push   rdi
+ 305:	56                   	push   rsi
+ 306:	52                   	push   rdx
+ 307:	51                   	push   rcx
+ 308:	48 89 e0             	mov    rax,rsp
+ 30b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 30f:	48 83 ec 10          	sub    rsp,0x10
+ 313:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 317:	e8 00 00 00 00       	call   31c <kd_linux_rwsem_down_write_entry_asm+0x1c>	318: R_X86_64_PLT32	kd_linux_rwsem_prepare_down_write_current-0x4
+ 31c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 320:	49 89 c0             	mov    r8,rax
+ 323:	59                   	pop    rcx
+ 324:	5a                   	pop    rdx
+ 325:	5e                   	pop    rsi
+ 326:	5f                   	pop    rdi
+ 327:	4d 85 c0             	test   r8,r8
+ 32a:	74 05                	je     331 <kd_linux_rwsem_down_write_entry_asm+0x31>
+ 32c:	e9 00 00 00 00       	jmp    331 <kd_linux_rwsem_down_write_entry_asm+0x31>	32d: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 331:	c3                   	ret
+ 332:	0f 1f 00             	nop    DWORD PTR [rax]
+ 335:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000340 <kd_linux_rwsem_down_write_killable_entry_asm>:
+ 340:	f3 0f 1e fa          	endbr64
+ 344:	57                   	push   rdi
+ 345:	56                   	push   rsi
+ 346:	52                   	push   rdx
+ 347:	51                   	push   rcx
+ 348:	48 89 e0             	mov    rax,rsp
+ 34b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 34f:	48 83 ec 10          	sub    rsp,0x10
+ 353:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 357:	e8 00 00 00 00       	call   35c <kd_linux_rwsem_down_write_killable_entry_asm+0x1c>	358: R_X86_64_PLT32	kd_linux_rwsem_prepare_down_write_killable_current-0x4
+ 35c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 360:	49 89 c0             	mov    r8,rax
+ 363:	49 89 d1             	mov    r9,rdx
+ 366:	59                   	pop    rcx
+ 367:	5a                   	pop    rdx
+ 368:	5e                   	pop    rsi
+ 369:	5f                   	pop    rdi
+ 36a:	4d 85 c0             	test   r8,r8
+ 36d:	74 05                	je     374 <kd_linux_rwsem_down_write_killable_entry_asm+0x34>
+ 36f:	e9 00 00 00 00       	jmp    374 <kd_linux_rwsem_down_write_killable_entry_asm+0x34>	370: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 374:	44 89 c8             	mov    eax,r9d
+ 377:	c3                   	ret
+ 378:	0f 1f 84 00 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+
+0000000000000380 <kd_linux_rwsem_up_write_entry_asm>:
+ 380:	f3 0f 1e fa          	endbr64
+ 384:	57                   	push   rdi
+ 385:	56                   	push   rsi
+ 386:	52                   	push   rdx
+ 387:	51                   	push   rcx
+ 388:	48 89 e0             	mov    rax,rsp
+ 38b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 38f:	48 83 ec 10          	sub    rsp,0x10
+ 393:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 397:	e8 00 00 00 00       	call   39c <kd_linux_rwsem_up_write_entry_asm+0x1c>	398: R_X86_64_PLT32	kd_linux_rwsem_prepare_up_write_current-0x4
+ 39c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 3a0:	49 89 c0             	mov    r8,rax
+ 3a3:	59                   	pop    rcx
+ 3a4:	5a                   	pop    rdx
+ 3a5:	5e                   	pop    rsi
+ 3a6:	5f                   	pop    rdi
+ 3a7:	4d 85 c0             	test   r8,r8
+ 3aa:	74 05                	je     3b1 <kd_linux_rwsem_up_write_entry_asm+0x31>
+ 3ac:	e9 00 00 00 00       	jmp    3b1 <kd_linux_rwsem_up_write_entry_asm+0x31>	3ad: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 3b1:	c3                   	ret
+ 3b2:	0f 1f 00             	nop    DWORD PTR [rax]
+ 3b5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+00000000000003c0 <kd_linux_rwsem_downgrade_write_entry_asm>:
+ 3c0:	f3 0f 1e fa          	endbr64
+ 3c4:	57                   	push   rdi
+ 3c5:	56                   	push   rsi
+ 3c6:	52                   	push   rdx
+ 3c7:	51                   	push   rcx
+ 3c8:	48 89 e0             	mov    rax,rsp
+ 3cb:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 3cf:	48 83 ec 10          	sub    rsp,0x10
+ 3d3:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 3d7:	e8 00 00 00 00       	call   3dc <kd_linux_rwsem_downgrade_write_entry_asm+0x1c>	3d8: R_X86_64_PLT32	kd_linux_rwsem_prepare_downgrade_write_current-0x4
+ 3dc:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 3e0:	49 89 c0             	mov    r8,rax
+ 3e3:	59                   	pop    rcx
+ 3e4:	5a                   	pop    rdx
+ 3e5:	5e                   	pop    rsi
+ 3e6:	5f                   	pop    rdi
+ 3e7:	4d 85 c0             	test   r8,r8
+ 3ea:	74 05                	je     3f1 <kd_linux_rwsem_downgrade_write_entry_asm+0x31>
+ 3ec:	e9 00 00 00 00       	jmp    3f1 <kd_linux_rwsem_downgrade_write_entry_asm+0x31>	3ed: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 3f1:	c3                   	ret
+ 3f2:	0f 1f 00             	nop    DWORD PTR [rax]
+ 3f5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000400 <kd_linux_rwsem_is_locked_entry_asm>:
+ 400:	f3 0f 1e fa          	endbr64
+ 404:	57                   	push   rdi
+ 405:	56                   	push   rsi
+ 406:	52                   	push   rdx
+ 407:	51                   	push   rcx
+ 408:	48 89 e0             	mov    rax,rsp
+ 40b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 40f:	48 83 ec 10          	sub    rsp,0x10
+ 413:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 417:	e8 00 00 00 00       	call   41c <kd_linux_rwsem_is_locked_entry_asm+0x1c>	418: R_X86_64_PLT32	kd_linux_rwsem_prepare_is_locked_current-0x4
+ 41c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 420:	49 89 c0             	mov    r8,rax
+ 423:	49 89 d1             	mov    r9,rdx
+ 426:	59                   	pop    rcx
+ 427:	5a                   	pop    rdx
+ 428:	5e                   	pop    rsi
+ 429:	5f                   	pop    rdi
+ 42a:	4d 85 c0             	test   r8,r8
+ 42d:	74 05                	je     434 <kd_linux_rwsem_is_locked_entry_asm+0x34>
+ 42f:	e9 00 00 00 00       	jmp    434 <kd_linux_rwsem_is_locked_entry_asm+0x34>	430: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 434:	44 89 c8             	mov    eax,r9d
+ 437:	c3                   	ret
+ 438:	0f 1f 84 00 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+
+0000000000000440 <kd_linux_rwsem_is_write_locked_entry_asm>:
+ 440:	f3 0f 1e fa          	endbr64
+ 444:	57                   	push   rdi
+ 445:	56                   	push   rsi
+ 446:	52                   	push   rdx
+ 447:	51                   	push   rcx
+ 448:	48 89 e0             	mov    rax,rsp
+ 44b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 44f:	48 83 ec 10          	sub    rsp,0x10
+ 453:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 457:	e8 00 00 00 00       	call   45c <kd_linux_rwsem_is_write_locked_entry_asm+0x1c>	458: R_X86_64_PLT32	kd_linux_rwsem_prepare_is_write_locked_current-0x4
+ 45c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 460:	49 89 c0             	mov    r8,rax
+ 463:	49 89 d1             	mov    r9,rdx
+ 466:	59                   	pop    rcx
+ 467:	5a                   	pop    rdx
+ 468:	5e                   	pop    rsi
+ 469:	5f                   	pop    rdi
+ 46a:	4d 85 c0             	test   r8,r8
+ 46d:	74 05                	je     474 <kd_linux_rwsem_is_write_locked_entry_asm+0x34>
+ 46f:	e9 00 00 00 00       	jmp    474 <kd_linux_rwsem_is_write_locked_entry_asm+0x34>	470: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 474:	44 89 c8             	mov    eax,r9d
+ 477:	c3                   	ret
+ 478:	0f 1f 84 00 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+
+0000000000000480 <kd_rwlock_read_lock_entry_asm>:
+ 480:	f3 0f 1e fa          	endbr64
+ 484:	57                   	push   rdi
+ 485:	56                   	push   rsi
+ 486:	52                   	push   rdx
+ 487:	51                   	push   rcx
+ 488:	48 89 e0             	mov    rax,rsp
+ 48b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 48f:	48 83 ec 10          	sub    rsp,0x10
+ 493:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 497:	e8 00 00 00 00       	call   49c <kd_rwlock_read_lock_entry_asm+0x1c>	498: R_X86_64_PLT32	kd_rwlock_prepare_read_lock_current-0x4
+ 49c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 4a0:	49 89 c0             	mov    r8,rax
+ 4a3:	59                   	pop    rcx
+ 4a4:	5a                   	pop    rdx
+ 4a5:	5e                   	pop    rsi
+ 4a6:	5f                   	pop    rdi
+ 4a7:	4d 85 c0             	test   r8,r8
+ 4aa:	74 05                	je     4b1 <kd_rwlock_read_lock_entry_asm+0x31>
+ 4ac:	e9 00 00 00 00       	jmp    4b1 <kd_rwlock_read_lock_entry_asm+0x31>	4ad: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 4b1:	c3                   	ret
+ 4b2:	0f 1f 00             	nop    DWORD PTR [rax]
+ 4b5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+00000000000004c0 <kd_rwlock_read_unlock_entry_asm>:
+ 4c0:	f3 0f 1e fa          	endbr64
+ 4c4:	57                   	push   rdi
+ 4c5:	56                   	push   rsi
+ 4c6:	52                   	push   rdx
+ 4c7:	51                   	push   rcx
+ 4c8:	48 89 e0             	mov    rax,rsp
+ 4cb:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 4cf:	48 83 ec 10          	sub    rsp,0x10
+ 4d3:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 4d7:	e8 00 00 00 00       	call   4dc <kd_rwlock_read_unlock_entry_asm+0x1c>	4d8: R_X86_64_PLT32	kd_rwlock_prepare_read_unlock_current-0x4
+ 4dc:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 4e0:	49 89 c0             	mov    r8,rax
+ 4e3:	59                   	pop    rcx
+ 4e4:	5a                   	pop    rdx
+ 4e5:	5e                   	pop    rsi
+ 4e6:	5f                   	pop    rdi
+ 4e7:	4d 85 c0             	test   r8,r8
+ 4ea:	74 05                	je     4f1 <kd_rwlock_read_unlock_entry_asm+0x31>
+ 4ec:	e9 00 00 00 00       	jmp    4f1 <kd_rwlock_read_unlock_entry_asm+0x31>	4ed: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 4f1:	c3                   	ret
+ 4f2:	0f 1f 00             	nop    DWORD PTR [rax]
+ 4f5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000500 <kd_rwlock_write_lock_entry_asm>:
+ 500:	f3 0f 1e fa          	endbr64
+ 504:	57                   	push   rdi
+ 505:	56                   	push   rsi
+ 506:	52                   	push   rdx
+ 507:	51                   	push   rcx
+ 508:	48 89 e0             	mov    rax,rsp
+ 50b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 50f:	48 83 ec 10          	sub    rsp,0x10
+ 513:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 517:	e8 00 00 00 00       	call   51c <kd_rwlock_write_lock_entry_asm+0x1c>	518: R_X86_64_PLT32	kd_rwlock_prepare_write_lock_current-0x4
+ 51c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 520:	49 89 c0             	mov    r8,rax
+ 523:	59                   	pop    rcx
+ 524:	5a                   	pop    rdx
+ 525:	5e                   	pop    rsi
+ 526:	5f                   	pop    rdi
+ 527:	4d 85 c0             	test   r8,r8
+ 52a:	74 05                	je     531 <kd_rwlock_write_lock_entry_asm+0x31>
+ 52c:	e9 00 00 00 00       	jmp    531 <kd_rwlock_write_lock_entry_asm+0x31>	52d: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 531:	c3                   	ret
+ 532:	0f 1f 00             	nop    DWORD PTR [rax]
+ 535:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+
+0000000000000540 <kd_rwlock_write_unlock_entry_asm>:
+ 540:	f3 0f 1e fa          	endbr64
+ 544:	57                   	push   rdi
+ 545:	56                   	push   rsi
+ 546:	52                   	push   rdx
+ 547:	51                   	push   rcx
+ 548:	48 89 e0             	mov    rax,rsp
+ 54b:	48 83 e4 f0          	and    rsp,0xfffffffffffffff0
+ 54f:	48 83 ec 10          	sub    rsp,0x10
+ 553:	48 89 04 24          	mov    QWORD PTR [rsp],rax
+ 557:	e8 00 00 00 00       	call   55c <kd_rwlock_write_unlock_entry_asm+0x1c>	558: R_X86_64_PLT32	kd_rwlock_prepare_write_unlock_current-0x4
+ 55c:	48 8b 24 24          	mov    rsp,QWORD PTR [rsp]
+ 560:	49 89 c0             	mov    r8,rax
+ 563:	59                   	pop    rcx
+ 564:	5a                   	pop    rdx
+ 565:	5e                   	pop    rsi
+ 566:	5f                   	pop    rdi
+ 567:	4d 85 c0             	test   r8,r8
+ 56a:	74 05                	je     571 <kd_rwlock_write_unlock_entry_asm+0x31>
+ 56c:	e9 00 00 00 00       	jmp    571 <kd_rwlock_write_unlock_entry_asm+0x31>	56d: R_X86_64_PLT32	kd_mutex_entry_asm-0x4
+ 571:	c3                   	ret

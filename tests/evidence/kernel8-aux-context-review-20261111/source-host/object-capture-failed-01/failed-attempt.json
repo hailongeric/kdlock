@@ -1,0 +1,12 @@
+{
+  "actual_returncode": 1,
+  "capture_output_created": false,
+  "collection_dispatched": false,
+  "commands_dispatched": 0,
+  "commands_planned": 144,
+  "helper_sha256": "cb196f92927605d84ad202b9e178947ab3783f5cb6b4bc4928a6e7cb89b94a09",
+  "missing_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/sched/wait.o",
+  "plan_sha256": "920f3f2cd39720cf524a7fd3b833f7a095fe5f6f2a6f13e39ba706853a5986c6",
+  "scope": "Original failed attempt preserved; no fallback, object build or retry.",
+  "status": "FAILED_MISSING_OBJECT_BEFORE_COMMAND_DISPATCH"
+}

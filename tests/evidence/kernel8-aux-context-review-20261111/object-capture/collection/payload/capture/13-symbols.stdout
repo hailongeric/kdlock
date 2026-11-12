@@ -1,0 +1,81 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/control.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 control.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000000 l    d  .text.unlikely	0000000000000000 .text.unlikely
+0000000000000010 l     F .text	0000000000000083 release_empty_cycle
+0000000000000000 l     F .text.unlikely	000000000000002b release_empty_cycle.cold
+00000000000000b0 l     F .text	0000000000000106 start
+00000000000001d0 l     F .text	00000000000000be put_blob
+00000000000002a0 l     F .text	00000000000005c8 stage_command
+000000000000002b l     F .text.unlikely	0000000000000162 stage_command.cold
+0000000000000880 l     F .text	00000000000007b1 claim_command
+000000000000018d l     F .text.unlikely	00000000000000e9 claim_command.cold
+0000000000001050 l     F .text	0000000000000a1e build_command
+0000000000000276 l     F .text.unlikely	000000000000011b build_command.cold
+0000000000000391 l     F .text.unlikely	0000000000000027 kd_jit_control_session_idle.cold
+00000000000003b8 l     F .text.unlikely	00000000000000a2 kd_jit_control_image_collect.cold
+000000000000045a l     F .text.unlikely	0000000000000684 kd_jit_control_command.cold
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  .discard.addressable	0000000000000000 .discard.addressable
+0000000000000000 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___SCK__WARN_trap_121.0
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 __x86_indirect_thunk_rax
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000000         *UND*	0000000000000000 kd_jit_source_use_put
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_load_invalid_value
+0000000000000000         *UND*	0000000000000000 memcpy
+0000000000000000         *UND*	0000000000000000 __ref_stack_chk_guard
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_producer_init
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_use_get
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_init
+0000000000000000         *UND*	0000000000000000 __stack_chk_fail
+0000000000000000         *UND*	0000000000000000 kd_jit_source_use_get
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_claim_begin
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_out_of_bounds
+0000000000001a80 g     F .text	000000000000003a kd_jit_control_image_init
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_use_init
+0000000000001ad0 g     F .text	00000000000000bd kd_jit_control_storage_init
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_claim_init
+0000000000000000         *UND*	0000000000000000 kd_jit_source_use_init
+0000000000000000         *UND*	0000000000000000 kd_jit_image_update_init
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_publication_init
+0000000000001ba0 g     F .text	00000000000000b9 kd_jit_control_session_init
+0000000000001c70 g     F .text	00000000000000a6 kd_jit_control_session_idle
+0000000000000000         *UND*	0000000000000000 _raw_spin_lock
+0000000000000000         *UND*	0000000000000000 _raw_spin_unlock
+0000000000001d30 g     F .text	0000000000000118 kd_jit_control_image_collect
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_close
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_try_release
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_producer_close
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_producer_release
+0000000000001e60 g     F .text	0000000000001777 kd_jit_control_command
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_publication_ack
+0000000000000000         *UND*	0000000000000000 kd_jit_image_update_abort
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_publication_abort
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_cancel_unpublished
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_claim_check
+0000000000000000         *UND*	0000000000000000 kd_jit_image_update_begin
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_use_put
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_claim_end
+0000000000000000         *UND*	0000000000000000 kd_jit_image_update_try_commit
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_publication_prepare
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_retire_abort
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_retire_prepare
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_retire_finish
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_publication_commit
+0000000000000000         *UND*	0000000000000000 kd_jit_image_owner_slot_get
+0000000000000000         *UND*	0000000000000000 __SCK__WARN_trap
+
+

@@ -1,0 +1,414 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/source_stack.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <read_word-0x10>:
+   0:	90                   	nop
+   1:	90                   	nop
+   2:	90                   	nop
+   3:	90                   	nop
+   4:	90                   	nop
+   5:	90                   	nop
+   6:	90                   	nop
+   7:	90                   	nop
+   8:	90                   	nop
+   9:	90                   	nop
+   a:	90                   	nop
+   b:	90                   	nop
+   c:	90                   	nop
+   d:	90                   	nop
+   e:	90                   	nop
+   f:	90                   	nop
+
+0000000000000010 <read_word>:
+  10:	e8 00 00 00 00       	call   15 <read_word+0x5>	11: R_X86_64_PLT32	__fentry__-0x4
+  15:	55                   	push   rbp
+  16:	48 89 fa             	mov    rdx,rdi
+  19:	48 89 f0             	mov    rax,rsi
+  1c:	48 89 e5             	mov    rbp,rsp
+  1f:	48 83 ec 18          	sub    rsp,0x18
+  23:	0f b6 4f 30          	movzx  ecx,BYTE PTR [rdi+0x30]
+  27:	80 f9 01             	cmp    cl,0x1
+  2a:	0f 87 00 00 00 00    	ja     30 <read_word+0x20>	2c: R_X86_64_PC32	.text.unlikely-0x4
+  30:	83 e1 01             	and    ecx,0x1
+  33:	74 28                	je     5d <read_word+0x4d>
+  35:	a8 07                	test   al,0x7
+  37:	75 24                	jne    5d <read_word+0x4d>
+  39:	48 3b 42 20          	cmp    rax,QWORD PTR [rdx+0x20]
+  3d:	72 1e                	jb     5d <read_word+0x4d>
+  3f:	48 8b 52 28          	mov    rdx,QWORD PTR [rdx+0x28]
+  43:	48 83 ea 08          	sub    rdx,0x8
+  47:	48 39 c2             	cmp    rdx,rax
+  4a:	72 11                	jb     5d <read_word+0x4d>
+  4c:	48 8b 00             	mov    rax,QWORD PTR [rax]
+  4f:	c9                   	leave
+  50:	31 d2                	xor    edx,edx
+  52:	31 c9                	xor    ecx,ecx
+  54:	31 f6                	xor    esi,esi
+  56:	31 ff                	xor    edi,edi
+  58:	e9 00 00 00 00       	jmp    5d <read_word+0x4d>	59: R_X86_64_PLT32	__x86_return_thunk-0x4
+  5d:	0f 0b                	ud2
+  5f:	90                   	nop
+  60:	90                   	nop
+  61:	90                   	nop
+  62:	90                   	nop
+  63:	90                   	nop
+  64:	90                   	nop
+  65:	90                   	nop
+  66:	90                   	nop
+  67:	90                   	nop
+  68:	90                   	nop
+  69:	90                   	nop
+  6a:	90                   	nop
+  6b:	90                   	nop
+  6c:	90                   	nop
+  6d:	90                   	nop
+  6e:	90                   	nop
+  6f:	90                   	nop
+
+0000000000000070 <acquire_stack>:
+  70:	e8 00 00 00 00       	call   75 <acquire_stack+0x5>	71: R_X86_64_PLT32	__fentry__-0x4
+  75:	48 85 ff             	test   rdi,rdi
+  78:	0f 84 9c 01 00 00    	je     21a <acquire_stack+0x1aa>
+  7e:	48 89 f2             	mov    rdx,rsi
+  81:	48 85 f6             	test   rsi,rsi
+  84:	0f 84 90 01 00 00    	je     21a <acquire_stack+0x1aa>
+  8a:	8b 8e 58 25 00 00    	mov    ecx,DWORD PTR [rsi+0x2558]
+  90:	49 89 f8             	mov    r8,rdi
+  93:	48 8d be 58 25 00 00 	lea    rdi,[rsi+0x2558]
+  9a:	85 c9                	test   ecx,ecx
+  9c:	0f 84 60 01 00 00    	je     202 <acquire_stack+0x192>
+  a2:	8d 71 01             	lea    esi,[rcx+0x1]
+  a5:	89 c8                	mov    eax,ecx
+  a7:	f0 0f b1 37          	lock cmpxchg DWORD PTR [rdi],esi
+  ab:	0f 85 17 01 00 00    	jne    1c8 <acquire_stack+0x158>
+  b1:	55                   	push   rbp
+  b2:	4c 89 c0             	mov    rax,r8
+  b5:	48 89 e5             	mov    rbp,rsp
+  b8:	48 83 ec 20          	sub    rsp,0x20
+  bc:	09 f1                	or     ecx,esi
+  be:	0f 88 94 00 00 00    	js     158 <acquire_stack+0xe8>
+  c4:	48 8b 4a 28          	mov    rcx,QWORD PTR [rdx+0x28]
+  c8:	48 85 c9             	test   rcx,rcx
+  cb:	74 72                	je     13f <acquire_stack+0xcf>
+  cd:	49 89 c8             	mov    r8,rcx
+  d0:	49 81 c0 00 40 00 00 	add    r8,0x4000
+  d7:	0f 82 ca 00 00 00    	jb     1a7 <acquire_stack+0x137>
+  dd:	4c 89 c6             	mov    rsi,r8
+  e0:	48 29 ce             	sub    rsi,rcx
+  e3:	48 83 fe 07          	cmp    rsi,0x7
+  e7:	0f 86 ba 00 00 00    	jbe    1a7 <acquire_stack+0x137>
+  ed:	be 01 00 00 00       	mov    esi,0x1
+  f2:	f0 0f c1 72 30       	lock xadd DWORD PTR [rdx+0x30],esi
+  f7:	85 f6                	test   esi,esi
+  f9:	0f 84 d0 00 00 00    	je     1cf <acquire_stack+0x15f>
+  ff:	8d 7e 01             	lea    edi,[rsi+0x1]
+ 102:	09 f7                	or     edi,esi
+ 104:	78 6e                	js     174 <acquire_stack+0x104>
+ 106:	48 89 50 18          	mov    QWORD PTR [rax+0x18],rdx
+ 10a:	48 89 48 20          	mov    QWORD PTR [rax+0x20],rcx
+ 10e:	4c 89 40 28          	mov    QWORD PTR [rax+0x28],r8
+ 112:	c6 40 30 01          	mov    BYTE PTR [rax+0x30],0x1
+ 116:	48 c7 40 08 00 00 00 00 	mov    QWORD PTR [rax+0x8],0x0	11a: R_X86_64_32S	.text+0x10
+ 11e:	48 c7 00 00 00 00 00 	mov    QWORD PTR [rax],0x0	121: R_X86_64_32S	.text+0x250
+ 125:	48 89 40 10          	mov    QWORD PTR [rax+0x10],rax
+ 129:	31 c0                	xor    eax,eax
+ 12b:	c9                   	leave
+ 12c:	31 d2                	xor    edx,edx
+ 12e:	31 c9                	xor    ecx,ecx
+ 130:	31 f6                	xor    esi,esi
+ 132:	31 ff                	xor    edi,edi
+ 134:	45 31 c0             	xor    r8d,r8d
+ 137:	45 31 c9             	xor    r9d,r9d
+ 13a:	e9 00 00 00 00       	jmp    13f <acquire_stack+0xcf>	13b: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 13f:	c9                   	leave
+ 140:	b8 fd ff ff ff       	mov    eax,0xfffffffd
+ 145:	31 d2                	xor    edx,edx
+ 147:	31 c9                	xor    ecx,ecx
+ 149:	31 f6                	xor    esi,esi
+ 14b:	31 ff                	xor    edi,edi
+ 14d:	45 31 c0             	xor    r8d,r8d
+ 150:	45 31 c9             	xor    r9d,r9d
+ 153:	e9 00 00 00 00       	jmp    158 <acquire_stack+0xe8>	154: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 158:	31 f6                	xor    esi,esi
+ 15a:	48 89 55 f8          	mov    QWORD PTR [rbp-0x8],rdx
+ 15e:	4c 89 45 f0          	mov    QWORD PTR [rbp-0x10],r8
+ 162:	e8 00 00 00 00       	call   167 <acquire_stack+0xf7>	163: R_X86_64_PLT32	refcount_warn_saturate-0x4
+ 167:	48 8b 55 f8          	mov    rdx,QWORD PTR [rbp-0x8]
+ 16b:	48 8b 45 f0          	mov    rax,QWORD PTR [rbp-0x10]
+ 16f:	e9 50 ff ff ff       	jmp    c4 <acquire_stack+0x54>
+ 174:	48 8d 7a 30          	lea    rdi,[rdx+0x30]
+ 178:	be 01 00 00 00       	mov    esi,0x1
+ 17d:	48 89 45 e0          	mov    QWORD PTR [rbp-0x20],rax
+ 181:	4c 89 45 e8          	mov    QWORD PTR [rbp-0x18],r8
+ 185:	48 89 55 f0          	mov    QWORD PTR [rbp-0x10],rdx
+ 189:	48 89 4d f8          	mov    QWORD PTR [rbp-0x8],rcx
+ 18d:	e8 00 00 00 00       	call   192 <acquire_stack+0x122>	18e: R_X86_64_PLT32	refcount_warn_saturate-0x4
+ 192:	48 8b 45 e0          	mov    rax,QWORD PTR [rbp-0x20]
+ 196:	4c 8b 45 e8          	mov    r8,QWORD PTR [rbp-0x18]
+ 19a:	48 8b 55 f0          	mov    rdx,QWORD PTR [rbp-0x10]
+ 19e:	48 8b 4d f8          	mov    rcx,QWORD PTR [rbp-0x8]
+ 1a2:	e9 5f ff ff ff       	jmp    106 <acquire_stack+0x96>
+ 1a7:	48 89 d7             	mov    rdi,rdx
+ 1aa:	e8 00 00 00 00       	call   1af <acquire_stack+0x13f>	1ab: R_X86_64_PLT32	put_task_stack-0x4
+ 1af:	b8 b5 ff ff ff       	mov    eax,0xffffffb5
+ 1b4:	c9                   	leave
+ 1b5:	31 d2                	xor    edx,edx
+ 1b7:	31 c9                	xor    ecx,ecx
+ 1b9:	31 f6                	xor    esi,esi
+ 1bb:	31 ff                	xor    edi,edi
+ 1bd:	45 31 c0             	xor    r8d,r8d
+ 1c0:	45 31 c9             	xor    r9d,r9d
+ 1c3:	e9 00 00 00 00       	jmp    1c8 <acquire_stack+0x158>	1c4: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 1c8:	89 c1                	mov    ecx,eax
+ 1ca:	e9 cb fe ff ff       	jmp    9a <acquire_stack+0x2a>
+ 1cf:	48 8d 7a 30          	lea    rdi,[rdx+0x30]
+ 1d3:	be 02 00 00 00       	mov    esi,0x2
+ 1d8:	48 89 45 e0          	mov    QWORD PTR [rbp-0x20],rax
+ 1dc:	4c 89 45 e8          	mov    QWORD PTR [rbp-0x18],r8
+ 1e0:	48 89 55 f0          	mov    QWORD PTR [rbp-0x10],rdx
+ 1e4:	48 89 4d f8          	mov    QWORD PTR [rbp-0x8],rcx
+ 1e8:	e8 00 00 00 00       	call   1ed <acquire_stack+0x17d>	1e9: R_X86_64_PLT32	refcount_warn_saturate-0x4
+ 1ed:	48 8b 4d f8          	mov    rcx,QWORD PTR [rbp-0x8]
+ 1f1:	48 8b 55 f0          	mov    rdx,QWORD PTR [rbp-0x10]
+ 1f5:	4c 8b 45 e8          	mov    r8,QWORD PTR [rbp-0x18]
+ 1f9:	48 8b 45 e0          	mov    rax,QWORD PTR [rbp-0x20]
+ 1fd:	e9 04 ff ff ff       	jmp    106 <acquire_stack+0x96>
+ 202:	b8 fd ff ff ff       	mov    eax,0xfffffffd
+ 207:	31 d2                	xor    edx,edx
+ 209:	31 c9                	xor    ecx,ecx
+ 20b:	31 f6                	xor    esi,esi
+ 20d:	31 ff                	xor    edi,edi
+ 20f:	45 31 c0             	xor    r8d,r8d
+ 212:	45 31 c9             	xor    r9d,r9d
+ 215:	e9 00 00 00 00       	jmp    21a <acquire_stack+0x1aa>	216: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 21a:	b8 ea ff ff ff       	mov    eax,0xffffffea
+ 21f:	31 d2                	xor    edx,edx
+ 221:	31 c9                	xor    ecx,ecx
+ 223:	31 f6                	xor    esi,esi
+ 225:	31 ff                	xor    edi,edi
+ 227:	45 31 c0             	xor    r8d,r8d
+ 22a:	45 31 c9             	xor    r9d,r9d
+ 22d:	e9 00 00 00 00       	jmp    232 <acquire_stack+0x1c2>	22e: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 232:	0f 1f 00             	nop    DWORD PTR [rax]
+ 235:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+ 240:	90                   	nop
+ 241:	90                   	nop
+ 242:	90                   	nop
+ 243:	90                   	nop
+ 244:	90                   	nop
+ 245:	90                   	nop
+ 246:	90                   	nop
+ 247:	90                   	nop
+ 248:	90                   	nop
+ 249:	90                   	nop
+ 24a:	90                   	nop
+ 24b:	90                   	nop
+ 24c:	90                   	nop
+ 24d:	90                   	nop
+ 24e:	90                   	nop
+ 24f:	90                   	nop
+
+0000000000000250 <write_word>:
+ 250:	e8 00 00 00 00       	call   255 <write_word+0x5>	251: R_X86_64_PLT32	__fentry__-0x4
+ 255:	55                   	push   rbp
+ 256:	48 89 f9             	mov    rcx,rdi
+ 259:	48 89 f0             	mov    rax,rsi
+ 25c:	48 89 e5             	mov    rbp,rsp
+ 25f:	48 83 ec 20          	sub    rsp,0x20
+ 263:	44 0f b6 47 30       	movzx  r8d,BYTE PTR [rdi+0x30]
+ 268:	41 80 f8 01          	cmp    r8b,0x1
+ 26c:	0f 87 00 00 00 00    	ja     272 <write_word+0x22>	26e: R_X86_64_PC32	.text.unlikely+0x27
+ 272:	41 83 e0 01          	and    r8d,0x1
+ 276:	74 2d                	je     2a5 <write_word+0x55>
+ 278:	a8 07                	test   al,0x7
+ 27a:	75 29                	jne    2a5 <write_word+0x55>
+ 27c:	48 3b 41 20          	cmp    rax,QWORD PTR [rcx+0x20]
+ 280:	72 23                	jb     2a5 <write_word+0x55>
+ 282:	48 8b 49 28          	mov    rcx,QWORD PTR [rcx+0x28]
+ 286:	48 83 e9 08          	sub    rcx,0x8
+ 28a:	48 39 c1             	cmp    rcx,rax
+ 28d:	72 16                	jb     2a5 <write_word+0x55>
+ 28f:	48 89 10             	mov    QWORD PTR [rax],rdx
+ 292:	c9                   	leave
+ 293:	31 c0                	xor    eax,eax
+ 295:	31 d2                	xor    edx,edx
+ 297:	31 c9                	xor    ecx,ecx
+ 299:	31 f6                	xor    esi,esi
+ 29b:	31 ff                	xor    edi,edi
+ 29d:	45 31 c0             	xor    r8d,r8d
+ 2a0:	e9 00 00 00 00       	jmp    2a5 <write_word+0x55>	2a1: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 2a5:	0f 0b                	ud2
+ 2a7:	66 0f 1f 84 00 00 00 00 00 	nop    WORD PTR [rax+rax*1+0x0]
+ 2b0:	90                   	nop
+ 2b1:	90                   	nop
+ 2b2:	90                   	nop
+ 2b3:	90                   	nop
+ 2b4:	90                   	nop
+ 2b5:	90                   	nop
+ 2b6:	90                   	nop
+ 2b7:	90                   	nop
+ 2b8:	90                   	nop
+ 2b9:	90                   	nop
+ 2ba:	90                   	nop
+ 2bb:	90                   	nop
+ 2bc:	90                   	nop
+ 2bd:	90                   	nop
+ 2be:	90                   	nop
+ 2bf:	90                   	nop
+
+00000000000002c0 <kd_source_stack_acquire_current>:
+ 2c0:	e8 00 00 00 00       	call   2c5 <kd_source_stack_acquire_current+0x5>	2c1: R_X86_64_PLT32	__fentry__-0x4
+ 2c5:	55                   	push   rbp
+ 2c6:	65 48 8b 35 00 00 00 00 	mov    rsi,QWORD PTR gs:[rip+0x0]        # 2ce <kd_source_stack_acquire_current+0xe>	2ca: R_X86_64_PC32	const_current_task-0x4
+ 2ce:	48 89 e5             	mov    rbp,rsp
+ 2d1:	e8 9a fd ff ff       	call   70 <acquire_stack>
+ 2d6:	5d                   	pop    rbp
+ 2d7:	31 f6                	xor    esi,esi
+ 2d9:	31 ff                	xor    edi,edi
+ 2db:	e9 00 00 00 00       	jmp    2e0 <kd_source_stack_acquire_current+0x20>	2dc: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 2e0:	90                   	nop
+ 2e1:	90                   	nop
+ 2e2:	90                   	nop
+ 2e3:	90                   	nop
+ 2e4:	90                   	nop
+ 2e5:	90                   	nop
+ 2e6:	90                   	nop
+ 2e7:	90                   	nop
+ 2e8:	90                   	nop
+ 2e9:	90                   	nop
+ 2ea:	90                   	nop
+ 2eb:	90                   	nop
+ 2ec:	90                   	nop
+ 2ed:	90                   	nop
+ 2ee:	90                   	nop
+ 2ef:	90                   	nop
+
+00000000000002f0 <kd_source_stack_acquire_unpublished>:
+ 2f0:	e8 00 00 00 00       	call   2f5 <kd_source_stack_acquire_unpublished+0x5>	2f1: R_X86_64_PLT32	__fentry__-0x4
+ 2f5:	48 85 f6             	test   rsi,rsi
+ 2f8:	74 1d                	je     317 <kd_source_stack_acquire_unpublished+0x27>
+ 2fa:	65 48 3b 35 00 00 00 00 	cmp    rsi,QWORD PTR gs:[rip+0x0]        # 302 <kd_source_stack_acquire_unpublished+0x12>	2fe: R_X86_64_PC32	const_current_task-0x4
+ 302:	74 13                	je     317 <kd_source_stack_acquire_unpublished+0x27>
+ 304:	55                   	push   rbp
+ 305:	48 89 e5             	mov    rbp,rsp
+ 308:	e8 63 fd ff ff       	call   70 <acquire_stack>
+ 30d:	5d                   	pop    rbp
+ 30e:	31 f6                	xor    esi,esi
+ 310:	31 ff                	xor    edi,edi
+ 312:	e9 00 00 00 00       	jmp    317 <kd_source_stack_acquire_unpublished+0x27>	313: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 317:	b8 ea ff ff ff       	mov    eax,0xffffffea
+ 31c:	31 f6                	xor    esi,esi
+ 31e:	31 ff                	xor    edi,edi
+ 320:	e9 00 00 00 00       	jmp    325 <kd_source_stack_acquire_unpublished+0x35>	321: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 325:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+ 330:	90                   	nop
+ 331:	90                   	nop
+ 332:	90                   	nop
+ 333:	90                   	nop
+ 334:	90                   	nop
+ 335:	90                   	nop
+ 336:	90                   	nop
+ 337:	90                   	nop
+ 338:	90                   	nop
+ 339:	90                   	nop
+ 33a:	90                   	nop
+ 33b:	90                   	nop
+ 33c:	90                   	nop
+ 33d:	90                   	nop
+ 33e:	90                   	nop
+ 33f:	90                   	nop
+
+0000000000000340 <kd_source_stack_release>:
+ 340:	e8 00 00 00 00       	call   345 <kd_source_stack_release+0x5>	341: R_X86_64_PLT32	__fentry__-0x4
+ 345:	55                   	push   rbp
+ 346:	48 89 e5             	mov    rbp,rsp
+ 349:	53                   	push   rbx
+ 34a:	48 83 ec 08          	sub    rsp,0x8
+ 34e:	48 85 ff             	test   rdi,rdi
+ 351:	0f 84 bc 00 00 00    	je     413 <kd_source_stack_release+0xd3>
+ 357:	0f b6 5f 30          	movzx  ebx,BYTE PTR [rdi+0x30]
+ 35b:	48 89 f8             	mov    rax,rdi
+ 35e:	80 fb 01             	cmp    bl,0x1
+ 361:	0f 87 00 00 00 00    	ja     367 <kd_source_stack_release+0x27>	363: R_X86_64_PC32	.text.unlikely+0x5d
+ 367:	83 e3 01             	and    ebx,0x1
+ 36a:	0f 84 a3 00 00 00    	je     413 <kd_source_stack_release+0xd3>
+ 370:	48 8b 58 18          	mov    rbx,QWORD PTR [rax+0x18]
+ 374:	c6 40 30 00          	mov    BYTE PTR [rax+0x30],0x0
+ 378:	48 c7 40 18 00 00 00 00 	mov    QWORD PTR [rax+0x18],0x0
+ 380:	48 c7 40 20 00 00 00 00 	mov    QWORD PTR [rax+0x20],0x0
+ 388:	48 89 df             	mov    rdi,rbx
+ 38b:	48 c7 40 28 00 00 00 00 	mov    QWORD PTR [rax+0x28],0x0
+ 393:	48 c7 40 08 00 00 00 00 	mov    QWORD PTR [rax+0x8],0x0
+ 39b:	48 c7 00 00 00 00 00 	mov    QWORD PTR [rax],0x0
+ 3a2:	48 c7 40 10 00 00 00 00 	mov    QWORD PTR [rax+0x10],0x0
+ 3aa:	e8 00 00 00 00       	call   3af <kd_source_stack_release+0x6f>	3ab: R_X86_64_PLT32	put_task_stack-0x4
+ 3af:	48 8d 7b 30          	lea    rdi,[rbx+0x30]
+ 3b3:	b8 ff ff ff ff       	mov    eax,0xffffffff
+ 3b8:	f0 0f c1 43 30       	lock xadd DWORD PTR [rbx+0x30],eax
+ 3bd:	83 f8 01             	cmp    eax,0x1
+ 3c0:	74 14                	je     3d6 <kd_source_stack_release+0x96>
+ 3c2:	85 c0                	test   eax,eax
+ 3c4:	7e 33                	jle    3f9 <kd_source_stack_release+0xb9>
+ 3c6:	48 8b 5d f8          	mov    rbx,QWORD PTR [rbp-0x8]
+ 3ca:	c9                   	leave
+ 3cb:	31 c0                	xor    eax,eax
+ 3cd:	31 f6                	xor    esi,esi
+ 3cf:	31 ff                	xor    edi,edi
+ 3d1:	e9 00 00 00 00       	jmp    3d6 <kd_source_stack_release+0x96>	3d2: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 3d6:	48 c7 c6 00 00 00 00 	mov    rsi,0x0	3d9: R_X86_64_32S	__put_task_struct_rcu_cb
+ 3dd:	48 8d bb 08 25 00 00 	lea    rdi,[rbx+0x2508]
+ 3e4:	e8 00 00 00 00       	call   3e9 <kd_source_stack_release+0xa9>	3e5: R_X86_64_PLT32	call_rcu-0x4
+ 3e9:	48 8b 5d f8          	mov    rbx,QWORD PTR [rbp-0x8]
+ 3ed:	c9                   	leave
+ 3ee:	31 c0                	xor    eax,eax
+ 3f0:	31 f6                	xor    esi,esi
+ 3f2:	31 ff                	xor    edi,edi
+ 3f4:	e9 00 00 00 00       	jmp    3f9 <kd_source_stack_release+0xb9>	3f5: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 3f9:	be 03 00 00 00       	mov    esi,0x3
+ 3fe:	e8 00 00 00 00       	call   403 <kd_source_stack_release+0xc3>	3ff: R_X86_64_PLT32	refcount_warn_saturate-0x4
+ 403:	48 8b 5d f8          	mov    rbx,QWORD PTR [rbp-0x8]
+ 407:	c9                   	leave
+ 408:	31 c0                	xor    eax,eax
+ 40a:	31 f6                	xor    esi,esi
+ 40c:	31 ff                	xor    edi,edi
+ 40e:	e9 00 00 00 00       	jmp    413 <kd_source_stack_release+0xd3>	40f: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 413:	0f 0b                	ud2
+
+Disassembly of section .text.unlikely:
+
+0000000000000000 <read_word.cold>:
+   0:	48 89 7d e8          	mov    QWORD PTR [rbp-0x18],rdi
+   4:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	7: R_X86_64_32S	.data+0x20
+   b:	48 89 75 f0          	mov    QWORD PTR [rbp-0x10],rsi
+   f:	0f b6 f1             	movzx  esi,cl
+  12:	88 4d ff             	mov    BYTE PTR [rbp-0x1],cl
+  15:	e8 00 00 00 00       	call   1a <read_word.cold+0x1a>	16: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  1a:	0f b6 4d ff          	movzx  ecx,BYTE PTR [rbp-0x1]
+  1e:	48 8b 45 f0          	mov    rax,QWORD PTR [rbp-0x10]
+  22:	48 8b 55 e8          	mov    rdx,QWORD PTR [rbp-0x18]
+  26:	e9 00 00 00 00       	jmp    2b <write_word.cold>	27: R_X86_64_PC32	.text+0x2c
+
+000000000000002b <write_word.cold>:
+  2b:	48 89 7d e0          	mov    QWORD PTR [rbp-0x20],rdi
+  2f:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	32: R_X86_64_32S	.data+0x20
+  36:	48 89 75 f0          	mov    QWORD PTR [rbp-0x10],rsi
+  3a:	41 0f b6 f0          	movzx  esi,r8b
+  3e:	48 89 55 e8          	mov    QWORD PTR [rbp-0x18],rdx
+  42:	44 88 45 ff          	mov    BYTE PTR [rbp-0x1],r8b
+  46:	e8 00 00 00 00       	call   4b <write_word.cold+0x20>	47: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  4b:	44 0f b6 45 ff       	movzx  r8d,BYTE PTR [rbp-0x1]
+  50:	48 8b 45 f0          	mov    rax,QWORD PTR [rbp-0x10]
+  54:	48 8b 55 e8          	mov    rdx,QWORD PTR [rbp-0x18]
+  58:	48 8b 4d e0          	mov    rcx,QWORD PTR [rbp-0x20]
+  5c:	e9 00 00 00 00       	jmp    61 <kd_source_stack_release.cold>	5d: R_X86_64_PC32	.text+0x26e
+
+0000000000000061 <kd_source_stack_release.cold>:
+  61:	48 89 7d f0          	mov    QWORD PTR [rbp-0x10],rdi
+  65:	0f b6 f3             	movzx  esi,bl
+  68:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	6b: R_X86_64_32S	.data
+  6f:	e8 00 00 00 00       	call   74 <kd_source_stack_release.cold+0x13>	70: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  74:	48 8b 45 f0          	mov    rax,QWORD PTR [rbp-0x10]
+  78:	e9 00 00 00 00       	jmp    7d <acquire_stack+0xd>	79: R_X86_64_PC32	.text+0x363

@@ -1,0 +1,202 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/task_progress.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <kd_task_progress_native-0x10>:
+   0:	90                   	nop
+   1:	90                   	nop
+   2:	90                   	nop
+   3:	90                   	nop
+   4:	90                   	nop
+   5:	90                   	nop
+   6:	90                   	nop
+   7:	90                   	nop
+   8:	90                   	nop
+   9:	90                   	nop
+   a:	90                   	nop
+   b:	90                   	nop
+   c:	90                   	nop
+   d:	90                   	nop
+   e:	90                   	nop
+   f:	90                   	nop
+
+0000000000000010 <kd_task_progress_native>:
+  10:	e8 00 00 00 00       	call   15 <kd_task_progress_native+0x5>	11: R_X86_64_PLT32	__fentry__-0x4
+  15:	55                   	push   rbp
+  16:	48 89 e5             	mov    rbp,rsp
+  19:	41 57                	push   r15
+  1b:	41 56                	push   r14
+  1d:	41 55                	push   r13
+  1f:	41 54                	push   r12
+  21:	53                   	push   rbx
+  22:	48 83 ec 20          	sub    rsp,0x20
+  26:	48 89 55 c0          	mov    QWORD PTR [rbp-0x40],rdx
+  2a:	65 48 8b 05 00 00 00 00 	mov    rax,QWORD PTR gs:[rip+0x0]        # 32 <kd_task_progress_native+0x22>	2e: R_X86_64_PC32	__ref_stack_chk_guard-0x4
+  32:	48 89 45 d0          	mov    QWORD PTR [rbp-0x30],rax
+  36:	31 c0                	xor    eax,eax
+  38:	c6 45 cf 00          	mov    BYTE PTR [rbp-0x31],0x0
+  3c:	48 85 d2             	test   rdx,rdx
+  3f:	0f 84 51 02 00 00    	je     296 <kd_task_progress_native+0x286>
+  45:	48 8b 45 c0          	mov    rax,QWORD PTR [rbp-0x40]
+  49:	49 89 fe             	mov    r14,rdi
+  4c:	c6 00 01             	mov    BYTE PTR [rax],0x1
+  4f:	48 85 ff             	test   rdi,rdi
+  52:	0f 84 3e 02 00 00    	je     296 <kd_task_progress_native+0x286>
+  58:	48 89 f3             	mov    rbx,rsi
+  5b:	48 85 f6             	test   rsi,rsi
+  5e:	0f 84 32 02 00 00    	je     296 <kd_task_progress_native+0x286>
+  64:	65 8b 05 00 00 00 00 	mov    eax,DWORD PTR gs:[rip+0x0]        # 6b <kd_task_progress_native+0x5b>	67: R_X86_64_PC32	__preempt_count-0x4
+  6b:	a9 00 01 ff 00       	test   eax,0xff0100
+  70:	0f 85 a6 01 00 00    	jne    21c <kd_task_progress_native+0x20c>
+  76:	a9 ff ff ff 7f       	test   eax,0x7fffffff
+  7b:	0f 85 7f 01 00 00    	jne    200 <kd_task_progress_native+0x1f0>
+  81:	ff 15 00 00 00 00    	call   QWORD PTR [rip+0x0]        # 87 <kd_task_progress_native+0x77>	83: R_X86_64_PC32	pv_ops+0xe4
+  87:	f6 c4 02             	test   ah,0x2
+  8a:	0f 84 8c 01 00 00    	je     21c <kd_task_progress_native+0x20c>
+  90:	65 4c 8b 25 00 00 00 00 	mov    r12,QWORD PTR gs:[rip+0x0]        # 98 <kd_task_progress_native+0x88>	94: R_X86_64_PC32	const_current_task-0x4
+  98:	41 8b 44 24 18       	mov    eax,DWORD PTR [r12+0x18]
+  9d:	85 c0                	test   eax,eax
+  9f:	0f 85 77 01 00 00    	jne    21c <kd_task_progress_native+0x20c>
+  a5:	e8 00 00 00 00       	call   aa <kd_task_progress_native+0x9a>	a6: R_X86_64_PLT32	kd_task_root_context_current-0x4
+  aa:	4c 39 f0             	cmp    rax,r14
+  ad:	0f 85 a9 01 00 00    	jne    25c <kd_task_progress_native+0x24c>
+  b3:	45 0f b6 ae e8 01 00 00 	movzx  r13d,BYTE PTR [r14+0x1e8]
+  bb:	41 80 fd 01          	cmp    r13b,0x1
+  bf:	0f 87 00 00 00 00    	ja     c5 <kd_task_progress_native+0xb5>	c1: R_X86_64_PC32	.text.unlikely-0x4
+  c5:	41 83 e5 01          	and    r13d,0x1
+  c9:	0f 84 8d 01 00 00    	je     25c <kd_task_progress_native+0x24c>
+  cf:	4d 39 a6 78 01 00 00 	cmp    QWORD PTR [r14+0x178],r12
+  d6:	0f 85 80 01 00 00    	jne    25c <kd_task_progress_native+0x24c>
+  dc:	49 83 be e0 01 00 00 00 	cmp    QWORD PTR [r14+0x1e0],0x0
+  e4:	0f 85 5c 01 00 00    	jne    246 <kd_task_progress_native+0x236>
+  ea:	48 89 de             	mov    rsi,rbx
+  ed:	4c 89 f7             	mov    rdi,r14
+  f0:	e8 00 00 00 00       	call   f5 <kd_task_progress_native+0xe5>	f1: R_X86_64_PLT32	kd_state_is_current-0x4
+  f5:	41 89 c5             	mov    r13d,eax
+  f8:	84 c0                	test   al,al
+  fa:	0f 84 5c 01 00 00    	je     25c <kd_task_progress_native+0x24c>
+ 100:	8b 43 18             	mov    eax,DWORD PTR [rbx+0x18]
+ 103:	85 c0                	test   eax,eax
+ 105:	0f 85 51 01 00 00    	jne    25c <kd_task_progress_native+0x24c>
+ 10b:	49 83 be e0 00 00 00 00 	cmp    QWORD PTR [r14+0xe0],0x0
+ 113:	0f 85 2d 01 00 00    	jne    246 <kd_task_progress_native+0x236>
+ 119:	49 83 be e8 00 00 00 00 	cmp    QWORD PTR [r14+0xe8],0x0
+ 121:	0f 85 1f 01 00 00    	jne    246 <kd_task_progress_native+0x236>
+ 127:	49 83 be f0 00 00 00 00 	cmp    QWORD PTR [r14+0xf0],0x0
+ 12f:	0f 85 11 01 00 00    	jne    246 <kd_task_progress_native+0x236>
+ 135:	41 8b 86 08 01 00 00 	mov    eax,DWORD PTR [r14+0x108]
+ 13c:	85 c0                	test   eax,eax
+ 13e:	74 09                	je     149 <kd_task_progress_native+0x139>
+ 140:	83 f8 05             	cmp    eax,0x5
+ 143:	0f 85 fd 00 00 00    	jne    246 <kd_task_progress_native+0x236>
+ 149:	4d 8b be 30 01 00 00 	mov    r15,QWORD PTR [r14+0x130]
+ 150:	4d 85 ff             	test   r15,r15
+ 153:	0f 84 0d 01 00 00    	je     266 <kd_task_progress_native+0x256>
+ 159:	4d 39 77 08          	cmp    QWORD PTR [r15+0x8],r14
+ 15d:	0f 85 03 01 00 00    	jne    266 <kd_task_progress_native+0x256>
+ 163:	4d 39 a6 90 01 00 00 	cmp    QWORD PTR [r14+0x190],r12
+ 16a:	0f 85 f6 00 00 00    	jne    266 <kd_task_progress_native+0x256>
+ 170:	49 8b 86 b0 01 00 00 	mov    rax,QWORD PTR [r14+0x1b0]
+ 177:	48 85 c0             	test   rax,rax
+ 17a:	74 09                	je     185 <kd_task_progress_native+0x175>
+ 17c:	4c 39 38             	cmp    QWORD PTR [rax],r15
+ 17f:	0f 85 e1 00 00 00    	jne    266 <kd_task_progress_native+0x256>
+ 185:	4d 8d a6 80 01 00 00 	lea    r12,[r14+0x180]
+ 18c:	48 8d 75 cf          	lea    rsi,[rbp-0x31]
+ 190:	4c 89 e7             	mov    rdi,r12
+ 193:	e8 00 00 00 00       	call   198 <kd_task_progress_native+0x188>	194: R_X86_64_PLT32	kd_owner_progress_run-0x4
+ 198:	89 c2                	mov    edx,eax
+ 19a:	85 c0                	test   eax,eax
+ 19c:	75 30                	jne    1ce <kd_task_progress_native+0x1be>
+ 19e:	49 8b be b0 01 00 00 	mov    rdi,QWORD PTR [r14+0x1b0]
+ 1a5:	48 89 de             	mov    rsi,rbx
+ 1a8:	48 85 ff             	test   rdi,rdi
+ 1ab:	0f 84 9c 00 00 00    	je     24d <kd_task_progress_native+0x23d>
+ 1b1:	e8 00 00 00 00       	call   1b6 <kd_task_progress_native+0x1a6>	1b2: R_X86_64_PLT32	kd_episode_collect-0x4
+ 1b6:	89 c2                	mov    edx,eax
+ 1b8:	85 d2                	test   edx,edx
+ 1ba:	75 12                	jne    1ce <kd_task_progress_native+0x1be>
+ 1bc:	48 8d 75 cf          	lea    rsi,[rbp-0x31]
+ 1c0:	4c 89 e7             	mov    rdi,r12
+ 1c3:	e8 00 00 00 00       	call   1c8 <kd_task_progress_native+0x1b8>	1c4: R_X86_64_PLT32	kd_owner_progress_run-0x4
+ 1c8:	89 c2                	mov    edx,eax
+ 1ca:	85 c0                	test   eax,eax
+ 1cc:	74 55                	je     223 <kd_task_progress_native+0x213>
+ 1ce:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+ 1d2:	65 48 2b 05 00 00 00 00 	sub    rax,QWORD PTR gs:[rip+0x0]        # 1da <kd_task_progress_native+0x1ca>	1d6: R_X86_64_PC32	__ref_stack_chk_guard-0x4
+ 1da:	0f 85 c0 00 00 00    	jne    2a0 <kd_task_progress_native+0x290>
+ 1e0:	48 83 c4 20          	add    rsp,0x20
+ 1e4:	89 d0                	mov    eax,edx
+ 1e6:	5b                   	pop    rbx
+ 1e7:	41 5c                	pop    r12
+ 1e9:	41 5d                	pop    r13
+ 1eb:	41 5e                	pop    r14
+ 1ed:	41 5f                	pop    r15
+ 1ef:	5d                   	pop    rbp
+ 1f0:	31 d2                	xor    edx,edx
+ 1f2:	31 c9                	xor    ecx,ecx
+ 1f4:	31 f6                	xor    esi,esi
+ 1f6:	31 ff                	xor    edi,edi
+ 1f8:	45 31 c0             	xor    r8d,r8d
+ 1fb:	e9 00 00 00 00       	jmp    200 <kd_task_progress_native+0x1f0>	1fc: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 200:	44 0f b6 a7 98 01 00 00 	movzx  r12d,BYTE PTR [rdi+0x198]
+ 208:	41 80 fc 01          	cmp    r12b,0x1
+ 20c:	0f 87 00 00 00 00    	ja     212 <kd_task_progress_native+0x202>	20e: R_X86_64_PC32	.text.unlikely+0x11
+ 212:	41 83 e4 01          	and    r12d,0x1
+ 216:	0f 85 65 fe ff ff    	jne    81 <kd_task_progress_native+0x71>
+ 21c:	ba f5 ff ff ff       	mov    edx,0xfffffff5
+ 221:	eb ab                	jmp    1ce <kd_task_progress_native+0x1be>
+ 223:	4c 89 ff             	mov    rdi,r15
+ 226:	89 45 bc             	mov    DWORD PTR [rbp-0x44],eax
+ 229:	e8 00 00 00 00       	call   22e <kd_task_progress_native+0x21e>	22a: R_X86_64_PLT32	kd_request_pool_collect-0x4
+ 22e:	49 8b 86 80 01 00 00 	mov    rax,QWORD PTR [r14+0x180]
+ 235:	8b 55 bc             	mov    edx,DWORD PTR [rbp-0x44]
+ 238:	49 39 c4             	cmp    r12,rax
+ 23b:	74 33                	je     270 <kd_task_progress_native+0x260>
+ 23d:	48 8b 45 c0          	mov    rax,QWORD PTR [rbp-0x40]
+ 241:	44 88 28             	mov    BYTE PTR [rax],r13b
+ 244:	eb 88                	jmp    1ce <kd_task_progress_native+0x1be>
+ 246:	ba f0 ff ff ff       	mov    edx,0xfffffff0
+ 24b:	eb 81                	jmp    1ce <kd_task_progress_native+0x1be>
+ 24d:	4c 89 f7             	mov    rdi,r14
+ 250:	e8 00 00 00 00       	call   255 <kd_task_progress_native+0x245>	251: R_X86_64_PLT32	kd_jit_collect_grants-0x4
+ 255:	89 c2                	mov    edx,eax
+ 257:	e9 5c ff ff ff       	jmp    1b8 <kd_task_progress_native+0x1a8>
+ 25c:	ba ff ff ff ff       	mov    edx,0xffffffff
+ 261:	e9 68 ff ff ff       	jmp    1ce <kd_task_progress_native+0x1be>
+ 266:	ba 8b ff ff ff       	mov    edx,0xffffff8b
+ 26b:	e9 5e ff ff ff       	jmp    1ce <kd_task_progress_native+0x1be>
+ 270:	49 8b 86 48 01 00 00 	mov    rax,QWORD PTR [r14+0x148]
+ 277:	4d 8d 86 48 01 00 00 	lea    r8,[r14+0x148]
+ 27e:	4c 39 c0             	cmp    rax,r8
+ 281:	75 ba                	jne    23d <kd_task_progress_native+0x22d>
+ 283:	4c 89 ff             	mov    rdi,r15
+ 286:	e8 00 00 00 00       	call   28b <kd_task_progress_native+0x27b>	287: R_X86_64_PLT32	kd_request_pool_empty-0x4
+ 28b:	8b 55 bc             	mov    edx,DWORD PTR [rbp-0x44]
+ 28e:	83 f0 01             	xor    eax,0x1
+ 291:	41 89 c5             	mov    r13d,eax
+ 294:	eb a7                	jmp    23d <kd_task_progress_native+0x22d>
+ 296:	ba ea ff ff ff       	mov    edx,0xffffffea
+ 29b:	e9 2e ff ff ff       	jmp    1ce <kd_task_progress_native+0x1be>
+ 2a0:	e8 00 00 00 00       	call   2a5 <kd_task_progress_native+0x295>	2a1: R_X86_64_PLT32	__stack_chk_fail-0x4
+
+Disassembly of section .text.unlikely:
+
+0000000000000000 <kd_task_progress_native.cold>:
+   0:	41 0f b6 f5          	movzx  esi,r13b
+   4:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	7: R_X86_64_32S	.data
+   b:	e8 00 00 00 00       	call   10 <kd_task_progress_native.cold+0x10>	c: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  10:	e9 00 00 00 00       	jmp    15 <kd_task_progress_native.cold+0x15>	11: R_X86_64_PC32	.text+0xc1
+  15:	41 0f b6 f4          	movzx  esi,r12b
+  19:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	1c: R_X86_64_32S	.data+0x20
+  20:	e8 00 00 00 00       	call   25 <kd_task_progress_native.cold+0x25>	21: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  25:	e9 00 00 00 00       	jmp    2a <kd_task_progress_native+0x1a>	26: R_X86_64_PC32	.text+0x20e
+
+Disassembly of section .altinstr_replacement:
+
+0000000000000000 <.altinstr_replacement>:
+   0:	e8 00 00 00 00       	call   5 <.altinstr_replacement+0x5>	1: R_X86_64_PLT32	BUG_func-0x4
+   5:	9c                   	pushf
+   6:	58                   	pop    rax

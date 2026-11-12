@@ -1,0 +1,87 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/request_pool.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 request_pool.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000010 l     F .text	00000000000000c2 private_records_init
+0000000000000000 l    d  .text.unlikely	0000000000000000 .text.unlikely
+00000000000000f0 l     F .text	000000000000005d user_idle
+0000000000000000 l     F .text.unlikely	0000000000000074 user_idle.cold
+0000000000000160 l     F .text	0000000000000062 image_idle
+0000000000000074 l     F .text.unlikely	0000000000000070 image_idle.cold
+00000000000001e0 l     F .text	00000000000000db components_idle
+00000000000002d0 l     F .text	00000000000001a7 cancelled_queue_only
+00000000000000e4 l     F .text.unlikely	000000000000010d cancelled_queue_only.cold
+0000000000000490 l     F .text	0000000000000168 reusable_locked
+00000000000001f1 l     F .text.unlikely	0000000000000036 reusable_locked.cold
+0000000000000610 l     F .text	0000000000000370 free_locked
+0000000000000000 l    d  __jump_table	0000000000000000 __jump_table
+0000000000000227 l     F .text.unlikely	0000000000000142 free_locked.cold
+0000000000000990 l     F .text	0000000000000137 drop_user
+0000000000000369 l     F .text.unlikely	0000000000000038 drop_user.cold
+0000000000000ae0 l     F .text	000000000000027c reserve_slot
+00000000000003a1 l     F .text.unlikely	0000000000000028 reserve_slot.cold
+00000000000003c9 l     F .text.unlikely	0000000000000010 kd_request_pool_init.cold
+00000000000003d9 l     F .text.unlikely	0000000000000015 kd_request_user_hold.cold
+00000000000003ee l     F .text.unlikely	0000000000000015 kd_request_slot_set_parent.cold
+0000000000000403 l     F .text.unlikely	0000000000000032 kd_request_slot_drop_parent.cold
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  .discard.addressable	0000000000000000 .discard.addressable
+0000000000000000 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___SCK__WARN_trap_460.0
+0000000000000008 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___SCK__tp_func_kdlock_observe_tp_459.1
+0000000000000000 l    d  __tracepoint_check	0000000000000000 __tracepoint_check
+0000000000000000 l     O __tracepoint_check	0000000000000012 __trace_check_kdlock_observe_tp.2
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 const_current_task
+0000000000000000         *UND*	0000000000000000 kd_jit_image_use_init
+0000000000000000         *UND*	0000000000000000 kd_owner_batch_init
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_load_invalid_value
+0000000000000000         *UND*	0000000000000000 kd_state_current_binding
+0000000000000000         *UND*	0000000000000000 __ref_stack_chk_guard
+0000000000000000         *UND*	0000000000000000 __tracepoint_kdlock_observe_tp
+0000000000000000         *UND*	0000000000000000 cpu_number
+0000000000000000         *UND*	0000000000000000 __cpu_online_mask
+0000000000000000         *UND*	0000000000000000 tracepoint_srcu
+0000000000000000         *UND*	0000000000000000 __SCT__tp_func_kdlock_observe_tp
+0000000000000000         *UND*	0000000000000000 __stack_chk_fail
+0000000000000000         *UND*	0000000000000000 __list_add_valid_or_report
+0000000000000000         *UND*	0000000000000000 __list_del_entry_valid_or_report
+0000000000000000         *UND*	0000000000000000 _raw_spin_lock_irqsave
+0000000000000000         *UND*	0000000000000000 _raw_spin_unlock_irqrestore
+0000000000000000         *UND*	0000000000000000 kd_state_is_current
+0000000000000d70 g     F .text	0000000000000033 kd_request_user_init
+0000000000000dc0 g     F .text	0000000000000158 kd_request_pool_init
+0000000000000f30 g     F .text	0000000000000053 kd_request_pool_empty
+0000000000000fa0 g     F .text	00000000000000a1 kd_request_pool_collect
+0000000000001060 g     F .text	0000000000000033 kd_request_slot_reserve
+00000000000010b0 g     F .text	0000000000000021 kd_request_slot_reserve_owned
+00000000000010f0 g     F .text	00000000000001c3 kd_request_slot_prepare
+0000000000000000         *UND*	0000000000000000 kd_jit_mutex_call_init
+00000000000012d0 g     F .text	00000000000000b5 kd_request_slot_cancel
+00000000000013a0 g     F .text	00000000000000ce kd_request_slot_discard
+0000000000000000         *UND*	0000000000000000 kd_mutex_node_discard
+0000000000001480 g     F .text	00000000000000b5 kd_request_slot_release
+0000000000001550 g     F .text	0000000000000136 kd_request_user_hold
+00000000000016a0 g     F .text	000000000000001c kd_request_user_put
+00000000000016d0 g     F .text	000000000000001f kd_request_user_finish
+0000000000001700 g     F .text	000000000000015b kd_request_slot_set_parent
+0000000000001870 g     F .text	0000000000000116 kd_request_slot_drop_parent
+00000000000019a0 g     F .text	00000000000000ea kd_request_pool_can_detach
+0000000000001aa0 g     F .text	0000000000000129 kd_request_pool_detach
+0000000000001be0 g     F .text	0000000000000182 kd_request_pool_revoke_cancelled
+0000000000001d80 g     F .text	00000000000000b6 kd_request_pool_retire_detached
+0000000000000000         *UND*	0000000000000000 __SCK__WARN_trap
+0000000000000000         *UND*	0000000000000000 __SCK__tp_func_kdlock_observe_tp
+
+

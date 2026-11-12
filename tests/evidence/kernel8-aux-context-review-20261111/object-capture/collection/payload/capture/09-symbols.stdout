@@ -1,0 +1,39 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/source_epoch.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 source_epoch.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000000 l    d  .text.unlikely	0000000000000000 .text.unlikely
+0000000000000010 l     F .text	00000000000000c2 link_use_locked
+0000000000000000 l     F .text.unlikely	0000000000000049 link_use_locked.cold
+0000000000000049 l     F .text.unlikely	000000000000001b kd_jit_source_use_extend.cold
+0000000000000064 l     F .text.unlikely	0000000000000028 kd_jit_source_use_put.cold
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_load_invalid_value
+0000000000000000         *UND*	0000000000000000 __list_add_valid_or_report
+00000000000000f0 g     F .text	0000000000000297 kd_jit_source_epoch_init
+0000000000000000         *UND*	0000000000000000 memcmp
+00000000000003a0 g     F .text	0000000000000033 kd_jit_source_use_init
+00000000000003f0 g     F .text	0000000000000092 kd_jit_source_use_get
+0000000000000000         *UND*	0000000000000000 _raw_spin_lock
+0000000000000000         *UND*	0000000000000000 _raw_spin_unlock
+00000000000004a0 g     F .text	00000000000000f8 kd_jit_source_use_extend
+00000000000005b0 g     F .text	00000000000000d7 kd_jit_source_use_put
+0000000000000000         *UND*	0000000000000000 __list_del_entry_valid_or_report
+00000000000006a0 g     F .text	0000000000000050 kd_jit_source_epoch_close
+0000000000000700 g     F .text	00000000000000e2 kd_jit_source_epoch_try_release
+0000000000000000         *UND*	0000000000000000 __x86_indirect_thunk_rax
+
+

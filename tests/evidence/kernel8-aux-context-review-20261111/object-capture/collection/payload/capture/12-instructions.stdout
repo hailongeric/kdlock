@@ -1,0 +1,1011 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/feedback_publish.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <candidate_get-0x10>:
+   0:	90                   	nop
+   1:	90                   	nop
+   2:	90                   	nop
+   3:	90                   	nop
+   4:	90                   	nop
+   5:	90                   	nop
+   6:	90                   	nop
+   7:	90                   	nop
+   8:	90                   	nop
+   9:	90                   	nop
+   a:	90                   	nop
+   b:	90                   	nop
+   c:	90                   	nop
+   d:	90                   	nop
+   e:	90                   	nop
+   f:	90                   	nop
+
+0000000000000010 <candidate_get>:
+  10:	e8 00 00 00 00       	call   15 <candidate_get+0x5>	11: R_X86_64_PLT32	__fentry__-0x4
+  15:	55                   	push   rbp
+  16:	48 89 e5             	mov    rbp,rsp
+  19:	41 57                	push   r15
+  1b:	41 56                	push   r14
+  1d:	41 54                	push   r12
+  1f:	53                   	push   rbx
+  20:	48 83 ec 08          	sub    rsp,0x8
+  24:	48 85 ff             	test   rdi,rdi
+  27:	0f 84 e9 00 00 00    	je     116 <candidate_get+0x106>
+  2d:	48 85 f6             	test   rsi,rsi
+  30:	0f 84 e0 00 00 00    	je     116 <candidate_get+0x106>
+  36:	4c 8b 67 10          	mov    r12,QWORD PTR [rdi+0x10]
+  3a:	48 89 fb             	mov    rbx,rdi
+  3d:	4d 85 e4             	test   r12,r12
+  40:	0f 84 da 00 00 00    	je     120 <candidate_get+0x110>
+  46:	4c 89 e7             	mov    rdi,r12
+  49:	49 89 d7             	mov    r15,rdx
+  4c:	49 89 f6             	mov    r14,rsi
+  4f:	e8 00 00 00 00       	call   54 <candidate_get+0x44>	50: R_X86_64_PLT32	_raw_spin_lock-0x4
+  54:	4c 39 63 10          	cmp    QWORD PTR [rbx+0x10],r12
+  58:	74 28                	je     82 <candidate_get+0x72>
+  5a:	bb 8c ff ff ff       	mov    ebx,0xffffff8c
+  5f:	4c 89 e7             	mov    rdi,r12
+  62:	e8 00 00 00 00       	call   67 <candidate_get+0x57>	63: R_X86_64_PLT32	_raw_spin_unlock-0x4
+  67:	48 83 c4 08          	add    rsp,0x8
+  6b:	89 d8                	mov    eax,ebx
+  6d:	5b                   	pop    rbx
+  6e:	41 5c                	pop    r12
+  70:	41 5e                	pop    r14
+  72:	41 5f                	pop    r15
+  74:	5d                   	pop    rbp
+  75:	31 d2                	xor    edx,edx
+  77:	31 c9                	xor    ecx,ecx
+  79:	31 f6                	xor    esi,esi
+  7b:	31 ff                	xor    edi,edi
+  7d:	e9 00 00 00 00       	jmp    82 <candidate_get+0x72>	7e: R_X86_64_PLT32	__x86_return_thunk-0x4
+  82:	0f b6 43 40          	movzx  eax,BYTE PTR [rbx+0x40]
+  86:	3c 01                	cmp    al,0x1
+  88:	0f 87 00 00 00 00    	ja     8e <candidate_get+0x7e>	8a: R_X86_64_PC32	.text.unlikely-0x4
+  8e:	a8 01                	test   al,0x1
+  90:	74 c8                	je     5a <candidate_get+0x4a>
+  92:	4c 39 73 18          	cmp    QWORD PTR [rbx+0x18],r14
+  96:	75 c2                	jne    5a <candidate_get+0x4a>
+  98:	8b 43 20             	mov    eax,DWORD PTR [rbx+0x20]
+  9b:	83 e8 01             	sub    eax,0x1
+  9e:	83 f8 01             	cmp    eax,0x1
+  a1:	77 b7                	ja     5a <candidate_get+0x4a>
+  a3:	41 83 bc 24 88 00 00 00 01 	cmp    DWORD PTR [r12+0x88],0x1
+  ac:	77 ac                	ja     5a <candidate_get+0x4a>
+  ae:	49 83 7c 24 18 00    	cmp    QWORD PTR [r12+0x18],0x0
+  b4:	74 a4                	je     5a <candidate_get+0x4a>
+  b6:	49 83 7c 24 20 00    	cmp    QWORD PTR [r12+0x20],0x0
+  bc:	74 9c                	je     5a <candidate_get+0x4a>
+  be:	41 0f b6 5c 24 4c    	movzx  ebx,BYTE PTR [r12+0x4c]
+  c4:	80 fb 01             	cmp    bl,0x1
+  c7:	0f 87 00 00 00 00    	ja     cd <candidate_get+0xbd>	c9: R_X86_64_PC32	.text.unlikely+0x17
+  cd:	83 e3 01             	and    ebx,0x1
+  d0:	74 88                	je     5a <candidate_get+0x4a>
+  d2:	41 83 7c 24 48 02    	cmp    DWORD PTR [r12+0x48],0x2
+  d8:	75 80                	jne    5a <candidate_get+0x4a>
+  da:	4d 39 64 24 40       	cmp    QWORD PTR [r12+0x40],r12
+  df:	0f 85 75 ff ff ff    	jne    5a <candidate_get+0x4a>
+  e5:	49 83 7c 24 38 00    	cmp    QWORD PTR [r12+0x38],0x0
+  eb:	0f 84 69 ff ff ff    	je     5a <candidate_get+0x4a>
+  f1:	4d 89 27             	mov    QWORD PTR [r15],r12
+  f4:	49 8b 44 24 18       	mov    rax,QWORD PTR [r12+0x18]
+  f9:	31 db                	xor    ebx,ebx
+  fb:	49 89 47 08          	mov    QWORD PTR [r15+0x8],rax
+  ff:	49 8b 44 24 20       	mov    rax,QWORD PTR [r12+0x20]
+ 104:	49 89 47 10          	mov    QWORD PTR [r15+0x10],rax
+ 108:	49 8b 44 24 38       	mov    rax,QWORD PTR [r12+0x38]
+ 10d:	49 89 47 18          	mov    QWORD PTR [r15+0x18],rax
+ 111:	e9 49 ff ff ff       	jmp    5f <candidate_get+0x4f>
+ 116:	bb ea ff ff ff       	mov    ebx,0xffffffea
+ 11b:	e9 47 ff ff ff       	jmp    67 <candidate_get+0x57>
+ 120:	bb 8c ff ff ff       	mov    ebx,0xffffff8c
+ 125:	e9 3d ff ff ff       	jmp    67 <candidate_get+0x57>
+ 12a:	66 0f 1f 44 00 00    	nop    WORD PTR [rax+rax*1+0x0]
+ 130:	90                   	nop
+ 131:	90                   	nop
+ 132:	90                   	nop
+ 133:	90                   	nop
+ 134:	90                   	nop
+ 135:	90                   	nop
+ 136:	90                   	nop
+ 137:	90                   	nop
+ 138:	90                   	nop
+ 139:	90                   	nop
+ 13a:	90                   	nop
+ 13b:	90                   	nop
+ 13c:	90                   	nop
+ 13d:	90                   	nop
+ 13e:	90                   	nop
+ 13f:	90                   	nop
+
+0000000000000140 <candidate_matches>:
+ 140:	e8 00 00 00 00       	call   145 <candidate_matches+0x5>	141: R_X86_64_PLT32	__fentry__-0x4
+ 145:	55                   	push   rbp
+ 146:	48 89 e5             	mov    rbp,rsp
+ 149:	53                   	push   rbx
+ 14a:	48 8d 55 d0          	lea    rdx,[rbp-0x30]
+ 14e:	48 83 ec 28          	sub    rsp,0x28
+ 152:	48 8b 77 48          	mov    rsi,QWORD PTR [rdi+0x48]
+ 156:	65 48 8b 1d 00 00 00 00 	mov    rbx,QWORD PTR gs:[rip+0x0]        # 15e <candidate_matches+0x1e>	15a: R_X86_64_PC32	__ref_stack_chk_guard-0x4
+ 15e:	48 89 5d f0          	mov    QWORD PTR [rbp-0x10],rbx
+ 162:	48 89 fb             	mov    rbx,rdi
+ 165:	48 8b 7f 40          	mov    rdi,QWORD PTR [rdi+0x40]
+ 169:	48 c7 45 d0 00 00 00 00 	mov    QWORD PTR [rbp-0x30],0x0
+ 171:	48 c7 45 d8 00 00 00 00 	mov    QWORD PTR [rbp-0x28],0x0
+ 179:	48 c7 45 e0 00 00 00 00 	mov    QWORD PTR [rbp-0x20],0x0
+ 181:	48 c7 45 e8 00 00 00 00 	mov    QWORD PTR [rbp-0x18],0x0
+ 189:	e8 82 fe ff ff       	call   10 <candidate_get>
+ 18e:	85 c0                	test   eax,eax
+ 190:	b8 00 00 00 00       	mov    eax,0x0
+ 195:	75 0a                	jne    1a1 <candidate_matches+0x61>
+ 197:	48 8b 4b 50          	mov    rcx,QWORD PTR [rbx+0x50]
+ 19b:	48 39 4d d0          	cmp    QWORD PTR [rbp-0x30],rcx
+ 19f:	74 20                	je     1c1 <candidate_matches+0x81>
+ 1a1:	48 8b 55 f0          	mov    rdx,QWORD PTR [rbp-0x10]
+ 1a5:	65 48 2b 15 00 00 00 00 	sub    rdx,QWORD PTR gs:[rip+0x0]        # 1ad <candidate_matches+0x6d>	1a9: R_X86_64_PC32	__ref_stack_chk_guard-0x4
+ 1ad:	75 33                	jne    1e2 <candidate_matches+0xa2>
+ 1af:	48 8b 5d f8          	mov    rbx,QWORD PTR [rbp-0x8]
+ 1b3:	c9                   	leave
+ 1b4:	31 d2                	xor    edx,edx
+ 1b6:	31 c9                	xor    ecx,ecx
+ 1b8:	31 f6                	xor    esi,esi
+ 1ba:	31 ff                	xor    edi,edi
+ 1bc:	e9 00 00 00 00       	jmp    1c1 <candidate_matches+0x81>	1bd: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 1c1:	48 8b 4b 58          	mov    rcx,QWORD PTR [rbx+0x58]
+ 1c5:	48 39 4d d8          	cmp    QWORD PTR [rbp-0x28],rcx
+ 1c9:	75 d6                	jne    1a1 <candidate_matches+0x61>
+ 1cb:	48 8b 4b 60          	mov    rcx,QWORD PTR [rbx+0x60]
+ 1cf:	48 39 4d e0          	cmp    QWORD PTR [rbp-0x20],rcx
+ 1d3:	75 cc                	jne    1a1 <candidate_matches+0x61>
+ 1d5:	48 8b 43 68          	mov    rax,QWORD PTR [rbx+0x68]
+ 1d9:	48 39 45 e8          	cmp    QWORD PTR [rbp-0x18],rax
+ 1dd:	0f 94 c0             	sete   al
+ 1e0:	eb bf                	jmp    1a1 <candidate_matches+0x61>
+ 1e2:	e8 00 00 00 00       	call   1e7 <candidate_matches+0xa7>	1e3: R_X86_64_PLT32	__stack_chk_fail-0x4
+ 1e7:	66 0f 1f 84 00 00 00 00 00 	nop    WORD PTR [rax+rax*1+0x0]
+ 1f0:	90                   	nop
+ 1f1:	90                   	nop
+ 1f2:	90                   	nop
+ 1f3:	90                   	nop
+ 1f4:	90                   	nop
+ 1f5:	90                   	nop
+ 1f6:	90                   	nop
+ 1f7:	90                   	nop
+ 1f8:	90                   	nop
+ 1f9:	90                   	nop
+ 1fa:	90                   	nop
+ 1fb:	90                   	nop
+ 1fc:	90                   	nop
+ 1fd:	90                   	nop
+ 1fe:	90                   	nop
+ 1ff:	90                   	nop
+
+0000000000000200 <update_matches>:
+ 200:	e8 00 00 00 00       	call   205 <update_matches+0x5>	201: R_X86_64_PLT32	__fentry__-0x4
+ 205:	55                   	push   rbp
+ 206:	48 89 e5             	mov    rbp,rsp
+ 209:	41 56                	push   r14
+ 20b:	41 89 f6             	mov    r14d,esi
+ 20e:	41 55                	push   r13
+ 210:	41 54                	push   r12
+ 212:	49 89 fc             	mov    r12,rdi
+ 215:	53                   	push   rbx
+ 216:	48 83 ec 08          	sub    rsp,0x8
+ 21a:	48 8b 9f 80 00 00 00 	mov    rbx,QWORD PTR [rdi+0x80]
+ 221:	4c 8b 6f 78          	mov    r13,QWORD PTR [rdi+0x78]
+ 225:	48 89 df             	mov    rdi,rbx
+ 228:	e8 00 00 00 00       	call   22d <update_matches+0x2d>	229: R_X86_64_PLT32	_raw_spin_lock-0x4
+ 22d:	49 39 5d 00          	cmp    QWORD PTR [r13+0x0],rbx
+ 231:	74 27                	je     25a <update_matches+0x5a>
+ 233:	45 31 e4             	xor    r12d,r12d
+ 236:	48 89 df             	mov    rdi,rbx
+ 239:	e8 00 00 00 00       	call   23e <update_matches+0x3e>	23a: R_X86_64_PLT32	_raw_spin_unlock-0x4
+ 23e:	44 89 e0             	mov    eax,r12d
+ 241:	48 83 c4 08          	add    rsp,0x8
+ 245:	5b                   	pop    rbx
+ 246:	41 5c                	pop    r12
+ 248:	41 5d                	pop    r13
+ 24a:	41 5e                	pop    r14
+ 24c:	5d                   	pop    rbp
+ 24d:	31 d2                	xor    edx,edx
+ 24f:	31 c9                	xor    ecx,ecx
+ 251:	31 f6                	xor    esi,esi
+ 253:	31 ff                	xor    edi,edi
+ 255:	e9 00 00 00 00       	jmp    25a <update_matches+0x5a>	256: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 25a:	49 8b 84 24 88 00 00 00 	mov    rax,QWORD PTR [r12+0x88]
+ 262:	49 39 45 18          	cmp    QWORD PTR [r13+0x18],rax
+ 266:	75 cb                	jne    233 <update_matches+0x33>
+ 268:	49 8b 84 24 90 00 00 00 	mov    rax,QWORD PTR [r12+0x90]
+ 270:	49 39 45 08          	cmp    QWORD PTR [r13+0x8],rax
+ 274:	75 bd                	jne    233 <update_matches+0x33>
+ 276:	49 8b 44 24 58       	mov    rax,QWORD PTR [r12+0x58]
+ 27b:	49 39 45 10          	cmp    QWORD PTR [r13+0x10],rax
+ 27f:	75 b2                	jne    233 <update_matches+0x33>
+ 281:	45 39 75 20          	cmp    DWORD PTR [r13+0x20],r14d
+ 285:	75 ac                	jne    233 <update_matches+0x33>
+ 287:	44 0f b6 6b 28       	movzx  r13d,BYTE PTR [rbx+0x28]
+ 28c:	48 8b 43 08          	mov    rax,QWORD PTR [rbx+0x8]
+ 290:	41 80 fd 01          	cmp    r13b,0x1
+ 294:	0f 87 00 00 00 00    	ja     29a <update_matches+0x9a>	296: R_X86_64_PC32	.text.unlikely+0x2b
+ 29a:	41 83 e5 01          	and    r13d,0x1
+ 29e:	75 93                	jne    233 <update_matches+0x33>
+ 2a0:	48 83 7b 20 00       	cmp    QWORD PTR [rbx+0x20],0x0
+ 2a5:	75 8c                	jne    233 <update_matches+0x33>
+ 2a7:	41 83 fe 03          	cmp    r14d,0x3
+ 2ab:	74 14                	je     2c1 <update_matches+0xc1>
+ 2ad:	49 8b 94 24 90 00 00 00 	mov    rdx,QWORD PTR [r12+0x90]
+ 2b5:	48 39 c2             	cmp    rdx,rax
+ 2b8:	41 0f 94 c4          	sete   r12b
+ 2bc:	e9 75 ff ff ff       	jmp    236 <update_matches+0x36>
+ 2c1:	49 8b 54 24 58       	mov    rdx,QWORD PTR [r12+0x58]
+ 2c6:	eb ed                	jmp    2b5 <update_matches+0xb5>
+ 2c8:	0f 1f 84 00 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+ 2d0:	90                   	nop
+ 2d1:	90                   	nop
+ 2d2:	90                   	nop
+ 2d3:	90                   	nop
+ 2d4:	90                   	nop
+ 2d5:	90                   	nop
+ 2d6:	90                   	nop
+ 2d7:	90                   	nop
+ 2d8:	90                   	nop
+ 2d9:	90                   	nop
+ 2da:	90                   	nop
+ 2db:	90                   	nop
+ 2dc:	90                   	nop
+ 2dd:	90                   	nop
+ 2de:	90                   	nop
+ 2df:	90                   	nop
+
+00000000000002e0 <kd_jit_feedback_publication_init>:
+ 2e0:	e8 00 00 00 00       	call   2e5 <kd_jit_feedback_publication_init+0x5>	2e1: R_X86_64_PLT32	__fentry__-0x4
+ 2e5:	55                   	push   rbp
+ 2e6:	48 c7 47 08 00 00 00 00 	mov    QWORD PTR [rdi+0x8],0x0
+ 2ee:	c7 07 00 00 00 00    	mov    DWORD PTR [rdi],0x0
+ 2f4:	48 89 e5             	mov    rbp,rsp
+ 2f7:	5d                   	pop    rbp
+ 2f8:	31 ff                	xor    edi,edi
+ 2fa:	e9 00 00 00 00       	jmp    2ff <kd_jit_feedback_publication_init+0x1f>	2fb: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 2ff:	90                   	nop
+ 300:	90                   	nop
+ 301:	90                   	nop
+ 302:	90                   	nop
+ 303:	90                   	nop
+ 304:	90                   	nop
+ 305:	90                   	nop
+ 306:	90                   	nop
+ 307:	90                   	nop
+ 308:	90                   	nop
+ 309:	90                   	nop
+ 30a:	90                   	nop
+ 30b:	90                   	nop
+ 30c:	90                   	nop
+ 30d:	90                   	nop
+ 30e:	90                   	nop
+ 30f:	90                   	nop
+
+0000000000000310 <kd_jit_feedback_publication_prepare>:
+ 310:	e8 00 00 00 00       	call   315 <kd_jit_feedback_publication_prepare+0x5>	311: R_X86_64_PLT32	__fentry__-0x4
+ 315:	55                   	push   rbp
+ 316:	48 89 e5             	mov    rbp,rsp
+ 319:	41 57                	push   r15
+ 31b:	41 56                	push   r14
+ 31d:	41 55                	push   r13
+ 31f:	41 54                	push   r12
+ 321:	53                   	push   rbx
+ 322:	48 89 d3             	mov    rbx,rdx
+ 325:	48 81 ec 90 00 00 00 	sub    rsp,0x90
+ 32c:	48 8b 45 20          	mov    rax,QWORD PTR [rbp+0x20]
+ 330:	48 89 4d a0          	mov    QWORD PTR [rbp-0x60],rcx
+ 334:	4c 8b 7d 10          	mov    r15,QWORD PTR [rbp+0x10]
+ 338:	8b 55 18             	mov    edx,DWORD PTR [rbp+0x18]
+ 33b:	48 89 b5 70 ff ff ff 	mov    QWORD PTR [rbp-0x90],rsi
+ 342:	48 89 45 88          	mov    QWORD PTR [rbp-0x78],rax
+ 346:	48 8b 45 28          	mov    rax,QWORD PTR [rbp+0x28]
+ 34a:	4c 89 45 a8          	mov    QWORD PTR [rbp-0x58],r8
+ 34e:	48 89 45 80          	mov    QWORD PTR [rbp-0x80],rax
+ 352:	48 8b 45 30          	mov    rax,QWORD PTR [rbp+0x30]
+ 356:	48 89 85 78 ff ff ff 	mov    QWORD PTR [rbp-0x88],rax
+ 35d:	48 8b 45 38          	mov    rax,QWORD PTR [rbp+0x38]
+ 361:	48 89 45 98          	mov    QWORD PTR [rbp-0x68],rax
+ 365:	48 8b 45 40          	mov    rax,QWORD PTR [rbp+0x40]
+ 369:	48 89 45 90          	mov    QWORD PTR [rbp-0x70],rax
+ 36d:	65 48 8b 05 00 00 00 00 	mov    rax,QWORD PTR gs:[rip+0x0]        # 375 <kd_jit_feedback_publication_prepare+0x65>	371: R_X86_64_PC32	__ref_stack_chk_guard-0x4
+ 375:	48 89 45 d0          	mov    QWORD PTR [rbp-0x30],rax
+ 379:	31 c0                	xor    eax,eax
+ 37b:	48 c7 45 b0 00 00 00 00 	mov    QWORD PTR [rbp-0x50],0x0
+ 383:	48 c7 45 b8 00 00 00 00 	mov    QWORD PTR [rbp-0x48],0x0
+ 38b:	48 c7 45 c0 00 00 00 00 	mov    QWORD PTR [rbp-0x40],0x0
+ 393:	48 c7 45 c8 00 00 00 00 	mov    QWORD PTR [rbp-0x38],0x0
+ 39b:	48 85 ff             	test   rdi,rdi
+ 39e:	0f 84 c4 00 00 00    	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 3a4:	48 85 f6             	test   rsi,rsi
+ 3a7:	0f 84 bb 00 00 00    	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 3ad:	48 85 db             	test   rbx,rbx
+ 3b0:	0f 84 b2 00 00 00    	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 3b6:	48 83 7d a0 00       	cmp    QWORD PTR [rbp-0x60],0x0
+ 3bb:	0f 84 a7 00 00 00    	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 3c1:	48 83 7d 98 00       	cmp    QWORD PTR [rbp-0x68],0x0
+ 3c6:	45 89 cc             	mov    r12d,r9d
+ 3c9:	0f 94 c0             	sete   al
+ 3cc:	48 83 7d 90 00       	cmp    QWORD PTR [rbp-0x70],0x0
+ 3d1:	0f 94 c1             	sete   cl
+ 3d4:	09 c8                	or     eax,ecx
+ 3d6:	44 39 ca             	cmp    edx,r9d
+ 3d9:	0f 92 c1             	setb   cl
+ 3dc:	08 c8                	or     al,cl
+ 3de:	0f 85 84 00 00 00    	jne    468 <kd_jit_feedback_publication_prepare+0x158>
+ 3e4:	49 89 fe             	mov    r14,rdi
+ 3e7:	45 85 c9             	test   r9d,r9d
+ 3ea:	0f 84 b9 00 00 00    	je     4a9 <kd_jit_feedback_publication_prepare+0x199>
+ 3f0:	48 8b 7d a8          	mov    rdi,QWORD PTR [rbp-0x58]
+ 3f4:	48 85 ff             	test   rdi,rdi
+ 3f7:	74 6f                	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 3f9:	44 89 c8             	mov    eax,r9d
+ 3fc:	48 8d 04 40          	lea    rax,[rax+rax*2]
+ 400:	48 8d 04 c5 ff ff ff ff 	lea    rax,[rax*8-0x1]
+ 408:	48 01 f8             	add    rax,rdi
+ 40b:	72 5b                	jb     468 <kd_jit_feedback_publication_prepare+0x158>
+ 40d:	85 d2                	test   edx,edx
+ 40f:	74 16                	je     427 <kd_jit_feedback_publication_prepare+0x117>
+ 411:	4d 85 ff             	test   r15,r15
+ 414:	74 52                	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 416:	48 8d 04 52          	lea    rax,[rdx+rdx*2]
+ 41a:	48 8d 04 c5 ff ff ff ff 	lea    rax,[rax*8-0x1]
+ 422:	4c 01 f8             	add    rax,r15
+ 425:	72 41                	jb     468 <kd_jit_feedback_publication_prepare+0x158>
+ 427:	4c 39 7d a8          	cmp    QWORD PTR [rbp-0x58],r15
+ 42b:	74 3b                	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 42d:	4c 39 7b 10          	cmp    QWORD PTR [rbx+0x10],r15
+ 431:	74 35                	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 433:	41 8b 36             	mov    esi,DWORD PTR [r14]
+ 436:	85 f6                	test   esi,esi
+ 438:	0f 85 39 03 00 00    	jne    777 <kd_jit_feedback_publication_prepare+0x467>
+ 43e:	48 8b 75 80          	mov    rsi,QWORD PTR [rbp-0x80]
+ 442:	48 8b 7d 88          	mov    rdi,QWORD PTR [rbp-0x78]
+ 446:	48 8d 55 b0          	lea    rdx,[rbp-0x50]
+ 44a:	e8 c1 fb ff ff       	call   10 <candidate_get>
+ 44f:	85 c0                	test   eax,eax
+ 451:	75 1a                	jne    46d <kd_jit_feedback_publication_prepare+0x15d>
+ 453:	48 8b 8d 78 ff ff ff 	mov    rcx,QWORD PTR [rbp-0x88]
+ 45a:	48 85 c9             	test   rcx,rcx
+ 45d:	74 09                	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 45f:	48 8b 45 c0          	mov    rax,QWORD PTR [rbp-0x40]
+ 463:	48 39 01             	cmp    QWORD PTR [rcx],rax
+ 466:	74 61                	je     4c9 <kd_jit_feedback_publication_prepare+0x1b9>
+ 468:	b8 ea ff ff ff       	mov    eax,0xffffffea
+ 46d:	48 8b 55 d0          	mov    rdx,QWORD PTR [rbp-0x30]
+ 471:	65 48 2b 15 00 00 00 00 	sub    rdx,QWORD PTR gs:[rip+0x0]        # 479 <kd_jit_feedback_publication_prepare+0x169>	475: R_X86_64_PC32	__ref_stack_chk_guard-0x4
+ 479:	0f 85 85 05 00 00    	jne    a04 <kd_jit_feedback_publication_prepare+0x6f4>
+ 47f:	48 81 c4 90 00 00 00 	add    rsp,0x90
+ 486:	5b                   	pop    rbx
+ 487:	41 5c                	pop    r12
+ 489:	41 5d                	pop    r13
+ 48b:	41 5e                	pop    r14
+ 48d:	41 5f                	pop    r15
+ 48f:	5d                   	pop    rbp
+ 490:	31 d2                	xor    edx,edx
+ 492:	31 c9                	xor    ecx,ecx
+ 494:	31 f6                	xor    esi,esi
+ 496:	31 ff                	xor    edi,edi
+ 498:	45 31 c0             	xor    r8d,r8d
+ 49b:	45 31 c9             	xor    r9d,r9d
+ 49e:	45 31 d2             	xor    r10d,r10d
+ 4a1:	45 31 db             	xor    r11d,r11d
+ 4a4:	e9 00 00 00 00       	jmp    4a9 <kd_jit_feedback_publication_prepare+0x199>	4a5: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 4a9:	85 d2                	test   edx,edx
+ 4ab:	74 86                	je     433 <kd_jit_feedback_publication_prepare+0x123>
+ 4ad:	4d 85 ff             	test   r15,r15
+ 4b0:	74 b6                	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 4b2:	48 8d 04 52          	lea    rax,[rdx+rdx*2]
+ 4b6:	48 8d 04 c5 ff ff ff ff 	lea    rax,[rax*8-0x1]
+ 4be:	4c 01 f8             	add    rax,r15
+ 4c1:	0f 83 6c ff ff ff    	jae    433 <kd_jit_feedback_publication_prepare+0x123>
+ 4c7:	eb 9f                	jmp    468 <kd_jit_feedback_publication_prepare+0x158>
+ 4c9:	4c 8b 45 b8          	mov    r8,QWORD PTR [rbp-0x48]
+ 4cd:	4c 39 00             	cmp    QWORD PTR [rax],r8
+ 4d0:	75 96                	jne    468 <kd_jit_feedback_publication_prepare+0x158>
+ 4d2:	48 8b 45 c8          	mov    rax,QWORD PTR [rbp-0x38]
+ 4d6:	49 39 00             	cmp    QWORD PTR [r8],rax
+ 4d9:	75 8d                	jne    468 <kd_jit_feedback_publication_prepare+0x158>
+ 4db:	8b 71 10             	mov    esi,DWORD PTR [rcx+0x10]
+ 4de:	85 f6                	test   esi,esi
+ 4e0:	0f 84 be 00 00 00    	je     5a4 <kd_jit_feedback_publication_prepare+0x294>
+ 4e6:	48 8b 79 08          	mov    rdi,QWORD PTR [rcx+0x8]
+ 4ea:	48 85 ff             	test   rdi,rdi
+ 4ed:	0f 84 75 ff ff ff    	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 4f3:	89 f0                	mov    eax,esi
+ 4f5:	48 8d 04 40          	lea    rax,[rax+rax*2]
+ 4f9:	48 8d 04 c5 ff ff ff ff 	lea    rax,[rax*8-0x1]
+ 501:	48 01 f8             	add    rax,rdi
+ 504:	0f 82 5e ff ff ff    	jb     468 <kd_jit_feedback_publication_prepare+0x158>
+ 50a:	48 89 9d 58 ff ff ff 	mov    QWORD PTR [rbp-0xa8],rbx
+ 511:	48 89 f8             	mov    rax,rdi
+ 514:	45 31 db             	xor    r11d,r11d
+ 517:	4c 89 bd 68 ff ff ff 	mov    QWORD PTR [rbp-0x98],r15
+ 51e:	41 89 f7             	mov    r15d,esi
+ 521:	4c 89 b5 60 ff ff ff 	mov    QWORD PTR [rbp-0xa0],r14
+ 528:	49 89 fe             	mov    r14,rdi
+ 52b:	8b 78 10             	mov    edi,DWORD PTR [rax+0x10]
+ 52e:	83 ff 01             	cmp    edi,0x1
+ 531:	0f 87 31 ff ff ff    	ja     468 <kd_jit_feedback_publication_prepare+0x158>
+ 537:	8b 50 14             	mov    edx,DWORD PTR [rax+0x14]
+ 53a:	83 fa 03             	cmp    edx,0x3
+ 53d:	0f 87 25 ff ff ff    	ja     468 <kd_jit_feedback_publication_prepare+0x158>
+ 543:	85 d2                	test   edx,edx
+ 545:	0f 84 ca 01 00 00    	je     715 <kd_jit_feedback_publication_prepare+0x405>
+ 54b:	45 85 db             	test   r11d,r11d
+ 54e:	74 32                	je     582 <kd_jit_feedback_publication_prepare+0x272>
+ 550:	48 8b 08             	mov    rcx,QWORD PTR [rax]
+ 553:	4c 89 f2             	mov    rdx,r14
+ 556:	eb 11                	jmp    569 <kd_jit_feedback_publication_prepare+0x259>
+ 558:	0f 1f 84 00 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+ 560:	48 83 c2 18          	add    rdx,0x18
+ 564:	48 39 d0             	cmp    rax,rdx
+ 567:	74 19                	je     582 <kd_jit_feedback_publication_prepare+0x272>
+ 569:	48 3b 0a             	cmp    rcx,QWORD PTR [rdx]
+ 56c:	75 f2                	jne    560 <kd_jit_feedback_publication_prepare+0x250>
+ 56e:	48 8b 5a 08          	mov    rbx,QWORD PTR [rdx+0x8]
+ 572:	48 39 58 08          	cmp    QWORD PTR [rax+0x8],rbx
+ 576:	75 e8                	jne    560 <kd_jit_feedback_publication_prepare+0x250>
+ 578:	3b 7a 10             	cmp    edi,DWORD PTR [rdx+0x10]
+ 57b:	75 e3                	jne    560 <kd_jit_feedback_publication_prepare+0x250>
+ 57d:	e9 e6 fe ff ff       	jmp    468 <kd_jit_feedback_publication_prepare+0x158>
+ 582:	41 83 c3 01          	add    r11d,0x1
+ 586:	48 83 c0 18          	add    rax,0x18
+ 58a:	45 39 df             	cmp    r15d,r11d
+ 58d:	75 9c                	jne    52b <kd_jit_feedback_publication_prepare+0x21b>
+ 58f:	4c 8b bd 68 ff ff ff 	mov    r15,QWORD PTR [rbp-0x98]
+ 596:	4c 8b b5 60 ff ff ff 	mov    r14,QWORD PTR [rbp-0xa0]
+ 59d:	48 8b 9d 58 ff ff ff 	mov    rbx,QWORD PTR [rbp-0xa8]
+ 5a4:	4c 8b 6d a8          	mov    r13,QWORD PTR [rbp-0x58]
+ 5a8:	48 8b 75 a0          	mov    rsi,QWORD PTR [rbp-0x60]
+ 5ac:	44 89 e1             	mov    ecx,r12d
+ 5af:	48 89 df             	mov    rdi,rbx
+ 5b2:	4c 89 ea             	mov    rdx,r13
+ 5b5:	e8 00 00 00 00       	call   5ba <kd_jit_feedback_publication_prepare+0x2aa>	5b6: R_X86_64_PLT32	kd_jit_feedback_claim_check-0x4
+ 5ba:	85 c0                	test   eax,eax
+ 5bc:	0f 85 ab fe ff ff    	jne    46d <kd_jit_feedback_publication_prepare+0x15d>
+ 5c2:	4c 8b 5d c8          	mov    r11,QWORD PTR [rbp-0x38]
+ 5c6:	4c 39 5b 08          	cmp    QWORD PTR [rbx+0x8],r11
+ 5ca:	0f 85 3b 01 00 00    	jne    70b <kd_jit_feedback_publication_prepare+0x3fb>
+ 5d0:	45 85 e4             	test   r12d,r12d
+ 5d3:	0f 84 f1 00 00 00    	je     6ca <kd_jit_feedback_publication_prepare+0x3ba>
+ 5d9:	4c 8b 4d c0          	mov    r9,QWORD PTR [rbp-0x40]
+ 5dd:	89 85 60 ff ff ff    	mov    DWORD PTR [rbp-0xa0],eax
+ 5e3:	4d 89 ea             	mov    r10,r13
+ 5e6:	4d 89 dd             	mov    r13,r11
+ 5e9:	44 89 a5 68 ff ff ff 	mov    DWORD PTR [rbp-0x98],r12d
+ 5f0:	4c 89 bd 58 ff ff ff 	mov    QWORD PTR [rbp-0xa8],r15
+ 5f7:	4d 89 d7             	mov    r15,r10
+ 5fa:	4c 89 b5 50 ff ff ff 	mov    QWORD PTR [rbp-0xb0],r14
+ 601:	45 31 f6             	xor    r14d,r14d
+ 604:	48 89 9d 48 ff ff ff 	mov    QWORD PTR [rbp-0xb8],rbx
+ 60b:	4c 89 cb             	mov    rbx,r9
+ 60e:	4d 8b 27             	mov    r12,QWORD PTR [r15]
+ 611:	4d 3b 6c 24 38       	cmp    r13,QWORD PTR [r12+0x38]
+ 616:	0f 85 ef 00 00 00    	jne    70b <kd_jit_feedback_publication_prepare+0x3fb>
+ 61c:	49 8b 47 08          	mov    rax,QWORD PTR [r15+0x8]
+ 620:	49 39 44 24 18       	cmp    QWORD PTR [r12+0x18],rax
+ 625:	0f 85 e0 00 00 00    	jne    70b <kd_jit_feedback_publication_prepare+0x3fb>
+ 62b:	49 8b 47 10          	mov    rax,QWORD PTR [r15+0x10]
+ 62f:	49 39 44 24 20       	cmp    QWORD PTR [r12+0x20],rax
+ 634:	0f 85 d1 00 00 00    	jne    70b <kd_jit_feedback_publication_prepare+0x3fb>
+ 63a:	49 83 7c 24 28 00    	cmp    QWORD PTR [r12+0x28],0x0
+ 640:	0f 84 c5 00 00 00    	je     70b <kd_jit_feedback_publication_prepare+0x3fb>
+ 646:	49 8b 54 24 48       	mov    rdx,QWORD PTR [r12+0x48]
+ 64b:	48 3b 53 10          	cmp    rdx,QWORD PTR [rbx+0x10]
+ 64f:	0f 85 b6 00 00 00    	jne    70b <kd_jit_feedback_publication_prepare+0x3fb>
+ 655:	49 8b 7c 24 40       	mov    rdi,QWORD PTR [r12+0x40]
+ 65a:	48 85 ff             	test   rdi,rdi
+ 65d:	0f 84 a8 00 00 00    	je     70b <kd_jit_feedback_publication_prepare+0x3fb>
+ 663:	48 8b 73 08          	mov    rsi,QWORD PTR [rbx+0x8]
+ 667:	e8 00 00 00 00       	call   66c <kd_jit_feedback_publication_prepare+0x35c>	668: R_X86_64_PLT32	memcmp-0x4
+ 66c:	85 c0                	test   eax,eax
+ 66e:	0f 85 97 00 00 00    	jne    70b <kd_jit_feedback_publication_prepare+0x3fb>
+ 674:	45 85 f6             	test   r14d,r14d
+ 677:	74 1a                	je     693 <kd_jit_feedback_publication_prepare+0x383>
+ 679:	48 8b 45 a8          	mov    rax,QWORD PTR [rbp-0x58]
+ 67d:	eb 0a                	jmp    689 <kd_jit_feedback_publication_prepare+0x379>
+ 67f:	90                   	nop
+ 680:	48 83 c0 18          	add    rax,0x18
+ 684:	49 39 c7             	cmp    r15,rax
+ 687:	74 0a                	je     693 <kd_jit_feedback_publication_prepare+0x383>
+ 689:	4c 3b 20             	cmp    r12,QWORD PTR [rax]
+ 68c:	75 f2                	jne    680 <kd_jit_feedback_publication_prepare+0x370>
+ 68e:	e9 d5 fd ff ff       	jmp    468 <kd_jit_feedback_publication_prepare+0x158>
+ 693:	41 83 c6 01          	add    r14d,0x1
+ 697:	49 83 c7 18          	add    r15,0x18
+ 69b:	44 39 b5 68 ff ff ff 	cmp    DWORD PTR [rbp-0x98],r14d
+ 6a2:	0f 85 66 ff ff ff    	jne    60e <kd_jit_feedback_publication_prepare+0x2fe>
+ 6a8:	8b 85 60 ff ff ff    	mov    eax,DWORD PTR [rbp-0xa0]
+ 6ae:	4c 8b bd 58 ff ff ff 	mov    r15,QWORD PTR [rbp-0xa8]
+ 6b5:	4c 8b b5 50 ff ff ff 	mov    r14,QWORD PTR [rbp-0xb0]
+ 6bc:	48 8b 9d 48 ff ff ff 	mov    rbx,QWORD PTR [rbp-0xb8]
+ 6c3:	44 8b a5 68 ff ff ff 	mov    r12d,DWORD PTR [rbp-0x98]
+ 6ca:	4c 8b 6d 98          	mov    r13,QWORD PTR [rbp-0x68]
+ 6ce:	49 8b 4d 00          	mov    rcx,QWORD PTR [r13+0x0]
+ 6d2:	48 85 c9             	test   rcx,rcx
+ 6d5:	74 34                	je     70b <kd_jit_feedback_publication_prepare+0x3fb>
+ 6d7:	48 89 cf             	mov    rdi,rcx
+ 6da:	48 89 8d 68 ff ff ff 	mov    QWORD PTR [rbp-0x98],rcx
+ 6e1:	89 85 60 ff ff ff    	mov    DWORD PTR [rbp-0xa0],eax
+ 6e7:	e8 00 00 00 00       	call   6ec <kd_jit_feedback_publication_prepare+0x3dc>	6e8: R_X86_64_PLT32	_raw_spin_lock-0x4
+ 6ec:	48 8b 8d 68 ff ff ff 	mov    rcx,QWORD PTR [rbp-0x98]
+ 6f3:	49 39 4d 00          	cmp    QWORD PTR [r13+0x0],rcx
+ 6f7:	8b 85 60 ff ff ff    	mov    eax,DWORD PTR [rbp-0xa0]
+ 6fd:	0f 84 7e 00 00 00    	je     781 <kd_jit_feedback_publication_prepare+0x471>
+ 703:	48 89 cf             	mov    rdi,rcx
+ 706:	e8 00 00 00 00       	call   70b <kd_jit_feedback_publication_prepare+0x3fb>	707: R_X86_64_PLT32	_raw_spin_unlock-0x4
+ 70b:	b8 8c ff ff ff       	mov    eax,0xffffff8c
+ 710:	e9 58 fd ff ff       	jmp    46d <kd_jit_feedback_publication_prepare+0x15d>
+ 715:	41 8b 48 40          	mov    ecx,DWORD PTR [r8+0x40]
+ 719:	85 c9                	test   ecx,ecx
+ 71b:	0f 84 47 fd ff ff    	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 721:	49 8b 50 38          	mov    rdx,QWORD PTR [r8+0x38]
+ 725:	48 8d 0c 49          	lea    rcx,[rcx+rcx*2]
+ 729:	48 8b 18             	mov    rbx,QWORD PTR [rax]
+ 72c:	31 f6                	xor    esi,esi
+ 72e:	4c 8b 50 08          	mov    r10,QWORD PTR [rax+0x8]
+ 732:	45 31 ed             	xor    r13d,r13d
+ 735:	4c 8d 0c ca          	lea    r9,[rdx+rcx*8]
+ 739:	0f 1f 80 00 00 00 00 	nop    DWORD PTR [rax+0x0]
+ 740:	48 8b 0a             	mov    rcx,QWORD PTR [rdx]
+ 743:	48 39 d9             	cmp    rcx,rbx
+ 746:	75 07                	jne    74f <kd_jit_feedback_publication_prepare+0x43f>
+ 748:	39 7a 10             	cmp    DWORD PTR [rdx+0x10],edi
+ 74b:	41 0f 94 c5          	sete   r13b
+ 74f:	4c 39 d1             	cmp    rcx,r10
+ 752:	0f 94 c1             	sete   cl
+ 755:	48 83 c2 18          	add    rdx,0x18
+ 759:	09 ce                	or     esi,ecx
+ 75b:	49 39 d1             	cmp    r9,rdx
+ 75e:	75 e0                	jne    740 <kd_jit_feedback_publication_prepare+0x430>
+ 760:	40 84 f6             	test   sil,sil
+ 763:	0f 84 ff fc ff ff    	je     468 <kd_jit_feedback_publication_prepare+0x158>
+ 769:	45 84 ed             	test   r13b,r13b
+ 76c:	0f 85 d9 fd ff ff    	jne    54b <kd_jit_feedback_publication_prepare+0x23b>
+ 772:	e9 f1 fc ff ff       	jmp    468 <kd_jit_feedback_publication_prepare+0x158>
+ 777:	b8 8e ff ff ff       	mov    eax,0xffffff8e
+ 77c:	e9 ec fc ff ff       	jmp    46d <kd_jit_feedback_publication_prepare+0x15d>
+ 781:	48 8b 75 98          	mov    rsi,QWORD PTR [rbp-0x68]
+ 785:	48 8b 7d 90          	mov    rdi,QWORD PTR [rbp-0x70]
+ 789:	48 39 7e 18          	cmp    QWORD PTR [rsi+0x18],rdi
+ 78d:	0f 85 70 ff ff ff    	jne    703 <kd_jit_feedback_publication_prepare+0x3f3>
+ 793:	48 8b 75 98          	mov    rsi,QWORD PTR [rbp-0x68]
+ 797:	48 8b 56 10          	mov    rdx,QWORD PTR [rsi+0x10]
+ 79b:	48 3b 55 b8          	cmp    rdx,QWORD PTR [rbp-0x48]
+ 79f:	0f 85 5e ff ff ff    	jne    703 <kd_jit_feedback_publication_prepare+0x3f3>
+ 7a5:	48 8b 75 98          	mov    rsi,QWORD PTR [rbp-0x68]
+ 7a9:	4c 8b 46 08          	mov    r8,QWORD PTR [rsi+0x8]
+ 7ad:	4c 39 c2             	cmp    rdx,r8
+ 7b0:	0f 84 4d ff ff ff    	je     703 <kd_jit_feedback_publication_prepare+0x3f3>
+ 7b6:	48 8b 75 98          	mov    rsi,QWORD PTR [rbp-0x68]
+ 7ba:	83 7e 20 01          	cmp    DWORD PTR [rsi+0x20],0x1
+ 7be:	0f 85 3f ff ff ff    	jne    703 <kd_jit_feedback_publication_prepare+0x3f3>
+ 7c4:	0f b6 51 28          	movzx  edx,BYTE PTR [rcx+0x28]
+ 7c8:	80 fa 01             	cmp    dl,0x1
+ 7cb:	0f 87 00 00 00 00    	ja     7d1 <kd_jit_feedback_publication_prepare+0x4c1>	7cd: R_X86_64_PC32	.text.unlikely+0x48
+ 7d1:	80 e2 01             	and    dl,0x1
+ 7d4:	0f 84 29 ff ff ff    	je     703 <kd_jit_feedback_publication_prepare+0x3f3>
+ 7da:	48 8b 75 98          	mov    rsi,QWORD PTR [rbp-0x68]
+ 7de:	48 39 71 20          	cmp    QWORD PTR [rcx+0x20],rsi
+ 7e2:	0f 85 1b ff ff ff    	jne    703 <kd_jit_feedback_publication_prepare+0x3f3>
+ 7e8:	4c 3b 41 08          	cmp    r8,QWORD PTR [rcx+0x8]
+ 7ec:	0f 85 11 ff ff ff    	jne    703 <kd_jit_feedback_publication_prepare+0x3f3>
+ 7f2:	48 89 cf             	mov    rdi,rcx
+ 7f5:	89 85 58 ff ff ff    	mov    DWORD PTR [rbp-0xa8],eax
+ 7fb:	4c 89 85 60 ff ff ff 	mov    QWORD PTR [rbp-0xa0],r8
+ 802:	48 89 8d 68 ff ff ff 	mov    QWORD PTR [rbp-0x98],rcx
+ 809:	e8 00 00 00 00       	call   80e <kd_jit_feedback_publication_prepare+0x4fe>	80a: R_X86_64_PLT32	_raw_spin_unlock-0x4
+ 80e:	45 85 e4             	test   r12d,r12d
+ 811:	48 8b 8d 68 ff ff ff 	mov    rcx,QWORD PTR [rbp-0x98]
+ 818:	4c 8b 85 60 ff ff ff 	mov    r8,QWORD PTR [rbp-0xa0]
+ 81f:	8b 85 58 ff ff ff    	mov    eax,DWORD PTR [rbp-0xa8]
+ 825:	0f 84 de 01 00 00    	je     a09 <kd_jit_feedback_publication_prepare+0x6f9>
+ 82b:	44 89 e2             	mov    edx,r12d
+ 82e:	48 8b 75 a8          	mov    rsi,QWORD PTR [rbp-0x58]
+ 832:	48 89 8d 60 ff ff ff 	mov    QWORD PTR [rbp-0xa0],rcx
+ 839:	45 31 d2             	xor    r10d,r10d
+ 83c:	48 6b d2 18          	imul   rdx,rdx,0x18
+ 840:	4c 89 85 58 ff ff ff 	mov    QWORD PTR [rbp-0xa8],r8
+ 847:	4c 8b ad 78 ff ff ff 	mov    r13,QWORD PTR [rbp-0x88]
+ 84e:	49 89 f1             	mov    r9,rsi
+ 851:	4c 8d 1c 16          	lea    r11,[rsi+rdx*1]
+ 855:	49 8b 39             	mov    rdi,QWORD PTR [r9]
+ 858:	8b 8f 84 00 00 00    	mov    ecx,DWORD PTR [rdi+0x84]
+ 85e:	85 c9                	test   ecx,ecx
+ 860:	0f 85 bd 00 00 00    	jne    923 <kd_jit_feedback_publication_prepare+0x613>
+ 866:	48 83 7f 50 03       	cmp    QWORD PTR [rdi+0x50],0x3
+ 86b:	0f 85 b2 00 00 00    	jne    923 <kd_jit_feedback_publication_prepare+0x613>
+ 871:	44 8b 87 80 00 00 00 	mov    r8d,DWORD PTR [rdi+0x80]
+ 878:	41 83 f8 01          	cmp    r8d,0x1
+ 87c:	0f 85 a1 00 00 00    	jne    923 <kd_jit_feedback_publication_prepare+0x613>
+ 882:	48 8b 57 78          	mov    rdx,QWORD PTR [rdi+0x78]
+ 886:	48 8b 4f 70          	mov    rcx,QWORD PTR [rdi+0x70]
+ 88a:	48 83 fa 01          	cmp    rdx,0x1
+ 88e:	0f 84 5e 01 00 00    	je     9f2 <kd_jit_feedback_publication_prepare+0x6e2>
+ 894:	48 3b 4f 68          	cmp    rcx,QWORD PTR [rdi+0x68]
+ 898:	0f 85 85 00 00 00    	jne    923 <kd_jit_feedback_publication_prepare+0x613>
+ 89e:	48 83 fa 02          	cmp    rdx,0x2
+ 8a2:	0f 84 54 01 00 00    	je     9fc <kd_jit_feedback_publication_prepare+0x6ec>
+ 8a8:	48 83 fa 04          	cmp    rdx,0x4
+ 8ac:	75 75                	jne    923 <kd_jit_feedback_publication_prepare+0x613>
+ 8ae:	41 8b 75 10          	mov    esi,DWORD PTR [r13+0x10]
+ 8b2:	85 f6                	test   esi,esi
+ 8b4:	74 6d                	je     923 <kd_jit_feedback_publication_prepare+0x613>
+ 8b6:	49 8b 55 08          	mov    rdx,QWORD PTR [r13+0x8]
+ 8ba:	48 8d 34 76          	lea    rsi,[rsi+rsi*2]
+ 8be:	89 85 68 ff ff ff    	mov    DWORD PTR [rbp-0x98],eax
+ 8c4:	48 8b 4f 60          	mov    rcx,QWORD PTR [rdi+0x60]
+ 8c8:	48 8d 34 f2          	lea    rsi,[rdx+rsi*8]
+ 8cc:	eb 0f                	jmp    8dd <kd_jit_feedback_publication_prepare+0x5cd>
+ 8ce:	66 90                	xchg   ax,ax
+ 8d0:	48 83 c2 18          	add    rdx,0x18
+ 8d4:	48 39 f2             	cmp    rdx,rsi
+ 8d7:	0f 84 0a 01 00 00    	je     9e7 <kd_jit_feedback_publication_prepare+0x6d7>
+ 8dd:	48 39 0a             	cmp    QWORD PTR [rdx],rcx
+ 8e0:	75 ee                	jne    8d0 <kd_jit_feedback_publication_prepare+0x5c0>
+ 8e2:	48 8b 47 68          	mov    rax,QWORD PTR [rdi+0x68]
+ 8e6:	48 39 42 08          	cmp    QWORD PTR [rdx+0x8],rax
+ 8ea:	75 e4                	jne    8d0 <kd_jit_feedback_publication_prepare+0x5c0>
+ 8ec:	44 39 42 10          	cmp    DWORD PTR [rdx+0x10],r8d
+ 8f0:	75 de                	jne    8d0 <kd_jit_feedback_publication_prepare+0x5c0>
+ 8f2:	8b 52 14             	mov    edx,DWORD PTR [rdx+0x14]
+ 8f5:	8b 85 68 ff ff ff    	mov    eax,DWORD PTR [rbp-0x98]
+ 8fb:	85 d2                	test   edx,edx
+ 8fd:	75 24                	jne    923 <kd_jit_feedback_publication_prepare+0x613>
+ 8ff:	49 8b 09             	mov    rcx,QWORD PTR [r9]
+ 902:	44 89 d2             	mov    edx,r10d
+ 905:	41 83 c2 01          	add    r10d,0x1
+ 909:	48 8d 14 52          	lea    rdx,[rdx+rdx*2]
+ 90d:	49 89 0c d7          	mov    QWORD PTR [r15+rdx*8],rcx
+ 911:	49 8b 49 08          	mov    rcx,QWORD PTR [r9+0x8]
+ 915:	49 89 4c d7 08       	mov    QWORD PTR [r15+rdx*8+0x8],rcx
+ 91a:	49 8b 49 10          	mov    rcx,QWORD PTR [r9+0x10]
+ 91e:	49 89 4c d7 10       	mov    QWORD PTR [r15+rdx*8+0x10],rcx
+ 923:	49 83 c1 18          	add    r9,0x18
+ 927:	4d 39 d9             	cmp    r9,r11
+ 92a:	0f 85 25 ff ff ff    	jne    855 <kd_jit_feedback_publication_prepare+0x545>
+ 930:	48 8b 8d 60 ff ff ff 	mov    rcx,QWORD PTR [rbp-0xa0]
+ 937:	4c 8b 85 58 ff ff ff 	mov    r8,QWORD PTR [rbp-0xa8]
+ 93e:	48 8b 55 b0          	mov    rdx,QWORD PTR [rbp-0x50]
+ 942:	48 8b b5 70 ff ff ff 	mov    rsi,QWORD PTR [rbp-0x90]
+ 949:	49 89 5e 10          	mov    QWORD PTR [r14+0x10],rbx
+ 94d:	48 8b 5d a0          	mov    rbx,QWORD PTR [rbp-0x60]
+ 951:	45 89 66 28          	mov    DWORD PTR [r14+0x28],r12d
+ 955:	49 89 76 08          	mov    QWORD PTR [r14+0x8],rsi
+ 959:	49 89 5e 18          	mov    QWORD PTR [r14+0x18],rbx
+ 95d:	48 8b 5d a8          	mov    rbx,QWORD PTR [rbp-0x58]
+ 961:	49 89 56 50          	mov    QWORD PTR [r14+0x50],rdx
+ 965:	48 8b 55 b8          	mov    rdx,QWORD PTR [rbp-0x48]
+ 969:	49 89 5e 20          	mov    QWORD PTR [r14+0x20],rbx
+ 96d:	48 8b 5d 88          	mov    rbx,QWORD PTR [rbp-0x78]
+ 971:	49 89 56 58          	mov    QWORD PTR [r14+0x58],rdx
+ 975:	48 8b 55 c0          	mov    rdx,QWORD PTR [rbp-0x40]
+ 979:	49 89 5e 40          	mov    QWORD PTR [r14+0x40],rbx
+ 97d:	48 8b 5d 80          	mov    rbx,QWORD PTR [rbp-0x80]
+ 981:	49 89 56 60          	mov    QWORD PTR [r14+0x60],rdx
+ 985:	48 8b 55 c8          	mov    rdx,QWORD PTR [rbp-0x38]
+ 989:	49 89 5e 48          	mov    QWORD PTR [r14+0x48],rbx
+ 98d:	48 8b 9d 78 ff ff ff 	mov    rbx,QWORD PTR [rbp-0x88]
+ 994:	4d 89 7e 30          	mov    QWORD PTR [r14+0x30],r15
+ 998:	49 89 5e 70          	mov    QWORD PTR [r14+0x70],rbx
+ 99c:	48 8b 5d 98          	mov    rbx,QWORD PTR [rbp-0x68]
+ 9a0:	45 89 56 38          	mov    DWORD PTR [r14+0x38],r10d
+ 9a4:	49 89 5e 78          	mov    QWORD PTR [r14+0x78],rbx
+ 9a8:	48 8b 5d 90          	mov    rbx,QWORD PTR [rbp-0x70]
+ 9ac:	49 89 56 68          	mov    QWORD PTR [r14+0x68],rdx
+ 9b0:	49 89 8e 80 00 00 00 	mov    QWORD PTR [r14+0x80],rcx
+ 9b7:	49 89 9e 88 00 00 00 	mov    QWORD PTR [r14+0x88],rbx
+ 9be:	4d 89 86 90 00 00 00 	mov    QWORD PTR [r14+0x90],r8
+ 9c5:	49 c7 86 98 00 00 00 00 00 00 00 	mov    QWORD PTR [r14+0x98],0x0
+ 9d0:	49 c7 86 00 01 00 00 00 00 00 00 	mov    QWORD PTR [r14+0x100],0x0
+ 9db:	41 c7 06 01 00 00 00 	mov    DWORD PTR [r14],0x1
+ 9e2:	e9 86 fa ff ff       	jmp    46d <kd_jit_feedback_publication_prepare+0x15d>
+ 9e7:	8b 85 68 ff ff ff    	mov    eax,DWORD PTR [rbp-0x98]
+ 9ed:	e9 31 ff ff ff       	jmp    923 <kd_jit_feedback_publication_prepare+0x613>
+ 9f2:	48 3b 4f 60          	cmp    rcx,QWORD PTR [rdi+0x60]
+ 9f6:	0f 85 27 ff ff ff    	jne    923 <kd_jit_feedback_publication_prepare+0x613>
+ 9fc:	45 31 c0             	xor    r8d,r8d
+ 9ff:	e9 aa fe ff ff       	jmp    8ae <kd_jit_feedback_publication_prepare+0x59e>
+ a04:	e8 00 00 00 00       	call   a09 <kd_jit_feedback_publication_prepare+0x6f9>	a05: R_X86_64_PLT32	__stack_chk_fail-0x4
+ a09:	45 31 d2             	xor    r10d,r10d
+ a0c:	e9 2d ff ff ff       	jmp    93e <kd_jit_feedback_publication_prepare+0x62e>
+ a11:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+ a15:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+ a20:	90                   	nop
+ a21:	90                   	nop
+ a22:	90                   	nop
+ a23:	90                   	nop
+ a24:	90                   	nop
+ a25:	90                   	nop
+ a26:	90                   	nop
+ a27:	90                   	nop
+ a28:	90                   	nop
+ a29:	90                   	nop
+ a2a:	90                   	nop
+ a2b:	90                   	nop
+ a2c:	90                   	nop
+ a2d:	90                   	nop
+ a2e:	90                   	nop
+ a2f:	90                   	nop
+
+0000000000000a30 <kd_jit_feedback_publication_commit>:
+ a30:	e8 00 00 00 00       	call   a35 <kd_jit_feedback_publication_commit+0x5>	a31: R_X86_64_PLT32	__fentry__-0x4
+ a35:	48 85 ff             	test   rdi,rdi
+ a38:	0f 84 36 01 00 00    	je     b74 <kd_jit_feedback_publication_commit+0x144>
+ a3e:	48 85 f6             	test   rsi,rsi
+ a41:	0f 84 2d 01 00 00    	je     b74 <kd_jit_feedback_publication_commit+0x144>
+ a47:	48 39 77 08          	cmp    QWORD PTR [rdi+0x8],rsi
+ a4b:	0f 85 35 01 00 00    	jne    b86 <kd_jit_feedback_publication_commit+0x156>
+ a51:	83 3f 01             	cmp    DWORD PTR [rdi],0x1
+ a54:	0f 85 2c 01 00 00    	jne    b86 <kd_jit_feedback_publication_commit+0x156>
+ a5a:	48 39 97 90 00 00 00 	cmp    QWORD PTR [rdi+0x90],rdx
+ a61:	0f 85 1f 01 00 00    	jne    b86 <kd_jit_feedback_publication_commit+0x156>
+ a67:	55                   	push   rbp
+ a68:	48 89 e5             	mov    rbp,rsp
+ a6b:	41 54                	push   r12
+ a6d:	49 89 d4             	mov    r12,rdx
+ a70:	53                   	push   rbx
+ a71:	48 89 fb             	mov    rbx,rdi
+ a74:	e8 c7 f6 ff ff       	call   140 <candidate_matches>
+ a79:	84 c0                	test   al,al
+ a7b:	0f 84 dd 00 00 00    	je     b5e <kd_jit_feedback_publication_commit+0x12e>
+ a81:	be 03 00 00 00       	mov    esi,0x3
+ a86:	48 89 df             	mov    rdi,rbx
+ a89:	e8 72 f7 ff ff       	call   200 <update_matches>
+ a8e:	84 c0                	test   al,al
+ a90:	0f 84 c8 00 00 00    	je     b5e <kd_jit_feedback_publication_commit+0x12e>
+ a96:	8b 4b 28             	mov    ecx,DWORD PTR [rbx+0x28]
+ a99:	48 8b 53 20          	mov    rdx,QWORD PTR [rbx+0x20]
+ a9d:	48 8b 73 18          	mov    rsi,QWORD PTR [rbx+0x18]
+ aa1:	48 8b 7b 10          	mov    rdi,QWORD PTR [rbx+0x10]
+ aa5:	e8 00 00 00 00       	call   aaa <kd_jit_feedback_publication_commit+0x7a>	aa6: R_X86_64_PLT32	kd_jit_feedback_claim_check-0x4
+ aaa:	85 c0                	test   eax,eax
+ aac:	0f 85 9b 00 00 00    	jne    b4d <kd_jit_feedback_publication_commit+0x11d>
+ ab2:	48 8b 53 10          	mov    rdx,QWORD PTR [rbx+0x10]
+ ab6:	48 8b 4b 68          	mov    rcx,QWORD PTR [rbx+0x68]
+ aba:	4c 89 a3 e8 00 00 00 	mov    QWORD PTR [rbx+0xe8],r12
+ ac1:	c7 03 02 00 00 00    	mov    DWORD PTR [rbx],0x2
+ ac7:	48 89 93 a0 00 00 00 	mov    QWORD PTR [rbx+0xa0],rdx
+ ace:	48 8b 53 18          	mov    rdx,QWORD PTR [rbx+0x18]
+ ad2:	48 89 8b f0 00 00 00 	mov    QWORD PTR [rbx+0xf0],rcx
+ ad9:	48 89 93 a8 00 00 00 	mov    QWORD PTR [rbx+0xa8],rdx
+ ae0:	48 8b 53 20          	mov    rdx,QWORD PTR [rbx+0x20]
+ ae4:	48 89 93 b0 00 00 00 	mov    QWORD PTR [rbx+0xb0],rdx
+ aeb:	8b 53 28             	mov    edx,DWORD PTR [rbx+0x28]
+ aee:	89 93 b8 00 00 00    	mov    DWORD PTR [rbx+0xb8],edx
+ af4:	48 8b 93 80 00 00 00 	mov    rdx,QWORD PTR [rbx+0x80]
+ afb:	48 89 93 c0 00 00 00 	mov    QWORD PTR [rbx+0xc0],rdx
+ b02:	48 8b 53 78          	mov    rdx,QWORD PTR [rbx+0x78]
+ b06:	48 89 93 c8 00 00 00 	mov    QWORD PTR [rbx+0xc8],rdx
+ b0d:	48 8b 93 88 00 00 00 	mov    rdx,QWORD PTR [rbx+0x88]
+ b14:	48 89 93 d0 00 00 00 	mov    QWORD PTR [rbx+0xd0],rdx
+ b1b:	48 8b 93 90 00 00 00 	mov    rdx,QWORD PTR [rbx+0x90]
+ b22:	48 89 93 d8 00 00 00 	mov    QWORD PTR [rbx+0xd8],rdx
+ b29:	48 8b 53 58          	mov    rdx,QWORD PTR [rbx+0x58]
+ b2d:	48 89 93 e0 00 00 00 	mov    QWORD PTR [rbx+0xe0],rdx
+ b34:	48 8b 53 70          	mov    rdx,QWORD PTR [rbx+0x70]
+ b38:	48 89 93 f8 00 00 00 	mov    QWORD PTR [rbx+0xf8],rdx
+ b3f:	48 8d 93 98 00 00 00 	lea    rdx,[rbx+0x98]
+ b46:	48 89 93 98 00 00 00 	mov    QWORD PTR [rbx+0x98],rdx
+ b4d:	5b                   	pop    rbx
+ b4e:	41 5c                	pop    r12
+ b50:	5d                   	pop    rbp
+ b51:	31 d2                	xor    edx,edx
+ b53:	31 c9                	xor    ecx,ecx
+ b55:	31 f6                	xor    esi,esi
+ b57:	31 ff                	xor    edi,edi
+ b59:	e9 00 00 00 00       	jmp    b5e <kd_jit_feedback_publication_commit+0x12e>	b5a: R_X86_64_PLT32	__x86_return_thunk-0x4
+ b5e:	5b                   	pop    rbx
+ b5f:	b8 8c ff ff ff       	mov    eax,0xffffff8c
+ b64:	41 5c                	pop    r12
+ b66:	5d                   	pop    rbp
+ b67:	31 d2                	xor    edx,edx
+ b69:	31 c9                	xor    ecx,ecx
+ b6b:	31 f6                	xor    esi,esi
+ b6d:	31 ff                	xor    edi,edi
+ b6f:	e9 00 00 00 00       	jmp    b74 <kd_jit_feedback_publication_commit+0x144>	b70: R_X86_64_PLT32	__x86_return_thunk-0x4
+ b74:	b8 ea ff ff ff       	mov    eax,0xffffffea
+ b79:	31 d2                	xor    edx,edx
+ b7b:	31 c9                	xor    ecx,ecx
+ b7d:	31 f6                	xor    esi,esi
+ b7f:	31 ff                	xor    edi,edi
+ b81:	e9 00 00 00 00       	jmp    b86 <kd_jit_feedback_publication_commit+0x156>	b82: R_X86_64_PLT32	__x86_return_thunk-0x4
+ b86:	b8 8c ff ff ff       	mov    eax,0xffffff8c
+ b8b:	31 d2                	xor    edx,edx
+ b8d:	31 c9                	xor    ecx,ecx
+ b8f:	31 f6                	xor    esi,esi
+ b91:	31 ff                	xor    edi,edi
+ b93:	e9 00 00 00 00       	jmp    b98 <kd_jit_feedback_publication_commit+0x168>	b94: R_X86_64_PLT32	__x86_return_thunk-0x4
+ b98:	0f 1f 84 00 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+ ba0:	90                   	nop
+ ba1:	90                   	nop
+ ba2:	90                   	nop
+ ba3:	90                   	nop
+ ba4:	90                   	nop
+ ba5:	90                   	nop
+ ba6:	90                   	nop
+ ba7:	90                   	nop
+ ba8:	90                   	nop
+ ba9:	90                   	nop
+ baa:	90                   	nop
+ bab:	90                   	nop
+ bac:	90                   	nop
+ bad:	90                   	nop
+ bae:	90                   	nop
+ baf:	90                   	nop
+
+0000000000000bb0 <kd_jit_feedback_publication_ack>:
+ bb0:	e8 00 00 00 00       	call   bb5 <kd_jit_feedback_publication_ack+0x5>	bb1: R_X86_64_PLT32	__fentry__-0x4
+ bb5:	48 85 ff             	test   rdi,rdi
+ bb8:	0f 84 f0 00 00 00    	je     cae <kd_jit_feedback_publication_ack+0xfe>
+ bbe:	48 85 f6             	test   rsi,rsi
+ bc1:	0f 84 e7 00 00 00    	je     cae <kd_jit_feedback_publication_ack+0xfe>
+ bc7:	48 39 77 08          	cmp    QWORD PTR [rdi+0x8],rsi
+ bcb:	0f 85 ef 00 00 00    	jne    cc0 <kd_jit_feedback_publication_ack+0x110>
+ bd1:	83 3f 02             	cmp    DWORD PTR [rdi],0x2
+ bd4:	0f 85 e6 00 00 00    	jne    cc0 <kd_jit_feedback_publication_ack+0x110>
+ bda:	55                   	push   rbp
+ bdb:	48 89 e5             	mov    rbp,rsp
+ bde:	53                   	push   rbx
+ bdf:	48 89 fb             	mov    rbx,rdi
+ be2:	e8 59 f5 ff ff       	call   140 <candidate_matches>
+ be7:	84 c0                	test   al,al
+ be9:	0f 84 b5 00 00 00    	je     ca4 <kd_jit_feedback_publication_ack+0xf4>
+ bef:	be 03 00 00 00       	mov    esi,0x3
+ bf4:	48 89 df             	mov    rdi,rbx
+ bf7:	e8 04 f6 ff ff       	call   200 <update_matches>
+ bfc:	84 c0                	test   al,al
+ bfe:	0f 84 a0 00 00 00    	je     ca4 <kd_jit_feedback_publication_ack+0xf4>
+ c04:	8b 4b 28             	mov    ecx,DWORD PTR [rbx+0x28]
+ c07:	48 8b 53 20          	mov    rdx,QWORD PTR [rbx+0x20]
+ c0b:	48 8b 73 18          	mov    rsi,QWORD PTR [rbx+0x18]
+ c0f:	48 8b 7b 10          	mov    rdi,QWORD PTR [rbx+0x10]
+ c13:	e8 00 00 00 00       	call   c18 <kd_jit_feedback_publication_ack+0x68>	c14: R_X86_64_PLT32	kd_jit_feedback_claim_check-0x4
+ c18:	85 c0                	test   eax,eax
+ c1a:	74 12                	je     c2e <kd_jit_feedback_publication_ack+0x7e>
+ c1c:	48 8b 5d f8          	mov    rbx,QWORD PTR [rbp-0x8]
+ c20:	c9                   	leave
+ c21:	31 d2                	xor    edx,edx
+ c23:	31 c9                	xor    ecx,ecx
+ c25:	31 f6                	xor    esi,esi
+ c27:	31 ff                	xor    edi,edi
+ c29:	e9 00 00 00 00       	jmp    c2e <kd_jit_feedback_publication_ack+0x7e>	c2a: R_X86_64_PLT32	__x86_return_thunk-0x4
+ c2e:	8b 4b 38             	mov    ecx,DWORD PTR [rbx+0x38]
+ c31:	48 8b 53 30          	mov    rdx,QWORD PTR [rbx+0x30]
+ c35:	48 8b 73 18          	mov    rsi,QWORD PTR [rbx+0x18]
+ c39:	48 8b 7b 10          	mov    rdi,QWORD PTR [rbx+0x10]
+ c3d:	e8 00 00 00 00       	call   c42 <kd_jit_feedback_publication_ack+0x92>	c3e: R_X86_64_PLT32	kd_jit_feedback_claim_ack-0x4
+ c42:	85 c0                	test   eax,eax
+ c44:	75 d6                	jne    c1c <kd_jit_feedback_publication_ack+0x6c>
+ c46:	48 8d 93 98 00 00 00 	lea    rdx,[rbx+0x98]
+ c4d:	c7 03 03 00 00 00    	mov    DWORD PTR [rbx],0x3
+ c53:	48 89 93 08 01 00 00 	mov    QWORD PTR [rbx+0x108],rdx
+ c5a:	48 8b 53 10          	mov    rdx,QWORD PTR [rbx+0x10]
+ c5e:	48 89 93 10 01 00 00 	mov    QWORD PTR [rbx+0x110],rdx
+ c65:	48 8b 53 18          	mov    rdx,QWORD PTR [rbx+0x18]
+ c69:	48 89 93 18 01 00 00 	mov    QWORD PTR [rbx+0x118],rdx
+ c70:	48 8b 53 30          	mov    rdx,QWORD PTR [rbx+0x30]
+ c74:	48 89 93 20 01 00 00 	mov    QWORD PTR [rbx+0x120],rdx
+ c7b:	8b 53 38             	mov    edx,DWORD PTR [rbx+0x38]
+ c7e:	89 93 28 01 00 00    	mov    DWORD PTR [rbx+0x128],edx
+ c84:	48 8d 93 00 01 00 00 	lea    rdx,[rbx+0x100]
+ c8b:	48 89 93 00 01 00 00 	mov    QWORD PTR [rbx+0x100],rdx
+ c92:	48 8b 5d f8          	mov    rbx,QWORD PTR [rbp-0x8]
+ c96:	c9                   	leave
+ c97:	31 d2                	xor    edx,edx
+ c99:	31 c9                	xor    ecx,ecx
+ c9b:	31 f6                	xor    esi,esi
+ c9d:	31 ff                	xor    edi,edi
+ c9f:	e9 00 00 00 00       	jmp    ca4 <kd_jit_feedback_publication_ack+0xf4>	ca0: R_X86_64_PLT32	__x86_return_thunk-0x4
+ ca4:	b8 8c ff ff ff       	mov    eax,0xffffff8c
+ ca9:	e9 6e ff ff ff       	jmp    c1c <kd_jit_feedback_publication_ack+0x6c>
+ cae:	b8 ea ff ff ff       	mov    eax,0xffffffea
+ cb3:	31 d2                	xor    edx,edx
+ cb5:	31 c9                	xor    ecx,ecx
+ cb7:	31 f6                	xor    esi,esi
+ cb9:	31 ff                	xor    edi,edi
+ cbb:	e9 00 00 00 00       	jmp    cc0 <kd_jit_feedback_publication_ack+0x110>	cbc: R_X86_64_PLT32	__x86_return_thunk-0x4
+ cc0:	b8 8c ff ff ff       	mov    eax,0xffffff8c
+ cc5:	31 d2                	xor    edx,edx
+ cc7:	31 c9                	xor    ecx,ecx
+ cc9:	31 f6                	xor    esi,esi
+ ccb:	31 ff                	xor    edi,edi
+ ccd:	e9 00 00 00 00       	jmp    cd2 <kd_jit_feedback_publication_ack+0x122>	cce: R_X86_64_PLT32	__x86_return_thunk-0x4
+ cd2:	0f 1f 00             	nop    DWORD PTR [rax]
+ cd5:	66 66 2e 0f 1f 84 00 00 00 00 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+ ce0:	90                   	nop
+ ce1:	90                   	nop
+ ce2:	90                   	nop
+ ce3:	90                   	nop
+ ce4:	90                   	nop
+ ce5:	90                   	nop
+ ce6:	90                   	nop
+ ce7:	90                   	nop
+ ce8:	90                   	nop
+ ce9:	90                   	nop
+ cea:	90                   	nop
+ ceb:	90                   	nop
+ cec:	90                   	nop
+ ced:	90                   	nop
+ cee:	90                   	nop
+ cef:	90                   	nop
+
+0000000000000cf0 <kd_jit_feedback_publication_abort>:
+ cf0:	e8 00 00 00 00       	call   cf5 <kd_jit_feedback_publication_abort+0x5>	cf1: R_X86_64_PLT32	__fentry__-0x4
+ cf5:	48 85 ff             	test   rdi,rdi
+ cf8:	74 4f                	je     d49 <kd_jit_feedback_publication_abort+0x59>
+ cfa:	48 85 f6             	test   rsi,rsi
+ cfd:	74 4a                	je     d49 <kd_jit_feedback_publication_abort+0x59>
+ cff:	48 39 77 08          	cmp    QWORD PTR [rdi+0x8],rsi
+ d03:	75 52                	jne    d57 <kd_jit_feedback_publication_abort+0x67>
+ d05:	83 3f 01             	cmp    DWORD PTR [rdi],0x1
+ d08:	75 4d                	jne    d57 <kd_jit_feedback_publication_abort+0x67>
+ d0a:	55                   	push   rbp
+ d0b:	48 89 e5             	mov    rbp,rsp
+ d0e:	53                   	push   rbx
+ d0f:	48 89 fb             	mov    rbx,rdi
+ d12:	e8 29 f4 ff ff       	call   140 <candidate_matches>
+ d17:	84 c0                	test   al,al
+ d19:	74 27                	je     d42 <kd_jit_feedback_publication_abort+0x52>
+ d1b:	be 04 00 00 00       	mov    esi,0x4
+ d20:	48 89 df             	mov    rdi,rbx
+ d23:	e8 d8 f4 ff ff       	call   200 <update_matches>
+ d28:	84 c0                	test   al,al
+ d2a:	74 16                	je     d42 <kd_jit_feedback_publication_abort+0x52>
+ d2c:	c7 03 04 00 00 00    	mov    DWORD PTR [rbx],0x4
+ d32:	31 c0                	xor    eax,eax
+ d34:	48 8b 5d f8          	mov    rbx,QWORD PTR [rbp-0x8]
+ d38:	c9                   	leave
+ d39:	31 f6                	xor    esi,esi
+ d3b:	31 ff                	xor    edi,edi
+ d3d:	e9 00 00 00 00       	jmp    d42 <kd_jit_feedback_publication_abort+0x52>	d3e: R_X86_64_PLT32	__x86_return_thunk-0x4
+ d42:	b8 8c ff ff ff       	mov    eax,0xffffff8c
+ d47:	eb eb                	jmp    d34 <kd_jit_feedback_publication_abort+0x44>
+ d49:	b8 ea ff ff ff       	mov    eax,0xffffffea
+ d4e:	31 f6                	xor    esi,esi
+ d50:	31 ff                	xor    edi,edi
+ d52:	e9 00 00 00 00       	jmp    d57 <kd_jit_feedback_publication_abort+0x67>	d53: R_X86_64_PLT32	__x86_return_thunk-0x4
+ d57:	b8 8c ff ff ff       	mov    eax,0xffffff8c
+ d5c:	31 f6                	xor    esi,esi
+ d5e:	31 ff                	xor    edi,edi
+ d60:	e9 00 00 00 00       	jmp    d65 <kd_jit_feedback_publication_abort+0x75>	d61: R_X86_64_PLT32	__x86_return_thunk-0x4
+
+Disassembly of section .text.unlikely:
+
+0000000000000000 <candidate_get.cold>:
+   0:	0f b6 f0             	movzx  esi,al
+   3:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	6: R_X86_64_32S	.data+0x60
+   a:	88 45 df             	mov    BYTE PTR [rbp-0x21],al
+   d:	e8 00 00 00 00       	call   12 <candidate_get.cold+0x12>	e: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  12:	0f b6 45 df          	movzx  eax,BYTE PTR [rbp-0x21]
+  16:	e9 00 00 00 00       	jmp    1b <candidate_get.cold+0x1b>	17: R_X86_64_PC32	.text+0x8a
+  1b:	0f b6 f3             	movzx  esi,bl
+  1e:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	21: R_X86_64_32S	.data+0x40
+  25:	e8 00 00 00 00       	call   2a <candidate_get.cold+0x2a>	26: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  2a:	e9 00 00 00 00       	jmp    2f <update_matches.cold>	2b: R_X86_64_PC32	.text+0xc9
+
+000000000000002f <update_matches.cold>:
+  2f:	41 0f b6 f5          	movzx  esi,r13b
+  33:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	36: R_X86_64_32S	.data+0x20
+  3a:	48 89 45 d8          	mov    QWORD PTR [rbp-0x28],rax
+  3e:	e8 00 00 00 00       	call   43 <update_matches.cold+0x14>	3f: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  43:	48 8b 45 d8          	mov    rax,QWORD PTR [rbp-0x28]
+  47:	e9 00 00 00 00       	jmp    4c <kd_jit_feedback_publication_prepare.cold>	48: R_X86_64_PC32	.text+0x296
+
+000000000000004c <kd_jit_feedback_publication_prepare.cold>:
+  4c:	0f b6 f2             	movzx  esi,dl
+  4f:	48 c7 c7 00 00 00 00 	mov    rdi,0x0	52: R_X86_64_32S	.data
+  56:	89 85 50 ff ff ff    	mov    DWORD PTR [rbp-0xb0],eax
+  5c:	4c 89 85 58 ff ff ff 	mov    QWORD PTR [rbp-0xa8],r8
+  63:	48 89 8d 60 ff ff ff 	mov    QWORD PTR [rbp-0xa0],rcx
+  6a:	88 95 68 ff ff ff    	mov    BYTE PTR [rbp-0x98],dl
+  70:	e8 00 00 00 00       	call   75 <kd_jit_feedback_publication_prepare.cold+0x29>	71: R_X86_64_PLT32	__ubsan_handle_load_invalid_value-0x4
+  75:	0f b6 95 68 ff ff ff 	movzx  edx,BYTE PTR [rbp-0x98]
+  7c:	48 8b 8d 60 ff ff ff 	mov    rcx,QWORD PTR [rbp-0xa0]
+  83:	4c 8b 85 58 ff ff ff 	mov    r8,QWORD PTR [rbp-0xa8]
+  8a:	8b 85 50 ff ff ff    	mov    eax,DWORD PTR [rbp-0xb0]
+  90:	e9 00 00 00 00       	jmp    95 <kd_jit_feedback_publication_prepare.cold+0x49>	91: R_X86_64_PC32	.text+0x7cd

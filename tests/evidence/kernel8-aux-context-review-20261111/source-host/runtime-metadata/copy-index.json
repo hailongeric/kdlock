@@ -1,0 +1,41 @@
+{
+  "bytes": 311164,
+  "count": 7,
+  "files": [
+    {
+      "bytes": 987,
+      "name": "capture.py",
+      "sha256": "4efaa6b1d0b0ead5478e0f7c883fb25496a2897167243854998f03b53c611864"
+    },
+    {
+      "bytes": 369,
+      "name": "command.json",
+      "sha256": "a2adb969ed9467d713f0d502a082b01c5db7db17a5017a7a996ed9807d275060"
+    },
+    {
+      "bytes": 3060,
+      "name": "metadata-plan.json",
+      "sha256": "9dc03c8281698ed09f3b82d8fc25d06662f515df359edf4c7f594370538af11b"
+    },
+    {
+      "bytes": 8288,
+      "name": "read.py",
+      "sha256": "cd24f4dc09ee6c55f02cdda506870c5ed860d4f6c0231659b0d46295f4213ccc"
+    },
+    {
+      "bytes": 56,
+      "name": "return.json",
+      "sha256": "7d62da640ba8ac2a4646843a31ff3137fb1930b525cbe25c03308f2d5e4f0a60"
+    },
+    {
+      "bytes": 0,
+      "name": "stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 298404,
+      "name": "stdout.json",
+      "sha256": "b5863eba6b264a1717eee55d4b093cbb75369fd2c1be515e3a70bffb2847173f"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/channel.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 channel.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000000 l       .export_symbol	0000000000000000 __export_symbol_kd_jit_channel_register
+0000000000000010 l       .export_symbol	0000000000000000 __export_symbol_kd_jit_channel_unregister
+0000000000000010 l     F .text	0000000000000079 channel_release
+00000000000000a0 l     F .text	00000000000002a2 query
+0000000000000000 l    d  __bug_table	0000000000000000 __bug_table
+0000000000000000 l    d  __jump_table	0000000000000000 __jump_table
+0000000000000360 l     F .text	000000000000010d deliver
+0000000000000000 l     O .rodata	0000000000000110 channel_operations
+0000000000000000 l    d  .text.unlikely	0000000000000000 .text.unlikely
+00000000000006a0 l     F .text	0000000000000105 channel_open
+0000000000000000 l     F .text.unlikely	000000000000006c channel_open.cold
+00000000000007c0 l     F .text	0000000000000338 channel_ioctl
+000000000000006c l     F .text.unlikely	00000000000000a1 channel_ioctl.cold
+000000000000010d l     F .text.unlikely	0000000000000054 kd_jit_channel_unregister.cold
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  .discard.gendwarfksyms	0000000000000000 .discard.gendwarfksyms
+0000000000000000 l     O .discard.gendwarfksyms	0000000000000008 __gendwarfksyms_ptr_kd_jit_channel_unregister
+0000000000000000 l    d  .discard.addressable	0000000000000000 .discard.addressable
+0000000000000000 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable_kd_jit_channel_unregister_456
+0000000000000008 l     O .discard.gendwarfksyms	0000000000000008 __gendwarfksyms_ptr_kd_jit_channel_register
+0000000000000008 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable_kd_jit_channel_register_455
+0000000000000000 l    d  .rodata	0000000000000000 .rodata
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000 l       .rodata.str1.1	0000000000000000 .LC0
+0000000000000001 l       .rodata.str1.1	0000000000000000 .LC1
+0000000000000480 g     F .text	0000000000000207 kd_jit_channel_register
+0000000000000b10 g     F .text	000000000000013b kd_jit_channel_unregister
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 mutex_lock
+0000000000000000         *UND*	0000000000000000 kd_jit_control_session_idle
+0000000000000000         *UND*	0000000000000000 mutex_unlock
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000000         *UND*	0000000000000000 module_put
+0000000000000000         *UND*	0000000000000000 __ref_stack_chk_guard
+0000000000000000         *UND*	0000000000000000 _copy_to_user
+0000000000000000         *UND*	0000000000000000 validate_usercopy_range
+0000000000000000         *UND*	0000000000000000 __check_object_size
+0000000000000000         *UND*	0000000000000000 __stack_chk_fail
+0000000000000000         *UND*	0000000000000000 __kvmalloc_node_noprof
+0000000000000000         *UND*	0000000000000000 mutex_init_generic
+0000000000000000         *UND*	0000000000000000 misc_register
+0000000000000000         *UND*	0000000000000000 kvfree
+0000000000000000         *UND*	0000000000000000 nonseekable_open
+0000000000000000         *UND*	0000000000000000 try_module_get
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_load_invalid_value
+0000000000000000         *UND*	0000000000000000 _copy_from_user
+0000000000000000         *UND*	0000000000000000 kd_jit_control_command
+0000000000000000         *UND*	0000000000000000 memcmp
+0000000000000000         *UND*	0000000000000000 misc_deregister
+
+

@@ -1,0 +1,56 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/feedback.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 feedback.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000000 l    d  .text.unlikely	0000000000000000 .text.unlikely
+0000000000000010 l     F .text	000000000000017e check_locked
+0000000000000000 l     F .text.unlikely	000000000000006a check_locked.cold
+000000000000006a l     F .text.unlikely	000000000000001b kd_jit_feedback_producer_init.cold
+0000000000000085 l     F .text.unlikely	0000000000000052 kd_jit_feedback_producer_use_get.cold
+00000000000000d7 l     F .text.unlikely	0000000000000028 kd_jit_feedback_producer_use_put.cold
+00000000000000ff l     F .text.unlikely	000000000000001b kd_jit_feedback_producer_close.cold
+000000000000011a l     F .text.unlikely	0000000000000036 kd_jit_feedback_producer_release.cold
+0000000000000150 l     F .text.unlikely	0000000000000010 kd_jit_feedback_pool_init.cold
+0000000000000160 l     F .text.unlikely	0000000000000027 kd_jit_feedback_record_exit.cold
+0000000000000187 l     F .text.unlikely	0000000000000023 kd_jit_feedback_claim_begin.cold
+00000000000001aa l     F .text.unlikely	000000000000006d kd_jit_feedback_claim_end.cold
+0000000000000217 l     F .text.unlikely	0000000000000036 kd_jit_feedback_claim_settle.cold
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_load_invalid_value
+00000000000001a0 g     F .text	0000000000000033 kd_jit_feedback_producer_use_init
+00000000000001f0 g     F .text	0000000000000152 kd_jit_feedback_producer_init
+0000000000000000         *UND*	0000000000000000 _raw_spin_lock
+0000000000000000         *UND*	0000000000000000 _raw_spin_unlock
+0000000000000000         *UND*	0000000000000000 kd_jit_source_use_init
+0000000000000000         *UND*	0000000000000000 kd_jit_source_use_extend
+0000000000000360 g     F .text	0000000000000185 kd_jit_feedback_producer_use_get
+0000000000000000         *UND*	0000000000000000 __list_add_valid_or_report
+0000000000000500 g     F .text	00000000000000d6 kd_jit_feedback_producer_use_put
+0000000000000000         *UND*	0000000000000000 __list_del_entry_valid_or_report
+00000000000005f0 g     F .text	0000000000000096 kd_jit_feedback_producer_close
+00000000000006a0 g     F .text	00000000000000be kd_jit_feedback_producer_release
+0000000000000000         *UND*	0000000000000000 kd_jit_source_use_put
+0000000000000770 g     F .text	000000000000018d kd_jit_feedback_pool_init
+0000000000000910 g     F .text	00000000000002ce kd_jit_feedback_record_exit
+0000000000000bf0 g     F .text	0000000000000040 kd_jit_feedback_claim_init
+0000000000000c40 g     F .text	000000000000015b kd_jit_feedback_claim_begin
+0000000000000db0 g     F .text	0000000000000089 kd_jit_feedback_claim_check
+0000000000000e50 g     F .text	00000000000000dd kd_jit_feedback_claim_ack
+0000000000000f40 g     F .text	00000000000002bc kd_jit_feedback_claim_end
+0000000000001210 g     F .text	000000000000003f kd_jit_feedback_settlement_init
+0000000000001260 g     F .text	00000000000002ab kd_jit_feedback_claim_settle
+
+

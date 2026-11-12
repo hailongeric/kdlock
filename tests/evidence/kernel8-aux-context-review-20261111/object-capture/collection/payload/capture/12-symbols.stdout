@@ -1,0 +1,40 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/feedback_publish.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 feedback_publish.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000000 l    d  .text.unlikely	0000000000000000 .text.unlikely
+0000000000000010 l     F .text	000000000000011a candidate_get
+0000000000000000 l     F .text.unlikely	000000000000002f candidate_get.cold
+0000000000000140 l     F .text	00000000000000a7 candidate_matches
+0000000000000200 l     F .text	00000000000000c8 update_matches
+000000000000002f l     F .text.unlikely	000000000000001d update_matches.cold
+000000000000004c l     F .text.unlikely	0000000000000049 kd_jit_feedback_publication_prepare.cold
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 _raw_spin_lock
+0000000000000000         *UND*	0000000000000000 _raw_spin_unlock
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_load_invalid_value
+0000000000000000         *UND*	0000000000000000 __ref_stack_chk_guard
+0000000000000000         *UND*	0000000000000000 __stack_chk_fail
+00000000000002e0 g     F .text	000000000000001f kd_jit_feedback_publication_init
+0000000000000310 g     F .text	0000000000000701 kd_jit_feedback_publication_prepare
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_claim_check
+0000000000000000         *UND*	0000000000000000 memcmp
+0000000000000a30 g     F .text	0000000000000168 kd_jit_feedback_publication_commit
+0000000000000bb0 g     F .text	0000000000000122 kd_jit_feedback_publication_ack
+0000000000000000         *UND*	0000000000000000 kd_jit_feedback_claim_ack
+0000000000000cf0 g     F .text	0000000000000075 kd_jit_feedback_publication_abort
+
+

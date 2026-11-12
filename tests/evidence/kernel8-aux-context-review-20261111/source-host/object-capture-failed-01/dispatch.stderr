@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "<stdin>", line 300, in <module>
+  File "<stdin>", line 157, in main
+  File "<stdin>", line 42, in facts
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 662, in lstat
+    return os.lstat(self)
+           ~~~~~~~~^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/sched/wait.o'

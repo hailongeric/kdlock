@@ -1,0 +1,50 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/source_provider.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 source_provider.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000010 l     F .text	00000000000000bc release_snapshot
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  __bug_table	0000000000000000 __bug_table
+0000000000000000 l    d  .discard.addressable	0000000000000000 .discard.addressable
+0000000000000000 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___SCK__WARN_trap_430.0
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000 l       .rodata.str1.1	0000000000000000 .LC0
+0000000000000000 l       .rodata.str1.8	0000000000000000 .LC1
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 kvfree
+0000000000000000         *UND*	0000000000000000 module_put
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+00000000000000e0 g     F .text	00000000000003a7 kd_jit_source_provider_create
+0000000000000000         *UND*	0000000000000000 __ref_stack_chk_guard
+0000000000000000         *UND*	0000000000000000 random_kmalloc_seed
+0000000000000000         *UND*	0000000000000000 kmalloc_caches
+0000000000000000         *UND*	0000000000000000 __kmalloc_cache_noprof
+0000000000000000         *UND*	0000000000000000 __kvmalloc_node_noprof
+0000000000000000         *UND*	0000000000000000 memcpy
+0000000000000000         *UND*	0000000000000000 copy_from_kernel_nofault
+0000000000000000         *UND*	0000000000000000 kd_jit_source_epoch_init
+0000000000000000         *UND*	0000000000000000 kfree
+0000000000000000         *UND*	0000000000000000 try_module_get
+0000000000000000         *UND*	0000000000000000 __stack_chk_fail
+00000000000004a0 g     F .text	0000000000000027 kd_jit_source_provider_close
+0000000000000000         *UND*	0000000000000000 kd_jit_source_epoch_close
+00000000000004e0 g     F .text	0000000000000045 kd_jit_source_provider_destroy
+0000000000000000         *UND*	0000000000000000 kd_jit_source_epoch_try_release
+0000000000000540 g     F .text	00000000000000e7 kd_jit_source_native_begin
+0000000000000000         *UND*	0000000000000000 kd_jit_source_use_init
+0000000000000000         *UND*	0000000000000000 kd_jit_source_use_get
+0000000000000640 g     F .text	0000000000000034 kd_jit_source_native_release
+0000000000000000         *UND*	0000000000000000 kd_jit_source_use_put
+0000000000000000         *UND*	0000000000000000 __SCK__WARN_trap
+
+

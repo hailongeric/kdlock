@@ -1,0 +1,102 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/kernel/kdlock/kernel/rw_native.o:     file format elf64-x86-64
+
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 rw_native.c
+0000000000000000 l    d  .text	0000000000000000 .text
+0000000000000000 l    d  .data	0000000000000000 .data
+0000000000000010 l     F .text	0000000000000040 native_context
+0000000000000000 l    d  .altinstr_replacement	0000000000000000 .altinstr_replacement
+0000000000000000 l    d  .text.unlikely	0000000000000000 .text.unlikely
+0000000000000060 l     F .text	0000000000000085 record_free_locked
+0000000000000000 l     F .text.unlikely	0000000000000069 record_free_locked.cold
+0000000000000100 l     F .text	000000000000014c observe_native.part.0
+0000000000000000 l    d  __jump_table	0000000000000000 __jump_table
+0000000000000069 l     F .text.unlikely	0000000000000060 observe_native.part.0.cold
+0000000000000260 l     F .text	000000000000017d reserve_record
+00000000000003f0 l     F .text	000000000000008d caller_done
+0000000000000490 l     F .text	000000000000006c native_grant_link.part.0
+00000000000000c9 l     F .text.unlikely	000000000000000a native_grant_link.part.0.cold
+0000000000000510 l     F .text	000000000000024c finish_writer
+00000000000000d3 l     F .text.unlikely	000000000000004d finish_writer.cold
+0000000000000770 l     F .text	00000000000004e4 write_lock_common
+0000000000000120 l     F .text.unlikely	0000000000000162 write_lock_common.cold
+0000000000000c70 l     F .text	000000000000031b read_lock_common
+0000000000000282 l     F .text.unlikely	000000000000003a read_lock_common.cold
+00000000000002bc l     F .text.unlikely	0000000000000023 kd_rw_native_pool_init.cold
+00000000000002df l     F .text.unlikely	000000000000002b kd_rw_native_pool_idle.cold
+000000000000030a l     F .text.unlikely	0000000000000060 kd_rw_native_read_unlock.cold
+000000000000036a l     F .text.unlikely	000000000000001b kd_rw_native_select_turn.cold
+0000000000000385 l     F .text.unlikely	000000000000001b kd_rw_native_is_locked.cold
+00000000000003a0 l     F .text.unlikely	0000000000000025 kd_rw_native_is_contended.cold
+0000000000000000 l    d  .rodata.str1.8	0000000000000000 .rodata.str1.8
+0000000000000000 l    d  .discard.addressable	0000000000000000 .discard.addressable
+0000000000000000 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___SCK__WARN_trap_461.0
+0000000000000008 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___SCK__tp_func_kdlock_observe_tp_460.1
+0000000000000000 l    d  __tracepoint_check	0000000000000000 __tracepoint_check
+0000000000000000 l     O __tracepoint_check	0000000000000012 __trace_check_kdlock_observe_tp.2
+0000000000000010 l     O .discard.addressable	0000000000000008 __UNIQUE_ID_addressable___SCK__cond_resched_105.3
+0000000000000000 l    d  .debug_info	0000000000000000 .debug_info
+0000000000000000 l    d  .debug_abbrev	0000000000000000 .debug_abbrev
+0000000000000000 l    d  .debug_loclists	0000000000000000 .debug_loclists
+0000000000000000 l    d  .debug_rnglists	0000000000000000 .debug_rnglists
+0000000000000000 l    d  .debug_line	0000000000000000 .debug_line
+0000000000000000 l    d  .debug_str	0000000000000000 .debug_str
+0000000000000000 l    d  .debug_line_str	0000000000000000 .debug_line_str
+0000000000000000 l    d  .debug_frame	0000000000000000 .debug_frame
+0000000000000000         *UND*	0000000000000000 __fentry__
+0000000000000000         *UND*	0000000000000000 __preempt_count
+0000000000000000         *UND*	0000000000000000 __x86_return_thunk
+0000000000000000         *UND*	0000000000000000 pv_ops
+0000000000000000         *UND*	0000000000000000 BUG_func
+0000000000000000         *UND*	0000000000000000 __ubsan_handle_load_invalid_value
+0000000000000000         *UND*	0000000000000000 __ref_stack_chk_guard
+0000000000000000         *UND*	0000000000000000 const_current_task
+0000000000000000         *UND*	0000000000000000 __tracepoint_kdlock_observe_tp
+0000000000000000         *UND*	0000000000000000 cpu_number
+0000000000000000         *UND*	0000000000000000 __cpu_online_mask
+0000000000000000         *UND*	0000000000000000 tracepoint_srcu
+0000000000000000         *UND*	0000000000000000 __SCT__tp_func_kdlock_observe_tp
+0000000000000000         *UND*	0000000000000000 __stack_chk_fail
+0000000000000000         *UND*	0000000000000000 _raw_spin_lock
+0000000000000000         *UND*	0000000000000000 _raw_spin_unlock
+0000000000000000         *UND*	0000000000000000 refcount_warn_saturate
+0000000000000000         *UND*	0000000000000000 __put_task_struct_rcu_cb
+0000000000000000         *UND*	0000000000000000 call_rcu
+0000000000000000         *UND*	0000000000000000 kd_task_root_context_current
+0000000000000000         *UND*	0000000000000000 __list_add_valid_or_report
+0000000000000000         *UND*	0000000000000000 __wake_up
+0000000000000000         *UND*	0000000000000000 kd_mutex_native_finish
+0000000000000000         *UND*	0000000000000000 __list_del_entry_valid_or_report
+0000000000000000         *UND*	0000000000000000 autoremove_wake_function
+0000000000000000         *UND*	0000000000000000 kd_mutex_batch_init
+0000000000000000         *UND*	0000000000000000 kd_mutex_native_node_init
+0000000000000000         *UND*	0000000000000000 kd_mutex_native_enqueue
+0000000000000000         *UND*	0000000000000000 prepare_to_wait
+0000000000000000         *UND*	0000000000000000 schedule
+0000000000000000         *UND*	0000000000000000 __tracepoint_sched_set_state_tp
+0000000000000000         *UND*	0000000000000000 __SCT__cond_resched
+0000000000000000         *UND*	0000000000000000 kd_mutex_native_start
+0000000000000000         *UND*	0000000000000000 finish_wait
+0000000000000000         *UND*	0000000000000000 __trace_set_current_state
+0000000000000fa0 g     F .text	000000000000014f kd_rw_native_pool_init
+0000000000001100 g     F .text	0000000000000104 kd_rw_native_pool_idle
+0000000000001220 g     F .text	0000000000000021 kd_rw_native_read_lock
+0000000000001260 g     F .text	000000000000002a kd_rw_native_read_trylock
+00000000000012a0 g     F .text	0000000000000242 kd_rw_native_read_unlock
+0000000000001500 g     F .text	0000000000000066 kd_rw_native_select_turn
+0000000000001580 g     F .text	000000000000008d kd_rw_native_queue_depart
+0000000000001620 g     F .text	000000000000001c kd_rw_native_write_lock
+0000000000001650 g     F .text	0000000000000024 kd_rw_native_write_trylock
+0000000000001690 g     F .text	000000000000001a kd_rw_native_write_unlock
+00000000000016c0 g     F .text	000000000000001d kd_rw_native_downgrade_write
+00000000000016f0 g     F .text	0000000000000044 kd_rw_native_is_write_locked
+0000000000001750 g     F .text	0000000000000044 kd_rw_native_is_reader_owned
+00000000000017b0 g     F .text	000000000000007b kd_rw_native_is_locked
+0000000000001840 g     F .text	00000000000000e8 kd_rw_native_is_contended
+0000000000001940 g     F .text	0000000000000074 kd_rw_native_owner_task
+0000000000000000         *UND*	0000000000000000 __SCK__WARN_trap
+0000000000000000         *UND*	0000000000000000 __SCK__tp_func_kdlock_observe_tp
+0000000000000000         *UND*	0000000000000000 __SCK__cond_resched
+
+

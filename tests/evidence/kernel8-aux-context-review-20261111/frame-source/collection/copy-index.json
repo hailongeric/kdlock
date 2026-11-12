@@ -1,0 +1,54 @@
+{
+  "bytes": 61753,
+  "count": 3,
+  "files": [
+    {
+      "bytes": 44744,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/entry/entry_64.S",
+      "identity": [
+        2080,
+        7369579,
+        33188,
+        1,
+        44744,
+        1793074875000000000,
+        1794423329026495197
+      ],
+      "name": "source/arch/x86/entry/entry_64.S",
+      "path": "payload/source/arch/x86/entry/entry_64.S",
+      "sha256": "21a092b3781bb3dae92973774eb290ae8a5aa91f3361d8c8041df293a6a60794"
+    },
+    {
+      "bytes": 5492,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/dumpstack_64.c",
+      "identity": [
+        2080,
+        7370236,
+        33188,
+        1,
+        5492,
+        1776026886000000000,
+        1794423329062640830
+      ],
+      "name": "source/arch/x86/kernel/dumpstack_64.c",
+      "path": "payload/source/arch/x86/kernel/dumpstack_64.c",
+      "sha256": "f2b47285d343582b60da0869be1b75964bfd5c490071e0ec27fad80b634783ea"
+    },
+    {
+      "bytes": 11517,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/source/arch/x86/kernel/unwind_frame.c",
+      "identity": [
+        2080,
+        7370341,
+        33188,
+        1,
+        11517,
+        1776026886000000000,
+        1794423329068462988
+      ],
+      "name": "source/arch/x86/kernel/unwind_frame.c",
+      "path": "payload/source/arch/x86/kernel/unwind_frame.c",
+      "sha256": "232660d894725e0ea58edae86da3f49e6bc957e01984fcf04f170f31e01447a2"
+    }
+  ]
+}
