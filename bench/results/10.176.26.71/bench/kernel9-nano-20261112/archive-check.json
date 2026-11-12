@@ -1,0 +1,45 @@
+{
+  "nested": {
+    "KD_contended_completed_sessions": 12,
+    "NO_JIT_sessions": 6,
+    "binaries": {
+      "archive_sha256": "ccc8cc048c87cd7ae0802ccccd925bd4692bbb87fc0238fbaeb6da229bc89a3e",
+      "bytes": 15387941,
+      "files": 77
+    },
+    "current_source": {
+      "compiled_source_unchanged": true,
+      "documentation_changes_after_freeze": [
+        "kernel/integration/RWSEM.md"
+      ],
+      "files": 215
+    },
+    "functional": {
+      "archive_sha256": "df256d9d0dac80e5e7161c65020c3d36b6c7b897f3f515673951d0506274d3f8",
+      "bytes": 4936755,
+      "files": 590
+    },
+    "source": {
+      "archive_sha256": "0e01fc454b82acff11272a67dce786248d2dc98db95da1fa73a12f217171f5d6",
+      "bytes": 2160225,
+      "files": 215
+    },
+    "timed_sessions": 54,
+    "timing": {
+      "archive_sha256": "0f8c8c56df216e0a8c8dd85a2c997c75583288c2742fe6102ad37a9af36e6aa6",
+      "bytes": 25490169,
+      "files": 1238
+    },
+    "totals": {
+      "completed": 193164288,
+      "jit_completions": 2050200,
+      "reads": 82462535,
+      "writes": 110701753
+    }
+  },
+  "outer": {
+    "archive_sha256": "7904119b4fb5ef8a940062994cf7d34d495eba614cb237be3eec91d9e0fe8058",
+    "bytes": 53027505,
+    "files": 2092
+  }
+}

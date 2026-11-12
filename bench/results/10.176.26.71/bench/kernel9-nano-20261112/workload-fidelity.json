@@ -1,0 +1,42 @@
+{
+  "RB_NANO_defined": false,
+  "defines": [
+    "RB_LINES=1",
+    "RB_POST_WORK_ROUNDS=256"
+  ],
+  "distinct_RB_NANO_body": "two u64 sequence/copy fields in one 64-byte record; two writer stores and two-field reader equality",
+  "equivalence_scope": "The generic body selected by the old named best_case profiles is preserved. No equivalence to the separate RB_NANO pair or original upstream benchmark is claimed.",
+  "measured_body": "cacheline1/post256, one padded u64 counter",
+  "named_profiles": [
+    "mutex-throughput",
+    "rwsem-throughput-mixed"
+  ],
+  "reference_files": {
+    "bench/nano/best_case.py": {
+      "bytes": 7802,
+      "sha256": "ea571ebb4a648ebe5f05ef2a8c34101887c413ca9dc08b45d155fa751f895348"
+    },
+    "bench/rwlock_compare/run.py": {
+      "bytes": 28621,
+      "sha256": "bf887e2fad7439055a6d9de577e69da1163b2b6c9da584596edd3d0c23b391ba"
+    },
+    "workload_modules/rwlock_bench/Makefile": {
+      "bytes": 2500,
+      "sha256": "fd2d585c15d29972a7a1edec9487c7f73cce87a753e59ddb344a73a1bef1d67b"
+    },
+    "workload_modules/rwlock_bench/body.h": {
+      "bytes": 2314,
+      "sha256": "5dda817acde26274057e7e839619382f7998fa55101f6432e7679d53f2d3df80"
+    },
+    "workload_modules/rwlock_bench/nano_body.h": {
+      "bytes": 1383,
+      "sha256": "65c18c604df9bfa476fb44e73a9472dec8a761a0b8fd9b8a4e36b6bcefe19f57"
+    },
+    "workload_modules/rwlock_bench/post_work.h": {
+      "bytes": 810,
+      "sha256": "a05b8ccca4924947bc5af7653f0a91da5dbac133ef66306e4460bebea52bfe35"
+    }
+  },
+  "same_body_header": true,
+  "same_post_work_header": true
+}

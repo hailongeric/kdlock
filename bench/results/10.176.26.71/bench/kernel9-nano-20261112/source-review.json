@@ -1,0 +1,5028 @@
+{
+  "scope": "Read-only offline source and result review; no new runtime test.",
+  "timed_rows_matched_to_raw_receipts": 54,
+  "compiled_source_matches_frozen_input": true,
+  "documentation_changes_after_freeze": [
+    "kernel/integration/RWSEM.md",
+    "tclock_backend/README.md"
+  ],
+  "full_git_diff_check_returncode": 2,
+  "retained_whitespace_findings": [
+    {
+      "path": "bench/nano/compiler.py",
+      "line": 301,
+      "message": "new blank line at EOF."
+    },
+    {
+      "path": "tclock_backend/include/rwsem/komb_rwsem.h",
+      "line": 82,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 692,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 693,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 694,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 695,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 699,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 700,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 701,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 702,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 703,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 704,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 714,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 715,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 716,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 717,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 718,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 719,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 720,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 721,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 722,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 723,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 728,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 729,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 730,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwlock.c",
+      "line": 731,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/komb_rwsem.c",
+      "line": 278,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/komb_rwsem.c",
+      "line": 555,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/komb_rwsem.c",
+      "line": 556,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/komb_rwsem.c",
+      "line": 658,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 21,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 25,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 31,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 35,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 39,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 43,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 45,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 46,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 48,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 50,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 51,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 52,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 53,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 54,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 55,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 56,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 58,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 59,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 60,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 62,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 63,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 64,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 65,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 69,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 71,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 73,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 74,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 78,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 80,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 81,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 82,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 85,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 90,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 92,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 93,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 107,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 115,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 117,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 120,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 121,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 122,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 124,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 132,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 134,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 135,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 138,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 140,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 142,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 144,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 145,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 146,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 151,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 153,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 155,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 158,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 159,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 160,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 161,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 162,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 163,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 165,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 166,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 167,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 170,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 172,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 173,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 176,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 177,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 178,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 188,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 189,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 190,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 193,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 194,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 195,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 203,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 204,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 205,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 206,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 208,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 210,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 211,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 213,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 216,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 217,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 218,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 219,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 220,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 224,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 227,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 228,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 229,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 242,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 243,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 244,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 247,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 254,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 255,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 256,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 258,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 260,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 261,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 263,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 264,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 265,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 268,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 269,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 272,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 273,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 274,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 276,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 277,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 278,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 281,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 282,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 284,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 288,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 289,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 290,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 292,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 294,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 297,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 298,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 299,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 301,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 302,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 304,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 306,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 307,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 308,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 310,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 311,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 319,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 323,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 324,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 325,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 326,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 327,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 335,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 336,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 337,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 338,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 339,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 342,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 343,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 344,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 346,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 348,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 351,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 354,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 355,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 363,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 365,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 368,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 377,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 379,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 381,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 382,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 390,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 403,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 404,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 406,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 407,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 408,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 410,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 414,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 415,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 416,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 418,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 419,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 420,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 422,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 423,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 426,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 427,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 428,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 430,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 431,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 432,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 442,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 446,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 447,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 448,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 450,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 451,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 452,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 461,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 462,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 463,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 476,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 477,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 478,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 480,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 481,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 482,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 503,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 504,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 505,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 506,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 515,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 516,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 517,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 527,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 528,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 531,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 532,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 533,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 534,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 535,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 539,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 542,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 544,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 545,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 551,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 552,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 553,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 556,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 559,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 562,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 563,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 564,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 566,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 567,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 568,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 571,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 572,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 575,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 578,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 579,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 581,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 582,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 583,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 586,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 616,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 635,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 726,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 729,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 731,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 733,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 749,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 752,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 754,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 766,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 771,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 796,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 802,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 809,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 811,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 820,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 822,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 823,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 824,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 826,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 827,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 840,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 854,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 855,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 860,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 861,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 862,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 864,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 865,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 866,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 869,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 870,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 871,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 873,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 883,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 884,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 885,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 889,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 892,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 893,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 894,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 897,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 905,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 907,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 909,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 910,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 914,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 916,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 921,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 922,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 928,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 929,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 931,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 932,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 933,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 938,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 943,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 944,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 945,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 952,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 953,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 954,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 957,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 958,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 960,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 961,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 962,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 963,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 964,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 965,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 968,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 969,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 970,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 972,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 973,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 974,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 976,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 977,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 978,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 996,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 997,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 998,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 999,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1000,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1001,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1006,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1007,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1012,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1016,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1018,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1021,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1025,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1026,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1029,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1030,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1031,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1034,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1040,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1041,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1042,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1043,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1045,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1048,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1051,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1052,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1053,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1056,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1057,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1058,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1060,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1061,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1062,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1064,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1074,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1075,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1076,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1079,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1080,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1081,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1085,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1088,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1089,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1090,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1103,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1104,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1105,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1107,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1108,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1109,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1121,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1122,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1124,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1125,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1126,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1133,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1134,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1143,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1145,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1148,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1158,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1159,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1160,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1163,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1164,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1166,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1170,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1171,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1187,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1201,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1202,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1203,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1204,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1205,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1207,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1211,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1215,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1218,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1219,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1220,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1222,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1223,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1236,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1238,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1239,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1240,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1242,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1243,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1244,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1246,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1247,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1250,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1251,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1252,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1254,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1255,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1256,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1260,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1262,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1263,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1264,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1268,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1269,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1270,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1272,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1273,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1274,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1277,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1281,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1282,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1285,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1286,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1287,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1290,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1293,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1294,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1295,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1296,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1297,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1300,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1305,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1307,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1309,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1310,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1311,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1314,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1315,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1316,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1317,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1334,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1373,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1375,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1376,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1377,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1378,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1381,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1382,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1383,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1384,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1385,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1386,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1389,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1390,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1391,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1393,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1394,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1395,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1398,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1399,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1400,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1402,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1403,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1404,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1408,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1409,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1412,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1420,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1422,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1424,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1425,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1426,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1433,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1434,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1439,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1442,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1443,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1444,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1446,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1447,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1448,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1450,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1452,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1453,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1466,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1469,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/port.patch",
+      "line": 1486,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 6,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 12,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 14,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 17,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 23,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 24,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 25,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 26,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 28,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 29,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 30,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 31,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 32,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 33,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 34,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 36,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 37,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 38,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 40,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 42,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 48,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 49,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 51,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 52,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 61,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 64,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 65,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 69,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 74,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 76,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 80,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 81,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 83,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 86,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 88,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 96,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 105,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 114,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 117,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 118,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 119,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 122,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 123,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 124,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 128,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 131,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 133,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 135,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 136,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 137,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 140,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 141,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 142,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 151,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 153,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 154,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 155,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 156,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 158,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 159,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 160,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 162,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 163,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 164,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 167,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 168,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 169,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 171,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 172,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 173,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 174,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 175,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 178,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 179,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 180,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 187,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 189,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 192,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 193,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 194,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 196,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 197,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 198,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 201,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 202,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 203,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 206,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 207,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 208,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 210,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 211,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 212,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 225,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 226,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 227,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 229,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 230,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 231,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 232,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 234,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 235,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 236,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 238,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 239,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 240,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 243,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 244,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 245,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 248,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 249,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 250,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 255,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 257,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 259,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 260,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 262,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 264,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 265,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 266,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 269,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 274,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 275,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 277,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 278,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 279,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 283,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 284,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 285,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 289,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 293,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 296,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 304,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 305,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 309,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 310,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 313,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 316,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 326,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 328,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 330,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 332,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 337,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 339,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 341,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 342,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 350,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 360,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 361,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 363,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 364,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 365,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 367,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 368,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 369,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 371,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 372,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 373,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 374,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 375,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 377,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 378,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 379,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 382,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 387,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 388,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 390,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 392,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 393,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 405,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 406,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 408,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 409,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 410,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 413,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 416,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 417,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 418,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 420,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 422,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 426,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 427,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 428,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 430,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 431,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 442,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 443,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 445,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 447,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 451,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 452,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 454,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 456,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 460,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 500,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 504,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 506,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 512,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 514,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 516,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 518,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 521,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 522,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 526,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 527,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 531,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwlock-port.patch",
+      "line": 535,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 22,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 35,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 42,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 46,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 47,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 52,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 53,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 54,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 56,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 57,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 58,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 61,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 62,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 63,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 67,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 72,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 75,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 76,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 83,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 84,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 87,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 88,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 89,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 93,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 96,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 97,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 101,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 103,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 105,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 106,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 110,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 112,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 117,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 118,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 124,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 125,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 126,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 128,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 129,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 134,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 139,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 140,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 141,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 148,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 149,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 150,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 153,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 157,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 158,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 159,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 161,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 162,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 163,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 168,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 172,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 174,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 177,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 181,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 182,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 183,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 186,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 187,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 188,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 191,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 197,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 198,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 200,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 203,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 206,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 207,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 208,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 210,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 212,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 215,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 216,
+      "message": "trailing whitespace, space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 217,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 219,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 220,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 221,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 224,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 225,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 226,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 227,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 231,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 234,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 235,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 236,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 249,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 250,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 251,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 253,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 254,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 255,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 260,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 265,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 266,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 268,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 269,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 270,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 277,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 278,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 287,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 289,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 292,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 302,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 303,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 304,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 307,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 308,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 310,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 314,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 315,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 331,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 345,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 346,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 347,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 349,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 350,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 351,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 355,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 359,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 362,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 363,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 364,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 366,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 368,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 384,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 385,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 388,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 389,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 392,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 403,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 407,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 408,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 409,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 411,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 412,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 413,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 416,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 419,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 420,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 421,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 422,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 423,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 426,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 431,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 433,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 435,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 436,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 437,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 440,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 441,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 442,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 451,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 453,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 454,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 455,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 458,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 459,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 462,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 465,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 466,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 467,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 469,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 470,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 471,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 478,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 479,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 480,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 482,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 483,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 484,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 488,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 489,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 492,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 500,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 501,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 502,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 509,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 510,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 515,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 518,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 519,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 520,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 523,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 537,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 544,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 546,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 552,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/rwsem-port.patch",
+      "line": 558,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/include/lib/combiner.h",
+      "line": 15,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/include/rwsem/komb_rwsem.h",
+      "line": 86,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/include/spinlock/komb.h",
+      "line": 20,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 96,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 103,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 113,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 123,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 155,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 156,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 452,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 525,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 526,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 673,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 741,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 842,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 872,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 992,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 993,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 994,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 995,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 999,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1000,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1001,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1002,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1003,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1004,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1014,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1015,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1016,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1017,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1018,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1019,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1020,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1021,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1022,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1023,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1028,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1029,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1030,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1031,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb.c",
+      "line": 1240,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_mutex.c",
+      "line": 335,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_mutex.c",
+      "line": 336,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_mutex.c",
+      "line": 339,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_mutex.c",
+      "line": 419,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_mutex.c",
+      "line": 757,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 18,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 31,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 38,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 45,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 57,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 58,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 260,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 297,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 298,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 409,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 455,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 534,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 564,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 678,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 679,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 680,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 681,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 685,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 686,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 687,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 688,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 689,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 690,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 700,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 701,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 702,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 703,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 704,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 705,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 706,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 707,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 708,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 709,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 714,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 715,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 716,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 717,
+      "message": "space before tab in indent."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 730,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwlock.c",
+      "line": 842,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwsem.c",
+      "line": 290,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwsem.c",
+      "line": 570,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwsem.c",
+      "line": 571,
+      "message": "trailing whitespace."
+    },
+    {
+      "path": "tclock_backend/upstream/locks/komb_rwsem.c",
+      "line": 675,
+      "message": "trailing whitespace."
+    }
+  ],
+  "whitespace_scope": "Findings are confined to exact frozen TCLock inputs/review patches and the frozen compiler adapter trailing blank line. No compiled input was reformatted after execution."
+}

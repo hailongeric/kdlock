@@ -1,0 +1,1123 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+        "M=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/tclock_backend",
+        "MO=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/tclock-mutex",
+        "KERNELRELEASE=7.0.0-38-kdrebuild9",
+        "-j8",
+        "W=1",
+        "V=1",
+        "TCLOCK_NUMA=1",
+        "TCLOCK_RWLOCK=0",
+        "TCLOCK_MUTEX=1",
+        "TCLOCK_RWSEM=0",
+        "modules"
+      ],
+      "elapsed_seconds": 2.0182976722717285,
+      "log_sha256": "a6c9a1138a59a8666069c59049cc4edd6d0795573cd64c0f00c000be4b2e6973",
+      "pid": 3900,
+      "returncode": 0,
+      "started_unix": 1794471059.1169336
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/scripts/sign-file",
+        "sha512",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.pem",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.x509",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-mutex.ko"
+      ],
+      "elapsed_seconds": 0.10871577262878418,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 4229,
+      "returncode": 0,
+      "started_unix": 1794471061.1444259
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-mutex.ko"
+      ],
+      "elapsed_seconds": 0.005747318267822266,
+      "log_sha256": "4bec86792e16e635bf6b35275446fe4e2942529e21327cfea3adc94e6ef1d61b",
+      "pid": 4230,
+      "returncode": 0,
+      "started_unix": 1794471061.258985
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-mutex.ko"
+      ],
+      "elapsed_seconds": 0.007737398147583008,
+      "log_sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "pid": 4231,
+      "returncode": 0,
+      "started_unix": 1794471061.268989
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-mutex.ko"
+      ],
+      "elapsed_seconds": 0.007160186767578125,
+      "log_sha256": "920ef7c350895130ee1ecde12316732c291b2b9a6261bd45756b396fd904218d",
+      "pid": 4232,
+      "returncode": 0,
+      "started_unix": 1794471061.2793646
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-mutex.ko"
+      ],
+      "elapsed_seconds": 0.00738215446472168,
+      "log_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "pid": 4233,
+      "returncode": 0,
+      "started_unix": 1794471061.2910187
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-mutex.ko"
+      ],
+      "elapsed_seconds": 0.0070629119873046875,
+      "log_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "pid": 4234,
+      "returncode": 0,
+      "started_unix": 1794471061.300969
+    },
+    {
+      "argv": [
+        "/usr/bin/objdump",
+        "-dr",
+        "--no-show-raw-insn",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-mutex.ko"
+      ],
+      "elapsed_seconds": 0.10908055305480957,
+      "log_sha256": "ca494ba4d62841656a45aa410b0def780cbd84a0e2ffbc95f296b569fc2de74e",
+      "pid": 4235,
+      "returncode": 0,
+      "started_unix": 1794471061.312413
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "mutex_numa",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-mutex.ko"
+      ],
+      "elapsed_seconds": 0.007416963577270508,
+      "log_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "pid": 4236,
+      "returncode": 0,
+      "started_unix": 1794471061.4278102
+    },
+    {
+      "argv": [
+        "/usr/bin/make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+        "M=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/workload_modules/nano",
+        "MO=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/mutex-native",
+        "KERNELRELEASE=7.0.0-38-kdrebuild9",
+        "-j8",
+        "W=1",
+        "V=1",
+        "RB_LOCK_KIND=mutex",
+        "RB_BACKEND=native",
+        "KD_SOURCE_ROOT=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input",
+        "TCLOCK_INCLUDE=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/tclock_backend/include",
+        "modules"
+      ],
+      "elapsed_seconds": 1.918609380722046,
+      "log_sha256": "b2cef37411a98ac9f9340254c7ac1d3a932febe1d3d364adae11f724825d3fc0",
+      "pid": 4237,
+      "returncode": 0,
+      "started_unix": 1794471061.4399374
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/scripts/sign-file",
+        "sha512",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.pem",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.x509",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-native.ko"
+      ],
+      "elapsed_seconds": 0.10476851463317871,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 4542,
+      "returncode": 0,
+      "started_unix": 1794471063.366737
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-native.ko"
+      ],
+      "elapsed_seconds": 0.0067708492279052734,
+      "log_sha256": "4bec86792e16e635bf6b35275446fe4e2942529e21327cfea3adc94e6ef1d61b",
+      "pid": 4543,
+      "returncode": 0,
+      "started_unix": 1794471063.4773076
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-native.ko"
+      ],
+      "elapsed_seconds": 0.10769462585449219,
+      "log_sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "pid": 4544,
+      "returncode": 0,
+      "started_unix": 1794471063.4885492
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-native.ko"
+      ],
+      "elapsed_seconds": 0.006513357162475586,
+      "log_sha256": "920ef7c350895130ee1ecde12316732c291b2b9a6261bd45756b396fd904218d",
+      "pid": 4545,
+      "returncode": 0,
+      "started_unix": 1794471063.5982757
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-native.ko"
+      ],
+      "elapsed_seconds": 0.10497355461120605,
+      "log_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "pid": 4546,
+      "returncode": 0,
+      "started_unix": 1794471063.6092925
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-native.ko"
+      ],
+      "elapsed_seconds": 0.0066263675689697266,
+      "log_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "pid": 4547,
+      "returncode": 0,
+      "started_unix": 1794471063.7190006
+    },
+    {
+      "argv": [
+        "/usr/bin/objdump",
+        "-drw",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-native.ko"
+      ],
+      "elapsed_seconds": 0.006785869598388672,
+      "log_sha256": "1de0bd100781a81e15625ebcb77ce5b46c1f1ed6cfb83841d14591725752141b",
+      "pid": 4548,
+      "returncode": 0,
+      "started_unix": 1794471063.7275186
+    },
+    {
+      "argv": [
+        "/usr/bin/make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+        "M=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/workload_modules/nano",
+        "MO=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/mutex-kdlock",
+        "KERNELRELEASE=7.0.0-38-kdrebuild9",
+        "-j8",
+        "W=1",
+        "V=1",
+        "RB_LOCK_KIND=mutex",
+        "RB_BACKEND=kdlock",
+        "KD_SOURCE_ROOT=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input",
+        "TCLOCK_INCLUDE=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/tclock_backend/include",
+        "modules"
+      ],
+      "elapsed_seconds": 2.116018772125244,
+      "log_sha256": "e20b19ecd514e7da0e985c8a2cae81cf8a25d3d3775e148b41e97339ab56027b",
+      "pid": 4549,
+      "returncode": 0,
+      "started_unix": 1794471063.738974
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/scripts/sign-file",
+        "sha512",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.pem",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.x509",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.10837554931640625,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 4854,
+      "returncode": 0,
+      "started_unix": 1794471065.8637755
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.10815668106079102,
+      "log_sha256": "4bec86792e16e635bf6b35275446fe4e2942529e21327cfea3adc94e6ef1d61b",
+      "pid": 4855,
+      "returncode": 0,
+      "started_unix": 1794471065.9779098
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.006802797317504883,
+      "log_sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "pid": 4856,
+      "returncode": 0,
+      "started_unix": 1794471066.0880961
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.10809183120727539,
+      "log_sha256": "920ef7c350895130ee1ecde12316732c291b2b9a6261bd45756b396fd904218d",
+      "pid": 4857,
+      "returncode": 0,
+      "started_unix": 1794471066.0992732
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.00667572021484375,
+      "log_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "pid": 4858,
+      "returncode": 0,
+      "started_unix": 1794471066.209816
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.10780143737792969,
+      "log_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "pid": 4859,
+      "returncode": 0,
+      "started_unix": 1794471066.220931
+    },
+    {
+      "argv": [
+        "/usr/bin/objdump",
+        "-drw",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.10784268379211426,
+      "log_sha256": "33e858fb360678e1aa9c4093fbc5b0cb4c6449f3939fcb4354687cb353c4b4da",
+      "pid": 4860,
+      "returncode": 0,
+      "started_unix": 1794471066.3308153
+    },
+    {
+      "argv": [
+        "/usr/bin/make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+        "M=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/workload_modules/nano",
+        "MO=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/mutex-tclock",
+        "KERNELRELEASE=7.0.0-38-kdrebuild9",
+        "-j8",
+        "W=1",
+        "V=1",
+        "RB_LOCK_KIND=mutex",
+        "RB_BACKEND=tclock",
+        "KD_SOURCE_ROOT=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input",
+        "TCLOCK_INCLUDE=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/tclock_backend/include",
+        "KBUILD_EXTRA_SYMBOLS=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/tclock-mutex/Module.symvers",
+        "modules"
+      ],
+      "elapsed_seconds": 1.8142292499542236,
+      "log_sha256": "edbb5c17342843985532e7e8bf3576587eba446c65fb750322c6cddf0d897a6e",
+      "pid": 4861,
+      "returncode": 0,
+      "started_unix": 1794471066.443932
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/scripts/sign-file",
+        "sha512",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.pem",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.x509",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-tclock.ko"
+      ],
+      "elapsed_seconds": 0.10573530197143555,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 5166,
+      "returncode": 0,
+      "started_unix": 1794471068.269042
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-tclock.ko"
+      ],
+      "elapsed_seconds": 0.10789799690246582,
+      "log_sha256": "4bec86792e16e635bf6b35275446fe4e2942529e21327cfea3adc94e6ef1d61b",
+      "pid": 5167,
+      "returncode": 0,
+      "started_unix": 1794471068.3802366
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-tclock.ko"
+      ],
+      "elapsed_seconds": 0.006739377975463867,
+      "log_sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "pid": 5168,
+      "returncode": 0,
+      "started_unix": 1794471068.4901407
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-tclock.ko"
+      ],
+      "elapsed_seconds": 0.006761789321899414,
+      "log_sha256": "920ef7c350895130ee1ecde12316732c291b2b9a6261bd45756b396fd904218d",
+      "pid": 5169,
+      "returncode": 0,
+      "started_unix": 1794471068.5013413
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-tclock.ko"
+      ],
+      "elapsed_seconds": 0.006444692611694336,
+      "log_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "pid": 5170,
+      "returncode": 0,
+      "started_unix": 1794471068.5099313
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-tclock.ko"
+      ],
+      "elapsed_seconds": 0.006363391876220703,
+      "log_sha256": "a2028e91fa528f9a3e9edf96e24839b5d53885392e6458bd2f72d524ff14733d",
+      "pid": 5171,
+      "returncode": 0,
+      "started_unix": 1794471068.520717
+    },
+    {
+      "argv": [
+        "/usr/bin/objdump",
+        "-drw",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-tclock.ko"
+      ],
+      "elapsed_seconds": 0.10697293281555176,
+      "log_sha256": "08f5e5683e20d693c2466add65d573306a73fabca3f364a369c6746f5ab4b3d8",
+      "pid": 5172,
+      "returncode": 0,
+      "started_unix": 1794471068.5314634
+    },
+    {
+      "argv": [
+        "/usr/bin/make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+        "M=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/tclock_backend",
+        "MO=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/tclock-rwsem",
+        "KERNELRELEASE=7.0.0-38-kdrebuild9",
+        "-j8",
+        "W=1",
+        "V=1",
+        "TCLOCK_NUMA=1",
+        "TCLOCK_RWLOCK=0",
+        "TCLOCK_MUTEX=0",
+        "TCLOCK_RWSEM=1",
+        "modules"
+      ],
+      "elapsed_seconds": 2.0175986289978027,
+      "log_sha256": "c1f8ff0c438a8aeeee1535c0a33619c216e483cd8ff6d00e4e1c70041f8c93a1",
+      "pid": 5173,
+      "returncode": 0,
+      "started_unix": 1794471068.6430538
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/scripts/sign-file",
+        "sha512",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.pem",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.x509",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-rwsem.ko"
+      ],
+      "elapsed_seconds": 0.10848617553710938,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 5514,
+      "returncode": 0,
+      "started_unix": 1794471070.6701813
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-rwsem.ko"
+      ],
+      "elapsed_seconds": 0.1081855297088623,
+      "log_sha256": "4bec86792e16e635bf6b35275446fe4e2942529e21327cfea3adc94e6ef1d61b",
+      "pid": 5515,
+      "returncode": 0,
+      "started_unix": 1794471070.7846966
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-rwsem.ko"
+      ],
+      "elapsed_seconds": 0.006478548049926758,
+      "log_sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "pid": 5516,
+      "returncode": 0,
+      "started_unix": 1794471070.8949282
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-rwsem.ko"
+      ],
+      "elapsed_seconds": 0.10775160789489746,
+      "log_sha256": "920ef7c350895130ee1ecde12316732c291b2b9a6261bd45756b396fd904218d",
+      "pid": 5517,
+      "returncode": 0,
+      "started_unix": 1794471070.9058127
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-rwsem.ko"
+      ],
+      "elapsed_seconds": 0.006485700607299805,
+      "log_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "pid": 5518,
+      "returncode": 0,
+      "started_unix": 1794471071.015593
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-rwsem.ko"
+      ],
+      "elapsed_seconds": 0.105133056640625,
+      "log_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "pid": 5519,
+      "returncode": 0,
+      "started_unix": 1794471071.0264559
+    },
+    {
+      "argv": [
+        "/usr/bin/objdump",
+        "-dr",
+        "--no-show-raw-insn",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-rwsem.ko"
+      ],
+      "elapsed_seconds": 0.10966134071350098,
+      "log_sha256": "d0418f608add978c51b5007fc2bbc56a5dd61e384a216a4f5a876950b2d42666",
+      "pid": 5520,
+      "returncode": 0,
+      "started_unix": 1794471071.1364841
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "rwsem_numa",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-rwsem.ko"
+      ],
+      "elapsed_seconds": 0.006574153900146484,
+      "log_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "pid": 5521,
+      "returncode": 0,
+      "started_unix": 1794471071.2512376
+    },
+    {
+      "argv": [
+        "/usr/bin/make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+        "M=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/workload_modules/nano",
+        "MO=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/rwsem-native",
+        "KERNELRELEASE=7.0.0-38-kdrebuild9",
+        "-j8",
+        "W=1",
+        "V=1",
+        "RB_LOCK_KIND=rwsem",
+        "RB_BACKEND=native",
+        "KD_SOURCE_ROOT=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input",
+        "TCLOCK_INCLUDE=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/tclock_backend/include",
+        "modules"
+      ],
+      "elapsed_seconds": 1.817089557647705,
+      "log_sha256": "938014c4c6ee4160e76fe3b13840967f7de090157cebadc1ee9f0236eda15b75",
+      "pid": 5522,
+      "returncode": 0,
+      "started_unix": 1794471071.2626083
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/scripts/sign-file",
+        "sha512",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.pem",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.x509",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-native.ko"
+      ],
+      "elapsed_seconds": 0.10850381851196289,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 5827,
+      "returncode": 0,
+      "started_unix": 1794471073.0881572
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-native.ko"
+      ],
+      "elapsed_seconds": 0.10519218444824219,
+      "log_sha256": "4bec86792e16e635bf6b35275446fe4e2942529e21327cfea3adc94e6ef1d61b",
+      "pid": 5828,
+      "returncode": 0,
+      "started_unix": 1794471073.202248
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-native.ko"
+      ],
+      "elapsed_seconds": 0.006764411926269531,
+      "log_sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "pid": 5829,
+      "returncode": 0,
+      "started_unix": 1794471073.3122268
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-native.ko"
+      ],
+      "elapsed_seconds": 0.10490989685058594,
+      "log_sha256": "920ef7c350895130ee1ecde12316732c291b2b9a6261bd45756b396fd904218d",
+      "pid": 5830,
+      "returncode": 0,
+      "started_unix": 1794471073.32346
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-native.ko"
+      ],
+      "elapsed_seconds": 0.006718635559082031,
+      "log_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "pid": 5831,
+      "returncode": 0,
+      "started_unix": 1794471073.4331725
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-native.ko"
+      ],
+      "elapsed_seconds": 0.10499095916748047,
+      "log_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "pid": 5832,
+      "returncode": 0,
+      "started_unix": 1794471073.444378
+    },
+    {
+      "argv": [
+        "/usr/bin/objdump",
+        "-drw",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-native.ko"
+      ],
+      "elapsed_seconds": 0.1097557544708252,
+      "log_sha256": "eae41fc8d359b97c2de155deeeae76a992b1a604a62555b7408c43fac3821234",
+      "pid": 5833,
+      "returncode": 0,
+      "started_unix": 1794471073.5540488
+    },
+    {
+      "argv": [
+        "/usr/bin/make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+        "M=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/workload_modules/nano",
+        "MO=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/rwsem-kdlock",
+        "KERNELRELEASE=7.0.0-38-kdrebuild9",
+        "-j8",
+        "W=1",
+        "V=1",
+        "RB_LOCK_KIND=rwsem",
+        "RB_BACKEND=kdlock",
+        "KD_SOURCE_ROOT=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input",
+        "TCLOCK_INCLUDE=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/tclock_backend/include",
+        "modules"
+      ],
+      "elapsed_seconds": 2.11318302154541,
+      "log_sha256": "bb526aa9ca4b278e3233f299f8719df76e951ee87d97f6904f9d998ff588f70e",
+      "pid": 5834,
+      "returncode": 0,
+      "started_unix": 1794471073.6685925
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/scripts/sign-file",
+        "sha512",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.pem",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.x509",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.10846710205078125,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 6139,
+      "returncode": 0,
+      "started_unix": 1794471075.7905908
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.0067043304443359375,
+      "log_sha256": "4bec86792e16e635bf6b35275446fe4e2942529e21327cfea3adc94e6ef1d61b",
+      "pid": 6140,
+      "returncode": 0,
+      "started_unix": 1794471075.9046066
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.10507631301879883,
+      "log_sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "pid": 6141,
+      "returncode": 0,
+      "started_unix": 1794471075.9157612
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.006765604019165039,
+      "log_sha256": "920ef7c350895130ee1ecde12316732c291b2b9a6261bd45756b396fd904218d",
+      "pid": 6142,
+      "returncode": 0,
+      "started_unix": 1794471076.025753
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.11169552803039551,
+      "log_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "pid": 6143,
+      "returncode": 0,
+      "started_unix": 1794471076.0369267
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.006631135940551758,
+      "log_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "pid": 6144,
+      "returncode": 0,
+      "started_unix": 1794471076.1506891
+    },
+    {
+      "argv": [
+        "/usr/bin/objdump",
+        "-drw",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-kdlock.ko"
+      ],
+      "elapsed_seconds": 0.1070716381072998,
+      "log_sha256": "6768cb5ffa23dbc4e1c5abee6a8ef48441b7ba4d4283ead0545544e08b05d8f1",
+      "pid": 6145,
+      "returncode": 0,
+      "started_unix": 1794471076.1617842
+    },
+    {
+      "argv": [
+        "/usr/bin/make",
+        "-C",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+        "O=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+        "M=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/workload_modules/nano",
+        "MO=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/rwsem-tclock",
+        "KERNELRELEASE=7.0.0-38-kdrebuild9",
+        "-j8",
+        "W=1",
+        "V=1",
+        "RB_LOCK_KIND=rwsem",
+        "RB_BACKEND=tclock",
+        "KD_SOURCE_ROOT=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input",
+        "TCLOCK_INCLUDE=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/input/tclock_backend/include",
+        "KBUILD_EXTRA_SYMBOLS=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/tclock-rwsem/Module.symvers",
+        "modules"
+      ],
+      "elapsed_seconds": 1.8168327808380127,
+      "log_sha256": "7ba7461ec8d6dd62705bca371aec5558bc6b8d410cbb5fbaff92b9b1c5ff9f34",
+      "pid": 6146,
+      "returncode": 0,
+      "started_unix": 1794471076.2735918
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/scripts/sign-file",
+        "sha512",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.pem",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.x509",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-tclock.ko"
+      ],
+      "elapsed_seconds": 0.10870957374572754,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 6451,
+      "returncode": 0,
+      "started_unix": 1794471078.1021924
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-tclock.ko"
+      ],
+      "elapsed_seconds": 0.1079094409942627,
+      "log_sha256": "4bec86792e16e635bf6b35275446fe4e2942529e21327cfea3adc94e6ef1d61b",
+      "pid": 6452,
+      "returncode": 0,
+      "started_unix": 1794471078.2163742
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-tclock.ko"
+      ],
+      "elapsed_seconds": 0.006533384323120117,
+      "log_sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb",
+      "pid": 6453,
+      "returncode": 0,
+      "started_unix": 1794471078.326354
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-tclock.ko"
+      ],
+      "elapsed_seconds": 0.1049492359161377,
+      "log_sha256": "920ef7c350895130ee1ecde12316732c291b2b9a6261bd45756b396fd904218d",
+      "pid": 6454,
+      "returncode": 0,
+      "started_unix": 1794471078.3372872
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-tclock.ko"
+      ],
+      "elapsed_seconds": 0.006745100021362305,
+      "log_sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec",
+      "pid": 6455,
+      "returncode": 0,
+      "started_unix": 1794471078.4469707
+    },
+    {
+      "argv": [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-tclock.ko"
+      ],
+      "elapsed_seconds": 0.1049036979675293,
+      "log_sha256": "f4aa6b2918426a252ea34442c1f49a4fb06c84ba2b435f594148ac945da57a33",
+      "pid": 6456,
+      "returncode": 0,
+      "started_unix": 1794471078.4580984
+    },
+    {
+      "argv": [
+        "/usr/bin/objdump",
+        "-drw",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-tclock.ko"
+      ],
+      "elapsed_seconds": 0.00948333740234375,
+      "log_sha256": "7f3ad05c22c761d6c7bc9c6300cc721f8d1c3877bcd777efb6922c933faa3e66",
+      "pid": 6457,
+      "returncode": 0,
+      "started_unix": 1794471078.5677736
+    }
+  ],
+  "kernel_files": {
+    ".config": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "Module.symvers": "ae12c954017277f2c9d87205f916167d8461955d957d3d1c99a30cd75ba2c43a",
+    "certs/signing_key.x509": "0e3f40e4d4fa0c3d75fd350a5aaa99af4959e2d64de86d06e45bc30336f7d281",
+    "vmlinux": "0fe0fe930e391bb263fdcfa4ba9940eee225280a668021cb11a269a691cb8c15"
+  },
+  "kernel_release": "7.0.0-38-kdrebuild9",
+  "modules": {
+    "mutex-kdlock": {
+      "metadata": {
+        "depends": "",
+        "sig_hashalgo": "sha512",
+        "sig_key": "68:6B:C2:8D:19:80:51:44:92:D6:88:41:CB:1F:A9:12:66:C1:FF:69",
+        "signer": "Build time autogenerated kernel key",
+        "vermagic": "7.0.0-38-kdrebuild9 SMP preempt mod_unload modversions"
+      },
+      "signed": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-kdlock.ko",
+      "signed_sha256": "22a19734f17531cfee1a5407e5097cd1d1926bb30f78ae8b764f1290271b8a3e",
+      "unsigned": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/mutex-kdlock/kd_nano.ko",
+      "unsigned_sha256": "3674db6ea1d8fa6449ecc3f54de1fe38266d381a7147e5f989a9532a7b90cd6c"
+    },
+    "mutex-native": {
+      "metadata": {
+        "depends": "",
+        "sig_hashalgo": "sha512",
+        "sig_key": "68:6B:C2:8D:19:80:51:44:92:D6:88:41:CB:1F:A9:12:66:C1:FF:69",
+        "signer": "Build time autogenerated kernel key",
+        "vermagic": "7.0.0-38-kdrebuild9 SMP preempt mod_unload modversions"
+      },
+      "signed": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-native.ko",
+      "signed_sha256": "ca21aa55f27f146060b32f972d9463a8b9688696fac4295280a4ae3cb92428d0",
+      "unsigned": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/mutex-native/kd_nano.ko",
+      "unsigned_sha256": "d2f96180ab1b1ed65077656f606bcc32c8fc5464ef6dc920b736241976370828"
+    },
+    "mutex-tclock": {
+      "metadata": {
+        "depends": "tclock_mutex_backend_km",
+        "sig_hashalgo": "sha512",
+        "sig_key": "68:6B:C2:8D:19:80:51:44:92:D6:88:41:CB:1F:A9:12:66:C1:FF:69",
+        "signer": "Build time autogenerated kernel key",
+        "vermagic": "7.0.0-38-kdrebuild9 SMP preempt mod_unload modversions"
+      },
+      "signed": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-mutex-tclock.ko",
+      "signed_sha256": "9443f1b3b6231f8fd164548c4d8597786291015900d90b79c80fe2f37a35495a",
+      "unsigned": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/mutex-tclock/kd_nano.ko",
+      "unsigned_sha256": "22aa186dc8eb0523b8c7bd3501b720a1a3ec4f7b27f9b84fdab21bf4482cbc18"
+    },
+    "rwsem-kdlock": {
+      "metadata": {
+        "depends": "",
+        "sig_hashalgo": "sha512",
+        "sig_key": "68:6B:C2:8D:19:80:51:44:92:D6:88:41:CB:1F:A9:12:66:C1:FF:69",
+        "signer": "Build time autogenerated kernel key",
+        "vermagic": "7.0.0-38-kdrebuild9 SMP preempt mod_unload modversions"
+      },
+      "signed": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-kdlock.ko",
+      "signed_sha256": "f1bb76322e8c1b043a6d05b3ac91083f7c727d7d79bd1669ad4177590e1603ad",
+      "unsigned": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/rwsem-kdlock/kd_nano.ko",
+      "unsigned_sha256": "8de1e4291e058276f0d99e7e59102dbcded686040bcec047386638c7da406e9f"
+    },
+    "rwsem-native": {
+      "metadata": {
+        "depends": "",
+        "sig_hashalgo": "sha512",
+        "sig_key": "68:6B:C2:8D:19:80:51:44:92:D6:88:41:CB:1F:A9:12:66:C1:FF:69",
+        "signer": "Build time autogenerated kernel key",
+        "vermagic": "7.0.0-38-kdrebuild9 SMP preempt mod_unload modversions"
+      },
+      "signed": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-native.ko",
+      "signed_sha256": "f822f7685e173d929d9be9ccb4394213129eeda733ab83b1e492d8b1a929d281",
+      "unsigned": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/rwsem-native/kd_nano.ko",
+      "unsigned_sha256": "caf6f0123f44b9c37f742718344a40affdfd3416570f8be3682ce601f4730747"
+    },
+    "rwsem-tclock": {
+      "metadata": {
+        "depends": "tclock_rwsem_backend_km",
+        "sig_hashalgo": "sha512",
+        "sig_key": "68:6B:C2:8D:19:80:51:44:92:D6:88:41:CB:1F:A9:12:66:C1:FF:69",
+        "signer": "Build time autogenerated kernel key",
+        "vermagic": "7.0.0-38-kdrebuild9 SMP preempt mod_unload modversions"
+      },
+      "signed": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-rwsem-tclock.ko",
+      "signed_sha256": "4afa0c380f7da4b42849d9ce66a3c0f404a1862464b1ed6e506b6725f3f38a05",
+      "unsigned": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/rwsem-tclock/kd_nano.ko",
+      "unsigned_sha256": "a05883f1c0ab255d8bb9a2e70f7ca8bf898df934366c1c07d2912a7f157786ea"
+    },
+    "tclock-mutex": {
+      "emitted_context_audit": {
+        "hidden_helpers_preserve_lock": true,
+        "rwlock_pv_preserves_argument": false,
+        "six_register_switch": true,
+        "slowpath_inline_returns": 2
+      },
+      "metadata": {
+        "depends": "",
+        "sig_hashalgo": "sha512",
+        "sig_key": "68:6B:C2:8D:19:80:51:44:92:D6:88:41:CB:1F:A9:12:66:C1:FF:69",
+        "signer": "Build time autogenerated kernel key",
+        "vermagic": "7.0.0-38-kdrebuild9 SMP preempt mod_unload modversions"
+      },
+      "signed": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-mutex.ko",
+      "signed_sha256": "7543d048b1f63799fba97c45ebf9ff561e660ed0c3d2df9e77f912fc6a786cb8",
+      "unsigned": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/tclock-mutex/tclock_mutex_backend_km.ko",
+      "unsigned_sha256": "1f6a828cf0313f6c607a44fa19d81d4f96a3b2953c22db113e714f6a4f474729"
+    },
+    "tclock-rwsem": {
+      "emitted_context_audit": {
+        "hidden_helpers_preserve_lock": true,
+        "rwlock_pv_preserves_argument": false,
+        "six_register_switch": true,
+        "slowpath_inline_returns": 2
+      },
+      "metadata": {
+        "depends": "",
+        "sig_hashalgo": "sha512",
+        "sig_key": "68:6B:C2:8D:19:80:51:44:92:D6:88:41:CB:1F:A9:12:66:C1:FF:69",
+        "signer": "Build time autogenerated kernel key",
+        "vermagic": "7.0.0-38-kdrebuild9 SMP preempt mod_unload modversions"
+      },
+      "signed": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/signed-tclock-rwsem.ko",
+      "signed_sha256": "c26068f63db157e3287e96a8573e24dc24f12b6920940652b967e78cc5eccafa",
+      "unsigned": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/nano-kernel9-20261112-02/build/tclock-rwsem/tclock_rwsem_backend_km.ko",
+      "unsigned_sha256": "5fcabb99c402157021ca6e91f62c86743fa0a7f93c14d7acee8f4cf490eb4ae9"
+    }
+  },
+  "sign_tool_sha256": "08610fe49bec7150cafa7018abb52ae1cc50b86d8f88b35f19a9e45b4052fe01",
+  "status": "NANO_MODULES_BUILT_SIGNED",
+  "tools": {
+    "as": {
+      "path": "/usr/bin/as",
+      "resolved": "/usr/bin/x86_64-linux-gnu-as",
+      "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b"
+    },
+    "ld": {
+      "path": "/usr/bin/ld",
+      "resolved": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+      "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075"
+    },
+    "make": {
+      "path": "/usr/bin/make",
+      "resolved": "/usr/bin/make",
+      "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49"
+    },
+    "modinfo": {
+      "path": "/usr/sbin/modinfo",
+      "resolved": "/usr/bin/kmod",
+      "sha256": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7"
+    },
+    "nm": {
+      "path": "/usr/bin/nm",
+      "resolved": "/usr/bin/x86_64-linux-gnu-nm",
+      "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01"
+    },
+    "objcopy": {
+      "path": "/usr/bin/objcopy",
+      "resolved": "/usr/bin/x86_64-linux-gnu-objcopy",
+      "sha256": "05f4473d24f7330a9b13f43d007d619a2e792e33de453cd7533a2d97c30da770"
+    },
+    "objdump": {
+      "path": "/usr/bin/objdump",
+      "resolved": "/usr/bin/x86_64-linux-gnu-objdump",
+      "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f"
+    },
+    "x86_64-linux-gnu-gcc": {
+      "path": "/usr/bin/x86_64-linux-gnu-gcc",
+      "resolved": "/usr/bin/x86_64-linux-gnu-gcc-15",
+      "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88"
+    }
+  }
+}

@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+"""VM-only selected nano family/backend; preserve failed runs and loaded state."""
+import argparse
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+from protocol import DEVICE, DESTROY, DRAIN, snapshot
+from oracle import require, validate
+
+
+def save(path, value):
+    with Path(path).open('x') as stream:
+        json.dump(value, stream, indent=2, sort_keys=True)
+        stream.write('\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def sha(path):
+    with Path(path).open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--repo', type=Path, required=True)
+    parser.add_argument('--build-receipt', type=Path, required=True)
+    parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--family', choices=('mutex', 'rwsem'), required=True)
+    parser.add_argument('--backend', choices=('native', 'kdlock', 'tclock'), required=True)
+    parser.add_argument('--stage', choices=('functional', 'timing'), required=True)
+    parser.add_argument('--boot-id', required=True)
+    parser.add_argument('--kernel-elf', type=Path, required=True)
+    parser.add_argument('--gs-proof', type=Path, required=True)
+    parser.add_argument('--prerequisite', type=Path, action='append', default=[])
+    args = parser.parse_args()
+    require(os.uname().release == '7.0.0-38-kdrebuild9' and
+            Path('/proc/sys/kernel/random/boot_id').read_text().strip() == args.boot_id,
+            'running kernel/boot identity differs')
+    require(int(Path('/proc/sys/kernel/tainted').read_text()) == 4096, 'unexpected prior kernel taint')
+    require({line.split()[0] for line in Path('/proc/modules').read_text().splitlines()} <= {'nls_iso8859_1'},
+            'a previous experiment remains loaded')
+    require(not Path(DEVICE).exists(), 'previous workload device remains')
+    args.output.mkdir()
+    os.sched_setaffinity(0, {63})
+    sys.path.insert(0, str(args.repo))
+    from compiler import Compiler, symbol_size, executable_elf_bytes
+    from evidence import validate_kd
+    receipt = json.loads(args.build_receipt.read_text())
+    require(receipt['status'] == 'NANO_MODULES_BUILT_SIGNED', 'module build incomplete')
+    if args.stage == 'timing':
+        prior = [json.loads(p.read_text()) for p in args.prerequisite]
+        require({(p['family'], p['backend']) for p in prior} ==
+                {(f, b) for f in ('mutex', 'rwsem') for b in ('native', 'kdlock', 'tclock')} and
+                all(p['status'] == 'FUNCTIONAL_PASS' and p['build_receipt_sha256'] == sha(args.build_receipt)
+                    and p['boot_id'] == args.boot_id for p in prior), 'all six current functional lanes required')
+    row = dict(status='STARTED', family=args.family, backend=args.backend, stage=args.stage,
+               profile='mutex-throughput' if args.family == 'mutex' else 'rwsem-throughput-mixed',
+               boot_id=args.boot_id, kernel_release=os.uname().release,
+               build_receipt_sha256=sha(args.build_receipt), measurements=[], commands=[],
+               workload='single 64-byte-padded counter, deterministic mix, post256, bulk ioctl',
+               instrumentation='bounded per-origin exact request/completion records for KD; original TCLock counters',
+               kd_proxy_limit=16, tclock_batch_limit=1024,
+               timing_qualification='exploratory; host strict timing qualification is separate')
+    save(args.output / 'started.json', row)
+
+    def command(label, argv, seconds=60):
+        log = args.output / (label + '.log')
+        record = dict(argv=list(map(str, argv)), started_unix=time.time())
+        row['commands'].append(record)
+        with log.open('xb') as stream:
+            child = subprocess.Popen(record['argv'], stdout=stream, stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL, start_new_session=True)
+            record['pid'] = child.pid
+            save(args.output / (label + '-started.json'), record)
+            end = time.monotonic() + seconds
+            while child.poll() is None:
+                if time.monotonic() >= end or log.stat().st_size > 64 * 1024 * 1024:
+                    record['returncode'] = None
+                    save(args.output / (label + '-incomplete.json'), record)
+                    raise TimeoutError('observer ended; child and module state retained: ' + label)
+                time.sleep(0.05)
+            stream.flush()
+            os.fsync(stream.fileno())
+        record.update(returncode=child.returncode, elapsed_seconds=time.time() - record['started_unix'],
+                      log_sha256=sha(log))
+        save(args.output / (label + '-result.json'), record)
+        require(child.returncode == 0, 'command failed: ' + label)
+        return log.read_text()
+
+    def module(key, label, parameters=()):
+        item = receipt['modules'][key]
+        require(sha(item['signed']) == item['signed_sha256'], 'signed module changed: ' + key)
+        command(label, ['/usr/sbin/insmod', item['signed'], *parameters])
+        return item
+
+    def fault_check(label):
+        text = command(label, ['/usr/bin/dmesg', '--color=never'])
+        require(text.startswith(before_log), 'kernel log prefix changed')
+        added = text[len(before_log):]
+        require(not any(token in added for token in ('BUG:', 'kernel BUG at', 'Oops:',
+                    'general protection fault', 'WARNING: CPU:', 'Kernel panic')), 'new kernel fault')
+
+    compiler = None
+    provider_name = 'tclock_' + args.family + '_backend_km'
+    tc_params = Path('/sys/module') / provider_name / 'parameters'
+    try:
+        before_log = command('dmesg-before', ['/usr/bin/dmesg', '--color=never'])
+        if args.backend == 'tclock':
+            module('tclock-' + args.family, 'load-tclock', ['komb_batch_size=1024'])
+        item = receipt['modules'][args.family + '-' + args.backend]
+        params = []
+        if args.backend == 'kdlock':
+            proof = json.loads(args.gs_proof.read_text())
+            require(proof['verified_for_running_kernel'] and proof['boot_id'] == args.boot_id and
+                    sha(args.kernel_elf) == proof['kernel_elf_sha256'], 'exact live GS/kernel proof differs')
+            gs = int(proof['current_task_gs_offset'], 0)
+            builtin_start, builtin_size = 0xffffffff8276eee0, 2
+            builtin = executable_elf_bytes(args.kernel_elf, builtin_start, builtin_size)
+            require(builtin.hex() == 'c3cc', 'captured return thunk differs')
+            write_size = symbol_size(item['signed'], 'rb_write', '/usr/bin/nm', 60)
+            read_size = symbol_size(item['signed'], 'rb_read', '/usr/bin/nm', 60)
+            version = 'nano-' + item['signed_sha256'] + '-' + proof['kernel_elf_sha256']
+            params = [f'gs_offset={gs}', 'gs_verified=1', 'immutable_text=1', 'auxiliary_contract=1',
+                      f'source_size={write_size}', f'step_size={read_size}', 'dependency_page_limit=16',
+                      'total_source_byte_limit=131072', f'builtin_source_start={builtin_start}',
+                      f'builtin_source_size={builtin_size}', 'source_version=' + version]
+        module(args.family + '-' + args.backend, 'load-workload', params)
+        layout = snapshot()
+        require(layout['values'] == [0] * 16 and not any(layout[n] for n in ('cnts', 'gate', 'active')),
+                'initial workload not empty')
+        row['layout'] = layout
+        if args.backend == 'tclock':
+            (tc_params / 'target_lock').write_text(str(layout['lock_addr']))
+            require((tc_params / 'quiescent').read_text().strip() == '1', 'TCLock initial state not quiescent')
+        if args.backend == 'kdlock':
+            symbols = [line.split() for line in Path('/proc/kallsyms').read_text().splitlines()]
+            writers = [int(s[0], 16) for s in symbols if len(s) == 4 and s[2:] == ['rb_write', '[kd_nano]']]
+            require(len(writers) == 1 and writers[0], 'exact loaded writer symbol missing')
+            compiler = Compiler(args.repo, args.output / 'compiler', gs, builtin_start, builtin, writers[0])
+
+        def phase(label, workers, *, duration=0, iterations=256, timed=False):
+            spec = dict(arm=args.backend, lock_kind=args.family, workload='cacheline', cachelines=1,
+                        post_work_rounds=256, threads=workers, cpus=list(range(workers)), collector_cpu=63,
+                        write_percent=100 if args.family == 'mutex' else 20, duration_ms=duration,
+                        iterations=iterations, sample_ms=10, peak_window_ms=300, peak_settle_ms=300)
+            save(args.output / (label + '.spec.json'), spec)
+            text = command(label, [sys.executable, '-B', args.repo / 'bench/nano/client.py',
+                                   '--spec', args.output / (label + '.spec.json')], 120)
+            measurement = json.loads(text)
+            require(measurement['data_ok'] is True, 'client body/mix/post-work validation failed')
+            peak = validate(measurement, spec)
+            measurement.update(label=label, timed=timed, spec=spec,
+                whole_run_ops_s=measurement['completed'] * 1e9 / measurement['wall_ns'], peak=peak)
+            if compiler is not None:
+                measurement['generated'] = validate_kd(measurement, compiler)
+            if args.backend == 'tclock':
+                # The client process has exited; task registration references
+                # can now drain through the provider's exact task/queue checks.
+                with open(DEVICE, 'rb', buffering=0) as device:
+                    fcntl.ioctl(device, DRAIN)
+                require((tc_params / 'quiescent').read_text().strip() == '1', 'TCLock exact drain incomplete')
+                measurement['tclock'] = {p.name: p.read_text().strip() for p in tc_params.iterdir()
+                                         if p.name != 'drain'}
+            save(args.output / (label + '.json'), measurement)
+            row['measurements'].append(measurement)
+            fault_check(label + '-dmesg')
+            print(json.dumps(dict(phase=label, backend=args.backend, family=args.family,
+                                  completed=measurement['completed'], generated=measurement.get('generated'),
+                                  whole_run_ops_s=measurement['whole_run_ops_s'])), flush=True)
+            return measurement
+
+        phase('local-1', 1, iterations=32)
+        if compiler is not None:
+            compiler.cycle(force=True)
+            for number in range(4):
+                trained = phase(f'learn-{number}', 8)
+                cycle = compiler.cycle()
+                if not cycle['claim_rows'] and trained['generated']['jit_completions']:
+                    break
+            else:
+                raise ValueError('bounded training did not establish completed generated bodies and an empty claim')
+        # These exercise the actual measured binding at every requested size.
+        for count in (1, 8, 36):
+            checked = phase(f'functional-{count}', count)
+            if compiler is not None:
+                cycle = compiler.cycle(claim_only=True)
+                require(not cycle['claim_rows'] and not cycle['published'], 'fixed image acquired new feedback')
+                if count > 1:
+                    require(checked['generated']['jit_completions'] > 0,
+                            'contended functional phase has no completed generated body')
+        if args.stage == 'timing':
+            for repeat in range(3):
+                for count in (1, 8, 36):
+                    phase(f'timed-r{repeat + 1}-w{count}', count, duration=2000, timed=True)
+                    if compiler is not None:
+                        cycle = compiler.cycle(claim_only=True)
+                        require(not cycle['claim_rows'] and not cycle['published'], 'timed fixed image acquired new feedback')
+        if compiler is not None:
+            row['shutdown'] = compiler.close(item['signed_sha256'])
+            with open(DEVICE, 'rb', buffering=0) as device:
+                fcntl.ioctl(device, DESTROY)
+        if args.backend == 'tclock':
+            # End the provider's object pointer before freeing the workload.
+            (tc_params / 'target_lock').write_text('0')
+        command('unload-workload', ['/usr/sbin/rmmod', 'kd_nano'])
+        if args.backend == 'tclock':
+            command('unload-tclock', ['/usr/sbin/rmmod', provider_name])
+        fault_check('dmesg-final')
+        require(not Path(DEVICE).exists() and not Path('/dev/kd_nano_source').exists(), 'device remains after unload')
+        require(int(Path('/proc/sys/kernel/tainted').read_text()) == 4096, 'kernel taint changed')
+        row['status'] = 'FUNCTIONAL_PASS' if args.stage == 'functional' else 'TIMING_COMPLETE'
+        save(args.output / 'result.json', row)
+        return 0
+    except BaseException as error:
+        row.update(status='FAILED_OR_INCOMPLETE_RETAINED', error=repr(error))
+        save(args.output / 'result.json', row)
+        raise
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

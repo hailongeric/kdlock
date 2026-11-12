@@ -162,6 +162,18 @@ unload passed with no new kernel faults. This is an affected general regression;
 the enqueue/await race is not forced and no new MM execution is established.
 The prior platform stop and failed kernel8 run remain separate historical records.
 
+The later [cacheline1/post256 comparison](../../../bench/results/10.176.26.71/bench/kernel9-nano-20261112/README.md)
+on that kernel9 boot passed all six functional lanes and completed 54 timed
+sessions. The fixed-image contended KD runs recorded 2,050,200 completed
+protected generated writer episodes in total; the six one-worker KD sessions
+remain NO_JIT. Exact body/mix counts, source/frame retirement and normal unload
+passed. KD trails Native and TCLock under the recorded instrumentation and
+exploratory CPU-63 auxiliary-worker policy. Configured proxy/continuation limits
+do not measure physical batch length; no causal ablation or new MM result is
+established. The payload is the old named profiles' generic one-counter body,
+not the separate two-word RB_NANO body. Frozen inputs, all session rows,
+progress samples, completion witnesses and retained build warnings are archived.
+
 ## 1 Active authority and scope
 
 Use the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins).

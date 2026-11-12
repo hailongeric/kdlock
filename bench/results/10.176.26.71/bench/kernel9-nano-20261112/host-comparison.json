@@ -1,0 +1,69 @@
+{
+  "same_host_boot": true,
+  "same_qemu": true,
+  "same_64_vcpu_tasks_and_pins": true,
+  "same_frequency_policy": true,
+  "same_numa": true,
+  "aux_before": [
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "qemu-system-x86",
+      "start_ticks": 42969155,
+      "tid": 257489
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "call_rcu",
+      "start_ticks": 42969155,
+      "tid": 257490
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "kvm-nx-lpage-re",
+      "start_ticks": 42969168,
+      "tid": 257560
+    }
+  ],
+  "aux_after": [
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "qemu-system-x86",
+      "start_ticks": 42969155,
+      "tid": 257489
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "call_rcu",
+      "start_ticks": 42969155,
+      "tid": 257490
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "kvm-nx-lpage-re",
+      "start_ticks": 42969168,
+      "tid": 257560
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "start_ticks": 285871802,
+      "tid": 1242932
+    }
+  ],
+  "strict_timing_qualified": false,
+  "scope": "exploratory under the recorded CPU-63 auxiliary-worker policy"
+}

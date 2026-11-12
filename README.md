@@ -33,6 +33,14 @@ observations, zero overflow, protected JIT completion and ordinary retirement.
 This does not force the queue race or establish a new mmap result. The failed
 run and earlier platform review stop keep their own verdicts.
 
+The [kernel9 cacheline1/post256 comparison](bench/results/10.176.26.71/bench/kernel9-nano-20261112/README.md)
+completed six functional lanes and all 54 timed sessions for mutex and mixed
+rwsem at 1, 8 and 36 workers. KD trails Native and TCLock in this instrumented,
+exploratory configuration; all six one-worker KD NO_JIT cases are retained.
+The selected one-counter body matches the old named throughput profiles, not
+the separate two-word RB_NANO body. Timing qualification, batching controls,
+completed-body evidence and source-backed overhead findings remain explicit.
+
 The current source adds ordinary sleepable rwsem read/write operations and
 `downgrade_write`, plus plain rwlock read/write operations in IRQ-enabled task
 context. Each family has its own runtime. A proxy can take a real concurrent
