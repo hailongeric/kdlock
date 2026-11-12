@@ -248,6 +248,80 @@ static struct kd_mutex_node *wait_link(struct kd_mutex_node *node)
 	}
 }
 
+void kd_mutex_fast_init(struct kd_mutex_fast *fast, struct task_struct *task,
+		       struct kd_thread_state *state)
+{
+	/* Cold, unpublished root storage only. No general node constructor or
+	 * extra task reference: root attachment already retains the exact task.
+	 * Only next is exposed to producers; the remaining node is not an offer.
+	 */
+	fast->lock = NULL;
+	fast->head.next = NULL;
+	fast->head.atomic_spin = false;
+	fast->head.requester = task;
+	fast->head.state = state;
+}
+
+static void observe_fast(unsigned long kind, struct kd_mutex_fast *fast,
+			 unsigned long object, unsigned long next, unsigned long flags)
+{
+	kd_observe(kind, .state = (unsigned long)fast->head.state,
+		.origin = (unsigned long)fast->head.requester,
+		.node = (unsigned long)&fast->head, .acquisition = (unsigned long)fast,
+		.owner = (unsigned long)fast, .owner_task = (unsigned long)fast->head.requester,
+		.object = object, .related = next, .phase = KD_MUTEX_SELECTED_LOCAL,
+		.flags = flags);
+}
+
+bool kd_mutex_fast_trylock(struct kd_mutex *lock, struct kd_mutex_fast *fast)
+{
+	BUG_ON(!lock || fast->lock || fast->head.requester != current);
+	WRITE_ONCE(fast->head.next, NULL);
+	/* The empty-tail claim is both execution selection and physical grant.
+	 * On failure this head was never published; the ordinary path starts
+	 * with the same unfinished source operation and its own persistent node.
+	 */
+	if (cmpxchg(&lock->tail, NULL, &fast->head))
+		return false;
+	fast->lock = lock;
+	observe_fast(KD_OBS_FAST_ACQUIRE, fast, (unsigned long)lock, 0,
+		     KD_OBS_FLAG_ENQUEUED);
+	return true;
+}
+
+void kd_mutex_fast_unlock(struct kd_mutex_fast *fast)
+{
+	struct kd_mutex *lock = fast->lock;
+	struct kd_mutex_node *next;
+	unsigned long successor = 0;
+	int selection;
+
+	BUG_ON(!lock || fast->head.requester != current || READ_ONCE(lock->owner));
+	next = smp_load_acquire(&fast->head.next);
+	if (next || cmpxchg(&lock->tail, &fast->head, NULL) != &fast->head) {
+		/* A producer can be preempted between exchange and link. Its final
+		 * release store must precede reuse of our task-owned head.
+		 */
+		if (!next)
+			next = wait_link(&fast->head);
+		BUG_ON(next->native_local || next->atomic_spin || next->rw ||
+		       next->wait_state != TASK_UNINTERRUPTIBLE);
+		selection = atomic_cmpxchg(&next->selection, KD_MUTEX_OFFERED,
+					  KD_MUTEX_SELECTED_LOCAL);
+		BUG_ON(selection != KD_MUTEX_OFFERED && selection != KD_MUTEX_SELECTED_LOCAL);
+		successor = (unsigned long)next;
+		publish_condition(next, &next->turn);
+		/* No successor access follows turn publication. */
+	}
+	/* No object access follows tail removal or turn publication: the next
+	 * owner may already have released and destroyed it. Only scalar identity
+	 * and this still-attached task's private header remain accessible.
+	 */
+	fast->lock = NULL;
+	observe_fast(KD_OBS_FAST_RELEASE, fast, (unsigned long)lock, successor,
+		     KD_OBS_FLAG_QUEUE_DONE | KD_OBS_FLAG_NODE_RETIRABLE);
+}
+
 static bool progress_wait(struct kd_mutex_node *node)
 {
 	bool blocked = false;

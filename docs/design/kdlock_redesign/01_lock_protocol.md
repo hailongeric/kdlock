@@ -175,6 +175,14 @@ Materialization before source transfer, one active executor, optional selection 
 
 **Selected C05 storage:** the ordinary local/proxy path uses task-owned preallocated persistent request records rather than allocating request storage at each lock. Each simultaneously live request/control has a distinct record pointing directly to its original S_W. W's core/regs stays singular and is never copied into a request record. Normal local selection remains part of this unified path.
 
+The later [native mutex fast-path candidate](../../../tests/mutex_fast/README.md)
+adds one cold task-owned head for eligible top-level empty-queue acquisition.
+It completes no delegation setup and has no image/source grant; a failed claim
+uses the ordinary persistent path. Its exact original task retains the physical
+owner and record through normal successor handoff. Nested requests remain local
+while that fast owner is held. This is a scoped source candidate requiring its
+own kernel/runtime evidence, not a change to persistent delegated lifetimes.
+
 A persistent record becomes reusable only after its request and all relevant users finish. Queue scheduling membership, source completion, physical release and retained release/return duties are separate: detachment or a returned result alone does not permit reuse. Count every non-free record, including concurrently live nested requests and late physical-owner/release, grant, notification, return, image/binding and current-native-endpoint users after the logical scope ends. Nesting depth alone is insufficient.
 
 The user guarantees an available record for every need of the supported workload. Capacity is finite and explicitly supplied by task attachment/resources; no deployment count or one-node sufficiency is configured here. Exhaustion is a documentation-only limitation of that support contract. It adds no exhaustion handler, recovery/local fallback or new special assertion, and does not imply a mathematically unbounded pool. The public ordinary lock API remains void; the capacity contract grants no public error result, fabricated success or source replay. Cold provisioning and managed lifecycle now have source through `c6becf81`; the actual deployment count and lifecycle/capacity proof remain outstanding.

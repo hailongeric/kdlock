@@ -18,10 +18,15 @@ def validate_kd(measurement, compiler, *, recording=True):
         require(counts['attached'] == counts['detached'] == 1 and counts['state'] and counts['origin'],
                 'task source/runtime lifecycle incomplete')
         require(counts['errors'] == counts['live'] == 0 and
-                counts['reserved'] == counts['freed'] == worker['completed'],
+                counts['reserved'] == counts['freed'] and
+                counts['fast_acquired'] == counts['fast_released'] and
+                counts['reserved'] + counts['fast_acquired'] == worker['completed'] and
+                counts['fast_acquired'] <= worker['writes'],
                 'exact request lifetime or per-operation accounting differs')
         require(counts['read_acquired'] == counts['read_released'] == worker['reads'],
                 'local reader credits differ from completed reads')
+        require(not counts['fast_acquired'] or measurement.get('spec', {}).get('lock_kind') == 'mutex',
+                'fast mutex evidence appeared outside the mutex family')
         require(0 <= counts['completed'] <= counts['entered'] and
                 counts['completed'] <= worker['writes'], 'completed JIT bodies exceed eligible writes')
         complete += counts['completed']

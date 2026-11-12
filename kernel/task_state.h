@@ -5,6 +5,7 @@
 #include <linux/types.h>
 #include "state.h"
 #include "owner_progress.h"
+#include "mutex.h"
 
 struct task_struct;
 struct kd_mutex_entry;
@@ -45,6 +46,8 @@ struct kd_task_root_context {
 	struct kd_owner_progress owners;
 	/* Exact owned native compatibility grants, no source-state backing. */
 	struct list_head native_grants;
+	/* One exact top-level local mutex owner; never lent or combined. */
+	struct kd_mutex_fast mutex_fast;
 	/* Own native-entry configuration, never an active borrowed S_W. */
 	struct kd_episode_resources *mutex_resources;
 	unsigned long mutex_control_bytes;

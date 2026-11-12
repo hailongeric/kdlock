@@ -16,7 +16,7 @@ class RecordingEvidence(unittest.TestCase):
     def local_measurement(self):
         counts = dict(attached=1, detached=1, state=100, origin=200, errors=0, live=0,
                       reserved=5, freed=5, read_acquired=4, read_released=4,
-                      completed=0, entered=0)
+                      completed=0, entered=0, fast_acquired=0, fast_released=0)
         return dict(kd_evidence=dict(available=True, workers=[counts]),
                     workers=[dict(completed=5, reads=4, writes=1)], writes=1)
 
@@ -35,6 +35,48 @@ class RecordingEvidence(unittest.TestCase):
             self.assertIsNone(result[field])
         self.assertFalse(result['retirement_observations_available'])
         with self.assertRaisesRegex(ValueError, 'unavailable'):
+            evidence.validate_kd(measurement, None)
+
+    def test_fast_pairs_have_separate_exact_lifetimes(self):
+        measurement = self.local_measurement()
+        measurement['spec'] = dict(lock_kind='mutex')
+        counts = measurement['kd_evidence']['workers'][0]
+        counts.update(reserved=4, freed=4, fast_acquired=1, fast_released=1)
+        self.assertEqual(evidence.validate_kd(measurement, None)['jit_status'], 'NO_JIT')
+        for changed in (dict(fast_released=0), dict(fast_acquired=2, fast_released=2),
+                        dict(reserved=5, freed=5)):
+            with self.subTest(changed=changed):
+                before = counts.copy()
+                counts.update(changed)
+                with self.assertRaisesRegex(ValueError, 'lifetime'):
+                    evidence.validate_kd(measurement, None)
+                counts.update(before)
+
+    def test_evidence_v2_preserves_proof_offsets(self):
+        self.assertEqual(protocol.EVIDENCE, 0x420B)
+        def reply(device, command, buffer, mutate):
+            self.assertEqual(command, protocol.EVIDENCE)
+            struct.pack_into('=2Q', buffer, 0, 2, 2)
+            for worker in range(2):
+                offset = 16 + worker * 138 * 8
+                struct.pack_into('=18Q', buffer, offset, *range(100 * worker, 100 * worker + 18))
+                for record in range(6):
+                    struct.pack_into('=20Q', buffer, offset + 18 * 8 + record * 160,
+                                     *([1000 * worker + record + 1] * 20))
+        with mock.patch('builtins.open', mock.mock_open()), mock.patch.object(protocol.fcntl, 'ioctl', reply):
+            result = protocol.evidence()
+        for worker, row in enumerate(result['workers']):
+            self.assertEqual(row['fast_acquired'], 100 * worker + 16)
+            self.assertEqual(row['fast_released'], 100 * worker + 17)
+            self.assertEqual([event['kind'] for event in row['records']],
+                             [1000 * worker + record + 1 for record in range(6)])
+
+    def test_rwsem_cannot_supply_fast_mutex_pairs(self):
+        measurement = self.local_measurement()
+        measurement['spec'] = dict(lock_kind='rwsem')
+        measurement['kd_evidence']['workers'][0].update(
+            reserved=4, freed=4, fast_acquired=1, fast_released=1)
+        with self.assertRaisesRegex(ValueError, 'mutex family'):
             evidence.validate_kd(measurement, None)
 
     def test_off_rejects_observation_rows(self):

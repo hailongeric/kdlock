@@ -10,6 +10,7 @@ enum rb_count {
 	RB_RESERVED, RB_FREED, RB_PREPARED, RB_PROXY, RB_ENTERED, RB_COMPLETED,
 	RB_FORWARDED, RB_ERRORS, RB_LIVE, RB_ATTACHED, RB_DETACHED,
 	RB_STATE, RB_ORIGIN, RB_PROOF, RB_READ_ACQUIRED, RB_READ_RELEASED,
+	RB_FAST_ACQUIRED, RB_FAST_RELEASED,
 };
 struct rb_request_record {
 	unsigned long node, acquisition, image;
@@ -20,6 +21,7 @@ struct rb_worker_evidence {
 	raw_spinlock_t guard;
 	struct kd_task_storage *storage;
 	unsigned long sample_node;
+	unsigned long fast_node, fast_acquisition, fast_object;
 	unsigned int map_index;
 	bool mapped;
 	struct rb_evidence_row row;
@@ -69,6 +71,33 @@ static void notrace rb_observe(void *unused, const struct kd_observation *e)
 		++w->row.count[RB_READ_ACQUIRED];
 	if (e->kind == KD_OBS_READ_RELEASE)
 		++w->row.count[RB_READ_RELEASED];
+	/* Fast heads have no pool slot. Validate their exact paired identity
+	 * separately; never synthesize SLOT_RESERVE/FREE or a generated body.
+	 */
+	if (e->kind == KD_OBS_FAST_ACQUIRE || e->kind == KD_OBS_FAST_RELEASE) {
+		if (!e->node || !e->acquisition || !e->object ||
+		    e->task != w->row.count[RB_ORIGIN] || e->origin != e->task ||
+		    e->owner_task != e->task || e->owner != e->acquisition ||
+		    e->source_user || e->return_user || e->notifier)
+			++w->row.count[RB_ERRORS];
+		if (e->kind == KD_OBS_FAST_ACQUIRE) {
+			if (w->fast_node || e->flags != KD_OBS_FLAG_ENQUEUED)
+				++w->row.count[RB_ERRORS];
+			w->fast_node = e->node;
+			w->fast_acquisition = e->acquisition;
+			w->fast_object = e->object;
+			++w->row.count[RB_FAST_ACQUIRED];
+		} else {
+			required = KD_OBS_FLAG_QUEUE_DONE | KD_OBS_FLAG_NODE_RETIRABLE;
+			if (!w->fast_node || w->fast_node != e->node ||
+			    w->fast_acquisition != e->acquisition || w->fast_object != e->object ||
+			    e->flags != required)
+				++w->row.count[RB_ERRORS];
+			w->fast_node = w->fast_acquisition = w->fast_object = 0;
+			++w->row.count[RB_FAST_RELEASED];
+		}
+		goto out;
+	}
 	if (!e->node)
 		goto out;
 	r = rb_record(w, e->node);
@@ -239,8 +268,9 @@ static int rb_kd_leave(unsigned int worker)
 		/* Keep this ioctl and source stack live until exact users have ended. */
 		cond_resched();
 	}
-	if (w->row.count[RB_ERRORS] || w->row.count[RB_LIVE] ||
-	    w->row.count[RB_RESERVED] != w->row.count[RB_FREED])
+	if (w->row.count[RB_ERRORS] || w->row.count[RB_LIVE] || w->fast_node ||
+	    w->row.count[RB_RESERVED] != w->row.count[RB_FREED] ||
+	    w->row.count[RB_FAST_ACQUIRED] != w->row.count[RB_FAST_RELEASED])
 		error = -EUCLEAN;
 	return error;
 }

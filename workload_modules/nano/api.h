@@ -38,11 +38,14 @@ struct rw_bench_progress {
 #define RB_PREPARE _IO('B', 5)
 #define RB_DRAIN _IO('B', 6)
 /* Independent evidence extension; the original workload ABI is unchanged. */
-struct rb_evidence_row { __u64 count[16]; __u64 proof[6][20]; };
+struct rb_evidence_row { __u64 count[18]; __u64 proof[6][20]; };
 struct rb_evidence_snapshot { __u64 version, workers; struct rb_evidence_row rows[RB_MAX_WORKERS]; };
 struct rb_bind { __u64 unlock_ip, unlock_cursor; };
 struct rb_recording { __u64 enabled, trace_enabled; };
-#define RB_EVIDENCE _IO('B', 7)
+/* New command for the larger ABI2 snapshot: old buffers must be refused
+ * before copying, rather than discovering the version after an oversized copy.
+ */
+#define RB_EVIDENCE _IO('B', 11)
 #define RB_BIND _IOW('B', 8, struct rb_bind)
 #define RB_DESTROY _IO('B', 9)
 #define RB_RECORDING _IOWR('B', 10, struct rb_recording)

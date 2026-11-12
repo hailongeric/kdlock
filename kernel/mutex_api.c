@@ -138,6 +138,25 @@ static void run_native(struct kd_mutex_entry *entry, struct kd_mutex *lock,
 	kd_mutex_resume_entry(entry, native, kd_episode_native_done, frame);
 }
 
+static bool mutex_fast_eligible(struct kd_task_root_context *root,
+				enum kd_operation_kind operation)
+{
+	struct kd_thread_state *state = &root->core;
+
+	/* Called only after the ordinary native-root and source-target checks.
+	 * Finished request storage may still retain the current native endpoint;
+	 * it stays retained until normal collection/detach, without per-call use.
+	 */
+	return operation == KD_OPERATION_MUTEX_LOCK && !root->mutex_fast.lock &&
+		in_task() && !irqs_disabled() && !in_atomic() &&
+		READ_ONCE(current->__state) == TASK_RUNNING &&
+		list_empty(&state->grants) && list_empty(&root->owners.batches) &&
+		list_empty(&root->native_grants) &&
+		!state->exit_image && !state->exit_use && !state->exit_holder &&
+		(state->operation.phase == KD_OPERATION_IDLE ||
+		 state->operation.phase == KD_OPERATION_RESUMABLE);
+}
+
 static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 					      enum kd_operation_kind operation,
 					      unsigned long api_target)
@@ -172,6 +191,18 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 	native = kd_state_current_binding(&root->core);
 	BUG_ON(!kd_state_is_current(&root->core, native) ||
 	       native->kind != KD_EXECUTION_NATIVE);
+	if (operation == KD_OPERATION_MUTEX_UNLOCK && root->mutex_fast.lock == lock) {
+		result = kd_task_validate_native(root, native);
+		BUG_ON(result);
+		kd_mutex_fast_unlock(&root->mutex_fast);
+		return NULL;
+	}
+	if (mutex_fast_eligible(root, operation)) {
+		result = kd_task_validate_native(root, native);
+		BUG_ON(result);
+		if (kd_mutex_fast_trylock(lock, &root->mutex_fast))
+			return NULL;
+	}
 	result = kd_task_progress_native(root, native, &pending);
 	BUG_ON(result);
 	if (kd_operation_is_unlock(operation)) {

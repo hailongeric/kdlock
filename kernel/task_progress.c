@@ -14,18 +14,12 @@
 #include "request_pool.h"
 #include "episode.h"
 
-int kd_task_progress_native(struct kd_task_root_context *root,
-			    struct kd_execution_binding *expected_native,
-			    bool *pending)
+int kd_task_validate_native(struct kd_task_root_context *root,
+			   struct kd_execution_binding *expected_native)
 {
 	struct kd_thread_state *state;
 	struct kd_request_pool *pool;
-	bool blocked;
-	int result;
 
-	if (!pending)
-		return -EINVAL;
-	*pending = true;
 	if (!root || !expected_native)
 		return -EINVAL;
 	if (!in_task() || (in_atomic() && !root->owners.atomic_spin) || irqs_disabled() ||
@@ -50,6 +44,26 @@ int kd_task_progress_native(struct kd_task_root_context *root,
 	if (!pool || pool->state != state || root->owners.task != current ||
 	    (root->mutex_resources && root->mutex_resources->pool != pool))
 		return -EUCLEAN;
+	return 0;
+}
+
+int kd_task_progress_native(struct kd_task_root_context *root,
+			    struct kd_execution_binding *expected_native,
+			    bool *pending)
+{
+	struct kd_thread_state *state;
+	struct kd_request_pool *pool;
+	bool blocked;
+	int result;
+
+	if (!pending)
+		return -EINVAL;
+	*pending = true;
+	result = kd_task_validate_native(root, expected_native);
+	if (result)
+		return result;
+	state = &root->core;
+	pool = state->requests;
 
 	/* Each operation ends its own guard before the next component is entered.
 	 * A successful final drop/reap may make a containing control reusable;
@@ -73,7 +87,7 @@ int kd_task_progress_native(struct kd_task_root_context *root,
 	 * In particular, a still-current native-return slot stays legitimately
 	 * LIVE even though atomic task detach can revoke/reclaim it later.
 	 */
-	*pending = !list_empty(&root->owners.batches) ||
+	*pending = root->mutex_fast.lock || !list_empty(&root->owners.batches) ||
 		   !list_empty(&state->grants) ||
 		   !kd_request_pool_empty(pool);
 	return 0;

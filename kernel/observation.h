@@ -44,6 +44,11 @@ enum kd_observation_kind {
 	KD_OBS_ACQUIRE_CANCELLED,
 	/* Result is physical 0/1; related is the explicit query operation kind. */
 	KD_OBS_QUERY_RESULT = 44,
+	/* Task-owned local mutex pair, independent of request-pool lifetimes.
+	 * acquisition/owner identify the exact retained fast record; release is
+	 * after physical handoff and the producer's last predecessor access.
+	 */
+	KD_OBS_FAST_ACQUIRE, KD_OBS_FAST_RELEASE,
 };
 
 #define KD_OBS_FLAG_ENQUEUED             (1UL << 0)

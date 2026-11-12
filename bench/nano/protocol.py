@@ -36,20 +36,21 @@ def progress(device, start, deadline, workers):
     return dict(started_ns=row[2], finished_ns=row[3], completed=list(row[6:6 + workers]))
 
 
-EVIDENCE = 0x4207
+EVIDENCE = 0x420B
 BIND = 0x40104208
 DESTROY = 0x4209
 RECORDING = 0xC010420A
 COUNTS = ('reserved', 'freed', 'prepared', 'proxy', 'entered', 'completed',
           'forwarded', 'errors', 'live', 'attached', 'detached', 'state',
-          'origin', 'proof', 'read_acquired', 'read_released')
+          'origin', 'proof', 'read_acquired', 'read_released', 'fast_acquired', 'fast_released')
 EVENT_FIELDS = ('kind', 'task', 'state', 'origin', 'node', 'acquisition', 'parent',
                 'owner', 'owner_task', 'object', 'image', 'ip', 'cursor', 'related',
                 'phase', 'result', 'flags', 'source_user', 'return_user', 'notifier')
 
 
 def evidence():
-    buffer = bytearray(16 + 64 * (16 + 6 * 20) * 8)
+    stride = (len(COUNTS) + 6 * 20) * 8
+    buffer = bytearray(16 + 64 * stride)
     with open(DEVICE, 'rb', buffering=0) as device:
         try:
             fcntl.ioctl(device, EVIDENCE, buffer, True)
@@ -58,14 +59,14 @@ def evidence():
                 raise
             return dict(available=False, workers=None, reason='phase recorder disabled')
     version, workers = struct.unpack_from('=2Q', buffer)
-    if version != 1 or not 1 <= workers <= 64:
+    if version != 2 or not 1 <= workers <= 64:
         raise ValueError('evidence ABI or worker count differs')
     rows = []
     for index in range(workers):
-        offset = 16 + index * 136 * 8
-        row = dict(zip(COUNTS, struct.unpack_from('=16Q', buffer, offset)))
+        offset = 16 + index * stride
+        row = dict(zip(COUNTS, struct.unpack_from(f'={len(COUNTS)}Q', buffer, offset)))
         row['records'] = [dict(zip(EVENT_FIELDS, struct.unpack_from('=20Q', buffer,
-                           offset + 128 + record * 160))) for record in range(6)]
+                           offset + len(COUNTS) * 8 + record * 160))) for record in range(6)]
         rows.append(row)
     return dict(version=version, available=True, workers=rows)
 

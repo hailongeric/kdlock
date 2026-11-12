@@ -7,6 +7,13 @@
 struct kd_task_root_context;
 struct kd_execution_binding;
 
+/* The same native context, endpoint and structural checks used by progress,
+ * without collection or mutation. Fast operations retain these checks while
+ * avoiding delegation preparation and scans of unrelated retired storage.
+ */
+int kd_task_validate_native(struct kd_task_root_context *root,
+			   struct kd_execution_binding *expected_native);
+
 /*
  * One private native progress pass on the attached current task/root. Caller
  * retains root, the exact expected_native endpoint and all backing through the
@@ -27,7 +34,7 @@ struct kd_execution_binding;
  * already between tail exchange and its final predecessor-link store; this is
  * not a wait-free operation or an IRQ/atomic route.
  *
- * On success, pending reports exact remaining owner/grant/pool list
+ * On success, pending reports the held fast owner and remaining owner/grant/pool list
  * membership observed by this pass. It is metadata remaining, not a physical
  * blocker or permission to wait: the current native endpoint legitimately keeps
  * a finished pool slot occupied until atomic detach revokes that endpoint.

@@ -15,6 +15,7 @@ void kd_task_root_context_init(struct kd_task_root_context *context)
 	context->task = NULL;
 	kd_owner_progress_init(&context->owners, NULL);
 	INIT_LIST_HEAD(&context->native_grants);
+	context->mutex_fast.lock = NULL;
 	context->mutex_resources = NULL;
 	context->mutex_control_bytes = 0;
 	context->native_spin_depth = 0;
@@ -60,7 +61,7 @@ static int attach_task(struct kd_task_root_context *context,
 	if (smp_load_acquire(&task->kd_root_context))
 		return -EEXIST;
 	/* Private initialized storage cannot be shared/reused by another task. */
-	if (context->attached || context->task || context->aux_entry)
+	if (context->attached || context->task || context->aux_entry || context->mutex_fast.lock)
 		return -EBUSY;
 	result = kd_execution_binding_init(&context->initial_native, &context->core,
 					   task, context, KD_EXECUTION_NATIVE);
@@ -77,6 +78,7 @@ static int attach_task(struct kd_task_root_context *context,
 	kd_owner_progress_init(&context->owners, task);
 	get_task_struct(task);
 	context->task = task;
+	kd_mutex_fast_init(&context->mutex_fast, task, &context->core);
 	context->aux_low = aux_low;
 	context->aux_high = aux_high;
 	context->aux_current = aux_current;
@@ -118,7 +120,7 @@ int kd_task_root_detach_unpublished(struct kd_task_root_context *context,
 	    !context->attached || context->task != child)
 		return -EINVAL;
 	state = &context->core;
-	if (context->aux_entry || !list_empty(&context->native_grants) ||
+	if (context->aux_entry || context->mutex_fast.lock || !list_empty(&context->native_grants) ||
 	    !list_empty(&context->owners.batches) ||
 	    state->origin != child || !state->requests ||
 	    !kd_request_pool_empty(state->requests) || !list_empty(&state->grants) ||
@@ -166,7 +168,7 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 		return -ESTALE;
 	if (!context->attached || context->task != current)
 		return -EPERM;
-	if (context->aux_entry || !list_empty(&context->owners.batches))
+	if (context->aux_entry || context->mutex_fast.lock || !list_empty(&context->owners.batches))
 		return -EBUSY;
 	/* Caller has stopped/drained auxiliary and borrowed work before this
 	 * first own-state access; neither a cursor nor task identity proves that.
@@ -228,7 +230,7 @@ int kd_task_root_revoke_cancelled(struct kd_task_root_context *context,
 	if (kd_task_root_context_current() != context || !context->attached ||
 	    context->task != current)
 		return -EPERM;
-	if (!context->source_closing || context->aux_entry ||
+	if (!context->source_closing || context->aux_entry || context->mutex_fast.lock ||
 	    context->native_spin_depth || !list_empty(&context->owners.batches) ||
 	    !list_empty(&context->native_grants))
 		return -EBUSY;

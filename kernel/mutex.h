@@ -182,6 +182,26 @@ struct kd_mutex_node {
 	struct kd_mutex_release release;
 };
 
+/* One task-owned, nondelegatable mutex head. It can only replace an empty
+ * tail, never queue behind another node. Other tasks access head.next only,
+ * through their final predecessor-link store. The enclosing attached root
+ * retains storage and the requester through unlock's completed handoff.
+ * No source grant, release batch or captured packet belongs to this record.
+ */
+struct kd_mutex_fast {
+	struct kd_mutex_node head;
+	struct kd_mutex *lock;
+};
+
+void kd_mutex_fast_init(struct kd_mutex_fast *fast, struct task_struct *task,
+		       struct kd_thread_state *state);
+/* Current native task only, after source/context/ownership eligibility checks.
+ * Failure has not enqueued or completed any operation. Matching unlock is
+ * mandatory before root detach, record reuse or task/source storage release.
+ */
+bool kd_mutex_fast_trylock(struct kd_mutex *lock, struct kd_mutex_fast *fast);
+void kd_mutex_fast_unlock(struct kd_mutex_fast *fast);
+
 /*
  * One physical MCS owner/batch. This storage survives finish_physical until
  * reap succeeds, even if the originating source scope or C frame has ended.

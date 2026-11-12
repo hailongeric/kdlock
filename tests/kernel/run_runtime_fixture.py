@@ -330,7 +330,8 @@ def main(*, spin=False, family=None):
                    "JIT_OPERATION", "CHILD_RETURN", "EPISODE_DONE", "FORWARD", "NATIVE_UNLOCK", "OWNER_STOP",
                    "READ_ACQUIRE", "READ_RELEASE", "WRITE_DOWNGRADE_REAL", "WRITE_DOWNGRADE_RETAINED", "NATIVE_MODE",
                    "NATIVE_READ_ACQUIRE", "NATIVE_READ_RELEASE", "NATIVE_WRITE_ACQUIRE", "NATIVE_WRITE_RELEASE",
-                   "NATIVE_DOWNGRADE", "NATIVE_CANCEL", "NATIVE_TRY_MISS", "ACQUIRE_CANCELLED", "QUERY_RESULT")
+                   "NATIVE_DOWNGRADE", "NATIVE_CANCEL", "NATIVE_TRY_MISS", "ACQUIRE_CANCELLED", "QUERY_RESULT",
+                   "FAST_ACQUIRE", "FAST_RELEASE")
     kinds = {name: index + 1 for index, name in enumerate(event_names)}
 
     def read_exact(fd, length):
@@ -536,6 +537,7 @@ def main(*, spin=False, family=None):
                                             "packet_contents_copied": False})
 
     def body_case(name, mode, workers, iterations):
+        begin = len(observations())
         control_command(f"start {mode} {workers} {iterations}")
         deadline = time.monotonic() + args.deadline
         while True:
@@ -569,11 +571,20 @@ def main(*, spin=False, family=None):
                 or int(values["locks_clear"]) != 1):
             (args.output / f"{name}-failure.txt").write_text(raw)
             raise AssertionError("ordinary source effects/current/core/physical cleanup differ")
+        rows = observations()[begin:]
+        fast_pairs = validate_fast_pairs(rows)
+        if family == "mutex" and workers == 1 and mode in (0, 1, 2):
+            if len(fast_pairs) != iterations:
+                raise AssertionError("single native task did not use one exact fast outer mutex per body")
+            if mode == 0 and any(has(row, "SLOT_RESERVE") for row in rows):
+                raise AssertionError("uncontended fast body allocated a delegation request")
+            if mode in (1, 2) and sum(has(row, "SLOT_RESERVE") for row in rows) != iterations:
+                raise AssertionError("native nested mutex did not use its distinct persistent request")
         results["cases"].append({"name": name, "mode": mode, "workers": workers,
                                  "iterations": iterations, "raw_status": raw, "values": values,
                                  "expected_call_effects": expected_calls,
                                  "actual_call_effects": int(values["calls"]),
-                                 "native_body_completion": True})
+                                 "native_body_completion": True, "fast_pairs": fast_pairs})
         control_command("stop")
 
     def check_spin_status(values, workers):
@@ -597,6 +608,31 @@ def main(*, spin=False, family=None):
 
     def has(row, name):
         return row["kind"] == kinds[name]
+
+    def validate_fast_pairs(rows):
+        active, pairs = {}, []
+        identity = ("task", "state", "origin", "node", "acquisition", "owner", "owner_task", "object")
+        for row in rows:
+            if has(row, "FAST_ACQUIRE"):
+                if (family != "mutex" or row["task"] in active or not all(row[key] for key in identity)
+                        or row["task"] != row["origin"] or row["owner_task"] != row["task"]
+                        or row["owner"] != row["acquisition"] or row["flags"] != 1):
+                    raise AssertionError("fast mutex acquire identity or ownership differs")
+                active[row["task"]] = row
+            elif has(row, "FAST_RELEASE"):
+                acquired = active.pop(row["task"], None)
+                if (acquired is None or any(row[key] != acquired[key] for key in identity)
+                        or row["flags"] != 2052
+                        or any(row[key] for key in ("source_user", "return_user", "notifier"))):
+                    raise AssertionError("fast mutex release lacks its exact final queue user")
+                pairs.append(dict(acquire=acquired["index"], release=row["index"],
+                                  task=row["task"], node=row["node"], successor=row["related"]))
+            elif has(row, "SELECT_PROXY") or has(row, "JIT_ENTER"):
+                if row["task"] in active or row["origin"] in active:
+                    raise AssertionError("a fast owner lent its continuation or served a borrowed source")
+        if active:
+            raise AssertionError("fast mutex record remained held at task completion")
+        return pairs
 
     def typed_unlock(row, target, image):
         record = next((call for call in calls if call["site"] == row["ip"]
@@ -814,6 +850,17 @@ def main(*, spin=False, family=None):
                 or int(final["locks_clear"]) != 1):
             raise AssertionError("five ordinary role effects or physical cleanup differ")
         rows = observations()[begin:]
+        fast_pairs = validate_fast_pairs(rows)
+        if family == "mutex":
+            if {pair["task"] for pair in fast_pairs} != set(tasks[:2]) or len(fast_pairs) != 2:
+                raise AssertionError("scene holders did not use their exact fast records")
+            for holder, successor in ((tasks[0], tasks[2]), (tasks[1], tasks[3])):
+                pair = next(pair for pair in fast_pairs if pair["task"] == holder)
+                queued = next(row for row in rows if has(row, "ENQUEUE")
+                              and row["task"] == row["origin"] == successor)
+                if not pair["acquire"] < queued["index"] < pair["release"] or pair["successor"] != queued["node"]:
+                    raise AssertionError("waiter arriving under a fast owner lacked normal queue handoff")
+            results.setdefault("fast_scene_handoffs", []).append(dict(mode=mode, pairs=fast_pairs))
         root = next(row for row in rows if has(row, "ENQUEUE") and row["task"] == tasks[4]
                     and row["origin"] == tasks[4])
         if atomic and mode == 3:
@@ -1051,6 +1098,11 @@ def main(*, spin=False, family=None):
         # probe is permitted in these completion checks.
         fixed_image = old
         results["warm_image_identity"] = fixed_image
+        if family == "mutex":
+            # An image is available, but an outer fast owner keeps each
+            # nested source local. Exercise both ordinary and non-LIFO release.
+            body_case("fast-native-nesting", 1, 1, 1)
+            body_case("fast-native-non-lifo", 2, 1, 1)
         warm_start = len(observations())
         body_case("warm-plain", 0, args.workers, args.iterations)
         warm_plain_end = len(observations())
