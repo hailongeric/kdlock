@@ -1,0 +1,44 @@
+{
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-input-0798c1ab-01/supervisor.py",
+    "--config-json",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-input-0798c1ab-01/host-config.json",
+    "--config-sha256",
+    "c38376355e1b34c5a7dd7c645c8666b8737c201aefe12c31b6d69ba38ba3ec54",
+    "--receipt",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-receipts-0798c1ab-01"
+  ],
+  "input_pins": {
+    "host-config.json": {
+      "bytes": 6979,
+      "sha256": "c38376355e1b34c5a7dd7c645c8666b8737c201aefe12c31b6d69ba38ba3ec54"
+    },
+    "jit-config.bin": {
+      "bytes": 419,
+      "sha256": "5c755511cd1b65c6c1f83539da8282b4e2f5c12ce85414ec08feccf863ef61ca"
+    },
+    "recovery.json": {
+      "bytes": 23263,
+      "sha256": "5e67b010e274427e676677043fef389f22488f9639319e9e7dcfbd5029561fde"
+    },
+    "admission.json": {
+      "bytes": 1289,
+      "sha256": "db233cd8ac3164d3170c071ecc7081c9e58141f93cbf0b147f700dab761f5a1b"
+    },
+    "supervisor.py": {
+      "bytes": 13269,
+      "sha256": "09dc900987cec70b89ea60620ddd07c1493fa6c7dd2b4649201421b33c238ebc"
+    }
+  },
+  "idle": {
+    "identity": {
+      "boot": "2ae5991e-d024-48ac-9f86-24a0a8910172",
+      "release": "7.0.0-38-kdrebuild8",
+      "taint": 0
+    },
+    "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n",
+    "activity": []
+  }
+}

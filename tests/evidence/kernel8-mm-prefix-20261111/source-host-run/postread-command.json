@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "/tmp/kdlock-kernel8-mm-prefix-run-20261111-01/postread-stdin.py",
+  "stdin_sha256": "bfeb1901ba77384bfe284f4fd49b49dafaaf13f1689aac567b6ca332271438a9",
+  "timeout_seconds": 90
+}

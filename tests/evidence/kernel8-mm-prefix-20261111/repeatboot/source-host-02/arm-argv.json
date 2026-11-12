@@ -1,0 +1,15 @@
+[
+  "/usr/bin/python3",
+  "-B",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/repeat-kdrebuild8-mm-input-02/repeat.py",
+  "--helper-sha256",
+  "54c5c48385e459e71d17061920463c5d29983327135442635d303c30cc7f99e9",
+  "--plan-sha256",
+  "35f093be246a4959e4e495d4e3e96d54dd9324257c27ad661881e7d1831b5ae9",
+  "--phase",
+  "arm",
+  "--recovery-sha256",
+  "d1db07ce20e2b15c1c4a5056806354a25efa48c0de7ae49897870be466cdd3af",
+  "--preflight-sha256",
+  "9ddaf9cc54d506bf9692f6403ba0ebacd7db2c3e68518473a679eb46d8c3500e"
+]

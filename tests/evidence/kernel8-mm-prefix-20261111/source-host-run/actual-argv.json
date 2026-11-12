@@ -1,0 +1,11 @@
+[
+  "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+  "-B",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-input-0798c1ab-01/supervisor.py",
+  "--config-json",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-input-0798c1ab-01/host-config.json",
+  "--config-sha256",
+  "c38376355e1b34c5a7dd7c645c8666b8737c201aefe12c31b6d69ba38ba3ec54",
+  "--receipt",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-receipts-0798c1ab-01"
+]

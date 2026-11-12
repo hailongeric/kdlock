@@ -1,0 +1,32 @@
+{
+  "bytes": 134101,
+  "count": 5,
+  "files": [
+    {
+      "bytes": 2294,
+      "name": "README.md",
+      "sha256": "4716ae8e6684f279cd91105215c964fddd8326399752f13b1aed8be10a550576"
+    },
+    {
+      "bytes": 1742,
+      "name": "phase-argv-templates.json",
+      "sha256": "82418828325e6def41e3dcc91db1fa52aa09ce50a7ea12f62b9f500ca0f85e32"
+    },
+    {
+      "bytes": 7916,
+      "name": "plan.json",
+      "sha256": "35f093be246a4959e4e495d4e3e96d54dd9324257c27ad661881e7d1831b5ae9"
+    },
+    {
+      "bytes": 101103,
+      "name": "reference-state.json",
+      "sha256": "759208ec01cb280364a8a558bae8e49cdaec88733f5bd72f342d91697268516d"
+    },
+    {
+      "bytes": 21046,
+      "name": "repeat.py",
+      "sha256": "9543da61aeceb6c449a44848750972315f4f480f27234501ae1d860bcbebbc23"
+    }
+  ],
+  "status": "SOURCE_ONLY_NO_STAGING_ARM_OR_REBOOT"
+}

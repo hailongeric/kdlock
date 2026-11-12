@@ -1,0 +1,42 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/repeat-kdrebuild8-mm-input-01/repeat.py",
+    "--helper-sha256",
+    "9543da61aeceb6c449a44848750972315f4f480f27234501ae1d860bcbebbc23",
+    "--plan-sha256",
+    "35f093be246a4959e4e495d4e3e96d54dd9324257c27ad661881e7d1831b5ae9",
+    "--phase",
+    "preflight",
+    "--recovery-sha256",
+    "d1db07ce20e2b15c1c4a5056806354a25efa48c0de7ae49897870be466cdd3af"
+  ],
+  "input_pins": {
+    "repeat.py": {
+      "bytes": 21046,
+      "sha256": "9543da61aeceb6c449a44848750972315f4f480f27234501ae1d860bcbebbc23"
+    },
+    "plan.json": {
+      "bytes": 7916,
+      "sha256": "35f093be246a4959e4e495d4e3e96d54dd9324257c27ad661881e7d1831b5ae9"
+    },
+    "reference-state.json": {
+      "bytes": 101103,
+      "sha256": "759208ec01cb280364a8a558bae8e49cdaec88733f5bd72f342d91697268516d"
+    },
+    "recovery.json": {
+      "bytes": 23263,
+      "sha256": "d1db07ce20e2b15c1c4a5056806354a25efa48c0de7ae49897870be466cdd3af"
+    }
+  },
+  "idle": {
+    "identity": {
+      "boot": "e001a3d2-3fcc-4e89-80ec-9187eb8ddfa0",
+      "release": "7.0.0-38-kdrebuild8",
+      "taint": 4096
+    },
+    "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n",
+    "activity": []
+  }
+}

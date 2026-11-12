@@ -1,0 +1,130 @@
+{
+  "boot_id": "2ae5991e-d024-48ac-9f86-24a0a8910172",
+  "bounds": {
+    "archive_bytes": 67108864,
+    "build_code_bytes": 131072,
+    "build_diagnostic_bytes": 262144,
+    "build_elf_bytes": 2097152,
+    "build_flat_bytes": 262144,
+    "build_source_bytes": 2097152,
+    "cfg_work_steps": 32768,
+    "command_bytes": 33554432,
+    "decode_sites": 4096,
+    "decode_window_bytes": 61440,
+    "direct_call_edges": 512,
+    "event_bytes": 10485800,
+    "input_bytes": 2097152,
+    "json_line_bytes": 1048576,
+    "lowered_sites": 4096,
+    "lowered_text_bytes": 65536,
+    "recovery_bytes": 4194352,
+    "runtime_block_visits": 1000000,
+    "source_boundaries": 64,
+    "source_bytes": 4096,
+    "source_regions": 4,
+    "stdio_bytes": 16777216,
+    "wire_artifact_bytes": 524288,
+    "wire_log_bytes": 268435456,
+    "wire_rows": 4096,
+    "wire_symbol_bytes": 256,
+    "wire_version_bytes": 256
+  },
+  "contracts": {
+    "auxiliary_context": true,
+    "delayed_cancel": true,
+    "immutable_text": true,
+    "no_external_users": true,
+    "ordinary_task_context": true,
+    "recovery_snapshot": true,
+    "same_mm": true
+  },
+  "experimental_admission": {
+    "actual_user_direction": "For this bounded prefix experiment, use the stated assumption that unchanged native kernel helpers and their callbacks fit the kernel's normal 16 KiB task-stack allowance. Label it explicitly as an experimental premise, not a measured whole-kernel bound or proof of the complete auxiliary-stack requirement; identify unverified callbacks separately. Proceed only if the measured KD budget plus guard margin supports the configured control requirement and existing allocation, retaining independent scheduler, IRQ, unwinder, lifetime and exact-handback checks. Minimize additional tests and reach a short actual delegated mmap/munmap run promptly. Keep handback before unsupported native RCU/PTL context and preserve exact source/target evidence and ordinary cleanup. Do not introduce a complex new execution architecture.",
+    "admission_sha256": "db233cd8ac3164d3170c071ecc7081c9e58141f93cbf0b147f700dab761f5a1b",
+    "auxiliary_bytes": 131072,
+    "complete_auxiliary_requirement_proved": false,
+    "conditional_budget_sha256": "bdcab02965bc43fb2134e5ef13087a0ecec92ee9fbfaef98ae62b657a8bf35b2",
+    "conditional_control_bytes": 44024,
+    "fresh_metadata_sha256": "e503f28582cc90cabb4cbe1112da3acf2769112e23132fd601dd9d6ecc869691",
+    "guard_margin_bytes": 21512,
+    "native_helper_callbacks_measured": false,
+    "native_helper_segment_bytes": 16384,
+    "postboot_result_sha256": "734b84de1e3cc2803493a4bc5ec02aaa7cef63d314a6d6c8a50b826fc01c7f50",
+    "repeat_postproof_sha256": "3a59b4a1a4737bb9040c00733b0f53868fc5872c0f85acc09ae180594fbd169b",
+    "required_control_bytes": 65536,
+    "scope": "Four-region original-JIT prefix with first-unexecuted native handback before omitted MM helpers; not full protected-MM JIT completion.",
+    "source_thread_id": "01a1c374-f9fc-76bd-9126-9e7a5f00f0f9",
+    "unverified_callbacks": [
+      "ordinary scheduler class and scheduling/wakeup callbacks inclusive of instrumentation",
+      "IRQ entry prefix/helper inclusive callback footprint"
+    ]
+  },
+  "paths": {
+    "client": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/mmap-userspace",
+    "gs_proof": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-mm-frontier-01/gs-proof.json",
+    "jit_config": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-input-0798c1ab-01/jit-config.bin",
+    "kernel_config": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/.config",
+    "kernel_elf": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/vmlinux",
+    "output": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-live-0798c1ab-01",
+    "provider_module": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/signed/kd_mmap_api_provider.ko",
+    "recovery": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-input-0798c1ab-01/recovery.json",
+    "repo": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/input",
+    "source_manifest": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/source-sha256.json",
+    "source_state": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/source-state.json"
+  },
+  "recovery_policy": {
+    "exe": "/usr/bin/qemu-system-x86_64",
+    "host_floor_bytes": 8589934592,
+    "hostname": "Super-Server",
+    "image_paths": [
+      "/home/eric/vm/qemu-disks/ubuntu22.04.img",
+      "/home/eric/vm/qemu-disks/sda.qcow2",
+      "/home/eric/vm/qemu-disks/kdlock-builds2-20261031/builds.qcow2"
+    ],
+    "maximum_age_seconds": 900,
+    "output_floor_bytes": 4294967296,
+    "pid": 257489,
+    "root_floor_bytes": 1073741824,
+    "tag": "kdlock-builddisk-clean-20261031"
+  },
+  "release": "7.0.0-38-kdrebuild8",
+  "repo_head": "0798c1abf422017cfc93647a2649be0e5a73c75a",
+  "sha256": {
+    "client": "bae90760f57f3930e1ff48443140eb096ea316c1fed00ae1840127f6985a4cd2",
+    "gs_proof": "ae1b56031053f9e1d14346984be573706a1bbe46344f56cc4069e2ad6a71168a",
+    "jit_config": "5c755511cd1b65c6c1f83539da8282b4e2f5c12ce85414ec08feccf863ef61ca",
+    "kernel_config": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "kernel_elf": "4441e45c27f9300a4cd19739c917458308581472604c3b75d8ffba9fec493be1",
+    "provider_module": "5eb94db883a0ddff654eb4dce92afd1c569a3fe7b46bd02b88f275dfcae22e06",
+    "recovery": "5e67b010e274427e676677043fef389f22488f9639319e9e7dcfbd5029561fde",
+    "source_manifest": "a29e77397367173e51ae091edec94f31798d50f5b9d3b6b90ce31dda0e3b823e",
+    "source_state": "15e35cb635d7f67350f6a297bd8231435e33e2a29ab685c9c1264a7a5b15c9b5"
+  },
+  "tool_sha256": {
+    "as": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+    "cpp": "7e562909f130fd90fd696eb40fc61c38eae9ca4ebdd0262b0704c0379be490e8",
+    "dmesg": "889b3947799e06c354b611f2759364b92e65e6ad596166e05bf62525f72468ce",
+    "insmod": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7",
+    "ld": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+    "objcopy": "05f4473d24f7330a9b13f43d007d619a2e792e33de453cd7533a2d97c30da770",
+    "objdump": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+    "rmmod": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7"
+  },
+  "tools": {
+    "as": "/usr/bin/as",
+    "cpp": "/usr/bin/cpp",
+    "dmesg": "/usr/bin/dmesg",
+    "insmod": "/usr/sbin/insmod",
+    "ld": "/usr/bin/ld",
+    "objcopy": "/usr/bin/objcopy",
+    "objdump": "/usr/bin/objdump",
+    "rmmod": "/usr/sbin/rmmod"
+  },
+  "workload": {
+    "deadline_ms": 10000,
+    "iterations": 8,
+    "phase_timeout_ms": 120000,
+    "rounds": 3,
+    "threads": 8
+  }
+}

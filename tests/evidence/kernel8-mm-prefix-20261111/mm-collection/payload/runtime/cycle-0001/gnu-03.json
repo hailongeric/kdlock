@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/usr/bin/objcopy",
+    "-O",
+    "binary",
+    "--only-section=.text",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-live-0798c1ab-01/cycle-0001/build/image.elf",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-live-0798c1ab-01/cycle-0001/build/image.bin"
+  ],
+  "diagnostic_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "returncode": 0
+}

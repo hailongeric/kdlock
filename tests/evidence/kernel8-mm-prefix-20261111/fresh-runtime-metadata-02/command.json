@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "/tmp/kdlock-kernel8-runtime-metadata-20261111-02/read.py",
+  "stdin_sha256": "a61cce38853ec7e3432b2b6c56f3c688c656442819d64ad049de58cf7559994f",
+  "timeout_seconds": 90
+}

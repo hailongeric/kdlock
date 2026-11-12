@@ -1,0 +1,5 @@
+{
+  "source": "/tmp/kdlock-kernel8-repeatboot-run-20261111-01/recovery.json",
+  "sha256": "d1db07ce20e2b15c1c4a5056806354a25efa48c0de7ae49897870be466cdd3af",
+  "scope": "Same actual verified recovery bytes, retained within900s admission window."
+}

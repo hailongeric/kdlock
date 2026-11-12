@@ -1,0 +1,33 @@
+{
+  "changed_from_5c14b483": [
+    "kernel/integration/RWSEM.md",
+    "tests/kernel/mmap_api/payload/mmap_jit_profile.inc",
+    "tests/kernel/rwsem_killable/README.md"
+  ],
+  "files": 143,
+  "format": "kdlock.regular-only-host-export.v1",
+  "git_status": "",
+  "kernel_core_git_head": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+  "kernel_package_files": 78,
+  "kernel_package_sha256": "c7d1afa19ab56c0fa8bf21f0232bf1c8199751407a44e918a4b8c5c133966da9",
+  "new_members": [],
+  "prior_manifest_sha256": "6a14d26236343e37ae43a30c6e441783f979299b426c0a7b9fbbca9154f09645",
+  "prior_source_git_head": "5c14b483ca16b3bba8f3dd40a00f16a6efefc12c",
+  "scope": "Source-only cold ioctl request backing and maintained evidence wording. Same regular member set; no test, module build, runtime or MM result is claimed.",
+  "source_git_head": "0798c1abf422017cfc93647a2649be0e5a73c75a",
+  "transfer_bytes": 1614072,
+  "transport": {
+    "source-sha256.json": {
+      "bytes": 19794,
+      "sha256": "a29e77397367173e51ae091edec94f31798d50f5b9d3b6b90ce31dda0e3b823e"
+    },
+    "source-state.json": {
+      "bytes": 133,
+      "sha256": "15e35cb635d7f67350f6a297bd8231435e33e2a29ab685c9c1264a7a5b15c9b5"
+    },
+    "source.tar": {
+      "bytes": 1730560,
+      "sha256": "3b2512060b7eb3cac27b3a794bb5f0dc833c6ff24cd9866218481b53832a8053"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "arm_or_reboot_dispatched": false,
+  "corrected_helper_prepared_sha256": "54c5c48385e459e71d17061920463c5d29983327135442635d303c30cc7f99e9",
+  "exact_error": "Strict canonical file check used /lib/modules alias before resolving verified /usr/lib/modules root.",
+  "helper_sha256": "9543da61aeceb6c449a44848750972315f4f480f27234501ae1d860bcbebbc23",
+  "menu_commands_dispatched": 0,
+  "namespace_byte_drift_observed": false,
+  "preflight_receipt_created": false,
+  "returncode": 1,
+  "status": "PREFLIGHT_FAILED_BEFORE_PHASE_AND_BOOT_SELECTION"
+}

@@ -1,0 +1,20 @@
+[
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/mmap-userspace",
+  "--threads",
+  "8",
+  "--iterations",
+  "8",
+  "--deadline-ms",
+  "10000",
+  "--control-device",
+  "/dev/kd_mmap_api",
+  "--quiescent-mm",
+  "--jit-config",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-input-0798c1ab-01/jit-config.bin",
+  "--jit-config-bytes",
+  "419",
+  "--jit-phase-timeout-ms",
+  "120000",
+  "--jit-rounds",
+  "3"
+]
