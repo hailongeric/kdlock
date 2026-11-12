@@ -7,6 +7,10 @@ six functional lanes and 54 exploratory timed sessions on the exact kernel9
 image. KD trails both comparators in that instrumented configuration; all six
 one-worker KD NO_JIT sessions remain included.
 
+The [single-worker recorder comparison](RECORDER.md) is a separate, source-only
+handoff for the test session. It keeps recording enabled by default and adds
+quiescent on/off phases without changing the kernel protocol or payload.
+
 The measured payload is the generic `RB_LINES=1` branch of
 [body.h](../../workload_modules/nano/body.h), followed by 256 register-only
 multiply/add rounds outside the lock. It matches the earlier named

@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Current runtime binding for the two unchanged nano bodies. */
+/* Current runtime binding for the cacheline1 writer and reader. */
 #include <linux/hash.h>
 #include <linux/mm.h>
 #include <linux/overflow.h>
@@ -54,6 +54,43 @@ static void rb_listen_stop(void)
 	unregister_trace_kdlock_observe_tp(rb_observe, NULL);
 	tracepoint_synchronize_unregister();
 	rb_listening = false;
+}
+
+/* The ioctl admission gate excludes all workers. Keep their storage, source
+ * leases and ordinary enter/leave path identical in both recording modes.
+ */
+static int rb_recording_set(struct rb_recording *mode)
+{
+	struct rw_bench_snapshot snap = { 0 };
+	unsigned int i;
+	int error;
+
+	if (mode->enabled > 1 || mode->trace_enabled)
+		return -EINVAL;
+	if (!rb_runtime)
+		return -ESHUTDOWN;
+	for (i = 0; i < RB_MAX_WORKERS; ++i)
+		if (rb_evidence[i].storage)
+			return -EBUSY;
+	rb_lock_snapshot(&snap);
+	if (snap.gate || snap.cnts)
+		return -EBUSY;
+	/* A change after CONFIG cannot turn an unrecorded or mixed phase into
+	 * observed evidence. Only the next CONFIG starts a new evidence phase.
+	 */
+	if (mode->enabled != rb_listening)
+		rb_evidence_recorded = false;
+	if (!mode->enabled) {
+		rb_listen_stop();
+	} else if (!rb_listening) {
+		error = register_trace_kdlock_observe_tp(rb_observe, NULL);
+		if (error)
+			return error;
+		rb_listening = true;
+	}
+	mode->enabled = rb_listening;
+	mode->trace_enabled = trace_kdlock_observe_tp_enabled();
+	return 0;
 }
 
 static int rb_runtime_destroy(void)
@@ -210,6 +247,12 @@ static int rb_copy_evidence(void __user *user)
 	struct rb_evidence_snapshot *snap;
 	unsigned int i;
 	int error;
+
+	/* Availability requires a phase configured under unchanged recording.
+	 * Missing observations are not an observed zero or retirement proof.
+	 */
+	if (!rb_evidence_recorded)
+		return -EOPNOTSUPP;
 	snap = kvzalloc(sizeof(*snap), GFP_KERNEL);
 	if (!snap)
 		return -ENOMEM;

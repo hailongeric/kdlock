@@ -182,7 +182,7 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	if (cmd == RB_PROGRESS)
 		return rb_read_progress(user);
 	if (cmd != RB_CONFIG && cmd != RB_SNAPSHOT && cmd != RB_PREPARE && cmd != RB_DRAIN &&
-	    cmd != RB_EVIDENCE && cmd != RB_BIND && cmd != RB_DESTROY)
+	    cmd != RB_EVIDENCE && cmd != RB_BIND && cmd != RB_DESTROY && cmd != RB_RECORDING)
 		return -ENOTTY;
 	if (atomic_cmpxchg_acquire(&rb_control, 0, -1))
 		return -EBUSY;
@@ -220,6 +220,19 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case RB_EVIDENCE:
 #ifdef RB_KDLOCK
 		error = rb_copy_evidence(user);
+#else
+		error = -EOPNOTSUPP;
+#endif
+		break;
+	case RB_RECORDING:
+#ifdef RB_KDLOCK
+		{
+			struct rb_recording mode;
+			if (copy_from_user(&mode, user, sizeof(mode))) { error = -EFAULT; break; }
+			error = rb_recording_set(&mode);
+			if (!error && copy_to_user(user, &mode, sizeof(mode)))
+				error = -EFAULT;
+		}
 #else
 		error = -EOPNOTSUPP;
 #endif

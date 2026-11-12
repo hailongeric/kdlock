@@ -26,6 +26,7 @@ struct rb_worker_evidence {
 	struct rb_request_record records[RB_RECORDS];
 };
 static struct rb_worker_evidence *rb_evidence;
+static bool rb_evidence_recorded;
 static struct { unsigned long state; unsigned int worker; } rb_state_map[RB_STATE_MAP];
 static unsigned long rb_unlock_ip, rb_unlock_cursor;
 
@@ -171,6 +172,7 @@ static void rb_evidence_reset(void)
 {
 	unsigned int i;
 	/* Called with the admission gate reserved, after every exact task leave. */
+	rb_evidence_recorded = rb_listening;
 	memset(rb_state_map, 0, sizeof(rb_state_map));
 	for (i = 0; i < RB_MAX_WORKERS; ++i) {
 		BUG_ON(rb_evidence[i].storage);

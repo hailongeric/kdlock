@@ -10,7 +10,7 @@ import subprocess
 import sys
 import time
 
-from protocol import DEVICE, DESTROY, DRAIN, snapshot
+from protocol import DEVICE, DESTROY, DRAIN, snapshot, set_recording
 from oracle import require, validate
 
 
@@ -27,6 +27,35 @@ def sha(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
+def measurement_plan(scope, stage):
+    if scope == 'recorder-pair':
+        plan = [(f'functional-{mode}', 1, False, mode) for mode in ('on', 'off')]
+        if stage == 'timing':
+            for repeat in range(3):
+                modes = ('on', 'off') if repeat % 2 == 0 else ('off', 'on')
+                plan.extend((f'timed-r{repeat + 1}-{mode}', 1, True, mode) for mode in modes)
+        return plan
+    plan = [(f'functional-{count}', count, False, 'on') for count in (1, 8, 36)]
+    if stage == 'timing':
+        plan.extend((f'timed-r{repeat + 1}-w{count}', count, True, 'on')
+                    for repeat in range(3) for count in (1, 8, 36))
+    return plan
+
+
+def validate_prerequisites(prior, scope, family, build_sha256, boot_id):
+    require(all(p['status'] == 'FUNCTIONAL_PASS' and p['build_receipt_sha256'] == build_sha256 and
+                p['boot_id'] == boot_id for p in prior), 'functional build/boot receipt differs')
+    if scope == 'recorder-pair':
+        require(len(prior) == 1 and prior[0]['family'] == family and prior[0]['backend'] == 'kdlock' and
+                prior[0].get('scope') == scope and prior[0].get('recorder_modes') == ['on', 'off'],
+                'current family recorder-on/off functional receipt required')
+    else:
+        require({(p['family'], p['backend']) for p in prior} ==
+                {(f, b) for f in ('mutex', 'rwsem') for b in ('native', 'kdlock', 'tclock')} and
+                all(p.get('scope', 'comparison') == 'comparison' for p in prior),
+                'all six current functional lanes required')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo', type=Path, required=True)
@@ -35,11 +64,14 @@ def main():
     parser.add_argument('--family', choices=('mutex', 'rwsem'), required=True)
     parser.add_argument('--backend', choices=('native', 'kdlock', 'tclock'), required=True)
     parser.add_argument('--stage', choices=('functional', 'timing'), required=True)
+    parser.add_argument('--scope', choices=('comparison', 'recorder-pair'), default='comparison')
     parser.add_argument('--boot-id', required=True)
     parser.add_argument('--kernel-elf', type=Path, required=True)
     parser.add_argument('--gs-proof', type=Path, required=True)
     parser.add_argument('--prerequisite', type=Path, action='append', default=[])
     args = parser.parse_args()
+    require(args.scope != 'recorder-pair' or args.backend == 'kdlock',
+            'recorder-pair scope requires the KD backend')
     require(os.uname().release == '7.0.0-38-kdrebuild9' and
             Path('/proc/sys/kernel/random/boot_id').read_text().strip() == args.boot_id,
             'running kernel/boot identity differs')
@@ -56,11 +88,9 @@ def main():
     require(receipt['status'] == 'NANO_MODULES_BUILT_SIGNED', 'module build incomplete')
     if args.stage == 'timing':
         prior = [json.loads(p.read_text()) for p in args.prerequisite]
-        require({(p['family'], p['backend']) for p in prior} ==
-                {(f, b) for f in ('mutex', 'rwsem') for b in ('native', 'kdlock', 'tclock')} and
-                all(p['status'] == 'FUNCTIONAL_PASS' and p['build_receipt_sha256'] == sha(args.build_receipt)
-                    and p['boot_id'] == args.boot_id for p in prior), 'all six current functional lanes required')
+        validate_prerequisites(prior, args.scope, args.family, sha(args.build_receipt), args.boot_id)
     row = dict(status='STARTED', family=args.family, backend=args.backend, stage=args.stage,
+               scope=args.scope, recorder_modes=['on', 'off'] if args.scope == 'recorder-pair' else ['on'],
                profile='mutex-throughput' if args.family == 'mutex' else 'rwsem-throughput-mixed',
                boot_id=args.boot_id, kernel_release=os.uname().release,
                build_receipt_sha256=sha(args.build_receipt), measurements=[], commands=[],
@@ -68,6 +98,8 @@ def main():
                instrumentation='bounded per-origin exact request/completion records for KD; original TCLock counters',
                kd_proxy_limit=16, tclock_batch_limit=1024,
                timing_qualification='exploratory; host strict timing qualification is separate')
+    if args.scope == 'recorder-pair':
+        row['instrumentation'] = 'quiescent recorder on/off; off completion/retirement observations unavailable'
     save(args.output / 'started.json', row)
 
     def command(label, argv, seconds=60):
@@ -145,11 +177,13 @@ def main():
             require(len(writers) == 1 and writers[0], 'exact loaded writer symbol missing')
             compiler = Compiler(args.repo, args.output / 'compiler', gs, builtin_start, builtin, writers[0])
 
-        def phase(label, workers, *, duration=0, iterations=256, timed=False):
+        def phase(label, workers, *, duration=0, iterations=256, timed=False, recorder='on'):
+            control = set_recording(recorder == 'on') if args.scope == 'recorder-pair' else None
             spec = dict(arm=args.backend, lock_kind=args.family, workload='cacheline', cachelines=1,
                         post_work_rounds=256, threads=workers, cpus=list(range(workers)), collector_cpu=63,
                         write_percent=100 if args.family == 'mutex' else 20, duration_ms=duration,
-                        iterations=iterations, sample_ms=10, peak_window_ms=300, peak_settle_ms=300)
+                        iterations=iterations, sample_ms=10, peak_window_ms=300, peak_settle_ms=300,
+                        recorder=recorder)
             save(args.output / (label + '.spec.json'), spec)
             text = command(label, [sys.executable, '-B', args.repo / 'bench/nano/client.py',
                                    '--spec', args.output / (label + '.spec.json')], 120)
@@ -159,7 +193,9 @@ def main():
             measurement.update(label=label, timed=timed, spec=spec,
                 whole_run_ops_s=measurement['completed'] * 1e9 / measurement['wall_ns'], peak=peak)
             if compiler is not None:
-                measurement['generated'] = validate_kd(measurement, compiler)
+                measurement['generated'] = validate_kd(measurement, compiler, recording=recorder == 'on')
+                if args.scope == 'recorder-pair':
+                    measurement.update(recording_control=control, fixed_image=compiler.old)
             if args.backend == 'tclock':
                 # The client process has exited; task registration references
                 # can now drain through the provider's exact task/queue checks.
@@ -186,22 +222,17 @@ def main():
                     break
             else:
                 raise ValueError('bounded training did not establish completed generated bodies and an empty claim')
-        # These exercise the actual measured binding at every requested size.
-        for count in (1, 8, 36):
-            checked = phase(f'functional-{count}', count)
+        # The narrow pair changes only observation dispatch after common training.
+        # Every switch and claim occurs between fully returned worker phases.
+        for label, count, timed, recorder in measurement_plan(args.scope, args.stage):
+            checked = phase(label, count, duration=2000 if timed else 0,
+                            timed=timed, recorder=recorder)
             if compiler is not None:
                 cycle = compiler.cycle(claim_only=True)
                 require(not cycle['claim_rows'] and not cycle['published'], 'fixed image acquired new feedback')
-                if count > 1:
+                if not timed and count > 1:
                     require(checked['generated']['jit_completions'] > 0,
                             'contended functional phase has no completed generated body')
-        if args.stage == 'timing':
-            for repeat in range(3):
-                for count in (1, 8, 36):
-                    phase(f'timed-r{repeat + 1}-w{count}', count, duration=2000, timed=True)
-                    if compiler is not None:
-                        cycle = compiler.cycle(claim_only=True)
-                        require(not cycle['claim_rows'] and not cycle['published'], 'timed fixed image acquired new feedback')
         if compiler is not None:
             row['shutdown'] = compiler.close(item['signed_sha256'])
             with open(DEVICE, 'rb', buffering=0) as device:

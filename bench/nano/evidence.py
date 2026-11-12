@@ -2,8 +2,16 @@
 from oracle import require
 
 
-def validate_kd(measurement, compiler):
-    rows = measurement['kd_evidence']['workers']
+def validate_kd(measurement, compiler, *, recording=True):
+    evidence = measurement['kd_evidence']
+    if not recording:
+        require(evidence.get('available') is False and evidence.get('workers') is None,
+                'recorder-off phase supplied observations instead of explicit unavailability')
+        return dict(jit_status='EVIDENCE_UNAVAILABLE', jit_entries=None, jit_completions=None,
+                    completed_writer_share=None, completion_scope='unavailable: phase recorder disabled',
+                    retirement_observations_available=False, physical_batch_length_measured=False)
+    require(evidence.get('available', True) is True, 'recorder-on evidence unavailable')
+    rows = evidence['workers']
     require(len(rows) == len(measurement['workers']), 'evidence worker geometry differs')
     complete = entries = 0
     for counts, worker in zip(rows, measurement['workers']):

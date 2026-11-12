@@ -1,4 +1,5 @@
 """Versioned rwlock workload ABI; importing this module performs no I/O."""
+import errno
 import fcntl
 import struct
 
@@ -38,6 +39,7 @@ def progress(device, start, deadline, workers):
 EVIDENCE = 0x4207
 BIND = 0x40104208
 DESTROY = 0x4209
+RECORDING = 0xC010420A
 COUNTS = ('reserved', 'freed', 'prepared', 'proxy', 'entered', 'completed',
           'forwarded', 'errors', 'live', 'attached', 'detached', 'state',
           'origin', 'proof', 'read_acquired', 'read_released')
@@ -49,7 +51,12 @@ EVENT_FIELDS = ('kind', 'task', 'state', 'origin', 'node', 'acquisition', 'paren
 def evidence():
     buffer = bytearray(16 + 64 * (16 + 6 * 20) * 8)
     with open(DEVICE, 'rb', buffering=0) as device:
-        fcntl.ioctl(device, EVIDENCE, buffer, True)
+        try:
+            fcntl.ioctl(device, EVIDENCE, buffer, True)
+        except OSError as error:
+            if error.errno != errno.EOPNOTSUPP:
+                raise
+            return dict(available=False, workers=None, reason='phase recorder disabled')
     version, workers = struct.unpack_from('=2Q', buffer)
     if version != 1 or not 1 <= workers <= 64:
         raise ValueError('evidence ABI or worker count differs')
@@ -60,4 +67,14 @@ def evidence():
         row['records'] = [dict(zip(EVENT_FIELDS, struct.unpack_from('=20Q', buffer,
                            offset + 128 + record * 160))) for record in range(6)]
         rows.append(row)
-    return dict(version=version, workers=rows)
+    return dict(version=version, available=True, workers=rows)
+
+
+def set_recording(enabled):
+    buffer = bytearray(struct.pack('=2Q', int(enabled), 0))
+    with open(DEVICE, 'rb', buffering=0) as device:
+        fcntl.ioctl(device, RECORDING, buffer, True)
+    active, trace_enabled = struct.unpack('=2Q', buffer)
+    if active != int(enabled) or trace_enabled != int(enabled):
+        raise ValueError('recorder state differs or another observation listener remains')
+    return dict(enabled=bool(active), trace_enabled=bool(trace_enabled))

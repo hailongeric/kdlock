@@ -23,11 +23,16 @@ def main():
     parser.add_argument('--kernel-source', type=Path, required=True)
     parser.add_argument('--kernel-output', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--backends', nargs='+', choices=('native', 'kdlock', 'tclock'),
+                        default=['native', 'kdlock', 'tclock'])
     args = parser.parse_args()
+    if len(args.backends) != len(set(args.backends)):
+        raise ValueError('duplicate backend selection')
     if os.uname().release != '7.0.0-38-kdrebuild9':
         raise RuntimeError('exact kernel9 VM required')
     args.output.mkdir()
-    result = dict(status='STARTED', kernel_release=os.uname().release, commands=[], modules={})
+    result = dict(status='STARTED', kernel_release=os.uname().release, backends=args.backends,
+                  commands=[], modules={})
 
     def save(name, value):
         with (args.output / name).open('x') as stream:
@@ -115,11 +120,12 @@ def main():
 
     try:
         for family in ('mutex', 'rwsem'):
-            tc = build('tclock-' + family, args.repo / 'tclock_backend',
-                'tclock_' + family + '_backend_km.ko',
-                ['TCLOCK_NUMA=1', 'TCLOCK_RWLOCK=0', 'TCLOCK_MUTEX=' + str(int(family == 'mutex')),
-                 'TCLOCK_RWSEM=' + str(int(family == 'rwsem'))])
-            for backend in ('native', 'kdlock', 'tclock'):
+            if 'tclock' in args.backends:
+                tc = build('tclock-' + family, args.repo / 'tclock_backend',
+                    'tclock_' + family + '_backend_km.ko',
+                    ['TCLOCK_NUMA=1', 'TCLOCK_RWLOCK=0', 'TCLOCK_MUTEX=' + str(int(family == 'mutex')),
+                     'TCLOCK_RWSEM=' + str(int(family == 'rwsem'))])
+            for backend in args.backends:
                 extra = ['RB_LOCK_KIND=' + family, 'RB_BACKEND=' + backend,
                          'KD_SOURCE_ROOT=' + str(args.repo),
                          'TCLOCK_INCLUDE=' + str(args.repo / 'tclock_backend/include')]

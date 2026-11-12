@@ -41,7 +41,9 @@ struct rw_bench_progress {
 struct rb_evidence_row { __u64 count[16]; __u64 proof[6][20]; };
 struct rb_evidence_snapshot { __u64 version, workers; struct rb_evidence_row rows[RB_MAX_WORKERS]; };
 struct rb_bind { __u64 unlock_ip, unlock_cursor; };
+struct rb_recording { __u64 enabled, trace_enabled; };
 #define RB_EVIDENCE _IO('B', 7)
 #define RB_BIND _IOW('B', 8, struct rb_bind)
 #define RB_DESTROY _IO('B', 9)
+#define RB_RECORDING _IOWR('B', 10, struct rb_recording)
 #endif
