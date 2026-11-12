@@ -968,7 +968,14 @@ int kd_mutex_await(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 			return -EINVAL;
 	} else {
 		might_sleep();
-		if (batch->initialized)
+		if (node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT) {
+			/* Enqueue published this exact prechecked possible batch. A
+			 * predecessor may initialize it before the requester reaches
+			 * await; result/selection publication now governs progress.
+			 */
+			if (node->possible_batch != batch)
+				return -EINVAL;
+		} else if (batch->initialized)
 			return -EBUSY;
 	}
 	if (node->requester != current)
@@ -1023,7 +1030,9 @@ int kd_mutex_acquire(struct kd_mutex *lock, struct kd_mutex_node *node,
 {
 	int result;
 
-	if (!batch || !outcome || (node->atomic_spin && node->possible_batch != batch))
+	if (!batch || !outcome ||
+	    ((node->atomic_spin || node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT) &&
+	     node->possible_batch != batch))
 		return -EINVAL;
 	if (batch->initialized)
 		return -EBUSY;
