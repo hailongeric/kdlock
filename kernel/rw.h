@@ -14,6 +14,7 @@ enum kd_rw_read_kind {
 	KD_RW_READ_MANAGED,
 	KD_RW_READ_NATIVE,
 	KD_RW_READ_NON_OWNER,
+	KD_RW_READ_FAST,
 };
 
 /* Exact active credits in actual acquisition order, under the family guard.
@@ -78,6 +79,16 @@ struct kd_rw_wait_ops {
 void kd_rwsem_init(struct kd_rwsem *lock);
 void kd_rwlock_init(struct kd_rwlock *lock);
 void kd_rw_read_credit_init(struct kd_rw_read_credit *credit);
+/* One task-root credit for ordinary native rwsem reads. It never transfers
+ * source execution or enters a writer queue. Attachment retains its state/task
+ * and backing; reuse follows the completed release's final object access.
+ */
+void kd_rw_fast_read_init(struct kd_rw_read_credit *credit, struct kd_thread_state *state);
+bool kd_rw_fast_read_trylock(struct kd_rw *lock, struct kd_rw_read_credit *credit);
+bool kd_rw_fast_read_is_last(struct kd_rw_read_credit *credit,
+		struct kd_rw *lock, struct task_struct *task);
+int kd_rw_fast_read_release(struct kd_rw_read_credit *credit,
+		struct kd_thread_state *state, struct kd_execution_binding *binding);
 /* Returned identity is borrowed: the logical caller must retain its grant
  * throughout dispatch. Nonowner-transfer credits do not select owned release.
  */

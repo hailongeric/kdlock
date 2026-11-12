@@ -34,7 +34,7 @@ int kd_task_validate_native(struct kd_task_root_context *root,
  * already between tail exchange and its final predecessor-link store; this is
  * not a wait-free operation or an IRQ/atomic route.
  *
- * On success, pending reports the held fast owner and remaining owner/grant/pool list
+ * On success, pending reports held fast grants and remaining owner/grant/pool list
  * membership observed by this pass. It is metadata remaining, not a physical
  * blocker or permission to wait: the current native endpoint legitimately keeps
  * a finished pool slot occupied until atomic detach revokes that endpoint.

@@ -49,6 +49,8 @@ enum kd_observation_kind {
 	 * after physical handoff and the producer's last predecessor access.
 	 */
 	KD_OBS_FAST_ACQUIRE, KD_OBS_FAST_RELEASE,
+	/* Task-root shared credit, after READ_RELEASE and final lock-object use. */
+	KD_OBS_FAST_READ_DONE,
 };
 
 #define KD_OBS_FLAG_ENQUEUED             (1UL << 0)
@@ -64,6 +66,7 @@ enum kd_observation_kind {
 #define KD_OBS_FLAG_CURRENT_JIT          (1UL << 10)
 #define KD_OBS_FLAG_NODE_RETIRABLE       (1UL << 11)
 #define KD_OBS_FLAG_ATOMIC_CONTEXT       (1UL << 12)
+#define KD_OBS_FLAG_FAST_READ            (1UL << 13)
 
 struct kd_observation {
 	unsigned long kind, task, state, origin, node, acquisition, parent;

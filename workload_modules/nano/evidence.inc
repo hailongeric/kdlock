@@ -11,6 +11,7 @@ enum rb_count {
 	RB_FORWARDED, RB_ERRORS, RB_LIVE, RB_ATTACHED, RB_DETACHED,
 	RB_STATE, RB_ORIGIN, RB_PROOF, RB_READ_ACQUIRED, RB_READ_RELEASED,
 	RB_FAST_ACQUIRED, RB_FAST_RELEASED,
+	RB_FAST_READ_ACQUIRED, RB_FAST_READ_RELEASED,
 };
 struct rb_request_record {
 	unsigned long node, acquisition, image;
@@ -22,6 +23,8 @@ struct rb_worker_evidence {
 	struct kd_task_storage *storage;
 	unsigned long sample_node;
 	unsigned long fast_node, fast_acquisition, fast_object;
+	unsigned long fast_read_credit, fast_read_object;
+	bool fast_read_physical_released;
 	unsigned int map_index;
 	bool mapped;
 	struct rb_evidence_row row;
@@ -71,6 +74,40 @@ static void notrace rb_observe(void *unused, const struct kd_observation *e)
 		++w->row.count[RB_READ_ACQUIRED];
 	if (e->kind == KD_OBS_READ_RELEASE)
 		++w->row.count[RB_READ_RELEASED];
+	if (e->kind == KD_OBS_FAST_READ_DONE ||
+	    ((e->kind == KD_OBS_READ_ACQUIRE || e->kind == KD_OBS_READ_RELEASE) &&
+	     (e->flags & KD_OBS_FLAG_FAST_READ))) {
+		if (!e->related || e->related != e->acquisition || !e->object ||
+		    e->task != w->row.count[RB_ORIGIN] || e->origin != e->task ||
+		    e->flags != KD_OBS_FLAG_FAST_READ || e->node || e->owner || e->owner_task ||
+		    e->return_user || e->notifier ||
+		    e->source_user != (e->kind == KD_OBS_FAST_READ_DONE ? 0 : e->related))
+			++w->row.count[RB_ERRORS];
+		if (e->kind == KD_OBS_READ_ACQUIRE) {
+			if (w->fast_read_credit || w->fast_node)
+				++w->row.count[RB_ERRORS];
+			w->fast_read_credit = e->related;
+			w->fast_read_object = e->object;
+			w->fast_read_physical_released = false;
+			++w->row.count[RB_FAST_READ_ACQUIRED];
+		} else {
+			if (!w->fast_read_credit || w->fast_read_credit != e->related ||
+			    w->fast_read_object != e->object)
+				++w->row.count[RB_ERRORS];
+			if (e->kind == KD_OBS_READ_RELEASE) {
+				if (w->fast_read_physical_released)
+					++w->row.count[RB_ERRORS];
+				w->fast_read_physical_released = true;
+			} else {
+				if (!w->fast_read_physical_released)
+					++w->row.count[RB_ERRORS];
+				w->fast_read_credit = w->fast_read_object = 0;
+				w->fast_read_physical_released = false;
+				++w->row.count[RB_FAST_READ_RELEASED];
+			}
+		}
+		goto out;
+	}
 	/* Fast heads have no pool slot. Validate their exact paired identity
 	 * separately; never synthesize SLOT_RESERVE/FREE or a generated body.
 	 */
@@ -81,7 +118,7 @@ static void notrace rb_observe(void *unused, const struct kd_observation *e)
 		    e->source_user || e->return_user || e->notifier)
 			++w->row.count[RB_ERRORS];
 		if (e->kind == KD_OBS_FAST_ACQUIRE) {
-			if (w->fast_node || e->flags != KD_OBS_FLAG_ENQUEUED)
+			if (w->fast_node || w->fast_read_credit || e->flags != KD_OBS_FLAG_ENQUEUED)
 				++w->row.count[RB_ERRORS];
 			w->fast_node = e->node;
 			w->fast_acquisition = e->acquisition;
@@ -268,9 +305,10 @@ static int rb_kd_leave(unsigned int worker)
 		/* Keep this ioctl and source stack live until exact users have ended. */
 		cond_resched();
 	}
-	if (w->row.count[RB_ERRORS] || w->row.count[RB_LIVE] || w->fast_node ||
+	if (w->row.count[RB_ERRORS] || w->row.count[RB_LIVE] || w->fast_node || w->fast_read_credit ||
 	    w->row.count[RB_RESERVED] != w->row.count[RB_FREED] ||
-	    w->row.count[RB_FAST_ACQUIRED] != w->row.count[RB_FAST_RELEASED])
+	    w->row.count[RB_FAST_ACQUIRED] != w->row.count[RB_FAST_RELEASED] ||
+	    w->row.count[RB_FAST_READ_ACQUIRED] != w->row.count[RB_FAST_READ_RELEASED])
 		error = -EUCLEAN;
 	return error;
 }

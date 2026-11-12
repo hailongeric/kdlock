@@ -6,6 +6,7 @@
 #include "state.h"
 #include "owner_progress.h"
 #include "mutex.h"
+#include "rw.h"
 
 struct task_struct;
 struct kd_mutex_entry;
@@ -48,6 +49,8 @@ struct kd_task_root_context {
 	struct list_head native_grants;
 	/* One exact top-level local mutex owner; never lent or combined. */
 	struct kd_mutex_fast mutex_fast;
+	/* One local rwsem read, ordered with every managed/native read credit. */
+	struct kd_rw_read_credit rwsem_fast;
 	/* Own native-entry configuration, never an active borrowed S_W. */
 	struct kd_episode_resources *mutex_resources;
 	unsigned long mutex_control_bytes;

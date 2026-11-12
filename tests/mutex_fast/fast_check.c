@@ -87,6 +87,7 @@ struct kd_task_root_context {
 	struct { struct list_head batches; struct task_struct *task; bool atomic_spin; } owners;
 	struct list_head native_grants;
 	struct kd_mutex_fast mutex_fast;
+	struct { void *lock; } rwsem_fast;
 	void *aux_entry, *lifecycle, *storage;
 	struct kd_episode_resources *mutex_resources;
 	struct kd_request_pool pool;
@@ -276,43 +277,48 @@ static void check_delayed(void)
 }
 static void check_eligibility(void)
 {
-	CHECK(mutex_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
 	for (int kind = KD_OPERATION_NONE; kind <= KD_OPERATION_RWSEM_IS_WRITE_LOCKED; ++kind)
-		if (kind != KD_OPERATION_MUTEX_LOCK)
-			CHECK(!mutex_fast_eligible(&root, kind));
+		if (kind != KD_OPERATION_MUTEX_LOCK && kind != KD_OPERATION_RWSEM_DOWN_READ)
+			CHECK(!native_fast_eligible(&root, kind));
+	CHECK(native_fast_eligible(&root, KD_OPERATION_RWSEM_DOWN_READ));
+	root.rwsem_fast.lock = lock;
+	CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(!native_fast_eligible(&root, KD_OPERATION_RWSEM_DOWN_READ));
+	root.rwsem_fast.lock = NULL;
 	root.core.operation.phase = KD_OPERATION_RESUMABLE;
-	CHECK(mutex_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
 	for (int phase = KD_OPERATION_TARGET_READY; phase <= KD_OPERATION_DONE; ++phase) {
 		root.core.operation.phase = phase;
-		CHECK(!mutex_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+		CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
 	}
 	root.core.operation.phase = KD_OPERATION_IDLE;
 	bool *contexts[] = { &irq_off, &atomic_context };
 	for (unsigned int index = 0; index < sizeof(contexts) / sizeof(contexts[0]); ++index) {
 		*contexts[index] = true;
-		CHECK(!mutex_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+		CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
 		*contexts[index] = false;
 	}
 	task_context = false;
-	CHECK(!mutex_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
 	task_context = true;
 	owner.__state = TASK_UNINTERRUPTIBLE;
-	CHECK(!mutex_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
 	owner.__state = TASK_RUNNING;
 	struct list_head marker, *lists[] = { &root.core.grants, &root.owners.batches, &root.native_grants };
 	for (unsigned int index = 0; index < sizeof(lists) / sizeof(lists[0]); ++index) {
 		lists[index]->next = &marker;
-		CHECK(!mutex_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+		CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
 		INIT_LIST_HEAD(lists[index]);
 	}
 	void **actors[] = { &root.core.exit_image, &root.core.exit_use, &root.core.exit_holder };
 	for (unsigned int index = 0; index < sizeof(actors) / sizeof(actors[0]); ++index) {
 		*actors[index] = &marker;
-		CHECK(!mutex_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+		CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
 		*actors[index] = NULL;
 	}
 	CHECK(kd_mutex_fast_trylock(lock, &root.mutex_fast));
-	CHECK(!mutex_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
 	kd_mutex_fast_unlock(&root.mutex_fast);
 }
 static void check_lifetime(void)
@@ -331,9 +337,16 @@ static void check_lifetime(void)
 	CHECK(kd_task_root_detach_unpublished(&child, &waiter) == -EBUSY);
 	CHECK(child.attached && waiter.refs == 1 && waiter.kd_root_context == &child);
 	child.mutex_fast.lock = NULL;
+	child.rwsem_fast.lock = lock;
+	CHECK(kd_task_root_detach_unpublished(&child, &waiter) == -EBUSY);
+	child.rwsem_fast.lock = NULL;
 	CHECK(!kd_task_root_detach_unpublished(&child, &waiter));
 	CHECK(!waiter.kd_root_context && !waiter.refs);
 	kd_mutex_fast_unlock(&root.mutex_fast);
+	root.rwsem_fast.lock = lock;
+	CHECK(kd_task_root_detach(&root, &root.initial_native) == -EBUSY);
+	CHECK(kd_task_root_revoke_cancelled(&root, &root.initial_native, &actors) == -EBUSY);
+	root.rwsem_fast.lock = NULL;
 	CHECK(!kd_task_root_detach(&root, &root.initial_native));
 	CHECK(!owner.kd_root_context && !root.attached && !owner.refs);
 }

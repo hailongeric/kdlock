@@ -63,10 +63,17 @@ static struct kd_source_grant *managed_grant(
 	return grant;
 }
 
+static bool fast_read_grant(struct kd_rwsem *lock)
+{
+	struct kd_task_root_context *root = native_root();
+
+	return root && kd_rw_fast_read_is_last(&root->rwsem_fast, &lock->core, current);
+}
+
 bool kd_linux_rwsem_source_release(const struct kd_linux_rwsem_binding *binding,
 		bool read)
 {
-	return managed_grant(binding->lock, read) != NULL;
+	return (read && fast_read_grant(binding->lock)) || managed_grant(binding->lock, read) != NULL;
 }
 
 /* Reached generic aliases use the current borrowed S_W, not the physical
@@ -180,7 +187,7 @@ struct kd_source_prepare_result kd_linux_rwsem_prepare_is_write_locked_current(s
 
 struct kd_mutex_entry *kd_linux_rwsem_prepare_up_read_current(struct kd_rwsem *lock)
 {
-	if (managed_grant(lock, true))
+	if (fast_read_grant(lock) || managed_grant(lock, true))
 		return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_UP_READ,
 			(unsigned long)kd_linux_rwsem_up_read_entry_asm);
 	(void)kd_rw_native_read_unlock(&lock->core, false);
@@ -295,6 +302,14 @@ void kd_linux_rwsem_up_read(struct kd_linux_rwsem_binding *binding)
 {
 	struct kd_task_root_context *root;
 
+	if (fast_read_grant(binding->lock)) {
+		/* Callable release consumes the same latest owned credit. This exact
+		 * native unlock needs no capture or generated-call clobber contract.
+		 */
+		(void)kd_rwsem_prepare_source_current(binding->lock, KD_OPERATION_RWSEM_UP_READ,
+			(unsigned long)kd_linux_rwsem_up_read_entry_asm);
+		return;
+	}
 	if (managed_grant(binding->lock, true)) {
 		root = native_root();
 		(void)kd_episode_unlock_native(root->mutex_resources, root,

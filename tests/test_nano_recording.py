@@ -16,7 +16,8 @@ class RecordingEvidence(unittest.TestCase):
     def local_measurement(self):
         counts = dict(attached=1, detached=1, state=100, origin=200, errors=0, live=0,
                       reserved=5, freed=5, read_acquired=4, read_released=4,
-                      completed=0, entered=0, fast_acquired=0, fast_released=0)
+                      completed=0, entered=0, fast_acquired=0, fast_released=0,
+                      fast_read_acquired=0, fast_read_released=0)
         return dict(kd_evidence=dict(available=True, workers=[counts]),
                     workers=[dict(completed=5, reads=4, writes=1)], writes=1)
 
@@ -52,22 +53,24 @@ class RecordingEvidence(unittest.TestCase):
                     evidence.validate_kd(measurement, None)
                 counts.update(before)
 
-    def test_evidence_v2_preserves_proof_offsets(self):
-        self.assertEqual(protocol.EVIDENCE, 0x420B)
+    def test_evidence_v3_preserves_proof_offsets(self):
+        self.assertEqual(protocol.EVIDENCE, 0x420C)
         def reply(device, command, buffer, mutate):
             self.assertEqual(command, protocol.EVIDENCE)
-            struct.pack_into('=2Q', buffer, 0, 2, 2)
+            struct.pack_into('=2Q', buffer, 0, 3, 2)
             for worker in range(2):
-                offset = 16 + worker * 138 * 8
-                struct.pack_into('=18Q', buffer, offset, *range(100 * worker, 100 * worker + 18))
+                offset = 16 + worker * 140 * 8
+                struct.pack_into('=20Q', buffer, offset, *range(100 * worker, 100 * worker + 20))
                 for record in range(6):
-                    struct.pack_into('=20Q', buffer, offset + 18 * 8 + record * 160,
+                    struct.pack_into('=20Q', buffer, offset + 20 * 8 + record * 160,
                                      *([1000 * worker + record + 1] * 20))
         with mock.patch('builtins.open', mock.mock_open()), mock.patch.object(protocol.fcntl, 'ioctl', reply):
             result = protocol.evidence()
         for worker, row in enumerate(result['workers']):
             self.assertEqual(row['fast_acquired'], 100 * worker + 16)
             self.assertEqual(row['fast_released'], 100 * worker + 17)
+            self.assertEqual(row['fast_read_acquired'], 100 * worker + 18)
+            self.assertEqual(row['fast_read_released'], 100 * worker + 19)
             self.assertEqual([event['kind'] for event in row['records']],
                              [1000 * worker + record + 1 for record in range(6)])
 
@@ -77,6 +80,23 @@ class RecordingEvidence(unittest.TestCase):
         measurement['kd_evidence']['workers'][0].update(
             reserved=4, freed=4, fast_acquired=1, fast_released=1)
         with self.assertRaisesRegex(ValueError, 'mutex family'):
+            evidence.validate_kd(measurement, None)
+
+    def test_fast_read_accounting_requires_exact_final_release(self):
+        measurement = self.local_measurement()
+        measurement['spec'] = dict(lock_kind='rwsem')
+        counts = measurement['kd_evidence']['workers'][0]
+        counts.update(reserved=1, freed=1, fast_read_acquired=4, fast_read_released=4)
+        self.assertEqual(evidence.validate_kd(measurement, None)['jit_status'], 'NO_JIT')
+        for changed in (dict(fast_read_released=3), dict(fast_read_acquired=5, fast_read_released=5),
+                        dict(read_released=3), dict(reserved=2, freed=2)):
+            before = counts.copy()
+            counts.update(changed)
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                evidence.validate_kd(measurement, None)
+            counts.update(before)
+        measurement['spec']['lock_kind'] = 'mutex'
+        with self.assertRaisesRegex(ValueError, 'rwsem family'):
             evidence.validate_kd(measurement, None)
 
     def test_off_rejects_observation_rows(self):

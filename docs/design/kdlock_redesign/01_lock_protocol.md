@@ -183,6 +183,14 @@ owner and record through normal successor handoff. Nested requests remain local
 while that fast owner is held. This is a scoped source candidate requiring its
 own kernel/runtime evidence, not a change to persistent delegated lifetimes.
 
+The subsequent [rwsem reader candidate](../../../tests/rwsem_fast/README.md)
+uses one task-owned shared credit on the existing family gate and exact active
+read index. It admits only a native root with no older duties and no observed
+writer or queued writer. Repeated-read release selects the latest owned credit;
+nested source stays local until the fast reader releases. Writer, downgrade and
+cancellation protocols retain their existing controls. This reader addition is
+a source candidate, separate from the kernel11 mutex validation receipt.
+
 A persistent record becomes reusable only after its request and all relevant users finish. Queue scheduling membership, source completion, physical release and retained release/return duties are separate: detachment or a returned result alone does not permit reuse. Count every non-free record, including concurrently live nested requests and late physical-owner/release, grant, notification, return, image/binding and current-native-endpoint users after the logical scope ends. Nesting depth alone is insufficient.
 
 The user guarantees an available record for every need of the supported workload. Capacity is finite and explicitly supplied by task attachment/resources; no deployment count or one-node sufficiency is configured here. Exhaustion is a documentation-only limitation of that support contract. It adds no exhaustion handler, recovery/local fallback or new special assertion, and does not imply a mathematically unbounded pool. The public ordinary lock API remains void; the capacity contract grants no public error result, fabricated success or source replay. Cold provisioning and managed lifecycle now have source through `c6becf81`; the actual deployment count and lifecycle/capacity proof remain outstanding.

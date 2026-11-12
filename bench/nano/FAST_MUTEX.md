@@ -1,5 +1,8 @@
 # Mutex fast-path candidate handoff
 
+This records the original `a1ad50e5` mutex candidate. The subsequent reader
+candidate and current comparison requirements are in [RWSEM_FAST.md](RWSEM_FAST.md).
+
 The bench session owns all builds, unit tests, module work, VM operations and
 timing. This source candidate accelerates eligible top-level native mutex pairs
 through an empty-tail claim and exact local handoff. It leaves rwsem and other

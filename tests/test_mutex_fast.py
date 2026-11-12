@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FUNCTIONS = {
     'kernel/mutex.c': ('publish_condition', 'wait_link', 'kd_mutex_fast_init',
                        'observe_fast', 'kd_mutex_fast_trylock', 'kd_mutex_fast_unlock'),
-    'kernel/mutex_api.c': ('mutex_fast_eligible',),
+    'kernel/mutex_api.c': ('native_fast_eligible',),
     'kernel/task_state.c': ('kd_task_root_context_current', 'kd_task_root_detach_unpublished',
                             'kd_task_root_detach', 'kd_task_root_revoke_cancelled'),
     'kernel/task_progress.c': ('kd_task_validate_native',),

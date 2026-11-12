@@ -49,6 +49,17 @@ static bool rw_context(bool atomic_wait)
 	return in_task() && !irqs_disabled() && (atomic_wait ? in_atomic() : !in_atomic());
 }
 
+void kd_rw_fast_read_init(struct kd_rw_read_credit *credit, struct kd_thread_state *state)
+{
+	/* Cold attached-root preparation; no additional packet or task reference. */
+	kd_rw_read_credit_init(credit);
+	credit->active_read.kind = KD_RW_READ_FAST;
+	credit->active_read.logical_owner = state->origin;
+	credit->state = state;
+	credit->acquisition = credit;
+	credit->user = credit;
+}
+
 static int prepare_credit(struct kd_rw *lock, struct kd_rw_read_credit *credit,
 		struct kd_thread_state *state, struct kd_execution_binding *binding,
 		const void *acquisition, const void *user, bool atomic_wait)
@@ -207,7 +218,8 @@ int kd_rw_read_release(struct kd_rw_read_credit *credit,
 			.acquisition = (unsigned long)acquisition,
 			.object = (unsigned long)lock, .related = (unsigned long)credit,
 			.cursor = lock->readers, .phase = KD_GRANT_PHYSICAL_READ,
-			.source_user = (unsigned long)user);
+			.source_user = (unsigned long)user,
+			.flags = credit->active_read.kind == KD_RW_READ_FAST ? KD_OBS_FLAG_FAST_READ : 0);
 	}
 	raw_spin_unlock(&credit->guard);
 	if (!result)
@@ -217,6 +229,80 @@ int kd_rw_read_release(struct kd_rw_read_credit *credit,
 	 */
 	raw_spin_unlock(&lock->guard);
 	return result;
+}
+
+bool kd_rw_fast_read_trylock(struct kd_rw *lock, struct kd_rw_read_credit *credit)
+{
+	bool acquired = false;
+	struct kd_thread_state *state = credit->state;
+
+	/* Native entry already validated context, exact binding and idle duties.
+	 * Only the original task can publish or consume this root-owned credit.
+	 */
+	BUG_ON(!lock || !state || state->origin != current || credit->lock || credit->active ||
+	       credit->active_read.kind != KD_RW_READ_FAST || credit->acquisition != credit ||
+	       credit->user != credit || !list_empty(&credit->active_read.link));
+	raw_spin_lock(&lock->guard);
+	/* Never take the shortcut across a queued writer or closed admission.
+	 * A writer arriving after this check still takes this guard before it
+	 * can drain/admit, and therefore observes this exact reader credit.
+	 */
+	if (!lock->writer_pending && !lock->writer && !READ_ONCE(lock->queue.tail)) {
+		raw_spin_lock(&credit->guard);
+		credit->lock = lock;
+		credit->active = true;
+		credit->released = false;
+		lock->readers++;
+		list_add_tail(&credit->active_read.link, &lock->active_reads);
+		raw_spin_unlock(&credit->guard);
+		kd_observe(KD_OBS_READ_ACQUIRE, .state = (unsigned long)state,
+			.origin = (unsigned long)state->origin,
+			.acquisition = (unsigned long)credit, .object = (unsigned long)lock,
+			.related = (unsigned long)credit, .cursor = lock->readers,
+			.phase = KD_GRANT_PHYSICAL_READ, .source_user = (unsigned long)credit,
+			.flags = KD_OBS_FLAG_FAST_READ);
+		acquired = true;
+	}
+	raw_spin_unlock(&lock->guard);
+	/* Failure publishes no credit and consumes no source operation. */
+	return acquired;
+}
+
+bool kd_rw_fast_read_is_last(struct kd_rw_read_credit *credit,
+		struct kd_rw *lock, struct task_struct *task)
+{
+	const void *last;
+
+	/* Owned recursive reads can place a managed/native credit after this one.
+	 * Object equality alone must never consume the older fast acquisition.
+	 */
+	return credit && lock && credit->lock == lock &&
+		kd_rw_last_owned_read(lock, task, &last) == KD_RW_READ_FAST && last == credit;
+}
+
+int kd_rw_fast_read_release(struct kd_rw_read_credit *credit,
+		struct kd_thread_state *state, struct kd_execution_binding *binding)
+{
+	struct kd_rw *lock;
+	int result;
+
+	if (!credit || !state || state->origin != current ||
+	    !kd_rw_fast_read_is_last(credit, credit->lock, current))
+		return -ESTALE;
+	lock = credit->lock;
+	result = kd_rw_read_release(credit, state, binding, credit, credit);
+	if (result)
+		return result;
+	/* The common release has completed wakeup and its final object unlock.
+	 * Keep only scalar object identity: another owner may already destroy it.
+	 * Same-task serialization and attachment retain this private credit.
+	 */
+	credit->lock = NULL;
+	kd_observe(KD_OBS_FAST_READ_DONE, .state = (unsigned long)state,
+		.origin = (unsigned long)state->origin, .acquisition = (unsigned long)credit,
+		.object = (unsigned long)lock, .related = (unsigned long)credit,
+		.flags = KD_OBS_FLAG_FAST_READ);
+	return 0;
 }
 
 int kd_rw_write_prepare(struct kd_rw *lock, struct kd_mutex_node *node,

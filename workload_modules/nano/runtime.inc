@@ -256,7 +256,7 @@ static int rb_copy_evidence(void __user *user)
 	snap = kvzalloc(sizeof(*snap), GFP_KERNEL);
 	if (!snap)
 		return -ENOMEM;
-	snap->version = 2;
+	snap->version = 3;
 	snap->workers = rb_config.workers;
 	for (i = 0; i < RB_MAX_WORKERS; ++i)
 		snap->rows[i] = rb_evidence[i].row;

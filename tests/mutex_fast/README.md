@@ -1,5 +1,10 @@
 # Task-owned mutex fast path
 
+The fixed mutex checkpoint is `a1ad50e5`; its kernel11 report is referenced by
+the [subsequent rwsem reader handoff](../../bench/nano/RWSEM_FAST.md). The original
+scope and ABI2 discussion below describe that checkpoint. The shared eligibility
+and lifecycle excerpt checks now also cover the separate fast reader record.
+
 This candidate separates a successful ordinary native mutex acquisition from
 delegation preparation. Source review is complete only when recorded with the
 frozen commit; compilation, execution and performance require separate VM

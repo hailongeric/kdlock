@@ -138,7 +138,7 @@ static void run_native(struct kd_mutex_entry *entry, struct kd_mutex *lock,
 	kd_mutex_resume_entry(entry, native, kd_episode_native_done, frame);
 }
 
-static bool mutex_fast_eligible(struct kd_task_root_context *root,
+static bool native_fast_eligible(struct kd_task_root_context *root,
 				enum kd_operation_kind operation)
 {
 	struct kd_thread_state *state = &root->core;
@@ -147,7 +147,8 @@ static bool mutex_fast_eligible(struct kd_task_root_context *root,
 	 * Finished request storage may still retain the current native endpoint;
 	 * it stays retained until normal collection/detach, without per-call use.
 	 */
-	return operation == KD_OPERATION_MUTEX_LOCK && !root->mutex_fast.lock &&
+	return (operation == KD_OPERATION_MUTEX_LOCK || operation == KD_OPERATION_RWSEM_DOWN_READ) &&
+		!root->mutex_fast.lock && !root->rwsem_fast.lock &&
 		in_task() && !irqs_disabled() && !in_atomic() &&
 		READ_ONCE(current->__state) == TASK_RUNNING &&
 		list_empty(&state->grants) && list_empty(&root->owners.batches) &&
@@ -197,10 +198,20 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 		kd_mutex_fast_unlock(&root->mutex_fast);
 		return NULL;
 	}
-	if (mutex_fast_eligible(root, operation)) {
+	if (operation == KD_OPERATION_RWSEM_UP_READ &&
+	    kd_rw_fast_read_is_last(&root->rwsem_fast, container_of(lock, struct kd_rw, queue), current)) {
 		result = kd_task_validate_native(root, native);
 		BUG_ON(result);
-		if (kd_mutex_fast_trylock(lock, &root->mutex_fast))
+		result = kd_rw_fast_read_release(&root->rwsem_fast, &root->core, native);
+		BUG_ON(result);
+		return NULL;
+	}
+	if (native_fast_eligible(root, operation)) {
+		result = kd_task_validate_native(root, native);
+		BUG_ON(result);
+		if (operation == KD_OPERATION_MUTEX_LOCK ?
+		    kd_mutex_fast_trylock(lock, &root->mutex_fast) :
+		    kd_rw_fast_read_trylock(container_of(lock, struct kd_rw, queue), &root->rwsem_fast))
 			return NULL;
 	}
 	result = kd_task_progress_native(root, native, &pending);

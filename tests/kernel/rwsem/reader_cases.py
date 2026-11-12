@@ -36,6 +36,7 @@ class ReaderCases:
 
     def credits(self, rows):
         active, per_object, pairs = {}, {}, []
+        fast_owners, fast_released = {}, set()
         for row in rows:
             if self.has(row, "READ_ACQUIRE") or self.has(row, "WRITE_DOWNGRADE_REAL"):
                 key = tuple(row[name] for name in ("related", "state", "acquisition", "source_user"))
@@ -43,6 +44,18 @@ class ReaderCases:
                     raise AssertionError("read credit lacks a distinct exact acquisition/user")
                 if self.has(row, "READ_ACQUIRE") and (row["owner"] or row["node"]):
                     raise AssertionError("shared credit was represented as an exclusive owner")
+                if row["flags"] & 8192:
+                    if (self.family != "rwsem" or not self.has(row, "READ_ACQUIRE") or row["flags"] != 8192
+                            or not row["task"] or row["task"] != row["origin"] or row["task"] in fast_owners
+                            or row["related"] != row["acquisition"] or row["source_user"] != row["related"]):
+                        raise AssertionError("fast shared credit has no exact original-task identity")
+                    end = next((later["index"] for later in rows if later["index"] > row["index"]
+                                and self.has(later, "READ_ACQUIRE") and later["flags"] & 8192
+                                and later["acquisition"] == row["acquisition"]), rows[-1]["index"] + 1)
+                    active[key] = (row, None, end)
+                    fast_owners[row["task"]] = row
+                    per_object.setdefault((row["state"], row["object"]), []).append(key)
+                    continue
                 reserve = next((prior for prior in reversed(rows) if prior["index"] < row["index"]
                                 and self.has(prior, "SLOT_RESERVE") and prior["state"] == row["state"]
                                 and prior["acquisition"] == row["acquisition"]), None)
@@ -65,9 +78,25 @@ class ReaderCases:
                 if lifetime is None or not stack or stack[-1] != key:
                     raise AssertionError("read release did not select the latest exact open credit")
                 opened, reserve, end = lifetime
+                if bool(row["flags"] & 8192) != bool(opened["flags"] & 8192):
+                    raise AssertionError("read release changed its credit storage class")
                 if not opened["index"] < row["index"] < end:
                     raise AssertionError("read release crossed its request slot lifetime")
                 stack.pop()
+                if reserve is None:
+                    if row["flags"] != 8192 or row["task"] != opened["task"] or row["origin"] != row["task"]:
+                        raise AssertionError("fast read physical release changed its exact owner")
+                    free = next((later for later in rows if row["index"] < later["index"] < end
+                                 and self.has(later, "FAST_READ_DONE") and all(later[field] == row[field]
+                                 for field in ("state", "origin", "task", "object", "related", "acquisition"))
+                                 and later["flags"] == 8192 and not any(later[field]
+                                 for field in ("node", "owner", "source_user", "return_user", "notifier"))), None)
+                    if free is None:
+                        raise AssertionError("fast read credit lacks final object-access completion")
+                    fast_released.add(row["task"])
+                    pairs.append({"reserve": None, "acquire": opened, "release": row,
+                                  "free": free, "fast_local": True})
+                    continue
                 free = next((later for later in rows if row["index"] < later["index"] < end
                              and self.has(later, "SLOT_FREE") and later["state"] == row["state"]
                              and later["acquisition"] == row["acquisition"]
@@ -77,7 +106,16 @@ class ReaderCases:
                 if free is None:
                     raise AssertionError("released reader credit lacks final exact request retirement")
                 pairs.append({"reserve": reserve, "acquire": opened, "release": row, "free": free})
-        if active:
+            elif self.has(row, "FAST_READ_DONE"):
+                opened = fast_owners.pop(row["task"], None)
+                if (opened is None or row["task"] not in fast_released or any(row[field] != opened[field]
+                        for field in ("state", "origin", "object", "related", "acquisition"))):
+                    raise AssertionError("fast read completion crossed an acquisition lifetime")
+                fast_released.remove(row["task"])
+            elif self.has(row, "SELECT_PROXY") or self.has(row, "JIT_ENTER"):
+                if row["task"] in fast_owners or row["origin"] in fast_owners:
+                    raise AssertionError("a fast reader lent its continuation or served another origin")
+        if active or fast_owners or fast_released:
             raise AssertionError("reader case retained an open credit after native task drain")
         return pairs
 
@@ -168,12 +206,16 @@ class ReaderCases:
         pairs = self.credits(self.rows(begin))
         if len(pairs) != 2:
             raise AssertionError("native distinct-object reads lost an exact credit")
+        if not self.atomic and sum(pair.get("fast_local", False) for pair in pairs) != 1:
+            raise AssertionError("native nested reads did not use one fast outer and one managed inner credit")
         self.proofs.append({"name": "native-read-read", "credits": pairs})
         begin = len(self.observations())
         self.body_case("native-repeated-read", 8, 1, 1)
         pairs = self.credits(self.rows(begin))
         if len(pairs) != 2 or pairs[0]["acquire"]["acquisition"] == pairs[1]["acquire"]["acquisition"]:
             raise AssertionError("repeated real reads did not retain two distinct acquisitions")
+        if not self.atomic and [pair.get("fast_local", False) for pair in pairs] != [False, True]:
+            raise AssertionError("same-object up_read did not release the managed inner before the fast outer")
         self.proofs.append({"name": "native-repeated-read", "credits": pairs})
 
     @staticmethod
@@ -522,7 +564,8 @@ class ReaderCases:
                 if point == 2:
                     credit = proof["shared"]
                     support = credit["acquire"]
-                    if (credit["reserve"]["node"] != row["node"] or support["acquisition"] != row["acquisition"] or
+                    if (credit["reserve"] is None or credit["reserve"]["node"] != row["node"] or
+                            support["acquisition"] != row["acquisition"] or
                             not support["index"] < row["index"] < credit["release"]["index"]):
                         raise AssertionError("shared-B query escaped its actual exact READ credit")
                 else:
@@ -557,7 +600,17 @@ class ReaderCases:
     def warm(self, image):
         begin = len(self.observations())
         self.body_case("warm-repeated-read", 8, 1, 1)
-        self.proofs.append({"name": "warm-repeated-read", "credits": self.credits(self.rows(begin))})
+        pairs = self.credits(self.rows(begin))
+        if not self.atomic and [pair.get("fast_local", False) for pair in pairs] != [False, True]:
+            raise AssertionError("warm repeated reads lost the distinct managed/fast release order")
+        self.proofs.append({"name": "warm-repeated-read", "credits": pairs})
+        if not self.atomic:
+            begin = len(self.observations())
+            self.body_case("warm-fast-read-write", 7, 1, 1)
+            pairs = self.credits(self.rows(begin))
+            if len(pairs) != 1 or not pairs[0].get("fast_local"):
+                raise AssertionError("warm nested writer lost its retained fast outer reader")
+            self.proofs.append({"name": "warm-fast-read-write", "credits": pairs})
         self.source_scene(6, image)
         self.source_scene(7, image)
         if not self.atomic:

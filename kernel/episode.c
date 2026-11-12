@@ -513,7 +513,7 @@ static int prepare(struct kd_episode_resources *resources,
 	struct kd_episode_frame *frame;
 	struct kd_jit_mutex_driver driver;
 	struct kd_task_root_context *physical = kd_task_root_context_current();
-	bool local_only = physical && physical->mutex_fast.lock;
+	bool local_only = physical && (physical->mutex_fast.lock || physical->rwsem_fast.lock);
 	bool prepared = false;
 	int error, unwind;
 
@@ -666,10 +666,11 @@ static unsigned int local_service_limit(struct kd_episode_resources *resources,
 	struct kd_task_root_context *physical = kd_task_root_context_current();
 
 	BUG_ON(!kd_state_is_current(state, binding));
-	/* A fast mutex owner cannot follow a lent continuation or serve another
+	/* A fast native grant cannot follow a lent continuation or serve another
 	 * origin. Its nested requests still use the ordinary queue locally.
 	 */
-	if (physical && (physical->mutex_fast.lock || !list_empty(&physical->native_grants)))
+	if (physical && (physical->mutex_fast.lock || physical->rwsem_fast.lock ||
+	    !list_empty(&physical->native_grants)))
 		return 0;
 	/* Do not start unrelated inner source batching before the new local
 	 * head's grant while this source still holds another logical grant.

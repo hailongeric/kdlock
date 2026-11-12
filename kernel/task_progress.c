@@ -87,7 +87,8 @@ int kd_task_progress_native(struct kd_task_root_context *root,
 	 * In particular, a still-current native-return slot stays legitimately
 	 * LIVE even though atomic task detach can revoke/reclaim it later.
 	 */
-	*pending = root->mutex_fast.lock || !list_empty(&root->owners.batches) ||
+	*pending = root->mutex_fast.lock || root->rwsem_fast.lock ||
+		   !list_empty(&root->owners.batches) ||
 		   !list_empty(&state->grants) ||
 		   !kd_request_pool_empty(pool);
 	return 0;
