@@ -27,8 +27,11 @@ completed two rounds and 81 typed queries, then failed with a writer-acquire
 was recovered to the normal kernel. Source correction `6e486ece` removes a
 post-publication cohort-batch refusal while retaining exact identity and
 lifetime checks. Static review and the [corrected kernel9 build](tests/evidence/kernel9-cohort-build-20261111/README.md)
-passed. Runtime validation is blocked by platform content review of helper
-preparation; kernel9 remains uninstalled. The failed run keeps its own verdict.
+passed. The [subsequent kernel9 regression](tests/evidence/kernel9-cohort-validation-20261112/README.md)
+booted the corrected image and passed the existing rwsem fixture with 7,257
+observations, zero overflow, protected JIT completion and ordinary retirement.
+This does not force the queue race or establish a new mmap result. The failed
+run and earlier platform review stop keep their own verdicts.
 
 The current source adds ordinary sleepable rwsem read/write operations and
 `downgrade_write`, plus plain rwlock read/write operations in IRQ-enabled task

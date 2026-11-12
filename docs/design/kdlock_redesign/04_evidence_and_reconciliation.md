@@ -152,6 +152,16 @@ delegated rwsem validation-helper preparation; it was not retried or recreated.
 No corrected-core runtime result, deterministic race reproduction or additional
 MM workload follows from this build.
 
+The later [authorized kernel9 regression](../../../tests/evidence/kernel9-cohort-validation-20261112/README.md)
+used the ordinary permitted execution path, installed and booted the same built
+image, and passed the existing four-worker rwsem fixture. It records 7,257
+observations with zero overflow, 13 publications and coverage-ACKed keys across
+16 compiler cycles, an unchanged warm fact baseline and four exact shutdown
+settlements. Protected JIT completion, source/frame retirement and ordinary
+unload passed with no new kernel faults. This is an affected general regression;
+the enqueue/await race is not forced and no new MM execution is established.
+The prior platform stop and failed kernel8 run remain separate historical records.
+
 ## 1 Active authority and scope
 
 Use the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins).

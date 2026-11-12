@@ -301,8 +301,11 @@ the published reentry image has no saved execution. A third-round writer-acquire
 `-EBUSY` BUG led to panic and reset recovery. Source correction `6e486ece`
 addresses a post-publication cohort-batch race; the failure's exact queue
 interleaving is unrecorded. Its [kernel9 build](../../tests/evidence/kernel9-cohort-build-20261111/README.md)
-passed, but runtime validation is blocked by platform content review and the
-new image remains uninstalled. `do_vmi_munmap` expansion remains proposed.
+passed. The [later kernel9 regression](../../tests/evidence/kernel9-cohort-validation-20261112/README.md)
+booted that image and passed the existing rwsem fixture with protected JIT
+completion and ordinary source/frame retirement. It does not force the exact
+queue interleaving or repeat the failed MM workload. The earlier platform stop
+remains recorded. `do_vmi_munmap` expansion remains proposed.
 The saved `do_mmap` ELF starts with a CALL to `__fentry__`; the actual
 five-region export instead begins with the patched NOP `0f1f440000`.
 The provider's actual capture is authoritative. An omitted fentry or other helper remains an ordinary exact

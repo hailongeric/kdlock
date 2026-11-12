@@ -1,5 +1,9 @@
 # Kernel9 writer-cohort correction: build result and runtime block
 
+Later installation, boot and the affected general rwsem regression are recorded
+[separately](../kernel9-cohort-validation-20261112/README.md). The original build
+and platform-stop checkpoint below retains its historical scope.
+
 Corrected core `6e486ece` compiled and linked successfully as
 `7.0.0-38-kdrebuild9`, Build ID
 `8198ffae09db584dce9b71d92b5743a4146ba80a`. The changed mutex object, full
