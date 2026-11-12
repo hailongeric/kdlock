@@ -1,0 +1,29 @@
+--- a/kernel/mutex.c
++++ b/kernel/mutex.c
+@@ -968,7 +968,14 @@
+ 			return -EINVAL;
+ 	} else {
+ 		might_sleep();
+-		if (batch->initialized)
++		if (node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT) {
++			/* Enqueue published this exact prechecked possible batch. A
++			 * predecessor may initialize it before the requester reaches
++			 * await; result/selection publication now governs progress.
++			 */
++			if (node->possible_batch != batch)
++				return -EINVAL;
++		} else if (batch->initialized)
+ 			return -EBUSY;
+ 	}
+ 	if (node->requester != current)
+@@ -1023,7 +1030,9 @@
+ {
+ 	int result;
+ 
+-	if (!batch || !outcome || (node->atomic_spin && node->possible_batch != batch))
++	if (!batch || !outcome ||
++	    ((node->atomic_spin || node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT) &&
++	     node->possible_batch != batch))
+ 		return -EINVAL;
+ 	if (batch->initialized)
+ 		return -EBUSY;

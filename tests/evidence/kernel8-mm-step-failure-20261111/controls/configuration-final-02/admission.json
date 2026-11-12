@@ -1,0 +1,31 @@
+{
+  "actual_new_callee_bytes": "Provider SOURCE_EXPORT before compilation through unchanged runner; no ELF substitution",
+  "auxiliary_bytes": 131072,
+  "boot_id": "4a98638f-c01c-4fc9-8de8-69a74346aa0f",
+  "collection_named_depth": 19,
+  "complete_auxiliary_requirement_proved": false,
+  "conditional_control_bytes": 44024,
+  "dispatch_authorization": "One unchanged bounded syscall workload; no CPU reservation, native-on-C continuation or new engine.",
+  "fresh_metadata_sha256": "2e68e7d1568c190f87278848dc2672416e9b17e681115ce41af1d74d2c72849b",
+  "gs_proof_sha256": "56acdfc9bf2165cd83dff7d2c36522e0fc9a1ff7f54206655c71fe5fba5910f3",
+  "guard_margin_bytes": 21512,
+  "interrupt_segment_bytes": 16384,
+  "native_helper_callbacks_measured": false,
+  "native_helper_segment_bytes": 16384,
+  "original_conditional_artifact_unchanged": true,
+  "original_premise_sha256": "db233cd8ac3164d3170c071ecc7081c9e58141f93cbf0b147f700dab761f5a1b",
+  "postboot_result_sha256": "0895ea1063ff0c05a04d06a7f7d74a98c1a525012a2e74b47fe83af82d42172e",
+  "query_named_depth": 16,
+  "repeat_postproof_sha256": "dcdd09b8b61d84ce7cf12e1b8e0dd4b8dc0201ac51f3ae3a116345162759492f",
+  "required_control_bytes": 65536,
+  "scope": "Five-region do_mmap expansion before unchanged generic context frontiers; query, early error return, root unlock and completion included; no full protected-MM claim.",
+  "source_scope_commit": "35840b0f",
+  "source_scope_sha256": "a6cb7507f5c752cc941f61d04681d56c8ca010e30ac57cce9263f9e805360687",
+  "terminal_named_depth": 27,
+  "unlock_completion_sha256": "4738ab6d39ac1ba7c06cefe7b0f18e08f713b1b198a7cc257e66ad6220d8574a",
+  "unverified_callbacks": [
+    "native raw-guard/preemption/scheduler/instrumentation callback trees inclusive in the native-helper premise",
+    "interrupt entry prefix/helper inclusive callback footprint"
+  ],
+  "user_direction": "Fresh runtime-byte capture and configuration-only admission of exact do_mmap, existing direct-CALL/query handling, all native-context frontiers preserved, refreshed stack scope under the already stated bounded native-helper premise, one short unchanged syscall workload if admission checks pass."
+}

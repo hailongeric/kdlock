@@ -1,0 +1,164 @@
+{
+  "admission_sha256": "db233cd8ac3164d3170c071ecc7081c9e58141f93cbf0b147f700dab761f5a1b",
+  "bounds": {
+    "archive_bytes": 67108864,
+    "build_code_bytes": 131072,
+    "build_diagnostic_bytes": 262144,
+    "build_elf_bytes": 2097152,
+    "build_flat_bytes": 262144,
+    "build_source_bytes": 2097152,
+    "cfg_work_steps": 32768,
+    "command_bytes": 33554432,
+    "decode_sites": 4096,
+    "decode_window_bytes": 61440,
+    "direct_call_edges": 512,
+    "event_bytes": 10485800,
+    "input_bytes": 2097152,
+    "json_line_bytes": 1048576,
+    "lowered_sites": 4096,
+    "lowered_text_bytes": 65536,
+    "recovery_bytes": 4194352,
+    "runtime_block_visits": 1000000,
+    "source_boundaries": 64,
+    "source_bytes": 4096,
+    "source_regions": 5,
+    "stdio_bytes": 16777216,
+    "wire_artifact_bytes": 524288,
+    "wire_log_bytes": 268435456,
+    "wire_rows": 4096,
+    "wire_symbol_bytes": 256,
+    "wire_version_bytes": 256
+  },
+  "client": {
+    "bytes": 43096,
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/build-01/mmap-userspace",
+    "sha256": "bae90760f57f3930e1ff48443140eb096ea316c1fed00ae1840127f6985a4cd2"
+  },
+  "configuration_identity_hex": "2fb5b611f24217ddfdd769252965d743db2caf62527c64a8056e1cad30dd9293",
+  "expected_explicit_iterations": 192,
+  "jit_config_bytes": 438,
+  "kernel_config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "kernel_core_git_head": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+  "kernel_elf_sha256": "4441e45c27f9300a4cd19739c917458308581472604c3b75d8ffba9fec493be1",
+  "load_identity_hex": null,
+  "native": {
+    "artifact_capacity": 1572864,
+    "auxiliary_bytes": 131072,
+    "claim_capacity": 4096,
+    "code_capacity": 131072,
+    "configuration_identity": [
+      15931275814293124399,
+      4888487147929720829,
+      12133959989327768795,
+      10633804871307652613
+    ],
+    "current_task_gs_offset": 18446744071633522712,
+    "cycle_capacity": 32,
+    "entry_capacity": 64,
+    "event_capacity": 65536,
+    "feedback_capacity": 4096,
+    "flat_capacity": 262144,
+    "frame_capacity": 2097152,
+    "image_capacity": 16,
+    "load_identity": null,
+    "metadata_capacity": 4096,
+    "native_capacity": 64,
+    "observation_capacity": 4096,
+    "proxy_limit": 2,
+    "request_capacity": 256,
+    "required_control_bytes": 65536,
+    "source_byte_capacity": 4096,
+    "source_capacity": 4096,
+    "source_region_count": 5,
+    "source_regions": 0,
+    "source_version": 0,
+    "source_version_bytes": 86
+  },
+  "paths": {
+    "kernel_config": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/.config",
+    "kernel_elf": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/build/vmlinux",
+    "output": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-live-0798c1ab-01",
+    "provider_module": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/signed/kd_mmap_api_provider.ko",
+    "repo": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/input",
+    "source_manifest": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/source-sha256.json",
+    "source_state": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/source-state.json"
+  },
+  "pending": [
+    "Fresh boot and GS proof",
+    "Fresh host recovery and metadata receipts",
+    "Root all-path AUX scope and immutable/context review",
+    "Bind new exact load identity and serialize final binary/config",
+    "Root launch gate"
+  ],
+  "provider_sha256": "5eb94db883a0ddff654eb4dce92afd1c569a3fe7b46bd02b88f275dfcae22e06",
+  "regions": [
+    {
+      "bytes": 804,
+      "root_return": 18446744071587165674,
+      "start": 18446744071587165008,
+      "symbol": "vm_mmap_pgoff"
+    },
+    {
+      "bytes": 1656,
+      "conditional_query_call": 18446744071587439174,
+      "omitted_call": 18446744071587439433,
+      "omitted_target": "__get_unmapped_area",
+      "omitted_target_address": 18446744071587435456,
+      "query_return": 18446744071587439179,
+      "start": 18446744071587439040,
+      "symbol": "do_mmap"
+    },
+    {
+      "bytes": 746,
+      "omitted_call": 18446744071587606356,
+      "omitted_target": "do_vmi_munmap",
+      "root_return": 18446744071587606542,
+      "start": 18446744071587606064,
+      "symbol": "__vm_munmap"
+    },
+    {
+      "bytes": 2,
+      "start": 18446744071603416800,
+      "symbol": "its_return_thunk"
+    },
+    {
+      "bytes": 6,
+      "start": 18446744071603416816,
+      "symbol": "__x86_return_thunk"
+    }
+  ],
+  "scope": "Five-region original JIT mmap-prefix extension before unchanged native-context frontiers; no full protected-MM claim.",
+  "source_bytes": 3214,
+  "source_git_head": "0798c1abf422017cfc93647a2649be0e5a73c75a",
+  "source_manifest_sha256": "a29e77397367173e51ae091edec94f31798d50f5b9d3b6b90ce31dda0e3b823e",
+  "source_state_sha256": "15e35cb635d7f67350f6a297bd8231435e33e2a29ab685c9c1264a7a5b15c9b5",
+  "status": "SOURCE_ONLY_GEOMETRY_PENDING_FRESH_BOOT_GS_RECOVERY_AND_SCOPE_REVIEW",
+  "tool_sha256": {
+    "as": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+    "cpp": "7e562909f130fd90fd696eb40fc61c38eae9ca4ebdd0262b0704c0379be490e8",
+    "dmesg": "889b3947799e06c354b611f2759364b92e65e6ad596166e05bf62525f72468ce",
+    "insmod": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7",
+    "ld": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+    "objcopy": "05f4473d24f7330a9b13f43d007d619a2e792e33de453cd7533a2d97c30da770",
+    "objdump": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+    "rmmod": "6edf62330978627d75d8de7e903f243b6ba765f8b54baa914ec83e21cd85bdc7"
+  },
+  "tools": {
+    "as": "/usr/bin/as",
+    "cpp": "/usr/bin/cpp",
+    "dmesg": "/usr/bin/dmesg",
+    "insmod": "/usr/sbin/insmod",
+    "ld": "/usr/bin/ld",
+    "objcopy": "/usr/bin/objcopy",
+    "objdump": "/usr/bin/objdump",
+    "rmmod": "/usr/sbin/rmmod"
+  },
+  "version_utf8": "mm-mmap-step-0798c1ab-77b2506014d6deaf7ae5cc383e5dd50177aaa23a9d876c3fcaea68d445e5572c",
+  "workload": {
+    "deadline_ms": 10000,
+    "iterations": 8,
+    "phase_timeout_ms": 120000,
+    "rounds": 3,
+    "threads": 8
+  }
+}

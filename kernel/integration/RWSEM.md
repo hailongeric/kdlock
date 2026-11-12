@@ -289,15 +289,21 @@ query handling already exist. No new execution path is needed for the first
 expansion. Repeating the old image cannot discover omitted text: direct-CALL
 facts are nonobservations, and compilation reads only its fixed source epoch.
 
-| Proposed next input | Exact kernel8 scope | Expected progress, conditional on actual captured bytes and construction |
+| Source input | Exact kernel8 scope | Reached or proposed progress |
 | --- | --- | --- |
-| Add `do_mmap` to the four retained regions | `0xffffffff818321c0`, 1,656 bytes; five regions totaling 3,214 bytes | Writer-state query at `0xffffffff81832246`, return `0xffffffff8183224b`; the successful ordinary anonymous path then calls omitted `__get_unmapped_area` at `0xffffffff81832349` |
+| Added `do_mmap` to the four retained regions | `0xffffffff818321c0`, 1,656 bytes; five regions totaling 3,214 bytes | 81 successful writer-state queries at `0xffffffff81832246`, followed by native handback at `0xffffffff8183224b`; the later `__get_unmapped_area` CALL at `0xffffffff81832349` has source evidence only |
 | Later add `do_vmi_munmap` | Reached target `0xffffffff81858430`; exact linked span and runtime bytes still needed | Native source validates the range, finds a VMA and enters `do_vmi_align_munmap`; compiled helper placement and earlier context effects still need inspection |
 
-These are proposed inputs, not an activated profile. The saved `do_mmap` ELF
-starts with a CALL to `__fentry__`; the previous runtime capture of the outer
-wrappers instead contains patched NOPs. The new provider's actual capture is
-authoritative. An omitted fentry or other helper remains an ordinary exact
+The five-region `do_mmap` profile was activated in a later
+[failed attempt](../../tests/evidence/kernel8-mm-step-failure-20261111/README.md).
+It recorded 81 successful typed queries and exact post-query native handback;
+the published reentry image has no saved execution. A third-round writer-acquire
+`-EBUSY` BUG led to panic and reset recovery. Source correction `6e486ece`
+addresses a post-publication cohort-batch race; the failure's exact queue
+interleaving is unrecorded. `do_vmi_munmap` expansion remains proposed.
+The saved `do_mmap` ELF starts with a CALL to `__fentry__`; the actual
+five-region export instead begins with the patched NOP `0f1f440000`.
+The provider's actual capture is authoritative. An omitted fentry or other helper remains an ordinary exact
 handback, not permission to substitute an ELF body or a native helper model.
 Keep every existing SPECIAL boundary and the original JIT, GS and S_W bridge.
 
@@ -315,7 +321,7 @@ functions) and early helper returns through typed root unlock and collection
 (at most 19), followed by the existing 27-function terminal tail. Independent
 source and saved-weight review includes all these branches; their compiled
 units fit the measured maximum. Virtual helper frames use W's source stack.
-Under the same unmeasured native/IRQ premises, the proposed five-region
+Under the same unmeasured native/IRQ premises, the attempted five-region
 conditional total remains 44,024 bytes. The older four-region artifact is unchanged; no full AUX bound,
 new runtime compatibility or callback-tree measurement follows. Broader helper
 admission needs another scope review before reusing this calculation.

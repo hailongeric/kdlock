@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "/tmp/kdlock-kernel8-mm-step-20261111-01/repeat-controls/preflight-read-stdin.py",
+  "sha256": "54ac64d449ab50bb1dc08e33d01d62fd247ca130439bf12d94df8afa3581d209",
+  "timeout_seconds": 60
+}

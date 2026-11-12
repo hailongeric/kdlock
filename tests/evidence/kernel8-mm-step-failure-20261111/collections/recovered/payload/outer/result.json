@@ -1,0 +1,58 @@
+{
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/input/tests/kernel/mmap_api/runner.py",
+    "--config-json",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-input-0798c1ab-01/host-config.json"
+  ],
+  "child_at_dispatch": {
+    "argv": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3 -B /mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/input/tests/kernel/mmap_api/runner.py --config-json /mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-input-0798c1ab-01/host-config.json ",
+    "direct_children": [],
+    "pid": 2902,
+    "process_group": 2902,
+    "session": 2902,
+    "stat": "2902 (python3) R 2901 2902 2902 0 -1 4194304 11 0 0 0 0 0 0 0 20 0 1 0 119035 8372224 0 18446744073709551615 4333568 8024065 140724768959040 0 0 0 0 0 0 0 0 0 17 36 0 0 0 0 0 11038136 11672456 692072448 140724768964157 140724768964487 140724768964487 140724768964531 0\n"
+  },
+  "child_final_observation": {
+    "argv": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3 -B /mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/input/tests/kernel/mmap_api/runner.py --config-json /mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-input-0798c1ab-01/host-config.json ",
+    "direct_children": [
+      2908
+    ],
+    "pid": 2902,
+    "process_group": 2902,
+    "session": 2902,
+    "stat": "2902 (python3) S 2901 2902 2902 0 -1 4194560 36698 8498 0 13 406 25 5 6 20 0 1 0 119035 91615232 20355 18446744073709551615 4333568 8024065 140724768959040 0 0 0 0 16781312 2 1 0 0 17 5 0 0 0 0 0 11038136 11672456 692072448 140724768964157 140724768964487 140724768964487 140724768964531 0\n"
+  },
+  "child_pid": 2902,
+  "child_returncode": null,
+  "client_pid": 2908,
+  "config": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-input-0798c1ab-01/host-config.json",
+  "config_sha256": "3c0655de113cdde76e86f238278604d2754013195e1037633300d7cfb93be0e1",
+  "config_unchanged": true,
+  "cwd": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/input",
+  "dispatched_unix": 1794452524.6332648,
+  "elapsed_seconds": 125.17801780399986,
+  "full_protected_mm_completion_required": false,
+  "identity_before": {
+    "actors": [],
+    "boot_id": "4a98638f-c01c-4fc9-8de8-69a74346aa0f",
+    "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n",
+    "release": "7.0.0-38-kdrebuild8",
+    "taint": 0
+  },
+  "log": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-receipts-0798c1ab-01/runner.log",
+  "log_bytes": 195,
+  "log_observer_limit_bytes": 33554432,
+  "observer_seconds": 600,
+  "python_sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+  "runner_error": "TimeoutError('client phase jit_round_complete; original owner/fds remain retained')",
+  "runner_result": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-live-0798c1ab-01/result.json",
+  "runner_result_sha256": "fd06287ab267b6ef682c623140dbd2735c20a4dfe6f83c5e574bf4fe8cbe99e6",
+  "runner_sha256": "3f36ab1289a6bc8e1601a745d36615d96d4a4bb9600c13d4ce8d99e321744afa",
+  "runner_status": "failed_retained",
+  "signals_or_cleanup_on_failure": false,
+  "started_unix": 1794452524.5500405,
+  "status": "RUNNER_FAILED_RETAINED",
+  "supervisor_pid": 2901
+}

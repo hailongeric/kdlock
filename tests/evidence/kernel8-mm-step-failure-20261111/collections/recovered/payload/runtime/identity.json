@@ -1,0 +1,80 @@
+{
+  "boot_id": "4a98638f-c01c-4fc9-8de8-69a74346aa0f",
+  "config_sha256": "3c0655de113cdde76e86f238278604d2754013195e1037633300d7cfb93be0e1",
+  "controller_pid": 2902,
+  "cycles": [],
+  "identities": {
+    "client": "bae90760f57f3930e1ff48443140eb096ea316c1fed00ae1840127f6985a4cd2",
+    "gs_proof": "56acdfc9bf2165cd83dff7d2c36522e0fc9a1ff7f54206655c71fe5fba5910f3",
+    "jit_config": "e6b3a905e9cc0952adb3092f3334757cbf3e4ecbcd1efc5071c8b02831f3383b",
+    "kernel_config": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+    "kernel_elf": "4441e45c27f9300a4cd19739c917458308581472604c3b75d8ffba9fec493be1",
+    "provider_module": "5eb94db883a0ddff654eb4dce92afd1c569a3fe7b46bd02b88f275dfcae22e06",
+    "recovery": "900bda6369c6e805863058a8676764863156587b7a606087813847cd2eef6146",
+    "source_manifest": "a29e77397367173e51ae091edec94f31798d50f5b9d3b6b90ce31dda0e3b823e",
+    "source_state": "15e35cb635d7f67350f6a297bd8231435e33e2a29ab685c9c1264a7a5b15c9b5"
+  },
+  "meaningful_returned_mm_body": "not_established",
+  "overall_pass": false,
+  "recovery_verified": {
+    "captured_unix": 1794452177.652686,
+    "complete_tag": "kdlock-builddisk-clean-20261031",
+    "images": [
+      {
+        "allocated_bytes": 297684082688,
+        "apparent_bytes": 534681157632,
+        "device": 66306,
+        "host_available": 286831853568,
+        "inode": 54036789,
+        "mtime_ns": 1794452177590567585,
+        "open_fds": [
+          "11"
+        ],
+        "path": "/home/eric/vm/qemu-disks/ubuntu22.04.img",
+        "realpath": "/home/eric/vm/qemu-disks/ubuntu22.04.img"
+      },
+      {
+        "allocated_bytes": 159471751168,
+        "apparent_bytes": 161209974784,
+        "device": 66306,
+        "host_available": 286831853568,
+        "inode": 54036790,
+        "mtime_ns": 1794451420356429775,
+        "open_fds": [
+          "12"
+        ],
+        "path": "/home/eric/vm/qemu-disks/sda.qcow2",
+        "realpath": "/home/eric/vm/qemu-disks/sda.qcow2"
+      },
+      {
+        "allocated_bytes": 130823405568,
+        "apparent_bytes": 183060725760,
+        "device": 66306,
+        "host_available": 286831853568,
+        "inode": 54395458,
+        "mtime_ns": 1794451519170490360,
+        "open_fds": [
+          "285"
+        ],
+        "path": "/home/eric/vm/qemu-disks/kdlock-builds2-20261031/builds.qcow2",
+        "realpath": "/home/eric/vm/qemu-disks/kdlock-builds2-20261031/builds.qcow2"
+      }
+    ],
+    "receipt_sha256": "900bda6369c6e805863058a8676764863156587b7a606087813847cd2eef6146"
+  },
+  "release": "7.0.0-38-kdrebuild8",
+  "rounds": [],
+  "scope": "real_syscalls_optional_source_prefix",
+  "status": "incomplete",
+  "wire": {
+    "attempts": 0,
+    "reserved_bytes": 0
+  },
+  "workload": {
+    "deadline_ms": 10000,
+    "iterations": 8,
+    "phase_timeout_ms": 120000,
+    "rounds": 3,
+    "threads": 8
+  }
+}

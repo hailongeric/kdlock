@@ -1,0 +1,5 @@
+[
+  "/usr/sbin/insmod",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/signed/kd_mmap_api_provider.ko",
+  "enable_jit_profile=1"
+]

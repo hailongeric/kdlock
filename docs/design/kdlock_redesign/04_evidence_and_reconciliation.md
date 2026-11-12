@@ -131,6 +131,17 @@ construction or runtime result. The
 [integration guide](../../../kernel/integration/RWSEM.md#incremental-source-admission-before-native-context)
 records the exact next source scope and the remaining task/CPU progress choices.
 
+The subsequent [five-region attempt and recovery](../../../tests/evidence/kernel8-mm-step-failure-20261111/README.md)
+records two completed rounds, 81 typed queries and exact post-query lookup
+handback. Image 2 was published, but its execution is absent from the saved
+prefix. The third round failed with writer-acquire `-EBUSY` at `jit.c:855`,
+followed by a kernel panic. No final drain or settlement is inferred. Failed
+RAM/disks and complete serial were preserved before reset recovery to the
+normal kernel. Source correction `6e486ece` retains prepublication freshness
+and exact batch identity while permitting predecessor initialization before
+cohort await. Static review is complete; this failure archive does not validate
+the correction or establish the failed request's exact queue interleaving.
+
 ## 1 Active authority and scope
 
 Use the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins).

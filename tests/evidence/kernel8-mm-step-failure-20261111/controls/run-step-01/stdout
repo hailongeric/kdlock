@@ -1,0 +1,2 @@
+{"status": "RUNNER_FAILED_RETAINED", "receipt": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-receipts-0798c1ab-01/result.json", "child_pid": 2902, "child_returncode": null}
+{"supervisor_returncode": 1, "signals_or_cleanup_by_wrapper": false}

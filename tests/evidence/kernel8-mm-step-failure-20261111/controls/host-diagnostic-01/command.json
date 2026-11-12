@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "22",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "eric@10.176.26.71",
+    "sudo",
+    "-n",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin_sha256": "76bac10daa7a955c9963d21985d44bbcf8437c8024253aee182713d1a9a55e22",
+  "timeout_seconds": 60,
+  "scope": "Read existing serial bytes and info-only QEMU status/register/snapshot commands"
+}

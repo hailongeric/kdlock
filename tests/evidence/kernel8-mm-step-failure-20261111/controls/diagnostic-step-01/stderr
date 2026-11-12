@@ -1,0 +1,4 @@
+  File "<stdin>", line 42
+    capture('capture-summary.json',(json.dumps(record,indent=2,sort_keys=True)+'
+                                                                               ^
+SyntaxError: unterminated string literal (detected at line 42)

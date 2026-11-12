@@ -1,0 +1,9 @@
+
+/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-live-0798c1ab-01/source-4.bin:     file format binary
+
+
+Disassembly of section .data:
+
+ffffffff8276eef0 <.data>:
+ffffffff8276eef0:	e9 8b 44 be fe                                  	jmp    0xffffffff81353380
+ffffffff8276eef5:	cc                                              	int3

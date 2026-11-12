@@ -1,0 +1,6 @@
+{
+  "status": "SOURCE_HOST_CONFIGURATION_PREPARATION_FAILED_BEFORE_ANY_INPUT_WRITE",
+  "error": "AssertionError: postboot tainted field is exact string 0, not integer 0",
+  "created_runtime_input_files": 0,
+  "vm_commands": 0
+}

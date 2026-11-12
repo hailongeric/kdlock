@@ -21,6 +21,14 @@ unsupported context effects remains in force. Exact inputs,
 earlier failures and evidence limits are in the
 [current checkpoint](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
 
+The subsequent [five-region mmap attempt](tests/evidence/kernel8-mm-step-failure-20261111/README.md)
+completed two rounds and 81 typed queries, then failed with a writer-acquire
+`-EBUSY` BUG and kernel panic. Its state and receipts are preserved; the guest
+was recovered to the normal kernel. Source correction `6e486ece` removes a
+post-publication cohort-batch refusal while retaining exact identity and
+lifetime checks. Static review is complete; corrected-kernel validation is
+separate from the failed run.
+
 The current source adds ordinary sleepable rwsem read/write operations and
 `downgrade_write`, plus plain rwlock read/write operations in IRQ-enabled task
 context. Each family has its own runtime. A proxy can take a real concurrent

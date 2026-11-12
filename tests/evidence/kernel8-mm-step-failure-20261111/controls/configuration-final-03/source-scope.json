@@ -1,0 +1,97 @@
+{
+  "auxiliary_query_scope": {
+    "auxiliary_allocation_bytes": 131072,
+    "collection_named_depth_maximum": 19,
+    "complete_requirement_proved": false,
+    "conditional_margin_bytes": 21512,
+    "conditional_total_bytes": 44024,
+    "declared_control_bytes": 65536,
+    "early_error_returns_included": true,
+    "existing_callback_charge_bytes": 96,
+    "existing_conservative_named_depth": 27,
+    "experimental_native_segment_bytes": 16384,
+    "experimental_native_segments": 2,
+    "generated_charge_bytes": 144,
+    "measured_group_maximum_bytes": 392,
+    "native_callback_trees_measured": false,
+    "new_runtime_result": false,
+    "query_named_depth_maximum": 16,
+    "root_unlock_and_completion_reviewed": true,
+    "root_unlock_named_depth_maximum": 17,
+    "second_source_and_weight_peer_complete": true,
+    "unlock_completion_review_sha256": "4738ab6d39ac1ba7c06cefe7b0f18e08f713b1b198a7cc257e66ad6220d8574a",
+    "whole_unit_alternative_charge_bytes": 16
+  },
+  "code_change_needed_before_first_omitted_helper": false,
+  "conditional_path": {
+    "later_omitted_call": "0xffffffff81832349",
+    "later_omitted_symbol": "__get_unmapped_area",
+    "later_omitted_target": "0xffffffff818313c0",
+    "new_query_call": "0xffffffff81832246",
+    "post_query_entry": "0xffffffff8183224b",
+    "query_target": "0xffffffff8152f810",
+    "requires_actual_live_bytes_and_construction": true
+  },
+  "host_region_bound_before": 4,
+  "host_region_bound_needed": 5,
+  "kernel_build_id": "a33dd4d11d0f0c6649107507e685b6e86e716c1a",
+  "kernel_core": "0d42063ead37dc8fc1631fa56c8348890ede9c5f",
+  "munmap": {
+    "new_live_bytes_captured": false,
+    "reached_callee": "0xffffffff81858430",
+    "standalone_linked_extent_retained": false
+  },
+  "new_callee_live_bytes_captured": false,
+  "preserved_context_entries": [
+    "__rcu_read_lock",
+    "__rcu_read_unlock",
+    "_raw_spin_lock",
+    "_raw_spin_unlock"
+  ],
+  "prior_source_capacity": 4096,
+  "proposed_linked_regions": [
+    {
+      "bytes": 804,
+      "name": "vm_mmap_pgoff",
+      "start": "0xffffffff817ef350"
+    },
+    {
+      "bytes": 746,
+      "name": "__vm_munmap",
+      "start": "0xffffffff8185ae30"
+    },
+    {
+      "bytes": 1656,
+      "name": "do_mmap",
+      "start": "0xffffffff818321c0"
+    },
+    {
+      "bytes": 2,
+      "name": "its_return_thunk",
+      "start": "0xffffffff8276eee0"
+    },
+    {
+      "bytes": 6,
+      "name": "__x86_return_thunk",
+      "start": "0xffffffff8276eef0"
+    }
+  ],
+  "remaining_before_dispatch": [
+    "Capture and bind actual callee bytes under immutable dependency contract",
+    "Create new source version/configuration/load identities and fresh operational receipts",
+    "Construct with explicit source/code/entry/discovery capacities; preserve exact exits",
+    "Retain the already selected native/IRQ premise with the fresh five-region query/unlock/completion scope and independent context/lifetime checks"
+  ],
+  "runtime_configuration_created": false,
+  "source_bytes": 3214,
+  "source_capacity_margin": 882,
+  "source_commit": "08454c4e2412a8821461ea596c04d5cbc1add45d",
+  "source_wire_growth_excluding_version_change": 1672,
+  "stage": "source_only_not_dispatched",
+  "unselected": [
+    "cpu_reservation",
+    "native_continuation_on_combiner",
+    "new_continuation_engine",
+    "deferred_required_handback"
+  ]
+}

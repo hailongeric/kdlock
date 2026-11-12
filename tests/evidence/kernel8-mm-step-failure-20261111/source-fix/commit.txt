@@ -1,0 +1,14 @@
+commit 6e486ecec398111fb5d5e30ffc76495f32f557b7
+Author:     moore <hailongeric@gmail.com>
+AuthorDate: Wed Nov 11 21:35:39 2026 -0800
+Commit:     moore <hailongeric@gmail.com>
+CommitDate: Wed Nov 11 21:35:39 2026 -0800
+
+    Allow predecessor-owned writer batch initialization before await
+    
+    Validate the exact reserved batch for writer-cohort requests before publication and during await. Retain prepublication freshness checks while allowing the predecessor to initialize the published batch under existing selection and result ordering.
+    
+    Independent static review and diff checks completed. Build and runtime validation remain pending; the failed mmap experiment retains its failed verdict.
+
+ kernel/mutex.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)

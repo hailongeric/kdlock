@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/usr/bin/cpp",
+    "-P",
+    "-x",
+    "assembler-with-cpp",
+    "-D__ASSEMBLER__",
+    "-I",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/input/include",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-live-0798c1ab-01/cycle-0002/build/image.S",
+    "-o",
+    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-mmap-step-live-0798c1ab-01/cycle-0002/build/image.s"
+  ],
+  "diagnostic_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "returncode": 0
+}

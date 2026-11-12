@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "22",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "eric@10.176.26.71",
+    "sudo",
+    "-n",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin_sha256": "14c65329083fecfb068810a9f10524a97c26c0f0316c62e77719763d0eaf4055",
+  "timeout_seconds": 90,
+  "scope": "Read existing serial bytes only; no guest or monitor mutation"
+}

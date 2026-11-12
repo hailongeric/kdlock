@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "22",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "eric@10.176.26.71",
+    "sudo",
+    "-n",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin_sha256": "2a34cdd51c241fa02b01128bd00dd143f4e8c61bcfa64f53d7daa443da8b16ee",
+  "scope": "One reset after confirmed kernel panic and preserved failure state; no snapshot restoration or drain claim"
+}

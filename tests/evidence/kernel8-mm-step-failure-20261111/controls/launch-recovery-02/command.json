@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "22",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "eric@10.176.26.71",
+    "sudo",
+    "-n",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin": "/tmp/kdlock-kernel8-mm-step-20261111-01/launch-recovery-02/read.py",
+  "stdin_sha256": "05936f37e7ba3ae185b04c14ccfc87d3de74b429626329842ac1d10c585949b2",
+  "timeout_seconds": 60
+}

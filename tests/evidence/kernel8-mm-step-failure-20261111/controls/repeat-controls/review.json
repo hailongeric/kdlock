@@ -1,0 +1,11 @@
+{
+  "changes": "Only current old-boot identity, new exact read-only reference/plan hashes, fresh input/output leaves and error label; corrected module canonical-root policy unchanged.",
+  "guest_input": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/repeat-kdrebuild8-mm-step-input-01",
+  "guest_output": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/repeat-kdrebuild8-mm-step-01",
+  "guest_postboot": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/postboot-kdrebuild8-mm-step-01",
+  "new_helper_sha256": "54db994bb63f4785d0e015ae15abe78d91892dff2e3e3807d9ee32f417b1b2c6",
+  "old_corrected_helper_sha256": "54c5c48385e459e71d17061920463c5d29983327135442635d303c30cc7f99e9",
+  "plan_sha256": "106c12b4759b4e979ba500dbf0fc7a4f6da7fda2456f2b7d547994d0bdea29ae",
+  "reference_sha256": "5afce494e76cd9fe54ef79824d0ec4f20cdc72a3b83119af563a39d7a2190ee6",
+  "status": "SOURCE_ONLY_NOT_STAGED"
+}

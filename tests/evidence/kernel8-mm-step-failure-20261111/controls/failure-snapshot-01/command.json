@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "22",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "eric@10.176.26.71",
+    "sudo",
+    "-n",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin_sha256": "35b7c1daf5e812a3b174f9899f33be81d167f0e27505e84375e12a4987f7daf7",
+  "observer_seconds": 210,
+  "scope": "One new failure-preservation snapshot; all prior snapshots retained; no reset, unload or drain claim"
+}

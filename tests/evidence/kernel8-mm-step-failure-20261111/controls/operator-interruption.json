@@ -1,0 +1,8 @@
+{
+  "agent": "/root/vm_mmap_step",
+  "stage": "After successful issued preflight/reboot/postboot/metadata/recovery commands; before final configuration and profile dispatch",
+  "reported_error": "Agent errored: This content was flagged for possible cybersecurity risk.",
+  "recorded_vm_command_denial": false,
+  "profile_or_workload_dispatched_by_agent": false,
+  "disposition": "Operator turn failure retained; root continues previously authorized task using normal tool approval. No flagged agent turn retried."
+}

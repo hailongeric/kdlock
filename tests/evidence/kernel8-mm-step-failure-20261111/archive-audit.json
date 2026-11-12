@@ -1,0 +1,11 @@
+{
+  "copied_files": 420,
+  "fix_runtime_validation_in_this_archive": false,
+  "omitted_files": [],
+  "ordinary_drain": false,
+  "project_code_executed": false,
+  "raw_bytes": 96817369,
+  "runtime_verdict": "failed_retained",
+  "status": "SAVED_ARCHIVE_BYTES_VERIFIED",
+  "stored_bytes": 29203973
+}
