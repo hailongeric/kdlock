@@ -58,6 +58,8 @@ struct kd_episode_resources {
 	struct kd_episode_frame *frames;
 	unsigned int capacity;
 	struct kd_episode_config config;
+	/* Current source actor only; sorted by slot, retained by grant_user. */
+	struct list_head grant_collect;
 };
 
 struct kd_episode_frame {
@@ -76,6 +78,7 @@ struct kd_episode_frame {
 	struct list_head deferred;
 	struct list_head deferred_link;
 	struct kd_episode_frame *deferred_host;
+	struct list_head grant_collect_link;
 
 	struct kd_request_user control_user;
 	struct kd_request_user image_user;

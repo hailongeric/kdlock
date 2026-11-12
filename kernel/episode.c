@@ -61,6 +61,7 @@ static void frame_init(struct kd_episode_frame *frame,
 	INIT_LIST_HEAD(&frame->child_link);
 	INIT_LIST_HEAD(&frame->deferred);
 	INIT_LIST_HEAD(&frame->deferred_link);
+	INIT_LIST_HEAD(&frame->grant_collect_link);
 	frame->deferred_host = NULL;
 	kd_request_user_init(&frame->control_user);
 	kd_request_user_init(&frame->image_user);
@@ -118,6 +119,7 @@ int kd_episode_resources_init(struct kd_episode_resources *resources,
 	resources->config = *config;
 	resources->config.family = family;
 	resources->config.atomic_spin = kd_lock_family_is_atomic(family);
+	INIT_LIST_HEAD(&resources->grant_collect);
 	for (index = 0; index < capacity; ++index)
 		frame_init(&frames[index], resources, &pool->slots[index], NULL);
 	return 0;
@@ -254,11 +256,48 @@ static int finish_image_actor(struct kd_episode_frame *frame)
 	return finish_user(&frame->image_user, &frame->image_held);
 }
 
+static void start_grant_actor(struct kd_episode_frame *frame)
+{
+	struct list_head *position;
+	struct kd_episode_frame *pending;
+
+	BUG_ON(!frame->grant_held || frame->grant_started ||
+	       !list_empty(&frame->grant_collect_link));
+	frame->grant_started = true;
+	/* Preserve the array walk's slot order without visiting unused slots.
+	 * All entries belong to this same array and retain their grant user.
+	 */
+	list_for_each(position, &frame->resources->grant_collect) {
+		pending = list_entry(position, struct kd_episode_frame, grant_collect_link);
+		if (frame < pending)
+			break;
+	}
+	list_add_tail(&frame->grant_collect_link, position);
+}
+
+static int finish_grant_actor(struct kd_episode_frame *frame)
+{
+	struct list_head *next = frame->grant_collect_link.next;
+	bool listed = !list_empty(&frame->grant_collect_link);
+	int result;
+
+	/* Unlink before final finish can make the slot reusable. Failure consumes
+	 * nothing; the other indexed actors still retain the original position.
+	 * Private/cancelled requests that never ran have no collection entry.
+	 */
+	if (listed)
+		list_del_init(&frame->grant_collect_link);
+	result = finish_user(&frame->grant_user, &frame->grant_held);
+	if (result && listed)
+		list_add_tail(&frame->grant_collect_link, next);
+	return result;
+}
+
 /* Current source owner only. Owner pumps never inspect or change this index. */
 int kd_episode_collect(struct kd_episode_resources *resources,
 		   struct kd_execution_binding *binding)
 {
-	unsigned int index;
+	struct kd_episode_frame *frame, *next;
 	int result;
 
 	if (!resources || !resources->pool)
@@ -266,9 +305,7 @@ int kd_episode_collect(struct kd_episode_resources *resources,
 	result = kd_jit_collect_grants(resources->pool->state, binding);
 	if (result)
 		return result;
-	for (index = 0; index < resources->capacity; ++index) {
-		struct kd_episode_frame *frame = &resources->frames[index];
-
+	list_for_each_entry_safe(frame, next, &resources->grant_collect, grant_collect_link) {
 		/* This exact actor holds the frame until its final finish below. */
 		if (!frame->grant_held || !frame->grant_started ||
 		    frame->slot->call.grant.linked)
@@ -280,7 +317,7 @@ int kd_episode_collect(struct kd_episode_resources *resources,
 		if (result)
 			return result;
 		/* No access to this frame follows the last grant-actor finish. */
-		result = finish_user(&frame->grant_user, &frame->grant_held);
+		result = finish_grant_actor(frame);
 		if (result)
 			return result;
 	}
@@ -445,7 +482,7 @@ static int cancel_private(struct kd_episode_frame *frame, bool prepared)
 	result = finish_user(&frame->image_user, &frame->image_held);
 	if (result)
 		return result;
-	result = finish_user(&frame->grant_user, &frame->grant_held);
+	result = finish_grant_actor(frame);
 	if (result)
 		return result;
 	result = finish_user(&frame->binding_user, &frame->binding_held);
@@ -708,7 +745,7 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 	int result;
 
 	BUG_ON(call != &frame->slot->call);
-	frame->grant_started = true;
+	start_grant_actor(frame);
 	for (;;) {
 		const struct kd_jit_image *image;
 		struct cached_operation cached;
@@ -1080,7 +1117,7 @@ int kd_episode_acquire_root(struct kd_episode_frame *frame,
 		result = finish_image_actor(frame);
 		if (result)
 			return result;
-		result = finish_user(&frame->grant_user, &frame->grant_held);
+		result = finish_grant_actor(frame);
 		if (result)
 			return result;
 		observe_frame(frame, KD_OBS_ACQUIRE_CANCELLED,
