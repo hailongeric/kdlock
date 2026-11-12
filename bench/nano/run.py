@@ -64,9 +64,9 @@ def validate_kernel_receipt(receipt, expected_release, kernel_sha256):
 
 def validate_builtin_source(symbols, expected_start, code):
     matches = [int(fields[0], 16) for fields in map(str.split, symbols.splitlines())
-               if len(fields) == 3 and fields[1] in ('t', 'T') and fields[2] == '__x86_return_thunk']
-    require(expected_start != 0 and matches == [expected_start], 'live return thunk address differs')
-    require(code == b'\xc3\xcc', 'captured return thunk differs')
+               if len(fields) == 3 and fields[1] in ('t', 'T') and fields[2] == 'its_return_thunk']
+    require(expected_start != 0 and matches == [expected_start], 'live ITS return thunk address differs')
+    require(code == b'\xc3\xcc', 'captured ITS return thunk differs')
 
 
 def main():
@@ -83,7 +83,7 @@ def main():
                         help='Exact running/module-build release; default preserves the kernel9 baseline')
     parser.add_argument('--builtin-source-start', type=lambda value: int(value, 0),
                         default=0xffffffff8276eee0,
-                        help='Exact live/ELF __x86_return_thunk address; default is kernel9')
+                        help='Exact live/ELF its_return_thunk address; default is kernel9')
     parser.add_argument('--kernel-elf', type=Path, required=True)
     parser.add_argument('--gs-proof', type=Path, required=True)
     parser.add_argument('--prerequisite', type=Path, action='append', default=[])

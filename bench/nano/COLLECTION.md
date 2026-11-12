@@ -8,12 +8,21 @@ unchanged release order and final-user handling. Compilation, unit/live
 validation and performance remain unrun for this candidate.
 
 The separate harness change makes the previously fixed kernel release and
-return-thunk address explicit inputs. It also matches the module build receipt
+ITS return-thunk address explicit inputs. It also matches the module build receipt
 to the selected kernel ELF and the requested thunk to the live built-in text
 symbol. The existing boot/GS proof, signed module hashes, thunk bytes and all
 workload checks remain required. Defaults preserve the old kernel9 selection;
 candidate commands must provide both identity arguments. These checks are not
-another kernel optimization. The two commits must be reported separately.
+another kernel optimization. Report the collector and harness revisions separately.
+
+The original harness at `57eab6a3` incorrectly named `__x86_return_thunk` in
+its identity check. The [kernel9 identity receipt](../../tests/evidence/kernel9-cohort-build-20261111/collection/payload/receipts/build-01/final-identity.json)
+records the admitted `its_return_thunk` at `0xffffffff8276eee0` with `c3cc`,
+and the distinct `__x86_return_thunk` at `0xffffffff8276eef0` with
+`c390909090cc`. Static review found the mismatch before candidate measurement.
+The corrected check requires the exact ITS symbol and original two bytes;
+the collector, workload and admitted dependency extent are unchanged. The
+identity regression includes both captured symbols to distinguish them.
 
 ## Preserve the baseline and build the candidate
 
@@ -44,7 +53,7 @@ In the VM, set `nano_source` to the frozen candidate source; `kernel_source`
 and `kernel_output` to the candidate kernel trees; `experiment_root` to a new
 output directory; and `kernel_release`, `boot_id`, `gs_proof` to the verified
 candidate identities. Set `builtin_source_start` to that kernel's exact
-`__x86_return_thunk` address, which must agree between ELF and live kallsyms.
+`its_return_thunk` address, which must agree between ELF and live kallsyms.
 The supported two-byte source span remains `c3cc`; a changed thunk is a refusal,
 not permission to broaden this experiment. Do not reuse the old GS offset or
 old thunk address without current evidence.

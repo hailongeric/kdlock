@@ -27,19 +27,30 @@ class CandidateIdentity(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 nano_run.validate_kernel_receipt(changed, 'candidate', 'candidate-elf')
 
-    def test_return_thunk_may_move_only_with_exact_live_binding(self):
-        symbols = 'ffffffff82000100 T __x86_return_thunk\nffffffff82000200 T ordinary\n'
+    def test_its_return_thunk_may_move_only_with_exact_live_binding(self):
+        symbols = 'ffffffff82000100 T its_return_thunk\nffffffff82000110 T __x86_return_thunk\n'
         nano_run.validate_builtin_source(symbols, 0xffffffff82000100, b'\xc3\xcc')
         with self.assertRaisesRegex(ValueError, 'address'):
             nano_run.validate_builtin_source(symbols, 0xffffffff8276eee0, b'\xc3\xcc')
         with self.assertRaisesRegex(ValueError, 'captured'):
             nano_run.validate_builtin_source(symbols, 0xffffffff82000100, b'\x90\xc3')
 
-    def test_thunk_binding_requires_one_nonzero_builtin_text_symbol(self):
-        for symbols, start in [('', 0x100), ('100 T __x86_return_thunk [module]\n', 0x100),
-                               ('100 D __x86_return_thunk\n', 0x100),
-                               ('100 T __x86_return_thunk\n100 T __x86_return_thunk\n', 0x100),
-                               ('000 T __x86_return_thunk\n', 0)]:
+    def test_kernel9_its_and_x86_return_thunks_have_distinct_bindings(self):
+        # Captured kernel9 build-01/final-identity.json return_symbols, not
+        # candidate live evidence. Both names must coexist in this regression.
+        symbols = 'ffffffff8276eee0 T its_return_thunk\nffffffff8276eef0 T __x86_return_thunk\n'
+        nano_run.validate_builtin_source(symbols, 0xffffffff8276eee0, bytes.fromhex('c3cc'))
+        with self.assertRaisesRegex(ValueError, 'address'):
+            nano_run.validate_builtin_source(symbols, 0xffffffff8276eef0, bytes.fromhex('c390'))
+        with self.assertRaisesRegex(ValueError, 'captured'):
+            nano_run.validate_builtin_source(symbols, 0xffffffff8276eee0, bytes.fromhex('c390909090cc'))
+
+    def test_its_binding_requires_one_nonzero_builtin_text_symbol(self):
+        for symbols, start in [('', 0x100), ('100 T its_return_thunk [module]\n', 0x100),
+                               ('100 D its_return_thunk\n', 0x100),
+                               ('100 T its_return_thunk\n100 T its_return_thunk\n', 0x100),
+                               ('100 T __x86_return_thunk\n', 0x100),
+                               ('000 T its_return_thunk\n', 0)]:
             with self.subTest(symbols=symbols), self.assertRaises(ValueError):
                 nano_run.validate_builtin_source(symbols, start, b'\xc3\xcc')
 
