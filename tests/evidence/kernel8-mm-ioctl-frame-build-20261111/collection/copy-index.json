@@ -1,0 +1,390 @@
+{
+  "bytes": 3268998,
+  "count": 24,
+  "files": [
+    {
+      "bytes": 1797,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-driver-0798c1ab-01/command.json",
+      "identity": [
+        2080,
+        7736517,
+        33188,
+        1,
+        1797,
+        1794442046831177693,
+        1794442046831177693
+      ],
+      "name": "driver/command.json",
+      "path": "payload/driver/command.json",
+      "sha256": "3ae1c83284a5ae1a5c09b37483aaac7cec05e55637d6ce1b49ffc82de27d3026"
+    },
+    {
+      "bytes": 19,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-driver-0798c1ab-01/dispatch.json",
+      "identity": [
+        2080,
+        7736520,
+        33188,
+        1,
+        19,
+        1794442046864618794,
+        1794442046864618794
+      ],
+      "name": "driver/dispatch.json",
+      "path": "payload/driver/dispatch.json",
+      "sha256": "5e685916c4f9a6bd2ea49b09fe33946b26f395d6835003d42f68f8632c6550ca"
+    },
+    {
+      "bytes": 63,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-driver-0798c1ab-01/return.json",
+      "identity": [
+        2080,
+        7736720,
+        33188,
+        1,
+        63,
+        1794442058110340470,
+        1794442058110340470
+      ],
+      "name": "driver/return.json",
+      "path": "payload/driver/return.json",
+      "sha256": "874b10ea9ff575a8f690b31fe87cae51495a3b62a4e0c9a1f07053b2392beadc"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-driver-0798c1ab-01/stderr",
+      "identity": [
+        2080,
+        7736519,
+        33188,
+        1,
+        0,
+        1794442046863000000,
+        1794442046863000000
+      ],
+      "name": "driver/stderr",
+      "path": "payload/driver/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 180,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-driver-0798c1ab-01/stdout",
+      "identity": [
+        2080,
+        7736518,
+        33188,
+        1,
+        180,
+        1794442058068000000,
+        1794442058068000000
+      ],
+      "name": "driver/stdout",
+      "path": "payload/driver/stdout",
+      "sha256": "f5460657b8a8c2b3facfac23270a175a43c0e76ac98469b5af5783a8ba1c3834"
+    },
+    {
+      "bytes": 17774,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/mmap-build.log",
+      "identity": [
+        2080,
+        7736524,
+        33188,
+        1,
+        17774,
+        1794442053618000000,
+        1794442053618000000
+      ],
+      "name": "receipts/mmap-build.log",
+      "path": "payload/receipts/mmap-build.log",
+      "sha256": "25e17a5c52a22b5bcc1206b79698b025defe972cef428bbf454fa424bc4a0a5a"
+    },
+    {
+      "bytes": 1,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/mmap-depends.log",
+      "identity": [
+        2080,
+        7736717,
+        33188,
+        1,
+        1,
+        1794442054016000000,
+        1794442054016000000
+      ],
+      "name": "receipts/mmap-depends.log",
+      "path": "payload/receipts/mmap-depends.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 16421,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/mmap-new-ioctl-frame.log",
+      "identity": [
+        2080,
+        7736719,
+        33188,
+        1,
+        16421,
+        1794442054063000000,
+        1794442054063000000
+      ],
+      "name": "receipts/mmap-new-ioctl-frame.log",
+      "path": "payload/receipts/mmap-new-ioctl-frame.log",
+      "sha256": "b9d67f2215e95ac691b73a952cadde76354ec436074191f77cdf5cf4afc27f88"
+    },
+    {
+      "bytes": 36453,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/mmap-old-ioctl-frame.log",
+      "identity": [
+        2080,
+        7736718,
+        33188,
+        1,
+        36453,
+        1794442054039000000,
+        1794442054039000000
+      ],
+      "name": "receipts/mmap-old-ioctl-frame.log",
+      "path": "payload/receipts/mmap-old-ioctl-frame.log",
+      "sha256": "ca6699e40df85d85c04f5f05b3517d1c9cd1ad343dc0d317099ddeeb1bc1a2b8"
+    },
+    {
+      "bytes": 7,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/mmap-sig_hashalgo.log",
+      "identity": [
+        2080,
+        7736716,
+        33188,
+        1,
+        7,
+        1794442053995000000,
+        1794442053995000000
+      ],
+      "name": "receipts/mmap-sig_hashalgo.log",
+      "path": "payload/receipts/mmap-sig_hashalgo.log",
+      "sha256": "722f6029e0eab200f0bae0040199c7d12f1e3c361a5f514788a778bf84ecc6ec"
+    },
+    {
+      "bytes": 60,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/mmap-sig_key.log",
+      "identity": [
+        2080,
+        7736715,
+        33188,
+        1,
+        60,
+        1794442053975000000,
+        1794442053975000000
+      ],
+      "name": "receipts/mmap-sig_key.log",
+      "path": "payload/receipts/mmap-sig_key.log",
+      "sha256": "812d6c8ebe15c39f1ae965a767d35191c6f14c97bad34867e48a470f7881180a"
+    },
+    {
+      "bytes": 0,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/mmap-sign.log",
+      "identity": [
+        2080,
+        7736712,
+        33188,
+        1,
+        0,
+        1794442053656000000,
+        1794442053656000000
+      ],
+      "name": "receipts/mmap-sign.log",
+      "path": "payload/receipts/mmap-sign.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/mmap-signer.log",
+      "identity": [
+        2080,
+        7736714,
+        33188,
+        1,
+        36,
+        1794442053954000000,
+        1794442053954000000
+      ],
+      "name": "receipts/mmap-signer.log",
+      "path": "payload/receipts/mmap-signer.log",
+      "sha256": "79c9d2b44f876286786c07df753485bd4fa89a79d1c386a771b5111f77a327bb"
+    },
+    {
+      "bytes": 56,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/mmap-vermagic.log",
+      "identity": [
+        2080,
+        7736691,
+        33188,
+        1,
+        56,
+        1794442053933000000,
+        1794442053933000000
+      ],
+      "name": "receipts/mmap-vermagic.log",
+      "path": "payload/receipts/mmap-vermagic.log",
+      "sha256": "9cac3141708dfe202989cd7a9dad2e148ddf0f324432d8a2c0ac90fcb14184fc"
+    },
+    {
+      "bytes": 178565,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/receipts/result.json",
+      "identity": [
+        2080,
+        7736713,
+        33188,
+        1,
+        178565,
+        1794442058030000000,
+        1794442058065000000
+      ],
+      "name": "receipts/result.json",
+      "path": "payload/receipts/result.json",
+      "sha256": "73f57b2690b98c442160b576b757429a0090674f75f6eeafb60d7499ac473052"
+    },
+    {
+      "bytes": 602729,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/signed/kd_mmap_api_provider.ko",
+      "identity": [
+        2080,
+        7736711,
+        33188,
+        1,
+        602729,
+        1794442053667738784,
+        1794442053668000000
+      ],
+      "name": "signed.ko",
+      "path": "payload/signed.ko",
+      "sha256": "5eb94db883a0ddff654eb4dce92afd1c569a3fe7b46bd02b88f275dfcae22e06"
+    },
+    {
+      "bytes": 461,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/actual-argv.json",
+      "identity": [
+        2080,
+        7736515,
+        33188,
+        1,
+        461,
+        1794442037791700104,
+        1794442037791700104
+      ],
+      "name": "transport/actual-argv.json",
+      "path": "payload/transport/actual-argv.json",
+      "sha256": "5ec18dfe88e4483e4d35450b2268465e05b5c93038ded8ef45d4e56830a19c56"
+    },
+    {
+      "bytes": 21221,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/controller.py",
+      "identity": [
+        2080,
+        7736512,
+        33188,
+        1,
+        21221,
+        1794442037782959663,
+        1794442037782959663
+      ],
+      "name": "transport/controller.py",
+      "path": "payload/transport/controller.py",
+      "sha256": "6d166dac84dcf0d48fbaf5f4ae78411c4d34f82ec8fbc459802c912cde4f3136"
+    },
+    {
+      "bytes": 17397,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/recipe.json",
+      "identity": [
+        2080,
+        7736513,
+        33188,
+        1,
+        17397,
+        1794442037785661693,
+        1794442037785661693
+      ],
+      "name": "transport/recipe.json",
+      "path": "payload/transport/recipe.json",
+      "sha256": "ea8c428a9a82f1e4d193a33998c949e58be8e22f79e8e07dfa6231007f0341a7"
+    },
+    {
+      "bytes": 23263,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/recovery.json",
+      "identity": [
+        2080,
+        7736514,
+        33188,
+        1,
+        23263,
+        1794442037788283574,
+        1794442037788283574
+      ],
+      "name": "transport/recovery.json",
+      "path": "payload/transport/recovery.json",
+      "sha256": "7554d28d150fcc09b391200aa7474d3b871e85c128abe4202aee373decaaf0b6"
+    },
+    {
+      "bytes": 19794,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/source-sha256.json",
+      "identity": [
+        2080,
+        7736510,
+        33188,
+        1,
+        19794,
+        1794442037776224240,
+        1794442037776224240
+      ],
+      "name": "transport/source-sha256.json",
+      "path": "payload/transport/source-sha256.json",
+      "sha256": "a29e77397367173e51ae091edec94f31798d50f5b9d3b6b90ce31dda0e3b823e"
+    },
+    {
+      "bytes": 133,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/source-state.json",
+      "identity": [
+        2080,
+        7736511,
+        33188,
+        1,
+        133,
+        1794442037780000000,
+        1794442037780000000
+      ],
+      "name": "transport/source-state.json",
+      "path": "payload/transport/source-state.json",
+      "sha256": "15e35cb635d7f67350f6a297bd8231435e33e2a29ab685c9c1264a7a5b15c9b5"
+    },
+    {
+      "bytes": 1730560,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/source.tar",
+      "identity": [
+        2080,
+        7736509,
+        33188,
+        1,
+        1730560,
+        1794442037763420809,
+        1794442037763420809
+      ],
+      "name": "transport/source.tar",
+      "path": "payload/transport/source.tar",
+      "sha256": "3b2512060b7eb3cac27b3a794bb5f0dc833c6ff24cd9866218481b53832a8053"
+    },
+    {
+      "bytes": 602008,
+      "guest_path": "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/mmap-build/kd_mmap_api_provider.ko",
+      "identity": [
+        2080,
+        7736707,
+        33188,
+        1,
+        602008,
+        1794442053612000000,
+        1794442053612000000
+      ],
+      "name": "unsigned.ko",
+      "path": "payload/unsigned.ko",
+      "sha256": "e99c8d907faed6b4ec92c52fe5c2e430c1db1ebd3b9705eea088cd87b76b23e3"
+    }
+  ]
+}

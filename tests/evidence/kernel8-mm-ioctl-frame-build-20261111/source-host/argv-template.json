@@ -1,0 +1,11 @@
+[
+  "/usr/bin/python3",
+  "-B",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/controller.py",
+  "--recipe",
+  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-input-0798c1ab-01/recipe.json",
+  "--recipe-sha256",
+  "ea8c428a9a82f1e4d193a33998c949e58be8e22f79e8e07dfa6231007f0341a7",
+  "--recovery-sha256",
+  "REQUIRED_FRESH_RECOVERY_SHA256"
+]
