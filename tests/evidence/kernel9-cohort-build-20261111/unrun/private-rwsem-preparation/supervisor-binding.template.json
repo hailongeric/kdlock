@@ -1,0 +1,62 @@
+{
+  "expected_release": "7.0.0-38-kdrebuild9",
+  "family": "rwsem",
+  "kernel": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01",
+  "kernel_core_git_head": "6e486ecec398111fb5d5e30ffc76495f32f557b7",
+  "old_literal_bindings_must_not_be_reused": [
+    "K02 predecessor/cleanup receipt",
+    "kernel8 full-build receipt",
+    "a991 host-check receipt",
+    "e001 boot and4096 pre-run taint",
+    "old BuildID/GS/thunk/module hashes",
+    "family mutex branch",
+    "old frozen source manifest/state and transport-helper constants"
+  ],
+  "reference": "prior-supervisor-reference.py",
+  "reference_sha256": "625834d3f1e4f45629b2e1069049253722dba5e7e6c27ae791391bb70c7bab9a",
+  "required_rebindings": {
+    "allowed_post_module_taint": "__UNBOUND_ACTUAL_ALLOWED_POST_MODULE_TAINT__",
+    "arguments_sha256": "__UNBOUND_ACTUAL_ARGUMENTS_SHA256__",
+    "build_receipt_sha256": "__UNBOUND_ACTUAL_BUILD_RECEIPT_SHA256__",
+    "fresh_boot_id": "__UNBOUND_ACTUAL_FRESH_BOOT_ID__",
+    "gs_proof_sha256": "__UNBOUND_ACTUAL_GS_PROOF_SHA256__",
+    "idle_helper_sha256": "__UNBOUND_ACTUAL_IDLE_HELPER_SHA256__",
+    "initial_taint": "__UNBOUND_ACTUAL_INITIAL_TAINT__",
+    "linked_build_id": "__UNBOUND_ACTUAL_LINKED_BUILD_ID__",
+    "metadata_helper_sha256": "__UNBOUND_ACTUAL_METADATA_HELPER_SHA256__",
+    "module_build_receipt_sha256": "__UNBOUND_ACTUAL_MODULE_BUILD_RECEIPT_SHA256__",
+    "postboot_receipt_sha256": "__UNBOUND_ACTUAL_POSTBOOT_RECEIPT_SHA256__",
+    "recovery_receipt_sha256": "__UNBOUND_ACTUAL_RECOVERY_RECEIPT_SHA256__",
+    "supervisor_sha256": "__UNBOUND_ACTUAL_SUPERVISOR_SHA256__"
+  },
+  "required_runtime_behavior": {
+    "failure_or_timeout": "Record exact child/result/error and preserve controls; no signals or force cleanup.",
+    "family": "rwsem",
+    "fresh_boot_taint_handling": "Bind actual before taint0 and allow only the actual ordinary OOT-module4096 change; do not copy old same4096 rule.",
+    "full_c_function_return": "outside_protected_episode_scope",
+    "log_bytes": 33554432,
+    "observer_seconds": 660,
+    "ordinary_closure": [
+      "child_actual_exit0",
+      "exact_final_wire_shutdown_archive_settle_end",
+      "module_and_devices_absent",
+      "no_activity",
+      "source/kernel/protected_pins_unchanged"
+    ],
+    "output_floor_bytes": 4294967296,
+    "required_final_files": [
+      "result.json",
+      "observations-final.bin",
+      "observations-final.json",
+      "shutdown-archive.json"
+    ],
+    "root_floor_bytes": 1073741824,
+    "single_child": true,
+    "source_result": "protected_episode_completed",
+    "success_status": "protected_rwsem_jit_reader_mechanism_pass"
+  },
+  "root": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01",
+  "scope": "Private rwsem/query corrected-core regression only; not deterministic race reproduction, MM syscall validation or performance.",
+  "source_git_head": "6e486ecec398111fb5d5e30ffc76495f32f557b7",
+  "status": "NONDISPATCHABLE_REFERENCE_AND_BINDINGS_ONLY"
+}

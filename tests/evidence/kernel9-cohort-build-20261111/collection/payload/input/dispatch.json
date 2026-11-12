@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/kdlock-builds2/kdlock-main-kernel9-input-6e486ece-01/build.py",
+    "--plan-json",
+    "/mnt/kdlock-builds2/kdlock-main-kernel9-input-6e486ece-01/plan.json",
+    "--plan-sha256",
+    "0df23f4f69069b9b8dfcff3c58b69df9b4b6904f7e2abff3073ee9dd71215408",
+    "--recovery-json",
+    "/mnt/kdlock-builds2/kdlock-main-kernel9-input-6e486ece-01/recovery.json",
+    "--recovery-sha256",
+    "961b759f10bc891113e4c63199bde612c150791348b5584268881e39d5aa53f9"
+  ],
+  "pid": 2760,
+  "unix": 1794462714.47332,
+  "observer_seconds": 1900
+}

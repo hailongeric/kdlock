@@ -1,0 +1,86 @@
+{
+  "core": "6e486ecec398111fb5d5e30ffc76495f32f557b7",
+  "execution": {
+    "ast_or_project_tests": false,
+    "helper_executed": false,
+    "helper_imported": false,
+    "install_arm_or_reboot": false,
+    "repo_writes": 0,
+    "vm_commands": 0
+  },
+  "expected_normal_boot": "f1442f01-e060-46fa-a480-da508d7ce8a9",
+  "helper": {
+    "bytes": 16571,
+    "main_guard": "Unconditional NOT_DISPATCHABLE_SOURCE_PREPARATION refusal; main is not called.",
+    "path": "/tmp/kdlock-kernel9-install-preparation-20261111/install.py",
+    "sha256": "4d0110bc8789e9bc4303fd046bbdf208754210edbb22a44eb2900b78438cbabc",
+    "source_review_complete": false
+  },
+  "kernel9_build_result": "Parent reported actual0 separately; no uncollected receipt hash is invented here.",
+  "not_created": [
+    "reference-install8.py",
+    "reference-checks8.py",
+    "candidate-entry.cfg",
+    "actual configuration/receipt bindings",
+    "reviewed phase argv"
+  ],
+  "read_only_derivation_inputs": {
+    "/tmp/kdlock-kdrebuild8-checks.py": {
+      "bytes": 19562,
+      "sha256": "1726d01a4794f82ca8cb1a92218a70dd59272fa2e5e8bdd27a266bd31d92a472"
+    },
+    "/tmp/kdlock-kdrebuild8-install.py": {
+      "bytes": 35167,
+      "sha256": "409f640efa69425ee8b8849c4f1897b9df83e4c1a7eccbea2b596ab7bb99a99b"
+    },
+    "/tmp/kdlock-kernel9-cohort-build-20261111/build.py": {
+      "bytes": 30668,
+      "sha256": "0535aa78d56e019b11de988e217416110176645fb9f25fce4dca9427881e0d57"
+    },
+    "/tmp/kdlock-kernel9-cohort-build-20261111/plan.json": {
+      "bytes": 23909,
+      "sha256": "0df23f4f69069b9b8dfcff3c58b69df9b4b6904f7e2abff3073ee9dd71215408"
+    }
+  },
+  "release": "7.0.0-38-kdrebuild9",
+  "remaining": [
+    "Finish and independently source-review the draft before considering any later activation.",
+    "Remove the inert checked-driver conditional placeholder.",
+    "Finish installed-module file/directory fsync handling inherited from prior recipe.",
+    "Materialize and pin exact reference/menu/config inputs; bind only fresh actual kernel9 build/GS/thunk/recovery/default-menu receipts.",
+    "Verify all stage/verify/install/arm records and fresh namespace semantics; no phase has executed."
+  ],
+  "scope": "Install-only source draft, stopped at parent direction after separate runtime-preparation platform review stop. No replacement rwsem helper.",
+  "selected_recipe_constraints": {
+    "declared_dependency_names": [
+      "virtio_pci",
+      "virtio_scsi",
+      "sd_mod",
+      "ext4",
+      "virtio_net",
+      "efivarfs",
+      "vfat",
+      "nls_iso8859_1"
+    ],
+    "initrd_dependency_names": [
+      "virtio_pci",
+      "virtio_scsi",
+      "sd_mod",
+      "ext4"
+    ],
+    "no_global_update_grub_or_cleanup": true,
+    "no_reboot_dispatch": true,
+    "phases": [
+      "stage",
+      "verify",
+      "install",
+      "arm"
+    ],
+    "preserve": "All old kernels/modules/snapshots/default and exact existing custom.cfg prefix",
+    "root_reserve_bytes": 1073741824,
+    "root_working_bytes": "UNBOUND explicit actual allowance",
+    "single_module": "kernel/fs/nls/nls_iso8859-1.ko"
+  },
+  "status": "INCOMPLETE_NOT_DISPATCHABLE_SOURCE_PREPARATION",
+  "target": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01"
+}

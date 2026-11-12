@@ -1,0 +1,95 @@
+{
+  "argv": {
+    "build": [
+      "/usr/bin/make",
+      "-C",
+      "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+      "O=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+      "M=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/input/tests/kernel/rwsem/payload",
+      "MO=/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/module-build",
+      "KERNELRELEASE=7.0.0-38-kdrebuild9",
+      "-j8",
+      "V=1",
+      "modules"
+    ],
+    "modinfo": [
+      [
+        "/usr/sbin/modinfo",
+        "-F",
+        "vermagic",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/signed/kd_rwsem_runtime_fixture.ko"
+      ],
+      [
+        "/usr/sbin/modinfo",
+        "-F",
+        "signer",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/signed/kd_rwsem_runtime_fixture.ko"
+      ],
+      [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_key",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/signed/kd_rwsem_runtime_fixture.ko"
+      ],
+      [
+        "/usr/sbin/modinfo",
+        "-F",
+        "sig_hashalgo",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/signed/kd_rwsem_runtime_fixture.ko"
+      ],
+      [
+        "/usr/sbin/modinfo",
+        "-F",
+        "depends",
+        "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/signed/kd_rwsem_runtime_fixture.ko"
+      ]
+    ],
+    "sign": [
+      "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/scripts/sign-file",
+      "sha512",
+      "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.pem",
+      "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/certs/signing_key.x509",
+      "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/signed/kd_rwsem_runtime_fixture.ko"
+    ]
+  },
+  "between_build_and_sign": {
+    "destination_signed": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/signed/kd_rwsem_runtime_fixture.ko",
+    "operation": "exclusive lossless copy, fsync and retain both raw hashes",
+    "source_unsigned": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/module-build/kd_rwsem_runtime_fixture.ko"
+  },
+  "bounds": {
+    "check_seconds": 60,
+    "log_bytes": 536870912,
+    "module_seconds": 180,
+    "output_floor_bytes": 4294967296,
+    "root_floor_bytes": 1073741824,
+    "total_seconds": 900
+  },
+  "expected_modinfo": {
+    "depends": "",
+    "sig_hashalgo": "sha512",
+    "sig_key": "nonempty",
+    "signer": "nonempty",
+    "vermagic_prefix": "7.0.0-38-kdrebuild9"
+  },
+  "fresh_inputs": {
+    "full_build_receipt_sha256": "__UNBOUND_ACTUAL_FULL_BUILD_RECEIPT_SHA256__",
+    "linked_kernel16_identity_sha256": "__UNBOUND_ACTUAL_LINKED_KERNEL16_IDENTITY_SHA256__",
+    "make_sha256": "__UNBOUND_ACTUAL_MAKE_SHA256__",
+    "modinfo_sha256": "__UNBOUND_ACTUAL_MODINFO_SHA256__",
+    "protected_identity_sha256": "__UNBOUND_ACTUAL_PROTECTED_IDENTITY_SHA256__",
+    "public_certificate_sha256": "__UNBOUND_ACTUAL_PUBLIC_CERTIFICATE_SHA256__",
+    "recovery_receipt_sha256": "__UNBOUND_ACTUAL_RECOVERY_RECEIPT_SHA256__",
+    "sign_tool_sha256": "__UNBOUND_ACTUAL_SIGN_TOOL_SHA256__",
+    "source78_identity_sha256": "__UNBOUND_ACTUAL_SOURCE78_IDENTITY_SHA256__"
+  },
+  "historical_warning_policy": "Retain actual diagnostics; prior rwsem build had frame4352 and prototype warnings, not a warning-free baseline.",
+  "kernel_build": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+  "kernel_core_git_head": "6e486ecec398111fb5d5e30ffc76495f32f557b7",
+  "kernel_source": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source",
+  "other_modules_or_tests_selected": [],
+  "private_key_data_recorded": false,
+  "source_git_head": "6e486ecec398111fb5d5e30ffc76495f32f557b7",
+  "source_root": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/private-rwsem-regression-01/input",
+  "status": "NONDISPATCHABLE_PENDING_LINKED_KERNEL9_RECEIPTS"
+}

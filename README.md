@@ -26,8 +26,9 @@ completed two rounds and 81 typed queries, then failed with a writer-acquire
 `-EBUSY` BUG and kernel panic. Its state and receipts are preserved; the guest
 was recovered to the normal kernel. Source correction `6e486ece` removes a
 post-publication cohort-batch refusal while retaining exact identity and
-lifetime checks. Static review is complete; corrected-kernel validation is
-separate from the failed run.
+lifetime checks. Static review and the [corrected kernel9 build](tests/evidence/kernel9-cohort-build-20261111/README.md)
+passed. Runtime validation is blocked by platform content review of helper
+preparation; kernel9 remains uninstalled. The failed run keeps its own verdict.
 
 The current source adds ordinary sleepable rwsem read/write operations and
 `downgrade_write`, plus plain rwlock read/write operations in IRQ-enabled task

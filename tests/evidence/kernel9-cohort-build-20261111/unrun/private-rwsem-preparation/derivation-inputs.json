@@ -1,0 +1,34 @@
+{
+  "/home/eric/vm/vm-shared/kdlock-main/tests/evidence/kernel8-affected-build-20261111/collection/payload/attempt01/receipts/result.json": {
+    "bytes": 200738,
+    "sha256": "223392b879bd1aaad6ffc3e40f322706be8bd94039abd0a50c16afe238ffa37c"
+  },
+  "/home/eric/vm/vm-shared/kdlock-main/tests/evidence/kernel8-mm-prefix-20261111/source-export/kernel-package-0d42063e.json": {
+    "bytes": 7763,
+    "sha256": "c7d1afa19ab56c0fa8bf21f0232bf1c8199751407a44e918a4b8c5c133966da9"
+  },
+  "/home/eric/vm/vm-shared/kdlock-main/tests/evidence/kernel8-private-regressions-20261111/source-host/controller.py": {
+    "bytes": 10956,
+    "sha256": "625834d3f1e4f45629b2e1069049253722dba5e7e6c27ae791391bb70c7bab9a"
+  },
+  "/home/eric/vm/vm-shared/kdlock-main/tests/evidence/kernel8-private-regressions-20261111/source-host/rwsem-arguments.json": {
+    "bytes": 2558,
+    "sha256": "fc808b241bf9669ef28e9c54f0c57247d9645aaee3dc2a11562fa37e6a4b04d4"
+  },
+  "/home/eric/vm/vm-shared/kdlock-main/tests/kernel/rwsem/payload/Kbuild": {
+    "bytes": 373,
+    "sha256": "5d8c79de5903f340319b3421d54ebafaf4864985509cb5196f619598b8adb032"
+  },
+  "/home/eric/vm/vm-shared/kdlock-main/tests/kernel/rwsem/run_rwsem_runtime_fixture.py": {
+    "bytes": 289,
+    "sha256": "c7f14017e2b53bc85c89a3ca2924c6da4c39a814416c2ae39f1ce00ccae750b5"
+  },
+  "/tmp/kdlock-kernel8-fixture-source-0798c1ab-01/source-sha256.json": {
+    "bytes": 19794,
+    "sha256": "a29e77397367173e51ae091edec94f31798d50f5b9d3b6b90ce31dda0e3b823e"
+  },
+  "/tmp/kdlock-kernel8-fixture-source-0798c1ab-01/source-state.json": {
+    "bytes": 133,
+    "sha256": "15e35cb635d7f67350f6a297bd8231435e33e2a29ab685c9c1264a7a5b15c9b5"
+  }
+}

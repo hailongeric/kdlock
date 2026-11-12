@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin_sha256": "3367b61828b4812859ed3dcb4bd6acf73330bee51adead6fb9c304b0aee52460",
+  "observer_seconds": 1950,
+  "scope": "One fresh source/O build, mutex object, bzImage, single NLS; no install/boot/test"
+}

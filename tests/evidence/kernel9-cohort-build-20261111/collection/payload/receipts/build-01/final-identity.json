@@ -1,0 +1,103 @@
+{
+  "build": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build",
+  "build_id": "8198ffae09db584dce9b71d92b5743a4146ba80a",
+  "files": {
+    ".config": {
+      "bytes": 308548,
+      "sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483"
+    },
+    "Module.symvers": {
+      "bytes": 953755,
+      "sha256": "ae12c954017277f2c9d87205f916167d8461955d957d3d1c99a30cd75ba2c43a"
+    },
+    "System.map": {
+      "bytes": 10618921,
+      "sha256": "f41a1010ba69eecdd2654afa61ffa4005f90e8ad0f8d4cb5d6cfaae23a6bd866"
+    },
+    "arch/x86/boot/bzImage": {
+      "bytes": 17334784,
+      "sha256": "1ac2719f88f187648d4bfde36c5b61eaf4c3ad10b0f42fbddbb14db0f544c366"
+    },
+    "certs/signing_key.x509": {
+      "bytes": 1324,
+      "sha256": "0e3f40e4d4fa0c3d75fd350a5aaa99af4959e2d64de86d06e45bc30336f7d281"
+    },
+    "fs/nls/nls_iso8859-1.ko": {
+      "bytes": 336464,
+      "sha256": "9576d9b1d453a5c820915e2a0f7e66569045105ab939b5ef4cc70ee525a31962"
+    },
+    "include/config/auto.conf": {
+      "bytes": 251819,
+      "sha256": "d731f7137d4af0af8468041db3b03292d174ed184d3916fa9162a29cb8f63243"
+    },
+    "include/config/kernel.release": {
+      "bytes": 20,
+      "sha256": "f18ccd16f638554a46fb2d4c070ee7775e87e33e9ce606e51899765ffd768a69"
+    },
+    "include/generated/autoconf.h": {
+      "bytes": 381211,
+      "sha256": "ba620d16cd34149765ecae7223c519826d89e1bd51ef996f25af495b7cf18314"
+    },
+    "include/generated/utsrelease.h": {
+      "bytes": 42,
+      "sha256": "86c5364efb6d9ac616265b48afd3496d055c276d84fc0d2ce25769d83dfe08ae"
+    },
+    "include/generated/utsversion.h": {
+      "bytes": 74,
+      "sha256": "dc3647b93d5b3dffedca2b6b5e6fc1779357ddb45aba5222b834c78f9b6a3e6c"
+    },
+    "modules.builtin": {
+      "bytes": 10431,
+      "sha256": "ef55d7bc5528d2c01f38fc0d8f6473c75e14ec62349898f6529be9bbac871366"
+    },
+    "modules.builtin.modinfo": {
+      "bytes": 159067,
+      "sha256": "f173376892f5d1a020884e4c6062b51e7cf26718928e1225be5e4fb507c34d0c"
+    },
+    "modules.order": {
+      "bytes": 23,
+      "sha256": "1677c25390fae9177f7760e08b471621e6c06b376705f1bd56232e071e32dcfe"
+    },
+    "vmlinux": {
+      "bytes": 511421424,
+      "sha256": "0fe0fe930e391bb263fdcfa4ba9940eee225280a668021cb11a269a691cb8c15"
+    },
+    "vmlinux.symvers": {
+      "bytes": 953755,
+      "sha256": "ae12c954017277f2c9d87205f916167d8461955d957d3d1c99a30cd75ba2c43a"
+    }
+  },
+  "gs_symbols": {
+    "__per_cpu_start": 18446744071633424384,
+    "const_current_task": 18446744071633522712,
+    "current_task": 18446744071633522712
+  },
+  "gs_witness": {
+    "current_task": "0xffffffff84425018",
+    "function": "kd_mutex_release_request",
+    "instruction_hex": "65488b054545f102",
+    "line": "ffffffff81510acb:\t65 48 8b 05 45 45 f1 02 \tmov    rax,QWORD PTR gs:[rip+0x2f14545]        # ffffffff84425018 <current_task>",
+    "site": "0xffffffff81510acb",
+    "source_next_ip": "0xffffffff81510ad3"
+  },
+  "kernelrelease": "7.0.0-38-kdrebuild9",
+  "module_count": 1,
+  "module_scope": "Only the declared NLS boot closure was built.",
+  "module_vermagic": "7.0.0-38-kdrebuild9 SMP preempt mod_unload modversions",
+  "return_symbols": {
+    "__x86_return_thunk": {
+      "address": 18446744071603416816,
+      "bytes": 6,
+      "hex": "c390909090cc",
+      "sha256": "bdf176e5f04f9ff2f0eee0cc934104e7027457b9869327c2248bf4465e55a356"
+    },
+    "its_return_thunk": {
+      "address": 18446744071603416800,
+      "bytes": 2,
+      "hex": "c3cc",
+      "sha256": "56de62c1837575efee31915828000fde2932e3c34c06b498f648ecaf6bae8d7c"
+    }
+  },
+  "scope": "Linked-image and selected-module evidence; no boot, API runtime or performance result.",
+  "source": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/source"
+}

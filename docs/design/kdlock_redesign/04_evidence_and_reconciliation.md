@@ -142,6 +142,16 @@ and exact batch identity while permitting predecessor initialization before
 cohort await. Static review is complete; this failure archive does not validate
 the correction or establish the failed request's exact queue interleaving.
 
+The [corrected kernel9 build](../../../tests/evidence/kernel9-cohort-build-20261111/README.md)
+compiled the changed mutex object and full image plus its single NLS module.
+All twelve commands returned zero, with the 54 full-kernel warning lines and
+one configuration warning retained. Source/core/old-output/boot identities
+remained unchanged, and the guest stayed on the recovered normal kernel.
+Kernel9 was not installed or booted. Platform content review stopped the
+delegated rwsem validation-helper preparation; it was not retried or recreated.
+No corrected-core runtime result, deterministic race reproduction or additional
+MM workload follows from this build.
+
 ## 1 Active authority and scope
 
 Use the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins).

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "ssh",
+    "-T",
+    "-p",
+    "2222",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "root@10.176.26.71",
+    "python3",
+    "-B",
+    "-"
+  ],
+  "stdin_sha256": "38c7a14fa3dd61b715c5fb68505aab5c81fa8ec3eb693a71f308cda8fe711bb9"
+}

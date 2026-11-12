@@ -1,0 +1,52 @@
+{
+  "build_receipt_sha256": "c931ed00177c974ff77a0d9d506cb0feceb443cef9c2590f2723e95f2aba637d",
+  "command_returncodes": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "complete_kernel_warning_counts": {
+    "compiler": 22,
+    "locale": 6,
+    "objtool": 26
+  },
+  "complete_kernel_warning_lines": 54,
+  "kernel_build_status": "KERNEL9_BUILD_AND_LINKED_IDENTITY_COMPLETE",
+  "kernel_elf_retained_on_guest": {
+    "bytes": 511421424,
+    "path": "/mnt/kdlock-builds2/kdlock-main-kernel9-6e486ece-01/build/vmlinux",
+    "sha256": "0fe0fe930e391bb263fdcfa4ba9940eee225280a668021cb11a269a691cb8c15"
+  },
+  "linked_build_id": "8198ffae09db584dce9b71d92b5743a4146ba80a",
+  "no_install_boot_or_runtime_test": true,
+  "normal_boot_unchanged": true,
+  "original_driver_diagnostic_counts": {
+    "kernel": 22,
+    "mutex-object": 0,
+    "nls": 0,
+    "olddefconfig": 1
+  },
+  "project_code_or_tests_executed_on_source_host": false,
+  "protected_inputs_unchanged": true,
+  "raw_guest_bytes": 65113715,
+  "raw_guest_files": 53,
+  "runtime_validation": "blocked_by_platform_content_review",
+  "source_commit": "6e486ecec398111fb5d5e30ffc76495f32f557b7",
+  "status": "SAVED_BUILD_RECORDS_AND_TRANSPORT_VERIFIED",
+  "whitespace": {
+    "all_paths_preserved_copies_or_executed_archive_helper": true,
+    "bytes_normalized": false,
+    "complete_raw_returncode": 2,
+    "exact_raw_diagnostics": 33,
+    "maintained_prose_returncode": 0
+  }
+}
