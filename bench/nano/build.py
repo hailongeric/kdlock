@@ -17,19 +17,26 @@ def digest(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
+def validate_kernel_release(expected, running, built):
+    if not expected or running != expected or built != expected:
+        raise RuntimeError('exact running/build kernel release differs')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo', type=Path, required=True)
     parser.add_argument('--kernel-source', type=Path, required=True)
     parser.add_argument('--kernel-output', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--expected-release', default='7.0.0-38-kdrebuild9',
+                        help='Exact running/build release; default preserves the kernel9 baseline')
     parser.add_argument('--backends', nargs='+', choices=('native', 'kdlock', 'tclock'),
                         default=['native', 'kdlock', 'tclock'])
     args = parser.parse_args()
     if len(args.backends) != len(set(args.backends)):
         raise ValueError('duplicate backend selection')
-    if os.uname().release != '7.0.0-38-kdrebuild9':
-        raise RuntimeError('exact kernel9 VM required')
+    validate_kernel_release(args.expected_release, os.uname().release,
+                            (args.kernel_output / 'include/config/kernel.release').read_text().strip())
     args.output.mkdir()
     result = dict(status='STARTED', kernel_release=os.uname().release, backends=args.backends,
                   commands=[], modules={})
@@ -75,7 +82,8 @@ def main():
             raise RuntimeError('missing tool: ' + name)
         result['tools'][name] = dict(path=path, resolved=str(Path(path).resolve()), sha256=digest(path))
     result['kernel_files'] = {name: digest(args.kernel_output / name)
-                              for name in ('vmlinux', '.config', 'Module.symvers', 'certs/signing_key.x509')}
+                              for name in ('vmlinux', '.config', 'Module.symvers', 'certs/signing_key.x509',
+                                           'include/config/kernel.release')}
     sign = args.kernel_output / 'scripts/sign-file'
     result['sign_tool_sha256'] = digest(sign)
     save('started.json', result)
@@ -85,7 +93,7 @@ def main():
         directory.mkdir()
         command('build-' + key, [result['tools']['make']['path'], '-C', args.kernel_source,
             'O=' + str(args.kernel_output), 'M=' + str(source), 'MO=' + str(directory),
-            'KERNELRELEASE=7.0.0-38-kdrebuild9', '-j8', 'W=1', 'V=1', *extra, 'modules'])
+            'KERNELRELEASE=' + args.expected_release, '-j8', 'W=1', 'V=1', *extra, 'modules'])
         unsigned = directory / name
         if sorted(directory.glob('*.ko')) != [unsigned]:
             raise ValueError('unexpected module outputs: ' + key)
@@ -101,7 +109,7 @@ def main():
             [result['tools']['modinfo']['path'], '-F', field, signed], 30).strip()
             for field in ('vermagic', 'signer', 'sig_key', 'sig_hashalgo', 'depends')}
         metadata = item['metadata']
-        if (metadata['vermagic'].split()[0] != '7.0.0-38-kdrebuild9' or
+        if (metadata['vermagic'].split()[0] != args.expected_release or
                 not metadata['signer'] or not metadata['sig_key'] or metadata['sig_hashalgo'] != 'sha512'):
             raise ValueError('signed module identity differs: ' + key)
         result['modules'][key] = item

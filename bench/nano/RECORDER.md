@@ -1,5 +1,9 @@
 # Single-worker recorder comparison
 
+This guide fixes the recorder-control experiment at `b74e6510` on kernel9.
+For a separately built collection candidate, use [the candidate handoff](COLLECTION.md)
+with its explicit build/boot identity; do not apply the kernel9-only commands below.
+
 This is a source-only handoff to the separate **bench new version kdlock**
 session. Source changes remain in the restructure session. That test session
 owns VM inspection, frozen staging, builds and live measurements, and must not

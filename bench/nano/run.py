@@ -56,6 +56,19 @@ def validate_prerequisites(prior, scope, family, build_sha256, boot_id):
                 'all six current functional lanes required')
 
 
+def validate_kernel_receipt(receipt, expected_release, kernel_sha256):
+    require(receipt['status'] == 'NANO_MODULES_BUILT_SIGNED', 'module build incomplete')
+    require(receipt['kernel_release'] == expected_release and
+            receipt['kernel_files']['vmlinux'] == kernel_sha256, 'module build/kernel ELF identity differs')
+
+
+def validate_builtin_source(symbols, expected_start, code):
+    matches = [int(fields[0], 16) for fields in map(str.split, symbols.splitlines())
+               if len(fields) == 3 and fields[1] in ('t', 'T') and fields[2] == '__x86_return_thunk']
+    require(expected_start != 0 and matches == [expected_start], 'live return thunk address differs')
+    require(code == b'\xc3\xcc', 'captured return thunk differs')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo', type=Path, required=True)
@@ -66,13 +79,18 @@ def main():
     parser.add_argument('--stage', choices=('functional', 'timing'), required=True)
     parser.add_argument('--scope', choices=('comparison', 'recorder-pair'), default='comparison')
     parser.add_argument('--boot-id', required=True)
+    parser.add_argument('--expected-release', default='7.0.0-38-kdrebuild9',
+                        help='Exact running/module-build release; default preserves the kernel9 baseline')
+    parser.add_argument('--builtin-source-start', type=lambda value: int(value, 0),
+                        default=0xffffffff8276eee0,
+                        help='Exact live/ELF __x86_return_thunk address; default is kernel9')
     parser.add_argument('--kernel-elf', type=Path, required=True)
     parser.add_argument('--gs-proof', type=Path, required=True)
     parser.add_argument('--prerequisite', type=Path, action='append', default=[])
     args = parser.parse_args()
     require(args.scope != 'recorder-pair' or args.backend == 'kdlock',
             'recorder-pair scope requires the KD backend')
-    require(os.uname().release == '7.0.0-38-kdrebuild9' and
+    require(os.uname().release == args.expected_release and
             Path('/proc/sys/kernel/random/boot_id').read_text().strip() == args.boot_id,
             'running kernel/boot identity differs')
     require(int(Path('/proc/sys/kernel/tainted').read_text()) == 4096, 'unexpected prior kernel taint')
@@ -85,7 +103,8 @@ def main():
     from compiler import Compiler, symbol_size, executable_elf_bytes
     from evidence import validate_kd
     receipt = json.loads(args.build_receipt.read_text())
-    require(receipt['status'] == 'NANO_MODULES_BUILT_SIGNED', 'module build incomplete')
+    kernel_sha256 = sha(args.kernel_elf)
+    validate_kernel_receipt(receipt, args.expected_release, kernel_sha256)
     if args.stage == 'timing':
         prior = [json.loads(p.read_text()) for p in args.prerequisite]
         validate_prerequisites(prior, args.scope, args.family, sha(args.build_receipt), args.boot_id)
@@ -93,6 +112,7 @@ def main():
                scope=args.scope, recorder_modes=['on', 'off'] if args.scope == 'recorder-pair' else ['on'],
                profile='mutex-throughput' if args.family == 'mutex' else 'rwsem-throughput-mixed',
                boot_id=args.boot_id, kernel_release=os.uname().release,
+               kernel_elf_sha256=kernel_sha256,
                build_receipt_sha256=sha(args.build_receipt), measurements=[], commands=[],
                workload='single 64-byte-padded counter, deterministic mix, post256, bulk ioctl',
                instrumentation='bounded per-origin exact request/completion records for KD; original TCLock counters',
@@ -151,11 +171,12 @@ def main():
         if args.backend == 'kdlock':
             proof = json.loads(args.gs_proof.read_text())
             require(proof['verified_for_running_kernel'] and proof['boot_id'] == args.boot_id and
-                    sha(args.kernel_elf) == proof['kernel_elf_sha256'], 'exact live GS/kernel proof differs')
+                    kernel_sha256 == proof['kernel_elf_sha256'], 'exact live GS/kernel proof differs')
             gs = int(proof['current_task_gs_offset'], 0)
-            builtin_start, builtin_size = 0xffffffff8276eee0, 2
+            builtin_start, builtin_size = args.builtin_source_start, 2
             builtin = executable_elf_bytes(args.kernel_elf, builtin_start, builtin_size)
-            require(builtin.hex() == 'c3cc', 'captured return thunk differs')
+            validate_builtin_source(Path('/proc/kallsyms').read_text(), builtin_start, builtin)
+            row['builtin_source_start'] = builtin_start
             write_size = symbol_size(item['signed'], 'rb_write', '/usr/bin/nm', 60)
             read_size = symbol_size(item['signed'], 'rb_read', '/usr/bin/nm', 60)
             version = 'nano-' + item['signed_sha256'] + '-' + proof['kernel_elf_sha256']
