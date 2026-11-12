@@ -149,11 +149,15 @@ run, broader context/progress obligations and the full acceptance matrix.
 
 ## Delegated syscall integration in progress
 
-Actual delegated/JIT mmap/munmap remains unvalidated. Source changes after the
-kernel6 receipts add integer capture, managed cancellation and queue-only
-storage retirement. Source `0c97cd34` has independent source review and the
-separate kernel7 focused/full build receipt. No kernel7 boot, mechanism result
-or real-MM JIT result is recorded here.
+The [bounded kernel8 syscall run](../../tests/evidence/kernel8-mm-prefix-20261111/README.md)
+records actual mmap/munmap completion with 144 and 103 borrowed JIT prefixes.
+Four source regions stop at staged CALLs to omitted `do_mmap` and
+`do_vmi_munmap`: their CALL stack effects are already applied, and original W
+resumes at the unexecuted callee entry without replay. Full protected-MM JIT
+completion remains unvalidated. Source changes after the kernel6 receipts add
+integer capture, managed cancellation and queue-only storage retirement. Source
+`0c97cd34` has independent source review and the separate kernel7 focused/full
+build receipt. No kernel7 boot or kernel7 mechanism/MM JIT result is recorded.
 
 `kd_linux_rwsem_bind` always sets `killable_source_calls=false`, preserving the
 interim original-task native route. The new cold
@@ -184,8 +188,19 @@ provider, runtime and original owner state before binding. Its module opt-in
 defaults to false. ABI1 retains its existing layouts and native-only behavior.
 Actual activity must still come from userspace mmap/munmap syscalls. The
 provider with the generic context frontiers has separate
-[compilation and signing evidence](../../tests/evidence/kernel8-provider-build-runner-ast-20261111/README.md).
-It was not loaded; actual ABI2 MM profile execution remains unvalidated.
+[earlier compilation evidence](../../tests/evidence/kernel8-provider-build-runner-ast-20261111/README.md).
+The [later ioctl fix](../../tests/evidence/kernel8-mm-ioctl-frame-build-20261111/README.md)
+reduces its fixed RSP reservation from 1,912 to 704 bytes without warnings.
+That provider was loaded for the scoped prefix run only. The original JIT,
+GS lowering, canonical S_W and generic rwsem path remain unchanged.
+
+The trial declares 64 KiB of control space within a 128 KiB auxiliary allocation.
+Its [44,024-byte conditional budget](../../tests/evidence/kernel8-aux-context-review-20261111/README.md)
+includes measured KD frames and two assumed inclusive 16 KiB native allowances.
+The user selected those native-helper/callback allowances as an experimental
+premise. Their footprints and the complete auxiliary requirement are not proved
+by this result. Independent scheduler, IRQ, unwinder and handback review remains
+separate from that premise. These values are trial inputs, not deployment defaults.
 
 The selected cancellation policy distinguishes an ungranted requester C from
 an already-granted W. Selection or an MCS turn is not a grant. Actual grant

@@ -37,9 +37,10 @@ with original failures retained. No kernel7 boot, behavioral or MM-delegation
 receipt is established by that build. The [generic integration guide](../../../kernel/integration/RWSEM.md#delegated-syscall-integration-in-progress)
 records the selected current-borrow drain policy, exact excluded read-holder
 cancellation dependency, retained queue actors and remaining owner-record,
-context and reached-frontier limits. The optional MM profile remains disabled
-by default and unvalidated. Kernel6's native MM and private JIT receipts retain
-their recorded earlier source scope.
+context and reached-frontier limits. At that checkpoint, the optional MM profile
+was disabled by default and unvalidated; the later bounded prefix result is
+recorded below. Kernel6's native MM and private JIT receipts retain their
+recorded earlier source scope.
 
 The subsequent generic query core `0d42063e` appends physical locked and
 write-locked predicates as explicit typed operations. It preserves native C
@@ -81,6 +82,10 @@ The [provider-only build](../../../tests/evidence/kernel8-provider-build-runner-
 compiled and signed that metadata provider, retaining its 1,912-byte frame
 warning; the provider was not loaded and no MM body executed. The same archive
 separately records the single changed-runner syntax check. The
+[later provider ioctl build](../../../tests/evidence/kernel8-mm-ioctl-frame-build-20261111/README.md)
+removes that warning and measures its fixed RSP reservation at 704 bytes,
+compared with 1,912 bytes before the cold input-allocation change. Neither
+compilation receipt supplies runtime MM evidence. The
 [completion and boundary checker receipts](../../../tests/evidence/kernel8-host-completion-boundaries-20261111/README.md)
 record synthetic tests and syntax checks only. The
 [linked MM context review](../../../tests/evidence/kernel8-mm-context-review-20261111/README.md)
@@ -92,6 +97,31 @@ continuation engine remain unselected and unimplemented. Safe handback before
 unsupported context effects remains in force. Meaningful protected MM
 completion and physical task/context obligations are not established by a
 returned prefix, same-mm placement or a stack switch.
+
+A later [actual kernel8 syscall run](../../../tests/evidence/kernel8-mm-prefix-20261111/README.md)
+records borrowed source prefixes and native completion on fresh boot
+`2ae5991e-d024-48ac-9f86-24a0a8910172`. Three 8-by-8 rounds complete 192 worker
+iterations, with 576 mmap and 384 munmap successes. Raw source records join
+144 mmap and 103 munmap foreign entries to later source CALLs, their producing
+image and exact native callee-entry handback. Their first exits are CALL_STAGED:
+CALL stack effects are retained once, and the source CALL is not replayed. Native
+MM bodies remain unchanged on original W.
+
+The run has 28,743 events without overflow, one publication across two cycles,
+zero coverage ACKs and 247 distinct facts archived and settled. Original owner
+leave, physical/source/slot retirement, channel closure, provider unload and
+final idle checks complete. Both full protected-MM completion counts remain
+zero. Source progress is observed; individual instruction counts, physical
+batch-chain length and performance are not measured. Earlier K04 and failed
+receipts retain their own verdicts.
+
+The [AUX review](../../../tests/evidence/kernel8-aux-context-review-20261111/README.md)
+records measured compiled KD frames plus the separately accepted experimental
+native-helper/IRQ allowance. Its conditional total is 44,024 bytes within the
+trial's 64 KiB control requirement and 128 KiB allocation; unverified native
+callback footprints and the complete auxiliary requirement remain explicit.
+This prefix stops before the omitted MM helpers, so it selects no CPU reservation,
+native-context service or new continuation engine for full protected execution.
 
 ## 1 Active authority and scope
 

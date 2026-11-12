@@ -12,10 +12,12 @@ non-PREEMPT_RT**.
 
 The later kernel8 checkpoint records passing native rwsem API and actual
 mmap/munmap syscall checks, independent private rwsem-query and mutex
-regressions, and the bounded managed-cancellation fixture. The metadata-only MM
-provider compiled and signed but was not loaded. Full generated protected-MM
-completion still requires an unselected native-context progress protocol; safe
-handback before unsupported context effects remains in force. Exact inputs,
+regressions, and the bounded managed-cancellation fixture. A later
+[actual syscall run](tests/evidence/kernel8-mm-prefix-20261111/README.md)
+records 144 borrowed mmap prefixes and 103 munmap prefixes with native
+completion and ordinary cleanup. Full generated protected-MM completion still
+requires an unselected native-context progress protocol; handback before
+unsupported context effects remains in force. Exact inputs,
 earlier failures and evidence limits are in the
 [current checkpoint](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#current-evidenced-checkpoint).
 

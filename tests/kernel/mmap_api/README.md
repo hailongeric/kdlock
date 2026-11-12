@@ -11,6 +11,22 @@ passed with four workers and 64 iterations each, including actual native
 downgrades, exact retirement and ordinary provider unload. This supplies no
 generated-execution or performance result.
 
+The later [kernel8 ABI2 syscall run](../../evidence/kernel8-mm-prefix-20261111/README.md)
+passed three rounds of eight workers and eight iterations each: 192 completed
+worker iterations, 576 mmap successes and 384 munmap successes. Raw records
+join 144 borrowed mmap prefixes and 103 munmap prefixes to their actual source
+CALLs and native callee-entry handback. All 247 pending facts were archived and
+settled without coverage ACK, followed by ordinary unload. Full protected-MM
+completion remained false for both roots. Incidental and arena calls are outside
+the worker counts; no performance or physical batch-chain claim follows.
+
+The [provider frame fix](../../evidence/kernel8-mm-ioctl-frame-build-20261111/README.md)
+compiled without warnings and reduced the fixed ioctl RSP reservation from
+1,912 to 704 bytes. The trial used 64 KiB control space inside 128 KiB auxiliary storage
+under the user's explicit experimental native-helper stack premise; this is not
+a measured all-kernel or complete auxiliary bound.
+[AUX review and premise](../../evidence/kernel8-aux-context-review-20261111/README.md).
+
 The caller supplies all three required positive decimal arguments:
 
 ```text
@@ -175,7 +191,7 @@ establish hardware-current, per-CPU, scheduler, RCU, uaccess, fault-fixup or
 auxiliary-stack equivalence. Immutable complete dependencies and the declared
 context/workload contracts remain caller obligations.
 
-The new source-only native-context table
+The shared native-context table
 supplies the existing runtime boundary interface with four SPECIAL entry
 addresses: `__rcu_read_lock`, `__rcu_read_unlock`, `_raw_spin_lock` and
 `_raw_spin_unlock`. Page-table mapping enters RCU before its later PTL spin
@@ -245,12 +261,13 @@ UP_WRITE and current-JIT episode completion for mmap, or the same retained
 grant's downgrade/read tail/UP_READ physical ACK followed by its selected
 post-UP_READ handback for munmap. [Linked kernel8 evidence](../../evidence/kernel8-build-20261111/README.md)
 
-The new [completion reporter](completion.py) and runner integration remain
-source-only until their fresh VM syntax and focused checks run. The reporter
-uses bounded ELF64 symbol metadata only to attribute the two actual MM root
-CALL spans. Per-round frozen event prefixes retain positive and rejected
-request-incarnation candidates. A prior handback or non-typed miss prevents a
-completion claim. Every accepted query must return to its exact post-CALL entry.
+The [completion reporter](completion.py) and runner integration have separate
+[synthetic and syntax receipts](../../evidence/kernel8-host-completion-boundaries-20261111/README.md).
+The actual prefix run retains zero protected-completion counts; it does not
+validate positive full-MM witnesses. The reporter uses bounded ELF64 symbol
+metadata only to attribute the two actual MM root CALL spans. Per-round frozen
+event prefixes retain positive and rejected request-incarnation candidates.
+A prior handback or non-typed miss prevents a completion claim. Every accepted query must return to its exact post-CALL entry.
 Physical ACK, release users, request slot and shared owner retirement are joined
 separately. The existing prefix verdict and cleanup workflow are unchanged.
 
