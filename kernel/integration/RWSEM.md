@@ -279,6 +279,47 @@ WRITE, retained logical READ with physical WRITE, and native real READ after
 downgrade. These query observations do not establish generated MM completion.
 
 
+## Incremental source admission before native context
+
+The [source-step review](../../tests/evidence/kernel8-mm-source-review-20261111/README.md)
+separates the passing four-region run from the next configuration-only step.
+The provider already captures arbitrary finite actual-address regions under
+its immutable-dependency contract; ordinary direct CALL translation and typed
+query handling already exist. No new execution path is needed for the first
+expansion. Repeating the old image cannot discover omitted text: direct-CALL
+facts are nonobservations, and compilation reads only its fixed source epoch.
+
+| Proposed next input | Exact kernel8 scope | Expected progress, conditional on actual captured bytes and construction |
+| --- | --- | --- |
+| Add `do_mmap` to the four retained regions | `0xffffffff818321c0`, 1,656 bytes; five regions totaling 3,214 bytes | Writer-state query at `0xffffffff81832246`, return `0xffffffff8183224b`; the successful ordinary anonymous path then calls omitted `__get_unmapped_area` at `0xffffffff81832349` |
+| Later add `do_vmi_munmap` | Reached target `0xffffffff81858430`; exact linked span and runtime bytes still needed | Native source validates the range, finds a VMA and enters `do_vmi_align_munmap`; compiled helper placement and earlier context effects still need inspection |
+
+These are proposed inputs, not an activated profile. The saved `do_mmap` ELF
+starts with a CALL to `__fentry__`; the previous runtime capture of the outer
+wrappers instead contains patched NOPs. The new provider's actual capture is
+authoritative. An omitted fentry or other helper remains an ordinary exact
+handback, not permission to substitute an ELF body or a native helper model.
+Keep every existing SPECIAL boundary and the original JIT, GS and S_W bridge.
+
+Cold admission needs a new source version/configuration and exact region list,
+with the host region bound raised from four to five. The extra source bytes
+fit the prior 4,096-byte source capacity; SOURCE transport grows by 1,672 bytes
+before any version-length change. Generated code, source tables, entry tables
+and discovery limits still need their actual bounded construction checks.
+The existing runner can learn the exact post-query reentry from QUERY_RESULT;
+a first image without that entry hands back there after completing the query
+once. This is reentry admission, not replay of the enclosing helper.
+
+The fresh AUX source scope includes the query branch (16 total named KD
+functions) and early helper returns through typed root unlock and collection
+(at most 19), followed by the existing 27-function terminal tail. Independent
+source and saved-weight review includes all these branches; their compiled
+units fit the measured maximum. Virtual helper frames use W's source stack.
+Under the same unmeasured native/IRQ premises, the proposed five-region
+conditional total remains 44,024 bytes. The older four-region artifact is unchanged; no full AUX bound,
+new runtime compatibility or callback-tree measurement follows. Broader helper
+admission needs another scope review before reusing this calculation.
+
 ## Native RCU and page-table context boundary
 
 The optional MM profile supplies four generic permanent SPECIAL entries:
@@ -300,17 +341,45 @@ paths have their own releases. A cut only before spin acquisition would
 already be inside RCU. These linked bytes describe a possible source path;
 they are not evidence that a generated syscall reached it.
 
-Full generated protected-MM completion requires a generic context protocol
-beyond these frontiers. Physical C must retain exact native RCU/PTL duties,
-while any immediate first-unexecuted native handback must let W execute its
-suffix with valid local context and route each matching release to C through
-its final ACK. C cannot schedule while its native PTL preemption pin is open;
-if W can run only on that occupied CPU, waiting for W to release cannot make
-progress. Direct native W unlock balances the CPU executing W and does not
-automatically discharge C's preemption duty.
-The sleepable outer rwsem pump, root-family atomic reconciliation, same mm
-and origin GS substitution do not supply this route. Declining before the
-first context effect preserves the existing exact handback. Delaying that
-handback or releasing and reacquiring native context would change the selected
-contract. Neither policy is introduced by the frontier table, and this source
-lane supplies no full protected-MM completion claim.
+This is the normal-PTE interval, not a globally first MM context effect.
+The source route through `do_vmi_align_munmap` gathers/splits VMAs, allocates
+maple-tree storage and updates that tree before `vms_complete_munmap_vmas`.
+The latter can downgrade before clearing PTEs. The retained-writer selection
+keeps the same physical WRITE grant through the logical read tail and its
+matching up_read. TLB gathering and notifier callbacks precede the normal-PTE
+walk; huge-PMD branches can take another lock earlier. These deeper orders
+come from source/disassembly, not an internal branch trace of the passing run.
+
+The required invariant is continuous valid context protection and an exact
+matching release. Custody on C is one possible implementation, not an inherent
+consequence of W owning S_W. Translating `__rcu_read_lock` unchanged currently
+updates logical W's nesting through current_task lowering while the scheduler
+still runs C. Translating the plain-spin helper can update the captured origin
+CPU's GS preemption counter. Neither establishes valid physical enrollment.
+By contrast, native service on C applies the duty to actual C and its CPU;
+ordinary native W release does not automatically discharge that duty.
+
+AUX solves a different concrete problem. W waits off its lent source stack;
+C's physical wrapper stack remains separate from virtual W SP/BP. Native
+scheduling saves/restores the actual auxiliary RSP, so AUX does not inherently
+forbid sleepable control. It does not transfer scheduler current, RCU enrollment,
+preemption pins, lazy-MMU or TLB/CR3 duties. Ordinary PREEMPT_RCU permits
+preemption but not explicit blocking in this configuration. A live native PTL
+additionally pins C: if W can run only on that occupied CPU, C cannot wait for
+W's native suffix to reach release. The sleepable rwsem pump, same mm, origin
+GS and root-family atomic reconciliation do not close this progress gap.
+
+| Alternative beyond the preserved frontier | Required proof and resource cost | Current status |
+| --- | --- | --- |
+| Keep pre-effect handback and admit more ordinary text before it | Existing native W route; finite copied source/code and exact context cuts | Supported next direction; does not complete protected-MM JIT |
+| C applies and retains native duties while W runs its exact suffix | Preallocated exact per-scope custody, W-local context admission, routed release/ACK and a guaranteed runnable W route while C remains pinned; extra concurrent CPU capacity may be necessary | Unselected context/progress implementation; available CPU count alone is not a guarantee |
+| Continue the native suffix on C | Full native-helper/task-context compatibility and exact source/code lifetimes; can avoid the two-actor wait but changes original-W handback | Requires explicit user selection; not implemented |
+| Enter a proved closed context interval | Every reachable callback, branch, failure and resource exit must already have a valid route; larger coverage alone is insufficient | No such proof exists; postponing an already-required handback would change the contract |
+
+No decision is needed to extend source before the retained frontiers. Crossing
+an unsupported context effect requires selecting and proving a context/progress
+route; CPU reservation or native-on-C continuation cannot be inferred from the
+stack design. Cancellation still stops new borrowers and drains current duties
+before C returns EINTR; queue-only exit cannot retire an open physical scope.
+No path may replay effects, drop/reacquire protection around a progressed suffix,
+or release source/task/stack/image storage before its exact final user.

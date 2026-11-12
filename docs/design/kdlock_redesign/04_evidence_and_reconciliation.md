@@ -123,6 +123,14 @@ callback footprints and the complete auxiliary requirement remain explicit.
 This prefix stops before the omitted MM helpers, so it selects no CPU reservation,
 native-context service or new continuation engine for full protected execution.
 
+The subsequent [source-step review](../../../tests/evidence/kernel8-mm-source-review-20261111/README.md)
+identifies configuration-only `do_mmap` admission and separately reviews its
+existing typed-query and early-return/root-unlock control branches. It preserves
+the native-context frontiers and supplies no new code, byte capture,
+construction or runtime result. The
+[integration guide](../../../kernel/integration/RWSEM.md#incremental-source-admission-before-native-context)
+records the exact next source scope and the remaining task/CPU progress choices.
+
 ## 1 Active authority and scope
 
 Use the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins).
