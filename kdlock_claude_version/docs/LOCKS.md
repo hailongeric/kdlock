@@ -15,15 +15,37 @@ inlined release would let a delegated section run past its end. With
 
 | Family | Delegable acquire (assembly stubs) | Local-only |
 | --- | --- | --- |
-| spinlock | `kd_spin_lock`, `_irq`, `_irqsave`, `_bh` | `kd_raw_spin_lock*`, `kd_spin_trylock{,_bh}` |
-| rwlock | `kd_write_lock`, `_irq`, `_irqsave`, `_bh` | `kd_read_lock*`, `kd_read_trylock`, `kd_write_trylock` |
-| mutex | `kd_mutex_lock`, `_interruptible`, `_killable` | `kd_mutex_trylock` |
+| spinlock | `kd_spin_lock`, `_irq`, `_irqsave`, `_bh` | `kd_raw_spin_lock{,_irq,_irqsave,_bh}`, `kd_spin_trylock{,_bh,_irq,_irqsave}`, `kd_arch_spin_{lock,trylock,unlock}` |
+| rwlock | `kd_write_lock`, `_irq`, `_irqsave`, `_bh` | `kd_read_lock{,_irq,_irqsave,_bh}`, `kd_read_trylock`, `kd_write_trylock{,_irqsave}`, `kd_arch_{read,write}_{lock,trylock,unlock}` |
+| mutex | `kd_mutex_lock`, `_interruptible`, `_killable`, `_io` | `kd_mutex_trylock` |
+| ww_mutex | none | `kd_ww_mutex_lock{,_interruptible}`, `kd_ww_mutex_lock_slow{,_interruptible}`, `kd_ww_mutex_trylock` |
 | rwsem | `kd_down_write`, `_killable` | `kd_down_read{,_interruptible,_killable}`, `kd_down_read_trylock`, `kd_down_write_trylock`, `kd_downgrade_write` |
 
 Releases are ordinary C functions (`kd_spin_unlock*`, `kd_write_unlock*`,
-`kd_read_unlock*`, `kd_mutex_unlock`, `kd_up_write`, `kd_up_read`). The
-translator knows them by symbol: a call to one with `rdi` equal to the session
-root ends the section.
+`kd_read_unlock*`, `kd_mutex_unlock`, `kd_ww_mutex_unlock`, `kd_up_write`,
+`kd_up_read`). The translator knows them by symbol: a call to one with `rdi`
+equal to the session root ends the section.
+
+**Coverage.** These are all operations the Linux 7.0 headers declare for
+`spinlock_t`, `raw_spinlock_t`, `rwlock_t`, `struct mutex`, `struct ww_mutex`
+and `struct rw_semaphore`; `integration/kd_linux_map.h` maps each native name.
+The lockdep-only variants (`_nested`, `_nest_lock`) are the plain operations
+without lockdep, and the reader `_non_owner` forms are the plain reader
+operations because no reader owner is recorded. Helpers: `kd_spin_is_locked`,
+`kd_spin_is_contended`, `kd_rwlock_is_contended`, `kd_mutex_is_locked`,
+`kd_mutex_get_owner`, `kd_ww_mutex_is_locked`, `kd_rwsem_is_locked`,
+`kd_rwsem_is_write_locked`, `kd_rwsem_is_contended`. `bench/kd_bench.c`
+(`KDB_IOC_APITEST`) calls every variant once and checks lock state, interrupt
+flag and preempt count against what the native variant leaves.
+
+**What "delegable" means for the sleeping and signal variants.** A caller
+of `kd_mutex_lock_interruptible/_killable/_io` or `kd_down_write_killable`
+whose section is delegated gets 0, like an uncontended caller. Signals are
+looked at only once the caller parks, where the native rules apply
+(`-EINTR`); `_io` accounts the parked wait as I/O wait. Readers, trylocks and
+ww mutexes never publish a continuation: a reader runs concurrently with
+other readers, a trylock does not wait, and a ww acquisition may have to
+back off.
 
 **All users of one object must use kdlock.** Queue encodings and layouts are
 not interchangeable with the native locks; replacing a lock type means
@@ -127,7 +149,8 @@ frontier exit and ends the delegation at that call.
 | Mutex waiting | optimistic spin then sleep | MCS spin while owner runs, then park; handoff flag |
 | Spin waiters in IRQ context | normal | never published, plain queue |
 | Recursive lock of one object | deadlock | deadlock |
-| `ww_mutex`, `rt_mutex`, lockdep, PREEMPT_RT, debug locks | supported | not provided; Kconfig refuses RT, lockdep and lock debugging |
+| `ww_mutex` deadlock avoidance | wound-wait or wait-die per class | wait-die for every class; callers see the same `-EDEADLK` / `-EALREADY` contract |
+| `rt_mutex`, lockdep, PREEMPT_RT, debug locks | supported | `rt_mutex` is untouched (it does not use the replaced types); Kconfig refuses RT, lockdep and lock debugging |
 
 ## 7. Tunables
 

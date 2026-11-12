@@ -45,15 +45,14 @@ map to the `__KD_*` initialisers in `kd_types.h`.
 3. `spin_lock*()` on `spinlock_t` maps to the delegable `kd_spin_lock*()`;
    `raw_spin_lock*()` maps to `kd_raw_spin_lock*()`. Both share the release
    functions.
-4. Callers of the `arch_spin_*` level (a handful in tracing, printk and
-   architecture code) manage preemption themselves. Give them
-   `kd_q_trylock_fifo()`/`kd_q_lock_plain()`/`kd_q_unlock()` on
-   `&lock->q` (from `kd_internal.h`), which leave the preempt count alone.
-5. Not provided and left to follow-up work: `ww_mutex`, `rt_mutex`,
-   `percpu_rwsem` internals that reach into `rw_semaphore`, mutex/rwsem
-   owner inspection helpers (`mutex_get_owner`, `rwsem_is_contended`,
-   optimistic-spin tunables), and `lockref`'s cmpxchg fast path check
-   (`arch_spin_value_unlocked` is provided).
+4. Callers of the `arch_spin_*` and `arch_read/write_*` level (a handful
+   in tracing, printk and architecture code) manage preemption themselves.
+   They map to `kd_arch_*`, which leave the preempt count alone.
+5. `kd_linux_map.h` covers every operation the Linux 7.0 headers declare
+   for the six lock types, `ww_mutex` included. Not provided: `rwsem_owner`
+   and the optimistic-spin tunables, and `lockref`'s cmpxchg fast path
+   check (`arch_spin_value_unlocked` is provided). `rt_mutex` and the locks
+   built on raw spinlocks need no change.
 
 ## Required configuration
 

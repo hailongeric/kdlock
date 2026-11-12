@@ -22,7 +22,8 @@ def _ioc(direction, nr, size):
     return (direction << 30) | (size << 16) | (ord("K") << 8) | nr
 
 
-INFO_FMT = "<II" + "Q" * 17 + "QQII" * 48
+KD_MAX_SYMS = 96
+INFO_FMT = "<II" + "Q" * 17 + "QQII" * KD_MAX_SYMS
 READ_FMT = "<QQQ"
 ALLOC_FMT = "<QQII"
 LOAD_FMT = "<IIQQQQ"
@@ -38,7 +39,7 @@ KD_IOC_SITE_DROP = _ioc(_IOC_WRITE, 5, struct.calcsize(SITE_FMT))
 KD_IOC_ENABLE = _ioc(_IOC_WRITE, 6, 4)
 KD_IOC_TEXT = _ioc(_IOC_READ | _IOC_WRITE, 7, struct.calcsize(TEXT_FMT))
 
-KD_ABI_VERSION = 2
+KD_ABI_VERSION = 3
 
 # Exit codes (kd_uapi.h).
 KD_X_UNLOCK, KD_X_ACQUIRE, KD_X_MISS_CODE, KD_X_MISS_IND = 1, 2, 3, 4
@@ -46,7 +47,7 @@ KD_X_MISS_RET, KD_X_FRONTIER, KD_X_BUDGET = 5, 6, 7
 KD_X_UNLOCK_ANC, KD_X_NESTED = 8, 9
 KD_X_TAIL = 0x10000
 
-KD_SYM_UNLOCK, KD_SYM_ACQUIRE, KD_SYM_NESTED = 1, 2, 3
+KD_SYM_UNLOCK, KD_SYM_ACQUIRE, KD_SYM_NESTED, KD_SYM_LOCAL = 1, 2, 3, 4
 
 KD_EV_REQUEST, KD_EV_MISS_CODE, KD_EV_MISS_IND, KD_EV_MISS_RET, KD_EV_SITE_OFF = 1, 2, 3, 4, 5
 KD_EV_TEXT_GONE = 6

@@ -42,7 +42,7 @@
 #define KD_CPU_exit_code	80
 #define KD_CPU_busy		84
 #define KD_CPU_wait_stack	88
-#define KD_CPU_regs		96
+#define KD_CPU_regs		128
 
 /* struct kd_mutex */
 #define KD_MUTEX_owner		8
@@ -65,5 +65,11 @@
 #define KD_WAIT_RESUMED		1	/* section was executed elsewhere; resume from packet */
 #define KD_WAIT_SLEEP		(-1)	/* left the queue; take the sleeping path */
 #define KD_WAIT_SLEEP_HELD	(-2)	/* rwsem: queue mutex held, must sleep for count */
+
+/*
+ * Returned by the sleepable-class *_slow functions instead of 0 or -errno:
+ * the caller should publish its continuation; preemption is still off.
+ */
+#define KD_SLOW_OFFER		1
 
 #endif /* KD_ASM_H */

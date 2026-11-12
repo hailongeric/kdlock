@@ -93,12 +93,13 @@ static const struct kd_family kd_rwsem_family = {
 	.post		= kd_rwsem_post,
 	.release	= kd_rwsem_release_queue,
 	.keeps_q	= true,
+	.always_deleg	= true,
 };
 
 /* Called by the entry stub on the wait stack. */
 int kd_down_write_wait(struct kd_rwsem *sem)
 {
-	int ret = kd_wait_sleepable(&sem->m, sem, &kd_rwsem_family, NULL, NULL);
+	int ret = kd_wait_sleepable(&sem->m, sem, &kd_rwsem_family, NULL, NULL, true);
 
 	if (ret == KD_WAIT_RESUMED)
 		kd_finish_resume(1);
@@ -116,7 +117,7 @@ int kd_down_write_nested(struct kd_rwsem *sem, struct kd_regs *r, void *entry)
 
 	if (kd_down_write_trylock_raw(sem))
 		return KD_WAIT_LOCAL;
-	ret = kd_wait_sleepable(&sem->m, sem, &kd_rwsem_family, r, entry);
+	ret = kd_wait_sleepable(&sem->m, sem, &kd_rwsem_family, r, entry, true);
 	if (ret == KD_WAIT_SLEEP_HELD) {
 		atomic_long_andnot(KD_RWSEM_WWAIT, &sem->count);
 		kd_mutex_unlock(&sem->m);
@@ -158,7 +159,7 @@ static int __kd_down_write_sleep(struct kd_rwsem *sem, int why, unsigned int sta
 
 	might_sleep();
 	if (why != KD_WAIT_SLEEP_HELD) {
-		ret = kd_mutex_sleep(&sem->m, state);
+		ret = kd_mutex_sleep(&sem->m, state, NULL);
 		if (ret)
 			return ret;
 		atomic_long_or(KD_RWSEM_WWAIT, &sem->count);
@@ -183,6 +184,37 @@ int kd_down_write_sleep_killable(struct kd_rwsem *sem, int why)
 	return __kd_down_write_sleep(sem, why, TASK_KILLABLE);
 }
 
+/*
+ * Slow path of the delegable write entries, on the caller's own stack; see
+ * __kd_mutex_lock_slow(). A contended writer publishes its continuation
+ * whenever it can (kd_family.always_deleg).
+ */
+static __always_inline int __kd_down_write_slow(struct kd_rwsem *sem, unsigned long site,
+						unsigned int state)
+{
+	int ret;
+
+	might_sleep();
+	preempt_disable();
+	if (kd_can_offer(site))
+		return KD_SLOW_OFFER;
+	ret = kd_wait_sleepable(&sem->m, sem, &kd_rwsem_family, NULL, NULL, false);
+	preempt_enable();
+	if (ret == KD_WAIT_LOCAL)
+		return 0;
+	return __kd_down_write_sleep(sem, ret, state);
+}
+
+int kd_down_write_slow(struct kd_rwsem *sem, unsigned long site)
+{
+	return __kd_down_write_slow(sem, site, TASK_UNINTERRUPTIBLE);
+}
+
+int kd_down_write_slow_killable(struct kd_rwsem *sem, unsigned long site)
+{
+	return __kd_down_write_slow(sem, site, TASK_KILLABLE);
+}
+
 bool kd_down_write_trylock_raw(struct kd_rwsem *sem)
 {
 	long c = 0;
@@ -198,7 +230,8 @@ EXPORT_SYMBOL(kd_down_write_trylock);
 
 void kd_up_write(struct kd_rwsem *sem)
 {
-	long c = atomic_long_fetch_andnot_release(KD_RWSEM_WLOCKED, &sem->count);
+	/* The writer bit is set, so subtracting it clears it: one locked add. */
+	long c = atomic_long_fetch_sub_release(KD_RWSEM_WLOCKED, &sem->count);
 
 	if (unlikely(c & KD_RWSEM_NEEDWAKE))
 		kd_rwsem_wake(sem);
@@ -282,7 +315,7 @@ static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state)
 		return 0;
 
 	/* Queue behind earlier writers and readers. */
-	ret = kd_mutex_sleep(&sem->m, state);
+	ret = kd_mutex_sleep(&sem->m, state, NULL);
 	if (ret)
 		return ret;
 	/*

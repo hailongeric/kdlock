@@ -70,16 +70,27 @@ layout):
 Static initialisers (`__MUTEX_INITIALIZER`, `__RWSEM_INITIALIZER`,
 `__ARCH_SPIN_LOCK_UNLOCKED`) map to the `__KD_*` initialisers.
 
-`arch_spin_*` callers (tracing, printk, architecture code) manage preemption
-themselves; give them `kd_q_trylock_fifo()` / `kd_q_lock_plain()` /
-`kd_q_unlock()` on `&lock->q`, which leave the preempt count alone.
+`arch_spin_*` and `arch_read/write_*` callers (tracing, printk, architecture
+code) manage preemption themselves; they map to `kd_arch_*`, which leave the
+preempt count alone and never publish.
+
+### API coverage
+
+`kd_linux_map.h` has a counterpart for every operation the Linux 7.0 headers
+declare for `spinlock_t`, `raw_spinlock_t`, `rwlock_t`, `struct mutex`,
+`struct ww_mutex` and `struct rw_semaphore`, including the `arch_` level, the
+trylock/interrupt combinations, `mutex_lock_io`, the lockdep aliases, the
+reader `_non_owner` forms and the state helpers (see LOCKS.md 1). The list
+was taken from the 7.0 headers in the VM, and each kd variant is exercised by
+the bench module's API test. It has not been compiled into a switched kernel.
 
 ### Not provided
 
-`ww_mutex`, `rt_mutex`, `percpu_rwsem` internals that reach into
-`rw_semaphore`, mutex/rwsem owner helpers (`mutex_get_owner`,
-`rwsem_is_contended`, optimistic-spin tunables), `lockref`'s cmpxchg fast path
-check beyond `arch_spin_value_unlocked`, lockdep and debug lock checks.
+`rwsem_owner` and the optimistic-spin tunables (no counterpart: readers and
+write holders record no owner), `lockref`'s cmpxchg fast path check beyond
+`arch_spin_value_unlocked`, lockdep and debug lock checks. `rt_mutex`,
+`percpu_rwsem`, `semaphore`, `local_lock`, `bit_spin_lock` and seqlocks need
+nothing: they are built on raw spinlocks or on the operations above.
 
 ## 5. Symbols and memory the code depends on
 

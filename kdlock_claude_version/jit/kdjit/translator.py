@@ -43,7 +43,7 @@ from collections import defaultdict
 import capstone
 from capstone import x86_const as X
 
-from .kernel import (MASK64, KD_SYM_ACQUIRE, KD_SYM_NESTED, KD_SYM_UNLOCK, KD_X_ACQUIRE,
+from .kernel import (MASK64, KD_SYM_ACQUIRE, KD_SYM_LOCAL, KD_SYM_NESTED, KD_SYM_UNLOCK, KD_X_ACQUIRE,
                      KD_X_FRONTIER, KD_X_MISS_CODE, KD_X_MISS_IND, KD_X_MISS_RET, KD_X_TAIL,
                      KD_X_UNLOCK, KD_X_UNLOCK_ANC)
 
@@ -55,8 +55,9 @@ DEFAULT_CONFIG = {
     "call_depth": 5,
     "max_insns": 60000,
     # Callees run natively: leaf helpers that do not depend on the current
-    # task or on return addresses. Every kd_ lock entry is added
-    # automatically; those act for the origin by themselves.
+    # task or on return addresses. The kd_ functions that may be called
+    # natively come from the kernel's own list (KD_SYM_LOCAL); they act for
+    # the origin by themselves. Any other kd_ function is a frontier.
     "native": [
         "memcpy", "__memcpy", "memset", "__memset", "memmove", "__memmove",
         "memcmp", "memchr", "memchr_inv", "strlen", "strnlen", "strcmp", "strncmp",
@@ -270,6 +271,8 @@ class Translator:
                 return "acquire", op
             if cls == KD_SYM_NESTED:
                 return "nested", alt
+            if cls == KD_SYM_LOCAL:
+                return "native", 0
         names = self.kv.names(target)
         for name in names:
             if name in self.skip:
@@ -282,8 +285,10 @@ class Translator:
             if _RET_THUNK.search(name):
                 return "ret", 0
         for name in names:
-            if name in self.native or name.startswith("kd_"):
+            if name in self.native:
                 return "native", 0
+            if name.startswith("kd_"):
+                return "frontier", 0
         if not self.kv.in_text(target):
             reg = self._thunk_reg(target)
             if reg is not None:

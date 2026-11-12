@@ -39,6 +39,54 @@ core_param(kd_batch, kd_batch, uint, 0644);
 bool kd_numa __read_mostly = true;
 core_param(kd_numa, kd_numa, bool, 0644);
 
+/*
+ * Adaptive delegation.
+ *
+ * Delegation pays off only while the combiner keeps finding the next
+ * waiter queued: then the lock's data stays in one cache and a section
+ * costs the combiner little more than its body. With a short queue the
+ * combiner outruns its waiters, and every section costs a lock handover
+ * plus the transfer of a continuation, which is more than the native lock
+ * pays (measured: spin, 1 line, 4 workers: 0.67 of Native with every
+ * waiter delegated).
+ *
+ * So a spinlock or mutex starts in plain mode. There a contended caller
+ * waits as on the native lock: same algorithm, on its own stack, nothing
+ * published. A queue head samples how many waiters are queued behind it
+ * (kd_q_depth()) and switches the lock to delegation mode when there are
+ * at least kd_deleg_enter (spinlock) or kd_deleg_enter_sleep (mutex). From
+ * then on contended callers publish their continuation. A combiner
+ * switches the lock back when fewer than kd_deleg_exit waiters are queued
+ * behind it.
+ *
+ * The defaults come from an A/B in one boot (bench/results/kdclaude,
+ * ab34enter): a mutex gains from delegation at a smaller depth than a
+ * spinlock (16-line section, 6 workers: +27% with 3 instead of 4), while
+ * a spinlock entered at depth 3 or 4 loses 2-3% at 4 and 5 workers. The
+ * break-even depth really depends on the section length, which nothing
+ * here measures; see docs/DIFFERENCES.md.
+ *
+ * rwlock and rwsem writers always delegate (kd_family.always_deleg).
+ * kd_adapt=0 keeps every lock in delegation mode.
+ */
+bool kd_adapt __read_mostly = true;
+core_param(kd_adapt, kd_adapt, bool, 0644);
+unsigned int kd_deleg_enter __read_mostly = 5;
+core_param(kd_deleg_enter, kd_deleg_enter, uint, 0644);
+unsigned int kd_deleg_enter_sleep __read_mostly = 3;
+core_param(kd_deleg_enter_sleep, kd_deleg_enter_sleep, uint, 0644);
+unsigned int kd_deleg_exit __read_mostly = 2;
+core_param(kd_deleg_exit, kd_deleg_exit, uint, 0644);
+
+/*
+ * Measuring the queue means reading other waiters' nodes, which the plain
+ * path otherwise never does, so it is sampled: once per KD_PROBE_PERIOD
+ * contended acquisitions of a CPU in plain mode, and once per
+ * KD_VOTE_PERIOD sections of a session (whose nodes are needed soon anyway).
+ */
+#define KD_PROBE_PERIOD		128	/* power of two */
+#define KD_VOTE_PERIOD		32
+
 #define KD_WAIT_STACK_ORDER	2	/* 16 KiB; interrupts taken while waiting land here */
 #define KD_EXEC_PIN		32	/* extra preempt count while executing a section */
 #define KD_OWNER_POLL		1024	/* queued sleepable waiter: owner check interval */
@@ -93,6 +141,11 @@ static_assert(KD_ASM_OP_NEST_SPIN == KD_OP_NEST_SPIN);
 static_assert(KD_ASM_OP_NEST_WRITE == KD_OP_NEST_WRITE);
 static_assert(KD_MAX_ROOTS <= 8);	/* kd_regs.released is one byte */
 static_assert(KD_MAX_NODES == 4);	/* two index bits in the tail encoding */
+static_assert(offsetof(struct kd_qlock, pending) == 1 && offsetof(struct kd_qlock, tail) == 2);
+static_assert(sizeof(struct kd_node) == SMP_CACHE_BYTES);
+static_assert(sizeof(struct kd_regs) <= 4 * SMP_CACHE_BYTES);	/* kd_session() prefetches four lines */
+static_assert(offsetof(struct kd_cpu, anc) + 12 <= KD_BLOCK);
+static_assert(!(offsetof(struct kd_cpu, nodes) % KD_BLOCK));
 
 /* Called from the stubs on the caller's own stack to drop the internal pin. */
 noinline void kd_unpin(void)
@@ -403,6 +456,45 @@ static __always_inline struct kd_regs *kd_packet_guess(struct kd_node *n)
 }
 
 /*
+ * Record the mode of the lock behind @q. Spin class: the holder's lock
+ * byte (the caller holds the lock). Sleepable class: a flag.
+ */
+static void kd_mode_set(struct kd_qlock *q, bool sleepable, bool on)
+{
+	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
+
+	if (sleepable) {
+		if (on)
+			atomic_or(KD_QF_DELEG << KD_QF_SHIFT, &q->val);
+		else
+			atomic_andnot(KD_QF_DELEG << KD_QF_SHIFT, &q->val);
+	} else {
+		u8 lv = READ_ONCE(q->locked);
+
+		WRITE_ONCE(q->locked, on ? lv | KD_Q_DELEG : lv & ~KD_Q_DELEG);
+	}
+	kd_stat_inc(kc, on ? KD_STAT_MODE_ENTER : KD_STAT_MODE_EXIT);
+}
+
+/*
+ * A queue head in plain mode: is the queue behind @me deep enough to
+ * delegate? Sampled, because the answer costs a read of the newest
+ * waiter's node, which the plain path does not otherwise touch.
+ */
+static __always_inline bool kd_probe_enter(struct kd_cpu *kc, struct kd_node *me,
+					   bool sleepable)
+{
+	int enter;
+
+	if (!static_branch_likely(&kd_delegation))
+		return false;
+	if (kc->probe++ & (KD_PROBE_PERIOD - 1))
+		return false;
+	enter = sleepable ? READ_ONCE(kd_deleg_enter_sleep) : READ_ONCE(kd_deleg_enter);
+	return kd_q_depth(me, enter) >= enter;
+}
+
+/*
  * Combining session. @me is the queue head and holds the full grant on
  * @root. Execute queued waiters' sections until the budget is used up, a
  * waiter that cannot be delegated, or a handback.
@@ -429,6 +521,11 @@ static __always_inline struct kd_regs *kd_packet_guess(struct kd_node *n)
  * @budget counts waiters served or passed over. The caller shares it
  * between the sessions of one wait so that handbacks cannot extend it.
  *
+ * Mode. The session counts the waiters still queued behind it, every
+ * KD_VOTE_PERIOD sections and when it ends. Below kd_deleg_exit the lock
+ * goes back to plain mode and *@deleg is cleared, so that the caller
+ * promotes its successor accordingly.
+ *
  * Sessions nest: this function is also reached from kd_exec_one() when the
  * executor becomes head of an inner lock's queue. kd_cpu.depth bounds that
  * recursion; at the limit the head just takes the lock. The passed-over
@@ -436,12 +533,15 @@ static __always_inline struct kd_regs *kd_packet_guess(struct kd_node *n)
  */
 static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 		       const struct kd_family *f, bool sleepable,
-		       unsigned int *budget)
+		       unsigned int *budget, bool *deleg)
 {
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_node *n, *nn, *first = NULL, *last = NULL;
 	bool numa = READ_ONCE(kd_numa);
-	bool handed = false, ran = false;
+	bool adapt = READ_ONCE(kd_adapt) && !(f && f->always_deleg);
+	bool handed = false, leave = false;
+	unsigned int served = 0, passed = 0;
+	int exit_below = READ_ONCE(kd_deleg_exit);
 	struct kd_regs *guess;
 
 	if (!static_branch_likely(&kd_delegation) || !in_task() ||
@@ -488,6 +588,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 				first = n;
 			last = n;
 			++*budget;
+			passed++;
 			kd_stat_inc(kc, KD_STAT_NUMA_DEFERRED);
 			continue;
 		}
@@ -529,6 +630,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 				prefetchw(guess);
 				prefetchw((void *)guess + 64);
 				prefetchw((void *)guess + 128);
+				prefetchw((void *)guess + 192);
 			}
 		}
 
@@ -540,24 +642,57 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 				prefetchw(nr);
 				prefetchw((void *)nr + 64);
 				prefetchw((void *)nr + 128);
+				prefetchw((void *)nr + 192);
 			}
 		}
 		kd_q_detach(q, me, n);
 		smp_store_release(&n->state, KD_N_RESUME);
 		++*budget;
-		if (!ran) {
-			ran = true;
+		if (!served++)
 			kd_stat_inc(kc, KD_STAT_SESSIONS);
-		}
 		if (handed)
 			break;
+		if (adapt && !(served % KD_VOTE_PERIOD) &&
+		    kd_q_depth(me, exit_below) + (int)passed < exit_below) {
+			leave = true;
+			break;
+		}
 	}
 	if (first)
 		kd_q_splice_front(q, me, first, last);
+	/*
+	 * A handback leaves the lock with the origin; the mode is judged by
+	 * the next session.
+	 */
+	if (adapt && !handed &&
+	    (leave || kd_q_depth(me, exit_below) < exit_below)) {
+		kd_mode_set(q, sleepable, false);
+		*deleg = false;
+	}
 	return handed;
 }
 
 /* ---- waiter side ----------------------------------------------------------- */
+
+/*
+ * May a contended caller at call site @rip publish its continuation now?
+ * Preemption is off. A site without generated code is counted, so that
+ * the translator is asked for the ones that matter.
+ */
+bool kd_can_offer(unsigned long rip)
+{
+	struct kd_site *site;
+
+	if (!static_branch_likely(&kd_delegation) || !in_task() ||
+	    raw_cpu_read(kd_cpu.busy))
+		return false;
+	site = kd_site_find(rip);
+	if (!site) {
+		kd_site_request(rip);
+		return false;
+	}
+	return READ_ONCE(site->entry) != NULL;
+}
 
 /*
  * Decide whether this waiter can be delegated and, if so, complete its
@@ -630,51 +765,133 @@ void kd_finish_resume(int pin)
 		__preempt_count_sub(-d);
 }
 
-static void kd_node_init(struct kd_node *n, int cpu, int idx)
+static __always_inline void kd_node_init(struct kd_node *n, int cpu, int idx)
 {
 	n->next = NULL;
 	n->tail = kd_tail(cpu, idx);
-	n->nid = cpu_to_node(cpu);
 	WRITE_ONCE(n->state, KD_N_WAIT);
 }
 
 /*
- * Queue for @q without publishing a continuation: interrupt context,
- * raw locks, internal wait locks, and CPUs that cannot publish right now.
- * Preemption is off. Never combines.
+ * Queue for the spin-class word @q without publishing a continuation, and
+ * take the lock: the queue part of the native queued spinlock. Preemption
+ * is off. The caller has been through kd_q_pending().
+ *
+ * This is the whole contended path in plain mode, and the path of every
+ * caller that can never be delegated: raw locks, internal wait locks,
+ * rwlock readers, interrupt context. A waiter queued here never combines;
+ * a session ends at its node (->entry is NULL: kd_wait_spin() clears it
+ * again whenever it gives a node back).
+ *
+ * @probe: the lock is a delegable one, so this head may switch it to
+ * delegation mode. The mode otherwise travels with the head role
+ * (KD_N_HEAD_D), also through waiters that do not take part in it.
+ * Returns whether the lock was taken in delegation mode.
  */
-void kd_q_lock_plain(struct kd_qlock *q)
+static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe)
 {
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
-	struct kd_node *me;
-	int idx = kc->nr_nodes;
+	struct kd_node *me, *next;
+	u8 lv = KD_Q_LOCKED;
+	int idx = kd_nr_nodes(kc);
 
 	if (unlikely(idx >= KD_MAX_NODES)) {
-		while (!kd_q_trylock(q))
+		/* As the native lock does when it runs out of nodes. */
+		while (!kd_q_trylock_fifo_read(q))
 			cpu_relax();
-		return;
+		return false;
 	}
-	kc->nr_nodes++;
+	kd_nr_nodes(kc)++;
 	/* An interrupt taken from here on must see the incremented count. */
 	barrier();
 	me = &kc->nodes[idx];
 	kd_node_init(me, smp_processor_id(), idx);
-	me->regs = NULL;
-	me->entry = NULL;
 
-	if (kd_q_enqueue(q, me, false))
-		smp_cond_load_relaxed(&me->state, VAL != KD_N_WAIT);
-	kd_q_head_lock(q);
-	kd_q_pass(q, me, false);
-	kc->nr_nodes--;
+	/* The node line may have been cold: the lock may be free by now. */
+	if (kd_q_trylock_fifo_read(q))
+		goto out;
+
+	if (kd_q_enqueue(q, me, false)) {
+		if (smp_cond_load_acquire(&me->state, VAL != KD_N_WAIT) == KD_N_HEAD_D)
+			lv |= KD_Q_DELEG;
+		/*
+		 * The successor's node is written when the head role is passed
+		 * on; ask for it now, while this CPU still waits for the lock.
+		 */
+		next = READ_ONCE(me->next);
+		if (next)
+			prefetchw(next);
+		/*
+		 * Measure the queue here, as the new head that still waits for
+		 * the holder: the walk then costs nobody anything. Done after
+		 * taking the lock it delays the holder and the next promotion
+		 * (measured: 3.5% of the plain rate at 4 workers).
+		 */
+		if (probe && lv == KD_Q_LOCKED && READ_ONCE(kd_adapt) &&
+		    kd_probe_enter(kc, me, false)) {
+			lv |= KD_Q_DELEG;
+			kd_stat_inc(kc, KD_STAT_MODE_ENTER);
+		}
+	} else {
+		/* First in the queue: keep the mode of the current holder. */
+		lv |= READ_ONCE(q->locked) & KD_Q_DELEG;
+	}
+
+	if (kd_q_head_take(q, me, lv))
+		goto out;
+	next = READ_ONCE(me->next);
+	if (!next)
+		next = smp_cond_load_relaxed(&me->next, VAL);
+	smp_store_release(&next->state,
+			  (lv & KD_Q_DELEG) ? KD_N_HEAD_D : KD_N_HEAD);
+out:
+	kd_nr_nodes(kc)--;
+	return lv & KD_Q_DELEG;
+}
+
+bool kd_q_queue(struct kd_qlock *q, bool probe)
+{
+	return __kd_q_queue(q, probe);
+}
+
+/* Contended acquisition for callers that are never delegated. */
+void kd_q_lock_plain(struct kd_qlock *q)
+{
+	u32 val;
+
+	if (!kd_q_pending(q, &val))
+		__kd_q_queue(q, false);
 }
 
 /*
- * Spin-class wait.
+ * Slow path of the delegable spinlock entries, called by the entry stub on
+ * the caller's stack with preemption off. @site is the caller's return
+ * address. One function, like the native slow path it stands for in plain
+ * mode.
  *
- * Top level (@nested == NULL): slow path of the delegable entries, on the
- * wait stack with preemption off and kd_cpu.busy set; publishes this
- * CPU's own packet if the call site has an image.
+ * Returns true with the lock held. Returns false, with nothing queued,
+ * when the lock is in delegation mode and this caller can publish its
+ * continuation; the stub then goes on to the wait stack and kd_wait_spin().
+ */
+bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site)
+{
+	u32 val;
+
+	if (kd_q_pending(q, &val))
+		return true;
+	if (kd_q_deleg_mode(q, val) && kd_can_offer(site))
+		return false;
+	raw_cpu_inc(kd_cpu.nodes[0].nplain);
+	kd_mode_note(q, __kd_q_queue(q, true));
+	return true;
+}
+
+/*
+ * Spin-class wait with a published continuation.
+ *
+ * Top level (@nested == NULL): called by the entry stub on the wait stack,
+ * after the *_slow function found the lock in delegation mode, with
+ * preemption off and kd_cpu.busy set; publishes this CPU's own packet.
  *
  * Nested (@nested != NULL): called by the executor of @nested for a
  * contended lock inside that continuation; publishes @nested with @entry
@@ -682,18 +899,23 @@ void kd_q_lock_plain(struct kd_qlock *q)
  *
  * Returns KD_WAIT_RESUMED if a combiner advanced the published packet,
  * KD_WAIT_LOCAL if this CPU holds the lock.
+ *
+ * A waiter that reaches the queue head takes the lock and, in delegation
+ * mode, serves the waiters behind it before it returns to run its own
+ * section. A head without a predecessor keeps the mode it queued under.
  */
 int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 		 struct kd_regs *nested, void *entry)
 {
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_node *me;
-	bool have_q = false;
+	bool have_q = false, out = false, deleg = true;
 	unsigned int budget = 0;
-	int idx = kc->nr_nodes;
+	int idx = kd_nr_nodes(kc);
+	u32 st;
 
 	if (unlikely(idx >= KD_MAX_NODES)) {
-		while (!kd_q_trylock(q))
+		while (!kd_q_trylock_fifo(q))
 			cpu_relax();
 		if (f && f->post)
 			f->post(root);
@@ -701,32 +923,56 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 			f->release(root);
 		return KD_WAIT_LOCAL;
 	}
-	kc->nr_nodes++;
+	kd_nr_nodes(kc)++;
 	barrier();
 	me = &kc->nodes[idx];
 	kd_node_init(me, smp_processor_id(), idx);
+	me->nid = numa_node_id();
 	kd_node_offer(kc, me, nested, entry);
 
-	if (kd_q_enqueue(q, me, false) &&
-	    smp_cond_load_acquire(&me->state, VAL != KD_N_WAIT) == KD_N_RESUME) {
-		kc->nr_nodes--;
-		return KD_WAIT_RESUMED;
+	if (kd_q_enqueue(q, me, false)) {
+		st = smp_cond_load_acquire(&me->state, VAL != KD_N_WAIT);
+		if (st == KD_N_RESUME) {
+			me->entry = NULL;
+			kd_nr_nodes(kc)--;
+			kd_mode_note(q, true);
+			return KD_WAIT_RESUMED;
+		}
+		deleg = st == KD_N_HEAD_D || !READ_ONCE(kd_adapt) ||
+			(f && f->always_deleg);
+	}
+
+	/*
+	 * Promoted in plain mode: measure the queue while waiting for the
+	 * holder, as kd_q_queue() does.
+	 */
+	if (!deleg && kd_probe_enter(kc, me, false)) {
+		deleg = true;
+		kd_stat_inc(kc, KD_STAT_MODE_ENTER);
 	}
 
 	/* Queue head. Loop because a handback takes the grant away again. */
 	for (;;) {
 		if (!have_q)
-			kd_q_head_lock(q);
+			out = kd_q_head_take(q, me, deleg ? KD_Q_LOCKED | KD_Q_DELEG :
+							    KD_Q_LOCKED);
 		if (f && f->post)
 			f->post(root);
-		if (!kd_session(q, me, root, f, false, &budget))
+		if (out)
+			break;		/* nobody is queued behind us */
+		if (!deleg)
+			break;
+		if (!kd_session(q, me, root, f, false, &budget, &deleg))
 			break;
 		have_q = f && f->keeps_q;
 	}
 	if (f && f->release)
 		f->release(root);
-	kd_q_pass(q, me, false);
-	kc->nr_nodes--;
+	if (!out)
+		kd_q_pass(q, me, false, deleg ? KD_N_HEAD_D : KD_N_HEAD);
+	me->entry = NULL;
+	kd_nr_nodes(kc)--;
+	kd_mode_note(q, deleg);
 	return KD_WAIT_LOCAL;
 }
 
@@ -746,22 +992,27 @@ static struct kd_node *kd_mnode_alloc(struct kd_cpu *kc)
 }
 
 /*
- * Sleepable-class wait (mutex, rwsem writer); @nested and @entry as for
- * kd_wait_spin(). The caller is pinned, so this only spins. Whenever
- * progress would need sleeping it leaves the queue and returns
- * KD_WAIT_SLEEP or KD_WAIT_SLEEP_HELD.
+ * Sleepable-class wait (mutex, rwsem writer) in the spinner queue. The
+ * caller is pinned, so this only spins. Whenever progress would need
+ * sleeping it leaves the queue and returns KD_WAIT_SLEEP or
+ * KD_WAIT_SLEEP_HELD.
+ *
+ * @offer: publish a continuation. Set by the entry stub's offer path (on
+ * the wait stack, kd_cpu.busy set) and for nested waits (@nested and
+ * @entry as for kd_wait_spin()). Clear in plain mode, where the caller
+ * waits on its own stack and nothing is published.
  *
  * A waiter gives up by moving its node from WAIT to ABANDON; the combiner
  * claims by moving it from WAIT to RUN. One cmpxchg decides, so a section
  * is executed by exactly one of them.
  */
 int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
-		      struct kd_regs *nested, void *entry)
+		      struct kd_regs *nested, void *entry, bool offer)
 {
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_qlock *q = &m->q;
 	struct kd_node *me;
-	bool have_q = false;
+	bool have_q = false, deleg;
 	unsigned int budget = 0, spins;
 	u32 st;
 
@@ -773,7 +1024,13 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 	me = kd_mnode_alloc(kc);
 	if (!me)
 		return KD_WAIT_SLEEP;
-	kd_node_offer(kc, me, nested, entry);
+	if (offer) {
+		me->nid = numa_node_id();
+		kd_node_offer(kc, me, nested, entry);
+	} else {
+		me->entry = NULL;
+		kd_stat_inc(kc, KD_STAT_PLAIN);
+	}
 
 	if (kd_q_enqueue(q, me, true)) {
 		/*
@@ -806,6 +1063,17 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 		WRITE_ONCE(me->state, KD_N_HEAD);
 	}
 
+	/*
+	 * Queue head, usually still waiting for the holder: the time to
+	 * measure the queue (see kd_q_queue()). The mode is a flag here, so it
+	 * can be set before the lock is ours. The successor's node is written
+	 * when the head role is passed on; ask for it now.
+	 */
+	if (!f->always_deleg && !kd_qs_deleg_mode(q) && kd_probe_enter(kc, me, true))
+		kd_mode_set(q, true, true);
+	if (READ_ONCE(me->next))
+		prefetchw(READ_ONCE(me->next));
+
 	for (;;) {
 		if (!have_q) {
 			while (!kd_q_trylock(q)) {
@@ -819,11 +1087,15 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 		}
 		if (f->post && !f->post(root)) {
 			/* Keep the queue mutex; the caller decides how to wait on. */
-			kd_q_pass(q, me, true);
+			kd_q_pass(q, me, true, 0);
 			smp_store_release(&me->state, KD_N_FREE);
 			return KD_WAIT_SLEEP_HELD;
 		}
-		if (!kd_session(q, me, root, f, true, &budget))
+		deleg = f->always_deleg || kd_qs_deleg_mode(q);
+		/* A caller waiting on its own stack (plain mode) never combines. */
+		if (!deleg || !offer)
+			break;
+		if (!kd_session(q, me, root, f, true, &budget, &deleg))
 			break;
 		have_q = f->keeps_q;
 	}
@@ -831,11 +1103,11 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 		f->set_owner(root, current);
 	if (f->release)
 		f->release(root);
-	kd_q_pass(q, me, true);
+	kd_q_pass(q, me, true, 0);
 	smp_store_release(&me->state, KD_N_FREE);
 	return KD_WAIT_LOCAL;
 sleep:
-	kd_q_pass(q, me, true);
+	kd_q_pass(q, me, true, 0);
 	smp_store_release(&me->state, KD_N_FREE);
 	return KD_WAIT_SLEEP;
 }
@@ -847,8 +1119,11 @@ unsigned long kd_stat_sum(int stat)
 	unsigned long sum = 0;
 	int cpu;
 
-	for_each_possible_cpu(cpu)
+	for_each_possible_cpu(cpu) {
 		sum += per_cpu_ptr(&kd_cpu, cpu)->stat[stat];
+		if (stat == KD_STAT_PLAIN)
+			sum += per_cpu_ptr(&kd_cpu, cpu)->nodes[0].nplain;
+	}
 	return sum;
 }
 

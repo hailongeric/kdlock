@@ -61,7 +61,7 @@ headings and on the other documents that summarize them; items marked
 | D11 | Rwsem | 320 B, phases, queued-reader admission, proxy downgrade | 40 B, count + mutex queue, readers spin (bounded) then sleep, downgrade always handed back | readers never delegate; **MM downgrade not delegated** |
 | D12 | Image/translator | Miasm backend, entries/generations, ABI-specific wrapper | capstone, byte copy, one image per site | simpler; some GPT gaps closed, some opened |
 | D13 | Exit set | manifest of native terminal calls incl. TLB, task-mm, user access, IRQ/BH | smaller frontier list | **TLB/mm helpers not yet handed back** |
-| D14 | API surface | mutex/rwsem non-owner, nested, timeout, owner helpers, MM adapter | core API only | gaps for stage 2/3 |
+| D14 | API surface | mutex/rwsem non-owner, nested, timeout, owner helpers, MM adapter | every Linux 7.0 operation of the six lock types, `ww_mutex` with wait-die only | no MM adapter; not yet compiled into a switched kernel |
 | D15 | Evidence tooling | schema-2 identity, ownership probes, many runners | one nano module + runner | no evidence yet |
 | D16 | Layout | rwlock 128 B, rwsem 320 B | 8 B and 40 B (native sizes) | better for embedding |
 
@@ -335,15 +335,18 @@ entry points, user-copy and get/put-user helpers, a few exit paths.
 
 ### D14. API surface
 
-Provided: lock, unlock, try, read, irq/bh variants, downgrade.
+Provided: every operation the Linux 7.0 headers declare for `spinlock_t`,
+`raw_spinlock_t`, `rwlock_t`, `struct mutex`, `struct ww_mutex` and
+`struct rw_semaphore` (LOCKS.md 1; mapping in `integration/kd_linux_map.h`),
+including `mutex_lock_io`, the trylock/interrupt combinations, the `arch_`
+level, the lockdep aliases, the reader `_non_owner` forms, `mutex_get_owner`
+and `rwsem_is_contended`.
 
-Not provided (needed by real kernel users, in particular `mmap_lock` and
-pipes): `down_read_non_owner/up_read_non_owner`, `down_write_nested`,
-`mutex_lock_nested` family (non-lockdep aliases), `mutex_lock_io`,
-`mutex_trylock_recursive`, `atomic_dec_and_mutex_lock`, `down_timeout`,
-`rwsem_is_contended`, owner helpers (`mutex_get_owner`, `rwsem_owner`),
-optimistic-spin tunables, `__KD_*` static initialisers for rwsem wrappers,
-`ww_mutex`, `rt_mutex`, lockdep annotations.
+Not provided: `rwsem_owner` and the optimistic-spin tunables (no owner is
+recorded for readers or write holders), lockdep annotations.
+`mutex_trylock_recursive` and `down_timeout` on a rwsem do not exist in
+Linux 7.0. `ww_mutex` uses wait-die for every class. `rt_mutex` is not
+replaced.
 
 ### D15. Evidence and validation tooling
 

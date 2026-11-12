@@ -2,13 +2,20 @@
 /*
  * kdlock entry stubs and generated-code transfer.
  *
- * Delegable lock entries are written in assembly because the slow path must
- * see the caller's state exactly as the call instruction left it: the
- * return address on top of the stack and the callee-saved registers
- * untouched. Caller-saved registers are dead across a call, so those eight
- * words are the caller's whole continuation.
+ * Delegable lock entries are written in assembly because the path that
+ * publishes a continuation must see the caller's state exactly as the call
+ * instruction left it: the return address on top of the stack and the
+ * callee-saved registers untouched. Caller-saved registers are dead across
+ * a call, so those eight words are the caller's whole continuation.
  *
- * Slow path order (each step relies on the previous one):
+ * A contended entry first calls its C *_slow function on the caller's own
+ * stack. In plain mode that function waits and acquires like the native
+ * lock and the stub returns. A C call preserves the callee-saved registers
+ * and the stack pointer, so when the function instead reports that the
+ * lock is in delegation mode, the continuation is still intact and the
+ * stub publishes it (offer path).
+ *
+ * Offer path order (each step relies on the previous one):
  *   1. preemption is off (lock semantics for spin/rwlock, an explicit pin
  *      for mutex/rwsem), so the CPU's packet and wait stack are ours;
  *   2. bts on kd_cpu.busy claims them against interrupts on this CPU; if
@@ -81,7 +88,7 @@
  * Interrupt state is changed with a native cli; the configuration must not
  * route irq flags through paravirt or irqflags tracing.
  */
-.macro KD_SPIN_ENTRY name:req, irq:req, bh:req, val:req, waitfn:req, plainfn:req, nestop:req
+.macro KD_SPIN_ENTRY name:req, irq:req, bh:req, val:req, slowfn:req, waitfn:req, plainfn:req, nestop:req
 /*
  * Entry used by generated code in place of \name. Same fast path. When
  * contended it does not wait here: the executor is running somebody's
@@ -139,9 +146,23 @@ SYM_FUNC_START(\name)
 .endif
 	RET
 .Lslow_\name:
+	/* \slowfn(lock, call site): true = acquired on this stack. */
+	movq	(%rsp), %rsi
+	pushq	%rcx				/* irqsave result; unused otherwise */
+	pushq	%rdi
+	call	\slowfn
+	popq	%rdi
+	popq	%rcx
+	testb	%al, %al
+	jz	.Loffer_\name
+.if \irq == 2
+	movq	%rcx, %rax
+.endif
+	RET
+.Loffer_\name:
 	btsl	$0, KC(KD_CPU_busy)
 	jc	.Lplain_\name
-	movq	%rcx, %rax			/* irqsave result; unused otherwise */
+	movq	%rcx, %rax
 	KD_OFFER \waitfn
 	movq	%rdx, %rax
 	RET
@@ -159,15 +180,15 @@ STACK_FRAME_NON_STANDARD \name
 EXPORT_SYMBOL(\name)
 .endm
 
-KD_SPIN_ENTRY kd_spin_lock,         0, 0, KD_ASM_SPIN_LOCKED, kd_spin_wait,  kd_spin_lock_plain, KD_ASM_OP_NEST_SPIN
-KD_SPIN_ENTRY kd_spin_lock_irq,     1, 0, KD_ASM_SPIN_LOCKED, kd_spin_wait,  kd_spin_lock_plain, KD_ASM_OP_NEST_SPIN
-KD_SPIN_ENTRY kd_spin_lock_irqsave, 2, 0, KD_ASM_SPIN_LOCKED, kd_spin_wait,  kd_spin_lock_plain, KD_ASM_OP_NEST_SPIN
-KD_SPIN_ENTRY kd_spin_lock_bh,      0, 1, KD_ASM_SPIN_LOCKED, kd_spin_wait,  kd_spin_lock_plain, KD_ASM_OP_NEST_SPIN
+KD_SPIN_ENTRY kd_spin_lock,         0, 0, KD_ASM_SPIN_LOCKED, kd_q_lock_slow,    kd_spin_wait,  kd_spin_lock_plain, KD_ASM_OP_NEST_SPIN
+KD_SPIN_ENTRY kd_spin_lock_irq,     1, 0, KD_ASM_SPIN_LOCKED, kd_q_lock_slow,    kd_spin_wait,  kd_spin_lock_plain, KD_ASM_OP_NEST_SPIN
+KD_SPIN_ENTRY kd_spin_lock_irqsave, 2, 0, KD_ASM_SPIN_LOCKED, kd_q_lock_slow,    kd_spin_wait,  kd_spin_lock_plain, KD_ASM_OP_NEST_SPIN
+KD_SPIN_ENTRY kd_spin_lock_bh,      0, 1, KD_ASM_SPIN_LOCKED, kd_q_lock_slow,    kd_spin_wait,  kd_spin_lock_plain, KD_ASM_OP_NEST_SPIN
 
-KD_SPIN_ENTRY kd_write_lock,         0, 0, KD_ASM_RW_WLOCKED, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE
-KD_SPIN_ENTRY kd_write_lock_irq,     1, 0, KD_ASM_RW_WLOCKED, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE
-KD_SPIN_ENTRY kd_write_lock_irqsave, 2, 0, KD_ASM_RW_WLOCKED, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE
-KD_SPIN_ENTRY kd_write_lock_bh,      0, 1, KD_ASM_RW_WLOCKED, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE
+KD_SPIN_ENTRY kd_write_lock,         0, 0, KD_ASM_RW_WLOCKED, kd_write_lock_slow, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE
+KD_SPIN_ENTRY kd_write_lock_irq,     1, 0, KD_ASM_RW_WLOCKED, kd_write_lock_slow, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE
+KD_SPIN_ENTRY kd_write_lock_irqsave, 2, 0, KD_ASM_RW_WLOCKED, kd_write_lock_slow, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE
+KD_SPIN_ENTRY kd_write_lock_bh,      0, 1, KD_ASM_RW_WLOCKED, kd_write_lock_slow, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE
 
 /*
  * Sleepable-class entry (mutex and rwsem writer).
@@ -175,12 +196,21 @@ KD_SPIN_ENTRY kd_write_lock_bh,      0, 1, KD_ASM_RW_WLOCKED, kd_write_wait, kd_
  * The fast path differs per family and is supplied by the caller of this
  * macro; it must jump to .Lslow_\name on failure with rdi intact.
  *
- * The pin taken here is internal, not part of the API: every way out drops
- * it again (kd_unpin, or the packet's pc_delta on the resume path).
+ * \slowfn(lock, call site) waits on the caller's stack and returns 0 or
+ * -EINTR, or KD_SLOW_OFFER with preemption disabled. That pin is internal,
+ * not part of the API: every way out of the offer path drops it again
+ * (kd_unpin, or the packet's pc_delta on the resume path).
  */
-.macro KD_SLEEPABLE_SLOW name:req, waitfn:req, sleepfn:req
+.macro KD_SLEEPABLE_SLOW name:req, slowfn:req, waitfn:req, sleepfn:req
 .Lslow_\name:
-	incl	PER_CPU_VAR(__preempt_count)
+	movq	(%rsp), %rsi
+	pushq	%rdi
+	call	\slowfn
+	popq	%rdi
+	cmpl	$KD_SLOW_OFFER, %eax
+	je	.Loffer_\name
+	RET
+.Loffer_\name:
 	btsl	$0, KC(KD_CPU_busy)
 	jc	.Lnested_\name
 	xorl	%eax, %eax			/* a delegated acquisition returns 0 */
@@ -198,13 +228,13 @@ KD_SPIN_ENTRY kd_write_lock_bh,      0, 1, KD_ASM_RW_WLOCKED, kd_write_wait, kd_
 	popq	%rdi
 	jmp	\sleepfn			/* sleepfn(lock, wait result) */
 .Lnested_\name:
-	/* Rare: a sleeping lock taken while this CPU cannot publish. */
+	/* Cannot happen after \slowfn checked busy; kept as a safe way out. */
 	decl	PER_CPU_VAR(__preempt_count)
 	movl	$KD_WAIT_SLEEP, %esi
 	jmp	\sleepfn
 .endm
 
-.macro KD_MUTEX_ENTRY name:req, sleepfn:req
+.macro KD_MUTEX_ENTRY name:req, slowfn:req, sleepfn:req
 SYM_FUNC_START(\name)
 	xorl	%eax, %eax
 	movb	$1, %dl
@@ -214,17 +244,18 @@ SYM_FUNC_START(\name)
 	movq	%rax, KD_MUTEX_owner(%rdi)
 	xorl	%eax, %eax
 	RET
-	KD_SLEEPABLE_SLOW \name, kd_mutex_wait, \sleepfn
+	KD_SLEEPABLE_SLOW \name, \slowfn, kd_mutex_wait, \sleepfn
 SYM_FUNC_END(\name)
 STACK_FRAME_NON_STANDARD \name
 EXPORT_SYMBOL(\name)
 .endm
 
-KD_MUTEX_ENTRY kd_mutex_lock,               kd_mutex_lock_sleep
-KD_MUTEX_ENTRY kd_mutex_lock_interruptible, kd_mutex_lock_sleep_interruptible
-KD_MUTEX_ENTRY kd_mutex_lock_killable,      kd_mutex_lock_sleep_killable
+KD_MUTEX_ENTRY kd_mutex_lock,               kd_mutex_lock_slow,               kd_mutex_lock_sleep
+KD_MUTEX_ENTRY kd_mutex_lock_interruptible, kd_mutex_lock_slow_interruptible, kd_mutex_lock_sleep_interruptible
+KD_MUTEX_ENTRY kd_mutex_lock_killable,      kd_mutex_lock_slow_killable,      kd_mutex_lock_sleep_killable
+KD_MUTEX_ENTRY kd_mutex_lock_io,            kd_mutex_lock_slow_io,            kd_mutex_lock_sleep_io
 
-.macro KD_RWSEM_ENTRY name:req, sleepfn:req
+.macro KD_RWSEM_ENTRY name:req, slowfn:req, sleepfn:req
 SYM_FUNC_START(\name)
 	xorl	%eax, %eax
 	movl	$KD_ASM_RWSEM_WLOCKED, %edx
@@ -232,14 +263,14 @@ SYM_FUNC_START(\name)
 	jnz	.Lslow_\name
 	xorl	%eax, %eax
 	RET
-	KD_SLEEPABLE_SLOW \name, kd_down_write_wait, \sleepfn
+	KD_SLEEPABLE_SLOW \name, \slowfn, kd_down_write_wait, \sleepfn
 SYM_FUNC_END(\name)
 STACK_FRAME_NON_STANDARD \name
 EXPORT_SYMBOL(\name)
 .endm
 
-KD_RWSEM_ENTRY kd_down_write,          kd_down_write_sleep
-KD_RWSEM_ENTRY kd_down_write_killable, kd_down_write_sleep_killable
+KD_RWSEM_ENTRY kd_down_write,          kd_down_write_slow,          kd_down_write_sleep
+KD_RWSEM_ENTRY kd_down_write_killable, kd_down_write_slow_killable, kd_down_write_sleep_killable
 
 /*
  * kd_resume - continue the origin from its packet.

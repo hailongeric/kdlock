@@ -9,7 +9,7 @@
 #include <linux/types.h>
 #include <linux/ioctl.h>
 
-#define KD_ABI_VERSION		2
+#define KD_ABI_VERSION		3
 
 /* ---- exit codes written by generated code ----------------------------- */
 
@@ -49,9 +49,14 @@ enum kd_op {
 
 /* ---- KD_IOC_INFO ------------------------------------------------------- */
 
+/*
+ * Every kd_ function generated code may meet is listed with its class. A
+ * kd_ function that is not listed is a frontier: only the origin runs it.
+ */
 #define KD_SYM_UNLOCK		1	/* compare rdi with the session root before calling */
 #define KD_SYM_ACQUIRE		2	/* always leave generated code */
 #define KD_SYM_NESTED		3	/* call ->alt instead: same fast path, exits when contended */
+#define KD_SYM_LOCAL		4	/* never sleeps and acts for the origin: call natively */
 
 struct kd_sym {
 	__u64 addr;
@@ -60,7 +65,7 @@ struct kd_sym {
 	__u32 op;
 };
 
-#define KD_MAX_SYMS		48
+#define KD_MAX_SYMS		96
 
 struct kd_info {
 	__u32 abi;

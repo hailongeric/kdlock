@@ -22,6 +22,9 @@
 #include <linux/sched.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
+#include <linux/rcupdate.h>
+#include <linux/ww_mutex.h>
+#include <linux/interrupt.h>
 #include <kdlock/kd_api.h>
 #include "kd_bench_uapi.h"
 
@@ -95,6 +98,70 @@ DEFINE_OPS(krwl, kd_write_lock(&k_rwl), kd_write_unlock(&k_rwl),
 	   kd_read_lock(&k_rwl), kd_read_unlock(&k_rwl))
 DEFINE_OPS(krwsem, kd_down_write(&k_rwsem), kd_up_write(&k_rwsem),
 	   kd_down_read(&k_rwsem), kd_up_read(&k_rwsem))
+
+/*
+ * The spin and mutex bodies with one use of `current` inside the section.
+ * The body functions are separate so each has its own call site and image.
+ */
+#define DEFINE_CUR(name, LOCK, UNLOCK, CUR)				\
+static noinline void name##_w(void)					\
+{									\
+	unsigned int i;							\
+	LOCK;								\
+	for (i = 0; i < g_lines; i++)					\
+		cnt[i].v++;						\
+	CUR;								\
+	UNLOCK;								\
+}
+
+#define KDB_CUR_READ	do { if (unlikely(READ_ONCE(current->pid) < 0)) cnt[0].v++; } while (0)
+#define KDB_CUR_WRITE	do { rcu_read_lock(); rcu_read_unlock(); } while (0)
+
+DEFINE_CUR(nspin_curr, spin_lock(&n_spin), spin_unlock(&n_spin), KDB_CUR_READ)
+DEFINE_CUR(nspin_curw, spin_lock(&n_spin), spin_unlock(&n_spin), KDB_CUR_WRITE)
+DEFINE_CUR(nmutex_curr, mutex_lock(&n_mutex), mutex_unlock(&n_mutex), KDB_CUR_READ)
+DEFINE_CUR(nmutex_curw, mutex_lock(&n_mutex), mutex_unlock(&n_mutex), KDB_CUR_WRITE)
+DEFINE_CUR(kspin_curr, kd_spin_lock(&k_spin), kd_spin_unlock(&k_spin), KDB_CUR_READ)
+DEFINE_CUR(kspin_curw, kd_spin_lock(&k_spin), kd_spin_unlock(&k_spin), KDB_CUR_WRITE)
+DEFINE_CUR(kmutex_curr, kd_mutex_lock(&k_mutex), kd_mutex_unlock(&k_mutex), KDB_CUR_READ)
+DEFINE_CUR(kmutex_curw, kd_mutex_lock(&k_mutex), kd_mutex_unlock(&k_mutex), KDB_CUR_WRITE)
+
+/*
+ * The native queued spinlock code on the kd lock object (the two have the
+ * same layout), with the preempt count handled as the raw API does. Tells
+ * a difference between the algorithms from one between the objects.
+ */
+#define NK_LOCK		do { preempt_disable(); arch_spin_lock((arch_spinlock_t *)&k_spin); } while (0)
+#define NK_UNLOCK	do { arch_spin_unlock((arch_spinlock_t *)&k_spin); preempt_enable(); } while (0)
+DEFINE_OPS(nkspin, NK_LOCK, NK_UNLOCK, NK_LOCK, NK_UNLOCK)
+
+/* The spin body through the raw acquire, which never publishes. */
+DEFINE_OPS(kspin_raw, kd_raw_spin_lock(&k_spin), kd_spin_unlock(&k_spin),
+	   kd_raw_spin_lock(&k_spin), kd_spin_unlock(&k_spin))
+
+/*
+ * Write sections of which every sixteenth meets something only its own
+ * task may run: an instruction with a fault fixup for the spin class,
+ * yield() for the rwsem. A delegated section is handed back there.
+ */
+#define KDB_HB_FIXUP	do {						\
+	if (!(cnt[0].v & 15)) {						\
+		u64 t;							\
+		if (copy_from_kernel_nofault(&t, &cnt[0].v, sizeof(t)) || \
+		    t != cnt[0].v)					\
+			hb_bad.v++;					\
+	}								\
+} while (0)
+#define KDB_HB_YIELD	do { if (!(cnt[0].v & 15)) yield(); } while (0)
+
+static struct kdb_line hb_bad;
+
+DEFINE_CUR(nspin_hb, spin_lock(&n_spin), spin_unlock(&n_spin), KDB_HB_FIXUP)
+DEFINE_CUR(kspin_hb, kd_spin_lock(&k_spin), kd_spin_unlock(&k_spin), KDB_HB_FIXUP)
+DEFINE_CUR(nrwl_hb, write_lock(&n_rwl), write_unlock(&n_rwl), KDB_HB_FIXUP)
+DEFINE_CUR(krwl_hb, kd_write_lock(&k_rwl), kd_write_unlock(&k_rwl), KDB_HB_FIXUP)
+DEFINE_CUR(nrwsem_hb, down_write(&n_rwsem), up_write(&n_rwsem), KDB_HB_YIELD)
+DEFINE_CUR(krwsem_hb, kd_down_write(&k_rwsem), kd_up_write(&k_rwsem), KDB_HB_YIELD)
 
 #ifdef KDB_WITH_TCLOCK
 /*
@@ -252,6 +319,45 @@ DEFINE_MIX(nmix, mutex_lock(&n_mutex), mutex_unlock(&n_mutex),
 DEFINE_MIX(kmix, kd_mutex_lock(&k_mutex), kd_mutex_unlock(&k_mutex),
 	   kd_mutex_lock(&k_mutex2), kd_mutex_unlock(&k_mutex2))
 
+/*
+ * Two of four ww mutexes in random order under one acquire context, with
+ * the documented back-off: on -EDEADLK release what is held, wait for the
+ * lock that was lost, then take the other one again. cnt[i] is protected
+ * by k_ww[i]; a lost update shows up in the counter sum.
+ */
+#define KDB_WW_LOCKS	4
+static DEFINE_WD_CLASS(kdb_ww_class);
+static struct kd_ww_mutex k_ww[KDB_WW_LOCKS];
+
+static noinline u32 kww_t(u32 r, u32 pct)
+{
+	struct ww_acquire_ctx ctx;
+	unsigned int ia = r % KDB_WW_LOCKS, ib = (r >> 8) % KDB_WW_LOCKS;
+	struct kd_ww_mutex *a, *b;
+	u32 f = 0;
+
+	if (ia == ib)
+		ib = (ia + 1) % KDB_WW_LOCKS;
+	a = &k_ww[ia];
+	b = &k_ww[ib];
+	ww_acquire_init(&ctx, &kdb_ww_class);
+	if (kd_ww_mutex_lock(a, &ctx))
+		f |= KDB_T_BAD;		/* a context that holds nothing never backs off */
+	while (kd_ww_mutex_lock(b, &ctx)) {
+		kd_ww_mutex_unlock(a);
+		kd_ww_mutex_lock_slow(b, &ctx);
+		swap(a, b);
+	}
+	if (kd_ww_mutex_lock(a, &ctx) != -EALREADY)
+		f |= KDB_T_BAD;
+	cnt[ia].v++;
+	cnt[ib].v++;
+	kd_ww_mutex_unlock(a);
+	kd_ww_mutex_unlock(b);
+	ww_acquire_fini(&ctx);
+	return f;
+}
+
 static u32 nnest_spin_t(u32 r, u32 pct)
 {
 	return r % 100 < pct ? nnest_spin_outer() : nnest_spin_inner();
@@ -285,15 +391,25 @@ struct ops {
 	int (*drain)(void);		/* after all workers exited */
 };
 
-static const struct ops op_table[3][7] = {
+static const struct ops op_table[3][KDB_NR_FAMILY] = {
 	[KDB_NATIVE] = { { nspin_w, nspin_r }, { nmutex_w, nmutex_r },
 			 { nrwl_w, nrwl_r }, { nrwsem_w, nrwsem_r },
 			 { .t = nnest_spin_t }, { .t = nnest_mutex_t },
-			 { .t = nmix_t } },
+			 { .t = nmix_t },
+			 { nspin_curr_w, nspin_r }, { nspin_curw_w, nspin_r },
+			 { nmutex_curr_w, nmutex_r }, { nmutex_curw_w, nmutex_r },
+			 { }, { nkspin_w, nkspin_r },
+			 { nspin_hb_w, nspin_r }, { nrwl_hb_w, nrwl_r },
+			 { nrwsem_hb_w, nrwsem_r } },
 	[KDB_KD]     = { { kspin_w, kspin_r }, { kmutex_w, kmutex_r },
 			 { krwl_w, krwl_r }, { krwsem_w, krwsem_r },
 			 { .t = knest_spin_t }, { .t = knest_mutex_t },
-			 { .t = kmix_t } },
+			 { .t = kmix_t },
+			 { kspin_curr_w, kspin_r }, { kspin_curw_w, kspin_r },
+			 { kmutex_curr_w, kmutex_r }, { kmutex_curw_w, kmutex_r },
+			 { .t = kww_t }, { kspin_raw_w, kspin_raw_r },
+			 { kspin_hb_w, kspin_r }, { krwl_hb_w, krwl_r },
+			 { krwsem_hb_w, krwsem_r } },
 #ifdef KDB_WITH_TCLOCK
 	[KDB_TCLOCK] = { { tspin_w, tspin_r },
 			 { tmutex_w, tmutex_r, .reg = tc_mutex_worker_register,
@@ -389,7 +505,7 @@ static int do_run(struct kdb_run *r)
 	unsigned int i;
 	int ret = 0, started = 0;
 
-	if (r->family > KDB_MIX || r->backend > KDB_TCLOCK || r->lines < 1 ||
+	if (r->family >= KDB_NR_FAMILY || r->backend > KDB_TCLOCK || r->lines < 1 ||
 	    r->lines > MAX_LINES || !r->workers || r->workers > KDB_MAX_WORKERS ||
 	    r->first_cpu + r->workers > nr_cpu_ids || !r->ms)
 		return -EINVAL;
@@ -411,12 +527,15 @@ static int do_run(struct kdb_run *r)
 	 */
 	memset(cnt, 0, sizeof(cnt));
 	ocnt.v = 0;
+	hb_bad.v = 0;
 	kd_spin_lock_init(&k_spin);
 	kd_spin_lock_init(&k_spin2);
 	kd_mutex_init(&k_mutex2);
 	kd_mutex_init(&k_mutex);
 	kd_rwlock_init(&k_rwl);
 	kd_rwsem_init(&k_rwsem);
+	for (i = 0; i < KDB_WW_LOCKS; i++)
+		kd_ww_mutex_init(&k_ww[i], &kdb_ww_class);
 #ifdef KDB_WITH_TCLOCK
 	tc_reset();
 #endif
@@ -430,8 +549,10 @@ static int do_run(struct kdb_run *r)
 
 		w->cpu = r->first_cpu + i;
 		w->ops = ops;
-		w->pct = (r->family == KDB_SPIN || r->family == KDB_MUTEX ||
-			  r->family == KDB_MIX) ? 100 : r->write_pct;
+		w->pct = (r->family == KDB_RWLOCK || r->family == KDB_RWSEM ||
+			  r->family == KDB_NEST_SPIN || r->family == KDB_NEST_MUTEX ||
+			  r->family == KDB_RWLOCK_HB || r->family == KDB_RWSEM_HB) ?
+			 r->write_pct : 100;
 		w->post = r->post;
 		init_completion(&w->done);
 		w->task = kthread_create(worker_fn, w, "kdb/%u", w->cpu);
@@ -489,6 +610,7 @@ static int do_run(struct kdb_run *r)
 		r->mismatches += ws[i].bad;
 		outer += ws[i].outer;
 	}
+	r->mismatches += hb_bad.v;
 	/* Lost or extra outer-counter updates. */
 	if (ocnt.v != outer)
 		r->mismatches += ocnt.v > outer ? ocnt.v - outer : outer - ocnt.v;
@@ -498,11 +620,204 @@ out:
 	return ret;
 }
 
+/*
+ * Every kd lock API variant once, on one task: the call must leave the
+ * lock, the interrupt flag and the preempt count as the native variant
+ * does. Contended behaviour is covered by the timed runs.
+ */
+#define CK(cond) do {							\
+	step++;								\
+	if (!(cond)) {							\
+		pr_err("kd_bench: api check %d failed: %s\n", step, #cond); \
+		bad++;							\
+	}								\
+} while (0)
+
+static noinline int kdb_api_test(void)
+{
+	static DEFINE_WD_CLASS(cls);
+	struct kd_spinlock s;
+	struct kd_rwlock rw;
+	struct kd_mutex m;
+	struct kd_rwsem sem;
+	struct kd_ww_mutex w1, w2;
+	struct ww_acquire_ctx ctx;
+	unsigned long fl, fl2;
+	int bad = 0, step = 0, pc = preempt_count();
+
+	kd_spin_lock_init(&s);
+	kd_rwlock_init(&rw);
+	kd_mutex_init(&m);
+	kd_rwsem_init(&sem);
+	kd_ww_mutex_init(&w1, &cls);
+	kd_ww_mutex_init(&w2, &cls);
+
+	/* spinlock_t */
+	kd_spin_lock(&s);
+	CK(kd_spin_is_locked(&s) && preempt_count() == pc + 1);
+	CK(!kd_spin_trylock(&s) && preempt_count() == pc + 1);
+	CK(!kd_spin_is_contended(&s));
+	kd_spin_unlock(&s);
+	CK(!kd_spin_is_locked(&s) && preempt_count() == pc);
+	kd_spin_lock_irq(&s);
+	CK(irqs_disabled());
+	kd_spin_unlock_irq(&s);
+	CK(!irqs_disabled() && preempt_count() == pc);
+	fl = kd_spin_lock_irqsave(&s);
+	CK(irqs_disabled() && !raw_irqs_disabled_flags(fl));
+	kd_spin_unlock_irqrestore(&s, fl);
+	CK(!irqs_disabled() && preempt_count() == pc);
+	kd_spin_lock_bh(&s);
+	CK(softirq_count() && kd_spin_is_locked(&s));
+	kd_spin_unlock_bh(&s);
+	CK(!softirq_count() && preempt_count() == pc);
+	CK(kd_spin_trylock(&s));
+	kd_spin_unlock(&s);
+	CK(kd_spin_trylock_bh(&s) && softirq_count());
+	kd_spin_unlock_bh(&s);
+	CK(kd_spin_trylock_irq(&s) && irqs_disabled());
+	kd_spin_unlock_irq(&s);
+	CK(kd_spin_trylock_irqsave(&s, &fl) && irqs_disabled());
+	CK(!kd_spin_trylock_irqsave(&s, &fl2) && irqs_disabled());
+	kd_spin_unlock_irqrestore(&s, fl);
+	CK(!irqs_disabled() && preempt_count() == pc && !kd_spin_is_locked(&s));
+
+	/* raw_spinlock_t and the arch_ level */
+	kd_raw_spin_lock(&s);
+	CK(kd_spin_is_locked(&s) && preempt_count() == pc + 1);
+	kd_spin_unlock(&s);
+	kd_raw_spin_lock_irq(&s);
+	CK(irqs_disabled());
+	kd_spin_unlock_irq(&s);
+	fl = kd_raw_spin_lock_irqsave(&s);
+	CK(irqs_disabled());
+	kd_spin_unlock_irqrestore(&s, fl);
+	kd_raw_spin_lock_bh(&s);
+	CK(softirq_count());
+	kd_spin_unlock_bh(&s);
+	preempt_disable();
+	kd_arch_spin_lock(&s);
+	CK(kd_spin_is_locked(&s) && !kd_arch_spin_trylock(&s) && preempt_count() == pc + 1);
+	kd_arch_spin_unlock(&s);
+	CK(kd_arch_spin_trylock(&s));
+	kd_arch_spin_unlock(&s);
+	preempt_enable();
+	CK(!irqs_disabled() && preempt_count() == pc && !kd_spin_is_locked(&s));
+
+	/* rwlock_t */
+	kd_write_lock(&rw);
+	CK(!kd_read_trylock(&rw) && !kd_write_trylock(&rw) && preempt_count() == pc + 1);
+	kd_write_unlock(&rw);
+	kd_write_lock_irq(&rw);
+	CK(irqs_disabled());
+	kd_write_unlock_irq(&rw);
+	fl = kd_write_lock_irqsave(&rw);
+	CK(irqs_disabled());
+	kd_write_unlock_irqrestore(&rw, fl);
+	kd_write_lock_bh(&rw);
+	CK(softirq_count());
+	kd_write_unlock_bh(&rw);
+	CK(kd_write_trylock(&rw));
+	kd_write_unlock(&rw);
+	CK(kd_write_trylock_irqsave(&rw, &fl) && irqs_disabled());
+	kd_write_unlock_irqrestore(&rw, fl);
+	kd_read_lock(&rw);
+	CK(kd_read_trylock(&rw) && !kd_write_trylock(&rw));
+	kd_read_unlock(&rw);
+	kd_read_unlock(&rw);
+	kd_read_lock_irq(&rw);
+	CK(irqs_disabled());
+	kd_read_unlock_irq(&rw);
+	fl = kd_read_lock_irqsave(&rw);
+	CK(irqs_disabled());
+	kd_read_unlock_irqrestore(&rw, fl);
+	kd_read_lock_bh(&rw);
+	CK(softirq_count());
+	kd_read_unlock_bh(&rw);
+	preempt_disable();
+	kd_arch_write_lock(&rw);
+	CK(!kd_arch_read_trylock(&rw) && !kd_arch_write_trylock(&rw));
+	kd_arch_write_unlock(&rw);
+	kd_arch_read_lock(&rw);
+	CK(kd_arch_read_trylock(&rw));
+	kd_arch_read_unlock(&rw);
+	kd_arch_read_unlock(&rw);
+	CK(kd_arch_write_trylock(&rw));
+	kd_arch_write_unlock(&rw);
+	preempt_enable();
+	CK(!kd_rwlock_is_contended(&rw) && !irqs_disabled() && preempt_count() == pc);
+
+	/* struct mutex */
+	kd_mutex_lock(&m);
+	CK(kd_mutex_is_locked(&m) && !kd_mutex_trylock(&m));
+	CK(kd_mutex_get_owner(&m) == (unsigned long)current);
+	kd_mutex_unlock(&m);
+	CK(!kd_mutex_is_locked(&m) && !kd_mutex_get_owner(&m));
+	CK(kd_mutex_lock_interruptible(&m) == 0);
+	kd_mutex_unlock(&m);
+	CK(kd_mutex_lock_killable(&m) == 0);
+	kd_mutex_unlock(&m);
+	kd_mutex_lock_io(&m);
+	CK(kd_mutex_is_locked(&m));
+	kd_mutex_unlock(&m);
+	CK(kd_mutex_trylock(&m));
+	kd_mutex_unlock(&m);
+	CK(preempt_count() == pc);
+
+	/* struct ww_mutex */
+	ww_acquire_init(&ctx, &cls);
+	CK(kd_ww_mutex_lock(&w1, &ctx) == 0);
+	CK(kd_ww_mutex_lock(&w1, &ctx) == -EALREADY);
+	CK(kd_ww_mutex_lock_interruptible(&w2, &ctx) == 0);
+	CK(kd_ww_mutex_is_locked(&w1) && kd_ww_mutex_is_locked(&w2) && ctx.acquired == 2);
+	kd_ww_mutex_unlock(&w2);
+	kd_ww_mutex_unlock(&w1);
+	kd_ww_mutex_lock_slow(&w1, &ctx);
+	CK(!kd_ww_mutex_trylock(&w1, &ctx) && kd_ww_mutex_trylock(&w2, &ctx));
+	kd_ww_mutex_unlock(&w1);
+	kd_ww_mutex_unlock(&w2);
+	CK(kd_ww_mutex_lock_slow_interruptible(&w2, &ctx) == 0);
+	kd_ww_mutex_unlock(&w2);
+	CK(ctx.acquired == 0 && !kd_ww_mutex_is_locked(&w1) && !kd_ww_mutex_is_locked(&w2));
+	ww_acquire_fini(&ctx);
+	CK(kd_ww_mutex_lock(&w1, NULL) == 0);
+	kd_ww_mutex_unlock(&w1);
+
+	/* struct rw_semaphore */
+	kd_down_write(&sem);
+	CK(kd_rwsem_is_locked(&sem) && kd_rwsem_is_write_locked(&sem));
+	CK(!kd_down_read_trylock(&sem) && !kd_down_write_trylock(&sem));
+	kd_downgrade_write(&sem);
+	CK(kd_rwsem_is_locked(&sem) && !kd_rwsem_is_write_locked(&sem));
+	CK(kd_down_read_trylock(&sem));
+	kd_up_read(&sem);
+	kd_up_read(&sem);
+	CK(!kd_rwsem_is_locked(&sem));
+	CK(kd_down_write_killable(&sem) == 0);
+	kd_up_write(&sem);
+	CK(kd_down_write_trylock(&sem));
+	kd_up_write(&sem);
+	kd_down_read(&sem);
+	CK(kd_down_read_interruptible(&sem) == 0);
+	CK(kd_down_read_killable(&sem) == 0);
+	CK(!kd_down_write_trylock(&sem));
+	kd_up_read(&sem);
+	kd_up_read(&sem);
+	kd_up_read(&sem);
+	CK(!kd_rwsem_is_locked(&sem) && !kd_rwsem_is_contended(&sem));
+	CK(!irqs_disabled() && preempt_count() == pc);
+
+	pr_info("kd_bench: api test: %d checks, %d failed\n", step, bad);
+	return bad;
+}
+
 static long kdb_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
 	struct kdb_run *r;
 	long ret;
 
+	if (cmd == KDB_IOC_APITEST)
+		return kdb_api_test();
 	if (cmd != KDB_IOC_RUN)
 		return -ENOTTY;
 	r = kzalloc(sizeof(*r), GFP_KERNEL);

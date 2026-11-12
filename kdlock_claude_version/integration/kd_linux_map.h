@@ -1,10 +1,13 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
- * Mapping of the Linux lock API onto kdlock (Linux 7, x86_64, !PREEMPT_RT).
+ * Mapping of the Linux lock API onto kdlock (Linux 7.0, x86_64, !PREEMPT_RT).
  *
  * This header is the reference for the kernel patch described in
  * README.md in this directory; it is not included by the kdlock core.
- * Each block names the native header whose definitions it replaces.
+ * Each block names the native header whose definitions it replaces, and
+ * covers every operation that header declares in Linux 7.0. The lockdep
+ * variants (_nested, _nest_lock) take a subclass or an outer lock only for
+ * lockdep, which CONFIG_KDLOCK excludes, so they map to the plain call.
  *
  * Two rules decide every mapping:
  *
@@ -41,6 +44,18 @@ typedef struct kd_rwlock arch_rwlock_t;
 #define arch_spin_is_locked(l)		kd_spin_is_locked(l)
 #define arch_spin_is_contended(l)	kd_spin_is_contended(l)
 #define arch_spin_value_unlocked(l)	(!atomic_read(&(l).q.val))
+#define arch_spin_lock(l)		kd_arch_spin_lock(l)
+#define arch_spin_trylock(l)		kd_arch_spin_trylock(l)
+#define arch_spin_unlock(l)		kd_arch_spin_unlock(l)
+
+/* ---- asm-generic/qrwlock.h: arch_ operations (preemption left to the caller) */
+#define arch_read_lock(l)		kd_arch_read_lock(l)
+#define arch_read_trylock(l)		kd_arch_read_trylock(l)
+#define arch_read_unlock(l)		kd_arch_read_unlock(l)
+#define arch_write_lock(l)		kd_arch_write_lock(l)
+#define arch_write_trylock(l)		kd_arch_write_trylock(l)
+#define arch_write_unlock(l)		kd_arch_write_unlock(l)
+#define arch_rwlock_is_contended(l)	kd_rwlock_is_contended(l)
 
 /* ---- linux/spinlock_api_smp.h: raw_spinlock_t ----------------------------- */
 
@@ -48,8 +63,15 @@ typedef struct kd_rwlock arch_rwlock_t;
 #define _raw_spin_lock_irq(lock)	kd_raw_spin_lock_irq(&(lock)->raw_lock)
 #define _raw_spin_lock_irqsave(lock)	kd_raw_spin_lock_irqsave(&(lock)->raw_lock)
 #define _raw_spin_lock_bh(lock)		kd_raw_spin_lock_bh(&(lock)->raw_lock)
+#define _raw_spin_lock_nested(lock, subclass)	kd_raw_spin_lock(&(lock)->raw_lock)
+#define _raw_spin_lock_nest_lock(lock, map)	kd_raw_spin_lock(&(lock)->raw_lock)
+#define _raw_spin_lock_irqsave_nested(lock, subclass) \
+	kd_raw_spin_lock_irqsave(&(lock)->raw_lock)
 #define _raw_spin_trylock(lock)		kd_spin_trylock(&(lock)->raw_lock)
 #define _raw_spin_trylock_bh(lock)	kd_spin_trylock_bh(&(lock)->raw_lock)
+#define _raw_spin_trylock_irq(lock)	kd_spin_trylock_irq(&(lock)->raw_lock)
+#define _raw_spin_trylock_irqsave(lock, flags) \
+	kd_spin_trylock_irqsave(&(lock)->raw_lock, flags)
 #define _raw_spin_unlock(lock)		kd_spin_unlock(&(lock)->raw_lock)
 #define _raw_spin_unlock_irq(lock)	kd_spin_unlock_irq(&(lock)->raw_lock)
 #define _raw_spin_unlock_irqrestore(lock, flags) \
@@ -68,6 +90,15 @@ typedef struct kd_rwlock arch_rwlock_t;
 #define kd_map_spin_lock_irqsave(lock, flags) \
 	do { (flags) = kd_spin_lock_irqsave(&(lock)->rlock.raw_lock); } while (0)
 #define kd_map_spin_lock_bh(lock)	kd_spin_lock_bh(&(lock)->rlock.raw_lock)
+#define kd_map_spin_lock_nested(lock, subclass)	kd_map_spin_lock(lock)
+#define kd_map_spin_lock_nest_lock(lock, outer)	kd_map_spin_lock(lock)
+#define kd_map_spin_lock_irqsave_nested(lock, flags, subclass) \
+	kd_map_spin_lock_irqsave(lock, flags)
+/*
+ * spin_trylock*(), spin_unlock*(), spin_is_locked(), spin_is_contended(),
+ * spin_needbreak(), assert_spin_locked() and atomic_dec_and_lock*() keep
+ * their generic definitions, which reach the _raw_ layer above.
+ */
 
 /* ---- linux/rwlock_api_smp.h ------------------------------------------------ */
 
@@ -86,7 +117,10 @@ typedef struct kd_rwlock arch_rwlock_t;
 #define _raw_write_lock_irq(lock)	kd_write_lock_irq(&(lock)->raw_lock)
 #define _raw_write_lock_irqsave(lock)	kd_write_lock_irqsave(&(lock)->raw_lock)
 #define _raw_write_lock_bh(lock)	kd_write_lock_bh(&(lock)->raw_lock)
+#define _raw_write_lock_nested(lock, subclass)	kd_write_lock(&(lock)->raw_lock)
 #define _raw_write_trylock(lock)	kd_write_trylock(&(lock)->raw_lock)
+#define _raw_write_trylock_irqsave(lock, flags) \
+	kd_write_trylock_irqsave(&(lock)->raw_lock, flags)
 #define _raw_write_unlock(lock)		kd_write_unlock(&(lock)->raw_lock)
 #define _raw_write_unlock_irq(lock)	kd_write_unlock_irq(&(lock)->raw_lock)
 #define _raw_write_unlock_irqrestore(lock, flags) \
@@ -103,10 +137,45 @@ typedef struct kd_rwlock arch_rwlock_t;
 #define kd_map_mutex_lock(m)			kd_mutex_lock(&(m)->kd)
 #define kd_map_mutex_lock_interruptible(m)	kd_mutex_lock_interruptible(&(m)->kd)
 #define kd_map_mutex_lock_killable(m)		kd_mutex_lock_killable(&(m)->kd)
-#define kd_map_mutex_lock_io(m)			kd_mutex_lock(&(m)->kd)
+#define kd_map_mutex_lock_io(m)			kd_mutex_lock_io(&(m)->kd)
 #define kd_map_mutex_trylock(m)			kd_mutex_trylock(&(m)->kd)
 #define kd_map_mutex_unlock(m)			kd_mutex_unlock(&(m)->kd)
 #define kd_map_mutex_is_locked(m)		kd_mutex_is_locked(&(m)->kd)
+#define kd_map_mutex_get_owner(m)		kd_mutex_get_owner(&(m)->kd)
+#define kd_map_mutex_destroy(m)			do { } while (0)
+#define kd_map_mutex_lock_nested(m, subclass)	kd_map_mutex_lock(m)
+#define kd_map_mutex_lock_interruptible_nested(m, subclass) \
+	kd_map_mutex_lock_interruptible(m)
+#define kd_map_mutex_lock_killable_nested(m, subclass) \
+	kd_map_mutex_lock_killable(m)
+#define kd_map_mutex_lock_io_nested(m, subclass)	kd_map_mutex_lock_io(m)
+#define kd_map_mutex_lock_nest_lock(m, outer)	kd_map_mutex_lock(m)
+#define kd_map_mutex_lock_killable_nest_lock(m, outer) \
+	kd_map_mutex_lock_killable(m)
+#define kd_map_mutex_trylock_nest_lock(m, outer)	kd_map_mutex_trylock(m)
+/*
+ * atomic_dec_and_mutex_lock(), devm_mutex_init() and the guard classes
+ * (mutex, mutex_try, mutex_intr) keep their generic definitions.
+ */
+
+/* ---- linux/ww_mutex.h ------------------------------------------------------
+ *
+ *	struct ww_mutex { struct kd_ww_mutex kd; };
+ *
+ * struct ww_acquire_ctx, struct ww_class and ww_acquire_init/done/fini()
+ * stay as they are.
+ */
+#define kd_map_ww_mutex_init(l, cls)		kd_ww_mutex_init(&(l)->kd, cls)
+#define kd_map_ww_mutex_lock(l, ctx)		kd_ww_mutex_lock(&(l)->kd, ctx)
+#define kd_map_ww_mutex_lock_interruptible(l, ctx) \
+	kd_ww_mutex_lock_interruptible(&(l)->kd, ctx)
+#define kd_map_ww_mutex_lock_slow(l, ctx)	kd_ww_mutex_lock_slow(&(l)->kd, ctx)
+#define kd_map_ww_mutex_lock_slow_interruptible(l, ctx) \
+	kd_ww_mutex_lock_slow_interruptible(&(l)->kd, ctx)
+#define kd_map_ww_mutex_trylock(l, ctx)		kd_ww_mutex_trylock(&(l)->kd, ctx)
+#define kd_map_ww_mutex_unlock(l)		kd_ww_mutex_unlock(&(l)->kd)
+#define kd_map_ww_mutex_is_locked(l)		kd_ww_mutex_is_locked(&(l)->kd)
+#define kd_map_ww_mutex_destroy(l)		do { } while (0)
 
 /* ---- linux/rwsem.h -----------------------------------------------------------
  *
@@ -124,5 +193,19 @@ typedef struct kd_rwlock arch_rwlock_t;
 #define kd_map_up_write(s)			kd_up_write(&(s)->kd)
 #define kd_map_downgrade_write(s)		kd_downgrade_write(&(s)->kd)
 #define kd_map_rwsem_is_locked(s)		kd_rwsem_is_locked(&(s)->kd)
+#define kd_map_rwsem_is_contended(s)		kd_rwsem_is_contended(&(s)->kd)
+#define kd_map_rwsem_assert_held(s)		WARN_ON(!kd_rwsem_is_locked(&(s)->kd))
+#define kd_map_rwsem_assert_held_write(s) \
+	WARN_ON(!kd_rwsem_is_write_locked(&(s)->kd))
+/* No owner is recorded for readers, so the non-owner forms are the plain ones. */
+#define kd_map_down_read_non_owner(s)		kd_map_down_read(s)
+#define kd_map_up_read_non_owner(s)		kd_map_up_read(s)
+#define kd_map_down_read_nested(s, subclass)	kd_map_down_read(s)
+#define kd_map_down_read_killable_nested(s, subclass) \
+	kd_map_down_read_killable(s)
+#define kd_map_down_write_nested(s, subclass)	kd_map_down_write(s)
+#define kd_map_down_write_killable_nested(s, subclass) \
+	kd_map_down_write_killable(s)
+#define kd_map_down_write_nest_lock(s, outer)	kd_map_down_write(s)
 
 #endif /* KD_LINUX_MAP_H */

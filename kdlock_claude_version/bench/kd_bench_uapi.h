@@ -20,7 +20,37 @@ enum { KDB_SPIN, KDB_MUTEX, KDB_RWLOCK, KDB_RWSEM,
 	 * sections whose own counter changed under them, and a final
 	 * difference between outer sections run and the outer counter.
 	 */
-	KDB_NEST_SPIN, KDB_NEST_MUTEX, KDB_MIX };
+	KDB_NEST_SPIN, KDB_NEST_MUTEX, KDB_MIX,
+	/*
+	 * `current` inside the section, to measure what task-identity use
+	 * costs a delegated section. Same body as SPIN / MUTEX plus
+	 *   *_CURR  one read through `current` (current->pid)
+	 *   *_CURW  rcu_read_lock()/rcu_read_unlock(), which with preemptible
+	 *           RCU write the caller's task structure twice
+	 */
+	KDB_SPIN_CURR, KDB_SPIN_CURW, KDB_MUTEX_CURR, KDB_MUTEX_CURW,
+	/*
+	 * Test body, kd only: every operation takes two of four ww mutexes
+	 * in random order under one acquire context, backs off on -EDEADLK,
+	 * and increments the two counters they protect (run with lines = 2).
+	 */
+	KDB_WW,
+	/*
+	 * SPIN through the raw (never delegated) acquire: the plain path
+	 * alone. With the native backend: the native queued spinlock code on
+	 * the kd lock object.
+	 */
+	KDB_SPIN_RAW,
+	/*
+	 * Handback bodies: every sixteenth write section meets something only
+	 * its own task may run, so the section is handed back in the middle
+	 * and the role exchange is exercised.
+	 *   SPIN_HB, RWLOCK_HB  an instruction with a fault fixup
+	 *                       (copy_from_kernel_nofault)
+	 *   RWSEM_HB            yield()
+	 */
+	KDB_SPIN_HB, KDB_RWLOCK_HB, KDB_RWSEM_HB,
+	KDB_NR_FAMILY };
 /*
  * KDB_TCLOCK: the original TCLock locks from tclock_backend/ (komb_*),
  * present only in a module built with KDB_TCLOCK=1, for the four base
@@ -52,5 +82,11 @@ struct kdb_run {
 };
 
 #define KDB_IOC_RUN	_IOWR('B', 1, struct kdb_run)
+/*
+ * Single-task check of every kd lock API variant: each call must leave the
+ * lock state, the interrupt flag and the preempt count as the native
+ * variant would. Returns the number of failed checks (details in dmesg).
+ */
+#define KDB_IOC_APITEST	_IO('B', 2)
 
 #endif

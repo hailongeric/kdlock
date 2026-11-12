@@ -49,7 +49,34 @@ static const struct kd_family kd_rw_family = {
 	.post		= kd_rw_post,
 	.release	= kd_rw_release_wait,
 	.keeps_q	= true,
+	.always_deleg	= true,
 };
+
+/* Tail-called by the entry stub when this CPU cannot publish. */
+void kd_write_lock_plain(struct kd_rwlock *rw)
+{
+	if (unlikely(!kd_q_trylock_fifo(&rw->wait)))
+		kd_q_lock_plain(&rw->wait);
+	kd_rw_post(rw);
+	kd_q_unlock(&rw->wait);
+}
+
+/*
+ * Slow path of the delegable write entries, on the caller's stack with
+ * preemption off; see kd_q_lock_slow(). A contended writer publishes its
+ * continuation whenever it can (kd_family.always_deleg). Otherwise this is
+ * the native queued rwlock's writer slow path: take the wait lock, wait
+ * for readers and the writer to leave, take the writer byte, drop the
+ * wait lock.
+ */
+bool kd_write_lock_slow(struct kd_rwlock *rw, unsigned long site)
+{
+	if (kd_can_offer(site))
+		return false;
+	raw_cpu_inc(kd_cpu.nodes[0].nplain);
+	kd_write_lock_plain(rw);
+	return true;
+}
 
 /* Called by the entry stub on the wait stack. */
 int kd_write_wait(struct kd_rwlock *rw)
@@ -64,15 +91,11 @@ int kd_write_wait(struct kd_rwlock *rw)
 /* Contended kd_write_lock*() inside a section; see kd_nested_acquire(). */
 int kd_write_nested(struct kd_rwlock *rw, struct kd_regs *r, void *entry)
 {
+	if (!entry) {
+		kd_write_lock_plain(rw);
+		return KD_WAIT_LOCAL;
+	}
 	return kd_wait_spin(&rw->wait, rw, &kd_rw_family, r, entry);
-}
-
-/* Tail-called by the entry stub when this CPU cannot publish. */
-void kd_write_lock_plain(struct kd_rwlock *rw)
-{
-	kd_q_lock_plain(&rw->wait);
-	kd_rw_post(rw);
-	kd_q_unlock(&rw->wait);
 }
 
 int kd_write_trylock(struct kd_rwlock *rw)
@@ -86,6 +109,26 @@ int kd_write_trylock(struct kd_rwlock *rw)
 	return 0;
 }
 EXPORT_SYMBOL(kd_write_trylock);
+
+int kd_write_trylock_irqsave(struct kd_rwlock *rw, unsigned long *flags)
+{
+	local_irq_save(*flags);
+	if (kd_write_trylock(rw))
+		return 1;
+	local_irq_restore(*flags);
+	return 0;
+}
+EXPORT_SYMBOL(kd_write_trylock_irqsave);
+
+/* arch_write_lock() level: the caller manages preemption. Never delegated. */
+void kd_arch_write_lock(struct kd_rwlock *rw)
+{
+	int c = 0;
+
+	if (unlikely(!atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED)))
+		kd_write_lock_plain(rw);
+}
+EXPORT_SYMBOL(kd_arch_write_lock);
 
 void kd_write_unlock(struct kd_rwlock *rw)
 {
@@ -132,7 +175,8 @@ static noinline void kd_read_lock_slow(struct kd_rwlock *rw)
 	}
 	atomic_sub(KD_RW_RBIAS, &rw->cnts);
 
-	kd_q_lock_plain(&rw->wait);
+	if (unlikely(!kd_q_trylock_fifo(&rw->wait)))
+		kd_q_lock_plain(&rw->wait);
 	atomic_add(KD_RW_RBIAS, &rw->cnts);
 	/* Holding ->wait excludes queued writers; a trylock writer may be active. */
 	atomic_cond_read_acquire(&rw->cnts, !(VAL & KD_RW_WLOCKED));
@@ -146,6 +190,13 @@ static __always_inline void __kd_read_lock(struct kd_rwlock *rw)
 	if (unlikely(c & KD_RW_WMASK))
 		kd_read_lock_slow(rw);
 }
+
+/* arch_read_lock() level: the caller manages preemption. */
+void kd_arch_read_lock(struct kd_rwlock *rw)
+{
+	__kd_read_lock(rw);
+}
+EXPORT_SYMBOL(kd_arch_read_lock);
 
 void kd_read_lock(struct kd_rwlock *rw)
 {

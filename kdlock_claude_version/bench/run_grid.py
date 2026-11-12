@@ -41,7 +41,19 @@ PROFILES = {
     "rwlock_c01_w20": ("rwlock", 1, 20, 256),
     "rwlock_c16_w1": ("rwlock", 16, 1, 256),
     "rwlock_c16_w20": ("rwlock", 16, 20, 256),
+    # `current` inside the section; compare with spin_c01 / mutex_c01.
+    "spin_c01_curr": ("spin_curr", 1, 100, 64),
+    "spin_c01_curw": ("spin_curw", 1, 100, 64),
+    "mutex_c01_curr": ("mutex_curr", 1, 100, 256),
+    "mutex_c01_curw": ("mutex_curw", 1, 100, 256),
+    # The plain path alone, and sections that are handed back.
+    "spin_c01_raw": ("spin_raw", 1, 100, 64),
+    "spin_c01_hb": ("spin_hb", 1, 100, 64),
+    "rwlock_c01_hb": ("rwlock_hb", 1, 100, 256),
+    "rwsem_c01_hb": ("rwsem_hb", 1, 100, 256),
 }
+# The default grid; the other profiles are run on request.
+GRID = [p for p in PROFILES if not p.endswith(("_curr", "_curw", "_raw", "_hb"))]
 WORKERS = [1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32]
 
 
@@ -61,7 +73,7 @@ def identity():
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", required=True, help="JSON lines file (appended)")
-    ap.add_argument("--profiles", nargs="+", default=list(PROFILES), choices=PROFILES)
+    ap.add_argument("--profiles", nargs="+", default=GRID, choices=PROFILES)
     ap.add_argument("--workers", type=int, nargs="+", default=WORKERS)
     ap.add_argument("--rounds", type=int, default=1)
     ap.add_argument("--ms", type=int, default=2000)

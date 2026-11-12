@@ -547,11 +547,11 @@ static long kd_text_query(struct kd_text_query __user *uarg)
 	  .cls = KD_SYM_NESTED, .op = (o) }
 
 /*
- * Lock entry points the translator must not treat as ordinary callees.
+ * The kd_ functions generated code may meet, by class (kd_uapi.h).
  * Spin-class acquires are called through their _jit entry, which leaves
- * generated code only when contended. Everything else in the kd_ API is
- * called natively from generated code and acts for the origin through
- * kd_logical_current().
+ * generated code only when contended. KD_SYM_LOCAL functions never sleep
+ * and act for the origin through kd_logical_current(), so the copy calls
+ * them natively. A kd_ function that is not listed here is a frontier.
  */
 static const struct kd_sym kd_syms[] = {
 	KD_SYM(kd_spin_unlock,			KD_SYM_UNLOCK,	KD_OP_UNLOCK),
@@ -568,6 +568,7 @@ static const struct kd_sym kd_syms[] = {
 	KD_SYM(kd_mutex_lock,			KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
 	KD_SYM(kd_mutex_lock_interruptible,	KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
 	KD_SYM(kd_mutex_lock_killable,		KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
+	KD_SYM(kd_mutex_lock_io,		KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
 	KD_SYM(kd_down_read,			KD_SYM_ACQUIRE,	KD_OP_DOWN_READ),
 	KD_SYM(kd_down_read_interruptible,	KD_SYM_ACQUIRE,	KD_OP_DOWN_READ),
 	KD_SYM(kd_down_read_killable,		KD_SYM_ACQUIRE,	KD_OP_DOWN_READ),
@@ -581,6 +582,36 @@ static const struct kd_sym kd_syms[] = {
 	KD_SYM_NEST(kd_write_lock_irq,		KD_OP_NEST_WRITE),
 	KD_SYM_NEST(kd_write_lock_irqsave,	KD_OP_NEST_WRITE),
 	KD_SYM_NEST(kd_write_lock_bh,		KD_OP_NEST_WRITE),
+	/* Spin without publishing, or do not wait at all. */
+	KD_SYM(kd_raw_spin_lock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_raw_spin_lock_irq,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_raw_spin_lock_irqsave,	KD_SYM_LOCAL,	0),
+	KD_SYM(kd_raw_spin_lock_bh,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_arch_spin_lock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_spin_trylock,			KD_SYM_LOCAL,	0),
+	KD_SYM(kd_spin_trylock_bh,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_spin_trylock_irq,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_spin_trylock_irqsave,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_write_trylock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_write_trylock_irqsave,	KD_SYM_LOCAL,	0),
+	KD_SYM(kd_arch_write_lock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_read_lock,			KD_SYM_LOCAL,	0),
+	KD_SYM(kd_read_lock_irq,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_read_lock_irqsave,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_read_lock_bh,			KD_SYM_LOCAL,	0),
+	KD_SYM(kd_arch_read_lock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_read_trylock,			KD_SYM_LOCAL,	0),
+	KD_SYM(kd_read_unlock,			KD_SYM_LOCAL,	0),
+	KD_SYM(kd_read_unlock_irq,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_read_unlock_irqrestore,	KD_SYM_LOCAL,	0),
+	KD_SYM(kd_read_unlock_bh,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_mutex_trylock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_mutex_get_owner,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_ww_mutex_trylock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_ww_mutex_unlock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_down_read_trylock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_down_write_trylock,		KD_SYM_LOCAL,	0),
+	KD_SYM(kd_up_read,			KD_SYM_LOCAL,	0),
 };
 static_assert(ARRAY_SIZE(kd_syms) <= KD_MAX_SYMS);
 

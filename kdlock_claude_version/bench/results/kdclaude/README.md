@@ -74,3 +74,41 @@ alternating per point, 2 rounds, 1008 points, no failures.
 `corr24.jsonl`: correctness on the same boot, 297 points exact (all
 families, three backends, plus nest/mix under kd), `handback_pinned` 0.
 `summary.txt` holds the per-point table.
+
+## Adaptive delegation (`probes-20261112/`)
+
+Builds #25–#35 on 2026-11-12: plain mode (native algorithm on the caller's
+stack) for spinlock and mutex, delegation mode entered and left by queue
+depth, the complete Linux 7.0 lock API. `run_corr.py` is the correctness
+pass (240 points plus the single-task API check).
+
+| File | Build | What |
+| --- | --- | --- |
+| `c25_delegoff.jsonl` | #25 | first adaptive build with the translator stopped, so every point is plain mode. Recorded because it was the first measurement of the plain path alone (spin 0.73–0.85 of Native, mutex 0.95–1.12) |
+| `c33.jsonl` | #33 | spin and mutex, Native/kd/TCLock, 2 rounds, after the plain spin path reached Native (below) |
+| `c34.jsonl` | #34 | mutex and rwsem w20, 2 rounds, release by one locked subtraction. Shows rwsem writers no longer delegating under a depth threshold (0% delegated, n16 1.46 Mops against 3.09 in round 4), which is why rwlock and rwsem always delegate |
+| `ab34enter.jsonl` | #34 | A/B in one boot: `kd_deleg_enter` 3/4/5 with `kd_deleg_exit` 2 |
+| `c35.jsonl`, `c35.summary.txt` | #35 | the committed state: spin, mutex, rwlock w20, rwsem w20, three backends, 1 round |
+| `corr35.jsonl` | #35 | correctness, 240 points exact, API check 65/65 |
+
+What the plain spinlock path needed to match Native, each step measured (kd
+spin c01, Native in the same boot; ratios are kd/Native at 3/4/5 workers):
+
+| Build | Change | 3 / 4 / 5 workers |
+| --- | --- | --- |
+| #25 | native algorithm in C, called from the entry stub | 0.79 / 0.79 / 0.79 |
+| #26 | no read of the predecessor's node before linking, no look at the tail node to learn the mode, look before the second trylock | 0.83 / 0.86 / 0.89 |
+| #27 | per-CPU state in 128-byte blocks, so a remote access to a node does not drag a local line along | 0.87 / 0.91 / 0.92 (delegation mode at 16/32 workers +20%) |
+| #29 | node count in the node's own cache line, as the native lock has it | raw API 1.00 / 1.00 / 1.00; delegable entry 0.92 / 0.95 / 0.95 |
+| #32 | A/B of each remaining piece in one boot (temporary switch): only the sampling counter mattered, and only when it was written in the node line (0.85 / 0.95 / 0.94 against 1.00 / 0.99 / 0.99 with it in a local line) | |
+| #33 | sampling counter in a local line, statistics and mode memory in the node line | 1.01 / 0.99 / 0.99 |
+
+The node-count finding came from a replica of the slow path inside the bench
+module with switchable variants (not kept): compact native-style nodes ran at
+Native's rate, and moving only the count to another line cost 12% at 3
+workers. A store that waits for its cache line holds up every later store of
+that CPU, including the lock handover.
+
+Rates between builds differ by up to about 15% in delegation mode for
+reasons not established (#27 6.45, #28 5.58, #35 6.29 Mops for spin c01 at 16
+workers with identical queue code). Compare only within one boot.

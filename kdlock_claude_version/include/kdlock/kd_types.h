@@ -16,11 +16,14 @@
 struct task_struct;
 
 /*
- * Queue word shared by all four families.
+ * Queue word shared by all four families. The layout is that of the native
+ * queued spinlock, so the spin class can use the same algorithm when it does
+ * not delegate.
  *
- *   locked  0 = free, 1 = held
- *   flags   family specific (mutex: KD_QF_*)
- *   tail    last queued waiter, (cpu + 1) << 2 | node index, 0 = no queue
+ *   locked   0 = free; KD_Q_LOCKED while held, plus holder-owned mode bits
+ *   pending  spin class: one waiter spins on ->locked outside the queue
+ *   flags    sleepable class (same byte): KD_QF_*
+ *   tail     last queued waiter, (cpu + 1) << 2 | node index, 0 = no queue
  *
  * Little-endian layout; x86_64 only.
  */
@@ -29,16 +32,40 @@ struct kd_qlock {
 		atomic_t	val;
 		struct {
 			u8	locked;
-			u8	flags;
+			union {
+				u8	pending;
+				u8	flags;
+			};
 			u16	tail;
 		};
+		u16		locked_pending;
 	};
 };
 
-#define KD_Q_LOCKED		1U
-#define KD_QF_SLEEPERS		0x01	/* mutex: tasks are parked on ->waiters */
-#define KD_QF_HANDOFF		0x02	/* mutex: next release goes to the first parked task */
-#define KD_QF_PENDING		0x01	/* spinlock: one waiter spins on ->locked outside the queue */
+/*
+ * ->locked. Only the holder writes this byte while the lock is held, and a
+ * release clears all of it.
+ *
+ * KD_Q_DELEG (spin class): the queue is deep enough for delegation to pay
+ * off; contended callers publish their continuation while they see it.
+ * KD_Q_XHEAD: the holder received its section back from a combiner, which
+ * now waits at the queue head as a delegable waiter; the holder's release
+ * takes the head role over (see kd_release_combine()).
+ */
+#define KD_Q_LOCKED		0x01U
+#define KD_Q_DELEG		0x02U
+#define KD_Q_XHEAD		0x04U
+#define KD_Q_LOCKED_MASK	0x000000ffU
+#define KD_Q_PENDING_VAL	0x00000100U
+#define KD_Q_PENDING_MASK	0x0000ff00U
+#define KD_Q_LOCKED_PENDING_MASK 0x0000ffffU
+#define KD_Q_TAIL_SHIFT		16
+
+/* ->flags of a mutex queue word (changed with atomic operations only). */
+#define KD_QF_SLEEPERS		0x01	/* tasks are parked on ->waiters */
+#define KD_QF_HANDOFF		0x02	/* next release goes to the first parked task */
+#define KD_QF_DELEG		0x04	/* delegation mode, as KD_Q_DELEG */
+#define KD_QF_XHEAD		0x08	/* as KD_Q_XHEAD */
 #define KD_QF_SHIFT		8
 
 #define __KD_QLOCK_UNLOCKED	{ { .val = ATOMIC_INIT(0) } }
@@ -105,6 +132,7 @@ struct kd_rwsem {
 #define KD_RWSEM_WLOCKED	0x01L
 #define KD_RWSEM_WWAIT		0x02L	/* queue holder is a writer waiting for readers */
 #define KD_RWSEM_NEEDWAKE	0x04L	/* queue holder sleeps on count */
+#define KD_RWSEM_XHEAD		0x08L	/* as KD_Q_XHEAD, for the write holder */
 #define KD_RWSEM_WMASK		(KD_RWSEM_WLOCKED | KD_RWSEM_WWAIT)
 #define KD_RWSEM_RSHIFT		8
 #define KD_RWSEM_RBIAS		(1L << KD_RWSEM_RSHIFT)
@@ -113,5 +141,17 @@ struct kd_rwsem {
 	.count = ATOMIC_LONG_INIT(0),					\
 	.m = __KD_MUTEX_INITIALIZER((name).m),				\
 }
+
+/*
+ * Wound/wait mutex: a mutex plus the acquire context that holds it. The
+ * context and class types are the kernel's own (linux/ww_mutex.h).
+ */
+struct ww_acquire_ctx;
+struct ww_class;
+
+struct kd_ww_mutex {
+	struct kd_mutex		base;
+	struct ww_acquire_ctx	*ctx;
+};
 
 #endif /* _KDLOCK_KD_TYPES_H */
