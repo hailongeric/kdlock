@@ -27,6 +27,23 @@
 #include "state.h"
 #include "rw.h"
 #include "rw_native.h"
+#include "rw_admission.h"
+
+static void rw_queue_get(struct kd_mutex_node *node)
+{
+	if (node->rw && node->rw->atomic_admission && !node->rw_admission_queued) {
+		kd_rw_admission_queue_get(node->rw);
+		node->rw_admission_queued = true;
+	}
+}
+
+static void rw_queue_put(struct kd_mutex_node *node)
+{
+	if (node->rw_admission_queued) {
+		node->rw_admission_queued = false;
+		kd_rw_admission_queue_put(node->rw);
+	}
+}
 
 static unsigned long node_observation_flags(struct kd_mutex_node *node)
 {
@@ -106,6 +123,7 @@ static void cancel_actor_done(struct kd_mutex_node *node, unsigned int actor)
 static void cancel_queue_depart(struct kd_mutex_node *node)
 {
 	if (!smp_load_acquire(&node->queue_done)) {
+		rw_queue_put(node);
 		smp_store_release(&node->queue_done, 1);
 		observe_node(KD_OBS_QUEUE_DONE, node, NULL, NULL,
 			KD_MUTEX_SELECTED_CANCELLED, 0);
@@ -400,6 +418,7 @@ static void mcs_physical_unlock(void *object)
 	for (;;) {
 		next = smp_load_acquire(&head->next);
 		if (!next && cmpxchg(&lock->tail, head, NULL) == head) {
+			rw_queue_put(head);
 			smp_store_release(&head->queue_done, 1);
 			observe_node(KD_OBS_QUEUE_DONE, head, batch, NULL,
 				     atomic_read(&head->selection), 0);
@@ -429,6 +448,7 @@ static void mcs_physical_unlock(void *object)
 				  KD_MUTEX_SELECTED_LOCAL);
 	BUG_ON(selection != KD_MUTEX_OFFERED &&
 	       selection != KD_MUTEX_SELECTED_LOCAL);
+	rw_queue_put(head);
 	smp_store_release(&head->queue_done, 1);
 	observe_node(KD_OBS_QUEUE_DONE, head, batch, next,
 		     atomic_read(&head->selection), 0);
@@ -493,6 +513,7 @@ int kd_mutex_node_init(struct kd_mutex_node *node,
 	node->service_policy = KD_MUTEX_SERVICE_DEFAULT;
 	node->synchronous_outer = false;
 	node->rw = NULL;
+	node->rw_admission_queued = false;
 	node->shared_read = false;
 	atomic_set(&node->read_users, 0);
 	node->read_return_user = NULL;
@@ -555,6 +576,8 @@ static void link_request(struct kd_mutex *lock, struct kd_mutex_node *node,
 {
 	struct kd_mutex_node *previous;
 
+	/* Close reader admission before the first externally visible link. */
+	rw_queue_get(node);
 	previous = xchg(&lock->tail, node);
 	if (previous) {
 		/* Final previous-node access: the consumer may detach after this. */
@@ -621,6 +644,7 @@ static void detach_proxy(struct kd_mutex_batch *batch, struct kd_mutex_node *nod
 		 */
 		WRITE_ONCE(head->next, NULL);
 		if (cmpxchg(&batch->lock->tail, node, head) == node) {
+			rw_queue_put(node);
 			smp_store_release(&node->queue_done, 1);
 			observe_node(KD_OBS_QUEUE_DONE, node, batch, head,
 				     node->native_local ? KD_MUTEX_SELECTED_LOCAL : KD_MUTEX_SELECTED_PROXY, 0);
@@ -630,6 +654,7 @@ static void detach_proxy(struct kd_mutex_batch *batch, struct kd_mutex_node *nod
 	}
 	WRITE_ONCE(head->next, next);
 	/* Observing next proves its producer's final node access completed. */
+	rw_queue_put(node);
 	smp_store_release(&node->queue_done, 1);
 	observe_node(KD_OBS_QUEUE_DONE, node, batch, head,
 		     node->native_local ? KD_MUTEX_SELECTED_LOCAL : KD_MUTEX_SELECTED_PROXY, 0);
@@ -1478,7 +1503,7 @@ void kd_mutex_wait_retirable(struct kd_mutex_node *node)
 int kd_mutex_native_node_init(struct kd_mutex_node *node,
 		struct kd_rw_native_record *record)
 {
-	if (!node || !record)
+	if (!node || !record || !record->pool || !record->pool->lock)
 		return -EINVAL;
 	node->native_local = record;
 	node->next = NULL;
@@ -1502,7 +1527,8 @@ int kd_mutex_native_node_init(struct kd_mutex_node *node,
 	atomic_set(&node->cancel_users, 0);
 	node->service_policy = KD_MUTEX_SERVICE_WRITER_COHORT;
 	node->synchronous_outer = true;
-	node->rw = NULL;
+	node->rw = record->pool->lock;
+	node->rw_admission_queued = false;
 	node->shared_read = false;
 	node->requester = current;
 	node->state = NULL;
@@ -1524,12 +1550,16 @@ int kd_mutex_native_enqueue(struct kd_mutex *lock, struct kd_mutex_node *node,
 		bool try_only)
 {
 	if (!lock || !node || !node->native_local || node->state ||
+	    !node->rw || &node->rw->queue != lock ||
 	    node->requester != current || node->enqueued)
 		return -EINVAL;
 	node->lock = lock;
 	if (try_only) {
-		if (cmpxchg(&lock->tail, NULL, node))
+		rw_queue_get(node);
+		if (cmpxchg(&lock->tail, NULL, node)) {
+			rw_queue_put(node);
 			return 0;
+		}
 		node->enqueued = true;
 		smp_store_release(&node->turn, 1);
 		observe_node(KD_OBS_ENQUEUE, node, NULL, NULL, KD_MUTEX_SELECTED_LOCAL, 0);
@@ -1550,7 +1580,7 @@ int kd_mutex_native_start(struct kd_mutex_node *node, struct kd_mutex_batch *bat
 		return -EINVAL;
 	batch->lock = node->lock;
 	batch->head = node;
-	/* Family admission/conversion is done under kd_rw.guard by native glue. */
+	/* Native glue owns family admission/conversion, including the rwsem word. */
 	batch->rw = NULL;
 	result = kd_mutex_release_owner_init(&batch->release_owner,
 			mcs_physical_unlock, node->lock, false);

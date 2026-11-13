@@ -8,6 +8,7 @@
 #include "task_storage.h"
 #include "lifecycle.h"
 #include "rw_native.h"
+#include "rw_admission.h"
 #include "../include/kd_linux_rwsem.h"
 
 EXPORT_SYMBOL_GPL(kd_mutex_init);
@@ -17,6 +18,7 @@ EXPORT_SYMBOL_GPL(kd_spin_init);
 EXPORT_SYMBOL_GPL(kd_spin_lock_entry_asm);
 EXPORT_SYMBOL_GPL(kd_spin_unlock_entry_asm);
 EXPORT_SYMBOL_GPL(kd_rwsem_init);
+EXPORT_SYMBOL_GPL(kd_rw_admission_readers);
 EXPORT_SYMBOL_GPL(kd_rwsem_down_read_entry_asm);
 EXPORT_SYMBOL_GPL(kd_rwsem_up_read_entry_asm);
 EXPORT_SYMBOL_GPL(kd_rwsem_down_write_entry_asm);

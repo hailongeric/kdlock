@@ -51,6 +51,10 @@ enum kd_observation_kind {
 	KD_OBS_FAST_ACQUIRE, KD_OBS_FAST_RELEASE,
 	/* Task-root shared credit, after READ_RELEASE and final lock-object use. */
 	KD_OBS_FAST_READ_DONE,
+	/* Exact ordinary rwsem record, after final object and queue access.
+	 * phase identifies its initial read/write acquisition, including downgrade.
+	 */
+	KD_OBS_ORDINARY_RWSEM_DONE,
 };
 
 #define KD_OBS_FLAG_ENQUEUED             (1UL << 0)
@@ -67,6 +71,7 @@ enum kd_observation_kind {
 #define KD_OBS_FLAG_NODE_RETIRABLE       (1UL << 11)
 #define KD_OBS_FLAG_ATOMIC_CONTEXT       (1UL << 12)
 #define KD_OBS_FLAG_FAST_READ            (1UL << 13)
+#define KD_OBS_FLAG_ORDINARY_RWSEM        (1UL << 14)
 
 struct kd_observation {
 	unsigned long kind, task, state, origin, node, acquisition, parent;

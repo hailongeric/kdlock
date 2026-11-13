@@ -1,4 +1,4 @@
-"""VM-only production-excerpt checks for native rwsem fast reader credits."""
+"""VM-only retained credit/guard utility checks; atomic admission has its own fixture."""
 import hashlib
 import json
 import os
@@ -10,7 +10,8 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-RW_FUNCTIONS = ('kd_rw_read_credit_init', 'rw_context', 'prepare_credit', 'credit_matches',
+RW_FUNCTIONS = ('kd_rw_read_link_init', 'kd_rw_read_link_task', 'kd_rw_read_unlink_task',
+                'kd_rw_read_credit_init', 'rw_context', 'prepare_credit', 'credit_matches',
                 'rw_progress', 'kd_rw_read_acquire', 'kd_rw_read_release', 'kd_rw_last_owned_read',
                 'kd_rw_fast_read_init', 'kd_rw_fast_read_trylock', 'kd_rw_fast_read_is_last',
                 'kd_rw_fast_read_release')

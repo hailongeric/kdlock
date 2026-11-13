@@ -27,6 +27,7 @@
 #include <asm/msr-index.h>
 
 #include "kernel/mutex.h"
+#include "kernel/rw_admission.h"
 #include "kernel/runtime.h"
 #include "kernel/observation.h"
 #include "kernel/task_state.h"
@@ -547,7 +548,7 @@ static bool notrace fixture_locks_clear(void)
 
 	for (index = 0; index < FIXTURE_MAX_ITERATIONS; ++index) {
 #ifdef KD_FIXTURE_READERS
-		if (READ_ONCE(lock_a[index].core.readers) || READ_ONCE(lock_b[index].core.readers) ||
+		if (kd_rw_admission_readers(&lock_a[index].core) || atomic_long_read(&lock_a[index].core.admission) || kd_rw_admission_readers(&lock_b[index].core) || atomic_long_read(&lock_b[index].core.admission) ||
 		    READ_ONCE(lock_a[index].core.writer) || READ_ONCE(lock_b[index].core.writer) ||
 		    READ_ONCE(lock_a[index].core.writer_pending) || READ_ONCE(lock_b[index].core.writer_pending))
 			return false;

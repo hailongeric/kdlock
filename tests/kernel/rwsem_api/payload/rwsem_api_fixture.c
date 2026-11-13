@@ -22,6 +22,7 @@
 
 #include "include/kd_linux_rwsem.h"
 #include "kernel/observation.h"
+#include "kernel/rw_admission.h"
 #include "kernel/rw_native.h"
 
 #ifndef CONFIG_KDLOCK_REBUILD
@@ -374,7 +375,7 @@ static int draining_turn(struct worker *worker)
 			 * before inspecting its initialized field under the family guard.
 			 */
 			if (fixture.gate.core.writer_pending && !fixture.gate.core.writer &&
-			    fixture.gate.core.readers && record->task == worker->task &&
+			    kd_rw_admission_readers(&fixture.gate.core) && record->task == worker->task &&
 			    record->phase == KD_RW_NATIVE_WRITE_WAIT && record->turn_owned &&
 			    record->batch.initialized && record->queue_user && !record->grant_user)
 				found = true;
@@ -411,7 +412,7 @@ static int cancelled(enum action action, int signal, bool read_blocker)
 		    write_grants != atomic64_read(&fixture.counts[2])) return -EUCLEAN;
 		raw_spin_lock(&fixture.gate.core.guard);
 		turn_clean = !fixture.gate.core.writer_pending && !fixture.gate.core.writer &&
-			!READ_ONCE(fixture.gate.core.queue.tail) && fixture.gate.core.readers == 1;
+			!READ_ONCE(fixture.gate.core.queue.tail) && kd_rw_admission_readers(&fixture.gate.core) == 1;
 		raw_spin_unlock(&fixture.gate.core.guard);
 		if (!turn_clean) return -EUCLEAN;
 		fixture.turn_cleanup_proved = true;

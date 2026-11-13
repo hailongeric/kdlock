@@ -15,6 +15,8 @@
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #x); exit(1); } } while (0)
 #define BUG_ON(x) CHECK(!(x))
 #define READ_ONCE(x) (x)
+#define WRITE_ONCE(x, v) ((x) = (v))
+#define smp_load_acquire(p) (*(p))
 #define TASK_RUNNING 0
 #define TASK_UNINTERRUPTIBLE 2
 #define TASK_KILLABLE 3
@@ -35,9 +37,12 @@ static void raw_spin_lock(raw_spinlock_t *g) { CHECK(!g->held); g->held = true; 
 static void raw_spin_unlock(raw_spinlock_t *g)
 { CHECK(g->held); g->held = false; after_unlock(g); }
 typedef int atomic_t;
+typedef long atomic_long_t;
 static void atomic_set(atomic_t *value, int next) { *value = next; }
 
-struct task_struct { unsigned int state; unsigned int refs; bool fatal; };
+struct task_struct { unsigned int state; unsigned int refs; bool fatal;
+	struct kd_task_root_context *kd_root_context; };
+struct kd_task_root_context { struct list_head rwsem_reads; };
 struct kd_execution_binding;
 struct kd_thread_state { struct task_struct *origin; struct kd_execution_binding *binding; };
 struct kd_execution_binding { struct kd_thread_state *state; };
@@ -127,6 +132,35 @@ static unsigned int event_count;
 	CHECK(event_count < 64); \
 	events[event_count++] = (struct kd_observation){ .kind = (k), .task = (unsigned long)current, __VA_ARGS__ }; \
 } while (0)
+/* Retained guard controls and one writer wake interval are checked here.
+ * Atomic admission itself has a separate production-function fixture.
+ */
+static struct kd_rw *wake_window;
+static bool wake_pending, wake_sampled;
+static unsigned int reschedules;
+static bool kd_rw_admission_read_try(struct kd_rw *lock)
+{ CHECK(!lock->atomic_admission); return false; }
+static void kd_rw_admission_read_put(struct kd_rw *lock) { CHECK(!lock->atomic_admission); }
+static bool kd_rw_admission_write_try(struct kd_rw *lock, bool queued)
+{
+	if (lock == wake_window) { CHECK(queued && lock->guard.held); return !wake_pending; }
+	CHECK(!lock->atomic_admission); return false;
+}
+static void kd_rw_admission_write_put(struct kd_rw *lock, bool downgrade)
+{
+	if (lock == wake_window) { CHECK(!downgrade && !wake_pending); return; }
+	CHECK(!lock->atomic_admission);
+}
+static bool kd_rw_admission_waking(struct kd_rw *lock)
+{
+	if (lock == wake_window) {
+		CHECK(lock->guard.held);
+		wake_sampled = true;
+		return wake_pending;
+	}
+	CHECK(!lock->atomic_admission); return false;
+}
+static void cond_resched(void) { CHECK(current->state == TASK_RUNNING); ++reschedules; }
 #include "writer_functions.h"
 
 struct fixture {
@@ -149,6 +183,8 @@ static bool retired;
 
 static void after_unlock(raw_spinlock_t *guard)
 {
+	if (wake_window && guard == &wake_window->guard && wake_sampled)
+		wake_pending = false;
 	if (retire_lock && guard == &retire_lock->guard) {
 		CHECK(!retired && !retire_lock->writer && !retire_lock->readers && wakeups);
 		CHECK(!mprotect(retire_lock, retire_size, PROT_NONE));
@@ -301,6 +337,20 @@ static void check_blocked(void)
 	CHECK(f.progress_calls == 2 && prepares == 2 && finishes == 1 && !schedules);
 	kd_rw_writer_exit(&f.lock, &f.batch, NULL);
 }
+static void check_wake_clear(void)
+{
+	struct fixture f = {0}; setup(&f);
+	f.node.ops = NULL; f.lock.atomic_admission = true;
+	wake_window = &f.lock; wake_pending = true;
+	/* The wake predates registration, but WAKE survives until the guarded
+	 * probe. after_unlock clears it before the writer chooses whether to sleep.
+	 */
+	CHECK(!kd_rw_writer_enter(&f.lock, &f.batch, &f.node));
+	check_granted(&f);
+	CHECK(wake_sampled && !wake_pending && reschedules == 1 && !schedules &&
+	      prepares == 2 && finishes == 1);
+	kd_rw_writer_exit(&f.lock, &f.batch, NULL);
+}
 static void check_cancel(void)
 {
 	struct fixture available = {0}, held = {0}, cancelled = {0};
@@ -416,6 +466,7 @@ int main(int argc, char **argv)
 	else if (!strcmp(argv[1], "drain_after_wait")) check_drain_after_wait();
 	else if (!strcmp(argv[1], "queued")) check_queued();
 	else if (!strcmp(argv[1], "blocked")) check_blocked();
+	else if (!strcmp(argv[1], "wake_clear")) check_wake_clear();
 	else if (!strcmp(argv[1], "cancel")) check_cancel();
 	else if (!strcmp(argv[1], "cohort")) check_cohort();
 	else if (!strcmp(argv[1], "nested")) check_nested();

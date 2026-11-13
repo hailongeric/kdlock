@@ -18,6 +18,7 @@ static struct kd_mutex rb_lock __aligned(64);
 #define RB_FAMILY KD_LOCK_FAMILY_MUTEX
 #else
 #include "include/kd_rwsem_api.h"
+#include "kernel/rw_admission.h"
 static struct kd_rwsem rb_lock __aligned(64);
 #define RB_WRITE_LOCK() kd_rwsem_down_write(&rb_lock)
 #define RB_WRITE_UNLOCK() kd_rwsem_up_write(&rb_lock)
@@ -76,9 +77,10 @@ static void rb_lock_snapshot(struct rw_bench_snapshot *s)
 #if defined(RB_KDLOCK) && defined(RB_MUTEX)
 	s->gate = READ_ONCE(rb_lock.tail) || READ_ONCE(rb_lock.owner);
 #elif defined(RB_KDLOCK)
-	s->cnts = READ_ONCE(rb_lock.core.readers);
+	s->cnts = kd_rw_admission_readers(&rb_lock.core);
 	s->gate = READ_ONCE(rb_lock.core.queue.tail) || READ_ONCE(rb_lock.core.queue.owner) ||
 		READ_ONCE(rb_lock.core.writer) || READ_ONCE(rb_lock.core.writer_pending) ||
+		atomic_long_read(&rb_lock.core.admission) || !list_empty(&rb_lock.core.read_waiters) ||
 		!list_empty(&rb_lock.core.active_reads);
 #elif defined(RB_TCLOCK) && defined(RB_MUTEX)
 	s->gate = READ_ONCE(rb_lock.tail) || READ_ONCE(rb_lock.locked) || READ_ONCE(rb_lock.combiner_task);

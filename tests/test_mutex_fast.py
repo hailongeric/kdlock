@@ -19,6 +19,7 @@ FUNCTIONS = {
     'kernel/mutex.c': ('publish_condition', 'wait_link', 'kd_mutex_fast_init',
                        'observe_fast', 'kd_mutex_fast_trylock', 'kd_mutex_fast_unlock'),
     'kernel/mutex_api.c': ('native_fast_eligible',),
+    'kernel/rw_local.c': ('kd_rw_local_root',),
     'kernel/task_state.c': ('kd_task_root_context_current', 'kd_task_root_detach_unpublished',
                             'kd_task_root_detach', 'kd_task_root_revoke_cancelled'),
     'kernel/task_progress.c': ('kd_task_validate_native',),
@@ -32,7 +33,7 @@ TYPES = {
 ENTRY_FUNCTIONS = {
     'kernel/state.h': ('kd_operation_is_lock', 'kd_operation_is_unlock', 'kd_operation_is_mode_change',
                        'kd_operation_family', 'kd_lock_family_is_atomic', 'kd_operation_is_atomic'),
-    'kernel/mutex_api.c': ('prepare_current',),
+    'kernel/mutex_api.c': ('prepare_current_with_image', 'prepare_current'),
 }
 
 
@@ -124,8 +125,11 @@ class MutexFastTests(unittest.TestCase):
     def test_shared_native_validation_retains_structural_checks(self):
         self.check_case('native_checks')
 
-    def test_read_rechecks_only_after_exact_progress_clears_eligibility(self):
-        self.check_case('read_recheck')
+    def test_retained_read_route_still_prepares_and_forwards_exact_image_use(self):
+        self.check_case('read_fallback')
+
+    def test_ordinary_rwsem_root_progresses_only_retained_duties(self):
+        self.check_case('rwsem_root')
 
 
 if __name__ == '__main__':

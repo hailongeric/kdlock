@@ -36,14 +36,17 @@ def progress(device, start, deadline, workers):
     return dict(started_ns=row[2], finished_ns=row[3], completed=list(row[6:6 + workers]))
 
 
-EVIDENCE = 0x420C
+EVIDENCE = 0x420D
 BIND = 0x40104208
 DESTROY = 0x4209
 RECORDING = 0xC010420A
 COUNTS = ('reserved', 'freed', 'prepared', 'proxy', 'entered', 'completed',
           'forwarded', 'errors', 'live', 'attached', 'detached', 'state',
           'origin', 'proof', 'read_acquired', 'read_released', 'fast_acquired', 'fast_released',
-          'fast_read_acquired', 'fast_read_released')
+          'fast_read_acquired', 'fast_read_released',
+          'ordinary_read_acquired', 'ordinary_read_released',
+          'ordinary_write_acquired', 'ordinary_write_released',
+          'ordinary_live', 'ordinary_queued_write')
 EVENT_FIELDS = ('kind', 'task', 'state', 'origin', 'node', 'acquisition', 'parent',
                 'owner', 'owner_task', 'object', 'image', 'ip', 'cursor', 'related',
                 'phase', 'result', 'flags', 'source_user', 'return_user', 'notifier')
@@ -51,7 +54,7 @@ EVENT_FIELDS = ('kind', 'task', 'state', 'origin', 'node', 'acquisition', 'paren
 
 def evidence():
     stride = (len(COUNTS) + 6 * 20) * 8
-    buffer = bytearray(16 + 64 * stride)
+    buffer = bytearray(32 + 64 * stride)
     with open(DEVICE, 'rb', buffering=0) as device:
         try:
             fcntl.ioctl(device, EVIDENCE, buffer, True)
@@ -59,17 +62,18 @@ def evidence():
             if error.errno != errno.EOPNOTSUPP:
                 raise
             return dict(available=False, workers=None, reason='phase recorder disabled')
-    version, workers = struct.unpack_from('=2Q', buffer)
-    if version != 3 or not 1 <= workers <= 64:
+    version, workers, delegation, proxy_limit = struct.unpack_from('=4Q', buffer)
+    if version != 4 or not 1 <= workers <= 64 or delegation not in (0, 1) or proxy_limit != delegation * 16:
         raise ValueError('evidence ABI or worker count differs')
     rows = []
     for index in range(workers):
-        offset = 16 + index * stride
+        offset = 32 + index * stride
         row = dict(zip(COUNTS, struct.unpack_from(f'={len(COUNTS)}Q', buffer, offset)))
         row['records'] = [dict(zip(EVENT_FIELDS, struct.unpack_from('=20Q', buffer,
                            offset + len(COUNTS) * 8 + record * 160))) for record in range(6)]
         rows.append(row)
-    return dict(version=version, available=True, workers=rows)
+    return dict(version=version, available=True, delegation_enabled=bool(delegation),
+                proxy_limit=proxy_limit, workers=rows)
 
 
 def set_recording(enabled):

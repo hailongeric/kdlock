@@ -15,6 +15,9 @@
 #define BUG_ON(x) CHECK(!(x))
 #define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
 #define WRITE_ONCE(x, v) __atomic_store_n(&(x), (v), __ATOMIC_RELAXED)
+#define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
+#define kd_root_context root
+typedef long atomic_long_t;
 #define TASK_RUNNING 0
 #define TASK_UNINTERRUPTIBLE 2
 #define KD_GRANT_PHYSICAL_READ 1
@@ -51,6 +54,7 @@ struct task_struct { int state; struct kd_task_root_context *root; };
 struct kd_execution_binding { struct kd_thread_state *state; };
 struct kd_thread_state { struct task_struct *origin; struct kd_execution_binding *binding; };
 struct kd_task_root_context {
+	struct list_head rwsem_reads;
 	struct kd_thread_state core;
 	struct kd_execution_binding binding;
 	struct kd_rw_read_credit rwsem_fast;
@@ -82,6 +86,17 @@ static pthread_mutex_t event_guard = PTHREAD_MUTEX_INITIALIZER;
 	events[event_count++] = (struct kd_observation){ .kind = (k), .task = (unsigned long)current, __VA_ARGS__ }; \
 	CHECK(!pthread_mutex_unlock(&event_guard)); \
 } while (0)
+/* These existing cases exercise the retained guard/credit lane. Refuse any
+ * accidental atomic-lane use; test_rwsem_admission compiles its real functions.
+ */
+static bool kd_rw_admission_read_try(struct kd_rw *lock)
+{ CHECK(!lock->atomic_admission); return false; }
+static int kd_rw_admission_read(struct kd_rw *lock, unsigned int state,
+		const struct kd_rw_wait_ops *ops, void *context)
+{ (void)state; (void)ops; (void)context; CHECK(!lock->atomic_admission); return -EINVAL; }
+static void kd_rw_admission_read_put(struct kd_rw *lock) { CHECK(!lock->atomic_admission); }
+static unsigned long kd_rw_admission_readers(struct kd_rw *lock)
+{ CHECK(!lock->atomic_admission); return lock->readers; }
 #include "read_functions.h"
 
 static struct kd_rwsem *sem;
@@ -183,6 +198,8 @@ static int kd_rw_native_read_unlock(struct kd_rw *lock, bool non_owner)
 	raw_spin_unlock(&lock->guard);
 	return 0;
 }
+static bool kd_rw_local_native_writer(struct kd_rw *lock)
+{ CHECK(!lock->atomic_admission); return false; }
 #include "linux_functions.h"
 
 static void check_credits(void)

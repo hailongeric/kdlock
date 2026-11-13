@@ -120,8 +120,11 @@ int kd_episode_resources_init(struct kd_episode_resources *resources,
 	resources->config.family = family;
 	resources->config.atomic_spin = kd_lock_family_is_atomic(family);
 	INIT_LIST_HEAD(&resources->grant_collect);
-	for (index = 0; index < capacity; ++index)
+	INIT_LIST_HEAD(&resources->ordinary_free);
+	for (index = 0; index < capacity; ++index) {
 		frame_init(&frames[index], resources, &pool->slots[index], NULL);
+		kd_rw_local_init(&frames[index].ordinary, &resources->ordinary_free);
+	}
 	return 0;
 }
 
@@ -507,13 +510,16 @@ static int cancel_private(struct kd_episode_frame *frame, bool prepared)
 static int prepare(struct kd_episode_resources *resources,
 		   struct kd_execution_binding *binding,
 		   struct kd_episode_frame *parent, enum kd_operation_kind operation,
+		   struct kd_jit_image_use *admitted,
 		   struct kd_episode_frame **result)
 {
 	struct kd_request_slot *slot;
 	struct kd_episode_frame *frame;
 	struct kd_jit_mutex_driver driver;
 	struct kd_task_root_context *physical = kd_task_root_context_current();
-	bool local_only = physical && (physical->mutex_fast.lock || physical->rwsem_fast.lock);
+	bool local_only = !resources->config.proxy_limit || (physical &&
+		(physical->mutex_fast.lock || physical->rwsem_fast.lock ||
+		 !list_empty(&physical->native_grants)));
 	bool prepared = false;
 	int error, unwind;
 
@@ -582,6 +588,9 @@ static int prepare(struct kd_episode_resources *resources,
 	if (parent)
 		error = kd_jit_image_use_extend(&parent->slot->source_use, &parent->image_user,
 			&slot->source_use, &frame->image_user, KD_JIT_IMAGE_USE_SOURCE);
+	else if (admitted)
+		error = kd_jit_image_use_extend(admitted, admitted, &slot->source_use,
+			&frame->image_user, KD_JIT_IMAGE_USE_SOURCE);
 	else
 		error = kd_jit_image_lookup(resources->config.image_slot, &slot->source_use,
 			resources->pool->state, &frame->image_user, KD_JIT_IMAGE_USE_SOURCE);
@@ -618,6 +627,14 @@ int kd_episode_prepare_root(struct kd_episode_resources *resources,
 		 struct kd_execution_binding *native_binding,
 		 enum kd_operation_kind operation, struct kd_episode_frame **frame)
 {
+	return kd_episode_prepare_root_admitted(resources, native_binding, operation, NULL, frame);
+}
+
+int kd_episode_prepare_root_admitted(struct kd_episode_resources *resources,
+		struct kd_execution_binding *native_binding,
+		enum kd_operation_kind operation, struct kd_jit_image_use *admitted,
+		struct kd_episode_frame **frame)
+{
 	int result;
 
 	if (!resources || !frame || !kd_operation_is_lock(operation) ||
@@ -630,7 +647,7 @@ int kd_episode_prepare_root(struct kd_episode_resources *resources,
 	result = kd_episode_collect(resources, native_binding);
 	if (result)
 		return result;
-	return prepare(resources, native_binding, NULL, operation, frame);
+	return prepare(resources, native_binding, NULL, operation, admitted, frame);
 }
 
 int kd_episode_cancel_root(struct kd_episode_frame *frame,
@@ -915,7 +932,7 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			unsigned long operation_ip = state->io.source_ip;
 			unsigned long object = state->regs.di;
 
-			result = prepare(resources, *binding, frame, cached.kind, &child);
+			result = prepare(resources, *binding, frame, cached.kind, NULL, &child);
 			BUG_ON(result);
 			result = kd_mutex_hold_return(&call->node, &child->return_identity);
 			BUG_ON(result);

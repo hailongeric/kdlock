@@ -24,6 +24,8 @@ enum kd_rw_native_phase {
 	KD_RW_NATIVE_WRITE_HELD,
 	KD_RW_NATIVE_CANCELLED,
 	KD_RW_NATIVE_RELEASING,
+	KD_RW_NATIVE_ORDINARY_READ,
+	KD_RW_NATIVE_ORDINARY_WRITE,
 };
 
 struct kd_rw_native_pool;
@@ -33,6 +35,7 @@ struct kd_rw_native_record {
 	struct task_struct *task;
 	struct kd_task_root_context *native_root;
 	struct list_head task_link;
+	struct list_head free_link;
 	struct kd_rw_read_link active_read;
 	struct kd_mutex_node node;
 	struct kd_mutex_batch batch;
@@ -42,6 +45,8 @@ struct kd_rw_native_record {
 	bool grant_user;
 	bool queue_user;
 	bool turn_owned;
+	bool ordinary_write;
+	bool ordinary_queued;
 };
 
 struct kd_rw_native_pool {
@@ -49,6 +54,10 @@ struct kd_rw_native_pool {
 	struct kd_rw *lock;
 	struct kd_rw_native_record *records;
 	unsigned int capacity;
+	/* Task-owned uninterruptible ordinary records return here only after
+	 * synchronous queue departure. Object-owned cancelable pools leave NULL.
+	 */
+	struct list_head *ordinary_free;
 };
 
 /* Cold private object initialization, before any source/native publication.
@@ -71,6 +80,7 @@ int kd_rw_native_read_trylock(struct kd_rw *lock, bool non_owner);
 int kd_rw_native_read_unlock(struct kd_rw *lock, bool non_owner);
 int kd_rw_native_write_lock(struct kd_rw *lock, unsigned int wait_state);
 int kd_rw_native_write_trylock(struct kd_rw *lock);
+int kd_rw_native_write_reserved(struct kd_rw *lock, struct kd_rw_native_record *record);
 int kd_rw_native_write_unlock(struct kd_rw *lock);
 int kd_rw_native_downgrade_write(struct kd_rw *lock);
 

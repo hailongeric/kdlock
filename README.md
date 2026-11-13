@@ -41,6 +41,13 @@ The selected one-counter body matches the old named throughput profiles, not
 the separate two-word RB_NANO body. Timing qualification, batching controls,
 completed-body evidence and source-backed overhead findings remain explicit.
 
+The [atomic rwsem admission candidate](docs/design/rwsem_admission.md) separates
+ordinary native readers and uncontended writers from optional contended writer
+preparation. It includes phase wakeup ordering, exact native release records and
+independent delegation/recording controls. Source review and static inspection
+are separate from its unrun build, functional and performance checks. Kernel14
+remains historical baseline evidence.
+
 The current source adds ordinary sleepable rwsem read/write operations and
 `downgrade_write`, plus plain rwlock read/write operations in IRQ-enabled task
 context. Each family has its own runtime. A proxy can take a real concurrent

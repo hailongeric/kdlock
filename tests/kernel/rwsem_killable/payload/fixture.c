@@ -19,6 +19,7 @@
 #include "include/kd_rwsem_api.h"
 #include "include/kd_linux_rwsem.h"
 #include "kernel/runtime.h"
+#include "kernel/rw_admission.h"
 #include "kernel/rw_native.h"
 #include "kernel/observation.h"
 #include "kernel/task_state.h"
@@ -206,7 +207,7 @@ static bool gate_clear(void)
 {
  bool clear;
  raw_spin_lock(&gate.core.guard);
- clear = !gate.core.readers && !gate.core.writer_pending && !gate.core.writer &&
+ clear = !atomic_long_read(&gate.core.admission) && !gate.core.readers && !gate.core.writer_pending && !gate.core.writer &&
          !READ_ONCE(gate.core.queue.tail) && !READ_ONCE(gate.core.queue.owner);
  raw_spin_unlock(&gate.core.guard);
  return clear;
@@ -265,7 +266,7 @@ static ssize_t status_read(struct file *file, char __user *output,
  count = event_count; overflow = event_overflow;
  raw_spin_unlock_irqrestore(&event_guard, flags);
  raw_spin_lock(&gate.core.guard);
- readers = gate.core.readers; pending = gate.core.writer_pending;
+ readers = kd_rw_admission_readers(&gate.core); pending = gate.core.writer_pending;
  writer = (unsigned long)gate.core.writer;
  tail = (unsigned long)READ_ONCE(gate.core.queue.tail);
  owner = (unsigned long)READ_ONCE(gate.core.queue.owner);

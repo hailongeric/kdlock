@@ -53,26 +53,52 @@ class RecordingEvidence(unittest.TestCase):
                     evidence.validate_kd(measurement, None)
                 counts.update(before)
 
-    def test_evidence_v3_preserves_proof_offsets(self):
-        self.assertEqual(protocol.EVIDENCE, 0x420C)
+    def test_evidence_v4_preserves_proof_offsets_and_immutable_mode(self):
+        self.assertEqual(protocol.EVIDENCE, 0x420D)
         def reply(device, command, buffer, mutate):
             self.assertEqual(command, protocol.EVIDENCE)
-            struct.pack_into('=2Q', buffer, 0, 3, 2)
+            struct.pack_into('=4Q', buffer, 0, 4, 2, 0, 0)
             for worker in range(2):
-                offset = 16 + worker * 140 * 8
-                struct.pack_into('=20Q', buffer, offset, *range(100 * worker, 100 * worker + 20))
+                offset = 32 + worker * 146 * 8
+                struct.pack_into('=26Q', buffer, offset, *range(100 * worker, 100 * worker + 26))
                 for record in range(6):
-                    struct.pack_into('=20Q', buffer, offset + 20 * 8 + record * 160,
+                    struct.pack_into('=20Q', buffer, offset + 26 * 8 + record * 160,
                                      *([1000 * worker + record + 1] * 20))
         with mock.patch('builtins.open', mock.mock_open()), mock.patch.object(protocol.fcntl, 'ioctl', reply):
             result = protocol.evidence()
+        self.assertFalse(result['delegation_enabled'])
+        self.assertEqual(result['proxy_limit'], 0)
         for worker, row in enumerate(result['workers']):
             self.assertEqual(row['fast_acquired'], 100 * worker + 16)
             self.assertEqual(row['fast_released'], 100 * worker + 17)
             self.assertEqual(row['fast_read_acquired'], 100 * worker + 18)
             self.assertEqual(row['fast_read_released'], 100 * worker + 19)
+            self.assertEqual(row['ordinary_read_acquired'], 100 * worker + 20)
+            self.assertEqual(row['ordinary_queued_write'], 100 * worker + 25)
             self.assertEqual([event['kind'] for event in row['records']],
                              [1000 * worker + record + 1 for record in range(6)])
+
+    def test_atomic_ordinary_records_require_release_and_local_only_evidence(self):
+        measurement = self.local_measurement()
+        measurement['spec'] = dict(lock_kind='rwsem', delegation=False)
+        measurement['kd_evidence'].update(version=4, delegation_enabled=False, proxy_limit=0)
+        counts = measurement['kd_evidence']['workers'][0]
+        counts.update(reserved=0, freed=0, proxy=0, ordinary_read_acquired=4,
+                      ordinary_read_released=4, ordinary_write_acquired=1,
+                      ordinary_write_released=1, ordinary_live=0, ordinary_queued_write=1)
+        self.assertEqual(evidence.validate_kd(measurement, None)['jit_status'], 'LOCAL_ONLY')
+        for change in (dict(ordinary_read_released=3), dict(ordinary_write_released=0),
+                       dict(ordinary_live=1), dict(ordinary_queued_write=2), dict(proxy=1),
+                       dict(entered=1), dict(reserved=1, freed=1), dict(read_released=3)):
+            before = counts.copy()
+            with self.subTest(change=change):
+                counts.update(change)
+                with self.assertRaises(ValueError):
+                    evidence.validate_kd(measurement, None)
+                counts.update(before)
+        measurement['kd_evidence']['delegation_enabled'] = True
+        with self.assertRaisesRegex(ValueError, 'delegation mode'):
+            evidence.validate_kd(measurement, None)
 
     def test_rwsem_cannot_supply_fast_mutex_pairs(self):
         measurement = self.local_measurement()
@@ -124,6 +150,30 @@ class RecordingEvidence(unittest.TestCase):
 
 
 class RecordingPlan(unittest.TestCase):
+    def test_rwsem_split_uses_one_and_eight_workers_with_unrecorded_timings(self):
+        for backend in ('native', 'kdlock'):
+            with self.subTest(backend=backend):
+                plan = nano_run.measurement_plan('rwsem-split', 'timing', backend)
+                modes = ('on', 'off') if backend == 'kdlock' else ('unavailable',)
+                self.assertEqual([(n, mode) for _, n, timed, mode in plan if not timed],
+                                 [(n, mode) for mode in modes for n in (1, 8)])
+                self.assertEqual([(n, mode) for _, n, timed, mode in plan if timed],
+                                 [(n, modes[-1]) for _ in range(3) for n in (1, 8)])
+
+    def test_rwsem_split_requires_both_immutable_delegation_modes(self):
+        receipts = [dict(status='FUNCTIONAL_PASS', family='rwsem', backend=backend,
+                         scope='rwsem-split', stage='functional', kd_delegation=mode,
+                         recorder_modes=['on', 'off'] if backend == 'kdlock' else ['unavailable'],
+                         build_receipt_sha256='build', boot_id='boot', runner_sha256='runner')
+                    for backend, mode in (('native', None), ('kdlock', 'off'), ('kdlock', 'on'))]
+        nano_run.validate_prerequisites(receipts, 'rwsem-split', 'rwsem', 'build', 'boot', 'runner')
+        for field, value in (('kd_delegation', 'off'), ('recorder_modes', ['off']),
+                             ('runner_sha256', 'other'), ('stage', 'timing')):
+            changed = [dict(row) for row in receipts]
+            changed[2][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                nano_run.validate_prerequisites(changed, 'rwsem-split', 'rwsem', 'build', 'boot', 'runner')
+
     def test_pair_has_only_six_single_worker_timings(self):
         plan = nano_run.measurement_plan('recorder-pair', 'timing')
         self.assertEqual([(n, timed) for _, n, timed, _ in plan],

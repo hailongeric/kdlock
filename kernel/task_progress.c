@@ -88,6 +88,7 @@ int kd_task_progress_native(struct kd_task_root_context *root,
 	 * LIVE even though atomic task detach can revoke/reclaim it later.
 	 */
 	*pending = root->mutex_fast.lock || root->rwsem_fast.lock ||
+		   !list_empty(&root->native_grants) || !list_empty(&root->rwsem_reads) ||
 		   !list_empty(&root->owners.batches) ||
 		   !list_empty(&state->grants) ||
 		   !kd_request_pool_empty(pool);

@@ -16,6 +16,9 @@ static unsigned int source_size, step_size, dependency_page_limit;
 static unsigned long total_source_byte_limit;
 static bool gs_verified, immutable_text, auxiliary_contract;
 static char *source_version;
+static bool delegation = true;
+module_param(delegation, bool, 0444);
+MODULE_PARM_DESC(delegation, "Immutable writer delegation mode, independent of observation recording");
 module_param(gs_offset, ulong, 0444);
 module_param(gs_verified, bool, 0444);
 module_param(immutable_text, bool, 0444);
@@ -178,7 +181,7 @@ static int rb_runtime_init(void)
 	rb_configuration.requests = RB_REQUESTS;
 	rb_configuration.auxiliary_bytes = 128 * 1024;
 	rb_configuration.control_bytes = 64 * 1024;
-	rb_configuration.proxy_limit = 16;
+	rb_configuration.proxy_limit = delegation ? 16 : 0;
 	source = (struct kd_jit_source_provider_args) {
 		.contract = KD_JIT_SOURCE_IMMUTABLE_DEPENDENCIES,
 		.version = (const unsigned char *)source_version, .version_length = strlen(source_version),
@@ -205,7 +208,8 @@ static int rb_runtime_init(void)
 #endif
 		.channel_name = "kd_nano_source", .owner = THIS_MODULE,
 		.frame_capacity = 2 * 1024 * 1024, .request_capacity = RB_REQUESTS,
-		.auxiliary_bytes = 128 * 1024, .required_control_bytes = 64 * 1024, .proxy_limit = 16,
+		.auxiliary_bytes = 128 * 1024, .required_control_bytes = 64 * 1024,
+		.proxy_limit = rb_configuration.proxy_limit,
 	};
 	error = kd_jit_runtime_create(&config, &rb_runtime);
 	if (error)
@@ -256,8 +260,10 @@ static int rb_copy_evidence(void __user *user)
 	snap = kvzalloc(sizeof(*snap), GFP_KERNEL);
 	if (!snap)
 		return -ENOMEM;
-	snap->version = 3;
+	snap->version = 4;
 	snap->workers = rb_config.workers;
+	snap->delegation_enabled = delegation;
+	snap->proxy_limit = rb_configuration.proxy_limit;
 	for (i = 0; i < RB_MAX_WORKERS; ++i)
 		snap->rows[i] = rb_evidence[i].row;
 	error = copy_to_user(user, snap, sizeof(*snap)) ? -EFAULT : 0;

@@ -32,9 +32,21 @@ def validate_scope(scope, backend):
             'recorder-pair scope requires the KD backend')
     require(scope != 'native-current' or backend in ('native', 'kdlock'),
             'native-current scope requires Native or KD')
+    require(scope != 'rwsem-split' or backend in ('native', 'kdlock'),
+            'rwsem-split scope requires Native or KD')
 
 
 def measurement_plan(scope, stage, backend=None):
+    if scope == 'rwsem-split':
+        validate_scope(scope, backend)
+        modes = ('on', 'off') if backend == 'kdlock' else ('unavailable',)
+        plan = [(f'functional-w{count}-{mode}', count, False, mode)
+                for mode in modes for count in (1, 8)]
+        if stage == 'timing':
+            mode = 'off' if backend == 'kdlock' else 'unavailable'
+            plan.extend((f'timed-r{repeat + 1}-w{count}-{mode}', count, True, mode)
+                        for repeat in range(3) for count in (1, 8))
+        return plan
     if scope == 'native-current':
         validate_scope(scope, backend)
         modes = ('on', 'off') if backend == 'kdlock' else ('unavailable',)
@@ -60,7 +72,15 @@ def measurement_plan(scope, stage, backend=None):
 def validate_prerequisites(prior, scope, family, build_sha256, boot_id, runner_sha256=None):
     require(all(p['status'] == 'FUNCTIONAL_PASS' and p['build_receipt_sha256'] == build_sha256 and
                 p['boot_id'] == boot_id for p in prior), 'functional build/boot receipt differs')
-    if scope == 'native-current':
+    if scope == 'rwsem-split':
+        require(bool(runner_sha256) and family == 'rwsem' and len(prior) == 3 and
+                {(p['backend'], p.get('kd_delegation')) for p in prior} ==
+                {('native', None), ('kdlock', 'on'), ('kdlock', 'off')} and
+                all(p['family'] == family and p.get('scope') == scope and
+                    p.get('stage') == 'functional' and p.get('runner_sha256') == runner_sha256 and
+                    p.get('recorder_modes') == (['on', 'off'] if p['backend'] == 'kdlock' else ['unavailable'])
+                    for p in prior), 'matching Native, KD delegation-off/on functional receipts required')
+    elif scope == 'native-current':
         require(len(prior) == 4 and {(p['family'], p['backend']) for p in prior} ==
                 {(f, b) for f in ('mutex', 'rwsem') for b in ('native', 'kdlock')} and
                 all(p.get('scope') == scope and p.get('stage') == 'functional' and
@@ -81,7 +101,7 @@ def validate_prerequisites(prior, scope, family, build_sha256, boot_id, runner_s
 
 def phase_recording(scope, backend, mode):
     # Native has no KD observation subscription or recorder-control ioctl.
-    if backend == 'kdlock' and scope in ('recorder-pair', 'native-current'):
+    if backend == 'kdlock' and scope in ('recorder-pair', 'native-current', 'rwsem-split'):
         require(mode in ('on', 'off'), 'KD recorder mode differs')
         return set_recording(mode == 'on')
     return None
@@ -108,7 +128,9 @@ def main():
     parser.add_argument('--family', choices=('mutex', 'rwsem'), required=True)
     parser.add_argument('--backend', choices=('native', 'kdlock', 'tclock'), required=True)
     parser.add_argument('--stage', choices=('functional', 'timing'), required=True)
-    parser.add_argument('--scope', choices=('comparison', 'recorder-pair', 'native-current'), default='comparison')
+    parser.add_argument('--scope', choices=('comparison', 'recorder-pair', 'native-current', 'rwsem-split'), default='comparison')
+    parser.add_argument('--delegation', choices=('on', 'off'), default='on',
+                        help='Immutable KD runtime mode; independent of recorder state')
     parser.add_argument('--boot-id', required=True)
     parser.add_argument('--expected-release', default='7.0.0-38-kdrebuild9',
                         help='Exact running/module-build release; default preserves the kernel9 baseline')
@@ -120,6 +142,10 @@ def main():
     parser.add_argument('--prerequisite', type=Path, action='append', default=[])
     args = parser.parse_args()
     validate_scope(args.scope, args.backend)
+    require(args.scope != 'rwsem-split' or args.family == 'rwsem', 'rwsem-split requires rwsem')
+    require(args.delegation == 'on' or args.backend == 'kdlock', 'delegation-off requires KD')
+    require(args.delegation == 'on' or args.family == 'rwsem',
+            'the contended local-only witness currently covers rwsem')
     require(os.uname().release == args.expected_release and
             Path('/proc/sys/kernel/random/boot_id').read_text().strip() == args.boot_id,
             'running kernel/boot identity differs')
@@ -150,11 +176,13 @@ def main():
                build_receipt_sha256=sha(args.build_receipt), measurements=[], commands=[],
                workload='single 64-byte-padded counter, deterministic mix, post256, bulk ioctl',
                instrumentation='bounded per-origin exact request/completion records for KD; original TCLock counters',
-               kd_proxy_limit=16, tclock_batch_limit=1024,
+               kd_delegation=args.delegation if args.backend == 'kdlock' else None,
+               kd_proxy_limit=(16 if args.delegation == 'on' else 0) if args.backend == 'kdlock' else None,
+               tclock_batch_limit=1024,
                timing_qualification='exploratory; host strict timing qualification is separate')
     if args.scope == 'recorder-pair':
         row['instrumentation'] = 'quiescent recorder on/off; off completion/retirement observations unavailable'
-    elif args.scope == 'native-current':
+    elif args.scope in ('native-current', 'rwsem-split'):
         row['instrumentation'] = ('KD training and functional recording on/off; all timings off with '
                                   'completion/retirement observations unavailable' if args.backend == 'kdlock'
                                   else 'Native has no KD recorder or generated-completion observations')
@@ -222,7 +250,14 @@ def main():
                       f'source_size={write_size}', f'step_size={read_size}', 'dependency_page_limit=16',
                       'total_source_byte_limit=131072', f'builtin_source_start={builtin_start}',
                       f'builtin_source_size={builtin_size}', 'source_version=' + version]
+            params.append('delegation=' + ('1' if args.delegation == 'on' else '0'))
         module(args.family + '-' + args.backend, 'load-workload', params)
+        if args.backend == 'kdlock':
+            mode = Path('/sys/module/kd_nano/parameters/delegation').read_text().strip()
+            require(mode == ('Y' if args.delegation == 'on' else 'N'),
+                    'loaded immutable delegation mode differs')
+            row['delegation_control'] = dict(parameter=mode, proxy_limit=row['kd_proxy_limit'],
+                                             immutable=True, independent_of_recording=True)
         layout = snapshot()
         require(layout['values'] == [0] * 16 and not any(layout[n] for n in ('cnts', 'gate', 'active')),
                 'initial workload not empty')
@@ -238,13 +273,13 @@ def main():
 
         def phase(label, workers, *, duration=0, iterations=256, timed=False, recorder=None):
             if recorder is None:
-                recorder = 'unavailable' if args.scope == 'native-current' and args.backend == 'native' else 'on'
+                recorder = 'unavailable' if args.scope in ('native-current', 'rwsem-split') and args.backend == 'native' else 'on'
             control = phase_recording(args.scope, args.backend, recorder)
             spec = dict(arm=args.backend, lock_kind=args.family, workload='cacheline', cachelines=1,
                         post_work_rounds=256, threads=workers, cpus=list(range(workers)), collector_cpu=63,
                         write_percent=100 if args.family == 'mutex' else 20, duration_ms=duration,
                         iterations=iterations, sample_ms=10, peak_window_ms=300, peak_settle_ms=300,
-                        recorder=recorder)
+                        recorder=recorder, delegation=args.backend == 'kdlock' and args.delegation == 'on')
             save(args.output / (label + '.spec.json'), spec)
             text = command(label, [sys.executable, '-B', args.repo / 'bench/nano/client.py',
                                    '--spec', args.output / (label + '.spec.json')], 120)
@@ -255,7 +290,7 @@ def main():
                 whole_run_ops_s=measurement['completed'] * 1e9 / measurement['wall_ns'], peak=peak)
             if compiler is not None:
                 measurement['generated'] = validate_kd(measurement, compiler, recording=recorder == 'on')
-                if args.scope in ('recorder-pair', 'native-current'):
+                if args.scope in ('recorder-pair', 'native-current', 'rwsem-split'):
                     measurement.update(recording_control=control, fixed_image=compiler.old)
             if args.backend == 'tclock':
                 # The client process has exited; task registration references
@@ -279,11 +314,14 @@ def main():
             for number in range(4):
                 trained = phase(f'learn-{number}', 8)
                 cycle = compiler.cycle()
-                if not cycle['claim_rows'] and trained['generated']['jit_completions']:
+                local_queue = sum(w.get('ordinary_queued_write', 0)
+                                  for w in trained['kd_evidence']['workers'])
+                if not cycle['claim_rows'] and (trained['generated']['jit_completions']
+                        if args.delegation == 'on' else local_queue > 0):
                     break
             else:
-                raise ValueError('bounded training did not establish completed generated bodies and an empty claim')
-        # Controlled scopes change only observation dispatch after common training.
+                raise ValueError('bounded training lacks the requested foreign-completion or contended local witness')
+        # Recorder changes leave each module load's selected delegation mode fixed.
         # Every switch and claim occurs between fully returned worker phases.
         for label, count, timed, recorder in measurement_plan(args.scope, args.stage, args.backend):
             checked = phase(label, count, duration=2000 if timed else 0,
@@ -291,7 +329,7 @@ def main():
             if compiler is not None:
                 cycle = compiler.cycle(claim_only=True)
                 require(not cycle['claim_rows'] and not cycle['published'], 'fixed image acquired new feedback')
-                if not timed and count > 1:
+                if not timed and count > 1 and recorder == 'on' and args.delegation == 'on':
                     require(checked['generated']['jit_completions'] > 0,
                             'contended functional phase has no completed generated body')
         if compiler is not None:

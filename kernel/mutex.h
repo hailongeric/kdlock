@@ -164,6 +164,8 @@ struct kd_mutex_node {
 	enum kd_mutex_service_policy service_policy;
 	bool synchronous_outer;
 	struct kd_rw *rw;
+	/* One atomic rwsem queue reservation through withdrawal/rejoin or unlink. */
+	bool rw_admission_queued;
 	bool shared_read;
 	atomic_t read_users;
 	const void *read_return_user;

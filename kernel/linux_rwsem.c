@@ -8,6 +8,7 @@
 #include "../include/kd_linux_rwsem.h"
 #include "mutex_api.h"
 #include "rw_native.h"
+#include "rw_local.h"
 
 static struct kd_task_root_context *native_root(void)
 {
@@ -30,7 +31,7 @@ static bool source_root_ready(void)
 {
 	struct kd_task_root_context *root = native_root();
 
-	return root && !root->source_closing && list_empty(&root->native_grants);
+	return root && !root->source_closing;
 }
 
 bool kd_linux_rwsem_source_ready(const struct kd_linux_rwsem_binding *binding)
@@ -66,14 +67,21 @@ static struct kd_source_grant *managed_grant(
 static bool fast_read_grant(struct kd_rwsem *lock)
 {
 	struct kd_task_root_context *root = native_root();
+	const void *credit;
+	enum kd_rw_read_kind kind;
 
-	return root && kd_rw_fast_read_is_last(&root->rwsem_fast, &lock->core, current);
+	if (!root)
+		return false;
+	kind = kd_rw_last_owned_read(&lock->core, current, &credit);
+	return kind == KD_RW_READ_ORDINARY || kind == KD_RW_READ_FAST;
 }
 
 bool kd_linux_rwsem_source_release(const struct kd_linux_rwsem_binding *binding,
 		bool read)
 {
-	return (read && fast_read_grant(binding->lock)) || managed_grant(binding->lock, read) != NULL;
+	return (read && fast_read_grant(binding->lock)) ||
+		(!read && kd_rw_local_native_writer(&binding->lock->core)) ||
+		managed_grant(binding->lock, read) != NULL;
 }
 
 /* Reached generic aliases use the current borrowed S_W, not the physical

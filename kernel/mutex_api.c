@@ -11,6 +11,7 @@
 #include "mutex_api.h"
 #include "native_entry.h"
 #include "task_progress.h"
+#include "rw_local.h"
 
 int kd_mutex_bind_current(struct kd_episode_resources *resources,
 			 unsigned long required_control_bytes)
@@ -147,7 +148,7 @@ static bool native_fast_eligible(struct kd_task_root_context *root,
 	 * Finished request storage may still retain the current native endpoint;
 	 * it stays retained until normal collection/detach, without per-call use.
 	 */
-	return (operation == KD_OPERATION_MUTEX_LOCK || operation == KD_OPERATION_RWSEM_DOWN_READ) &&
+	return operation == KD_OPERATION_MUTEX_LOCK &&
 		!root->mutex_fast.lock && !root->rwsem_fast.lock &&
 		in_task() && !irqs_disabled() && !in_atomic() &&
 		READ_ONCE(current->__state) == TASK_RUNNING &&
@@ -158,9 +159,10 @@ static bool native_fast_eligible(struct kd_task_root_context *root,
 		 state->operation.phase == KD_OPERATION_RESUMABLE);
 }
 
-static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
+static struct kd_mutex_entry *prepare_current_with_image(struct kd_mutex *lock,
 					      enum kd_operation_kind operation,
-					      unsigned long api_target)
+					      unsigned long api_target,
+					      struct kd_jit_image_use *admitted)
 {
 	struct kd_task_root_context *root = kd_task_root_context_current();
 	struct kd_execution_binding *native;
@@ -211,25 +213,11 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 	if (fast_eligible) {
 		result = kd_task_validate_native(root, native);
 		BUG_ON(result);
-		if (operation == KD_OPERATION_MUTEX_LOCK ?
-		    kd_mutex_fast_trylock(lock, &root->mutex_fast) :
-		    kd_rw_fast_read_trylock(container_of(lock, struct kd_rw, queue), &root->rwsem_fast))
+		if (kd_mutex_fast_trylock(lock, &root->mutex_fast))
 			return NULL;
 	}
 	result = kd_task_progress_native(root, native, &pending);
 	BUG_ON(result);
-	/* Native unlock can drop its last source user after its owner pump.
-	 * This progress pass may now retire that exact batch. Recheck a read
-	 * that was ineligible before progress; never bypass a retained duty or
-	 * retry an already attempted physical admission. No old frame is kept.
-	 */
-	if (!fast_eligible && operation == KD_OPERATION_RWSEM_DOWN_READ &&
-	    native_fast_eligible(root, operation)) {
-		result = kd_task_validate_native(root, native);
-		BUG_ON(result);
-		if (kd_rw_fast_read_trylock(container_of(lock, struct kd_rw, queue), &root->rwsem_fast))
-			return NULL;
-	}
 	if (kd_operation_is_unlock(operation)) {
 		result = kd_episode_unlock_native(root->mutex_resources,
 						  root, native, lock, operation);
@@ -246,14 +234,20 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 		BUG_ON(result);
 		return NULL;
 	}
-	result = kd_episode_prepare_root(root->mutex_resources, native,
-					 operation, &frame);
+	result = kd_episode_prepare_root_admitted(root->mutex_resources, native,
+					 operation, admitted, &frame);
 	BUG_ON(result);
 	frame->source_target = api_target;
 	result = kd_mutex_prepare_entry(&frame->slot->entry, native, run_native,
 					frame, root->mutex_control_bytes);
 	BUG_ON(result);
 	return &frame->slot->entry;
+}
+
+static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
+		enum kd_operation_kind operation, unsigned long api_target)
+{
+	return prepare_current_with_image(lock, operation, api_target, NULL);
 }
 
 struct kd_mutex_entry *kd_mutex_prepare_lock_current(struct kd_mutex *lock)
@@ -280,28 +274,89 @@ struct kd_mutex_entry *kd_spin_prepare_unlock_current(struct kd_spinlock *lock)
 		(unsigned long)kd_spin_unlock_entry_asm);
 }
 
+static struct kd_mutex_entry *prepare_rwsem_writer(struct kd_rwsem *lock,
+		unsigned long api_target)
+{
+	struct kd_task_root_context *root = kd_rw_local_root();
+	struct kd_mutex_entry *entry;
+	struct kd_jit_image_use admitted;
+	int result;
+
+	if (!root)
+		return prepare_current(&lock->core.queue, KD_OPERATION_RWSEM_DOWN_WRITE, api_target);
+	if (kd_rw_local_write_try(&lock->core, root))
+		return NULL;
+	/* Only contended writers with an actual retained image and no local
+	 * grant enter source preparation. The stack-local lookup user ends
+	 * before the assembly entry can switch stacks or lend source access.
+	 */
+	if (root->mutex_resources->config.proxy_limit && list_empty(&root->native_grants)) {
+		kd_jit_image_use_init(&admitted);
+		result = kd_jit_image_lookup(root->mutex_resources->config.image_slot,
+			&admitted, &root->core, &admitted, KD_JIT_IMAGE_USE_SOURCE);
+		if (!result) {
+			entry = prepare_current_with_image(&lock->core.queue,
+				KD_OPERATION_RWSEM_DOWN_WRITE, api_target, &admitted);
+			BUG_ON(kd_jit_image_use_put(&admitted, &admitted));
+			return entry;
+		}
+		BUG_ON(result != -ENOENT && result != -EAGAIN);
+	}
+	BUG_ON(kd_rw_local_write_lock(&lock->core, root));
+	return NULL;
+}
+
 struct kd_mutex_entry *kd_rwsem_prepare_source_current(struct kd_rwsem *lock,
 		enum kd_operation_kind operation, unsigned long api_target)
 {
-	BUG_ON(kd_operation_family(operation) != KD_LOCK_FAMILY_RWSEM);
+	const void *credit;
+	int result;
+
+	BUG_ON(!lock || kd_operation_family(operation) != KD_LOCK_FAMILY_RWSEM ||
+	       resolve_source_target(api_target) != operation);
+	if (operation == KD_OPERATION_RWSEM_DOWN_READ && kd_rw_local_read_lock(&lock->core))
+		return NULL;
+	if (operation == KD_OPERATION_RWSEM_UP_READ) {
+		if (kd_rw_local_read_release(&lock->core))
+			return NULL;
+		if (kd_rw_last_owned_read(&lock->core, current, &credit) == KD_RW_READ_NATIVE) {
+			BUG_ON(kd_rw_native_read_unlock(&lock->core, false));
+			return NULL;
+		}
+	}
+	if (operation == KD_OPERATION_RWSEM_UP_WRITE ||
+	    operation == KD_OPERATION_RWSEM_DOWNGRADE_WRITE) {
+		bool downgrade = operation == KD_OPERATION_RWSEM_DOWNGRADE_WRITE;
+
+		if (kd_rw_local_write_release(&lock->core, downgrade))
+			return NULL;
+		if (kd_rw_local_native_writer(&lock->core)) {
+			result = downgrade ? kd_rw_native_downgrade_write(&lock->core) :
+				kd_rw_native_write_unlock(&lock->core);
+			BUG_ON(result);
+			return NULL;
+		}
+	}
+	if (operation == KD_OPERATION_RWSEM_DOWN_WRITE)
+		return prepare_rwsem_writer(lock, api_target);
 	return prepare_current(lock ? &lock->core.queue : NULL, operation, api_target);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_down_read_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWN_READ,
+	return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_DOWN_READ,
 		(unsigned long)kd_rwsem_down_read_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_up_read_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_UP_READ,
+	return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_UP_READ,
 		(unsigned long)kd_rwsem_up_read_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_down_write_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWN_WRITE,
+	return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_DOWN_WRITE,
 		(unsigned long)kd_rwsem_down_write_entry_asm);
 }
 
@@ -318,13 +373,13 @@ struct kd_source_prepare_result kd_rwsem_prepare_down_write_killable_current(
 
 struct kd_mutex_entry *kd_rwsem_prepare_up_write_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_UP_WRITE,
+	return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_UP_WRITE,
 		(unsigned long)kd_rwsem_up_write_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_downgrade_write_current(struct kd_rwsem *lock)
 {
-	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWSEM_DOWNGRADE_WRITE,
+	return kd_rwsem_prepare_source_current(lock, KD_OPERATION_RWSEM_DOWNGRADE_WRITE,
 		(unsigned long)kd_rwsem_downgrade_write_entry_asm);
 }
 

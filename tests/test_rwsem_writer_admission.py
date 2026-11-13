@@ -14,7 +14,8 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-FUNCTIONS = ('kd_rw_read_credit_init', 'rw_context', 'credit_matches',
+FUNCTIONS = ('kd_rw_read_link_init', 'kd_rw_read_link_task', 'kd_rw_read_unlink_task',
+             'kd_rw_read_credit_init', 'rw_context', 'credit_matches',
              'kd_rw_read_release', 'kd_rw_fast_read_init', 'kd_rw_fast_read_trylock',
              'note_candidate_cancel', 'kd_rw_writer_enter', 'kd_rw_write_grant',
              'kd_rw_writer_exit')
@@ -99,6 +100,9 @@ class RwsemWriterAdmissionTests(unittest.TestCase):
 
     def test_blocked_owner_progress_and_ready_retry_retain_cleanup(self):
         self.check_case('blocked')
+
+    def test_wake_clear_after_guard_release_cannot_put_writer_back_to_sleep(self):
+        self.check_case('wake_clear')
 
     def test_killable_readiness_and_cancellation_keep_the_original_path(self):
         self.check_case('cancel')

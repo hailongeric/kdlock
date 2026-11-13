@@ -3,11 +3,14 @@
 #define KDLOCK_RW_H
 
 #include <linux/spinlock.h>
+#include <linux/atomic.h>
 #include <linux/wait.h>
 #include "mutex.h"
 
 struct kd_execution_binding;
 struct kd_rw_native_pool;
+struct kd_rw_native_record;
+struct kd_task_root_context;
 
 enum kd_rw_read_kind {
 	KD_RW_READ_NONE,
@@ -15,13 +18,21 @@ enum kd_rw_read_kind {
 	KD_RW_READ_NATIVE,
 	KD_RW_READ_NON_OWNER,
 	KD_RW_READ_FAST,
+	KD_RW_READ_ORDINARY,
 };
 
-/* Exact active credits in actual acquisition order, under the family guard.
- * The containing credit owns lifetime; this index adds no packet/reference.
+/* Exact owned acquisitions in source order. Managed/native compatibility
+ * credits also join the guarded object index; ordinary task records do not.
+ * The containing record owns lifetime; these indexes add no packet/reference.
  */
 struct kd_rw_read_link {
 	struct list_head link;
+	/* The logical task alone orders owned reads, including borrowed source.
+	 * Its stopped-source/return ordering serializes this list without a lock.
+	 */
+	struct list_head task_link;
+	struct kd_task_root_context *root;
+	struct kd_rw *object;
 	struct task_struct *logical_owner;
 	enum kd_rw_read_kind kind;
 	const void *credit;
@@ -30,6 +41,13 @@ struct kd_rw_read_link {
 /* Writer queue ownership and concurrent reader credits are separate duties. */
 struct kd_rw {
 	struct kd_mutex queue;
+	atomic_long_t admission;
+	bool atomic_admission;
+	struct list_head read_waiters;
+	struct kd_rw_native_record *ordinary_writer;
+	struct task_struct *ordinary_writer_task;
+	/* Speculative diagnostic value, never grant authority or a task hold. */
+	struct task_struct *reader_task;
 	raw_spinlock_t guard;
 	wait_queue_head_t changed;
 	unsigned long readers;
@@ -43,14 +61,17 @@ struct kd_rw {
 struct kd_rwsem { struct kd_rw core; };
 struct kd_rwlock { struct kd_rw core; };
 
-#define KD_RW_INITIALIZER(_name) { \
+#define KD_RW_INITIALIZER(_name, _atomic) { \
 	.queue = KD_MUTEX_INITIALIZER, \
+	.admission = ATOMIC_LONG_INIT(0), .atomic_admission = (_atomic), \
+	.read_waiters = LIST_HEAD_INIT((_name).read_waiters), .ordinary_writer = NULL, \
+	.ordinary_writer_task = NULL, .reader_task = NULL, \
 	.guard = __RAW_SPIN_LOCK_UNLOCKED((_name).guard), \
 	.changed = __WAIT_QUEUE_HEAD_INITIALIZER((_name).changed), \
 	.active_reads = LIST_HEAD_INIT((_name).active_reads), \
 	.readers = 0, .writer_pending = false, .writer = NULL, .native_pool = NULL }
-#define KD_RWSEM_INITIALIZER(_name) { .core = KD_RW_INITIALIZER((_name).core) }
-#define KD_RWLOCK_INITIALIZER(_name) { .core = KD_RW_INITIALIZER((_name).core) }
+#define KD_RWSEM_INITIALIZER(_name) { .core = KD_RW_INITIALIZER((_name).core, true) }
+#define KD_RWLOCK_INITIALIZER(_name) { .core = KD_RW_INITIALIZER((_name).core, false) }
 
 /* Exact caller-preallocated shared credit, never an exclusive mutex owner.
  * Its containing user survives acquisition, release and final unlink. Fields
@@ -76,6 +97,10 @@ struct kd_rw_wait_ops {
 	bool (*ready)(void *context);
 };
 
+void kd_rw_read_link_init(struct kd_rw_read_link *entry);
+void kd_rw_read_link_task(struct kd_rw_read_link *entry, struct kd_rw *lock);
+void kd_rw_read_unlink_task(struct kd_rw_read_link *entry);
+
 void kd_rwsem_init(struct kd_rwsem *lock);
 void kd_rwlock_init(struct kd_rwlock *lock);
 void kd_rw_read_credit_init(struct kd_rw_read_credit *credit);
@@ -90,7 +115,9 @@ bool kd_rw_fast_read_is_last(struct kd_rw_read_credit *credit,
 int kd_rw_fast_read_release(struct kd_rw_read_credit *credit,
 		struct kd_thread_state *state, struct kd_execution_binding *binding);
 /* Returned identity is borrowed: the logical caller must retain its grant
- * throughout dispatch. Nonowner-transfer credits do not select owned release.
+ * throughout dispatch and own this source continuation (native or its unique
+ * selected proxy). The task index is not a foreign diagnostic lookup.
+ * Nonowner-transfer credits do not select owned release.
  */
 enum kd_rw_read_kind kd_rw_last_owned_read(struct kd_rw *lock,
 		struct task_struct *logical_task, const void **credit);

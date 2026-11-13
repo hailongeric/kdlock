@@ -15,6 +15,7 @@ void kd_task_root_context_init(struct kd_task_root_context *context)
 	context->task = NULL;
 	kd_owner_progress_init(&context->owners, NULL);
 	INIT_LIST_HEAD(&context->native_grants);
+	INIT_LIST_HEAD(&context->rwsem_reads);
 	context->mutex_fast.lock = NULL;
 	context->rwsem_fast.lock = NULL;
 	context->mutex_resources = NULL;
@@ -124,7 +125,7 @@ int kd_task_root_detach_unpublished(struct kd_task_root_context *context,
 		return -EINVAL;
 	state = &context->core;
 	if (context->aux_entry || context->mutex_fast.lock || context->rwsem_fast.lock ||
-	    !list_empty(&context->native_grants) ||
+	    !list_empty(&context->native_grants) || !list_empty(&context->rwsem_reads) ||
 	    !list_empty(&context->owners.batches) ||
 	    state->origin != child || !state->requests ||
 	    !kd_request_pool_empty(state->requests) || !list_empty(&state->grants) ||
@@ -187,7 +188,7 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 	if (native_binding->state != state || native_binding->task != current ||
 	    native_binding->kind != KD_EXECUTION_NATIVE)
 		return -EPERM;
-	if (!list_empty(&context->native_grants) ||
+	if (!list_empty(&context->native_grants) || !list_empty(&context->rwsem_reads) ||
 	    state->exit_image || state->exit_use || state->exit_holder ||
 	    !list_empty(&state->grants) ||
 	    (state->operation.phase != KD_OPERATION_IDLE &&
@@ -238,7 +239,7 @@ int kd_task_root_revoke_cancelled(struct kd_task_root_context *context,
 	if (!context->source_closing || context->aux_entry ||
 	    context->mutex_fast.lock || context->rwsem_fast.lock ||
 	    context->native_spin_depth || !list_empty(&context->owners.batches) ||
-	    !list_empty(&context->native_grants))
+	    !list_empty(&context->native_grants) || !list_empty(&context->rwsem_reads))
 		return -EBUSY;
 	state = &context->core;
 	if (state->origin != current || !kd_state_is_current(state, native_binding) ||

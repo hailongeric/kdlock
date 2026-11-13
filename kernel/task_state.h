@@ -47,6 +47,8 @@ struct kd_task_root_context {
 	struct kd_owner_progress owners;
 	/* Exact owned native compatibility grants, no source-state backing. */
 	struct list_head native_grants;
+	/* Exact source-ordered owned rwsem reads; source ownership serializes it. */
+	struct list_head rwsem_reads;
 	/* One exact top-level local mutex owner; never lent or combined. */
 	struct kd_mutex_fast mutex_fast;
 	/* One local rwsem read, ordered with every managed/native read credit. */

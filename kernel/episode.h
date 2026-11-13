@@ -4,6 +4,7 @@
 
 #include "request_pool.h"
 #include "feedback.h"
+#include "rw_local.h"
 
 struct kd_episode_frame;
 
@@ -60,9 +61,13 @@ struct kd_episode_resources {
 	struct kd_episode_config config;
 	/* Current source actor only; sorted by slot, retained by grant_user. */
 	struct list_head grant_collect;
+	/* Separate task-owned native identities; no request-slot reservation. */
+	struct list_head ordinary_free;
 };
 
 struct kd_episode_frame {
+	/* Cold sibling storage, independent of the managed frame's live users. */
+	struct kd_rw_local ordinary;
 	struct kd_episode_resources *resources;
 	struct kd_request_slot *slot;
 	const void *claim;
@@ -125,6 +130,10 @@ int kd_episode_resources_init(struct kd_episode_resources *resources,
 int kd_episode_prepare_root(struct kd_episode_resources *resources,
 		 struct kd_execution_binding *native_binding,
 		 enum kd_operation_kind operation, struct kd_episode_frame **frame);
+int kd_episode_prepare_root_admitted(struct kd_episode_resources *resources,
+		struct kd_execution_binding *native_binding,
+		enum kd_operation_kind operation, struct kd_jit_image_use *admitted,
+		struct kd_episode_frame **frame);
 /* Current source owner only; closes completed source/image/grant actors without
  * restoring source registers or changing its current binding. Collection and
  * frame flag mutation follow the exact offer/result ordering: no origin source

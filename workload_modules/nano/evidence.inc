@@ -12,10 +12,15 @@ enum rb_count {
 	RB_STATE, RB_ORIGIN, RB_PROOF, RB_READ_ACQUIRED, RB_READ_RELEASED,
 	RB_FAST_ACQUIRED, RB_FAST_RELEASED,
 	RB_FAST_READ_ACQUIRED, RB_FAST_READ_RELEASED,
+	RB_ORDINARY_READ_ACQUIRED, RB_ORDINARY_READ_RELEASED,
+	RB_ORDINARY_WRITE_ACQUIRED, RB_ORDINARY_WRITE_RELEASED,
+	RB_ORDINARY_LIVE, RB_ORDINARY_QUEUED_WRITE,
 };
 struct rb_request_record {
 	unsigned long node, acquisition, image;
 	bool live, prepared, foreign, all_jit, unlock, done;
+	unsigned int ordinary_phase;
+	bool ordinary_read, ordinary_queued;
 	struct kd_observation prepare;
 };
 struct rb_worker_evidence {
@@ -46,6 +51,80 @@ static struct rb_request_record *rb_record(struct rb_worker_evidence *w, unsigne
 	return NULL;
 }
 
+static void rb_ordinary_observe(struct rb_worker_evidence *w, const struct kd_observation *e)
+{
+	struct rb_request_record *r = rb_record(w, e->acquisition);
+	bool acquire = e->kind == KD_OBS_READ_ACQUIRE || e->kind == KD_OBS_NATIVE_WRITE_ACQUIRE;
+	unsigned long flags;
+
+	if (!r || !e->acquisition || !e->object || e->related != e->acquisition ||
+	    e->task != e->origin || e->origin != w->row.count[RB_ORIGIN] ||
+	    e->image || e->return_user || e->notifier) {
+		++w->row.count[RB_ERRORS];
+		return;
+	}
+	if (acquire) {
+		if (r->live)
+			++w->row.count[RB_ERRORS];
+		r->node = r->acquisition = e->acquisition;
+		r->image = e->object;
+		r->live = true;
+		r->ordinary_read = e->kind == KD_OBS_READ_ACQUIRE;
+		r->ordinary_queued = !!(e->flags & KD_OBS_FLAG_ENQUEUED);
+		r->ordinary_phase = r->ordinary_read ? 1 : 2;
+		++w->row.count[RB_ORDINARY_LIVE];
+		++w->row.count[r->ordinary_read ? RB_ORDINARY_READ_ACQUIRED : RB_ORDINARY_WRITE_ACQUIRED];
+		if (r->ordinary_queued)
+			++w->row.count[RB_ORDINARY_QUEUED_WRITE];
+	} else if (!r->live || !r->ordinary_phase || r->image != e->object) {
+		++w->row.count[RB_ERRORS];
+		return;
+	}
+	flags = KD_OBS_FLAG_ORDINARY_RWSEM;
+	if (e->kind == KD_OBS_ORDINARY_RWSEM_DONE) {
+		if (r->ordinary_queued)
+			flags |= KD_OBS_FLAG_QUEUE_DONE | KD_OBS_FLAG_NODE_RETIRABLE;
+		if (r->ordinary_phase != 4 || e->flags != flags || e->source_user || e->node ||
+		    e->phase != (r->ordinary_read ? KD_GRANT_PHYSICAL_READ : KD_GRANT_PHYSICAL_WRITE))
+			++w->row.count[RB_ERRORS];
+		r->live = false;
+		r->ordinary_phase = 0;
+		--w->row.count[RB_ORDINARY_LIVE];
+		++w->row.count[r->ordinary_read ? RB_ORDINARY_READ_RELEASED : RB_ORDINARY_WRITE_RELEASED];
+		return;
+	}
+	if (r->ordinary_queued)
+		flags |= KD_OBS_FLAG_ENQUEUED;
+	if (e->flags != flags || e->owner_task != e->task ||
+	    e->source_user != (r->ordinary_queued ? 0 : e->acquisition))
+		++w->row.count[RB_ERRORS];
+	if (acquire) {
+		if (e->phase != (r->ordinary_read ? KD_GRANT_PHYSICAL_READ : KD_GRANT_PHYSICAL_WRITE) ||
+		    (r->ordinary_read && (e->owner || e->node || r->ordinary_queued)) ||
+		    (!r->ordinary_read && (!e->owner || (r->ordinary_queued && !e->node))))
+			++w->row.count[RB_ERRORS];
+		return;
+	}
+	if (e->kind == KD_OBS_NATIVE_DOWNGRADE) {
+		if (r->ordinary_phase != 2)
+			++w->row.count[RB_ERRORS];
+		r->ordinary_phase = 3;
+		++w->row.count[RB_READ_ACQUIRED];
+	} else if (e->kind == KD_OBS_READ_RELEASE || e->kind == KD_OBS_NATIVE_READ_RELEASE) {
+		if (r->ordinary_phase != 1 && r->ordinary_phase != 3)
+			++w->row.count[RB_ERRORS];
+		r->ordinary_phase = 4;
+		if (e->kind == KD_OBS_NATIVE_READ_RELEASE)
+			++w->row.count[RB_READ_RELEASED];
+	} else if (e->kind == KD_OBS_NATIVE_WRITE_RELEASE) {
+		if (r->ordinary_phase != 2)
+			++w->row.count[RB_ERRORS];
+		r->ordinary_phase = 4;
+	} else {
+		++w->row.count[RB_ERRORS];
+	}
+}
+
 static void notrace rb_observe(void *unused, const struct kd_observation *e)
 {
 	struct rb_worker_evidence *w = NULL;
@@ -74,6 +153,10 @@ static void notrace rb_observe(void *unused, const struct kd_observation *e)
 		++w->row.count[RB_READ_ACQUIRED];
 	if (e->kind == KD_OBS_READ_RELEASE)
 		++w->row.count[RB_READ_RELEASED];
+	if (e->flags & KD_OBS_FLAG_ORDINARY_RWSEM) {
+		rb_ordinary_observe(w, e);
+		goto out;
+	}
 	if (e->kind == KD_OBS_FAST_READ_DONE ||
 	    ((e->kind == KD_OBS_READ_ACQUIRE || e->kind == KD_OBS_READ_RELEASE) &&
 	     (e->flags & KD_OBS_FLAG_FAST_READ))) {
@@ -305,7 +388,10 @@ static int rb_kd_leave(unsigned int worker)
 		/* Keep this ioctl and source stack live until exact users have ended. */
 		cond_resched();
 	}
-	if (w->row.count[RB_ERRORS] || w->row.count[RB_LIVE] || w->fast_node || w->fast_read_credit ||
+	if (w->row.count[RB_ERRORS] || w->row.count[RB_LIVE] || w->row.count[RB_ORDINARY_LIVE] ||
+	    w->fast_node || w->fast_read_credit ||
+	    w->row.count[RB_ORDINARY_READ_ACQUIRED] != w->row.count[RB_ORDINARY_READ_RELEASED] ||
+	    w->row.count[RB_ORDINARY_WRITE_ACQUIRED] != w->row.count[RB_ORDINARY_WRITE_RELEASED] ||
 	    w->row.count[RB_RESERVED] != w->row.count[RB_FREED] ||
 	    w->row.count[RB_FAST_ACQUIRED] != w->row.count[RB_FAST_RELEASED] ||
 	    w->row.count[RB_FAST_READ_ACQUIRED] != w->row.count[RB_FAST_READ_RELEASED])

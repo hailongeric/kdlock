@@ -9,6 +9,8 @@
 #include <asm/processor.h>
 
 #include "rw_native.h"
+#include "rw_admission.h"
+#include "rw_local.h"
 #include "task_state.h"
 #include "observation.h"
 
@@ -36,6 +38,8 @@ static struct task_struct *record_free_locked(struct kd_rw_native_record *record
 	task = record->task;
 	record->task = NULL;
 	record->phase = KD_RW_NATIVE_FREE;
+	if (record->pool->ordinary_free)
+		list_add(&record->free_link, record->pool->ordinary_free);
 	return task;
 }
 
@@ -83,7 +87,7 @@ static int reserve_record(struct kd_rw *lock, enum kd_rw_native_phase phase,
 		record->turn_owned = false;
 		record->native_root = NULL;
 		INIT_LIST_HEAD(&record->task_link);
-		INIT_LIST_HEAD(&record->active_read.link);
+		kd_rw_read_link_init(&record->active_read);
 		record->active_read.logical_owner = current;
 		record->active_read.kind = non_owner ? KD_RW_READ_NON_OWNER : KD_RW_READ_NATIVE;
 		record->active_read.credit = record;
@@ -106,7 +110,8 @@ int kd_rw_native_pool_init(struct kd_rw *lock, struct kd_rw_native_pool *pool,
 	if (!lock || !pool || !records || !capacity)
 		return -EINVAL;
 	raw_spin_lock(&lock->guard);
-	if (lock->native_pool || lock->readers || lock->writer_pending || lock->writer ||
+	if (lock->native_pool || atomic_long_read(&lock->admission) ||
+	    lock->readers || lock->writer_pending || lock->writer ||
 	    READ_ONCE(lock->queue.tail)) {
 		raw_spin_unlock(&lock->guard);
 		return -EBUSY;
@@ -115,6 +120,7 @@ int kd_rw_native_pool_init(struct kd_rw *lock, struct kd_rw_native_pool *pool,
 	pool->lock = lock;
 	pool->records = records;
 	pool->capacity = capacity;
+	pool->ordinary_free = NULL;
 	for (i = 0; i < capacity; ++i) {
 		records[i].pool = pool;
 		records[i].task = NULL;
@@ -124,9 +130,12 @@ int kd_rw_native_pool_init(struct kd_rw *lock, struct kd_rw_native_pool *pool,
 		records[i].queue_user = false;
 		records[i].turn_owned = false;
 		records[i].non_owner = false;
+		records[i].ordinary_write = false;
+		records[i].ordinary_queued = false;
 		records[i].native_root = NULL;
 		INIT_LIST_HEAD(&records[i].task_link);
-		INIT_LIST_HEAD(&records[i].active_read.link);
+		INIT_LIST_HEAD(&records[i].free_link);
+		kd_rw_read_link_init(&records[i].active_read);
 	}
 	WRITE_ONCE(lock->native_pool, pool);
 	raw_spin_unlock(&lock->guard);
@@ -143,7 +152,7 @@ bool kd_rw_native_pool_idle(struct kd_rw_native_pool *pool)
 		return false;
 	raw_spin_lock(&lock->guard);
 	raw_spin_lock(&pool->guard);
-	if (lock->readers || lock->writer || lock->writer_pending ||
+	if (atomic_long_read(&lock->admission) || lock->readers || lock->writer || lock->writer_pending ||
 	    READ_ONCE(lock->queue.tail))
 		idle = false;
 	for (i = 0; idle && i < pool->capacity; ++i)
@@ -178,14 +187,17 @@ static void observe_native(unsigned long kind, struct kd_rw *lock,
 		struct kd_rw_native_record *record, bool writer,
 		unsigned long phase, long result)
 {
-	kd_observe(kind, .origin = (unsigned long)record->task,
+	kd_observe(kind, .state = record->pool->ordinary_free ? (unsigned long)kd_task_state_own() : 0,
+		.origin = (unsigned long)record->task,
 		.node = writer ? (unsigned long)&record->node : 0,
 		.acquisition = (unsigned long)record,
 		.owner = writer && record->batch.initialized ?
 			(unsigned long)&record->batch.release_owner : 0,
 		.owner_task = (unsigned long)record->task,
 		.object = (unsigned long)&lock->queue, .related = (unsigned long)record,
-		.cursor = lock->readers, .phase = phase, .result = (unsigned long)result);
+		.cursor = kd_rw_admission_readers(lock), .phase = phase, .result = (unsigned long)result,
+		.flags = record->pool->ordinary_free ?
+			KD_OBS_FLAG_ORDINARY_RWSEM | KD_OBS_FLAG_ENQUEUED : 0);
 }
 
 static void grant_read_locked(struct kd_rw *lock, struct kd_rw_native_record *record,
@@ -195,6 +207,7 @@ static void grant_read_locked(struct kd_rw *lock, struct kd_rw_native_record *re
 	record->phase = KD_RW_NATIVE_READ_HELD;
 	record->grant_user = true;
 	list_add_tail(&record->active_read.link, &lock->active_reads);
+	kd_rw_read_link_task(&record->active_read, lock);
 	native_grant_link(record);
 	observe_native(KD_OBS_NATIVE_READ_ACQUIRE, lock, record, false,
 		KD_GRANT_PHYSICAL_READ, result);
@@ -214,6 +227,24 @@ static int read_lock_common(struct kd_rw *lock, unsigned int wait_state,
 	if (result)
 		return result;
 	pool = record->pool;
+	if (lock->atomic_admission) {
+		result = try_only ? (kd_rw_admission_read_try(lock) ? 1 : 0) :
+			kd_rw_admission_read(lock, wait_state, NULL, NULL);
+		raw_spin_lock(&lock->guard);
+		raw_spin_lock(&pool->guard);
+		if ((!try_only && !result) || (try_only && result == 1))
+			grant_read_locked(lock, record, result);
+		else {
+			if (result == -EINTR)
+				record->phase = KD_RW_NATIVE_CANCELLED;
+			observe_native(result == -EINTR ? KD_OBS_NATIVE_CANCEL : KD_OBS_NATIVE_TRY_MISS,
+				lock, record, false, KD_GRANT_PHYSICAL_READ, result);
+		}
+		raw_spin_unlock(&pool->guard);
+		raw_spin_unlock(&lock->guard);
+		caller_done(record);
+		return result;
+	}
 	for (;;) {
 		if (!try_only)
 			prepare_to_wait(&lock->changed, &wait, wait_state);
@@ -263,12 +294,13 @@ int kd_rw_native_read_unlock(struct kd_rw *lock, bool non_owner)
 	struct kd_rw_native_pool *pool;
 	struct kd_rw_native_record *record = NULL;
 	struct kd_rw_read_link *entry;
+	bool atomic_admission;
 
 	if (!lock || !native_context())
 		return -EPERM;
-	pool = READ_ONCE(lock->native_pool);
-	if (!pool)
-		return -ENODEV;
+	if (!non_owner && kd_rw_local_read_release(lock))
+		return 0;
+	atomic_admission = READ_ONCE(lock->atomic_admission);
 	raw_spin_lock(&lock->guard);
 	if (non_owner) {
 		/* Linux supplies no transfer token; choose one exact eligible held
@@ -293,6 +325,7 @@ int kd_rw_native_read_unlock(struct kd_rw *lock, bool non_owner)
 		raw_spin_unlock(&lock->guard);
 		return -ESTALE;
 	}
+	pool = record->pool;
 	raw_spin_lock(&pool->guard);
 	if (record->pool != pool || record->phase != KD_RW_NATIVE_READ_HELD ||
 	    !record->grant_user || record->caller_user || !lock->readers) {
@@ -302,6 +335,7 @@ int kd_rw_native_read_unlock(struct kd_rw *lock, bool non_owner)
 	}
 	record->caller_user = true;
 	list_del_init(&record->active_read.link);
+	kd_rw_read_unlink_task(&record->active_read);
 	native_grant_unlink(record);
 	lock->readers--;
 	record->grant_user = false;
@@ -309,9 +343,14 @@ int kd_rw_native_read_unlock(struct kd_rw *lock, bool non_owner)
 	observe_native(KD_OBS_NATIVE_READ_RELEASE, lock, record, false,
 		KD_GRANT_PHYSICAL_READ, 0);
 	raw_spin_unlock(&pool->guard);
-	wake_up_all(&lock->changed);
+	if (!atomic_admission)
+		wake_up_all(&lock->changed);
 	raw_spin_unlock(&lock->guard);
+	if (atomic_admission)
+		kd_rw_admission_read_put(lock);
 	/* The independent control pool is the only backing touched after this. */
+	if (pool->ordinary_free)
+		kd_rw_local_done(lock, record);
 	caller_done(record);
 	return 0;
 }
@@ -351,19 +390,28 @@ static int native_start(struct kd_rw_native_record *record)
 	return kd_mutex_native_start(&record->node, &record->batch);
 }
 
-static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool try_only)
+static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool try_only,
+		struct kd_rw_native_record *reserved)
 {
 	struct kd_rw_native_record *record;
 	struct kd_rw_native_pool *pool;
 	DEFINE_WAIT(wait);
 	bool cancel = false;
+	bool rollback_write = false;
 	int result;
 
 	if (wait_state != TASK_UNINTERRUPTIBLE && wait_state != TASK_KILLABLE)
 		return -EINVAL;
-	result = reserve_record(lock, KD_RW_NATIVE_WRITE_WAIT, false, &record);
-	if (result)
-		return result;
+	if (reserved) {
+		record = reserved;
+		get_task_struct(current);
+		record->phase = KD_RW_NATIVE_WRITE_WAIT;
+		record->caller_user = true;
+	} else {
+		result = reserve_record(lock, KD_RW_NATIVE_WRITE_WAIT, false, &record);
+		if (result)
+			return result;
+	}
 	pool = record->pool;
 	kd_mutex_batch_init(&record->batch);
 	result = kd_mutex_native_node_init(&record->node, record);
@@ -374,7 +422,8 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 	if (try_only) {
 		raw_spin_lock(&lock->guard);
 		raw_spin_lock(&pool->guard);
-		if (lock->writer_pending || lock->writer || lock->readers) {
+		if (lock->atomic_admission ? !kd_rw_admission_write_try(lock, false) :
+		    (lock->writer_pending || lock->writer || lock->readers)) {
 			result = 0;
 		} else {
 			record->queue_user = true;
@@ -393,6 +442,7 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 				}
 			} else {
 				record->queue_user = false;
+				rollback_write = lock->atomic_admission;
 			}
 		}
 		if (!result)
@@ -400,6 +450,8 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 				KD_GRANT_PHYSICAL_WRITE, 0);
 		raw_spin_unlock(&pool->guard);
 		raw_spin_unlock(&lock->guard);
+		if (rollback_write)
+			kd_rw_admission_write_put(lock, false);
 		if (result >= 0)
 			caller_done(record);
 		return result;
@@ -414,9 +466,14 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 	for (;;) {
 		bool start = false;
 		bool acquired = false;
+		bool waking;
 
 		prepare_to_wait(&lock->changed, &wait, wait_state);
 		raw_spin_lock(&lock->guard);
+		/* A wake may precede wait registration. Retain its guarded WAKE
+		 * observation even if the actor clears it before our sleep decision.
+		 */
+		waking = kd_rw_admission_waking(lock);
 		raw_spin_lock(&pool->guard);
 		if (smp_load_acquire(&record->node.turn))
 			record->turn_owned = true;
@@ -424,7 +481,7 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 			start = true;
 		} else if (record->turn_owned) {
 			lock->writer_pending = true;
-			if (!lock->readers) {
+			if (!waking && (lock->atomic_admission ? kd_rw_admission_write_try(lock, true) : !lock->readers)) {
 				lock->writer = &record->batch;
 				lock->writer_pending = false;
 				record->phase = KD_RW_NATIVE_WRITE_HELD;
@@ -460,7 +517,12 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 		}
 		if (acquired || cancel)
 			break;
-		schedule();
+		if (waking) {
+			__set_current_state(TASK_RUNNING);
+			cond_resched();
+		} else {
+			schedule();
+		}
 	}
 	finish_wait(&lock->changed, &wait);
 	if (cancel && record->turn_owned) {
@@ -474,12 +536,17 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 
 int kd_rw_native_write_lock(struct kd_rw *lock, unsigned int wait_state)
 {
-	return write_lock_common(lock, wait_state, false);
+	return write_lock_common(lock, wait_state, false, NULL);
 }
 
 int kd_rw_native_write_trylock(struct kd_rw *lock)
 {
-	return write_lock_common(lock, TASK_UNINTERRUPTIBLE, true);
+	return write_lock_common(lock, TASK_UNINTERRUPTIBLE, true, NULL);
+}
+
+int kd_rw_native_write_reserved(struct kd_rw *lock, struct kd_rw_native_record *record)
+{
+	return write_lock_common(lock, TASK_UNINTERRUPTIBLE, false, record);
 }
 
 static struct kd_rw_native_record *owned_writer_locked(struct kd_rw *lock)
@@ -502,17 +569,16 @@ static int finish_writer(struct kd_rw *lock, bool downgrade)
 
 	if (!lock || !native_context())
 		return -EPERM;
-	pool = READ_ONCE(lock->native_pool);
-	if (!pool)
-		return -ENODEV;
+	if (kd_rw_local_write_release(lock, downgrade))
+		return 0;
 	raw_spin_lock(&lock->guard);
-	raw_spin_lock(&pool->guard);
 	record = owned_writer_locked(lock);
 	if (!record) {
-		raw_spin_unlock(&pool->guard);
 		raw_spin_unlock(&lock->guard);
 		return -ESTALE;
 	}
+	pool = record->pool;
+	raw_spin_lock(&pool->guard);
 	record->caller_user = true;
 	if (downgrade) {
 		/* A real credit exists before writer publication ends; the same
@@ -521,6 +587,7 @@ static int finish_writer(struct kd_rw *lock, bool downgrade)
 		lock->readers++;
 		record->phase = KD_RW_NATIVE_READ_HELD;
 		list_add_tail(&record->active_read.link, &lock->active_reads);
+		kd_rw_read_link_task(&record->active_read, lock);
 
 	} else {
 		record->grant_user = false;
@@ -532,11 +599,16 @@ static int finish_writer(struct kd_rw *lock, bool downgrade)
 		lock, record, true, downgrade ? KD_GRANT_PHYSICAL_READ :
 		KD_GRANT_PHYSICAL_WRITE, 0);
 	raw_spin_unlock(&pool->guard);
-	wake_up_all(&lock->changed);
+	if (!lock->atomic_admission)
+		wake_up_all(&lock->changed);
 	raw_spin_unlock(&lock->guard);
+	if (lock->atomic_admission)
+		kd_rw_admission_write_put(lock, downgrade);
 	result = kd_mutex_native_finish(&record->node, &record->batch);
 	if (result)
 		return result;
+	if (!downgrade && pool->ordinary_free)
+		kd_rw_local_done(lock, record);
 	caller_done(record);
 	return 0;
 }
@@ -557,6 +629,8 @@ bool kd_rw_native_is_write_locked(struct kd_rw *lock)
 
 	if (!lock)
 		return false;
+	if (lock->atomic_admission)
+		return atomic_long_read(&lock->admission) & KD_RW_ADMIT_WRITE;
 	raw_spin_lock(&lock->guard);
 	held = lock->writer != NULL;
 	raw_spin_unlock(&lock->guard);
@@ -569,6 +643,8 @@ bool kd_rw_native_is_reader_owned(struct kd_rw *lock)
 
 	if (!lock)
 		return false;
+	if (lock->atomic_admission)
+		return kd_rw_admission_readers(lock) != 0;
 	raw_spin_lock(&lock->guard);
 	held = lock->readers != 0;
 	raw_spin_unlock(&lock->guard);
@@ -581,6 +657,8 @@ bool kd_rw_native_is_locked(struct kd_rw *lock)
 
 	if (!lock)
 		return false;
+	if (lock->atomic_admission)
+		return atomic_long_read(&lock->admission) != 0;
 	raw_spin_lock(&lock->guard);
 	held = lock->writer || lock->writer_pending || lock->readers ||
 	       READ_ONCE(lock->queue.tail);
@@ -628,7 +706,12 @@ struct task_struct *kd_rw_native_owner_task(struct kd_rw *lock)
 	if (!lock)
 		return NULL;
 	raw_spin_lock(&lock->guard);
-	if (lock->writer)
+	if (lock->atomic_admission && kd_rw_admission_readers(lock))
+		task = READ_ONCE(lock->reader_task);
+	else if (lock->atomic_admission && (atomic_long_read(&lock->admission) & KD_RW_ADMIT_WRITE) &&
+	    READ_ONCE(lock->ordinary_writer_task))
+		task = READ_ONCE(lock->ordinary_writer_task);
+	else if (lock->writer)
 		task = lock->writer->release_owner.task;
 	else if (!list_empty(&lock->active_reads)) {
 		entry = list_last_entry(&lock->active_reads, struct kd_rw_read_link, link);

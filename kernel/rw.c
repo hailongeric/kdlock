@@ -10,12 +10,20 @@
 #include <asm/processor.h>
 
 #include "rw.h"
+#include "rw_admission.h"
+#include "task_state.h"
 #include "state.h"
 #include "observation.h"
 
-static void rw_init(struct kd_rw *lock)
+static void rw_init(struct kd_rw *lock, bool atomic_admission)
 {
 	kd_mutex_init(&lock->queue);
+	atomic_long_set(&lock->admission, 0);
+	lock->atomic_admission = atomic_admission;
+	INIT_LIST_HEAD(&lock->read_waiters);
+	lock->ordinary_writer = NULL;
+	lock->ordinary_writer_task = NULL;
+	lock->reader_task = NULL;
 	raw_spin_lock_init(&lock->guard);
 	init_waitqueue_head(&lock->changed);
 	lock->readers = 0;
@@ -25,12 +33,47 @@ static void rw_init(struct kd_rw *lock)
 	lock->native_pool = NULL;
 }
 
-void kd_rwsem_init(struct kd_rwsem *lock) { rw_init(&lock->core); }
-void kd_rwlock_init(struct kd_rwlock *lock) { rw_init(&lock->core); }
+void kd_rwsem_init(struct kd_rwsem *lock) { rw_init(&lock->core, true); }
+void kd_rwlock_init(struct kd_rwlock *lock) { rw_init(&lock->core, false); }
+
+void kd_rw_read_link_init(struct kd_rw_read_link *entry)
+{
+	INIT_LIST_HEAD(&entry->link);
+	INIT_LIST_HEAD(&entry->task_link);
+	entry->root = NULL;
+	entry->object = NULL;
+}
+
+void kd_rw_read_link_task(struct kd_rw_read_link *entry, struct kd_rw *lock)
+{
+	struct kd_task_root_context *root;
+
+	entry->object = lock;
+	if (lock->atomic_admission)
+		WRITE_ONCE(lock->reader_task, entry->logical_owner);
+	if (!lock->atomic_admission || entry->kind == KD_RW_READ_NON_OWNER)
+		return;
+	root = smp_load_acquire(&entry->logical_owner->kd_root_context);
+	/* Task attachment precedes owned acquisitions. A borrowed source owns
+	 * this same logical list while W waits; no physical task list is reused.
+	 */
+	if (root) {
+		entry->root = root;
+		list_add_tail(&entry->task_link, &root->rwsem_reads);
+	}
+}
+
+void kd_rw_read_unlink_task(struct kd_rw_read_link *entry)
+{
+	if (entry->root) {
+		list_del_init(&entry->task_link);
+		entry->root = NULL;
+	}
+}
 
 void kd_rw_read_credit_init(struct kd_rw_read_credit *credit)
 {
-	INIT_LIST_HEAD(&credit->active_read.link);
+	kd_rw_read_link_init(&credit->active_read);
 	credit->active_read.logical_owner = NULL;
 	credit->active_read.kind = KD_RW_READ_MANAGED;
 	credit->active_read.credit = credit;
@@ -136,6 +179,28 @@ int kd_rw_read_acquire(struct kd_rw *lock, struct kd_rw_read_credit *credit,
 	result = prepare_credit(lock, credit, state, binding, acquisition, user, atomic_wait);
 	if (result)
 		return result;
+	if (lock->atomic_admission) {
+		result = kd_rw_admission_read(lock, TASK_UNINTERRUPTIBLE, ops, context);
+		if (result) {
+			kd_rw_read_credit_init(credit);
+			return result;
+		}
+		raw_spin_lock(&lock->guard);
+		raw_spin_lock(&credit->guard);
+		lock->readers++;
+		credit->active = true;
+		list_add_tail(&credit->active_read.link, &lock->active_reads);
+		kd_rw_read_link_task(&credit->active_read, lock);
+		raw_spin_unlock(&credit->guard);
+		kd_observe(KD_OBS_READ_ACQUIRE, .state = (unsigned long)state,
+			.origin = (unsigned long)state->origin,
+			.acquisition = (unsigned long)acquisition,
+			.object = (unsigned long)lock, .related = (unsigned long)credit,
+			.cursor = kd_rw_admission_readers(lock), .phase = KD_GRANT_PHYSICAL_READ,
+			.source_user = (unsigned long)user);
+		raw_spin_unlock(&lock->guard);
+		return 0;
+	}
 	for (;;) {
 		bool blocked;
 		bool acquired = false;
@@ -184,6 +249,7 @@ int kd_rw_read_release(struct kd_rw_read_credit *credit,
 		const void *acquisition, const void *user)
 {
 	struct kd_rw *lock;
+	bool atomic_admission;
 	int result = 0;
 
 	if (!kd_state_is_current(state, binding))
@@ -202,6 +268,7 @@ int kd_rw_read_release(struct kd_rw_read_credit *credit,
 		return -ESTALE;
 	}
 	lock = credit->lock;
+	atomic_admission = READ_ONCE(lock->atomic_admission);
 	raw_spin_unlock(&credit->guard);
 	raw_spin_lock(&lock->guard);
 	raw_spin_lock(&credit->guard);
@@ -211,6 +278,7 @@ int kd_rw_read_release(struct kd_rw_read_credit *credit,
 	else {
 		lock->readers--;
 		list_del_init(&credit->active_read.link);
+		kd_rw_read_unlink_task(&credit->active_read);
 		credit->active = false;
 		credit->released = true;
 		kd_observe(KD_OBS_READ_RELEASE, .state = (unsigned long)state,
@@ -222,12 +290,14 @@ int kd_rw_read_release(struct kd_rw_read_credit *credit,
 			.flags = credit->active_read.kind == KD_RW_READ_FAST ? KD_OBS_FLAG_FAST_READ : 0);
 	}
 	raw_spin_unlock(&credit->guard);
-	if (!result)
+	if (!result && !atomic_admission)
 		wake_up_all(&lock->changed);
 	/* A draining writer cannot acquire the family guard until this final
 	 * lock-object access ends. No object read follows this publication.
 	 */
 	raw_spin_unlock(&lock->guard);
+	if (!result && atomic_admission)
+		kd_rw_admission_read_put(lock);
 	return result;
 }
 
@@ -247,13 +317,15 @@ bool kd_rw_fast_read_trylock(struct kd_rw *lock, struct kd_rw_read_credit *credi
 	 * A writer arriving after this check still takes this guard before it
 	 * can drain/admit, and therefore observes this exact reader credit.
 	 */
-	if (!lock->writer_pending && !lock->writer && !READ_ONCE(lock->queue.tail)) {
+	if (lock->atomic_admission ? kd_rw_admission_read_try(lock) :
+	    (!lock->writer_pending && !lock->writer && !READ_ONCE(lock->queue.tail))) {
 		raw_spin_lock(&credit->guard);
 		credit->lock = lock;
 		credit->active = true;
 		credit->released = false;
 		lock->readers++;
 		list_add_tail(&credit->active_read.link, &lock->active_reads);
+		kd_rw_read_link_task(&credit->active_read, lock);
 		raw_spin_unlock(&credit->guard);
 		kd_observe(KD_OBS_READ_ACQUIRE, .state = (unsigned long)state,
 			.origin = (unsigned long)state->origin,
@@ -373,6 +445,7 @@ int kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 	for (;;) {
 		bool blocked = false;
 		bool acquired = false;
+		bool waking;
 		unsigned int sleep_state = TASK_UNINTERRUPTIBLE;
 
 		if (!atomic_wait)
@@ -390,7 +463,8 @@ int kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 		 */
 		if (!atomic_wait && !wait_prepared &&
 		    waiter->wait_state == TASK_UNINTERRUPTIBLE && !batch->candidate &&
-		    waiter->admission == KD_MUTEX_ADMISSION_PENDING && !blocked && !lock->readers) {
+		    waiter->admission == KD_MUTEX_ADMISSION_PENDING && !blocked &&
+		    (lock->atomic_admission ? kd_rw_admission_write_try(lock, true) : !lock->readers)) {
 			lock->writer = batch;
 			waiter->admission = KD_MUTEX_ADMISSION_GRANTED;
 			atomic_set(&waiter->cancel_users, 0);
@@ -413,10 +487,16 @@ int kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 			wait_prepared = true;
 		}
 		raw_spin_lock(&lock->guard);
+		/* Preserve this observation through the sleep decision. The actor
+		 * may already have woken before prepare_to_wait, then clear WAKE
+		 * after this guard is dropped, without another wakeup.
+		 */
+		waking = kd_rw_admission_waking(lock);
 		note_candidate_cancel(batch);
 		if (waiter->admission == KD_MUTEX_ADMISSION_CANCELLED) {
 			cancelled = true;
-		} else if (!blocked && !lock->readers) {
+		} else if (!blocked && !waking && (lock->atomic_admission ?
+			   kd_rw_admission_write_try(lock, true) : !lock->readers)) {
 			/* Actual admission wins over a still-pending signal request. */
 			lock->writer = batch;
 			waiter->admission = KD_MUTEX_ADMISSION_GRANTED;
@@ -440,7 +520,10 @@ int kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 			break;
 		if (atomic_wait)
 			cpu_relax();
-		else if (!waiter->ops || !waiter->ops->wait_ready ||
+		else if (waking) {
+			__set_current_state(TASK_RUNNING);
+			cond_resched();
+		} else if (!waiter->ops || !waiter->ops->wait_ready ||
 			 !waiter->ops->wait_ready(waiter, waiter->context))
 			schedule();
 	}
@@ -472,6 +555,8 @@ int kd_rw_write_grant(struct kd_rw *lock, struct kd_mutex_batch *batch,
 void kd_rw_writer_exit(struct kd_rw *lock, struct kd_mutex_batch *batch,
 			struct kd_rw_read_credit *conversion)
 {
+	bool atomic_admission = READ_ONCE(lock->atomic_admission);
+
 	raw_spin_lock(&lock->guard);
 	BUG_ON(lock->writer != batch || lock->writer_pending || lock->readers);
 	if (conversion) {
@@ -483,6 +568,7 @@ void kd_rw_writer_exit(struct kd_rw *lock, struct kd_mutex_batch *batch,
 		lock->readers = 1;
 		conversion->active = true;
 		list_add_tail(&conversion->active_read.link, &lock->active_reads);
+		kd_rw_read_link_task(&conversion->active_read, lock);
 		raw_spin_unlock(&conversion->guard);
 	}
 	lock->writer = NULL;
@@ -496,8 +582,11 @@ void kd_rw_writer_exit(struct kd_rw *lock, struct kd_mutex_batch *batch,
 			.object = (unsigned long)lock, .related = (unsigned long)conversion,
 			.cursor = lock->readers, .phase = KD_GRANT_PHYSICAL_READ,
 			.source_user = (unsigned long)conversion->user);
-	wake_up_all(&lock->changed);
+	if (!atomic_admission)
+		wake_up_all(&lock->changed);
 	raw_spin_unlock(&lock->guard);
+	if (atomic_admission)
+		kd_rw_admission_write_put(lock, conversion != NULL);
 }
 
 int kd_rw_write_held(struct kd_mutex_node *node, struct kd_thread_state *state)
@@ -565,12 +654,23 @@ enum kd_rw_read_kind kd_rw_last_owned_read(struct kd_rw *lock,
 		struct task_struct *logical_task, const void **credit)
 {
 	struct kd_rw_read_link *entry;
+	struct kd_task_root_context *root;
 	enum kd_rw_read_kind kind = KD_RW_READ_NONE;
 
 	if (credit)
 		*credit = NULL;
 	if (!lock || !logical_task || !credit)
 		return kind;
+	root = smp_load_acquire(&logical_task->kd_root_context);
+	if (lock->atomic_admission && root) {
+		list_for_each_entry_reverse(entry, &root->rwsem_reads, task_link) {
+			if (entry->object == lock) {
+				*credit = entry->credit;
+				return entry->kind;
+			}
+		}
+		return kind;
+	}
 	raw_spin_lock(&lock->guard);
 	list_for_each_entry_reverse(entry, &lock->active_reads, link) {
 		if (entry->kind != KD_RW_READ_NON_OWNER &&

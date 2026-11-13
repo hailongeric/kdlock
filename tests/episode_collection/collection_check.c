@@ -66,6 +66,12 @@ struct kd_episode_config {
 	void *resolve, *classify_target, *report;
 };
 struct kd_episode_frame;
+/* Ordinary record construction is an external cold endpoint in this fixture;
+ * the admission and live integration fixtures cover its actual ownership.
+ */
+struct kd_rw_local { struct list_head free_link; };
+static void kd_rw_local_init(struct kd_rw_local *local, struct list_head *free)
+{ list_add_tail(&local->free_link, free); }
 #include "episode_types.h"
 
 static void kd_request_user_init(struct kd_request_user *user) { user->active = false; user->kind = 0; }

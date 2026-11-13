@@ -259,6 +259,11 @@ unwind behavior and broader progress remain unproved.
 
 ### 2.6 Rwsem and rwlock extension
 
+The selected [atomic rwsem admission candidate](../rwsem_admission.md) adds
+ordinary native admission and phase wakeup handling while preserving the
+managed contracts below. Its build, integration and performance checks are
+outstanding; earlier fixture receipts do not validate that candidate.
+
 C10 selects concurrent reads on the current executor when reached during
 borrowed source. The initial standalone read body stays on original W. A normal
 inner B read release returns its current continuation to the enclosing A proxy.
