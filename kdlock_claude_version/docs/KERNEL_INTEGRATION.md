@@ -11,8 +11,9 @@ in `integration/kd_linux_map.h`; this page is the procedure and the status.
 | kdlock directory builds in (`CONFIG_KDLOCK=y`) | **done**: compiled and objtool-checked in the VM, all undefined symbols resolve |
 | Whole kernel with kdlock built in links | **done**: `7.0.0-38-kdclaude1` (vmlinux, bzImage, modules) built in the VM; 138 `kd_` symbols in vmlinux |
 | Booted | **yes**, in the `kdclaude` VM next to `kdlock1` (one-shot `grub-reboot`); see BUILD_AND_TEST.md |
-| Kernel lock API switched to kdlock (`kd_linux_map.h` applied) | **no**. Today only the directory is built in; no kernel code calls `kd_*`. Benchmarks and tests call `kd_*` directly |
-| Per-subsystem lock objects converted | no |
+| `mm->mmap_lock` switched to kdlock (`CONFIG_KDLOCK_MM`, section 4a) | **done** (build #43): every mmap lock operation of the kernel goes through kdlock for mms created while `kd_mm=1`; will-it-scale mmap1 runs, writers are delegated, data-checked stress and the nano correctness pass are clean |
+| Whole kernel lock API switched to kdlock (`kd_linux_map.h` applied) | **no**. Only the mmap lock is switched; every other kernel lock is native |
+| Per-subsystem lock objects converted | the mmap lock only |
 
 ## 2. Placing the code
 
@@ -43,6 +44,64 @@ Notes found while building:
 * Boot with `nopvspin` (as the project's VM policy already does).
 * `CONFIG_INLINE_*` lock variants off and `CONFIG_UNINLINE_SPIN_UNLOCK=y`, so
   every release is an out-of-line call.
+
+## 4a. The mmap lock (`CONFIG_KDLOCK_MM`)
+
+This is the scope TCLocks used for will-it-scale mmap1: the lock of
+`mm_struct` is replaced, nothing else. TCLocks replaced `rw_semaphore`
+throughout its 5.14 kernel; here only `mm->mmap_lock` changes, so every
+other lock in an mmap critical section stays native.
+
+**Source changes.** `integration/apply_to_tree.sh` runs
+`integration/apply_mm.py`, which adds one `#elif defined(CONFIG_KDLOCK_MM)`
+branch to two headers of the 7.0 tree, beside the earlier adapter's
+`CONFIG_KDLOCK_MMAP` branch (which this tree already carries and which stays
+off):
+
+* `include/linux/mm_types.h`: `mmap_lock` becomes `struct kd_mm_lock`
+  (`include/kdlock/kd_mm_types.h`): a union of the native `rw_semaphore` and
+  a `struct kd_rwsem`, plus the choice.
+* `include/linux/mmap_lock.h`: its `__mmap_sem_*` indirection maps to the
+  inline functions of `include/kdlock/kd_mm.h`, and `mmap_destroy_lock()`
+  checks that a kdlock mmap lock is idle when the mm is freed.
+
+No MM function body changes. Every user of the mmap lock already goes
+through `mmap_lock.h` (`mmap_write_lock*`, `mmap_read_*`, the per-VMA lock
+fallbacks, BPF's deferred `mmap_read_unlock_non_owner`); the remaining
+direct references are lockdep-only and compile to nothing here.
+
+**Per-mm choice.** `kd_mm_init()` (`kernel/kd_mm.c`) picks the backend when
+an mm is created, from the core parameter `kd_mm` (0 native, default; 1
+kdlock), and it never changes for that mm. Static mms (`init_mm`, `efi_mm`)
+stay native. A process started after the parameter changed gets the other
+backend, so Native and kdlock runs alternate within one boot; the runner
+does exactly that.
+
+**Why inline.** A delegable acquisition is keyed by its call site, so
+`kd_down_write*()` must be called from the code that holds the lock. With an
+out-of-line wrapper every mmap writer would share one site, one image and one
+usefulness account (munmap's planned handbacks would switch mmap off). The
+release must likewise be a direct call to `kd_up_write()` there.
+
+**What is delegated.** Contended writers: `mmap`, `munmap`, `mprotect`,
+`mremap`, `brk`, `fork` (the parent's lock), and the rest. Readers stay
+local. munmap downgrades to a read hold before it unmaps; the write part
+is delegated and the downgrade hands the read-side remainder back to the
+caller, which counts as useful for the site (`hb_downgrade`). Inside a
+section, the following are handed back to the caller rather than run on the
+lock holder's CPU (TRANSLATOR frontier list): native sleeping-lock acquires
+(`down_write` of `anon_vma` and `i_mmap_rwsem`, `mutex_lock`, ...), TLB
+shootdowns and cross-CPU calls, `schedule`. Native spinlocks inside a
+section are called directly.
+
+**Translator policy for this kernel.** Images for the mmap paths copy the
+memory allocator, maple tree and VMA code: about 50 000 instructions per
+site after learning. The daemon runs with `max_insns` 250 000
+(`--config`, `{"max_insns": 250000}`).
+
+**Kernel ABI.** `mm_struct` changes size, so every module must be rebuilt
+and installed with the kernel (`modules_install`); a kernel booted with the
+old modules cannot mount `/boot/efi` (`module_layout` mismatch).
 
 ## 4. Replacing the lock API (not done)
 

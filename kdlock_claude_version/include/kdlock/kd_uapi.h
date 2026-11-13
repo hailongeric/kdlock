@@ -162,6 +162,12 @@ struct kd_text_query {
  * range; target = new text generation. Knowledge about the range is stale.
  */
 #define KD_EV_TEXT_GONE		6
+/*
+ * A section was handed back for a reason the translator cannot learn
+ * (frontier, sleeping acquire, downgrade): ip = first instruction not
+ * executed, target = exit code. Diagnostic; 256 per image.
+ */
+#define KD_EV_HANDBACK		7
 
 struct kd_event {
 	__u32 type;

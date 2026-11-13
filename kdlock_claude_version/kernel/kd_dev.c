@@ -73,6 +73,11 @@ static const char * const kd_stat_names[KD_STAT_NR] = {
 	[KD_STAT_XCHG_TAKEN]		= "xchg_taken",
 	[KD_STAT_XCHG_DECLINED]		= "xchg_declined",
 	[KD_STAT_XCHG_RETRACT]		= "xchg_retract",
+	[KD_STAT_HB_FRONTIER]		= "hb_frontier",
+	[KD_STAT_HB_MISS]		= "hb_miss",
+	[KD_STAT_HB_ACQUIRE]		= "hb_acquire",
+	[KD_STAT_HB_DOWNGRADE]		= "hb_downgrade",
+	[KD_STAT_HB_OTHER]		= "hb_other",
 };
 
 static int kd_stats_show(struct seq_file *m, void *v)

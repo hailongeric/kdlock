@@ -1,0 +1,1 @@
+Copied unchanged from TCLocks (github rs3lab/TCLocks, commit bbfb9f00a, src/benchmarks/will-it-scale): main.c, Makefile, tests used here. Build: make wl=mmap1.

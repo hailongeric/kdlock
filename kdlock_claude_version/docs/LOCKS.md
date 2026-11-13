@@ -152,6 +152,14 @@ call.
   is always handed back: the origin performs it natively.
 * **Write release** (`kd_up_write`) is one locked subtraction, as for the
   mutex.
+* **Every holder of `m` spins before it sleeps on `count`**, bounded by
+  time (`kd_rwsem_wspin_ns`, 50 us): the writer at the queue head, a parked
+  writer that got `m`, and a reader that queued. A holder of `m` that sleeps
+  makes every later waiter see an owner off the CPU and park as well, and
+  they are then woken one by one. mmap1 hit this behind munmap, whose
+  unmap runs as a reader after a downgrade: 0.33 of Native at 4 threads
+  before, 0.98 after. Nano rwsem: unchanged at 4-16 workers, 20% writers at
+  32 workers +74-87%.
 * Writers publish whenever they can; there is no plain mode for the writer
   queue (ARCHITECTURE 7a).
 * A nested rwsem writer acquire inside a section is queued and spun for like

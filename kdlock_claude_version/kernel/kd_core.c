@@ -258,11 +258,11 @@ static void kd_rcu_sync(int base, int target)
 		rcu_read_unlock();
 }
 
-static void kd_report_exit(struct kd_regs *r, unsigned int kind, unsigned long ip,
+static void kd_report_exit(struct kd_regs *r, u32 x, unsigned long ip,
 			   unsigned long aux)
 {
 	struct kd_site *site = r->site;
-	u32 type;
+	u32 type, kind = KD_X_KIND(x);
 	unsigned long target = 0;
 
 	switch (kind) {
@@ -278,7 +278,10 @@ static void kd_report_exit(struct kd_regs *r, unsigned int kind, unsigned long i
 		target = *(unsigned long *)r->rsp;
 		break;
 	default:
-		return;		/* frontier, budget, pending acquire: nothing to learn */
+		/* Frontier, budget, pending acquire: nothing to learn, but say where. */
+		if (atomic_add_unless(&site->hb_budget, -1, 0))
+			kd_event_push(KD_EV_HANDBACK, site->rip, ip, x);
+		return;
 	}
 	/* Bounded per image so a hot unlearned path cannot flood the ring. */
 	if (atomic_add_unless(&site->miss_budget, -1, 0))
@@ -317,7 +320,7 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	void *resume;
 	unsigned long flags, ip, aux;
 	unsigned int kind, op, level = r->nroots;
-	bool done = false, native = true, bh = false;
+	bool done = false, native = true, bh = false, planned = false;
 	int pc0, d, i, ret, rcu0;
 	u32 x;
 
@@ -435,9 +438,32 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 			/* Not acquired: fall through, the origin repeats the call. */
 		}
 
-		/* Handback: the origin executes the instruction at @ip itself. */
+		/*
+		 * Handback: the origin executes the instruction at @ip itself.
+		 * A downgrade is a planned one: the write part of the section
+		 * was executed here, and only the read-side remainder belongs
+		 * to the origin (munmap does this on every call). It counts as
+		 * useful for the site, or such sites would be switched off.
+		 */
+		planned = kind == KD_X_UNLOCK && op == KD_OP_DOWNGRADE;
+		switch (kind) {
+		case KD_X_FRONTIER:
+			kd_stat_inc(kc, KD_STAT_HB_FRONTIER);
+			break;
+		case KD_X_MISS_CODE:
+		case KD_X_MISS_IND:
+		case KD_X_MISS_RET:
+			kd_stat_inc(kc, KD_STAT_HB_MISS);
+			break;
+		case KD_X_ACQUIRE:
+		case KD_X_NESTED:
+			kd_stat_inc(kc, KD_STAT_HB_ACQUIRE);
+			break;
+		default:
+			kd_stat_inc(kc, planned ? KD_STAT_HB_DOWNGRADE : KD_STAT_HB_OTHER);
+		}
 		r->rip = ip;
-		kd_report_exit(r, kind, ip, aux);
+		kd_report_exit(r, x, ip, aux);
 		break;
 	}
 
@@ -471,7 +497,7 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 		local_bh_enable();
 
 	kd_stat_inc(kc, native ? KD_STAT_HANDBACK : KD_STAT_DELEGATED);
-	kd_site_account(r->site, !native);
+	kd_site_account(r->site, !native || planned);
 	return done;
 }
 

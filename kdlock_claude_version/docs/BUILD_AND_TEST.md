@@ -170,6 +170,30 @@ Bugs found by these runs and fixed:
   sampling counter written in the queue node's line did cost 5 to 15% of
   the plain rate and was moved (`bench/results/kdclaude/README.md`).
 
+## 5c. The mmap lock on kdlock (2026-11-13)
+
+Builds #40-#43 with `CONFIG_KDLOCK_MM`. The kernel's `mm_struct` changes
+size, so `kbuild.sh` now also runs `modules_install`; build #40 booted
+without it and stopped in emergency mode (`/boot/efi` not mountable,
+`module_layout` mismatch).
+
+```
+echo 1 > /sys/module/kernel/parameters/kd_mm      # new mms get the kdlock mmap lock
+gcc -O2 -pthread -o mm_stress bench/mm_stress.c && ./mm_stress 16 30
+python3 bench/run_mmap1.py --out mmap1.jsonl --rounds 2
+```
+
+| Check (build #43) | Result |
+| --- | --- |
+| `mm_stress` (data-checked mmap, munmap, mprotect, mremap, MADV_DONTNEED, malloc, fork; one shared mm), kdlock mms, 4/16/31 threads x 30 s | all checks passed; Native control passed |
+| Kernel subtree and module builds run with `kd_mm=1` | built; modules load and pass the API check |
+| will-it-scale mmap1, threads and processes, 1-32 workers, 2 rounds | no failed point, no kernel warning; delegated mmap sections 2-3.6 M per point from 4 threads |
+| Nano correctness pass | 240 points exact |
+
+`mm_stress` itself had a defect that only showed under load: a thread
+refilled a hole with `MAP_FIXED` after another thread could have mapped it.
+It failed with Native too and was fixed in the test.
+
 ## 6. Not tested yet
 
 * Nesting deeper than two levels, and the `KD_MAX_DEPTH` / `KD_MAX_ROOTS`

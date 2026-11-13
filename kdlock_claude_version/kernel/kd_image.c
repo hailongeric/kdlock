@@ -359,6 +359,7 @@ static long kd_image_load(struct kd_image_load __user *uarg)
 	WRITE_ONCE(site->ok, 0);
 	WRITE_ONCE(site->bad, 0);
 	atomic_set(&site->miss_budget, KD_MISS_BUDGET);
+	atomic_set(&site->hb_budget, 256);
 	smp_store_release(&site->entry, site->img->text + l.entry_off);
 out:
 	mutex_unlock(&kd_image_mutex);

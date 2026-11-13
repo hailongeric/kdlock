@@ -25,4 +25,8 @@ add_once "$tree/kernel/Kconfig.locks" 'source "kernel/locking/kdlock/Kconfig"'
 add_once "$tree/kernel/locking/Makefile" 'obj-$(CONFIG_KDLOCK) += kdlock/'
 # Symbols exported from assembly need C prototypes (MODVERSIONS/gendwarfksyms).
 add_once "$tree/arch/x86/include/asm/asm-prototypes.h" '#include <kdlock/kd_api.h>'
+# mm->mmap_lock routing (CONFIG_KDLOCK_MM); needs the __mmap_sem_* layer.
+if grep -q "__mmap_sem_down_write" "$tree/include/linux/mmap_lock.h"; then
+	python3 "$here/integration/apply_mm.py" "$tree"
+fi
 echo "kdlock placed in $tree"

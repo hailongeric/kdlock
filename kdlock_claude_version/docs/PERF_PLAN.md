@@ -203,6 +203,14 @@ Status 2026-11-13 (adaptive delegation, role exchange, API coverage; commits
 
 ### Task D: API switch and micro/API stage
 
+Status 2026-11-13: the mmap lock is switched (`CONFIG_KDLOCK_MM`,
+KERNEL_INTEGRATION 4a) and will-it-scale mmap1 runs on it with delegated
+writers: kd/Native 0.98-1.00 at 1-4 threads and 1.06-1.23 at 8-32
+(`bench/results/kdclaude/mmap1-20261113/`). Getting there needed one rwsem
+fix (holders of the queue mutex spin by time before they sleep). The rest of
+the kernel lock API is still native; the syscall runners below are open.
+
+
 * Apply `integration/kd_linux_map.h`: replace `arch_spinlock_t`,
   `arch_rwlock_t`, `struct mutex`, `struct rw_semaphore` and their API
   (inline variants off, `osq_lock.c` etc. not built). Today only the

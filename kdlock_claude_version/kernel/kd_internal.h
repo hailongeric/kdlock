@@ -175,6 +175,12 @@ enum {
 	KD_STAT_XCHG_TAKEN,	/* releases that took the head role over */
 	KD_STAT_XCHG_DECLINED,	/* releases that could not and gave it back */
 	KD_STAT_XCHG_RETRACT,	/* offers withdrawn because the holder stopped running */
+	/* Handbacks by reason. */
+	KD_STAT_HB_FRONTIER,	/* instruction or callee only the origin may run */
+	KD_STAT_HB_MISS,	/* unknown code, indirect or return target (learnable) */
+	KD_STAT_HB_ACQUIRE,	/* sleeping acquire that could not be completed here */
+	KD_STAT_HB_DOWNGRADE,	/* rwsem downgrade: the read-side remainder is the origin's */
+	KD_STAT_HB_OTHER,
 	KD_STAT_NR,
 };
 
@@ -390,6 +396,7 @@ struct kd_site {
 	struct kd_image	*img;
 	u32		ok, bad;	/* approximate, combiner-updated */
 	atomic_t	miss_budget;	/* learning reports left for this image */
+	atomic_t	hb_budget;	/* handback reports left for this image */
 	struct rcu_head	rcu;
 };
 

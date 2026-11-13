@@ -70,6 +70,15 @@ DEFAULT_CONFIG = {
         # they count for the executor; the kernel carries the depth over to
         # the origin (kd_rcu_sync() in kd_core.c).
         "__rcu_read_lock", "__rcu_read_unlock",
+        # Native spinlocks: no task identity, and the preempt-count change
+        # is measured and moved to the origin like any other. Calling them
+        # spares copying the queued-spinlock slow path into every image.
+        "_raw_spin_lock", "_raw_spin_lock_irq", "_raw_spin_lock_irqsave",
+        "_raw_spin_lock_bh", "_raw_spin_unlock", "_raw_spin_unlock_irq",
+        "_raw_spin_unlock_irqrestore", "_raw_spin_unlock_bh",
+        "_raw_spin_trylock", "_raw_read_lock", "_raw_read_unlock",
+        "_raw_write_lock", "_raw_write_unlock", "queued_spin_lock_slowpath",
+        "native_queued_spin_lock_slowpath",
     ],
     # Calls dropped from the copy.
     "skip": ["__fentry__", "__might_sleep", "__might_resched", "__might_fault"],
@@ -85,6 +94,24 @@ DEFAULT_CONFIG = {
         "__stack_chk_fail", "_copy_from_user", "_copy_to_user",
         "rep_movs_alternative", "rep_stos_alternative",
         "strncpy_from_user", "strnlen_user",
+        # Native sleeping locks. Their fast path is fine on any CPU, but
+        # their slow path prepares to sleep for the task (task state, wait
+        # entries, optimistic spinning on per-CPU queue nodes) before it
+        # reaches schedule(); the origin does all of that itself.
+        "mutex_lock", "mutex_lock_interruptible", "mutex_lock_killable",
+        "mutex_lock_io", "down_read", "down_read_killable",
+        "down_read_interruptible", "down_write", "down_write_killable",
+        "rt_mutex_lock", "down", "down_interruptible", "down_killable",
+        "percpu_down_write", "__percpu_down_read",
+        # TLB shootdown and cross-CPU calls. They act on "this CPU" (the
+        # executor) and may wait for other CPUs, among them the origin's,
+        # which may be waiting with interrupts off for a spin-class lock.
+        "flush_tlb_mm_range", "flush_tlb_kernel_range", "flush_tlb_multi",
+        "native_flush_tlb_multi", "arch_tlbbatch_flush", "flush_tlb_all",
+        "smp_call_function_many_cond", "smp_call_function_single",
+        "smp_call_function_any", "on_each_cpu_cond_mask",
+        "switch_mm", "switch_mm_irqs_off", "leave_mm",
+        "__cond_resched", "synchronize_rcu", "synchronize_rcu_expedited",
     ],
     "frontier_prefix": [
         "schedule_timeout_", "wait_for_completion", "__get_user_", "__put_user_",

@@ -23,3 +23,14 @@ config KDLOCK
 	  translated, the locks behave as plain queued locks.
 
 	  NR_CPUS must stay below 16384 (queue tail encoding).
+
+config KDLOCK_MM
+	bool "kdlock: mm_struct mmap lock as a kdlock rwsem"
+	depends on KDLOCK && MMU && !KDLOCK_MMAP
+	default n
+	help
+	  Make mm->mmap_lock a union of the native rw_semaphore and a kdlock
+	  rwsem. Each new mm chooses one when it is created, from the kd_mm
+	  core parameter (default 0: native). With kdlock, contended mmap
+	  writers (mmap, munmap, mprotect, brk, ...) can have their critical
+	  section run by the queue head. Static mms stay native.

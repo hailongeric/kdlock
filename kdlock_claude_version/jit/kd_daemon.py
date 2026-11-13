@@ -37,7 +37,8 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from kdjit.kernel import (Device, KernelView, KD_EV_MISS_CODE, KD_EV_MISS_IND,  # noqa: E402
-                          KD_EV_MISS_RET, KD_EV_REQUEST, KD_EV_SITE_OFF, KD_EV_TEXT_GONE)
+                          KD_EV_MISS_RET, KD_EV_REQUEST, KD_EV_SITE_OFF, KD_EV_TEXT_GONE,
+                          KD_EV_HANDBACK)
 from kdjit.translator import Learned, TranslationError, Translator  # noqa: E402
 
 
@@ -126,6 +127,10 @@ class Daemon:
         kind, _cpu, site, ip, target = event
         if kind == KD_EV_TEXT_GONE:
             self._text_gone(site, ip)
+            return
+        if kind == KD_EV_HANDBACK:
+            if self.args.verbose:
+                print("site %#x: handback at %s, exit %#x" % (site, self._where(ip), target))
             return
         if site in self.failed:
             return

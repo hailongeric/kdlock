@@ -62,6 +62,25 @@ the reachable code (it sits in `__raise_softirq_irqoff`) made the whole
 site fail, which kept every section with an `rcu_read_unlock()` from being
 delegated.
 
+For kernels whose own locks are kdlock in part (the mmap lock), sections
+run kernel code that takes native locks. Native spinlock acquires and
+releases are called natively (no task identity; the preempt-count change is
+moved to the origin as usual). Native sleeping-lock acquires
+(`mutex_lock*`, `down_read*`, `down_write*`, ...), TLB shootdowns and
+cross-CPU calls (`flush_tlb_mm_range`, `smp_call_function_many_cond`, ...),
+`switch_mm*`, `__cond_resched` and `synchronize_rcu*` are frontiers: their
+slow paths prepare to sleep for the task, act on "this CPU", or wait for
+other CPUs, among them the origin's.
+
+The mmap paths need images of about 50 000 instructions after learning;
+run the daemon with `--config` `{"max_insns": 250000}` there.
+
+Handbacks for reasons the translator cannot learn are reported as
+`KD_EV_HANDBACK` events (256 per image) and counted by reason in debugfs
+(`hb_frontier`, `hb_miss`, `hb_acquire`, `hb_downgrade`, `hb_other`); the
+daemon logs them with `-v`. A handback at a downgrade counts as useful for
+the site's usefulness account: the write part ran on the combiner.
+
 **Frontiers** are: instructions with an exception-table entry (they rely on
 their own address being in the table), text outside a live text region,
 privileged/CPU-state instructions

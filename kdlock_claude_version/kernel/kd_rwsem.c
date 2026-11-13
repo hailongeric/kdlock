@@ -24,11 +24,26 @@
 #include <linux/export.h>
 #include <linux/sched.h>
 #include <linux/sched/signal.h>
+#include <linux/sched/clock.h>
+#include <linux/moduleparam.h>
 #include <linux/rcupdate.h>
 #include <linux/preempt.h>
 #include "kd_internal.h"
 
-#define KD_RWSEM_SPIN	1024	/* iterations a queue head spins for count before sleeping */
+#define KD_RWSEM_SPIN	1024	/* iterations a reader spins before queueing */
+
+/*
+ * How long the writer at the head of the queue spins for the readers to
+ * leave before it sleeps holding ->m. Sleeping there is expensive: every
+ * writer behind it sees an owner off the CPU and parks too, and they are
+ * woken one by one. mmap writers wait like this behind munmap, which
+ * downgrades and finishes its unmap as a reader (measured: at the old
+ * bound of 1024 pauses the head slept in about one wait out of three and
+ * mmap1 with 4 threads ran at a third of Native's rate). The native rwsem
+ * spins on a reader-owned lock for a time bound as well.
+ */
+static unsigned int kd_rwsem_wspin_ns __read_mostly = 50000;
+core_param(kd_rwsem_wspin_ns, kd_rwsem_wspin_ns, uint, 0644);
 
 static __always_inline bool kd_rwsem_readers(long c)
 {
@@ -66,20 +81,49 @@ static __always_inline bool kd_rwsem_write_try(struct kd_rwsem *sem)
  * caller then continues in kd_down_write_sleep() with ->m still held and
  * KD_RWSEM_WWAIT still set.
  */
+/*
+ * Holder of ->m: spin, bounded by time, until the writer bit can be taken
+ * (@write) or no writer is in (!@write; the caller is a registered
+ * reader). Any task that holds ->m spins here before it sleeps on
+ * ->count, because a holder of ->m that sleeps makes every other waiter
+ * see an owner off the CPU and park as well; they are then woken one by
+ * one (measured: mmap1 with 4 threads at a third of Native's rate while
+ * this happened).
+ */
+static bool kd_rwsem_spin_for(struct kd_rwsem *sem, bool write)
+{
+	u64 end = 0;
+	int i;
+
+	for (i = 0;; i++) {
+		if (write ? kd_rwsem_write_try(sem) :
+			    !(atomic_long_read(&sem->count) & KD_RWSEM_WLOCKED))
+			return true;
+		if (need_resched())
+			return false;
+		/*
+		 * Bounded by time, not iterations: how long the holders keep
+		 * the lock decides, and a pause costs very different amounts
+		 * on different machines. The clock is read once in a while.
+		 */
+		if (!(i & 63)) {
+			u64 now = local_clock();
+
+			if (!end)
+				end = now + READ_ONCE(kd_rwsem_wspin_ns);
+			else if (now > end)
+				return false;
+		}
+		cpu_relax();
+	}
+}
+
 static bool kd_rwsem_post(void *root)
 {
 	struct kd_rwsem *sem = root;
-	int i;
 
 	atomic_long_or(KD_RWSEM_WWAIT, &sem->count);
-	for (i = 0; i < KD_RWSEM_SPIN; i++) {
-		if (kd_rwsem_write_try(sem))
-			return true;
-		if (need_resched())
-			break;
-		cpu_relax();
-	}
-	return false;
+	return kd_rwsem_spin_for(sem, true);
 }
 
 static void kd_rwsem_release_queue(void *root)
@@ -175,6 +219,10 @@ static int __kd_down_write_sleep(struct kd_rwsem *sem, int why, unsigned int sta
 		if (ret)
 			return ret;
 		atomic_long_or(KD_RWSEM_WWAIT, &sem->count);
+		if (kd_rwsem_spin_for(sem, true)) {
+			kd_mutex_unlock(&sem->m);
+			return 0;
+		}
 	}
 	ret = kd_rwsem_sleep_on(sem, state, kd_rwsem_write_try(sem));
 	if (ret) {
@@ -348,7 +396,7 @@ static bool kd_down_read_spin(struct kd_rwsem *sem)
 
 static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state)
 {
-	int ret, i;
+	int ret;
 
 	kd_rwsem_read_undo(sem);
 	if (kd_down_read_spin(sem))
@@ -373,12 +421,7 @@ static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state)
 	 * high-worker-count rwsem loss has other causes (readers serialise
 	 * through ->m), see docs/DIFFERENCES.md D11.
 	 */
-	for (i = 0; i < KD_RWSEM_SPIN &&
-		    (atomic_long_read(&sem->count) & KD_RWSEM_WLOCKED); i++) {
-		if (need_resched())
-			break;
-		cpu_relax();
-	}
+	kd_rwsem_spin_for(sem, false);
 	ret = kd_rwsem_sleep_on(sem, state,
 				!(atomic_long_read(&sem->count) & KD_RWSEM_WLOCKED));
 	if (ret)
