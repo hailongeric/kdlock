@@ -71,7 +71,11 @@ struct kd_execution_binding {
 	enum kd_execution_kind kind;
 };
 struct kd_request_pool { struct kd_thread_state *state; };
-struct kd_episode_resources { struct kd_request_pool *pool; };
+struct kd_episode_resources {
+	struct kd_request_pool *pool;
+	struct { enum kd_lock_family family; } config;
+};
+struct test_fast_read { void *lock; };
 struct kd_thread_state {
 	struct task_struct *origin;
 	struct kd_execution_binding *binding;
@@ -87,7 +91,7 @@ struct kd_task_root_context {
 	struct { struct list_head batches; struct task_struct *task; bool atomic_spin; } owners;
 	struct list_head native_grants;
 	struct kd_mutex_fast mutex_fast;
-	struct { void *lock; } rwsem_fast;
+	struct test_fast_read rwsem_fast;
 	void *aux_entry, *lifecycle, *storage;
 	struct kd_episode_resources *mutex_resources;
 	struct kd_request_pool pool;
@@ -389,6 +393,130 @@ static void check_native_checks(void)
 	owner.__state = TASK_RUNNING;
 	CHECK(!kd_task_validate_native(&root, binding));
 }
+/* Actual native wrapper and operation predicates. Controlled progress exposes
+ * the eligibility transition; it does not model physical owner retirement.
+ * The existing reader cases exercise the actual family gate and final release.
+ */
+struct kd_rw { struct kd_mutex queue; };
+struct kd_mutex_entry { int unused; };
+struct test_entry_slot { struct kd_mutex_entry entry; };
+struct kd_episode_frame { struct test_entry_slot *slot; unsigned long source_target; };
+static struct kd_rw entry_rw;
+static struct kd_episode_resources entry_resources;
+static struct test_entry_slot entry_slot;
+static struct kd_episode_frame entry_frame = { .slot = &entry_slot };
+static struct list_head retained_marker;
+static unsigned int entry_progress, read_attempts, early_read_attempts, frame_prepares, captures;
+static bool progress_clears_owner, read_gate_available, progress_opens_gate;
+#define container_of(p, t, m) ((t *)((char *)(p) - offsetof(t, m)))
+#define PREEMPT_OFFSET 1
+#define PREEMPT_MASK 255
+static unsigned int preempt_count(void) { return 0; }
+static void preempt_disable(void) { CHECK(false); }
+static void preempt_enable(void) { CHECK(false); }
+static enum kd_operation_kind resolve_source_target(unsigned long target)
+{ return (enum kd_operation_kind)target; }
+static bool kd_rw_fast_read_is_last(struct test_fast_read *credit, struct kd_rw *rw,
+		struct task_struct *task)
+{ (void)credit; (void)rw; (void)task; return false; }
+static int kd_rw_fast_read_release(struct test_fast_read *credit, struct kd_thread_state *state,
+		struct kd_execution_binding *binding)
+{ (void)credit; (void)state; (void)binding; CHECK(false); return 0; }
+static bool kd_rw_fast_read_trylock(struct kd_rw *rw, struct test_fast_read *credit)
+{
+	CHECK(rw == &entry_rw && credit == &root.rwsem_fast);
+	CHECK(native_fast_eligible(&root, KD_OPERATION_RWSEM_DOWN_READ));
+	++read_attempts;
+	if (!entry_progress) ++early_read_attempts;
+	if (!read_gate_available) return false;
+	credit->lock = rw;
+	return true;
+}
+static int kd_task_progress_native(struct kd_task_root_context *context,
+		struct kd_execution_binding *binding, bool *pending)
+{
+	CHECK(context == &root && !kd_task_validate_native(context, binding));
+	++entry_progress;
+	if (progress_clears_owner) INIT_LIST_HEAD(&context->owners.batches);
+	if (progress_opens_gate) read_gate_available = true;
+	/* A current native endpoint may keep storage pending after duty drain. */
+	*pending = true;
+	return 0;
+}
+static int kd_episode_unlock_native(struct kd_episode_resources *resources,
+		struct kd_task_root_context *context, struct kd_execution_binding *binding,
+		struct kd_mutex *mutex, enum kd_operation_kind operation)
+{
+	(void)resources; (void)context; (void)binding; (void)mutex; (void)operation;
+	CHECK(false); return 0;
+}
+static int kd_episode_downgrade_native(struct kd_episode_resources *resources,
+		struct kd_task_root_context *context, struct kd_execution_binding *binding,
+		struct kd_mutex *mutex, enum kd_operation_kind operation)
+{
+	(void)resources; (void)context; (void)binding; (void)mutex; (void)operation;
+	CHECK(false); return 0;
+}
+static int kd_episode_prepare_root(struct kd_episode_resources *resources,
+		struct kd_execution_binding *binding, enum kd_operation_kind operation,
+		struct kd_episode_frame **frame)
+{
+	CHECK(resources == &entry_resources && binding == &root.initial_native);
+	CHECK(operation == KD_OPERATION_RWSEM_DOWN_READ || operation == KD_OPERATION_RWSEM_DOWN_WRITE);
+	++frame_prepares; *frame = &entry_frame; return 0;
+}
+static void run_native(void) { CHECK(false); }
+static int kd_mutex_prepare_entry(struct kd_mutex_entry *entry, struct kd_execution_binding *binding,
+		void (*run)(void), void *context, unsigned long required_control_bytes)
+{
+	CHECK(entry == &entry_slot.entry && binding == &root.initial_native && run == run_native &&
+	      context == &entry_frame && required_control_bytes == root.mutex_control_bytes);
+	++captures; return 0;
+}
+#include "entry_functions.h"
+
+static void setup_entry(bool retained_owner, bool drain, bool gate)
+{
+	setup_root(&root, &owner);
+	entry_resources.pool = &root.pool;
+	entry_resources.config.family = KD_LOCK_FAMILY_RWSEM;
+	root.mutex_resources = &entry_resources;
+	if (retained_owner) root.owners.batches.next = &retained_marker;
+	entry_progress = read_attempts = early_read_attempts = frame_prepares = captures = 0;
+	progress_clears_owner = drain; read_gate_available = gate; progress_opens_gate = false;
+}
+static struct kd_mutex_entry *enter_read(void)
+{
+	return prepare_current(&entry_rw.queue, KD_OPERATION_RWSEM_DOWN_READ,
+		(unsigned long)KD_OPERATION_RWSEM_DOWN_READ);
+}
+static void check_read_recheck(void)
+{
+	setup_entry(true, true, true);
+	CHECK(!enter_read());
+	CHECK(entry_progress == 1 && read_attempts == 1 && !early_read_attempts &&
+	      !frame_prepares && !captures && root.rwsem_fast.lock == &entry_rw);
+	setup_entry(true, false, true);
+	CHECK(enter_read() == &entry_slot.entry);
+	CHECK(entry_progress == 1 && !read_attempts && frame_prepares == 1 && captures == 1);
+	setup_entry(true, true, true);
+	root.core.grants.next = &retained_marker;
+	CHECK(enter_read() == &entry_slot.entry);
+	CHECK(entry_progress == 1 && !read_attempts && frame_prepares == 1 && captures == 1);
+	setup_entry(false, false, false);
+	progress_opens_gate = true;
+	CHECK(enter_read() == &entry_slot.entry);
+	CHECK(entry_progress == 1 && read_attempts == 1 && early_read_attempts == 1 &&
+	      read_gate_available && frame_prepares == 1 && captures == 1);
+	setup_entry(true, true, false);
+	CHECK(enter_read() == &entry_slot.entry);
+	CHECK(entry_progress == 1 && read_attempts == 1 && !early_read_attempts &&
+	      frame_prepares == 1 && captures == 1);
+	setup_entry(true, true, true);
+	CHECK(prepare_current(&entry_rw.queue, KD_OPERATION_RWSEM_DOWN_WRITE,
+		(unsigned long)KD_OPERATION_RWSEM_DOWN_WRITE) == &entry_slot.entry);
+	CHECK(entry_progress == 1 && !read_attempts && frame_prepares == 1 && captures == 1);
+}
 int main(int argc, char **argv)
 {
 	CHECK(argc == 2);
@@ -400,6 +528,7 @@ int main(int argc, char **argv)
 	else if (!strcmp(argv[1], "eligibility")) check_eligibility();
 	else if (!strcmp(argv[1], "lifetime")) check_lifetime();
 	else if (!strcmp(argv[1], "native_checks")) check_native_checks();
+	else if (!strcmp(argv[1], "read_recheck")) check_read_recheck();
 	else CHECK(false);
 	CHECK(!munmap(lock, page_size) && !munmap(successor, page_size));
 	printf("PASS %s\n", argv[1]);

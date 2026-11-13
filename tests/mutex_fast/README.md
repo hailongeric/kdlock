@@ -1,5 +1,12 @@
 # Task-owned mutex fast path
 
+The subsequent [rwsem eligibility recheck](../../bench/nano/RWSEM_READ_RECHECK.md)
+adds one controlled case using the actual native wrapper and operation
+predicates. It checks that completed owner progress can enable a read before
+frame preparation, while retained duties and failed physical admission keep
+the ordinary path. Its progress/gate endpoints are stand-ins, not a runtime
+owner-retirement proof. The focused runner now defines eight cases.
+
 The fixed mutex checkpoint is `a1ad50e5`; its kernel11 report is referenced by
 the [subsequent rwsem reader handoff](../../bench/nano/RWSEM_FAST.md). The original
 scope and ABI2 discussion below describe that checkpoint. The shared eligibility

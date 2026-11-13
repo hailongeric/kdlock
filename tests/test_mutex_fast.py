@@ -24,9 +24,15 @@ FUNCTIONS = {
     'kernel/task_progress.c': ('kd_task_validate_native',),
 }
 TYPES = {
-    'kernel/state.h': ('enum kd_execution_kind', 'enum kd_operation_kind', 'enum kd_operation_phase'),
+    'kernel/state.h': ('enum kd_execution_kind', 'enum kd_operation_kind', 'enum kd_operation_phase',
+                      'enum kd_lock_family'),
     'kernel/mutex.h': ('enum kd_mutex_selection', 'struct kd_mutex', 'struct kd_mutex_fast'),
     'kernel/observation.h': ('enum kd_observation_kind', 'struct kd_observation'),
+}
+ENTRY_FUNCTIONS = {
+    'kernel/state.h': ('kd_operation_is_lock', 'kd_operation_is_unlock', 'kd_operation_is_mode_change',
+                       'kd_operation_family', 'kd_lock_family_is_atomic', 'kd_operation_is_atomic'),
+    'kernel/mutex_api.c': ('prepare_current',),
 }
 
 
@@ -43,8 +49,8 @@ class MutexFastTests(unittest.TestCase):
         if not parent.is_absolute() or not parent.is_dir() or not compiler.is_absolute() or not compiler.is_file():
             raise ValueError('supply existing absolute VM scratch and compiler paths')
         cls.output = Path(tempfile.mkdtemp(prefix='mutex-fast-', dir=parent))
-        inputs, functions, types = {}, [], []
-        for relative in dict.fromkeys((*FUNCTIONS, *TYPES)):
+        inputs, functions, types, entry_functions = {}, [], [], {}
+        for relative in dict.fromkeys((*FUNCTIONS, *TYPES, *ENTRY_FUNCTIONS)):
             raw = (ROOT / relative).read_bytes()
             inputs[relative] = hashlib.sha256(raw).hexdigest()
             source = raw.decode()
@@ -54,6 +60,12 @@ class MutexFastTests(unittest.TestCase):
                 if match is None:
                     raise ValueError('missing production function ' + name)
                 functions.append(source[match.start():source.index('\n}', match.start()) + 2])
+            for name in ENTRY_FUNCTIONS.get(relative, ()):
+                match = re.search(r'^(?:static )?(?:inline )?(?:void|int|bool|enum \w+|struct \w+\s*\*)\s*'
+                                  + name + r'\(', source, re.M)
+                if match is None:
+                    raise ValueError('missing production entry function ' + name)
+                entry_functions[name] = source[match.start():source.index('\n}', match.start()) + 2]
             for name in TYPES.get(relative, ()):
                 match = re.search(r'^' + name + r' \{.*?^};', source, re.M | re.S)
                 if match is None:
@@ -63,13 +75,16 @@ class MutexFastTests(unittest.TestCase):
                 types.extend(re.findall(r'^#define KD_OBS_FLAG_.*$', source, re.M))
         (cls.output / 'fast_functions.h').write_text('\n'.join(functions) + '\n')
         (cls.output / 'fast_types.h').write_text('\n'.join(types) + '\n')
+        (cls.output / 'entry_functions.h').write_text('\n'.join(entry_functions[name]
+            for names in ENTRY_FUNCTIONS.values() for name in names) + '\n')
         fixture = ROOT / 'tests/mutex_fast/fast_check.c'
         inputs[str(fixture.relative_to(ROOT))] = hashlib.sha256(fixture.read_bytes()).hexdigest()
         (cls.output / fixture.name).write_bytes(fixture.read_bytes())
         cls.binary = cls.output / 'fast_check'
         command = [str(compiler), '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-pthread',
                    str(cls.output / fixture.name), '-o', str(cls.binary)]
-        receipt = dict(command=command, release=platform.release(), inputs=inputs, functions=FUNCTIONS)
+        receipt = dict(command=command, release=platform.release(), inputs=inputs,
+                       functions=FUNCTIONS, entry_functions=ENTRY_FUNCTIONS)
         (cls.output / 'build.json').write_text(json.dumps(receipt, indent=2) + '\n')
         result = subprocess.run(command, capture_output=True, text=True, timeout=30)
         (cls.output / 'build.stdout').write_text(result.stdout)
@@ -108,6 +123,9 @@ class MutexFastTests(unittest.TestCase):
 
     def test_shared_native_validation_retains_structural_checks(self):
         self.check_case('native_checks')
+
+    def test_read_rechecks_only_after_exact_progress_clears_eligibility(self):
+        self.check_case('read_recheck')
 
 
 if __name__ == '__main__':

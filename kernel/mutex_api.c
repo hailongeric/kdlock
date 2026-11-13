@@ -166,6 +166,7 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 	struct kd_execution_binding *native;
 	struct kd_episode_frame *frame;
 	bool atomic_context = kd_operation_is_atomic(operation);
+	bool fast_eligible;
 	bool pending;
 	int result;
 
@@ -206,7 +207,8 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 		BUG_ON(result);
 		return NULL;
 	}
-	if (native_fast_eligible(root, operation)) {
+	fast_eligible = native_fast_eligible(root, operation);
+	if (fast_eligible) {
 		result = kd_task_validate_native(root, native);
 		BUG_ON(result);
 		if (operation == KD_OPERATION_MUTEX_LOCK ?
@@ -216,6 +218,18 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 	}
 	result = kd_task_progress_native(root, native, &pending);
 	BUG_ON(result);
+	/* Native unlock can drop its last source user after its owner pump.
+	 * This progress pass may now retire that exact batch. Recheck a read
+	 * that was ineligible before progress; never bypass a retained duty or
+	 * retry an already attempted physical admission. No old frame is kept.
+	 */
+	if (!fast_eligible && operation == KD_OPERATION_RWSEM_DOWN_READ &&
+	    native_fast_eligible(root, operation)) {
+		result = kd_task_validate_native(root, native);
+		BUG_ON(result);
+		if (kd_rw_fast_read_trylock(container_of(lock, struct kd_rw, queue), &root->rwsem_fast))
+			return NULL;
+	}
 	if (kd_operation_is_unlock(operation)) {
 		result = kd_episode_unlock_native(root->mutex_resources,
 						  root, native, lock, operation);
