@@ -27,7 +27,22 @@ def sha(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
-def measurement_plan(scope, stage):
+def validate_scope(scope, backend):
+    require(scope != 'recorder-pair' or backend == 'kdlock',
+            'recorder-pair scope requires the KD backend')
+    require(scope != 'native-current' or backend in ('native', 'kdlock'),
+            'native-current scope requires Native or KD')
+
+
+def measurement_plan(scope, stage, backend=None):
+    if scope == 'native-current':
+        validate_scope(scope, backend)
+        modes = ('on', 'off') if backend == 'kdlock' else ('unavailable',)
+        plan = [(f'functional-{mode}', 1, False, mode) for mode in modes]
+        if stage == 'timing':
+            mode = 'off' if backend == 'kdlock' else 'unavailable'
+            plan.extend((f'timed-r{repeat + 1}-{mode}', 1, True, mode) for repeat in range(3))
+        return plan
     if scope == 'recorder-pair':
         plan = [(f'functional-{mode}', 1, False, mode) for mode in ('on', 'off')]
         if stage == 'timing':
@@ -42,10 +57,18 @@ def measurement_plan(scope, stage):
     return plan
 
 
-def validate_prerequisites(prior, scope, family, build_sha256, boot_id):
+def validate_prerequisites(prior, scope, family, build_sha256, boot_id, runner_sha256=None):
     require(all(p['status'] == 'FUNCTIONAL_PASS' and p['build_receipt_sha256'] == build_sha256 and
                 p['boot_id'] == boot_id for p in prior), 'functional build/boot receipt differs')
-    if scope == 'recorder-pair':
+    if scope == 'native-current':
+        require(len(prior) == 4 and {(p['family'], p['backend']) for p in prior} ==
+                {(f, b) for f in ('mutex', 'rwsem') for b in ('native', 'kdlock')} and
+                all(p.get('scope') == scope and p.get('stage') == 'functional' and
+                    p.get('recorder_modes') == (['on', 'off'] if p['backend'] == 'kdlock' else ['unavailable'])
+                    for p in prior), 'all four current Native/KD functional lanes required')
+        require(bool(runner_sha256) and all(p.get('runner_sha256') == runner_sha256 for p in prior),
+                'functional runner identity differs')
+    elif scope == 'recorder-pair':
         require(len(prior) == 1 and prior[0]['family'] == family and prior[0]['backend'] == 'kdlock' and
                 prior[0].get('scope') == scope and prior[0].get('recorder_modes') == ['on', 'off'],
                 'current family recorder-on/off functional receipt required')
@@ -54,6 +77,14 @@ def validate_prerequisites(prior, scope, family, build_sha256, boot_id):
                 {(f, b) for f in ('mutex', 'rwsem') for b in ('native', 'kdlock', 'tclock')} and
                 all(p.get('scope', 'comparison') == 'comparison' for p in prior),
                 'all six current functional lanes required')
+
+
+def phase_recording(scope, backend, mode):
+    # Native has no KD observation subscription or recorder-control ioctl.
+    if backend == 'kdlock' and scope in ('recorder-pair', 'native-current'):
+        require(mode in ('on', 'off'), 'KD recorder mode differs')
+        return set_recording(mode == 'on')
+    return None
 
 
 def validate_kernel_receipt(receipt, expected_release, kernel_sha256):
@@ -77,7 +108,7 @@ def main():
     parser.add_argument('--family', choices=('mutex', 'rwsem'), required=True)
     parser.add_argument('--backend', choices=('native', 'kdlock', 'tclock'), required=True)
     parser.add_argument('--stage', choices=('functional', 'timing'), required=True)
-    parser.add_argument('--scope', choices=('comparison', 'recorder-pair'), default='comparison')
+    parser.add_argument('--scope', choices=('comparison', 'recorder-pair', 'native-current'), default='comparison')
     parser.add_argument('--boot-id', required=True)
     parser.add_argument('--expected-release', default='7.0.0-38-kdrebuild9',
                         help='Exact running/module-build release; default preserves the kernel9 baseline')
@@ -88,8 +119,7 @@ def main():
     parser.add_argument('--gs-proof', type=Path, required=True)
     parser.add_argument('--prerequisite', type=Path, action='append', default=[])
     args = parser.parse_args()
-    require(args.scope != 'recorder-pair' or args.backend == 'kdlock',
-            'recorder-pair scope requires the KD backend')
+    validate_scope(args.scope, args.backend)
     require(os.uname().release == args.expected_release and
             Path('/proc/sys/kernel/random/boot_id').read_text().strip() == args.boot_id,
             'running kernel/boot identity differs')
@@ -104,12 +134,16 @@ def main():
     from evidence import validate_kd
     receipt = json.loads(args.build_receipt.read_text())
     kernel_sha256 = sha(args.kernel_elf)
+    runner_sha256 = sha(Path(__file__))
     validate_kernel_receipt(receipt, args.expected_release, kernel_sha256)
     if args.stage == 'timing':
         prior = [json.loads(p.read_text()) for p in args.prerequisite]
-        validate_prerequisites(prior, args.scope, args.family, sha(args.build_receipt), args.boot_id)
+        validate_prerequisites(prior, args.scope, args.family, sha(args.build_receipt), args.boot_id,
+                               runner_sha256)
     row = dict(status='STARTED', family=args.family, backend=args.backend, stage=args.stage,
-               scope=args.scope, recorder_modes=['on', 'off'] if args.scope == 'recorder-pair' else ['on'],
+               scope=args.scope, recorder_modes=list(dict.fromkeys(
+                   mode for _, _, _, mode in measurement_plan(args.scope, 'functional', args.backend))),
+               runner_sha256=runner_sha256,
                profile='mutex-throughput' if args.family == 'mutex' else 'rwsem-throughput-mixed',
                boot_id=args.boot_id, kernel_release=os.uname().release,
                kernel_elf_sha256=kernel_sha256,
@@ -120,6 +154,10 @@ def main():
                timing_qualification='exploratory; host strict timing qualification is separate')
     if args.scope == 'recorder-pair':
         row['instrumentation'] = 'quiescent recorder on/off; off completion/retirement observations unavailable'
+    elif args.scope == 'native-current':
+        row['instrumentation'] = ('KD training and functional recording on/off; all timings off with '
+                                  'completion/retirement observations unavailable' if args.backend == 'kdlock'
+                                  else 'Native has no KD recorder or generated-completion observations')
     save(args.output / 'started.json', row)
 
     def command(label, argv, seconds=60):
@@ -198,8 +236,10 @@ def main():
             require(len(writers) == 1 and writers[0], 'exact loaded writer symbol missing')
             compiler = Compiler(args.repo, args.output / 'compiler', gs, builtin_start, builtin, writers[0])
 
-        def phase(label, workers, *, duration=0, iterations=256, timed=False, recorder='on'):
-            control = set_recording(recorder == 'on') if args.scope == 'recorder-pair' else None
+        def phase(label, workers, *, duration=0, iterations=256, timed=False, recorder=None):
+            if recorder is None:
+                recorder = 'unavailable' if args.scope == 'native-current' and args.backend == 'native' else 'on'
+            control = phase_recording(args.scope, args.backend, recorder)
             spec = dict(arm=args.backend, lock_kind=args.family, workload='cacheline', cachelines=1,
                         post_work_rounds=256, threads=workers, cpus=list(range(workers)), collector_cpu=63,
                         write_percent=100 if args.family == 'mutex' else 20, duration_ms=duration,
@@ -215,7 +255,7 @@ def main():
                 whole_run_ops_s=measurement['completed'] * 1e9 / measurement['wall_ns'], peak=peak)
             if compiler is not None:
                 measurement['generated'] = validate_kd(measurement, compiler, recording=recorder == 'on')
-                if args.scope == 'recorder-pair':
+                if args.scope in ('recorder-pair', 'native-current'):
                     measurement.update(recording_control=control, fixed_image=compiler.old)
             if args.backend == 'tclock':
                 # The client process has exited; task registration references
@@ -243,9 +283,9 @@ def main():
                     break
             else:
                 raise ValueError('bounded training did not establish completed generated bodies and an empty claim')
-        # The narrow pair changes only observation dispatch after common training.
+        # Controlled scopes change only observation dispatch after common training.
         # Every switch and claim occurs between fully returned worker phases.
-        for label, count, timed, recorder in measurement_plan(args.scope, args.stage):
+        for label, count, timed, recorder in measurement_plan(args.scope, args.stage, args.backend):
             checked = phase(label, count, duration=2000 if timed else 0,
                             timed=timed, recorder=recorder)
             if compiler is not None:
