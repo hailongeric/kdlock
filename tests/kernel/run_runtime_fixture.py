@@ -331,7 +331,7 @@ def main(*, spin=False, family=None):
                    "READ_ACQUIRE", "READ_RELEASE", "WRITE_DOWNGRADE_REAL", "WRITE_DOWNGRADE_RETAINED", "NATIVE_MODE",
                    "NATIVE_READ_ACQUIRE", "NATIVE_READ_RELEASE", "NATIVE_WRITE_ACQUIRE", "NATIVE_WRITE_RELEASE",
                    "NATIVE_DOWNGRADE", "NATIVE_CANCEL", "NATIVE_TRY_MISS", "ACQUIRE_CANCELLED", "QUERY_RESULT",
-                   "FAST_ACQUIRE", "FAST_RELEASE", "FAST_READ_DONE")
+                   "FAST_ACQUIRE", "FAST_RELEASE", "FAST_READ_DONE", "ORDINARY_RWSEM_DONE")
     kinds = {name: index + 1 for index, name in enumerate(event_names)}
 
     def read_exact(fd, length):
@@ -573,6 +573,10 @@ def main(*, spin=False, family=None):
             raise AssertionError("ordinary source effects/current/core/physical cleanup differ")
         rows = observations()[begin:]
         fast_pairs = validate_fast_pairs(rows)
+        ordinary = None
+        if family == "rwsem":
+            from rwsem.ordinary_evidence import ordinary_lifetimes
+            ordinary = ordinary_lifetimes(rows, has)
         if family == "mutex" and workers == 1 and mode in (0, 1, 2):
             if len(fast_pairs) != iterations:
                 raise AssertionError("single native task did not use one exact fast outer mutex per body")
@@ -584,7 +588,8 @@ def main(*, spin=False, family=None):
                                  "iterations": iterations, "raw_status": raw, "values": values,
                                  "expected_call_effects": expected_calls,
                                  "actual_call_effects": int(values["calls"]),
-                                 "native_body_completion": True, "fast_pairs": fast_pairs})
+                                 "native_body_completion": True, "fast_pairs": fast_pairs,
+                                 "ordinary_rwsem": ordinary})
         control_command("stop")
 
     def check_spin_status(values, workers):

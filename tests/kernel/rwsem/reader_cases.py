@@ -4,6 +4,8 @@ Imported only by the VM runner for the selected rwsem/rwlock family. This module
 creates no producer, publication, ownership or source-state objects.
 """
 
+from .ordinary_evidence import ORDINARY, ordinary_event, ordinary_lifetimes
+
 
 class ReaderCases:
     def __init__(self, family, args, results, control, wait, observations, has,
@@ -37,10 +39,31 @@ class ReaderCases:
     def credits(self, rows):
         active, per_object, pairs = {}, {}, []
         fast_owners, fast_released = {}, set()
+        ordinary = self.ordinary(rows)
+        ordinary_acquires = {pair["acquire"]["index"]: pair for pair in ordinary["reads"]}
+        ordinary_releases = {pair["release"]["index"]: pair for pair in ordinary["reads"]}
+        ordinary_active = {}
         for row in rows:
+            key = tuple(row[name] for name in ("related", "state", "acquisition", "source_user"))
+            if row["index"] in ordinary_acquires:
+                if key in active or key in ordinary_active:
+                    raise AssertionError("ordinary read duplicated an open exact credit")
+                ordinary_active[key] = ordinary_acquires[row["index"]]
+                per_object.setdefault((row["state"], row["object"]), []).append(key)
+                continue
+            if row["index"] in ordinary_releases:
+                pair = ordinary_active.pop(key, None)
+                stack = per_object.get((row["state"], row["object"]), [])
+                if pair is not ordinary_releases[row["index"]] or not stack or stack[-1] != key:
+                    raise AssertionError("ordinary read release did not select the latest exact open credit")
+                stack.pop()
+                pairs.append(pair)
+                continue
+            if ordinary_event(row, self.has):
+                continue  # Complete ordinary lifetimes were validated above.
             if self.has(row, "READ_ACQUIRE") or self.has(row, "WRITE_DOWNGRADE_REAL"):
                 key = tuple(row[name] for name in ("related", "state", "acquisition", "source_user"))
-                if not all(key) or key in active or not row["object"]:
+                if not all(key) or key in active or key in ordinary_active or not row["object"]:
                     raise AssertionError("read credit lacks a distinct exact acquisition/user")
                 if self.has(row, "READ_ACQUIRE") and (row["owner"] or row["node"]):
                     raise AssertionError("shared credit was represented as an exclusive owner")
@@ -115,9 +138,14 @@ class ReaderCases:
             elif self.has(row, "SELECT_PROXY") or self.has(row, "JIT_ENTER"):
                 if row["task"] in fast_owners or row["origin"] in fast_owners:
                     raise AssertionError("a fast reader lent its continuation or served another origin")
-        if active or fast_owners or fast_released:
+        if active or ordinary_active or fast_owners or fast_released:
             raise AssertionError("reader case retained an open credit after native task drain")
         return pairs
+
+    def ordinary(self, rows):
+        if self.atomic and any(ordinary_event(row, self.has) for row in rows):
+            raise AssertionError("rwlock supplied sleepable ordinary rwsem records")
+        return ordinary_lifetimes(rows, self.has)
 
     def clean(self, values, workers):
         if (int(values["finished"]) != workers or int(values["completed"]) != workers
@@ -162,13 +190,27 @@ class ReaderCases:
         self.clean(final, 3)
         self.control("stop")
         rows = self.rows(begin)
+        credits, writers = self.native_evidence(rows, mode)
+        proof = {"name": ("concurrent-readers", "local-real-downgrade", "writer-first-readers")[mode],
+                 "overlap_status": overlap_raw, "final_status": raw, "credits": credits,
+                 "ordinary_writers": writers}
+        if self.family == "rwsem" and mode == 1:
+            proof["native_queries"] = self.query_counts(final, {4: (1, 0)}, 0)
+            if any(self.has(row, "QUERY_RESULT") or self.has(row, "JIT_ENTER") for row in rows):
+                raise AssertionError("the native real-downgrade scene unexpectedly entered generated query code")
+        self.proofs.append(proof)
+
+    def native_evidence(self, rows, mode):
+        """Trace part of native scenes; live overlap/effects checks stay in native_scene."""
         credits = self.credits(rows)
+        ordinary_writers = self.ordinary(rows)["writes"]
         if len(credits) != 2:
             raise AssertionError("native scene did not retain its two exact shared credits")
         first, second = sorted(credits, key=lambda pair: pair["acquire"]["index"])
         if not first["acquire"]["index"] < second["acquire"]["index"] < first["release"]["index"]:
             raise AssertionError("two readers never actually overlapped")
-        writer_grants = [row for row in rows if self.has(row, "GRANT")
+        writer_grants = [row for row in rows if (self.has(row, "GRANT") or
+                         (self.has(row, "NATIVE_WRITE_ACQUIRE") and row["flags"] & ORDINARY))
                          and row["object"] == first["acquire"]["object"]]
         if len(writer_grants) != (2 if mode == 1 else 1):
             raise AssertionError("native reader scene writer grant count differs")
@@ -176,25 +218,42 @@ class ReaderCases:
         if mode != 2 and writer["index"] <= max(pair["release"]["index"] for pair in credits):
             raise AssertionError("writer entered before the last exact reader credit release")
         if mode == 2:
-            request = next((row for row in rows if self.has(row, "RELEASE_REQUEST")
-                            and row["acquisition"] == writer["acquisition"] and row["state"] == writer["state"]), None)
+            if writer["flags"] & ORDINARY:
+                request = next(pair["release"] for pair in ordinary_writers if pair["acquire"] is writer)
+            else:
+                request = next((row for row in rows if self.has(row, "RELEASE_REQUEST")
+                                and row["acquisition"] == writer["acquisition"] and row["state"] == writer["state"]), None)
             if request is None or any(pair["acquire"]["index"] <= request["index"] for pair in credits):
                 raise AssertionError("reader entered before the writer's matching release operation")
         if mode == 1:
-            converted = next((pair for pair in credits if self.has(pair["acquire"], "WRITE_DOWNGRADE_REAL")), None)
-            if converted is None or not any(self.has(row, "NATIVE_MODE") and row["result"] == 10 for row in rows):
+            converted = next((pair for pair in credits if self.has(pair["acquire"], "WRITE_DOWNGRADE_REAL")
+                              or pair.get("writer_acquire")), None)
+            if converted is None:
                 raise AssertionError("native downgrade did not establish a real same-grant reader")
-            physical = next((row for row in rows if self.has(row, "PHYSICAL_END")
-                             and row["owner"] == converted["acquire"]["owner"]), None)
-            if physical is None or not converted["acquire"]["index"] < physical["index"] < converted["release"]["index"]:
-                raise AssertionError("local writer was retained through its logical read tail")
-        proof = {"name": ("concurrent-readers", "local-real-downgrade", "writer-first-readers")[mode],
-                 "overlap_status": overlap_raw, "final_status": raw, "credits": credits}
-        if self.family == "rwsem" and mode == 1:
-            proof["native_queries"] = self.query_counts(final, {4: (1, 0)}, 0)
-            if any(self.has(row, "QUERY_RESULT") or self.has(row, "JIT_ENTER") for row in rows):
-                raise AssertionError("the native real-downgrade scene unexpectedly entered generated query code")
-        self.proofs.append(proof)
+            if converted.get("ordinary_local"):
+                if converted["writer_acquire"] is not writer_grants[0]:
+                    raise AssertionError("ordinary downgrade changed its original writer acquisition")
+                # The exact conversion/read release/DONE and any native MCS
+                # retirement were checked by ordinary_lifetimes. The live
+                # query point additionally requires physical locked=1/write=0.
+            else:
+                if not any(self.has(row, "NATIVE_MODE") and row["result"] == 10 for row in rows):
+                    raise AssertionError("native downgrade lacks its exact mode transition")
+                physical = next((row for row in rows if self.has(row, "PHYSICAL_END")
+                                 and row["owner"] == converted["acquire"]["owner"]), None)
+                if physical is None or not converted["acquire"]["index"] < physical["index"] < converted["release"]["index"]:
+                    raise AssertionError("local writer was retained through its logical read tail")
+        return credits, ordinary_writers
+
+    def native_read_pair(self, pairs, repeated):
+        if (len(pairs) != 2 or not all(pair.get("ordinary_local") for pair in pairs)
+                or pairs[0]["acquire"]["acquisition"] == pairs[1]["acquire"]["acquisition"]
+                or len({pair["acquire"]["object"] for pair in pairs}) != (1 if repeated else 2)
+                or any(pairs[0]["acquire"][name] != pairs[1]["acquire"][name]
+                       for name in ("task", "origin", "state"))
+                or not pairs[1]["acquire"]["index"] < pairs[0]["acquire"]["index"]
+                < pairs[0]["release"]["index"] < pairs[1]["release"]["index"]):
+            raise AssertionError("native nested reads lost distinct local acquisitions or inner-first release")
 
     def native(self):
         self.native_scene(0)
@@ -206,16 +265,16 @@ class ReaderCases:
         pairs = self.credits(self.rows(begin))
         if len(pairs) != 2:
             raise AssertionError("native distinct-object reads lost an exact credit")
-        if not self.atomic and sum(pair.get("fast_local", False) for pair in pairs) != 1:
-            raise AssertionError("native nested reads did not use one fast outer and one managed inner credit")
+        if not self.atomic:
+            self.native_read_pair(pairs, repeated=False)
         self.proofs.append({"name": "native-read-read", "credits": pairs})
         begin = len(self.observations())
         self.body_case("native-repeated-read", 8, 1, 1)
         pairs = self.credits(self.rows(begin))
         if len(pairs) != 2 or pairs[0]["acquire"]["acquisition"] == pairs[1]["acquire"]["acquisition"]:
             raise AssertionError("repeated real reads did not retain two distinct acquisitions")
-        if not self.atomic and [pair.get("fast_local", False) for pair in pairs] != [False, True]:
-            raise AssertionError("same-object up_read did not release the managed inner before the fast outer")
+        if not self.atomic:
+            self.native_read_pair(pairs, repeated=True)
         self.proofs.append({"name": "native-repeated-read", "credits": pairs})
 
     @staticmethod
@@ -601,16 +660,19 @@ class ReaderCases:
         begin = len(self.observations())
         self.body_case("warm-repeated-read", 8, 1, 1)
         pairs = self.credits(self.rows(begin))
-        if not self.atomic and [pair.get("fast_local", False) for pair in pairs] != [False, True]:
-            raise AssertionError("warm repeated reads lost the distinct managed/fast release order")
+        if not self.atomic:
+            self.native_read_pair(pairs, repeated=True)
         self.proofs.append({"name": "warm-repeated-read", "credits": pairs})
         if not self.atomic:
             begin = len(self.observations())
             self.body_case("warm-fast-read-write", 7, 1, 1)
-            pairs = self.credits(self.rows(begin))
-            if len(pairs) != 1 or not pairs[0].get("fast_local"):
-                raise AssertionError("warm nested writer lost its retained fast outer reader")
-            self.proofs.append({"name": "warm-fast-read-write", "credits": pairs})
+            rows = self.rows(begin)
+            pairs, writers = self.credits(rows), self.ordinary(rows)["writes"]
+            if (len(pairs) != 1 or not pairs[0].get("ordinary_local") or len(writers) != 1
+                    or not pairs[0]["acquire"]["index"] < writers[0]["acquire"]["index"]
+                    < writers[0]["release"]["index"] < pairs[0]["release"]["index"]):
+                raise AssertionError("warm nested writer lost its retained ordinary outer reader")
+            self.proofs.append({"name": "warm-fast-read-write", "credits": pairs, "ordinary_writers": writers})
         self.source_scene(6, image)
         self.source_scene(7, image)
         if not self.atomic:
