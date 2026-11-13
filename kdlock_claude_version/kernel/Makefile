@@ -12,6 +12,7 @@ ccflags-y += -I$(src)
 obj-$(CONFIG_KDLOCK) += kd_entry.o kd_core.o kd_spinlock.o kd_rwlock.o \
 			kd_mutex.o kd_ww_mutex.o kd_rwsem.o kd_image.o kd_dev.o
 obj-$(CONFIG_KDLOCK_MM) += kd_mm.o
+obj-$(CONFIG_KDLOCK_API) += kd_sw.o
 
 # The wait and session paths run on a per-CPU stack and on other tasks'
 # stacks; keep instrumentation that assumes the task stack out of them.

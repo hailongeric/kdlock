@@ -12,8 +12,9 @@ in `integration/kd_linux_map.h`; this page is the procedure and the status.
 | Whole kernel with kdlock built in links | **done**: `7.0.0-38-kdclaude1` (vmlinux, bzImage, modules) built in the VM; 138 `kd_` symbols in vmlinux |
 | Booted | **yes**, in the `kdclaude` VM next to `kdlock1` (one-shot `grub-reboot`); see BUILD_AND_TEST.md |
 | `mm->mmap_lock` switched to kdlock (`CONFIG_KDLOCK_MM`, section 4a) | **done** (build #43): every mmap lock operation of the kernel goes through kdlock for mms created while `kd_mm=1`; will-it-scale mmap1 runs, writers are delegated, data-checked stress and the nano correctness pass are clean |
-| Whole kernel lock API switched to kdlock (`kd_linux_map.h` applied) | **no**. Only the mmap lock is switched; every other kernel lock is native |
-| Per-subsystem lock objects converted | the mmap lock only |
+| Syscall-path lock objects switchable (`CONFIG_KDLOCK_API`, section 4b) | **done** (build #45): `file_lock`, `flc_lock`, pipe mutex, `f_pos_lock`, `simple_xattrs.lock`, `uts_sem`, for all their kernel users; data-checked syscall stress and a native/kd build comparison clean (`bench/results/kdclaude/api-20261113/`) |
+| Whole kernel lock API switched to kdlock (`kd_linux_map.h` applied) | **no**. Only the objects above and the mmap lock are switchable; every other kernel lock is native |
+| Per-subsystem lock objects converted | the mmap lock and the six objects of 4b |
 
 ## 2. Placing the code
 
@@ -102,6 +103,56 @@ site after learning. The daemon runs with `max_insns` 250 000
 **Kernel ABI.** `mm_struct` changes size, so every module must be rebuilt
 and installed with the kernel (`modules_install`); a kernel booted with the
 old modules cannot mount `/boot/efi` (`module_layout` mismatch).
+
+## 4b. Switchable lock objects on syscall paths (`CONFIG_KDLOCK_API`)
+
+The lock objects behind the micro/API syscall workloads (BENCHMARK_WORKLOADS
+in the parent project: OFD, setfd, pipe, seek, UTS, xattr) are converted
+the same way as the mmap lock, for every kernel user of each object:
+
+| Field | Native type | Workload system calls |
+| --- | --- | --- |
+| `files_struct.file_lock` | `spinlock_t` | `fcntl(F_SETFD)`, open, close, dup, fork |
+| `file_lock_context.flc_lock` | `spinlock_t` | `fcntl(F_OFD_GETLK/SETLK)`, flock, leases |
+| `pipe_inode_info.mutex` | `struct mutex` | pipe read/write, `FIONREAD`, `F_GETPIPE_SZ`, splice |
+| `file.f_pos_lock` | `struct mutex` | read/write/lseek on a shared file |
+| `simple_xattrs.lock` | `rwlock_t` | tmpfs/kernfs `getxattr`/`setxattr` |
+| `uts_sem` | `rw_semaphore` | `uname`, `sethostname`, UTS sysctls |
+
+**Source changes** (`integration/apply_api.py`, run by `apply_to_tree.sh`):
+
+* the six field declarations change type, each inside `#ifdef
+  CONFIG_KDLOCK_API` with the native line in the `#else` branch, plus the two
+  static initialisers (`init_files`, `uts_sem`);
+* `linux/spinlock.h`, `linux/mutex.h` and `linux/rwsem.h` include
+  `include/kdlock/kd_sw_{spin,mutex,rwsem}.h` at their end;
+* `kernel/locking/mutex.c` and `rwsem.c`, which define the native functions,
+  set `KD_SW_NO_DISPATCH`.
+
+No call site changes. The headers make each lock API name (`spin_lock`,
+`mutex_lock`, `down_write`, `read_lock`, the `_irq/_bh/_irqsave/_nested`
+forms, trylocks, init, `is_locked`, asserts) a `_Generic` dispatch: a
+pointer to a switchable object selects the `kd_sw_*` inline operation,
+any other argument the native function exactly as before. Because the field
+type changed, any native-only interface applied to a converted field (one
+the dispatch does not cover, e.g. a lock guard class) fails to compile, so
+the build itself checks that every user of an object follows one protocol.
+The whole 7.0 tree with the Ubuntu configuration (all modules, including
+nfsd, ceph, smb, fuse) built without a change, which also means none of
+those users needed a guard class.
+
+**Per-object choice.** A switchable object is a union of the native lock
+and the kdlock one plus a `use_kd` flag, set by the object's init call from
+the core parameter `kd_api` (bit mask: 1 spinlock_t, 2 rwlock_t, 4 mutex,
+8 rw_semaphore; default 0) and never changed. Zero-filled objects are native
+and unlocked. `uts_sem` is static and taken by system calls at any moment,
+so it follows the boot parameter `kd_uts=1` instead, applied in an initcall
+before any user task exists (`kernel/kd_sw.c`).
+
+**What delegates.** spinlock_t and mutex sections and rwlock/rwsem write
+sections, as for any kdlock object. Readers run locally. Sections that copy
+to or from user memory hand back at the copy (the `f_pos_lock` section is a
+whole `read()`), so those objects stay in the plain path.
 
 ## 4. Replacing the lock API (not done)
 

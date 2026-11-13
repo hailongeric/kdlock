@@ -34,3 +34,16 @@ config KDLOCK_MM
 	  core parameter (default 0: native). With kdlock, contended mmap
 	  writers (mmap, munmap, mprotect, brk, ...) can have their critical
 	  section run by the queue head. Static mms stay native.
+
+config KDLOCK_API
+	bool "kdlock: switchable lock objects on selected syscall paths"
+	depends on KDLOCK
+	default n
+	help
+	  Change the type of a few lock fields to a union of the native lock
+	  and the kdlock one, chosen per object when it is initialised (kd_api
+	  core parameter, default 0: native): files_struct.file_lock,
+	  file_lock_context.flc_lock, pipe_inode_info.mutex, file.f_pos_lock,
+	  simple_xattrs.lock and uts_sem (boot parameter kd_uts). The lock calls
+	  on these fields are unchanged; a _Generic dispatch at the end of
+	  linux/spinlock.h, mutex.h and rwsem.h routes them.

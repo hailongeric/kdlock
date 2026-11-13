@@ -1,6 +1,6 @@
 # Wiring kdlock into a Linux 7 tree
 
-Nothing here has been applied or built. This is the list of changes the
+The whole-kernel switch below has not been applied or built. This is the list of changes the
 kernel patch has to make, with [kd_linux_map.h](kd_linux_map.h) as the
 symbol-level reference.
 
@@ -16,8 +16,13 @@ the build needs: `source "kernel/locking/kdlock/Kconfig"` in
 `kernel/Kconfig.locks`, `obj-$(CONFIG_KDLOCK) += kdlock/` in
 `kernel/locking/Makefile`, and `#include <kdlock/kd_api.h>` in
 `arch/x86/include/asm/asm-prototypes.h` (symbols exported from assembly need
-C prototypes under MODVERSIONS/gendwarfksyms). It does not switch any lock
-API over.
+C prototypes under MODVERSIONS/gendwarfksyms). It also runs two scripts
+that make selected lock objects switchable per object (native or kdlock,
+chosen at init): `apply_mm.py` for `mm->mmap_lock` (`CONFIG_KDLOCK_MM`) and
+`apply_api.py` for six syscall-path objects (`CONFIG_KDLOCK_API`); see
+docs/KERNEL_INTEGRATION.md 4a and 4b. It does not switch the kernel's lock
+API as a whole; the rest of this page describes that switch, which has not
+been applied.
 
 ## Type replacement
 

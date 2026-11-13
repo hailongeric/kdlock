@@ -29,4 +29,6 @@ add_once "$tree/arch/x86/include/asm/asm-prototypes.h" '#include <kdlock/kd_api.
 if grep -q "__mmap_sem_down_write" "$tree/include/linux/mmap_lock.h"; then
 	python3 "$here/integration/apply_mm.py" "$tree"
 fi
+# Switchable lock objects on selected syscall paths (CONFIG_KDLOCK_API).
+python3 "$here/integration/apply_api.py" "$tree"
 echo "kdlock placed in $tree"

@@ -207,8 +207,16 @@ Status 2026-11-13: the mmap lock is switched (`CONFIG_KDLOCK_MM`,
 KERNEL_INTEGRATION 4a) and will-it-scale mmap1 runs on it with delegated
 writers: kd/Native 0.98-1.00 at 1-4 threads and 1.06-1.23 at 8-32
 (`bench/results/kdclaude/mmap1-20261113/`). Getting there needed one rwsem
-fix (holders of the queue mutex spin by time before they sleep). The rest of
-the kernel lock API is still native; the syscall runners below are open.
+fix (holders of the queue mutex spin by time before they sleep).
+The syscall-path objects are switchable too (`CONFIG_KDLOCK_API`,
+KERNEL_INTEGRATION 4b): files table, OFD lock list, pipe mutex, file
+position mutex, tmpfs xattr lock, `uts_sem`. `bench/api_stress.c` drives each
+through its real system calls with exact result checks
+(`bench/results/kdclaude/api-20261113/`): setfd 1.61 and OFD 2.65 of Native at
+32 workers (delegated), pipe/seek at parity or slightly above, xattr 0.90 at
+8 workers (no delegation, reader path), uts 2.8-3.3 from the rwsem wait
+policy, not delegation. The whole-kernel switch (first bullet) is still not
+done; per the minimal-change rule only these objects are converted.
 
 
 * Apply `integration/kd_linux_map.h`: replace `arch_spinlock_t`,

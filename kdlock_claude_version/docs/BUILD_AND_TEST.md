@@ -194,6 +194,29 @@ python3 bench/run_mmap1.py --out mmap1.jsonl --rounds 2
 refilled a hole with `MAP_FIXED` after another thread could have mapped it.
 It failed with Native too and was fixed in the test.
 
+## 5d. Syscall-path lock objects on kdlock (2026-11-13)
+
+Build #45 with `CONFIG_KDLOCK_MM` and `CONFIG_KDLOCK_API` (the VM's
+`builtin.sh` enables both). Struct layouts change (`files_struct`, `file`,
+pipes, ...), so the TCLock modules and `kd_bench` must be rebuilt
+(`tcbuild.sh`) after the kernel.
+
+```
+gcc -O2 -pthread -o /root/api_stress bench/api_stress.c
+echo 7 > /sys/module/kernel/parameters/kd_api   # new spinlock_t/rwlock_t/mutex objects on kdlock
+/root/api_stress setfd 16 20                    # also ofd, pipe, seek, xattr
+python3 bench/run_api.py --out api.jsonl --rounds 2
+# uts_sem: boot once with kd_uts=1 (grub entry id kdclaude1-uts in /boot/grub/custom.cfg)
+grub-reboot kdclaude1-uts && reboot
+```
+
+| Check (build #45) | Result |
+| --- | --- |
+| Whole Ubuntu-config kernel and all modules build with the dispatch | no error, no call site needed a change; only new warnings are stack-frame sizes |
+| `api_stress` kd, setfd/ofd/pipe/seek/xattr at 4/16/31 threads x 20 s; uts at 4/16/31 on the `kd_uts=1` boot | all checks passed; setfd/ofd 40-66 M delegated sections per point; no kernel log entries |
+| `run_api.py` 1-32 workers, 2 rounds, plus uts on two boots | 120 points, all checks passed (`bench/results/kdclaude/api-20261113/`) |
+| `defconfig` subtree build (kernel/ fs/ mm/ lib/) with `kd_api=0` and `kd_api=7` | 808 object files byte-identical; no kernel warning |
+
 ## 6. Not tested yet
 
 * Nesting deeper than two levels, and the `KD_MAX_DEPTH` / `KD_MAX_ROOTS`
@@ -203,9 +226,11 @@ It failed with Native too and was fixed in the test.
   taking a lock that a delegated section holds (DIFFERENCES D4).
 * Signals during queued spinning for `killable`/`interruptible` (D8).
 * CPU hotplug, text patching after publication.
-* Kernel lock API switch (`kd_linux_map.h`) and real system-call workloads.
-  The API is complete on paper and every variant runs in the API check, but
-  no kernel has been built with its own locks replaced.
+* Whole-kernel lock API switch (`kd_linux_map.h`). Only the mmap lock and
+  the six syscall-path objects of KERNEL_INTEGRATION 4b are switchable.
+* Switchable objects under NFS/ceph/SMB lock and lease traffic, and the
+  `_irq`/`_bh`/`_irqsave` forms on them (built, not exercised by the
+  workloads).
 * Role exchange when the new holder really sleeps for long (the test bodies
   `yield()` with nothing else runnable), under oversubscription, and for a
   holder that migrates before it releases (the path through the lock word's
