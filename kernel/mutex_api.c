@@ -274,33 +274,75 @@ struct kd_mutex_entry *kd_spin_prepare_unlock_current(struct kd_spinlock *lock)
 		(unsigned long)kd_spin_unlock_entry_asm);
 }
 
+static struct kd_mutex_entry *prepare_rwsem_read_bridge(struct kd_task_root_context *root,
+		struct kd_rw_native_record *record, unsigned long api_target,
+		struct kd_jit_image_use *admitted)
+{
+	struct kd_execution_binding *native = kd_state_current_binding(&root->core);
+	struct kd_episode_frame *frame;
+	int result;
+
+	result = kd_rw_local_read_promote(record, native);
+	if (result)
+		return NULL;
+	result = kd_episode_prepare_root_admitted(root->mutex_resources, native,
+		KD_OPERATION_RWSEM_DOWN_WRITE, admitted, &frame);
+	if (result)
+		goto rollback;
+	/* Even a retained lookup can lose source admission while the image
+	 * closes. Do not publish a promoted reader for an ineligible writer.
+	 */
+	if (!frame->source_image || !frame->slot->call.node.ready)
+		goto cancel;
+	frame->source_target = api_target;
+	result = kd_mutex_prepare_entry(&frame->slot->entry, native, run_native,
+		frame, root->mutex_control_bytes);
+	if (result)
+		goto cancel;
+	kd_rw_local_read_commit(record, &frame->slot->call.node, frame->slot->source_use.image);
+	return &frame->slot->entry;
+cancel:
+	result = kd_episode_cancel_root(frame, native);
+	BUG_ON(result);
+rollback:
+	kd_rw_local_read_rollback(record);
+	return NULL;
+}
+
 static struct kd_mutex_entry *prepare_rwsem_writer(struct kd_rwsem *lock,
 		unsigned long api_target)
 {
 	struct kd_task_root_context *root = kd_rw_local_root();
 	struct kd_mutex_entry *entry;
 	struct kd_jit_image_use admitted;
+	struct kd_rw_native_record *read;
 	int result;
 
 	if (!root)
 		return prepare_current(&lock->core.queue, KD_OPERATION_RWSEM_DOWN_WRITE, api_target);
 	if (kd_rw_local_write_try(&lock->core, root))
 		return NULL;
-	/* Only contended writers with an actual retained image and no local
-	 * grant enter source preparation. The stack-local lookup user ends
-	 * before the assembly entry can switch stacks or lend source access.
+	/* Only contended writers with an actual retained image and either no
+	 * local grant or one bridgeable ordinary read enter source preparation.
+	 * The stack-local lookup user ends before the assembly entry can switch
+	 * stacks or lend source access.
 	 */
-	if (root->mutex_resources->config.proxy_limit && list_empty(&root->native_grants)) {
+	read = kd_rw_local_read_candidate(root, &lock->core);
+	if (root->mutex_resources->config.proxy_limit &&
+	    (list_empty(&root->native_grants) || read)) {
 		kd_jit_image_use_init(&admitted);
 		result = kd_jit_image_lookup(root->mutex_resources->config.image_slot,
 			&admitted, &root->core, &admitted, KD_JIT_IMAGE_USE_SOURCE);
 		if (!result) {
-			entry = prepare_current_with_image(&lock->core.queue,
-				KD_OPERATION_RWSEM_DOWN_WRITE, api_target, &admitted);
+			entry = read ? prepare_rwsem_read_bridge(root, read, api_target, &admitted) :
+				prepare_current_with_image(&lock->core.queue,
+					KD_OPERATION_RWSEM_DOWN_WRITE, api_target, &admitted);
 			BUG_ON(kd_jit_image_use_put(&admitted, &admitted));
-			return entry;
+			if (entry)
+				return entry;
+		} else {
+			BUG_ON(result != -ENOENT && result != -EAGAIN);
 		}
-		BUG_ON(result != -ENOENT && result != -EAGAIN);
 	}
 	BUG_ON(kd_rw_local_write_lock(&lock->core, root));
 	return NULL;

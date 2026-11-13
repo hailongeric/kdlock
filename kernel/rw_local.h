@@ -23,4 +23,20 @@ bool kd_rw_local_write_release(struct kd_rw *lock, bool downgrade);
 bool kd_rw_local_native_writer(struct kd_rw *lock);
 void kd_rw_local_done(struct kd_rw *lock, struct kd_rw_native_record *record);
 
+/* Writer-boundary bridge for one ordinary read on a distinct object. Native
+ * source exclusively owns the private promotion until commit; failure must
+ * roll it back before a local writer wait. No admission count changes here.
+ */
+struct kd_rw_native_record *kd_rw_local_read_candidate(struct kd_task_root_context *root,
+		struct kd_rw *inner);
+int kd_rw_local_read_promote(struct kd_rw_native_record *record,
+		struct kd_execution_binding *native);
+void kd_rw_local_read_rollback(struct kd_rw_native_record *record);
+void kd_rw_local_read_commit(struct kd_rw_native_record *record,
+		struct kd_mutex_node *writer, const struct kd_jit_image *image);
+bool kd_rw_local_read_promoted(const struct kd_source_grant *grant);
+int kd_rw_local_read_release_promoted(struct kd_task_root_context *root,
+		struct kd_execution_binding *native, struct kd_mutex *lock,
+		enum kd_operation_kind operation);
+
 #endif

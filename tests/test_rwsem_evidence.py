@@ -366,5 +366,94 @@ class RwsemSceneOrdering(unittest.TestCase):
                 self.check(rows, before_release=False)
 
 
+class RwsemReadPromotionEvidence(unittest.TestCase):
+    """Synthetic provider transitions; no generated execution is claimed here."""
+
+    def setUp(self):
+        self.cases = ReaderCases('rwsem', None, {}, None, None, None, has, None, None, None)
+
+    def synthetic(self):
+        def row(name, **values):
+            return dict(dict.fromkeys(FIELDS, 0), kind=KINDS[name], **values)
+        identity = dict(task=10, origin=10, state=20, object=30, acquisition=40)
+        acquire = row('READ_ACQUIRE', **identity, related=40, source_user=40,
+                      owner_task=10, flags=ORDINARY, phase=1)
+        prepared = row('FRAME_PREPARE', task=10, origin=10, state=20, node=60,
+                       acquisition=70, image=80, phase=3)
+        promotion = row('READ_PROMOTE', **identity, related=50, source_user=40,
+                        node=60, parent=70, image=80, phase=1, flags=ORDINARY)
+        writer = row('ENQUEUE', task=10, origin=10, state=20, node=60, acquisition=70,
+                     object=90, phase=1, flags=17)
+        selected = dict(writer, kind=KINDS['SELECT_PROXY'], task=13, phase=3)
+        entered = dict(writer, kind=KINDS['JIT_ENTER'], task=13, image=80)
+        released = row('READ_RELEASE', **identity, related=50, source_user=40, phase=1)
+        done = row('ORDINARY_RWSEM_DONE', **identity, related=40, flags=ORDINARY, phase=1)
+        return ordered([acquire, prepared, promotion, writer, selected, entered, released, done])
+
+    def test_exact_transfer_keeps_one_read_through_foreign_writer_and_native_release(self):
+        rows = self.synthetic()
+        pairs = self.cases.credits(rows)
+        self.assertEqual(len(pairs), 1)
+        self.assertTrue(pairs[0]['promoted_read'])
+        self.assertFalse(pairs[0]['ordinary_local'])
+        self.assertEqual(pairs[0]['acquire']['acquisition'], pairs[0]['release']['acquisition'])
+        proof = dict(mode=7, fixed_image=80, state=20, roles=[1, 2, 3, 13, 10],
+                     entries=[rows[5]], credits=pairs, writer=rows[3])
+        result = self.cases.validate_source_scene(proof, rows, dict(object_a='1e', object_b='5a'))
+        self.assertEqual(result['outer_read_promotion']['free'], rows[-1])
+
+    def test_missing_promotion_does_not_make_local_read_eligible(self):
+        rows = [row for row in self.synthetic() if not has(row, 'READ_PROMOTE')]
+        with self.assertRaises(AssertionError):
+            self.cases.credits(rows)
+
+    def test_promotion_requires_exact_original_owner_credit_and_writer(self):
+        for field in ('task', 'origin', 'state', 'object', 'acquisition', 'source_user',
+                      'node', 'parent', 'image', 'phase', 'flags'):
+            rows = self.synthetic()
+            rows[2][field] += 1
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                self.cases.credits(rows)
+        for kind in ('FRAME_PREPARE', 'ENQUEUE'):
+            with self.subTest(missing=kind), self.assertRaises(AssertionError):
+                self.cases.credits([row for row in self.synthetic() if not has(row, kind)])
+
+    def test_release_requires_original_task_and_exact_promoted_credit(self):
+        for field in ('task', 'origin', 'state', 'acquisition', 'related', 'source_user', 'flags'):
+            rows = self.synthetic()
+            rows[6][field] += 1
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                self.cases.credits(rows)
+
+    def test_repeated_promotion_release_or_premature_completion_is_rejected(self):
+        for index in (0, 2, 6):
+            rows = self.synthetic()
+            rows.insert(index + 1, dict(rows[index]))
+            with self.subTest(duplicate=index), self.assertRaises(AssertionError):
+                self.cases.credits(ordered(rows))
+        rows = self.synthetic()
+        rows[6], rows[7] = rows[7], rows[6]
+        with self.assertRaises(AssertionError):
+            self.cases.credits(ordered(rows))
+
+    def test_original_task_cannot_serve_a_foreign_source_while_read_is_promoted(self):
+        rows = self.synthetic()
+        rows[4]['task'], rows[4]['origin'] = 10, 99
+        with self.assertRaises(AssertionError):
+            self.cases.credits(rows)
+
+    def test_scene_still_requires_selected_inner_writer_and_live_read_interval(self):
+        rows = self.synthetic()
+        pairs = self.cases.credits(rows)
+        proof = dict(mode=7, fixed_image=80, state=20, roles=[1, 2, 3, 13, 10],
+                     entries=[rows[5]], credits=pairs, writer=rows[3])
+        with self.assertRaises(AssertionError):
+            self.cases.validate_source_scene(copy.deepcopy(proof),
+                [row for row in rows if not has(row, 'SELECT_PROXY')], dict(object_a='1e', object_b='5a'))
+        proof['entries'] = [dict(rows[5], index=rows[6]['index'] + 1)]
+        with self.assertRaises(AssertionError):
+            self.cases.validate_source_scene(proof, rows, dict(object_a='1e', object_b='5a'))
+
+
 if __name__ == '__main__':
     unittest.main()

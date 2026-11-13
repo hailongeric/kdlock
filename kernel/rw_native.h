@@ -4,6 +4,7 @@
 
 #include <linux/list.h>
 #include "rw.h"
+#include "state.h"
 
 /* Physical-local compatibility has no source state or register backing. The
  * caller supplies finite storage covering held credits, native waiters and
@@ -26,6 +27,7 @@ enum kd_rw_native_phase {
 	KD_RW_NATIVE_RELEASING,
 	KD_RW_NATIVE_ORDINARY_READ,
 	KD_RW_NATIVE_ORDINARY_WRITE,
+	KD_RW_NATIVE_PROMOTED_READ,
 };
 
 struct kd_rw_native_pool;
@@ -37,8 +39,21 @@ struct kd_rw_native_record {
 	struct list_head task_link;
 	struct list_head free_link;
 	struct kd_rw_read_link active_read;
-	struct kd_mutex_node node;
-	struct kd_mutex_batch batch;
+	/* An ordinary reader never uses the local writer controls. Promotion at
+	 * a later writer boundary reuses that space, without another allocation
+	 * or source packet. phase selects the active member through final use.
+	 */
+	union {
+		struct {
+			struct kd_mutex_node node;
+			struct kd_mutex_batch batch;
+		};
+		struct {
+			struct kd_source_grant grant;
+			struct kd_rw_read_credit credit;
+			bool published;
+		} read_bridge;
+	};
 	enum kd_rw_native_phase phase;
 	bool non_owner;
 	bool caller_user;

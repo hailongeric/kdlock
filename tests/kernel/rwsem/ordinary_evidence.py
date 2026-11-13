@@ -69,9 +69,50 @@ def ordinary_lifetimes(rows, has):
             raise AssertionError("ordinary evidence is not in observation order")
         last_index = row["index"]
         if has(row, "SELECT_PROXY") or has(row, "JIT_ENTER"):
-            owners = {record["acquire"]["origin"] for record in active.values()}
+            owners = {record["acquire"]["origin"] for record in active.values()
+                      if "promotion" not in record}
             if row["task"] in owners or row["origin"] in owners:
                 raise AssertionError("ordinary held record lent or served a generated continuation")
+            promoted = [record for record in active.values() if "promotion" in record]
+            if any(row["task"] == record["acquire"]["origin"] for record in promoted):
+                raise AssertionError("promoted reader served another source while retaining its read")
+        if has(row, "READ_PROMOTE"):
+            record = active.get(row["acquisition"])
+            if (record is None or record["stage"] != "read" or "promotion" in record
+                    or not record["read"] or record["queued"] or row["flags"] != ORDINARY
+                    or any(row[field] != record["acquire"][field]
+                           for field in ("state", "origin", "task", "object", "acquisition", "source_user"))
+                    or not all(row[field] for field in ("related", "node", "parent", "image"))
+                    or row["related"] == row["acquisition"] or row["phase"] != 1
+                    or any(row[field] for field in ("owner", "owner_task", "ip", "cursor", "result",
+                                                  "return_user", "notifier"))):
+                raise AssertionError("read promotion lost its original ordinary acquisition")
+            prepared = [earlier for earlier in rows if has(earlier, "FRAME_PREPARE")
+                        and earlier["index"] < row["index"] and earlier["node"] == row["node"]
+                        and earlier["acquisition"] == row["parent"]
+                        and all(earlier[field] == row[field] for field in ("state", "origin", "task", "image"))]
+            if len(prepared) != 1:
+                raise AssertionError("read promotion lacks its exact prepared writer image")
+            offered = [later for later in rows if has(later, "ENQUEUE") and later["index"] > row["index"]
+                       and later["node"] == row["node"] and later["acquisition"] == row["parent"]
+                       and all(later[field] == row[field] for field in ("state", "origin", "task"))]
+            if (len(offered) != 1 or offered[0]["phase"] != 1 or offered[0]["flags"] != 17
+                    or not offered[0]["object"] or offered[0]["object"] == row["object"]):
+                raise AssertionError("read promotion lacks its distinct offered inner writer")
+            record["promotion"] = row
+            continue
+        if has(row, "READ_RELEASE") and not row["flags"] & ORDINARY:
+            record = active.get(row["acquisition"])
+            if record is not None and "promotion" in record:
+                promotion = record["promotion"]
+                if (record["stage"] != "read" or row["flags"] or row["phase"] != 1
+                        or any(row[field] != promotion[field] for field in
+                               ("state", "origin", "task", "object", "acquisition", "related", "source_user"))
+                        or any(row[field] for field in ("owner", "owner_task", "node", "parent", "image",
+                                                      "ip", "result", "return_user", "notifier"))):
+                    raise AssertionError("promoted read release changed owner or physical credit")
+                record["release"], record["stage"] = row, "released"
+                continue
         if not ordinary_event(row, has):
             if row["acquisition"] in active and any(has(row, name) for name in ORDINARY_KINDS):
                 raise AssertionError("ordinary record changed its observation class")
@@ -109,6 +150,8 @@ def ordinary_lifetimes(rows, has):
                 raise AssertionError("ordinary record lacks final object/queue completion")
             proof = dict(acquire=acquired, release=record["release"], free=row,
                          ordinary_local=True, queued=queued)
+            if "promotion" in record:
+                proof.update(promotion=record["promotion"], ordinary_local=False, promoted_read=True)
             if queued:
                 proof["queue"] = queued_retirement(rows, has, record, row)
             if record["read"]:
@@ -136,7 +179,7 @@ def ordinary_lifetimes(rows, has):
             record["stage"] = "converted" if kind == "NATIVE_DOWNGRADE" else "released"
         elif kind in ("READ_RELEASE", "NATIVE_READ_RELEASE"):
             expected = "NATIVE_READ_RELEASE" if queued else "READ_RELEASE"
-            if (record["stage"] not in ("read", "converted") or kind != expected
+            if ("promotion" in record or record["stage"] not in ("read", "converted") or kind != expected
                     or row["phase"] != 1 or row["owner"] or row["node"]):
                 raise AssertionError("ordinary read release lost its read or converted grant")
             record["read_release" if record["stage"] == "converted" else "release"] = row

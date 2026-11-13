@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Ordinary native admission uses task ownership records, without JIT setup. */
 #include <linux/bug.h>
+#include <linux/errno.h>
 #include <linux/interrupt.h>
 #include <linux/sched.h>
 
@@ -253,4 +254,193 @@ bool kd_rw_local_native_writer(struct kd_rw *lock)
 		     record->phase == KD_RW_NATIVE_ORDINARY_WRITE))
 			return true;
 	return false;
+}
+
+struct kd_rw_native_record *kd_rw_local_read_candidate(struct kd_task_root_context *root,
+		struct kd_rw *inner)
+{
+	struct kd_rw_native_record *record;
+
+	/* The caller just obtained this native root. Bound this first bridge to
+	 * one ordinary read, no other owned credit and a distinct inner writer.
+	 * Callable, nonowner, repeated and downgraded reads retain their routes.
+	 */
+	if (!root || !inner || !inner->atomic_admission ||
+	    !list_empty(&root->core.grants) || !list_is_singular(&root->native_grants) ||
+	    !list_is_singular(&root->rwsem_reads))
+		return NULL;
+	record = list_first_entry(&root->native_grants, struct kd_rw_native_record, task_link);
+	if (record->phase != KD_RW_NATIVE_ORDINARY_READ || record->task != current ||
+	    record->native_root != root || !record->grant_user || record->non_owner ||
+	    record->caller_user || record->queue_user || record->ordinary_write ||
+	    record->ordinary_queued || record->pool->lock == inner ||
+	    !record->pool->lock->atomic_admission ||
+	    record->pool->ordinary_free != &root->mutex_resources->ordinary_free ||
+	    record->active_read.kind != KD_RW_READ_ORDINARY ||
+	    record->active_read.object != record->pool->lock ||
+	    record->active_read.root != root || record->active_read.credit != record ||
+	    record->active_read.logical_owner != current ||
+	    root->rwsem_reads.next != &record->active_read.task_link)
+		return NULL;
+	return record;
+}
+
+static int drop_promoted_read(void *control, const void *user)
+{
+	struct kd_rw_native_record *record = control;
+	struct kd_source_grant *grant = &record->read_bridge.grant;
+	int result;
+
+	if (user != record || record->phase != KD_RW_NATIVE_PROMOTED_READ ||
+	    !record->read_bridge.published || grant->linked || grant->logical_open ||
+	    record->task != current || !record->grant_user)
+		return -ESTALE;
+	result = kd_rw_read_credit_unlink(&record->read_bridge.credit,
+		grant->state, record, record);
+	if (result)
+		return result;
+	/* Physical release ended all object accesses. The original task-owned
+	 * record survives independently until this exact grant's final drop.
+	 */
+	kd_rw_local_done(record->pool->lock, record);
+	free_local(record);
+	return 0;
+}
+
+bool kd_rw_local_read_promoted(const struct kd_source_grant *grant)
+{
+	return grant && grant->drop == drop_promoted_read;
+}
+
+void kd_rw_local_read_rollback(struct kd_rw_native_record *record)
+{
+	struct kd_task_root_context *root = record->native_root;
+	struct kd_source_grant *grant = &record->read_bridge.grant;
+	struct kd_rw_read_credit *credit = &record->read_bridge.credit;
+	struct kd_rw *lock = record->pool->lock;
+
+	/* Private, before any source offer/auxiliary entry is published. This is
+	 * a metadata transfer back to the same held read, never an unlock.
+	 */
+	BUG_ON(record->phase != KD_RW_NATIVE_PROMOTED_READ ||
+	       record->read_bridge.published || record->task != current ||
+	       !root || root->aux_entry || root != kd_task_root_context_current() ||
+	       !credit->active || credit->released);
+	if (grant->linked) {
+		list_del_init(&grant->state_link);
+		grant->linked = false;
+		grant->logical_open = false;
+	}
+	raw_spin_lock(&lock->guard);
+	BUG_ON(!lock->readers);
+	lock->readers--;
+	list_del_init(&credit->active_read.link);
+	list_replace_init(&credit->active_read.task_link, &record->active_read.task_link);
+	record->active_read.root = root;
+	credit->active_read.root = NULL;
+	credit->active = false;
+	raw_spin_unlock(&lock->guard);
+	record->phase = KD_RW_NATIVE_ORDINARY_READ;
+	list_add_tail(&record->task_link, &root->native_grants);
+}
+
+int kd_rw_local_read_promote(struct kd_rw_native_record *record,
+		struct kd_execution_binding *native)
+{
+	struct kd_task_root_context *root = record->native_root;
+	struct kd_rw *lock = record->pool->lock;
+	struct kd_rw_read_credit *credit = &record->read_bridge.credit;
+	struct kd_source_grant *grant = &record->read_bridge.grant;
+	int result;
+
+	if (!root || record->task != current || native->kind != KD_EXECUTION_NATIVE ||
+	    !kd_state_is_current(&root->core, native) ||
+	    record->phase != KD_RW_NATIVE_ORDINARY_READ)
+		return -EPERM;
+	kd_rw_read_credit_init(credit);
+	credit->lock = lock;
+	credit->state = &root->core;
+	credit->acquisition = record;
+	credit->user = record;
+	credit->active_read.logical_owner = record->task;
+	credit->active_read.object = lock;
+	kd_source_grant_init(grant, &root->core, &lock->queue, record, NULL,
+		record, drop_promoted_read, record);
+	grant->family = KD_LOCK_FAMILY_RWSEM;
+	grant->mode = KD_GRANT_MODE_READ;
+	grant->physical = KD_GRANT_PHYSICAL_READ;
+	grant->read_credit = credit;
+	record->read_bridge.published = false;
+	/* The original atomic read remains continuously charged. Only the exact
+	 * guarded credit index and current-source index change representation.
+	 */
+	raw_spin_lock(&lock->guard);
+	lock->readers++;
+	credit->active = true;
+	list_add_tail(&credit->active_read.link, &lock->active_reads);
+	list_replace_init(&record->active_read.task_link, &credit->active_read.task_link);
+	credit->active_read.root = root;
+	record->active_read.root = NULL;
+	raw_spin_unlock(&lock->guard);
+	list_del_init(&record->task_link);
+	record->phase = KD_RW_NATIVE_PROMOTED_READ;
+	result = kd_state_link_grant(&root->core, native, grant);
+	if (result)
+		kd_rw_local_read_rollback(record);
+	return result;
+}
+
+void kd_rw_local_read_commit(struct kd_rw_native_record *record,
+		struct kd_mutex_node *writer, const struct kd_jit_image *image)
+{
+	BUG_ON(record->phase != KD_RW_NATIVE_PROMOTED_READ ||
+	       record->read_bridge.published || !record->read_bridge.grant.linked ||
+	       !writer->ready || writer->enqueued || !image);
+	record->read_bridge.published = true;
+	kd_observe(KD_OBS_READ_PROMOTE, .state = (unsigned long)record->read_bridge.grant.state,
+		.origin = (unsigned long)record->task, .acquisition = (unsigned long)record,
+		.object = (unsigned long)record->pool->lock,
+		.related = (unsigned long)&record->read_bridge.credit,
+		.node = (unsigned long)writer, .parent = (unsigned long)writer->acquisition,
+		.image = (unsigned long)image, .phase = KD_GRANT_PHYSICAL_READ,
+		.source_user = (unsigned long)record, .flags = KD_OBS_FLAG_ORDINARY_RWSEM);
+}
+
+int kd_rw_local_read_release_promoted(struct kd_task_root_context *root,
+		struct kd_execution_binding *native, struct kd_mutex *lock,
+		enum kd_operation_kind operation)
+{
+	struct kd_source_grant *grant;
+	struct kd_rw_native_record *record;
+	const void *credit;
+	int result;
+
+	if (operation != KD_OPERATION_RWSEM_UP_READ)
+		return -EOPNOTSUPP;
+	if (!root || !root->attached || root != kd_task_root_context_current() ||
+	    root->task != current || root->aux_entry || !in_task() || in_atomic() ||
+	    irqs_disabled() || !kd_state_is_current(&root->core, native) ||
+	    native->kind != KD_EXECUTION_NATIVE)
+		return -EPERM;
+	grant = kd_state_find_operation_grant(&root->core, native, lock, operation);
+	if (IS_ERR(grant) || !kd_rw_local_read_promoted(grant))
+		return -EOPNOTSUPP;
+	record = grant->control;
+	if (!record || &record->read_bridge.grant != grant || record->native_root != root ||
+	    record->phase != KD_RW_NATIVE_PROMOTED_READ || !record->read_bridge.published ||
+	    record->task != current || grant->acquisition != record || grant->user != record ||
+	    grant->read_credit != &record->read_bridge.credit)
+		return -ESTALE;
+	if (kd_rw_last_owned_read(container_of(lock, struct kd_rw, queue), current, &credit) !=
+	    KD_RW_READ_MANAGED || credit != grant->read_credit)
+		return -ESTALE;
+	result = kd_rw_read_release(grant->read_credit, &root->core, native,
+		grant->acquisition, grant->user);
+	if (result)
+		return result;
+	result = kd_state_close_grant(&root->core, native, grant);
+	if (result)
+		return result;
+	/* Final drop returns the original record; no grant/control access follows. */
+	return kd_state_unlink_grant(&root->core, native, grant);
 }

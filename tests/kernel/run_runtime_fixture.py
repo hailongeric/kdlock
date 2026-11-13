@@ -331,7 +331,7 @@ def main(*, spin=False, family=None):
                    "READ_ACQUIRE", "READ_RELEASE", "WRITE_DOWNGRADE_REAL", "WRITE_DOWNGRADE_RETAINED", "NATIVE_MODE",
                    "NATIVE_READ_ACQUIRE", "NATIVE_READ_RELEASE", "NATIVE_WRITE_ACQUIRE", "NATIVE_WRITE_RELEASE",
                    "NATIVE_DOWNGRADE", "NATIVE_CANCEL", "NATIVE_TRY_MISS", "ACQUIRE_CANCELLED", "QUERY_RESULT",
-                   "FAST_ACQUIRE", "FAST_RELEASE", "FAST_READ_DONE", "ORDINARY_RWSEM_DONE")
+                   "FAST_ACQUIRE", "FAST_RELEASE", "FAST_READ_DONE", "ORDINARY_RWSEM_DONE", "READ_PROMOTE")
     kinds = {name: index + 1 for index, name in enumerate(event_names)}
 
     def read_exact(fd, length):

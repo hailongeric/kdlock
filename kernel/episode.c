@@ -1007,6 +1007,12 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			unsigned long object = state->regs.di;
 
 			BUG_ON(IS_ERR(grant));
+			/* The first ordinary-read bridge retains release on original W.
+			 * A reached outer release returns its exact unexecuted operation;
+			 * it is not a request-frame grant or another reader acquisition.
+			 */
+			if (kd_rw_local_read_promoted(grant))
+				return forward(frame, binding, image, 0);
 			target = grant_frame(grant);
 			BUG_ON(IS_ERR(target));
 			BUG_ON(target->slot->call.node.atomic_spin != resources->config.atomic_spin);
@@ -1250,6 +1256,9 @@ int kd_episode_unlock_native(struct kd_episode_resources *resources,
 
 	if (!kd_operation_is_unlock(operation))
 		return -EINVAL;
+	result = kd_rw_local_read_release_promoted(root, native_binding, lock, operation);
+	if (result != -EOPNOTSUPP)
+		return result;
 	result = native_grant(&resources, root, native_binding, lock, operation, &frame);
 	if (result)
 		return result;

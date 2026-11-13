@@ -53,6 +53,12 @@ class ReaderCases:
                 per_object.setdefault((row["state"], row["object"]), []).append(key)
                 continue
             if row["index"] in ordinary_releases:
+                released = ordinary_releases[row["index"]]
+                if released.get("promoted_read"):
+                    # Promotion transfers representation, not acquisition.
+                    # Keep the original exact read in source order through DONE.
+                    key = tuple(released["acquire"][name] for name in
+                                ("related", "state", "acquisition", "source_user"))
                 pair = ordinary_active.pop(key, None)
                 stack = per_object.get((row["state"], row["object"]), [])
                 if pair is not ordinary_releases[row["index"]] or not stack or stack[-1] != key:
@@ -496,6 +502,22 @@ class ReaderCases:
             if shared is None or accepted is None or resumed is None or not shared["release"]["index"] < accepted["index"]:
                 raise AssertionError("shared B read release did not resume the enclosing A proxy")
             proof.update(shared=shared, accepted=accepted, resumed=resumed)
+        elif mode == 7 and not self.atomic:
+            promoted = [pair for pair in credits if pair.get("promoted_read")
+                        and pair["acquire"]["state"] == state
+                        and pair["acquire"]["object"] == int(final["object_a"], 16)]
+            if len(promoted) != 1:
+                raise AssertionError("read-write scene lacks its exact original read promotion")
+            pair, writer = promoted[0], proof["writer"]
+            if (pair["promotion"]["node"] != writer["node"]
+                    or pair["promotion"]["parent"] != writer["acquisition"]
+                    or pair["promotion"]["image"] != image
+                    or not pair["acquire"]["index"] < pair["promotion"]["index"] < writer["index"]
+                    or pair["release"]["task"] != tasks[4]
+                    or not all(pair["promotion"]["index"] < row["index"] < pair["release"]["index"]
+                               for row in entries)):
+                raise AssertionError("read-write generated execution escaped the promoted read lifetime")
+            proof["outer_read_promotion"] = pair
         elif mode in (9, 10, 11):
             retained = next((row for row in rows if self.has(row, "WRITE_DOWNGRADE_RETAINED")
                              and row["state"] == state and row["phase"] == 2), None)

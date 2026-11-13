@@ -127,6 +127,43 @@ existing physical writer and exact typed final-release route.
 
 ## Delegation control and evidence
 
+### Single ordinary read at an inner writer boundary
+
+The first read bridge covers one already-held ordinary rwsem read of A when its
+original task attempts an eligible contended ordinary writer on distinct B.
+Uncontended writers, disabled delegation and absent images keep their local
+routes. Repeated reads, callable/nonowner reads, native downgrade credits and
+other simultaneous owned grants are outside this bridge. It changes neither
+ordinary read acquisition/release function nor the atomic admission algorithm.
+
+After retaining an image, private preparation transfers the existing read's
+metadata into a generic source grant in that same record's unused local-writer
+storage. The original task and acquisition identity stay unchanged. A's atomic
+read count remains continuously charged; no read operation, source prefix or
+side effect is replayed. Only the guarded credit index gains a managed entry.
+The single canonical S_W remains the inner writer's execution state.
+
+Frame/image or auxiliary-entry refusal cancels private writer preparation and
+restores the ordinary read metadata before local waiting. Commit requires an
+actually offerable writer and records READ_PROMOTE, distinct from READ_ACQUIRE.
+Local selection or a generated miss after commitment retains a complete read
+grant with the existing exact native continuation. The held outer grant keeps
+local service of unrelated borrowers disabled through the common service rule.
+
+This first bridge keeps A's release on original W. A generated outer up_read
+hands its exact unexecuted operation back through the existing terminal route;
+it never treats the read as an episode frame. Native up_read uses the existing
+credit release, source-grant close and final unlink. The atomic read is dropped
+once, all object access ends before ORDINARY_RWSEM_DONE, and only then does the
+original record return to its task-owned free list. An open grant and owned-read
+index prevent task detach; no new lifetime counter or physical owner is added.
+
+Focused excerpt and evidence-oracle tests distinguish private rollback,
+original-owner release, exact promotion and final reuse. They do not establish
+live generated execution. Scene 7 still requires its managed B enqueue, foreign
+generated entry, original outer-read owner, source effects and exact retirement;
+the retained kernel15 local-only result remains a failed scene.
+
 The nano module's read-only load parameter `delegation` selects immutable runtime
 `proxy_limit=16` or `0`. Zero also disables request offer eligibility; another
 enabled combiner cannot select such a request. It is independent of `RB_RECORDING`.

@@ -55,6 +55,11 @@ enum kd_observation_kind {
 	 * phase identifies its initial read/write acquisition, including downgrade.
 	 */
 	KD_OBS_ORDINARY_RWSEM_DONE,
+	/* Existing ordinary read becomes a source grant without another acquire.
+	 * acquisition/source_user keep the ordinary record, related is its new
+	 * credit, and node/parent/image identify the prepared inner writer.
+	 */
+	KD_OBS_READ_PROMOTE,
 };
 
 #define KD_OBS_FLAG_ENQUEUED             (1UL << 0)
