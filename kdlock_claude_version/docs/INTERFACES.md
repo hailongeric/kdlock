@@ -11,7 +11,7 @@ device. Structures are in `include/kdlock/kd_uapi.h` and
 | Call | Purpose |
 | --- | --- |
 | `read()` | drain events (`struct kd_event`, 32 bytes each); never blocks; returns 0 bytes when empty. Producers run under arbitrary locks and do not wake anybody, so the daemon polls |
-| `KD_IOC_INFO` | `struct kd_info`: ABI version, address of `kd_jit_exit`, GS-relative addresses of the `kd_cpu` fields generated code uses (`pcpu_task`, `canary`, `stack_top`, `root`, `exit_ip`, `resume`, `aux`, `exit_code`, `anc`), the kernel per-CPU symbols to redirect, and up to 48 `struct kd_sym` (address, class, op, alternative entry) for the lock API |
+| `KD_IOC_INFO` | `struct kd_info`: ABI version, address of `kd_jit_exit`, GS-relative addresses of the `kd_cpu` fields generated code uses (`pcpu_task`, `canary`, `stack_top`, `root`, `exit_ip`, `resume`, `aux`, `exit_code`, `anc`), the kernel per-CPU symbols to redirect, and up to 96 `struct kd_sym` (address, class, op, alternative entry) for the lock API |
 | `KD_IOC_READ` | copy kernel text/data to user space (the translator's only view of the kernel) |
 | `KD_IOC_IMAGE_ALLOC` | allocate executable memory of a given size; returns the address the image will run at and an id |
 | `KD_IOC_IMAGE_LOAD` | copy image bytes, make them read-only executable, bind them to a site, publish the entry. Carries the text generation the image was built from: `-ESTALE` if text changed since, `-ENOENT` if the site is not in live text. A refused image is freed |
@@ -19,7 +19,7 @@ device. Structures are in `include/kdlock/kd_uapi.h` and
 | `KD_IOC_ENABLE` | global delegation switch (static key) |
 | `KD_IOC_TEXT` | for an address: the text region holding it (core kernel text, or one module's text / init text while it is coming), every instruction in that region with an exception-table entry, and the current text generation. Address 0 reads only the generation |
 
-ABI version is `KD_ABI_VERSION` (2); the translator refuses a mismatch.
+ABI version is `KD_ABI_VERSION` (3); the translator refuses a mismatch.
 
 ### Text generation
 
@@ -47,6 +47,9 @@ before it reads symbols and text for a build and passes it to
 | `KD_SYM_UNLOCK` | release API: compare `rdi` with the session root before calling |
 | `KD_SYM_ACQUIRE` | sleeping-family acquire: always leave generated code |
 | `KD_SYM_NESTED` | spin-class acquire: call `alt` (`*_jit`) instead; same fast path, exits `NESTED` when contended |
+| `KD_SYM_LOCAL` | never sleeps and acts for the origin by itself (trylocks, reader spin locks and releases, raw acquires): call natively |
+
+A `kd_` function that is not in the list is a frontier for generated code.
 
 ### Exit codes (`kd_cpu.exit_code`, low byte = kind, bits 8-15 = `enum kd_op`)
 
@@ -76,20 +79,31 @@ Read-only, `/sys/kernel/debug/kdlock_stats`. One `name value` line each:
 | `offered` | waiters queued with an image |
 | `plain` | waiters queued without |
 | `numa_deferred` | waiters of another node passed over by a session |
+| `stop_plain`, `stop_resched`, `stop_handoff`, `stop_ctx`, `stop_budget` | why sessions stopped before the queue was empty |
+| `no_spin`, `abandon`, `head_sleep`, `parked`, `handoff` | mutex and rwsem: how waiting ended up off the queue, and releases that took the lock again for a parked waiter |
+| `mode_enter`, `mode_exit` | locks switched to delegation mode by a queue head / back to plain mode by a combiner |
+| `xchg_offer`, `xchg_taken`, `xchg_declined`, `xchg_retract` | role exchange: combiners that offered themselves after a handback, releases that took the head role over, releases that could not, offers withdrawn because the holder stopped running |
 
 Counters are per-CPU, summed on read, non-atomic and approximate by design.
 
 ## 3. Kernel command line
 
-`kd_batch=<n>` (default 1024), `kd_numa=<0|1>` (default 1). Both are also
-writable at runtime under `/sys/module/kernel/parameters/` (core params, mode
-0644).
+`kd_batch=<n>` (default 1024), `kd_numa=<0|1>` (default 1), `kd_adapt=<0|1>`
+(1), `kd_deleg_enter=<n>` (5), `kd_deleg_enter_sleep=<n>` (3),
+`kd_deleg_exit=<n>` (2), `kd_xchg=<0|1|2>` (1); meanings in LOCKS.md 7. All
+are also writable at runtime under `/sys/module/kernel/parameters/` (core
+params, mode 0644), which is what `bench/run_ab.sh` uses to compare settings
+within one boot.
 
 ## 4. Benchmark device `/dev/kdbench` (module `bench/kd_bench.ko`)
 
+`KDB_IOC_APITEST` calls every kd lock API variant once on one task and
+checks lock state, interrupt flag and preempt count; it returns the number of
+failed checks (`run_nano.py --api-test`).
+
 `KDB_IOC_RUN` with `struct kdb_run`: family (`spin, mutex, rwlock, rwsem`, and
-the test bodies `nest_spin, nest_mutex, mix`), backend (`native, kd`),
-counters per body (1 or 16), write (or for `nest_*` outer) percentage, post-work
+the bodies listed below), backend (`native, kd, tclock`),
+counters per body (1 to 16), write (or for `nest_*` outer) percentage, post-work
 rounds, workers, first CPU, duration in ms. Returns elapsed ns, total ops,
 writes, torn reads, counter delta and per-worker ops/writes. One call is one
 timed point; the kernel threads are pinned to CPUs `first_cpu ..
@@ -108,5 +122,16 @@ Test bodies (correctness, not workloads; both backends from the same macro):
 | `nest_mutex` | the same with a mutex as A |
 | `mix` | mutex section that compares `current` (read through a non-inlinable helper) with the task taken before the lock, calls through a function pointer, and in 1/16 each calls `yield()` (frontier) or takes a second mutex (sleeping acquire) |
 
+| `spin_curr`, `mutex_curr` | the spin / mutex body plus one read through `current` |
+| `spin_curw`, `mutex_curw` | the same plus `rcu_read_lock(); rcu_read_unlock()`, which with preemptible RCU count in the task structure |
+| `ww` (kd only, 2 counters) | two of four ww mutexes in random order under one acquire context, backing off on `-EDEADLK` |
+| `spin_raw` | the spin body through `kd_raw_spin_lock` (the plain path alone); with the native backend, the native queued spinlock code on the kd lock object |
+| `spin_hb`, `rwlock_hb` | write sections of which every sixteenth meets an instruction with a fault fixup (`copy_from_kernel_nofault`): handed back there |
+| `rwsem_hb` | write sections of which every sixteenth calls `yield()` |
+
 For these, `torn_reads` also counts broken outer/`current` checks and any
 difference between outer sections run and the final outer counter.
+
+`bench/run_corr.py` runs short points of every family and body with the data
+oracle, the API check, and a look at the kernel log for warnings raised
+meanwhile.

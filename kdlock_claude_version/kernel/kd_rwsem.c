@@ -89,9 +89,21 @@ static void kd_rwsem_release_queue(void *root)
 	kd_mutex_unlock(&sem->m);
 }
 
+/* Role exchange mark: a bit of ->count, which the write release changes anyway. */
+static void kd_rwsem_xflag(void *root, bool set)
+{
+	struct kd_rwsem *sem = root;
+
+	if (set)
+		atomic_long_or(KD_RWSEM_XHEAD, &sem->count);
+	else
+		atomic_long_andnot(KD_RWSEM_XHEAD, &sem->count);
+}
+
 static const struct kd_family kd_rwsem_family = {
 	.post		= kd_rwsem_post,
 	.release	= kd_rwsem_release_queue,
+	.xflag		= kd_rwsem_xflag,
 	.keeps_q	= true,
 	.always_deleg	= true,
 };
@@ -228,11 +240,36 @@ int kd_down_write_trylock(struct kd_rwsem *sem)
 }
 EXPORT_SYMBOL(kd_down_write_trylock);
 
+/*
+ * One locked subtraction, and no look at ->count before it; see
+ * kd_mutex_unlock(). The writer bit is set, so subtracting it clears it.
+ *
+ * KD_RWSEM_XHEAD (role exchange): a queue head waits to be taken over.
+ * That needs the writer bit, which is already released; take it again
+ * unless a reader or writer got in first, serve the queued writers, and
+ * release again.
+ */
 void kd_up_write(struct kd_rwsem *sem)
 {
-	/* The writer bit is set, so subtracting it clears it: one locked add. */
-	long c = atomic_long_fetch_sub_release(KD_RWSEM_WLOCKED, &sem->count);
+	long c;
 
+	/* Role exchange, known on this CPU: take over while the bit is held. */
+	if (unlikely(raw_cpu_read(kd_cpu.xs_hint) == sem)) {
+		raw_cpu_write(kd_cpu.xs_hint, NULL);
+		if (kd_release_combine(&sem->m.q, &sem->m, sem, &kd_rwsem_family))
+			return;
+	}
+	c = atomic_long_fetch_sub_release(KD_RWSEM_WLOCKED, &sem->count);
+
+	while (unlikely(c & KD_RWSEM_XHEAD)) {
+		if (!kd_rwsem_write_try(sem)) {
+			kd_release_decline(sem, &kd_rwsem_family);
+			break;
+		}
+		if (kd_release_combine(&sem->m.q, &sem->m, sem, &kd_rwsem_family))
+			return;			/* the writer bit left with a waiter */
+		c = atomic_long_fetch_sub_release(KD_RWSEM_WLOCKED, &sem->count);
+	}
 	if (unlikely(c & KD_RWSEM_NEEDWAKE))
 		kd_rwsem_wake(sem);
 }
@@ -247,6 +284,9 @@ void kd_downgrade_write(struct kd_rwsem *sem)
 {
 	long c = atomic_long_fetch_add(KD_RWSEM_RBIAS - KD_RWSEM_WLOCKED, &sem->count);
 
+	/* The caller stays in as a reader, so it cannot serve writers here. */
+	if (unlikely(c & KD_RWSEM_XHEAD))
+		kd_release_decline(sem, &kd_rwsem_family);
 	if (unlikely(c & KD_RWSEM_NEEDWAKE))
 		kd_rwsem_wake(sem);
 }

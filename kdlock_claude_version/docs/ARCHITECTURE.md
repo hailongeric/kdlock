@@ -2,8 +2,8 @@
 
 This document describes how kdlock works as written in this directory. It is
 the reference for the code in `kernel/` and for the contract the translator in
-`jit/` must meet. Status: nothing here has been booted or measured; see
-[BUILD_AND_TEST.md](BUILD_AND_TEST.md).
+`jit/` must meet. What has run and been measured:
+[BUILD_AND_TEST.md](BUILD_AND_TEST.md) and `bench/results/kdclaude/`.
 
 ## 1. Goal and mechanism
 
@@ -22,6 +22,12 @@ values. Anything the copy cannot execute correctly ends it with an *exit*,
 and the waiter then continues natively from exactly that instruction
 (*handback*). Delegation is therefore always optional: a section that cannot
 be delegated is simply run by its owner.
+
+Delegation is also only used where it pays. A spinlock or mutex is in
+**plain mode** until its queue is deep: a contended caller then waits exactly
+as on the native lock, on its own stack, and publishes nothing. Queue heads
+measure the queue and switch the lock to **delegation mode**, and combiners
+switch it back (section 7a).
 
 Terms: **origin** (W) is the task whose critical section is being run;
 **executor** (C) is the CPU/task that runs it; the **session** is one
@@ -54,9 +60,12 @@ the generated copy for one site.
 
 ## 3. Lock objects
 
-All four families share one 4-byte queue word `struct kd_qlock`
-(`locked` byte, `flags` byte, 16-bit MCS tail) and one set of queue
-primitives in `kd_internal.h`.
+All four families share one 4-byte queue word `struct kd_qlock` and one set of
+queue primitives in `kd_internal.h`. Its layout is that of the native queued
+spinlock: a `locked` byte (held, plus the holder-owned mode bit
+`KD_Q_DELEG`), a second byte that is the `pending` bit for the spin class
+and the `flags` (`SLEEPERS`, `HANDOFF`, `DELEG`, `XHEAD`) for a mutex, and a
+16-bit MCS tail.
 
 | Object | Size | Layout |
 | --- | ---: | --- |
@@ -69,10 +78,17 @@ The sizes equal the native ones, so containers that embed locks
 (`struct page`, `lockref`, ...) keep their layout.
 
 Queue nodes (`struct kd_node`, one cache line) live in per-CPU arrays:
-spin-class nodes are a per-CPU LIFO stack (`nr_nodes`), sleepable-class nodes
-are allocated from a FREE-state pool. Four nodes per CPU and class
+spin-class nodes are a per-CPU LIFO stack, sleepable-class nodes are
+allocated from a FREE-state pool. Four nodes per CPU and class
 (`KD_MAX_NODES`); when they run out the caller waits without queueing.
-Node states: `FREE, WAIT, RUN, HEAD, RESUME, ABANDON`.
+Node states: `FREE, WAIT, RUN, HEAD, HEAD_D, RESUME, ABANDON, HWAIT, HBACK`.
+
+Where the per-CPU state sits matters for the plain path (measured, see
+`bench/results/kdclaude/README.md`): everything other CPUs write (nodes, the
+packet) is in 128-byte blocks apart from what only the owner writes; the
+count of nodes in use, the plain-wait statistic and the mode memory are in
+the first node's own line, as the native lock keeps its node count; and the
+sampling counter is deliberately *not* in that line.
 
 ## 4. The contended acquisition, step by step
 
@@ -85,39 +101,44 @@ and save the caller's registers.
 1. **Fast path.** One cmpxchg on the lock word. On success it adjusts
    preempt count / IRQ / BH state as the native API would and returns. No
    packet, no stack switch.
-2. **Slow path.** If `kd_cpu.busy` is already set (an interrupt on this CPU is
-   inside a wait, or a session is running) or the CPU has no wait stack, the
-   stub falls back to a plain, non-publishing wait (`kd_*_plain`). Otherwise
-   it sets `busy` with a single non-locked `bts` (an interrupt on the same CPU
-   sees it atomically) and stores the caller's continuation into this CPU's
-   packet: callee-saved registers, `rsp`, return `rip`, flags. The return
-   address is the *site*.
-3. It switches `rsp` to the per-CPU **wait stack** (16 KiB) and calls the C
-   wait function. From here the caller's own stack is untouched and unused:
-   that is what lets another CPU run on it.
+2. **Slow function.** On failure the stub calls the family's C `*_slow`
+   function on the caller's own stack, passing the return address (the
+   *site*). In plain mode that function does the whole contended
+   acquisition and the stub returns: this is the non-delegating path, and
+   for the spinlock it is the native queued-spinlock algorithm (pending
+   waiter, MCS queue, head takes the lock with a plain store). A C call
+   preserves the callee-saved registers and the stack pointer, so nothing
+   is lost if the function instead reports "publish".
+3. **Offer path.** The function reports that when the lock is in delegation
+   mode and this caller can publish (task context, `kd_cpu.busy` clear, the
+   site has an image). The stub then sets `busy` with a single non-locked
+   `bts` (an interrupt on the same CPU sees it atomically), stores the
+   caller's continuation into this CPU's packet (callee-saved registers,
+   `rsp`, return `rip`, flags), switches `rsp` to the per-CPU **wait stack**
+   (16 KiB) and calls the C wait function. From here the caller's own stack
+   is untouched and unused: that is what lets another CPU run on it.
 
-### 4.2 Waiting (`kd_core.c`: `kd_wait_spin`, `kd_wait_sleepable`)
+### 4.2 Waiting with a published continuation (`kd_wait_spin`, `kd_wait_sleepable`)
 
-The waiter looks its site up in a hash table (preemption off, no locking).
-
-* Site has an image → queue a **delegable** node (`entry` = image entry,
-  `regs` = packet).
-* No image → queue a plain node, and count the contention; at 64 contended
-  waits (`KD_REQ_THRESHOLD`) a `KD_EV_REQUEST` event asks the translator to
-  build one.
+The waiter queues a **delegable** node (`entry` = image entry, `regs` =
+packet). A site without an image is counted instead; at 64 contended waits
+(`KD_REQ_THRESHOLD`) a `KD_EV_REQUEST` event asks the translator to build
+one, and until then its callers wait without publishing.
 
 The node is appended with one `xchg` on the queue tail. A node with a
 predecessor spins on its own `state`:
 
 * `RESUME` — a combiner already executed this waiter's section; the waiter
   returns `KD_WAIT_RESUMED`.
-* `HEAD` — it is now the queue head: it takes the lock itself.
+* `HEAD` / `HEAD_D` — it is now the queue head: it takes the lock itself.
+  `HEAD_D` says the lock is in delegation mode (spin class; a mutex keeps
+  its mode in a flag).
 
 ### 4.3 The queue head becomes the combiner
 
-The head takes the lock (`kd_q_head_lock`), runs the family's `post()` hook
-(rwlock: wait for readers; rwsem: set the writer bit and wait for readers),
-then runs a **session** (`kd_session`):
+The head takes the lock, runs the family's `post()` hook (rwlock: wait for
+readers; rwsem: set the writer bit and wait for readers), and, in delegation
+mode, runs a **session** (`kd_session`):
 
 ```
 while the next node n exists and the budget is not exhausted:
@@ -125,11 +146,12 @@ while the next node n exists and the budget is not exhausted:
     if NUMA order is on and n is on another node: defer it (see 7)
     stop if n's saved interrupt state is incompatible with ours
     sleepable class: claim n with WAIT -> RUN; if the waiter withdrew, free it
-    prefetch the next waiter's packet and stack
+    prefetch the next waiter's node and packet
     done = kd_exec_one(root, n)          # run n's section, section 5
     unlink n from the queue
     publish n.state = RESUME              # last access to n and its packet
     stop if the section was handed back (done == false)
+    every 32 sections: leave delegation mode if the queue got short (7a)
 ```
 
 After the session the head runs the family's `release()` hook if the queue
@@ -187,13 +209,53 @@ The packet holds the first instruction the executor did **not** execute. The
 lock word stays "held" and now **belongs to the origin**: the combiner does not
 release it. The node is resumed, the origin continues natively from the exit
 point (every effect of the executed prefix stays, nothing is replayed), and
-later releases the lock with the ordinary unlock. The combiner goes back to
-waiting for the lock as queue head. No extra lock states exist; handback is a
-plain ownership transfer, which is why it is cheap and exact.
+later releases the lock with the ordinary unlock. Handback is a plain
+ownership transfer, which is why it is cheap and exact. Every call that can
+switch tasks (`schedule` and its relatives, `yield`, the sleeps) is a
+frontier, so a section that would block is always back on its own task
+before it does.
 
 Families where the queue word is only a wait lock (`keeps_q`: rwlock, rwsem)
-transfer the grant (writer byte / writer bit) but not the queue word; the head
-keeps the queue word and continues its session after reacquiring the grant.
+transfer the grant (writer byte / writer bit) but not the queue word.
+
+### Role exchange
+
+What the combiner C does after a handback depends on `kd_xchg` (default 1:
+mutex and rwsem writer; 2: every family; 0: never).
+
+Without an exchange C stays queue head, waits for the origin W to release,
+takes the lock again and continues its session.
+
+With an exchange the roles swap. C's node already publishes C's own
+continuation, so C **offers itself** before it resumes W: the node goes to
+state `HWAIT` and is entered in a small table keyed by lock address. C is
+then a delegable waiter at the front of the queue. When W releases the lock
+it **takes the head role over** (`kd_release_combine`): it links a node of
+its own in front of C's and runs a session, which serves C first and then
+the rest of the queue; afterwards it passes the head role on and releases.
+The lock's data moves to W's CPU once and stays there.
+
+* W learns of the offer without reading the lock word before its release
+  (that read can cost a cache transfer on the handover path). A spin-class
+  holder cannot leave its CPU: the offer is counted in its packet and, when
+  it resumes, in `kd_cpu.xcount`, which its releases test. A mutex or rwsem
+  holder may move: its packet names the lock (`kd_cpu.xs_hint` on the CPU
+  where it resumes), and elsewhere the release, a single atomic operation,
+  finds the `XHEAD` mark in the value that operation returns and takes the
+  lock again for the session if nobody was faster.
+* An offer leaves `HWAIT` only under the table's bucket lock, in one of
+  three ways: W took over (`WAIT`: C is an ordinary queued waiter), W
+  declined (`HBACK`: its release runs where a session cannot, for example
+  inside another delegated section or in a downgrade), or C withdrew
+  (`HBACK`, sleepable class only: W stopped running or C's CPU is wanted).
+  After `HBACK` C is queue head as without an exchange.
+* While W has a spin-class offer to answer it does not publish its own
+  continuation for another lock: the combiner that ran it would not know.
+
+Measured effect (A/B in one boot, a sixteenth of the sections handed back):
+see LOCKS.md 6a. It helps where the holder really blocks or the combiner
+would otherwise sleep with the queue in its hands, and costs a few percent
+where a handed-back section just finishes.
 
 ## 6. Context transfer
 
@@ -214,6 +276,25 @@ While a section runs on the executor:
 * **Logical task for lock functions.** Native lock functions called from a
   section (`kd_*`) act for the origin through `kd_logical_current()`: mutex
   owner, wake targets, etc.
+* **RCU read-side nesting** (preemptible RCU). `rcu_read_lock()` and
+  `rcu_read_unlock()` count in the task structure, and a task's count may
+  only be changed by code running as that task, which includes the
+  interrupt handlers on its CPU. The copy therefore calls
+  `__rcu_read_lock()` / `__rcu_read_unlock()` natively, where they count for
+  the executor, and the depth is carried like the preempt count: the packet
+  says how many read-side sections the continuation is in (`rcu_depth`), an
+  executor holds that many on top of its own while it runs it, and the
+  origin brings its own count in line when it resumes, with real lock and
+  unlock calls so that each task does its own exit processing
+  (`kd_rcu_sync`). Before this, a delegated `rcu_read_lock()` section raced
+  with the origin's interrupt handlers and the kernel reported an unbalanced
+  depth (build #38).
+* **Other state reached through `current`.** A read through `current` gives
+  the origin's value. A non-atomic update of an origin task field from the
+  executor's CPU has the hazard just described if interrupt handlers on the
+  origin's CPU update the same field (`pagefault_disabled`,
+  `migration_disabled` are the known candidates). Only the RCU depth is
+  handled; see section 11.
 
 ## 7. NUMA order
 
@@ -229,6 +310,47 @@ waiters without an image are never passed over. `kd_numa=0` restores FIFO.
 Consequence: a waiter is delayed by at most (batch × number of nodes ahead of
 it) executions. This is a bound on batches, not a fairness guarantee for
 arbitrary workloads.
+
+## 7a. Plain mode and delegation mode
+
+Delegation pays off only while the combiner keeps finding the next waiter
+queued: then the lock's data stays in one cache and a section costs the
+combiner little more than its body. With a short queue the combiner outruns
+its waiters, and every section costs a lock handover plus the transfer of a
+continuation, which is more than the native lock pays.
+
+* **Plain mode** is where a spinlock or mutex starts. A contended caller
+  waits in the family's `*_slow` function, on its own stack, nothing
+  published. For the spin class this is the native queued spinlock,
+  including the pending waiter; a mutex caller spins in the queue while the
+  holder runs and parks otherwise, as before. A waiter queued this way never
+  combines, and a session ends at its node.
+* **Entering.** A queue head samples how many waiters are linked behind it
+  (`kd_q_depth`, once per 128 contended acquisitions of a CPU, while it
+  still waits for the holder so that the walk delays nobody). At
+  `kd_deleg_enter` (spinlock, 5) or `kd_deleg_enter_sleep` (mutex, 3) the
+  lock goes to delegation mode.
+* **Where the mode lives.** Spin class: the bit `KD_Q_DELEG` in the lock
+  byte, which only the holder writes and a release clears. It travels with
+  the head role (`HEAD_D`), also through waiters that do not take part, and
+  a pending waiter carries it over. A contended caller reads it from the
+  lock word it has just read anyway; while the byte is momentarily empty
+  (between a release and the next head) it goes by what this CPU saw last
+  for that lock. Mutex: the flag `KD_QF_DELEG`, which outlives single holds.
+* **Leaving.** A session counts the waiters still queued behind it every 32
+  sections and when it ends; below `kd_deleg_exit` (2) the lock goes back to
+  plain mode.
+* **rwlock and rwsem writers always publish** when they can
+  (`kd_family.always_deleg`). There a session saves more than cache
+  transfers: the writers it serves share one wait for the readers to leave.
+  A depth threshold kept rwsem writers from delegating at all (measured).
+* `kd_adapt=0` keeps every lock in delegation mode.
+
+The thresholds were chosen by A/B in one boot. The break-even depth really
+depends on the section length, which nothing measures: at 6 workers a
+16-line mutex section gains 27% from entering at depth 3 instead of 4, while
+a 1-line spinlock section entered at depth 3 or 4 loses 2-3% at 4 and 5
+workers.
 
 ## 8. Nesting
 
@@ -284,6 +406,10 @@ sized for it; real stack use has not been measured.
 * Learning: each image has 64 learning reports (`KD_MISS_BUDGET`). A miss or
   frontier exit reports `ip`/`target` into a lossy 4096-entry event ring that
   the daemon polls.
+* Lock API in a section: the kernel lists every `kd_` function generated
+  code may meet with a class (release, sleeping acquire, spin-class acquire,
+  or `KD_SYM_LOCAL`: never sleeps, call natively). A `kd_` function that is
+  not listed is a frontier.
 * Usefulness: every 256 executions (`KD_SITE_WINDOW`) a site whose sections
   were mostly handed back is switched off (`KD_EV_SITE_OFF`) until a new image
   arrives.
@@ -313,6 +439,13 @@ sized for it; real stack use has not been measured.
    unlock is the only way the lock is released.
 6. `kd_cpu.busy` is set for the whole time a CPU's packet and wait stack are
    in use; interrupts that find it set wait without publishing.
+7. Spin class: while a queue exists its head is the only possible taker of
+   the lock (the fast path needs the whole word zero, a pending waiter only
+   exists without a queue), so the head takes it with a plain store.
+8. An offered head (`HWAIT`) changes state only under its table bucket
+   lock, together with its table entry.
+9. A task's RCU read-side depth is changed only by code running as that
+   task.
 
 ## 11. Known limits
 
@@ -335,8 +468,15 @@ See also [DIFFERENCES.md](DIFFERENCES.md).
 5. **Module load/unload drops every image.** Correct but coarse: each
    module unload (and each module's init completion) causes all sites to be
    translated again.
-6. **Unwinding.** No ORC data for images, the wait stack or the stack switch;
-   stack traces through them stop early.
+6. **Unwinding.** No ORC data for images, the wait stack, the stack switch or
+   the entry stubs (which now also call the plain slow path); stack traces
+   through them stop early.
+7. **Task fields updated through `current`.** Apart from the RCU depth
+   (section 6), a section that updates a field of its task non-atomically is
+   executed with that update made from the executor's CPU. If interrupt
+   handlers on the origin's CPU update the same field, an update can be
+   lost. No such case was observed besides RCU; `pagefault_disable()` and
+   `migrate_disable()` in a delegated section are the candidates.
 8. **Not delegated:** readers, trylocks, `raw_spinlock_t`, waiters in
    interrupt context. Native code called from a section that itself blocks on
    a lock waits without publishing.

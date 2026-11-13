@@ -204,8 +204,20 @@ static void kd_mutex_set_owner(void *root, struct task_struct *t)
 	WRITE_ONCE(m->owner, t);
 }
 
+/* Role exchange mark: a flag the release reads anyway. */
+static void kd_mutex_xflag(void *root, bool set)
+{
+	struct kd_mutex *m = root;
+
+	if (set)
+		atomic_or(KD_QF_XHEAD << KD_QF_SHIFT, &m->q.val);
+	else
+		atomic_andnot(KD_QF_XHEAD << KD_QF_SHIFT, &m->q.val);
+}
+
 static const struct kd_family kd_mutex_family = {
 	.set_owner	= kd_mutex_set_owner,
+	.xflag		= kd_mutex_xflag,
 };
 
 /*
@@ -346,31 +358,6 @@ EXPORT_SYMBOL(kd_mutex_get_owner);
 
 /* ---- release ---------------------------------------------------------------- */
 
-/*
- * A parked waiter asked for the lock (KD_QF_HANDOFF): ownership goes to
- * the first parked waiter directly, the lock byte stays set. Returns false
- * if nobody is parked any more; the caller then releases normally.
- */
-static noinline bool kd_mutex_handoff(struct kd_mutex *m)
-{
-	struct kd_mutex_waiter *w;
-	DEFINE_WAKE_Q(wake_q);
-	unsigned long flags;
-
-	flags = kd_wait_lock(m);
-	atomic_andnot(KD_QF_HANDOFF << KD_QF_SHIFT, &m->q.val);
-	w = list_first_entry_or_null(&m->waiters, struct kd_mutex_waiter, list);
-	if (w) {
-		raw_cpu_inc(kd_cpu.stat[KD_STAT_HANDOFF]);
-		w->granted = true;
-		WRITE_ONCE(m->owner, w->task);
-		wake_q_add(&wake_q, w->task);
-	}
-	kd_wait_unlock(m, flags);
-	wake_up_q(&wake_q);
-	return w != NULL;
-}
-
 static noinline void kd_mutex_wake_first(struct kd_mutex *m)
 {
 	struct kd_mutex_waiter *w;
@@ -404,24 +391,88 @@ void kd_mutex_wake_matching(struct kd_mutex *m,
 }
 
 /*
+ * A parked waiter asked for the lock (KD_QF_HANDOFF) and the holder has
+ * just released it. Take it again for the first parked waiter if nobody
+ * was faster; otherwise the flag stays for the next release.
+ */
+static noinline void kd_mutex_handoff(struct kd_mutex *m)
+{
+	struct kd_mutex_waiter *w;
+	DEFINE_WAKE_Q(wake_q);
+	unsigned long flags;
+
+	flags = kd_wait_lock(m);
+	w = list_first_entry_or_null(&m->waiters, struct kd_mutex_waiter, list);
+	if (!w) {
+		atomic_andnot(KD_QF_HANDOFF << KD_QF_SHIFT, &m->q.val);
+	} else if (kd_q_trylock(&m->q)) {
+		atomic_andnot(KD_QF_HANDOFF << KD_QF_SHIFT, &m->q.val);
+		raw_cpu_inc(kd_cpu.stat[KD_STAT_HANDOFF]);
+		w->granted = true;
+		WRITE_ONCE(m->owner, w->task);
+	}
+	if (w)
+		wake_q_add(&wake_q, w->task);
+	kd_wait_unlock(m, flags);
+	wake_up_q(&wake_q);
+}
+
+/*
+ * The release found flags set. @old is the lock word as it was.
+ *
+ * KD_QF_XHEAD (role exchange): a queue head waits to be taken over. That
+ * needs the lock, which is already released; take it again unless somebody
+ * else did, serve the queue, and release again.
+ */
+static noinline void kd_mutex_unlock_slow(struct kd_mutex *m, int old)
+{
+	for (;;) {
+		if (old & (KD_QF_XHEAD << KD_QF_SHIFT)) {
+			if (!kd_mutex_trylock_as(m, kd_logical_current())) {
+				kd_release_decline(m, &kd_mutex_family);
+			} else {
+				if (kd_release_combine(&m->q, m, m, &kd_mutex_family))
+					return;		/* the mutex left with a waiter */
+				WRITE_ONCE(m->owner, NULL);
+				old = atomic_fetch_sub_release(KD_Q_LOCKED, &m->q.val);
+				old &= ~(KD_QF_XHEAD << KD_QF_SHIFT);
+				if (old >> KD_QF_SHIFT & 0xff)
+					continue;
+				return;
+			}
+		}
+		if (old & (KD_QF_HANDOFF << KD_QF_SHIFT))
+			kd_mutex_handoff(m);
+		else if (old & (KD_QF_SLEEPERS << KD_QF_SHIFT))
+			kd_mutex_wake_first(m);
+		return;
+	}
+}
+
+/*
  * One atomic operation, as for the native mutex, whether or not spinners
- * are queued: the lock byte is cleared by a locked subtraction that also
- * returns the flags as they were. A waiter that parks sets KD_QF_SLEEPERS
- * with a full barrier and then tries the lock, so either this release
- * sees the flag or that waiter sees the lock free. Nothing is read after
- * the release: by then the next holder owns the line, and a read would
- * take it away again.
+ * are queued: a locked subtraction clears the lock byte and returns the
+ * flags as they were. A waiter that parks sets KD_QF_SLEEPERS with a full
+ * barrier and then tries the lock, so either this release sees the flag
+ * or that waiter sees the lock free. The lock word is not read before the
+ * release and nothing is read after it: either would cost a cache transfer
+ * on the handover path whenever another CPU touched the line in between.
+ * Everything a flag asks for is therefore done after the release, with
+ * the lock taken again where it is needed.
  */
 void kd_mutex_unlock(struct kd_mutex *m)
 {
-	u8 flags = READ_ONCE(m->q.flags);
 	int old;
 
+	/* Role exchange, known on this CPU: take over while the lock is held. */
+	if (unlikely(raw_cpu_read(kd_cpu.xs_hint) == m)) {
+		raw_cpu_write(kd_cpu.xs_hint, NULL);
+		if (kd_release_combine(&m->q, m, m, &kd_mutex_family))
+			return;
+	}
 	WRITE_ONCE(m->owner, NULL);
-	if (unlikely(flags & KD_QF_HANDOFF) && kd_mutex_handoff(m))
-		return;
 	old = atomic_fetch_sub_release(KD_Q_LOCKED, &m->q.val);
-	if (unlikely(old & (KD_QF_SLEEPERS << KD_QF_SHIFT)))
-		kd_mutex_wake_first(m);
+	if (unlikely(old & ((KD_QF_SLEEPERS | KD_QF_HANDOFF | KD_QF_XHEAD) << KD_QF_SHIFT)))
+		kd_mutex_unlock_slow(m, old);
 }
 EXPORT_SYMBOL(kd_mutex_unlock);

@@ -130,6 +130,46 @@ register`); they are unchanged upstream code. Correctness pass with all three
 backends (spin/mutex/rwlock/rwsem, c01/c16, 1%/20% writes, 1–32 workers): 288
 points exact.
 
+## 5b. Adaptive delegation, role exchange, API coverage (2026-11-12/13)
+
+Builds #25 to #39 of `7.0.0-38-kdclaude1`; the last one is the committed
+state. `bench/run_corr.py` is the correctness pass used from here on:
+
+```
+python3 run_corr.py --out corr.jsonl          # Native and kd, about 2 minutes
+python3 run_nano.py --api-test                # the single-task API check alone
+```
+
+It runs 240 points (every family and test body of `kd_bench`, 1 to 32
+workers, 300 ms each), the single-task check of every kd API variant (65
+checks of lock state, interrupt flag and preempt count), and fails on a
+broken data oracle or on anything the kernel log complained about meanwhile.
+
+| Check (build #39 unless noted) | Result |
+| --- | --- |
+| Correctness pass, defaults | 240 points exact, API 65/65, no kernel complaints |
+| The same with `kd_xchg=2` (every family offers), build #38 | 240 points exact |
+| Role exchange exercised (`spin_hb`, `rwlock_hb`, `rwsem_hb`, `mix`: a sixteenth of the sections handed back) | exact; of 643 768 offers in one pass 640 586 taken over, 3 177 declined, 5 withdrawn (build #36) |
+| ww mutexes (`ww` body: two of four locks in random order per operation, back-off on `-EDEADLK`), 2/8/32 workers | exact |
+| Sections with `rcu_read_lock(); rcu_read_unlock()` delegated (`spin_curw`, `mutex_curw`) | exact, 12.5 M delegated sections at 16 workers without an RCU complaint; build #38 did complain, see below |
+| Nano grid, three backends, 2 rounds (round 5) | 1008 points, no failed point; `bench/results/kdclaude/grid-20261113-r5/` |
+
+Bugs found by these runs and fixed:
+
+* **Delegated `rcu_read_lock()` sections unbalanced the RCU depth** (kernel
+  warnings on build #38). The origin's `rcu_read_lock_nesting` was changed
+  from the executor's CPU while interrupt handlers on the origin's CPU
+  changed it too. The RCU calls now count for the executor and the depth is
+  carried over (ARCHITECTURE 6).
+* **No section with `rcu_read_unlock()` could be translated**: an
+  instruction with an operand-size prefix and a rip-relative operand, deep
+  in its call graph, made the whole site fail (TRANSLATOR 2).
+* A release that looked at the lock word before releasing (for the exchange
+  mark, or for the handoff flag) was replaced before it was measured as
+  final: the look can cost a cache transfer on the handover path. The
+  sampling counter written in the queue node's line did cost 5 to 15% of
+  the plain rate and was moved (`bench/results/kdclaude/README.md`).
+
 ## 6. Not tested yet
 
 * Nesting deeper than two levels, and the `KD_MAX_DEPTH` / `KD_MAX_ROOTS`
@@ -140,8 +180,18 @@ points exact.
 * Signals during queued spinning for `killable`/`interruptible` (D8).
 * CPU hotplug, text patching after publication.
 * Kernel lock API switch (`kd_linux_map.h`) and real system-call workloads.
-* Any performance measurement with repeats and matched Native controls
-  ([PERF_PLAN.md](PERF_PLAN.md) task C).
+  The API is complete on paper and every variant runs in the API check, but
+  no kernel has been built with its own locks replaced.
+* Role exchange when the new holder really sleeps for long (the test bodies
+  `yield()` with nothing else runnable), under oversubscription, and for a
+  holder that migrates before it releases (the path through the lock word's
+  mark instead of the per-CPU hint ran 3 177 + 5 times, as declines and
+  withdrawals).
+* ww mutexes against a second user in the same class holding locks for long,
+  and `kd_mutex_lock_io` accounting.
+* Sections that update other task fields non-atomically
+  (`pagefault_disable()`, `migrate_disable()`); only the RCU depth is
+  carried over.
 
 ## 7. Rules
 

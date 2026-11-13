@@ -41,9 +41,26 @@ fences and `LOCK` prefixes exactly as they are). Only these change:
 | Call to a release API | `cmp rdi, gs:[kd_cpu.root]`; equal → `UNLOCK` exit (section complete). If `gs:[kd_cpu.anc]` is nonzero a non-root release → `UNLOCK_ANC` exit |
 | Call to a spin-class acquire | native call to its `_jit` alternative (same fast path; contended → `NESTED`) |
 | Call to a sleeping acquire | `ACQUIRE` exit |
-| Calls in the `native` list (memcpy, strlen, ...) and every `kd_` function | native `call` |
+| Calls in the `native` list (memcpy, strlen, ..., `__rcu_read_lock`, `__rcu_read_unlock`) and the `kd_` functions the kernel lists as `KD_SYM_LOCAL` | native `call` |
+| Any other `kd_` function | frontier |
 | Calls in `skip` (`__fentry__`, `__might_sleep`, ...) | dropped |
 | Frontiers | exit carrying the address of the first unexecuted instruction |
+
+`__rcu_read_lock` and `__rcu_read_unlock` are called natively on purpose:
+with preemptible RCU they count in the task structure, which only code
+running as that task may change, so they must count for the executor; the
+kernel carries the depth over to the origin (ARCHITECTURE 6).
+
+A plain instruction whose operand cannot be relocated becomes a frontier at
+that instruction; the rest of the site stays delegable. The displacement of
+a rip-relative or `%gs`-absolute operand is located by the decoder and
+checked against the operand's value; with an operand-size prefix (for
+example `or %ax, %gs:x(%rip)`) the decoder reports a 2-byte displacement
+although the encoding carries the usual disp32 behind ModRM, and the
+translator finds it there. Before this, one such instruction anywhere in
+the reachable code (it sits in `__raise_softirq_irqoff`) made the whole
+site fail, which kept every section with an `rcu_read_unlock()` from being
+delegated.
 
 **Frontiers** are: instructions with an exception-table entry (they rely on
 their own address being in the table), text outside a live text region,
@@ -97,7 +114,13 @@ daemon: poll events (10 ms), add to cumulative knowledge, wait 50 ms (settle),
   roots, indirect and return targets) and every other site is republished,
   since the kernel dropped all images.
 * `KD_EV_REQUEST` always triggers a build; the kernel sends it only for sites
-  without an image.
+  without an image. With adaptive delegation that is a site whose lock has
+  reached delegation mode: a lock that stays in plain mode never asks.
+* Known weakness: the state file is keyed by address and kernel release. A
+  module loaded at another address after a reboot leaves entries for
+  addresses that now hold other code; the daemon builds images for them
+  that no waiter ever looks up (or fails to, with a logged error). They are
+  dropped only when their text range goes away while the daemon runs.
 
 ## 5. Contract the kernel assumes of an image
 

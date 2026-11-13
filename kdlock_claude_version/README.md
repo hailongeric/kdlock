@@ -76,31 +76,42 @@ current invocation; readers stay on their own task.
 | `kernel/kd_internal.h` | Packet, node, per-CPU state, MCS queue primitives |
 | `kernel/kd_core.c` | Waiting, combining session, section executor |
 | `kernel/kd_spinlock.c`, `kd_rwlock.c`, `kd_mutex.c`, `kd_rwsem.c` | The four families |
+| `kernel/kd_ww_mutex.c` | ww mutexes on the kd mutex (never delegated) |
 | `kernel/kd_image.c`, `kd_dev.c` | Sites, images, event ring, device, stats |
 | `jit/kdjit/translator.py` | Section translator (capstone) |
 | `jit/kdjit/kernel.py` | Device, kallsyms, text and exception-table access |
 | `jit/kd_daemon.py` | Event loop, cumulative knowledge, publication |
 | `integration/` | How to map the Linux lock API and types onto kdlock; `apply_to_tree.sh` |
-| `bench/` | Nano benchmark module and runner |
+| `bench/` | Nano benchmark module, runners (`run_nano.py`, `run_grid.py`, `run_ab.sh`, `run_corr.py`), results |
 | `docs/` | Full documentation |
 
 ## Lock protocol
 
-All families share one queue word (`locked` byte, `flags` byte, 16-bit MCS
-tail) and one set of queue primitives.
+All families share one queue word with the layout of the native queued
+spinlock (`locked` byte, pending/flags byte, 16-bit MCS tail) and one set
+of queue primitives.
 
-**Waiter.** The entry stub tries the fast path. On failure it claims the
-CPU's packet and wait stack (`kd_cpu.busy`), stores the continuation, moves
-to the wait stack and calls the C wait function. The waiter looks up its
-call site; with an image it queues a delegable node, otherwise a plain one
-and the site's contention counter may request a translation.
+**Two modes.** A spinlock or mutex is in *plain mode* until its queue is
+deep. A contended caller then waits as on the native lock (for the
+spinlock: the same algorithm), on its own stack, and publishes nothing. A
+queue head that finds enough waiters behind it switches the lock to
+*delegation mode*; a combiner that finds the queue short switches it back.
+rwlock and rwsem writers always delegate: one session shares one wait for
+the readers. Details and the measured thresholds: ARCHITECTURE 7a.
 
-**Combiner.** A waiter promoted to queue head takes the lock and runs a
-session: for each following delegable node it executes the section, unlinks
-the node and publishes `RESUME`. It stops at the batch limit, at a plain
-node, on `need_resched()`, or when a section's interrupt state is
-incompatible with its own. Then it passes headship on and returns to run
-its own section. Fast-path owners never combine.
+**Waiter.** The entry stub tries the fast path. On failure it calls the
+family's slow function on the caller's stack, which in plain mode acquires
+the lock and returns. In delegation mode, if the call site has an image,
+the stub instead claims the CPU's packet and wait stack (`kd_cpu.busy`),
+stores the continuation, moves to the wait stack and queues a delegable
+node. A site without an image is counted and may request a translation.
+
+**Combiner.** A waiter promoted to queue head takes the lock and, in
+delegation mode, runs a session: for each following delegable node it
+executes the section, unlinks the node and publishes `RESUME`. It stops at
+the batch limit, at a plain node, on `need_resched()`, or when a section's
+interrupt state is incompatible with its own. Then it passes headship on
+and returns to run its own section. Fast-path owners never combine.
 
 **NUMA order.** As in TCLocks, a session serves only waiters of the
 combiner's NUMA node. A delegable waiter of another node is unlinked onto a
@@ -118,8 +129,18 @@ packet, and the waiter resumes after the call.
 
 **Handback.** Any other exit leaves the packet at the first instruction
 not executed. The lock stays held and now belongs to the waiter, which
-resumes natively and later releases normally. The combiner goes back to
-waiting for the lock as queue head.
+resumes natively and later releases normally. Every call that can switch
+tasks is such an exit, so a section that would block is back on its own
+task before it does.
+
+**Role exchange.** After a handback of a mutex or rwsem-writer section the
+roles swap: the combiner's node, which publishes the combiner's own
+continuation, becomes a delegable waiter at the head of the queue, and the
+waiter that got the lock takes the head role over when it releases, serving
+the former combiner first and then the rest of the queue. If that waiter
+blocks, the former combiner withdraws the offer and carries on as queue
+head. `kd_xchg=2` extends this to spinlock and rwlock, `kd_xchg=0` turns it
+off; measured effect in LOCKS 6a.
 
 **Nesting.** When the section a combiner C_A is executing for W meets a
 contended inner lock B, C_A does what a TCLocks combiner does: it becomes
@@ -154,13 +175,15 @@ released) or passes it to W, and W resumes natively exactly once.
 is the waiter's logical flag (`popfq` on entry, `pushfq` on exit), and
 preemption is disabled. The preempt-count change the section caused on the
 combiner is measured, undone there and added on the waiter at resume, so
-both stay balanced across nested spinlocks and handbacks.
+both stay balanced across nested spinlocks and handbacks. The RCU
+read-side depth is carried the same way: `rcu_read_lock()` in a section
+counts for the combiner, and the waiter catches up when it resumes.
 
 | Family | Grant | Delegable | Notes |
 | --- | --- | --- | --- |
-| spinlock | queue word | `kd_spin_lock{,_irq,_irqsave,_bh}` | `kd_raw_*` never publish; FIFO, no pending bit |
+| spinlock | queue word | `kd_spin_lock{,_irq,_irqsave,_bh}` | `kd_raw_*` never publish; plain mode is the native queued spinlock |
 | rwlock | writer byte in `cnts`; `wait` orders slow paths | writers | Combiner keeps `wait` and the writer byte for the session; readers local; interrupt-context readers do not queue behind waiting writers |
-| mutex | lock byte; MCS queue for spinners, list for sleepers | `kd_mutex_lock{,_interruptible,_killable}` | A spinner withdraws (`WAIT -> ABANDON`) before sleeping, the combiner claims with `WAIT -> RUN`; handoff flag bounds sleeper starvation |
+| mutex | lock byte; MCS queue for spinners, list for sleepers | `kd_mutex_lock{,_interruptible,_killable,_io}` | A spinner withdraws (`WAIT -> ABANDON`) before sleeping, the combiner claims with `WAIT -> RUN`; handoff flag bounds sleeper starvation; release is one atomic |
 | rwsem | writer bit in `count`; a kd mutex `m` orders slow paths | writers | Only the holder of `m` sleeps on `count`, so `m.owner` is the wake target; downgrade is one atomic and is always handed back inside a section |
 
 A delegated section never sleeps on the combiner. Calls that can sleep are
@@ -221,5 +244,20 @@ new image arrives.
    handed back.
 9. **NUMA order** uses the node of the CPU that queued the node. For a
    nested waiter that is the executor, not the origin of the continuation.
-10. **API coverage:** see `integration/README.md` for what the kernel patch
-   still has to supply (`ww_mutex`, owner helpers, `arch_spin_*` users).
+10. **API coverage:** every Linux 7.0 operation of the six lock types has a
+   kd counterpart (`integration/kd_linux_map.h`), but no kernel has been
+   built with its own locks replaced; `arch_spin_*` users and the lockref
+   fast path are listed in `integration/README.md`.
+11. **Task fields updated through `current`.** The RCU read-side depth is
+   carried between executor and origin. Any other non-atomic update of an
+   origin task field inside a section (`pagefault_disable()`,
+   `migrate_disable()`) is made from the executor's CPU and can race with
+   interrupt handlers on the origin's CPU.
+12. **Mode thresholds** are queue depths chosen by A/B on the nano bodies.
+   The break-even depth depends on the section length, which is not
+   measured; near the threshold either mode can be a few percent worse.
+13. **Mutex handoff is not strict:** the lock is released and taken again
+   for the parked waiter, so another caller can get in between.
+14. **Role exchange** ends when the holder blocks for long (a parked former
+   combiner cannot be served), and costs a few percent where a handed-back
+   section just finishes (LOCKS 6a).

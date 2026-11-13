@@ -5,17 +5,22 @@
  * Count word as in qrwlock: writer byte, writer-waiting bit, reader count.
  * ->wait orders slow-path readers and writers.
  *
- * Writers are delegable. A queued writer that reaches the queue head takes
- * the writer byte and then, as combiner, keeps both the byte and ->wait
- * while it executes the writers queued behind it. Queued readers are not
- * delegable, so a session stops at the first reader and FIFO order between
- * readers and writers is preserved.
+ * Writers are delegable, and a contended writer publishes its continuation
+ * whenever it can: there is no plain mode here, because the writers one
+ * session serves share a single wait for the readers to leave. A queued
+ * writer that reaches the queue head takes the writer byte and then, as
+ * combiner, keeps both the byte and ->wait while it executes the writers
+ * queued behind it. Queued readers are not delegable, so a session stops at
+ * the first reader and FIFO order between readers and writers is preserved.
+ * A writer that cannot publish (interrupt context, no generated code) takes
+ * the native queued rwlock's slow path.
  *
  * Readers always run on their own task; reader concurrency is unchanged.
  *
  * Releasing the write lock clears the writer byte and nothing else. After
  * a handback the origin therefore releases with the ordinary call, while
- * the combiner still holds ->wait and reacquires the byte as next writer.
+ * the combiner still holds ->wait and reacquires the byte as next writer
+ * (or, with kd_xchg=2, is served by the origin's release).
  */
 #include <linux/kernel.h>
 #include <linux/export.h>
@@ -51,6 +56,15 @@ static const struct kd_family kd_rw_family = {
 	.keeps_q	= true,
 	.always_deleg	= true,
 };
+
+/* Release the writer byte; see kd_spin_release(). */
+static __always_inline void kd_write_release(struct kd_rwlock *rw)
+{
+	if (unlikely(raw_cpu_read(kd_cpu.xcount)) &&
+	    kd_release_combine(&rw->wait, NULL, rw, &kd_rw_family))
+		return;
+	smp_store_release(&rw->wlocked, 0);
+}
 
 /* Tail-called by the entry stub when this CPU cannot publish. */
 void kd_write_lock_plain(struct kd_rwlock *rw)
@@ -132,14 +146,14 @@ EXPORT_SYMBOL(kd_arch_write_lock);
 
 void kd_write_unlock(struct kd_rwlock *rw)
 {
-	smp_store_release(&rw->wlocked, 0);
+	kd_write_release(rw);
 	preempt_enable();
 }
 EXPORT_SYMBOL(kd_write_unlock);
 
 void kd_write_unlock_irq(struct kd_rwlock *rw)
 {
-	smp_store_release(&rw->wlocked, 0);
+	kd_write_release(rw);
 	local_irq_enable();
 	preempt_enable();
 }
@@ -147,7 +161,7 @@ EXPORT_SYMBOL(kd_write_unlock_irq);
 
 void kd_write_unlock_irqrestore(struct kd_rwlock *rw, unsigned long flags)
 {
-	smp_store_release(&rw->wlocked, 0);
+	kd_write_release(rw);
 	local_irq_restore(flags);
 	preempt_enable();
 }
@@ -155,7 +169,7 @@ EXPORT_SYMBOL(kd_write_unlock_irqrestore);
 
 void kd_write_unlock_bh(struct kd_rwlock *rw)
 {
-	smp_store_release(&rw->wlocked, 0);
+	kd_write_release(rw);
 	__local_bh_enable_ip(_RET_IP_, SOFTIRQ_LOCK_OFFSET);
 }
 EXPORT_SYMBOL(kd_write_unlock_bh);

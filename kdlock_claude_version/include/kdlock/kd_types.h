@@ -48,13 +48,9 @@ struct kd_qlock {
  *
  * KD_Q_DELEG (spin class): the queue is deep enough for delegation to pay
  * off; contended callers publish their continuation while they see it.
- * KD_Q_XHEAD: the holder received its section back from a combiner, which
- * now waits at the queue head as a delegable waiter; the holder's release
- * takes the head role over (see kd_release_combine()).
  */
 #define KD_Q_LOCKED		0x01U
 #define KD_Q_DELEG		0x02U
-#define KD_Q_XHEAD		0x04U
 #define KD_Q_LOCKED_MASK	0x000000ffU
 #define KD_Q_PENDING_VAL	0x00000100U
 #define KD_Q_PENDING_MASK	0x0000ff00U
@@ -65,7 +61,12 @@ struct kd_qlock {
 #define KD_QF_SLEEPERS		0x01	/* tasks are parked on ->waiters */
 #define KD_QF_HANDOFF		0x02	/* next release goes to the first parked task */
 #define KD_QF_DELEG		0x04	/* delegation mode, as KD_Q_DELEG */
-#define KD_QF_XHEAD		0x08	/* as KD_Q_XHEAD */
+/*
+ * The holder received its section back from a combiner, which now waits at
+ * the queue head as a delegable waiter; the holder's release takes the
+ * head role over (role exchange, kd_release_combine() in kd_core.c).
+ */
+#define KD_QF_XHEAD		0x08
 #define KD_QF_SHIFT		8
 
 #define __KD_QLOCK_UNLOCKED	{ { .val = ATOMIC_INIT(0) } }
@@ -132,7 +133,7 @@ struct kd_rwsem {
 #define KD_RWSEM_WLOCKED	0x01L
 #define KD_RWSEM_WWAIT		0x02L	/* queue holder is a writer waiting for readers */
 #define KD_RWSEM_NEEDWAKE	0x04L	/* queue holder sleeps on count */
-#define KD_RWSEM_XHEAD		0x08L	/* as KD_Q_XHEAD, for the write holder */
+#define KD_RWSEM_XHEAD		0x08L	/* as KD_QF_XHEAD, for the write holder */
 #define KD_RWSEM_WMASK		(KD_RWSEM_WLOCKED | KD_RWSEM_WWAIT)
 #define KD_RWSEM_RSHIFT		8
 #define KD_RWSEM_RBIAS		(1L << KD_RWSEM_RSHIFT)

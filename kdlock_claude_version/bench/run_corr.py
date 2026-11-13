@@ -5,8 +5,10 @@
 Runs short points and checks the data oracle of each (every worker made
 progress, no reader saw a torn body, the counters add up to the completed
 writes, the test bodies saw no broken invariant), plus the single-task
-check of every kd API variant. Rates are not the purpose here. One JSON
-line per point; exit status 1 if any point failed.
+check of every kd API variant, and reports what the kernel log complained
+about meanwhile (warnings, stalls). Rates are not the purpose here. One
+JSON line per point; exit status 1 if any point failed or the kernel
+complained.
 
   run_corr.py --out corr.jsonl                 # Native and kd
   run_corr.py --out corr.jsonl --backends native kd tclock
@@ -17,6 +19,7 @@ import fcntl
 import json
 import os
 import platform
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -45,6 +48,17 @@ POINTS = [
 ]
 
 
+def kernel_complaints():
+    """Lines of the kernel log that report a problem."""
+    try:
+        out = subprocess.run(["dmesg"], capture_output=True, text=True, timeout=20).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    marks = ("BUG:", "WARNING:", "blocked for more than", "rcu_sched detected", "rcu_preempt detected",
+             "Voluntary context switch within RCU")
+    return [l for l in out.splitlines() if any(m in l for m in marks)]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", required=True, help="JSON lines file (appended)")
@@ -57,6 +71,7 @@ def main():
 
     ident = {"kernel": platform.release(), "build": platform.version(), "tag": args.tag}
     fd = os.open(args.dev, os.O_RDWR)
+    complaints = len(kernel_complaints())
     total = bad = 0
     with open(args.out, "a") as out:
         failed = fcntl.ioctl(fd, run_nano.IOC_APITEST)
@@ -88,8 +103,13 @@ def main():
                                 print("FAIL %s %s lines=%d pct=%d n=%d %s" %
                                       (family, backend, lines, pct, n, json.dumps(res)),
                                       flush=True)
-    print("%d points, %d failed" % (total, bad))
-    return 1 if bad else 0
+    new = kernel_complaints()[complaints:]
+    with open(args.out, "a") as out:
+        out.write(json.dumps(dict(ident, kernel_complaints=new)) + "\n")
+    for line in new:
+        print("KERNEL: " + line)
+    print("%d points, %d failed, %d kernel complaints" % (total, bad, len(new)))
+    return 1 if bad or new else 0
 
 
 if __name__ == "__main__":

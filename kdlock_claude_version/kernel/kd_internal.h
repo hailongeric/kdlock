@@ -5,6 +5,10 @@
  *
  * Model
  * -----
+ * A lock is in plain mode or in delegation mode (kd_core.c, "adaptive
+ * delegation"). In plain mode a contended caller waits as on the native
+ * lock, on its own stack. The rest of this comment is delegation mode.
+ *
  * A contended caller W of a delegable lock API records its continuation
  * (callee-saved registers, stack pointer, return address) in its CPU's
  * packet, moves to a per-CPU wait stack and queues. The caller's own stack
@@ -23,7 +27,9 @@
  *   - reaches anything only W may execute (untranslated target, sleeping
  *     call, instruction with a fault fixup, ...): C records the exact
  *     pre-instruction state, W resumes there natively and now owns the
- *     lock; C waits for the lock like any queue head. Nothing is replayed.
+ *     lock. Nothing is replayed. C then either waits for the lock like any
+ *     queue head, or offers itself as a waiter that W serves when it
+ *     releases (kd_core.c, "role exchange").
  */
 #ifndef KD_INTERNAL_H
 #define KD_INTERNAL_H
@@ -71,9 +77,25 @@ struct kd_regs {
 	u8 nroots;
 	u8 released;			/* bit i: roots[i] was released by the continuation */
 	u8 stop;			/* how the last executor left it: KD_STOP_* */
-	u8 __pad;
+	/*
+	 * Spin-class locks this continuation was handed back with whose
+	 * combiner offered itself to the origin (role exchange). The origin
+	 * moves it to kd_cpu.xcount when it resumes.
+	 */
+	u8 xoffers;
 	void *jit_resume;		/* generated code to continue at after KD_STOP_DONE */
 	void *roots[KD_MAX_ROOTS];
+	/*
+	 * Sleepable-class lock this continuation was handed back with whose
+	 * combiner offered itself (role exchange); becomes kd_cpu.xs_hint.
+	 */
+	void *xs_root;
+	/*
+	 * Preemptible-RCU read-side sections the continuation is inside right
+	 * now. Whoever executes it holds that many itself, and the origin
+	 * brings its own count in line when it resumes (kd_rcu_sync()).
+	 */
+	int rcu_depth;
 };
 
 enum {
@@ -91,6 +113,7 @@ enum {
 	KD_N_ABANDON,		/* sleepable only: waiter left to sleep; skip and free */
 	KD_N_HEAD_D,		/* spin class: promoted, lock is in delegation mode */
 	KD_N_HWAIT,		/* queue head offering itself to the lock holder (role exchange) */
+	KD_N_HBACK,		/* that offer was declined or withdrawn: head as before */
 };
 
 struct kd_node {
@@ -201,6 +224,19 @@ struct kd_cpu {
 	 * (measured: 5 to 15% of the plain rate at 3 to 5 workers).
 	 */
 	u32		probe;
+	/*
+	 * Spin-class locks the task on this CPU holds for which a queue head
+	 * waits to be taken over (role exchange). A spin-class holder cannot
+	 * leave its CPU, so its release finds out here, without a look at the
+	 * lock word before the release.
+	 */
+	u32		xcount;
+	/*
+	 * Sleepable-class lock the task that last resumed here holds with such
+	 * an offer. Only a hint: that task may have moved on, and then its
+	 * release finds the offer by the mark in the lock word instead.
+	 */
+	void		*xs_hint;
 
 	/* ---- the combiner that serves this CPU reads and writes this ---- */
 	struct kd_regs	regs __aligned(KD_BLOCK);	/* this CPU's own packet while it waits */
@@ -219,6 +255,7 @@ extern unsigned int kd_batch;
 extern bool kd_numa;
 extern bool kd_adapt;
 extern unsigned int kd_deleg_enter, kd_deleg_enter_sleep, kd_deleg_exit;
+extern unsigned int kd_xchg;
 
 #define kd_stat_inc(kc, s)	((kc)->stat[s]++)
 
@@ -241,6 +278,14 @@ struct kd_family {
 	bool (*post)(void *root);
 	void (*release)(void *root);
 	void (*set_owner)(void *root, struct task_struct *t);
+	/*
+	 * Sleepable class: set or clear the mark that tells the holder's
+	 * release about a waiting offer (role exchange, kd_core.c). It is a
+	 * bit of the word the release changes atomically, so the release
+	 * learns it from the value that operation returns. The spin class
+	 * needs none: see kd_cpu.xcount.
+	 */
+	void (*xflag)(void *root, bool set);
 	bool keeps_q;
 	bool always_deleg;
 };
@@ -259,6 +304,9 @@ void kd_q_lock_plain(struct kd_qlock *q);
 bool kd_q_queue(struct kd_qlock *q, bool probe);
 bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site);
 bool kd_can_offer(unsigned long rip);
+bool kd_release_combine(struct kd_qlock *q, struct kd_mutex *m, void *root,
+			const struct kd_family *f);
+void kd_release_decline(void *root, const struct kd_family *f);
 void kd_unpin(void);
 unsigned long kd_stat_sum(int stat);
 

@@ -56,14 +56,17 @@ headings and on the other documents that summarize them; items marked
 | D6 | Handback | exact, custody of every live owner, owner list | exact; ownership transfer by lock-word value | same intent, less machinery, fewer checks |
 | D7 | Nested locks | not supported beyond one scoped path | general recursion (bounded) | superset; unvalidated |
 | D8 | What may delegate | rwsem: prepared writers only; mutex: not killable/interruptible | all writers; killable/interruptible too | more coverage; cancellation semantics differ |
-| D9 | Spinlock | qspinlock-style pending + MCS | pending waiter only while no queue, then MCS | 4-worker point still below Native |
-| D10 | Mutex waiting | published waiters poll pinned | spin only while owner runs, then park; first parked waiter spins for its handoff | better under oversubscription; different handoff rules |
+| D9 | Spinlock | qspinlock-style pending + MCS | the native algorithm itself in plain mode | plain mode at Native's rate (spin c01, 2-6 workers: 1.00-1.02) |
+| D10 | Mutex waiting | published waiters poll pinned | spin only while owner runs, then park; first parked waiter spins for its handoff; release is one atomic, handoff retakes the lock | better under oversubscription; handoff is not strict |
 | D11 | Rwsem | 320 B, phases, queued-reader admission, proxy downgrade | 40 B, count + mutex queue, readers spin (bounded) then sleep, downgrade always handed back | readers never delegate; **MM downgrade not delegated** |
 | D12 | Image/translator | Miasm backend, entries/generations, ABI-specific wrapper | capstone, byte copy, one image per site | simpler; some GPT gaps closed, some opened |
 | D13 | Exit set | manifest of native terminal calls incl. TLB, task-mm, user access, IRQ/BH | smaller frontier list | **TLB/mm helpers not yet handed back** |
 | D14 | API surface | mutex/rwsem non-owner, nested, timeout, owner helpers, MM adapter | every Linux 7.0 operation of the six lock types, `ww_mutex` with wait-die only | no MM adapter; not yet compiled into a switched kernel |
 | D15 | Evidence tooling | schema-2 identity, ownership probes, many runners | one nano module + runner | no evidence yet |
 | D16 | Layout | rwlock 128 B, rwsem 320 B | 8 B and 40 B (native sizes) | better for embedding |
+| D17 | When to delegate | every eligible contended caller is published; counted local cutoffs were removed | plain mode until the queue is deep, per lock; rwlock/rwsem writers always | no loss at low contention; thresholds are depth only, not section length |
+| D18 | After a handback | owner handoff only; "queued role exchange remains unimplemented" (`AGENTS.md` rule 6) | the combiner becomes a delegable waiter and the origin's release takes the head role over (mutex, rwsem writer by default) | gains where the holder blocks, costs a few percent where it does not |
+| D19 | Task state in a section | origin's GS lowered for ordinary accesses | `current` redirected; RCU read-side depth kept on the executor and carried over | other non-atomic task-field updates remain a hazard |
 
 ## 3. Details
 
@@ -118,6 +121,16 @@ other per-CPU access addresses the **executor's** per-CPU area.
 * **Check:** list per-CPU symbols touched by the nano bodies and by mmap_lock
   critical sections; the translator could report `%gs` accesses to unknown
   symbols as a learnable event instead of copying them silently.
+* **Cost of `current` in a section, measured** (build #39, two rounds, spin
+  and mutex bodies with one read of `current->pid`, and with
+  `rcu_read_lock(); rcu_read_unlock()`; `probes-20261112/cur39.jsonl`): the
+  access itself is one redirected load and causes no exit. Delegated rates
+  at 8/16/32 workers: spin 5.27/5.59/5.41 Mops without, 5.44/5.69/5.60 with
+  the read, 5.89/6.43/6.28 with the RCU pair; mutex 3.93/4.26/3.51,
+  3.60/3.75/3.33 and 3.85/3.81/3.51. The differences have both signs and
+  changed sign between two boots (the bodies are separate call sites with
+  separate images), so no cost of `current` is established, only a bound of
+  roughly 10%. What it does cost is correctness care, see D19.
 
 ### D4. Interrupt-flag and BH variants
 
@@ -220,19 +233,19 @@ inner lock; roots stack; released bitmask; bounded depth).
 
 Docs: pending-bit fast contention path plus MCS (native-like).
 
-Here (since `63f8de2a`): also a pending waiter, but only while no queue
-exists (`kd_spin_pending`). The pending bit sits in the queue word's flags
-byte, so the fast path stays closed while it is set. Pending becomes locked in
-one atomic step, a newcomer waits a bounded time for that handover rather
-than queueing, and the pending waiter joins the queue as soon as one forms.
-Under real contention every waiter is therefore in the queue and can be
-delegated.
+Here: in plain mode the lock *is* the native queued spinlock: same word
+layout, the same pending and queue steps in the same order, the queue head
+taking the lock with a plain store. In delegation mode waiters queue the
+same way with their continuation published.
 
-* **Effect:** before the change, two contending CPUs formed a queue and
-  delegated one section per session (spin_c01 n2 at 0.59–0.62 of Native
-  in single rounds); with it, n2 delegates 0–3% and ran at 0.87/1.04 of
-  Native (c01/c08, build #11, two rounds). Four workers remain the weak point:
-  the queue keeps draining, so sessions are short (about four sections).
+* **Effect:** plain mode runs at Native's rate (spin c01 at 2-6 workers
+  1.00-1.02, build #35). Getting there took more than the algorithm; each
+  step was measured (`bench/results/kdclaude/README.md`): no read of a
+  predecessor's node before linking, per-CPU state in 128-byte blocks, the
+  node count in the node's own line, and no store to that line by a freshly
+  promoted head. The general rule behind the last two: a store that waits
+  for its cache line holds up every later store of that CPU, the lock
+  handover included.
 
 ### D10. Mutex waiting and handoff
 
@@ -248,8 +261,15 @@ Since `63f8de2a`, as in the native mutex, the first parked waiter spins on the
 owner once it has been woken and has asked for `HANDOFF`, so a handoff
 normally goes to a running task. The recorded owner is the task that runs
 with the lock: the combiner during its session, and the origin from a
-handback onwards. Queued waiters check it every 64 iterations, not per
+handback onwards. Queued waiters check it every 1024 iterations, not per
 section; it shares its cache line with the queue tail.
+
+Since build #34 the release is one locked subtraction that returns the
+flags, with no read of the lock word before or after it. A handoff request
+is therefore honoured after the release: the releasing task takes the lock
+again for the first parked waiter unless somebody else was faster, in which
+case the request stays for the next release. That is weaker than the native
+mutex, where the lock is never free in between.
 
 * **Effect:** better behaviour when the owner is descheduled or tasks
   outnumber CPUs (the docs list oversubscription as unvalidated and
@@ -363,6 +383,62 @@ Docs: rwlock 128 B, rwsem 320 B, mutex 32 B. Here: 8 B, 40 B and 32 B, equal
 to the native types. Embedded locks keep their layout; false sharing between
 the lock word and neighbors is now the user's concern, as with native locks.
 
+### D17. When to delegate
+
+Docs: every eligible contended caller publishes; earlier counted cutoffs
+("local" classes) were removed in favour of the 1024 batch.
+
+Here: a spinlock or mutex is in plain mode until a queue head finds
+`kd_deleg_enter` (5) or `kd_deleg_enter_sleep` (3) waiters behind it, and
+leaves delegation mode when a session finds fewer than `kd_deleg_exit` (2).
+rwlock and rwsem writers always publish. ARCHITECTURE 7a.
+
+* **Effect:** with every caller published, kd lost to Native at 2-5 workers
+  (round 4: spin c01 0.67-0.81, mutex c01 0.79-0.81). With plain mode those
+  points are at Native's rate for the spinlock and within 0.93-1.0 for the
+  mutex (build #35), and the gains at higher counts stay.
+* **Limit:** the right depth depends on the section length (a 16-line mutex
+  section gains from 5 workers, a 1-line one from 7), and only depth is
+  measured. Around the threshold either mode can be the worse one by a few
+  percent.
+
+### D18. Role exchange after a handback
+
+`AGENTS.md` (rule 6) records for the earlier implementation: an owner
+handoff exists, "the former combiner is not immediately requeued/delegatable,
+and the recipient does not start a new combiner loop", and "the requested
+queued role exchange remains unimplemented".
+
+Here it is implemented (ARCHITECTURE 5, "Role exchange"): on a handback the
+combiner's node becomes a delegable waiter at the head of the queue at once,
+and the recipient starts a session when it releases.
+
+* **Effect (measured, LOCKS 6a):** rwsem writer +19% at 16 workers, mutex
+  +10% at 32, mutex -4 to -5% at 8 and 16, spinlock 0 to -4%. It is on by
+  default only for mutex and rwsem writer.
+* **Not done:** a parked former combiner cannot be served (its packet is
+  per-CPU and released when it parks), so an exchange ends when the holder
+  blocks for long: the offer is withdrawn and the queue dissolves as before.
+
+### D19. Task state in a delegated section
+
+Docs: the origin's GS is used for ordinary accesses, so `current`-relative
+state is the origin's by construction.
+
+Here `current` is redirected, which makes reads right, but a **non-atomic
+update** of an origin task field from the executor's CPU can race with
+interrupt handlers on the origin's CPU, which run as the origin and update
+the same fields. Found with the `spin_curw` body: delegated
+`rcu_read_lock(); rcu_read_unlock()` sections left the RCU depth unbalanced
+between tasks and the kernel warned (build #38, "Voluntary context switch
+within RCU read-side critical section"). Fixed for RCU (ARCHITECTURE 6):
+the executor counts for itself and the depth is carried over.
+
+* **Open:** `pagefault_disable()`, `migrate_disable()` and other task-field
+  updates inside a section are executed on the origin's task structure from
+  the executor's CPU. No failure was observed; the same pattern as RCU
+  would be needed if one is.
+
 ## 4. Effects expected on the known performance picture
 
 From `PERFORMANCE.md` (old implementation, one round, different VM):
@@ -372,7 +448,7 @@ From `PERFORMANCE.md` (old implementation, one round, different VM):
 | Mutex c01/c16: KD beats native and TCLock at 60 workers | same delegation idea; cheaper machine model; NUMA order | at least comparable; low counts unknown |
 | Rwlock: below TCLock at 60 workers, c16/1% below native | same reader-local design; smaller object; qrwlock-style count | similar; readers dominate |
 | Rwsem: below TCLock; reader admission matters | readers sleep immediately (D11) | **worse** until a spinning admission stage exists |
-| Spin c01/c08 | no pending path (D9) | low-count regression possible |
+| Spin c01/c08 | plain mode is the native algorithm (D9, D17) | measured since: at Native's rate at 2-6 workers, above it from 7 |
 | Handback-heavy sites are switched off | same accounting | same |
 
 ## 5. Items to settle, in priority order

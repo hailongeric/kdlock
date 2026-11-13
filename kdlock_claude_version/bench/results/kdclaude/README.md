@@ -112,3 +112,68 @@ that CPU, including the lock handover.
 Rates between builds differ by up to about 15% in delegation mode for
 reasons not established (#27 6.45, #28 5.58, #35 6.29 Mops for spin c01 at 16
 workers with identical queue code). Compare only within one boot.
+
+## Role exchange, `current`, RCU (`probes-20261112/`, builds #36–#39)
+
+| File | Build | What |
+| --- | --- | --- |
+| `ab36xchg.jsonl` | #36 | A/B in one boot: `kd_xchg` 0 against 1 (then: every family offers), Native alongside, bodies with a sixteenth of the write sections handed back (`spin_hb`, `rwlock_hb`, `rwsem_hb`, `mix`), 3 rounds |
+| `ab37xchg.jsonl` | #37 | the same, kd only, after the sleepable-class release learned to take over before it releases (`kd_cpu.xs_hint`). Effect unchanged; this is the table in docs/LOCKS.md 6a |
+| `corr38.jsonl`, `corr38x2.jsonl` | #38 | correctness with `kd_xchg` 1 (default) and 2: 240 points exact each |
+| `cur38.jsonl` | #38 | first run of the `current` bodies. **The `*_curw` rows are not delegated**: their sites failed to translate (see below), so they show plain mode only |
+| `cur38b.jsonl` | #38 | the same after the translator fix. **Superseded**: during the run before it the kernel had reported an unbalanced RCU depth (below) |
+| `cur39.jsonl`, `cur39.summary.txt` | #39 | `current` bodies with the RCU depth carried over: the numbers quoted in docs/DIFFERENCES.md D3 |
+| `corr39.jsonl` | #39 | correctness: 240 points exact, API check 65/65, no kernel complaints (the pass now reads the kernel log) |
+
+Two defects found by the `current` bodies:
+
+* **Translator.** `rcu_read_unlock()` reaches `__raise_softirq_irqoff`, which
+  contains `or %ax, %gs:x(%rip)`. The decoder reports a 2-byte displacement
+  for an instruction with an operand-size prefix, the translator refused the
+  instruction and with it the whole site, so no section with an
+  `rcu_read_unlock()` was ever delegated. The displacement is now located and
+  checked by the translator, and an instruction it cannot relocate ends only
+  that path.
+* **RCU depth.** Once those sections were delegated, the kernel warned
+  ("Voluntary context switch within RCU read-side critical section", and a
+  nonzero depth at the scheduler tick; build #38, 16 workers). The combiner
+  was incrementing and decrementing the origin's `rcu_read_lock_nesting` from
+  its own CPU while interrupt handlers on the origin's CPU did the same as
+  the origin. Since #39 the RCU calls in a section count for the executor and
+  the depth is carried over at the handover (docs/ARCHITECTURE.md 6). 12.5 M
+  delegated `rcu_read_lock` sections and the correctness pass then ran
+  without a complaint.
+
+## Round 5 (`grid-20261113-r5/`)
+
+Build #39 (the commit that adds this directory; its kernel sources differ
+from the built ones only in comments of `kd_internal.h` and `kd_rwlock.c`),
+Native, kd and TCLock alternating per point, 2 rounds, 1008 points, no failed
+point, no kernel complaint. `corr39.jsonl`: correctness on the same build,
+240 points exact. `summary.txt` holds the per-point table. Defaults:
+`kd_adapt=1`, `kd_deleg_enter=5`, `kd_deleg_enter_sleep=3`, `kd_deleg_exit=2`,
+`kd_xchg=1`. Host governor `powersave`, frequency not fixed; two rounds give
+no variance claim.
+
+kd/Native, medians of the two rounds (round 4 in brackets where it differed
+most):
+
+| Profile | 2-5 workers | 6-8 | 12-16 | 20-32 |
+| --- | --- | --- | --- | --- |
+| spin c01 | 0.99-1.05 (0.67-0.92) | 1.00-1.16 | 1.22 | 1.62-1.76 |
+| spin c08 | 1.04-1.16 (0.75-0.98) | 1.17-1.24 | 1.16-1.19 | 1.29-1.36 |
+| mutex c01 | 0.89-1.03 (0.79-1.02) | 1.03-1.19 | 1.30-1.31 | 1.86-2.81 |
+| mutex c16 | 0.94-1.00 | 1.26-1.64 | 1.66 | 1.99-2.85 |
+| rwlock (four profiles) | 0.97-1.10 | 1.00-1.13 | 0.99-1.14 | 0.98-1.24 |
+| rwsem (four profiles) | 1.02-2.09 | 1.57-2.51 | 1.95-3.73 | 1.59-2.92 |
+
+Below Native by more than 2%: mutex c01 at 3 workers (0.89; Native itself
+ran between 3.5 and 5.4 Mops at that point across this day's runs), mutex c16
+at 2 and 3 workers (0.94, 0.96), rwlock c01 w20 at 4 workers (0.97).
+
+kd/TCLock: at or above 1 for spin and mutex up to 8 workers and for mutex
+c16 everywhere from 6 (1.12-1.25). Below: mutex c01 at 12-32 workers
+(0.74-0.84; round 4: 0.70-0.74), spin c08 at 12-32 (0.88-0.90), rwlock w20 at
+20-32 (0.64-0.83), rwsem at 20-32 (w1 0.66-0.84, w20 0.23-0.38). The rwsem
+and rwlock gaps across both NUMA nodes are the reader paths, which this
+round of work did not change.

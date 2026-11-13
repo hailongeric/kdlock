@@ -173,6 +173,34 @@ Status after the TCLock comparison (commits `94f91a77`..`7e05332e`):
     queue) is about 4 times faster. Needs a reader admission design of its
     own (D11), not tuning.
 
+Status 2026-11-13 (adaptive delegation, role exchange, API coverage; commits
+`594af5ee` and the one after it; data in `bench/results/kdclaude/`,
+`probes-20261112/` and `grid-20261113-r5/`):
+
+* The loss at 2-5 workers is gone for the spinlock and nearly gone for the
+  mutex: a lock is in plain mode (the native algorithm, on the caller's
+  stack) until its queue is deep (ARCHITECTURE 7a). Round 5, kd/Native:
+  spin c01 0.99-1.05 at 2-7 workers (round 4: 0.67-0.98), mutex c01
+  1.02-1.03 at 4-6 (0.81-0.96); left below Native: mutex c01 at 3 workers
+  (0.89, Native bimodal there), mutex c16 at 2-3 (0.94-0.96).
+* What the plain path needed beyond the algorithm is recorded step by step
+  in the results README: cache-line placement of the queue node, its count
+  and the sampling counter decided 4 to 15% each.
+* Delegation mode got faster as a side effect of the same layout work and of
+  a one-atomic mutex release: against TCLock, mutex c16 is now ahead from 6
+  workers (1.12-1.25; round 4: 0.91-0.95) and mutex c01 at 12-32 workers is
+  at 0.74-0.84 (0.70-0.74).
+* Role exchange after a handback is implemented and on by default for mutex
+  and rwsem writer; its measured effect is mixed (LOCKS 6a).
+* Reading or RCU-locking through `current` in a section has no established
+  cost (DIFFERENCES D3); it had two defects, both fixed (D19, TRANSLATOR 2).
+* Still open, in order of size: rwsem and rwlock with writers across both
+  NUMA nodes against TCLock (reader admission, unchanged); mutex c01 at
+  12-32 workers against TCLock; spin c08 at 12-32 (0.88-0.90); a mode
+  criterion that accounts for section length; sites that hand back often
+  are slower than Native at 32 workers (spin body with a sixteenth handed
+  back: about 0.8) and are not switched off until handbacks dominate.
+
 ### Task D: API switch and micro/API stage
 
 * Apply `integration/kd_linux_map.h`: replace `arch_spinlock_t`,

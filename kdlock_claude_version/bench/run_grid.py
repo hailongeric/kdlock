@@ -51,6 +51,7 @@ PROFILES = {
     "spin_c01_hb": ("spin_hb", 1, 100, 64),
     "rwlock_c01_hb": ("rwlock_hb", 1, 100, 256),
     "rwsem_c01_hb": ("rwsem_hb", 1, 100, 256),
+    "mutex_c01_hb": ("mix", 1, 100, 256),
 }
 # The default grid; the other profiles are run on request.
 GRID = [p for p in PROFILES if not p.endswith(("_curr", "_curw", "_raw", "_hb"))]

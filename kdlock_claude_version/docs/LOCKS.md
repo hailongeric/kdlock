@@ -53,25 +53,32 @@ replacing the object and every caller (see
 [KERNEL_INTEGRATION.md](KERNEL_INTEGRATION.md)).
 
 **What may be delegated.** Only a caller in task context, with an image for its
-call site, and whose saved interrupt state the executor can honor
-(`kd_ctx_compatible`). Everything else queues as a plain waiter. A delegated
-section must not sleep on the combiner; every call that can sleep is a
-frontier exit and ends the delegation at that call.
+call site, whose lock is in delegation mode (ARCHITECTURE 7a), and whose saved
+interrupt state the executor can honor (`kd_ctx_compatible`). Everything else
+queues as a plain waiter. A delegated section must not sleep on the combiner;
+every call that can sleep is a frontier exit and ends the delegation at that
+call.
 
 ## 2. Spinlock
 
-* The queue word **is** the lock (`locked` byte). A free lock with no queue
-  is taken by one cmpxchg of the whole word (`kd_q_trylock_fifo`), so a fast
-  path can never barge past a queue. There is no pending bit: waiters go
-  straight to the MCS queue (FIFO).
-* The queue head takes the lock byte (`kd_q_head_lock`), serves followers,
-  then hands headship to the successor.
-* `kd_raw_spin_lock*` use the same word but **never publish** (used for
-  scheduler, timers, lock internals) and never combine.
+* The queue word **is** the lock, with the layout of the native queued
+  spinlock. In plain mode it also behaves like it: a free lock with no
+  waiter is taken by one cmpxchg of the whole word, the first contender
+  becomes the *pending* waiter and spins on the lock byte, later ones join
+  an MCS queue whose head waits for holder and pending waiter to leave and
+  then takes the lock with a plain store. Nobody can barge past a queue.
+* In delegation mode a contended caller of a delegable entry publishes its
+  continuation and queues the same way; the queue head, once it holds the
+  lock, serves the waiters behind it and then hands the head role on.
+* `kd_raw_spin_lock*` and the `kd_arch_spin_*` level use the same word but
+  **never publish** (scheduler, timers, lock internals) and never combine.
 * `_irq`, `_irqsave` and `_bh` entries are delegable: the section runs with
   the origin's logical IF/BH state (see ARCHITECTURE 6). Their releases apply
   the matching logical effects when they are the session root release
   (`kd_apply_unlock`).
+* Release is a byte store. A holder that has a role-exchange offer to
+  answer finds out from its own CPU's state (`kd_cpu.xcount`), not from the
+  lock word.
 
 ## 3. Rwlock (writer-preference queued, qrwlock-like)
 
@@ -97,20 +104,29 @@ frontier exit and ends the delegation at that call.
   mutex.
 * Two kinds of waiter:
   * **Spinning** waiters stay in the MCS queue **while the owner is running**
-    (`kd_mutex_can_spin`: no `need_resched()`, owner on a CPU). They publish
-    their continuation; the queue head, once it owns the mutex, runs their
-    sections before its own. They are non-preemptible.
+    (`kd_mutex_can_spin`: no `need_resched()`, owner on a CPU), the role the
+    optimistic-spin queue has in the native mutex. They are non-preemptible.
+    In plain mode they wait on their own stack and each takes the lock
+    itself at the queue head. In delegation mode they publish their
+    continuation; the queue head, once it owns the mutex, runs their
+    sections before its own.
   * **Parked** waiters sleep on `->waiters` under `wait_lock`.
 * A spinning waiter becomes a parked one by **withdrawing first**:
   `WAIT -> ABANDON` by cmpxchg. The combiner claims by `WAIT -> RUN`. One
   cmpxchg decides, so a section is executed by exactly one of them and a task
   is never run by a combiner and by itself.
-* **Handoff.** A parked waiter that keeps losing sets `KD_QF_HANDOFF`; the next
-  release then passes ownership to the first parked waiter directly (lock byte
-  stays set, `owner` changes) and a running session stops early. This bounds
-  sleeper starvation.
-* Unlock uses `atomic_fetch_andnot_release` to learn atomically whether
-  sleepers exist, avoiding a lost wakeup.
+* **Handoff.** A parked waiter that keeps losing sets `KD_QF_HANDOFF`; a
+  running session then stops early, and the next release takes the lock
+  again for the first parked waiter (`owner` changes, the waiter is woken)
+  unless somebody was faster in between, in which case the flag stays for
+  the release after that. This bounds sleeper starvation in practice; it is
+  not the strict handoff of the native mutex.
+* Release is one atomic operation whether or not spinners are queued: a
+  locked subtraction clears the lock byte and returns the flags as they
+  were, so there is no lost wakeup. The lock word is not read before the
+  release and nothing is read after it (either costs a cache transfer on
+  the handover path); what a flag asks for (`SLEEPERS`, `HANDOFF`, `XHEAD`)
+  is done after the release, with the lock taken again where needed.
 * `owner` is the **logical** owner (the origin, also for delegated sections).
   `kd_mutex_nested` takes it for `r->task`.
 * Signals: while a waiter spins in the queue it does not observe signals
@@ -134,6 +150,10 @@ frontier exit and ends the delegation at that call.
   `m` when a writer holds or waits.
 * **Downgrade** (`kd_downgrade_write`) is one atomic and, inside a section,
   is always handed back: the origin performs it natively.
+* **Write release** (`kd_up_write`) is one locked subtraction, as for the
+  mutex.
+* Writers publish whenever they can; there is no plain mode for the writer
+  queue (ARCHITECTURE 7a).
 * A nested rwsem writer acquire inside a section is queued and spun for like
   any nested lock while its holder runs, and handed back with the call
   pending once it would need to sleep.
@@ -142,8 +162,11 @@ frontier exit and ends the delegation at that call.
 
 | Topic | Native | kdlock |
 | --- | --- | --- |
-| Spin fairness | qspinlock pending bit + MCS | plain FIFO MCS |
-| Who runs a contended section | its own task | the queue head's CPU, if an image exists |
+| Spin fairness | qspinlock pending bit + MCS | the same |
+| Who runs a contended section | its own task | its own task in plain mode; the queue head's CPU in delegation mode, if an image exists |
+| Who serves the queue after a section is handed back (mutex, rwsem writer) | n/a | the task it was handed back to, when it releases (role exchange) |
+| RCU read-side depth during a delegated section | origin's | executor's, carried over to the origin |
+| Mutex handoff to a parked waiter | lock never free in between | released, then taken again for the waiter if nobody was faster |
 | Preempt count / IF during a delegated section | origin's | executor's, with the origin's logical IF and a transferred count |
 | Per-CPU data accessed in a section | origin's CPU | executor's CPU (except the three task-identity symbols) |
 | Mutex waiting | optimistic spin then sleep | MCS spin while owner runs, then park; handoff flag |
@@ -152,12 +175,37 @@ frontier exit and ends the delegation at that call.
 | `ww_mutex` deadlock avoidance | wound-wait or wait-die per class | wait-die for every class; callers see the same `-EDEADLK` / `-EALREADY` contract |
 | `rt_mutex`, lockdep, PREEMPT_RT, debug locks | supported | `rt_mutex` is untouched (it does not use the replaced types); Kconfig refuses RT, lockdep and lock debugging |
 
+## 6a. What the role exchange costs and gains
+
+A/B in one boot (`kd_xchg` 0 against every family offering; build #37, three
+rounds, medians, Mops; bodies in which every sixteenth write section is
+handed back). `bench/results/kdclaude/probes-20261112/ab37xchg.jsonl`.
+
+| Workers | mutex | rwsem writer | rwlock writer | spinlock |
+| ---: | --- | --- | --- | --- |
+| 4 | 3.118 → 3.116 | 2.646 → 2.618 | 3.249 → 3.235 | 4.436 → 4.435 |
+| 8 | 3.066 → 2.934 (−4%) | 3.258 → 3.111 (−5%, ranges overlap) | 4.177 → 4.070 (−3%) | 4.601 → 4.512 (−2%) |
+| 16 | 2.980 → 2.843 (−5%) | 2.552 → 3.049 (+19%) | 4.460 → 4.247 (−5%) | 4.591 → 4.391 (−4%) |
+| 32 | 1.476 → 1.627 (+10%) | 1.037 → 1.028 | 2.560 → 2.686 (+5%) | 2.470 → 2.417 (−2%) |
+
+The default (`kd_xchg=1`) therefore offers only for mutex and rwsem writer:
+that is where a section can block, and where the alternative is a combiner
+that ends up sleeping with the queue in its hands. The spinlock only lost.
+These bodies hand back 6% of their sections; a site that hands back rarely
+sees neither effect.
+
 ## 7. Tunables
 
 | Name | Default | Meaning |
 | --- | --- | --- |
 | `kd_batch` (core param, 0644) | 1024 | executions (served + passed over) per wait |
 | `kd_numa` (core param, 0644) | 1 | NUMA-ordered sessions |
+| `kd_adapt` (core param, 0644) | 1 | plain mode below the queue depths that follow; 0: always delegation mode |
+| `kd_deleg_enter` (core param, 0644) | 5 | spinlock: waiters behind a queue head that switch the lock to delegation mode |
+| `kd_deleg_enter_sleep` (core param, 0644) | 3 | the same for a mutex |
+| `kd_deleg_exit` (core param, 0644) | 2 | a session leaves delegation mode with fewer waiters queued behind it |
+| `kd_xchg` (core param, 0644) | 1 | role exchange after a handback: 0 never, 1 mutex and rwsem writer, 2 every family |
+| `KD_PROBE_PERIOD` / `KD_VOTE_PERIOD` | 128 / 32 | contended acquisitions per depth sample in plain mode / sections per sample in a session |
 | `KD_MAX_NODES` | 4 | queue nodes per CPU and class |
 | `KD_MAX_ROOTS` / `KD_MAX_DEPTH` | 4 / 3 | nesting bounds |
 | `KD_REQ_THRESHOLD` | 64 | contended waits before a site is requested |

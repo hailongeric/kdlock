@@ -65,6 +65,11 @@ DEFAULT_CONFIG = {
         "_find_first_bit", "_find_next_bit", "_find_first_zero_bit",
         "_find_next_zero_bit", "__list_add_valid_or_report",
         "__list_del_entry_valid_or_report",
+        # Preemptible RCU counts read-side nesting in the task structure,
+        # which only code running as that task may change. Called natively
+        # they count for the executor; the kernel carries the depth over to
+        # the origin (kd_rcu_sync() in kd_core.c).
+        "__rcu_read_lock", "__rcu_read_unlock",
     ],
     # Calls dropped from the copy.
     "skip": ["__fentry__", "__might_sleep", "__might_resched", "__might_fault"],
@@ -442,7 +447,12 @@ class Translator:
             self._note_tail(addr, ins.target)
             return ins, succs
 
-        ins.patch = self._plain_patch(cs)
+        try:
+            ins.patch = self._plain_patch(cs)
+        except TranslationError:
+            # An operand that cannot be relocated: the origin runs this
+            # instruction, the rest of the site stays delegable.
+            return frontier()
         return ins, ()
 
     @staticmethod
@@ -467,21 +477,46 @@ class Translator:
             if op.type != X.X86_OP_MEM:
                 continue
             mem = op.mem
-            enc = cs.encoding
             if mem.base == X.X86_REG_RIP:
                 target = (cs.address + cs.size + mem.disp) & MASK64
                 if mem.segment == X.X86_REG_GS:
                     target = self.subst.get(target, target)
-                if enc.disp_size != 4:
-                    raise TranslationError("rip-relative operand without disp32 at %#x" % cs.address)
-                return enc.disp_offset, target, False
+                return self._disp32_offset(cs, mem.disp, "rip-relative"), target, False
             if mem.segment == X.X86_REG_GS and mem.base == 0 and mem.index == 0:
                 target = self.subst.get(mem.disp & MASK64)
                 if target is not None:
-                    if enc.disp_size != 4:
-                        raise TranslationError("%%gs absolute operand without disp32 at %#x" % cs.address)
-                    return enc.disp_offset, target, True
+                    return self._disp32_offset(cs, mem.disp, "%gs absolute"), target, True
         return None
+
+    @staticmethod
+    def _disp32_offset(cs, disp, what):
+        """Offset of the 32-bit displacement of a rip-relative or absolute operand.
+
+        The decoder's own answer is used when it names a disp32 that holds
+        `disp`. With an operand-size prefix (for example
+        `or %ax, %gs:x(%rip)`) it does not, although the encoding is the
+        usual one: in 64-bit mode such an operand always carries a disp32,
+        directly behind ModRM (rip-relative) or behind ModRM and SIB
+        (absolute). The bytes are checked against `disp` before they are
+        trusted.
+        """
+        enc = cs.encoding
+        raw = bytes(cs.bytes)
+        want = struct.pack("<i", _signed(disp)) if _fits_simm32(disp) else None
+        cands = []
+        if enc.disp_size == 4:
+            cands.append(enc.disp_offset)
+        m = enc.modrm_offset
+        if m and want is not None:
+            modrm = raw[m]
+            if modrm & 0xC7 == 0x05:                    # mod 00, rm 101: disp32 follows
+                cands.append(m + 1)
+            elif modrm & 0xC7 == 0x04 and m + 1 < len(raw) and raw[m + 1] & 0x07 == 0x05:
+                cands.append(m + 2)                     # SIB with no base: disp32 follows
+        for off in cands:
+            if want is not None and raw[off:off + 4] == want:
+                return off
+        raise TranslationError("%s operand without a locatable disp32 at %#x" % (what, cs.address))
 
     @staticmethod
     def _split_mem_branch(cs, op):

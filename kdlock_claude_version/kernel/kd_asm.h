@@ -26,7 +26,7 @@
 #define KD_R_r15		120
 #define KD_R_rip		128
 #define KD_R_rflags		136
-#define KD_R_SIZE		232
+#define KD_R_SIZE		248
 
 /* struct kd_cpu */
 #define KD_CPU_task		0

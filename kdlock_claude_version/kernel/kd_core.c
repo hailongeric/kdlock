@@ -10,6 +10,7 @@
 #include <linux/sched.h>
 #include <linux/sched/task_stack.h>
 #include <linux/prefetch.h>
+#include <linux/rcupdate.h>
 #include <linux/gfp.h>
 #include <linux/mm.h>
 #include <linux/random.h>
@@ -144,7 +145,7 @@ static_assert(KD_MAX_NODES == 4);	/* two index bits in the tail encoding */
 static_assert(offsetof(struct kd_qlock, pending) == 1 && offsetof(struct kd_qlock, tail) == 2);
 static_assert(sizeof(struct kd_node) == SMP_CACHE_BYTES);
 static_assert(sizeof(struct kd_regs) <= 4 * SMP_CACHE_BYTES);	/* kd_session() prefetches four lines */
-static_assert(offsetof(struct kd_cpu, anc) + 12 <= KD_BLOCK);
+static_assert(offsetof(struct kd_cpu, xs_hint) + 8 <= KD_BLOCK);
 static_assert(!(offsetof(struct kd_cpu, nodes) % KD_BLOCK));
 
 /* Called from the stubs on the caller's own stack to drop the internal pin. */
@@ -221,6 +222,42 @@ static int kd_nested_acquire(unsigned int op, struct kd_regs *r, void *resume)
 	return KD_WAIT_SLEEP;
 }
 
+/*
+ * RCU read-side nesting, with preemptible RCU.
+ *
+ * rcu_read_lock() and rcu_read_unlock() count in the task structure, and a
+ * task's count is only ever changed by code running as that task, which
+ * includes the interrupt handlers on its CPU. A section that changed its
+ * origin's count from the executor's CPU would race with those handlers
+ * (seen as "Voluntary context switch within RCU read-side critical
+ * section" and a nonzero depth at the tick, build #38). The read-side
+ * section also has to be in force on the CPU that follows the protected
+ * pointers.
+ *
+ * So the copy calls __rcu_read_lock()/__rcu_read_unlock() natively (the
+ * translator lists them), where they count for the executor, and the
+ * count is carried like the preempt count: the packet says how many
+ * read-side sections the continuation is in (->rcu_depth), an executor
+ * holds that many on top of its own while it runs it, and the origin
+ * brings its own count in line when it resumes. The adjustments are real
+ * lock and unlock calls, so each task does its own exit processing.
+ *
+ * No grace period can end between an executor leaving and the origin
+ * catching up: both are non-preemptible throughout, and a CPU in that
+ * state reports no quiescent state.
+ *
+ * Make this task hold @target read-side sections more than @base.
+ */
+static void kd_rcu_sync(int base, int target)
+{
+	int have = rcu_preempt_depth() - base;
+
+	for (; have < target; have++)
+		rcu_read_lock();
+	for (; have > target; have--)
+		rcu_read_unlock();
+}
+
 static void kd_report_exit(struct kd_regs *r, unsigned int kind, unsigned long ip,
 			   unsigned long aux)
 {
@@ -281,7 +318,7 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	unsigned long flags, ip, aux;
 	unsigned int kind, op, level = r->nroots;
 	bool done = false, native = true, bh = false;
-	int pc0, d, i, ret;
+	int pc0, d, i, ret, rcu0;
 	u32 x;
 
 	local_save_flags(flags);
@@ -301,6 +338,8 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	 */
 	__preempt_count_add(KD_EXEC_PIN);
 	pc0 = preempt_count();
+	rcu0 = rcu_preempt_depth();
+	kd_rcu_sync(rcu0, r->rcu_depth);
 
 	r->roots[level] = root;
 	r->nroots = level + 1;
@@ -319,6 +358,8 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 		kd_jit_enter(r, code);
 
 		WRITE_ONCE(kc->task, NULL);
+		/* Whoever continues it, here or elsewhere, starts from this. */
+		r->rcu_depth = rcu_preempt_depth() - rcu0;
 		x = kc->exit_code;
 		ip = kc->exit_ip;
 		resume = (void *)kc->resume;
@@ -379,6 +420,7 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 			}
 			if (ret == KD_WAIT_RESUMED) {
 				/* Another combiner advanced the packet; read its verdict. */
+				kd_rcu_sync(rcu0, r->rcu_depth);
 				kd_stat_inc(kc, KD_STAT_NESTED_DELEGATED);
 				native = r->stop == KD_STOP_HANDBACK || !r->jit_resume;
 				if (r->released & BIT(level)) {
@@ -399,6 +441,7 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 		break;
 	}
 
+	kd_rcu_sync(rcu0, 0);
 	kc->cur = NULL;
 	kc->root = NULL;
 	kc->depth--;
@@ -453,6 +496,156 @@ static bool kd_ctx_compatible(const struct kd_regs *r)
 static __always_inline struct kd_regs *kd_packet_guess(struct kd_node *n)
 {
 	return &container_of(n, struct kd_cpu, nodes[0])->regs;
+}
+
+/* ---- role exchange after a handback ----------------------------------------- */
+
+/*
+ * When a section is handed back, its origin W continues on its own CPU and
+ * owns the lock, while the combiner C still has its own section to run.
+ * C does not just wait for W's release as queue head. It offers itself:
+ * its node, which already publishes C's own continuation, goes to state
+ * KD_N_HWAIT. W's release takes the head role over
+ * (kd_release_combine()): it links a node of its own in front of C's and
+ * runs a session, which serves C first and then the rest of the queue. The
+ * lock's data thus moves to W's CPU once and stays there, instead of going
+ * to W and back to C.
+ *
+ * How W's release learns of the offer without reading the lock word before
+ * it releases (that read can cost a cache transfer on the handover path):
+ * a spin-class holder stays on its CPU, so the offer is counted in its
+ * packet and from there in kd_cpu.xcount when it resumes. A sleepable-class
+ * holder may move, so there are two ways: its packet names the lock, which
+ * becomes kd_cpu.xs_hint on the CPU where it resumes, and a release on that
+ * CPU takes over before it releases; elsewhere the release, one atomic
+ * operation on the lock word, finds a mark (kd_family.xflag) in the value
+ * that operation returns and takes the lock again for the session if
+ * nobody was faster.
+ *
+ * The holder finds C's node in a small table keyed by lock address: the
+ * lock words have no room for a second node id, and a mutex holder may
+ * have changed CPU since it queued. An offer leaves KD_N_HWAIT only under
+ * the bucket lock, together with its table entry, in one of three ways:
+ *
+ *   -> KD_N_WAIT   the holder took over; C is an ordinary queued waiter
+ *   -> KD_N_HBACK  the holder declined (its release runs where a session
+ *                  cannot), or C withdrew because the holder stopped
+ *                  running (sleepable class); C is queue head as before
+ *
+ * kd_xchg selects who offers: 0 nobody, 1 the sleepable class (mutex and
+ * rwsem writer), 2 every class. The default is 1. That is where a section
+ * can block, and where a combiner that waits as queue head for a holder
+ * that blocked ends up sleeping with the queue in its hands. Measured (A/B
+ * in one boot, a sixteenth of the sections handed back, build #37; see
+ * bench/results/kdclaude): rwsem +19% at 16 workers, mutex +10% at 32, but
+ * mutex -4 to -5% at 8 and 16; the spinlock only lost (0 to -4%), and the
+ * rwlock gained 5% at 32 workers and lost 3 to 5% at 8 and 16.
+ */
+unsigned int kd_xchg __read_mostly = 1;
+core_param(kd_xchg, kd_xchg, uint, 0644);
+
+#define KD_XHEAD_BUCKETS	64	/* power of two */
+#define KD_XHEAD_WAYS		4
+
+struct kd_xhead_bucket {
+	struct kd_qlock	lock;
+	struct {
+		void		*root;
+		struct kd_node	*node;
+	} e[KD_XHEAD_WAYS];
+} ____cacheline_aligned_in_smp;
+
+static struct kd_xhead_bucket kd_xheads[KD_XHEAD_BUCKETS];
+
+/* Interrupts off: the bucket lock is also taken by releases in any context. */
+static struct kd_xhead_bucket *kd_xhead_lock(void *root, unsigned long *flags)
+{
+	struct kd_xhead_bucket *b =
+		&kd_xheads[hash_ptr(root, ilog2(KD_XHEAD_BUCKETS))];
+
+	local_irq_save(*flags);
+	if (unlikely(!kd_q_trylock_fifo(&b->lock)))
+		kd_q_lock_plain(&b->lock);
+	return b;
+}
+
+static void kd_xhead_unlock(struct kd_xhead_bucket *b, unsigned long flags)
+{
+	kd_q_unlock(&b->lock);
+	local_irq_restore(flags);
+}
+
+/*
+ * Queue head @me, which holds the grant on @root and is about to resume a
+ * waiter that leaves with it, offers itself to that waiter, whose packet is
+ * @r. Every change @me makes to the queue is done. False: no offer (nothing
+ * published by @me, table full).
+ */
+static bool kd_xhead_offer(struct kd_node *me, void *root, const struct kd_family *f,
+			   struct kd_regs *r, bool sleepable)
+{
+	struct kd_xhead_bucket *b;
+	unsigned long flags;
+	int i;
+
+	if (READ_ONCE(kd_xchg) < (sleepable ? 1 : 2) || !f || !me->entry)
+		return false;
+	b = kd_xhead_lock(root, &flags);
+	for (i = 0; i < KD_XHEAD_WAYS; i++) {
+		if (b->e[i].root)
+			continue;
+		b->e[i].root = root;
+		b->e[i].node = me;
+		WRITE_ONCE(me->state, KD_N_HWAIT);
+		if (f->xflag)
+			f->xflag(root, true);
+		if (sleepable)
+			r->xs_root = root;
+		else
+			r->xoffers++;
+		break;
+	}
+	kd_xhead_unlock(b, flags);
+	if (i == KD_XHEAD_WAYS)
+		return false;
+	raw_cpu_inc(kd_cpu.stat[KD_STAT_XCHG_OFFER]);
+	return true;
+}
+
+/*
+ * End the offer for @root by moving its node to state @to. @only limits
+ * that to one node (the offering head withdrawing its own offer). Returns
+ * the node, or NULL if there was no such offer any more.
+ */
+static struct kd_node *kd_xhead_settle(void *root, const struct kd_family *f,
+				       struct kd_node *only, u32 to)
+{
+	struct kd_xhead_bucket *b;
+	struct kd_node *n = NULL;
+	unsigned long flags;
+	int i;
+
+	b = kd_xhead_lock(root, &flags);
+	for (i = 0; i < KD_XHEAD_WAYS; i++) {
+		if (b->e[i].root != root || (only && b->e[i].node != only))
+			continue;
+		n = b->e[i].node;
+		b->e[i].root = NULL;
+		b->e[i].node = NULL;
+		if (f->xflag)
+			f->xflag(root, false);
+		smp_store_release(&n->state, to);
+		break;
+	}
+	kd_xhead_unlock(b, flags);
+	return n;
+}
+
+/* The holder cannot take over where it is (for example a downgrade). */
+void kd_release_decline(void *root, const struct kd_family *f)
+{
+	if (kd_xhead_settle(root, f, NULL, KD_N_HBACK))
+		raw_cpu_inc(kd_cpu.stat[KD_STAT_XCHG_DECLINED]);
 }
 
 /*
@@ -526,6 +719,10 @@ static __always_inline bool kd_probe_enter(struct kd_cpu *kc, struct kd_node *me
  * goes back to plain mode and *@deleg is cleared, so that the caller
  * promotes its successor accordingly.
  *
+ * Role exchange. If a waiter leaves with the grant and @xowner is given,
+ * @me offers itself to it (kd_xhead_offer()); *@xowner is then that
+ * waiter's task and @me is in state KD_N_HWAIT.
+ *
  * Sessions nest: this function is also reached from kd_exec_one() when the
  * executor becomes head of an inner lock's queue. kd_cpu.depth bounds that
  * recursion; at the limit the head just takes the lock. The passed-over
@@ -533,7 +730,8 @@ static __always_inline bool kd_probe_enter(struct kd_cpu *kc, struct kd_node *me
  */
 static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 		       const struct kd_family *f, bool sleepable,
-		       unsigned int *budget, bool *deleg)
+		       unsigned int *budget, bool *deleg,
+		       struct task_struct **xowner)
 {
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_node *n, *nn, *first = NULL, *last = NULL;
@@ -646,6 +844,18 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			}
 		}
 		kd_q_detach(q, me, n);
+		if (handed) {
+			/*
+			 * The origin may release, and take the head role over,
+			 * as soon as it is resumed: finish with the queue first.
+			 */
+			if (first) {
+				kd_q_splice_front(q, me, first, last);
+				first = NULL;
+			}
+			if (xowner && kd_xhead_offer(me, root, f, n->regs, sleepable))
+				*xowner = n->regs->task;
+		}
 		smp_store_release(&n->state, KD_N_RESUME);
 		++*budget;
 		if (!served++)
@@ -685,6 +895,13 @@ bool kd_can_offer(unsigned long rip)
 
 	if (!static_branch_likely(&kd_delegation) || !in_task() ||
 	    raw_cpu_read(kd_cpu.busy))
+		return false;
+	/*
+	 * A holder with an offer to answer (role exchange) must release that
+	 * lock itself, on this CPU; a combiner running its continuation would
+	 * not know about the offer.
+	 */
+	if (unlikely(raw_cpu_read(kd_cpu.xcount)))
 		return false;
 	site = kd_site_find(rip);
 	if (!site) {
@@ -727,6 +944,9 @@ static void kd_prepare_offer(struct kd_cpu *kc, struct kd_node *me)
 	r->bh_off = softirq_count() != 0;
 	r->nroots = 0;
 	r->released = 0;
+	r->xoffers = 0;
+	r->xs_root = NULL;
+	r->rcu_depth = rcu_preempt_depth();
 	me->regs = r;
 	kd_stat_inc(kc, KD_STAT_OFFERED);
 	return;
@@ -755,10 +975,18 @@ static void kd_node_offer(struct kd_cpu *kc, struct kd_node *me,
  */
 void kd_finish_resume(int pin)
 {
+	struct kd_cpu *kc;
 	long d;
 
 	local_irq_disable();
-	d = this_cpu_ptr(&kd_cpu)->regs.pc_delta - pin;
+	kc = this_cpu_ptr(&kd_cpu);
+	/* Offers of the combiners that handed this section back. */
+	kc->xcount += kc->regs.xoffers;
+	if (kc->regs.xs_root)
+		kc->xs_hint = kc->regs.xs_root;
+	/* RCU read-side sections the section entered or left for us. */
+	kd_rcu_sync(0, kc->regs.rcu_depth);
+	d = kc->regs.pc_delta - pin;
 	if (d > 0)
 		__preempt_count_add(d);
 	else if (d < 0)
@@ -910,6 +1138,7 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_node *me;
 	bool have_q = false, out = false, deleg = true;
+	struct task_struct *xowner;
 	unsigned int budget = 0;
 	int idx = kd_nr_nodes(kc);
 	u32 st;
@@ -962,9 +1191,33 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 			break;		/* nobody is queued behind us */
 		if (!deleg)
 			break;
-		if (!kd_session(q, me, root, f, false, &budget, &deleg))
+		xowner = NULL;
+		if (!kd_session(q, me, root, f, false, &budget, &deleg, &xowner))
 			break;
 		have_q = f && f->keeps_q;
+		if (!xowner)
+			continue;
+		/*
+		 * We offered ourselves to the origin that left with the grant
+		 * (it may have answered already). A spin-class holder cannot
+		 * stop running, so its release answers: it takes the head role
+		 * over, or declines.
+		 */
+		st = smp_cond_load_acquire(&me->state, VAL != KD_N_HWAIT);
+		if (st == KD_N_HBACK)
+			continue;
+		if (st == KD_N_WAIT)
+			st = smp_cond_load_acquire(&me->state, VAL != KD_N_WAIT);
+		if (st == KD_N_RESUME) {
+			me->entry = NULL;
+			kd_nr_nodes(kc)--;
+			kd_mode_note(q, true);
+			return KD_WAIT_RESUMED;
+		}
+		/* Promoted again; the taker dropped the queue lock it inherited. */
+		deleg = st == KD_N_HEAD_D || !READ_ONCE(kd_adapt) ||
+			(f && f->always_deleg);
+		have_q = false;
 	}
 	if (f && f->release)
 		f->release(root);
@@ -1012,7 +1265,8 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_qlock *q = &m->q;
 	struct kd_node *me;
-	bool have_q = false, deleg;
+	struct task_struct *xowner;
+	bool have_q = false, deleg, queued;
 	unsigned int budget = 0, spins;
 	u32 st;
 
@@ -1032,7 +1286,9 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 		kd_stat_inc(kc, KD_STAT_PLAIN);
 	}
 
-	if (kd_q_enqueue(q, me, true)) {
+	queued = kd_q_enqueue(q, me, true) != NULL;
+again:
+	if (queued) {
 		/*
 		 * The owner word shares its cache line with the queue tail that
 		 * every new waiter swaps, so a queued waiter looks at it only
@@ -1095,9 +1351,40 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 		/* A caller waiting on its own stack (plain mode) never combines. */
 		if (!deleg || !offer)
 			break;
-		if (!kd_session(q, me, root, f, true, &budget, &deleg))
+		xowner = NULL;
+		if (!kd_session(q, me, root, f, true, &budget, &deleg, &xowner))
 			break;
 		have_q = f->keeps_q;
+		if (!xowner)
+			continue;
+		/*
+		 * We offered ourselves to the origin that left with the grant
+		 * (it may have answered already). Unlike a spin-class holder it
+		 * may block; then the offer is withdrawn and this head goes on
+		 * as it would without one.
+		 */
+		for (spins = 1;; spins++) {
+			st = READ_ONCE(me->state);
+			if (st != KD_N_HWAIT)
+				break;
+			if (need_resched() ||
+			    (!(spins % KD_OWNER_POLL) && !owner_on_cpu(xowner))) {
+				if (kd_xhead_settle(root, f, me, KD_N_HBACK)) {
+					kd_stat_inc(kc, KD_STAT_XCHG_RETRACT);
+					break;
+				}
+				continue;	/* the holder was faster */
+			}
+			cpu_relax();
+		}
+		if (READ_ONCE(me->state) == KD_N_HBACK) {
+			WRITE_ONCE(me->state, KD_N_HEAD);
+			continue;
+		}
+		/* Taken over: an ordinary queued waiter behind the new head. */
+		have_q = false;
+		queued = true;
+		goto again;
 	}
 	if (f->set_owner)
 		f->set_owner(root, current);
@@ -1110,6 +1397,88 @@ sleep:
 	kd_q_pass(q, me, true, 0);
 	smp_store_release(&me->state, KD_N_FREE);
 	return KD_WAIT_SLEEP;
+}
+
+/*
+ * Release side of the role exchange. The caller holds the grant on @root
+ * and may have an offer to answer for it: kd_cpu.xcount is nonzero (spin
+ * class), kd_cpu.xs_hint names @root, or the release returned the family's
+ * mark and the caller took the lock again (sleepable class). @m is the
+ * queue mutex for the sleepable class, NULL for the spin class.
+ *
+ * Takes the head role over from the head that offered itself and serves
+ * the queue, that head first. Returns false when the caller still holds
+ * the grant and must release it as usual: after the session, or because
+ * nothing was taken over (declined, or the offer was withdrawn). Returns
+ * true when a section was handed back during the session, so the grant
+ * left with that waiter.
+ *
+ * A session needs task context and a node, and it must not start inside a
+ * delegated section (the release was called natively from generated code,
+ * whose executor state is live). Otherwise the offer is declined.
+ */
+bool kd_release_combine(struct kd_qlock *q, struct kd_mutex *m, void *root,
+			const struct kd_family *f)
+{
+	bool sleepable = m != NULL, deleg = true, handed, can, was_busy;
+	struct kd_node *me = NULL, *c;
+	unsigned int budget = 0;
+	struct kd_cpu *kc;
+
+	preempt_disable();
+	kc = this_cpu_ptr(&kd_cpu);
+	can = static_branch_likely(&kd_delegation) && in_task() &&
+	      !READ_ONCE(kc->task) && kc->depth < KD_MAX_DEPTH;
+	if (can) {
+		if (sleepable) {
+			me = kd_mnode_alloc(kc);
+		} else if (kd_nr_nodes(kc) < KD_MAX_NODES) {
+			int idx = kd_nr_nodes(kc)++;
+
+			barrier();
+			me = &kc->nodes[idx];
+			kd_node_init(me, smp_processor_id(), idx);
+		}
+		can = me != NULL;
+	}
+	c = kd_xhead_settle(root, f, NULL, can ? KD_N_WAIT : KD_N_HBACK);
+	if (c && !sleepable)
+		kc->xcount--;
+	if (!c || !can) {
+		if (me && sleepable)
+			smp_store_release(&me->state, KD_N_FREE);
+		else if (me)
+			kd_nr_nodes(kc)--;
+		if (c)
+			kd_stat_inc(kc, KD_STAT_XCHG_DECLINED);
+		preempt_enable();
+		return false;
+	}
+	kd_stat_inc(kc, KD_STAT_XCHG_TAKEN);
+
+	/* We are the queue head now, in front of the head that offered. */
+	me->entry = NULL;
+	me->nid = numa_node_id();
+	WRITE_ONCE(me->state, KD_N_HEAD);
+	WRITE_ONCE(me->next, c);
+	if (sleepable)
+		WRITE_ONCE(m->owner, current);
+	/* As during any session: this CPU must not publish meanwhile. */
+	was_busy = kc->busy;
+	kc->busy = 1;
+
+	handed = kd_session(q, me, root, f, sleepable, &budget, &deleg, NULL);
+
+	kc->busy = was_busy;
+	if (f->release)
+		f->release(root);
+	kd_q_pass(q, me, sleepable, deleg ? KD_N_HEAD_D : KD_N_HEAD);
+	if (sleepable)
+		smp_store_release(&me->state, KD_N_FREE);
+	else
+		kd_nr_nodes(kc)--;
+	preempt_enable();
+	return handed;
 }
 
 /* ---- init ------------------------------------------------------------------- */
