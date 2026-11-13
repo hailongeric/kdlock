@@ -5,6 +5,7 @@ creates no producer, publication, ownership or source-state objects.
 """
 
 from .ordinary_evidence import ORDINARY, ordinary_event, ordinary_lifetimes
+from .scene_evidence import scene6_ordering, scene6_prelude
 
 
 class ReaderCases:
@@ -379,11 +380,31 @@ class ReaderCases:
         self.control(f"scene {mode}")
         _, first = self.wait(lambda value: int(value["ready"], 16) == 31, f"reader{mode}-ready")
         tasks = [int(first[f"role{index}"], 16) for index in range(5)]
-        self.control("go 0")
-        self.wait(lambda value: int(value["held"], 16) & 1, f"reader{mode}-A-holder")
-        if mode not in (9, 10):
+        prelude = self.family == "rwsem" and mode == 6
+        object_a = int(first["object_a"], 16)
+        if prelude:
+            # H_B first holds an ordinary read of A. H_A must publish a real
+            # writer request before that read ends; an empty-word fast writer
+            # would give C_A its turn before W reaches the queue.
             self.control("go 1")
-            self.wait(lambda value: int(value["held"], 16) & 2, f"reader{mode}-B-holder")
+            self.wait(lambda value: any(self.has(row, "READ_ACQUIRE")
+                and row["task"] == tasks[1] and row["origin"] == tasks[1]
+                and row["object"] == object_a and row["flags"] == ORDINARY
+                for row in self.rows(begin)), "reader6-prelude-read-held")
+            self.control("go 0")
+            self.wait(lambda value: int(value["queued"], 16) & 1, "reader6-A-holder-enqueued")
+            self.control("prelude_release")
+            self.wait(lambda value: int(value["held"], 16) & 3 == 3
+                and any(self.has(row, "ORDINARY_RWSEM_DONE") and row["task"] == tasks[1]
+                        and row["object"] == object_a for row in self.rows(begin)),
+                "reader6-prelude-done-and-holders-granted")
+            scene6_prelude(self.rows(begin), self.has, tasks, object_a, image)
+        else:
+            self.control("go 0")
+            self.wait(lambda value: int(value["held"], 16) & 1, f"reader{mode}-A-holder")
+            if mode not in (9, 10):
+                self.control("go 1")
+                self.wait(lambda value: int(value["held"], 16) & 2, f"reader{mode}-B-holder")
         self.control("go 2")
         self.wait(lambda value: int(value["queued"], 16) & 4, f"reader{mode}-CA")
         self.control("go 4")
@@ -394,6 +415,13 @@ class ReaderCases:
             self.wait(lambda value: int(value["queued"], 16) & 8, f"reader{mode}-CB")
         else:
             self.control("go 1")
+        if prelude:
+            ordering = scene6_ordering(self.rows(begin), self.has, tasks, object_a, image,
+                                      before_release=True)
+            # Retain this established precondition even if later learning or
+            # generated completion fails. It is not a scene pass receipt.
+            self.results.setdefault("reader_scene6_ordering", []).append(
+                dict(start=begin, image=image, before_release=ordering))
         self.control("release 0")
         if mode in (6, 12):
             self.wait(lambda value: int(value["w_read_attempts"]) > 0, f"reader{mode}-shared-B-attempt")
@@ -430,6 +458,12 @@ class ReaderCases:
         proof = {"name": f"reader-source-{mode}", "mode": mode, "fixed_image": image,
                  "state": state, "roles": tasks, "credits": credits, "raw_status": raw,
                  "entries": entries, "start": begin, "end": len(self.observations())}
+        if prelude:
+            ordering = scene6_ordering(rows, self.has, tasks, object_a, image, before_release=False)
+            for request in (ordering["holder"], ordering["candidate"]):
+                self.retirement(rows, request, None, 1, image)
+            proof["queue_ordering"] = ordering
+            self.results["reader_scene6_ordering"][-1]["completed_ordering"] = ordering
         writer = next((row for row in rows if self.has(row, "ENQUEUE") and row["state"] == state
                        and row["origin"] == tasks[4] and row["task"] == tasks[4]), None)
         child = next((row for row in rows if mode == 11 and self.has(row, "ENQUEUE")

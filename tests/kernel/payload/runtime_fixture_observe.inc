@@ -18,6 +18,9 @@ static bool scene_release[SCENE_ROLES];
 static struct completion scene_release[SCENE_ROLES];
 #endif
 static unsigned long scene_queued, scene_held, scene_nodes[SCENE_ROLES], scene_child;
+#ifdef KD_FIXTURE_RWSEM
+static DECLARE_COMPLETION(scene_prelude_release);
+#endif
 
 static void notrace fixture_observe(void *unused, const struct kd_observation *event)
 {
@@ -173,6 +176,15 @@ static void notrace scene_single(struct fixture_worker *worker)
 	unsigned long flags;
 
 #ifdef KD_FIXTURE_RWSEM
+	if (requested_mode == 6 && worker->role == SCENE_HB) {
+		/* Ordinary read admission keeps H_A's ordinary write contended until
+		 * its real MCS request is observed. Finish this exact read before
+		 * proceeding to the independent B holder; no source body is replayed.
+		 */
+		fixture_read_acquire(&lock_a[0]);
+		wait_for_completion(&scene_prelude_release);
+		fixture_read_release(&lock_a[0]);
+	}
 	if ((requested_mode == 9 || requested_mode == 10) && worker->role == SCENE_HB) {
 		fixture_rw_probe_reader(worker);
 		return;
@@ -245,6 +257,9 @@ static int notrace start_scene(unsigned int mode)
 		scene_nodes[index] = 0;
 	}
 	scene_queued = 0; scene_held = 0; scene_child = 0;
+#ifdef KD_FIXTURE_RWSEM
+	reinit_completion(&scene_prelude_release);
+#endif
 	requested_mode = mode; requested_iterations = 1;
 #ifdef KD_FIXTURE_READERS
 	rw_probe_needed = mode == 9 || mode == 10 || mode == 11;

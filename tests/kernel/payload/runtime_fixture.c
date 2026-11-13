@@ -838,6 +838,12 @@ static ssize_t notrace control_write(struct file *file, const char __user *input
 		 scene_active && (mode == SCENE_HA || mode == SCENE_HB)) {
 		fixture_release_holder(mode); result = 0;
 	}
+#ifdef KD_FIXTURE_RWSEM
+	else if (sysfs_streq(buffer, "prelude_release") && scene_active &&
+		 requested_mode == RW_WRITE_READ) {
+		complete_all(&scene_prelude_release); result = 0;
+	}
+#endif
 #ifdef KD_FIXTURE_READERS
 	else if (sscanf(buffer, "readscene %u %n", &mode, &used) == 1 && used > 0 && !buffer[used])
 		result = start_rw_scene(mode);

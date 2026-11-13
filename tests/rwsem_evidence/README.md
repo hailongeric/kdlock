@@ -48,7 +48,7 @@ borrowed lock aliases also reject nonempty native grants in
 `kernel/linux_rwsem.c:120`. Removing one check would not restore the common path
 or establish release authority.
 
-Before this candidate, a contended outer read failed the fast probe and used
+Before this candidate, an eligible outer read whose fast probe failed used
 the existing managed shared-read slow path. That exact READ grant stayed on
 the canonical source state while the nested writer could be selected remotely.
 One restoration candidate for that prior supported path is to retain successful
@@ -65,3 +65,52 @@ That requires a reviewed core protocol and new kernel validation; merely
 removing `native_grants` checks establishes none of those obligations. Neither
 alternative is implemented here. This is an eligibility regression diagnosis,
 not evidence of an ordinary lock exclusion failure.
+
+Scene 7 starts W while A is held but does not acknowledge its failed probe or
+read-wait publication before releasing A. Its outer read is not forced slow.
+An uncontended outer read already kept the nested writer local before the
+split; the failed-probe alternative would not cover that case. No scene 7
+semantics or proof requirements change in the scene 6 repair below.
+
+`f3b1d75b-reader-scene6.bin` preserves the complete, unchanged 183,880-byte
+capture from the subsequent **failed** rerun with test revision `5f08f18b`.
+Its 14 oracle checks and five ordinary-reader checks passed. The first generated
+reader learning pass failed in scene 6, write A followed by read B; scene 7 was
+never reached. The core/release/boot remain those recorded above. Kernel Build ID
+was `4fec402f74cf0f38be6f72b0322d14c9f68ada0b`; the fixture module SHA-256 was
+`668e60f931b78cb106ec94525286fd0e505aefecc8eb34e6da29d5ff1bafd8a0`.
+
+- Header: version 1, 20 fields, capacity 65,536, 1,149 events, zero overflow.
+- Capture SHA-256: `c01371d4ca68bbff9f02b8acf9063d5fb41d5193460f2a9b881c98dcf651a65b`.
+- Original directory: `/tmp/kdlock-rwsem-split-f3b1d75b-20261113-01/oracle-5f08f18b-01`.
+- Scene 6 begins at event 1078. H_A's ordinary fast write has no queue node;
+  C_A enqueues with no predecessor at 1082. W enqueues behind C_A as OFFERED at
+  1085. C_A and W receive local grants at 1091/1107; W's managed read uses
+  1116/1118. The scene has no SELECT_PROXY or JIT_ENTER.
+
+The cohort check precedes the physical writer wait and is not retried there.
+With an ordinary fast holder outside MCS, C_A can pass that check before W
+links. Holding A therefore no longer supplies the old fixture's queue ordering.
+This is a concrete admission-topology change and a missing fixture precondition,
+not evidence that W's offer was ineligible or its reader exclusion failed.
+
+The test-only scene 6 repair reuses H_B for an ordinary read prelude on A. The
+runner observes that read, starts H_A, waits for H_A's actual enqueue, then
+releases the prelude through its own completion gate. H_B releases its exact
+read before acquiring B normally. Both the prelude's DONE and H_A's real grant
+must precede C_A's enqueue. Their relative order is unrestricted: reader DONE
+is not another task's admission point. Before H_A releases, the oracle proves
+the exact offered chain H_A -> C_A -> W and retains that precondition separately
+from any scene pass. Final evidence must show H_A's handoff to C_A, C_A's proxy
+selection of W, and the existing generated entry, continuation, effects and
+retirement proofs, including H_A and C_A's managed records. No runtime/core
+code, queue selection policy, original source body or reader semantics change.
+
+The added focused inputs reject the old live failure, missing or mismatched
+prelude retirement, wrong queue predecessors/identities/images, early holder
+release, and local selection substituted for proxy selection. Positive inputs
+are explicitly synthetic and allow DONE either side of H_A's grant and ordinary
+record reuse afterward. These additions have source review only: no build,
+unittest or VM run was performed by the source session. The benchmark session
+owns the kernel15 module build and rerun; successful repaired execution remains
+unverified.

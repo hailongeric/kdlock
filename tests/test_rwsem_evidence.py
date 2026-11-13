@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tests/kernel'))
 from rwsem.reader_cases import ReaderCases
 from rwsem.ordinary_evidence import ORDINARY, ordinary_lifetimes
+from rwsem.scene_evidence import scene6_ordering
 
 
 def runner_tuple(name):
@@ -217,6 +218,152 @@ class RwsemEvidence(unittest.TestCase):
         self.assertTrue(self.cases.credits(ordered([acquire, release, done]))[0]['fast_local'])
         with self.assertRaises(AssertionError):
             self.cases.credits(ordered([acquire, release]))
+
+
+class RwsemSceneOrdering(unittest.TestCase):
+    """The positive ordering is synthetic; the old live scene remains failed."""
+
+    def setUp(self):
+        data = (ROOT / 'tests/rwsem_evidence/f3b1d75b-reader-scene6.bin').read_bytes()
+        self.assertEqual(hashlib.sha256(data).hexdigest(),
+                         'c01371d4ca68bbff9f02b8acf9063d5fb41d5193460f2a9b881c98dcf651a65b')
+        self.assertEqual(struct.unpack_from('=5Q', data), (1, 20, 65536, 1149, 0))
+        self.assertEqual(len(data), 40 + 1149 * 160)
+        self.trace = [dict(zip(FIELDS, struct.unpack_from('=20Q', data, 40 + index * 160)), index=index)
+                      for index in range(1149)]
+        self.tasks = [self.trace[index]['task'] for index in (1078, 1079, 1082, 1088, 1085)]
+        self.object_a = self.trace[1078]['object']
+        self.image = self.trace[1084]['image']
+
+    def synthetic(self, done_after_grant=False):
+        # H_B's prelude uses actual ordinary row shapes, with a distinct cold
+        # identity. H_A's queued rows use the retained C_A request shapes.
+        reader = [dict(self.trace[index], task=self.tasks[1], origin=self.tasks[1],
+                       state=self.trace[1079]['state']) for index in (24, 28, 29)]
+        for row in reader:
+            if row['owner_task']:
+                row['owner_task'] = self.tasks[1]
+        holder = [dict(self.trace[index]) for index in (1080, 1081, 1082, 1091, 1093)]
+        for row in holder:
+            row.update(task=self.tasks[0], origin=self.tasks[0], state=0x1000,
+                       node=0x1100, acquisition=0x1200)
+            if row['owner_task']:
+                row['owner_task'] = self.tasks[0]
+            if row['owner']:
+                row['owner'] = 0x1300
+        holder[0]['related'], holder[0]['parent'] = 0x1400, 0x1200
+        holder[2]['related'], holder[3]['related'], holder[4]['related'] = 0, 0x1100, 0x1500
+        candidate = [dict(self.trace[index]) for index in (1080, 1081, 1082)]
+        candidate[-1]['related'] = holder[2]['node']
+        waiter = [dict(self.trace[index]) for index in (1083, 1084, 1085)]
+        middle = ([reader[2]] + holder[3:] if not done_after_grant
+                  else holder[3:] + [reader[2]])
+        prefix = ordered([reader[0]] + holder[:3] + [reader[1]] + middle + candidate + waiter)
+        released = dict(self.trace[1096], task=self.tasks[0], state=0x1000,
+                        acquisition=0x1200, owner=0x1300, owner_task=self.tasks[0], related=0x1500)
+        departed = dict(self.trace[1100], task=self.tasks[0], origin=self.tasks[0], state=0x1000,
+                        node=0x1100, acquisition=0x1200, owner=0x1300, owner_task=self.tasks[0],
+                        related=candidate[-1]['node'])
+        selected = dict(self.trace[1107], kind=KINDS['SELECT_PROXY'], task=self.tasks[2],
+                        owner_task=self.tasks[2], related=candidate[-1]['node'], phase=3)
+        return prefix, ordered(prefix + [released, departed, selected])
+
+    def check(self, rows, before_release=True):
+        return scene6_ordering(rows, has, self.tasks, self.object_a, self.image,
+                               before_release=before_release)
+
+    def test_retained_scene6_did_not_have_a_queue_backed_holder(self):
+        rows = self.trace[1078:]
+        self.assertEqual(self.trace[1082]['related'], 0)
+        self.assertEqual(self.trace[1085]['related'], self.trace[1082]['node'])
+        self.assertEqual(self.trace[1085]['phase'], 1)
+        self.assertFalse(any(has(row, 'SELECT_PROXY') or has(row, 'JIT_ENTER') for row in rows))
+        with self.assertRaisesRegex(AssertionError, 'ordinary prelude acquisition'):
+            self.check(rows, before_release=False)
+
+    def test_prelude_done_and_holder_grant_both_precede_candidate(self):
+        for delayed_done in (False, True):
+            with self.subTest(delayed_done=delayed_done):
+                prefix, complete = self.synthetic(delayed_done)
+                proof = self.check(prefix)
+                self.assertLess(proof['reader']['free']['index'], proof['candidate']['index'])
+                self.assertLess(proof['grant']['index'], proof['candidate']['index'])
+                self.assertEqual(self.check(complete, before_release=False)['proxy_selected']['task'],
+                                 self.tasks[2])
+
+    def test_prelude_requires_exact_read_completion_and_holder_grant(self):
+        prefix, _ = self.synthetic()
+        for kind in ('ORDINARY_RWSEM_DONE', 'READ_RELEASE', 'GRANT', 'SELECT_LOCAL', 'FRAME_PREPARE'):
+            with self.subTest(missing=kind), self.assertRaises(AssertionError):
+                self.check([row for row in prefix if not has(row, kind)])
+        for field in ('state', 'origin', 'acquisition', 'object', 'related', 'phase', 'flags'):
+            rows = copy.deepcopy(prefix)
+            next(row for row in rows if has(row, 'ORDINARY_RWSEM_DONE'))[field] += 1
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                self.check(rows)
+
+    def test_prelude_record_may_be_reused_only_after_its_exact_done(self):
+        prefix, _ = self.synthetic()
+        read = next(row for row in prefix if has(row, 'READ_ACQUIRE'))
+        reused = dict(self.trace[1079], acquisition=read['acquisition'], related=read['acquisition'],
+                      owner=read['acquisition'], source_user=read['acquisition'], state=read['state'])
+        # H_B's later B grant stays open while the prelude itself is verified.
+        self.check(ordered(prefix + [reused]))
+        rows = copy.deepcopy(prefix)
+        rows.insert(next(i for i, row in enumerate(rows) if has(row, 'ORDINARY_RWSEM_DONE')), reused)
+        with self.assertRaisesRegex(AssertionError, 'reused before final'):
+            self.check(ordered(rows))
+
+    def test_wrong_predecessor_offer_identity_or_image_cannot_prove_queue(self):
+        prefix, _ = self.synthetic()
+        for task in (self.tasks[2], self.tasks[4]):
+            for field, value in (('related', 0), ('node', 0), ('state', 0), ('acquisition', 0),
+                                  ('phase', 2), ('flags', 1)):
+                rows = copy.deepcopy(prefix)
+                next(row for row in rows if has(row, 'ENQUEUE') and row['task'] == task)[field] = value
+                with self.subTest(task=task, field=field), self.assertRaises(AssertionError):
+                    self.check(rows)
+            rows = copy.deepcopy(prefix)
+            next(row for row in rows if has(row, 'FRAME_PREPARE') and row['task'] == task)['image'] += 1
+            with self.subTest(task=task, field='image'), self.assertRaises(AssertionError):
+                self.check(rows)
+            duplicated = next(row for row in prefix if has(row, 'ENQUEUE') and row['task'] == task)
+            with self.subTest(task=task, duplicate_offer=True), self.assertRaises(AssertionError):
+                self.check(ordered(prefix + [duplicated]))
+
+    def test_candidate_cannot_start_before_reader_retirement_or_holder_grant(self):
+        prefix, _ = self.synthetic()
+        for kind in ('ORDINARY_RWSEM_DONE', 'GRANT'):
+            rows = copy.deepcopy(prefix)
+            moved = next(row for row in rows if has(row, kind))
+            rows.remove(moved)
+            rows.append(moved)
+            with self.subTest(kind=kind), self.assertRaises(AssertionError):
+                self.check(ordered(rows))
+
+    def test_early_holder_release_and_local_successor_do_not_satisfy_proxy_proof(self):
+        prefix, complete = self.synthetic()
+        with self.assertRaisesRegex(AssertionError, 'before the release gate'):
+            self.check(complete)
+        for field, value in (('kind', KINDS['SELECT_LOCAL']), ('task', self.tasks[4]),
+                              ('related', 0), ('acquisition', 1)):
+            rows = copy.deepcopy(complete)
+            rows[-1][field] = value
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                self.check(rows, before_release=False)
+        for position in (0, len(prefix) - 1):
+            rows = copy.deepcopy(complete)
+            release = rows.pop(len(prefix))
+            rows.insert(position, release)
+            with self.subTest(position=position), self.assertRaises(AssertionError):
+                self.check(ordered(rows), before_release=False)
+        for kind, field in (('RELEASE_REQUEST', 'owner'), ('RELEASE_REQUEST', 'related'),
+                             ('QUEUE_DONE', 'related'), ('QUEUE_DONE', 'acquisition'),
+                             ('QUEUE_DONE', 'owner_task'), ('QUEUE_DONE', 'phase')):
+            rows = copy.deepcopy(complete)
+            next(row for row in rows if has(row, kind))[field] += 1
+            with self.subTest(kind=kind, field=field), self.assertRaises(AssertionError):
+                self.check(rows, before_release=False)
 
 
 if __name__ == '__main__':
