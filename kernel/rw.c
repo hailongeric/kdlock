@@ -356,6 +356,7 @@ int kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 	DEFINE_WAIT(wait);
 	bool atomic_wait = waiter->atomic_spin;
 	bool registered = false;
+	bool wait_prepared = false;
 	bool cancelled = false;
 
 	BUG_ON(!rw_context(atomic_wait));
@@ -382,6 +383,21 @@ int kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 			BUG_ON(result);
 		}
 		raw_spin_lock(&lock->guard);
+		/* The MCS turn and owner progress already precede this admission.
+		 * Only the first ordinary probe can avoid a wait entry; a later
+		 * iteration must retain its registered wait and final cleanup.
+		 * Cohort candidates retain their existing cancellation checks.
+		 */
+		if (!atomic_wait && !wait_prepared &&
+		    waiter->wait_state == TASK_UNINTERRUPTIBLE && !batch->candidate &&
+		    waiter->admission == KD_MUTEX_ADMISSION_PENDING && !blocked && !lock->readers) {
+			lock->writer = batch;
+			waiter->admission = KD_MUTEX_ADMISSION_GRANTED;
+			atomic_set(&waiter->cancel_users, 0);
+			lock->writer_pending = false;
+			raw_spin_unlock(&lock->guard);
+			return 0;
+		}
 		if (waiter->wait_state == TASK_KILLABLE && waiter->requester == current &&
 		    !waiter->cancel_requested)
 			sleep_state = TASK_KILLABLE;
@@ -392,8 +408,10 @@ int kd_rw_writer_enter(struct kd_rw *lock, struct kd_mutex_batch *batch,
 		/* Publish the physical wait before checking origin's request. A fatal
 		 * signal on W either wakes this registered task or precedes this check.
 		 */
-		if (!atomic_wait)
+		if (!atomic_wait) {
 			prepare_to_wait(&lock->changed, &wait, sleep_state);
+			wait_prepared = true;
+		}
 		raw_spin_lock(&lock->guard);
 		note_candidate_cancel(batch);
 		if (waiter->admission == KD_MUTEX_ADMISSION_CANCELLED) {
