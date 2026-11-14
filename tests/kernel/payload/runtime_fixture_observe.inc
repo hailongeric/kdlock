@@ -36,6 +36,10 @@ static void notrace fixture_observe(void *unused, const struct kd_observation *e
 	if (READ_ONCE(scene_active) && event->kind == KD_OBS_ENQUEUE) {
 		for (role = 0; role < SCENE_ROLES; ++role) {
 			fixture_lock_t *lock = role == SCENE_HB || role == SCENE_CB ? &lock_b[0] : &lock_a[0];
+#ifdef KD_FIXTURE_SPIN
+			if (requested_mode == 0 && role == SCENE_CB)
+				lock = &lock_a[0];
+#endif
 
 			if (event->task == (unsigned long)READ_ONCE(workers[role].task) &&
 			    event->origin == event->task && event->object == (unsigned long)fixture_queue(lock)) {
@@ -230,7 +234,10 @@ static int notrace start_scene(unsigned int mode)
 	unsigned int index;
 	int result;
 
-	if (!runtime || worker_count || mode < 1 ||
+	if (!runtime || worker_count ||
+#ifndef KD_FIXTURE_SPIN
+	    mode < 1 ||
+#endif
 #ifdef KD_FIXTURE_READERS
 	    mode > FIXTURE_MAX_MODE ||
 #elif defined(KD_FIXTURE_ATOMIC)

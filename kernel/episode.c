@@ -521,6 +521,8 @@ static int prepare(struct kd_episode_resources *resources,
 		(physical->mutex_fast.lock || physical->rwsem_fast.lock ||
 		 !list_empty(&physical->native_grants)));
 	bool prepared = false;
+	bool spin_batch_ready;
+	struct kd_source_grant *existing;
 	int error, unwind;
 
 	*result = NULL;
@@ -530,6 +532,13 @@ static int prepare(struct kd_episode_resources *resources,
 	frame = &resources->frames[slot - resources->pool->slots];
 	frame_init(frame, resources, slot, parent);
 	frame->operation = operation;
+	spin_batch_ready = resources->config.family == KD_LOCK_FAMILY_SPIN && !parent && !local_only;
+	if (spin_batch_ready)
+		list_for_each_entry(existing, &resources->pool->state->grants, state_link)
+			if (existing->logical_open) {
+				spin_batch_ready = false;
+				break;
+			}
 	error = hold_user(frame, &frame->control_user, &frame->control_held,
 			  KD_REQUEST_USER_CONTROL);
 	if (error)
@@ -612,6 +621,10 @@ static int prepare(struct kd_episode_resources *resources,
 					frame->source_image && !local_only);
 	if (error)
 		goto failed;
+	/* Only root ordinary spin requests may join a multi-origin batch.
+	 * A nested request stays on the existing local/recursive protocol.
+	 */
+	slot->call.node.spin_batch_ready = spin_batch_ready && frame->source_image;
 	prepared = true;
 	observe_frame(frame, KD_OBS_FRAME_PREPARE,
 		.image = (unsigned long)(frame->source_image ? slot->source_use.image : NULL),
@@ -734,6 +747,16 @@ static enum kd_mutex_outcome forward(struct kd_episode_frame *frame,
 	struct kd_thread_state *state = frame->resources->pool->state;
 	int result;
 
+	/* Stop spin admission before any miss/context handback publishes W.
+	 * A completed logical unlock uses the separate success return below.
+	 */
+	if (frame->slot->call.node.batch && frame->slot->call.node.batch->spin_batch) {
+		struct kd_mutex_release_owner *owner = &frame->slot->call.node.batch->release_owner;
+
+		raw_spin_lock(&owner->guard);
+		owner->close_requested = true;
+		raw_spin_unlock(&owner->guard);
+	}
 	report(frame, image, state, entry_result, state->exit_image != NULL);
 	if (!kd_state_is_jit_current(state, *binding))
 		return KD_MUTEX_OUTCOME_UNSET;
@@ -925,6 +948,8 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 				.result = predicate);
 			continue;
 		}
+		if (kd_operation_is_lock(cached.kind) && call->node.batch->spin_batch)
+			return forward(frame, binding, image, 0);
 		if (kd_operation_is_lock(cached.kind)) {
 			struct kd_episode_frame *child;
 			struct kd_execution_binding *child_binding = *binding;
@@ -1051,6 +1076,18 @@ static enum kd_mutex_outcome run(struct kd_jit_mutex_call *call,
 			 */
 			if (retained_read)
 				return forward(frame, binding, image, 0);
+			if (target == frame && active->spin_batch) {
+				/* The source CALL/RET is complete once, but physical ACK
+				 * still retains this acquisition and its backing storage.
+				 * Publish the exact post-unlock continuation to W without
+				 * executing its next operation on the combiner.
+				 */
+				result = kd_jit_transfer_origin(state, *binding,
+					&frame->root->slot->native_return);
+				BUG_ON(result);
+				*binding = NULL;
+				return KD_MUTEX_PROXY_ORIGIN_SUFFIX;
+			}
 			continue;
 		}
 		if (kd_operation_is_mode_change(cached.kind)) {

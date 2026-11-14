@@ -44,5 +44,7 @@ kdlock_rebuild-y := \
 	include/mutex_entry.o \
 	include/native_resume.o
 
+kdlock_rebuild-$(CONFIG_KDLOCK_RW_WAIT_DIAG) += kernel/rw_wait_diag.o
+
 # include/wrapper.S is an unexpanded per-image template, never a core object.
 # Generated image assembly/metadata has its own caller-owned build/provider.

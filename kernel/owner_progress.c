@@ -248,6 +248,12 @@ int kd_owner_progress_run(struct kd_owner_progress *progress, bool *blocked)
 
 		if (!item->control_stopped || !item->terminal_foreign)
 			continue;
+		/* The active spin driver retains this owner and explicitly drains
+		 * physical duties before departing. An earlier completed origin
+		 * must not prevent the driver from executing the next batch body.
+		 */
+		if (item->batch->spin_batch && item->batch->cohort_active)
+			continue;
 		phase = phase_locked(item->batch);
 		if (phase != KD_MUTEX_OWNER_PHYSICALLY_RELEASED &&
 		    phase != KD_MUTEX_OWNER_RETIRED)

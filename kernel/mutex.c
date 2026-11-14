@@ -19,15 +19,22 @@
 #include <linux/interrupt.h>
 #include <linux/irqflags.h>
 #include <linux/preempt.h>
+#include <linux/percpu.h>
 #include <asm/cmpxchg.h>
 #include <asm/processor.h>
 
 #include "mutex.h"
+#include "spin_policy.h"
+
+static DEFINE_PER_CPU(struct kd_spin_contention_cache, kd_spin_contention_state);
 #include "observation.h"
 #include "state.h"
 #include "rw.h"
 #include "rw_native.h"
 #include "rw_admission.h"
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+#include "rw_wait_diag.h"
+#endif
 
 static void rw_queue_get(struct kd_mutex_node *node)
 {
@@ -79,6 +86,10 @@ static void observe_node(unsigned long kind, struct kd_mutex_node *node,
 static void publish_condition(struct kd_mutex_node *node, int *condition)
 {
 	struct task_struct *task;
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+	struct kd_rw_wait_diag_row *diag = condition == &node->turn ?
+		kd_rw_wait_diag_current(node->rw) : NULL;
+#endif
 
 	if (node->atomic_spin) {
 		smp_store_release(condition, 1);
@@ -88,7 +99,13 @@ static void publish_condition(struct kd_mutex_node *node, int *condition)
 
 	get_task_struct(task);
 	smp_store_release(condition, 1);
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+	/* diag was captured before publication. No node access follows it. */
+	kd_rw_wait_diag_add(diag, KD_RW_DIAG_TURN_WAKE_REQUEST, 1);
+	kd_rw_wait_diag_add(diag, KD_RW_DIAG_TURN_WAKE_ACCEPT, wake_up_process(task));
+#else
 	wake_up_process(task);
+#endif
 	put_task_struct(task);
 }
 
@@ -472,6 +489,7 @@ void kd_mutex_batch_init(struct kd_mutex_batch *batch)
 	batch->initialized = false;
 	batch->head_retired = false;
 	batch->cohort_active = false;
+	batch->spin_batch = false;
 	batch->candidate = NULL;
 	batch->rw = NULL;
 	batch->conversion = NULL;
@@ -501,6 +519,9 @@ int kd_mutex_node_init(struct kd_mutex_node *node,
 	node->wait_started = false;
 	node->source_granted = false;
 	node->ready = ready;
+	node->spin_batch_ready = false;
+	node->spin_batch_allowed = false;
+	node->spin_batch_probe = false;
 	node->atomic_spin = false;
 	node->wait_state = TASK_UNINTERRUPTIBLE;
 	node->admission = KD_MUTEX_ADMISSION_PENDING;
@@ -579,6 +600,14 @@ static void link_request(struct kd_mutex *lock, struct kd_mutex_node *node,
 	/* Close reader admission before the first externally visible link. */
 	rw_queue_get(node);
 	previous = xchg(&lock->tail, node);
+	/* Only the first publication counts as a source acquisition. The task
+	 * is pinned; IRQ/NMI callers are outside this plain spin contract.
+	 * A predecessor means this acquisition entered the contended MCS path.
+	 */
+	if (node->atomic_spin && !node->rw && !node->wait_started)
+		node->spin_batch_allowed = kd_spin_contention_sample(
+			this_cpu_ptr(&kd_spin_contention_state), lock, kd_spin_policy_epoch(lock),
+			previous != NULL, &node->spin_batch_probe);
 	if (previous) {
 		/* Final previous-node access: the consumer may detach after this. */
 		smp_store_release(&previous->next, node);
@@ -731,6 +760,8 @@ static int start_batch(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 	batch->rw = node->rw;
 	batch->conversion = NULL;
 	batch->candidate = candidate;
+	batch->spin_batch = candidate && node->atomic_spin && !node->rw &&
+		node->service_policy == KD_MUTEX_SERVICE_DEFAULT;
 	/* Constructor writes remain private until writer_enter publishes the
 	 * physical family grant; diagnostics then see fully initialized control.
 	 */
@@ -738,7 +769,7 @@ static int start_batch(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 					     mcs_physical_unlock, batch->lock,
 					     node->atomic_spin);
 	BUG_ON(result);
-	batch->release_owner.single_grant = node->atomic_spin &&
+	batch->release_owner.single_grant = node->atomic_spin && !batch->spin_batch &&
 		node->service_policy == KD_MUTEX_SERVICE_DEFAULT;
 	batch->release_owner.early_release = node->atomic_spin || node->synchronous_outer;
 	if (batch->rw) {
@@ -779,53 +810,101 @@ static void finish_cancelled_turn(struct kd_mutex_node *node, struct kd_mutex_ba
 	cancel_queue_depart(node);
 }
 
-/*
- * The immediate successor's link store ended its use of our old head.
- * Its node becomes the physical head while we run its source. Our own
- * source offer stays stopped and ungranted until we rejoin for a new turn.
- */
-static bool spin_serve_successor(struct kd_mutex_node *local)
+/* Queue membership retains these immutable offer fields. Do not pass a hole. */
+static bool spin_batch_offer(struct kd_mutex_node *node, struct kd_mutex *lock)
 {
-	struct kd_mutex_node *node = smp_load_acquire(&local->next);
-	struct kd_mutex_batch *batch;
-	struct task_struct *origin;
-	struct kd_thread_state *state;
-	enum kd_mutex_outcome outcome;
+	return node && node->atomic_spin && !node->rw && node->lock == lock &&
+		node->service_policy == KD_MUTEX_SERVICE_DEFAULT && node->spin_batch_ready &&
+		node->ready && node->possible_batch && node->ops && node->ops->execute_proxy &&
+		atomic_read(&node->selection) == KD_MUTEX_OFFERED;
+}
 
-	if (!node || !node->atomic_spin ||
+/* C withdraws once. W1's retained node anchors one physical acquisition;
+ * later W nodes can detach even at the tail. Only actual release ends it.
+ */
+static bool spin_serve_batch(struct kd_mutex_node *local, unsigned int limit)
+{
+	struct kd_mutex_node *node;
+	struct kd_mutex_batch *batch;
+	unsigned int served = 0;
+
+	/* Intensity is CPU-local history, not queue depth. Only an occasional
+	 * heavy observation authorizes this two-link opportunity sample. Never
+	 * wait for links or require both observed requests to be JIT eligible.
+	 */
+	if (!local->spin_batch_allowed || !local->spin_batch_probe || limit < 2)
+		return false;
+	node = smp_load_acquire(&local->next);
+	if (!node || !smp_load_acquire(&node->next))
+		return false;
+	if (!spin_batch_offer(node, local->lock) ||
 	    atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
 			   KD_MUTEX_SELECTED_PROXY) != KD_MUTEX_OFFERED)
 		return false;
-	BUG_ON(!node->ready || !node->ops || !node->ops->execute_proxy ||
-	       !node->possible_batch || node->lock != local->lock);
 	WRITE_ONCE(local->next, NULL);
 	WRITE_ONCE(local->turn, 0);
 	batch = node->possible_batch;
-	BUG_ON(start_batch(node, batch, 0, NULL));
-	observe_node(KD_OBS_SELECT_PROXY, node, batch, local,
-		     KD_MUTEX_SELECTED_PROXY, 0);
-	bind_grant(batch, node);
-	batch->serving = node;
-	state = node->state;
-	origin = state->origin;
-	outcome = node->ops->execute_proxy(node, node->context);
-	BUG_ON(outcome < KD_MUTEX_PROXY_OPERATION_DONE ||
-	       outcome > KD_MUTEX_PROXY_UNWIND_PARENT);
-	node->outcome = outcome;
-	kd_observe(KD_OBS_PROXY_RETURN, .state = (unsigned long)state,
-		.origin = (unsigned long)origin, .node = (unsigned long)node,
-		.acquisition = (unsigned long)node->acquisition,
-		.owner = (unsigned long)&batch->release_owner,
-		.owner_task = (unsigned long)batch->release_owner.task,
-		.object = (unsigned long)node->lock, .related = (unsigned long)local,
-		.phase = KD_MUTEX_SELECTED_PROXY, .result = outcome,
-		.flags = node_observation_flags(node));
-	batch->serving = NULL;
-	/* The requester may need to run its native suffix to unlock this grant. */
-	publish_condition(node, &node->result_ready);
-	/* Stay off the queue while the native suffix can still need this task
-	 * to release a borrowed grant. W may release this lock and acquire it
-	 * again before unlocking another grant owned here.
+	BUG_ON(start_batch(node, batch, limit, local));
+	batch->cohort_active = true;
+	for (;;) {
+		struct kd_thread_state *state = node->state;
+		struct task_struct *origin = state->origin;
+		enum kd_mutex_outcome outcome;
+		bool completed;
+
+		observe_node(KD_OBS_SELECT_PROXY, node, batch, local,
+			KD_MUTEX_SELECTED_PROXY, 0);
+		bind_grant(batch, node);
+		batch->serving = node;
+		batch->proxy_served++;
+		outcome = node->ops->execute_proxy(node, node->context);
+		BUG_ON(outcome < KD_MUTEX_PROXY_OPERATION_DONE ||
+		       outcome > KD_MUTEX_PROXY_UNWIND_PARENT);
+		node->outcome = outcome;
+		kd_observe(KD_OBS_PROXY_RETURN, .state = (unsigned long)state,
+			.origin = (unsigned long)origin, .node = (unsigned long)node,
+			.acquisition = (unsigned long)node->acquisition,
+			.owner = (unsigned long)&batch->release_owner,
+			.owner_task = (unsigned long)batch->release_owner.task,
+			.object = (unsigned long)local->lock, .related = (unsigned long)local,
+			.phase = KD_MUTEX_SELECTED_PROXY, .result = outcome,
+			.flags = node_observation_flags(node));
+		batch->serving = NULL;
+		/* Canonical state may already belong to W. Only retained release
+		 * metadata decides whether this body completed its logical unlock.
+		 */
+		raw_spin_lock(&batch->release_owner.guard);
+		completed = node->release.phase == KD_MUTEX_UNLOCK_OWNER_HANDLED &&
+			!batch->release_owner.close_requested;
+		if (!completed)
+			batch->release_owner.close_requested = true;
+		raw_spin_unlock(&batch->release_owner.guard);
+		publish_condition(node, &node->result_ready);
+		served++;
+		if (!completed || served == limit)
+			break;
+		node = smp_load_acquire(&batch->head->next);
+		if (!spin_batch_offer(node, local->lock) ||
+		    atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
+				   KD_MUTEX_SELECTED_PROXY) != KD_MUTEX_OFFERED)
+			break;
+		detach_proxy(batch, node);
+	}
+	/* Admission is now closed. A handed-back W may still own a grant;
+	 * progress handles its exact native unlock while earlier W tasks run.
+	 * The driver actor prevents reaping even if progress performs release.
+	 */
+	raw_spin_lock(&batch->release_owner.guard);
+	batch->release_owner.close_requested = true;
+	raw_spin_unlock(&batch->release_owner.guard);
+	while (batch->release_owner.phase != KD_MUTEX_OWNER_PHYSICALLY_RELEASED) {
+		progress_wait(local);
+		cpu_relax();
+	}
+	batch->candidate = NULL;
+	batch->cohort_active = false;
+	/* No batch/head access after dropping the driver. Drain other physical
+	 * duties before rejoining, so a native suffix can reacquire this lock.
 	 */
 	while (progress_wait(local))
 		cpu_relax();
@@ -1090,7 +1169,7 @@ int kd_mutex_await(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 	    serve_writer_cohort(node, proxy_limit))
 		wait_request(node);
 	else if (node->atomic_spin && node->service_policy == KD_MUTEX_SERVICE_DEFAULT &&
-		 proxy_limit && spin_serve_successor(node))
+		 proxy_limit && spin_serve_batch(node, proxy_limit))
 		wait_request(node);
 	if (smp_load_acquire(&node->result_ready))
 		goto returned;
@@ -1150,8 +1229,30 @@ static int spin_source_unlock(struct kd_mutex_node *node,
 
 	if (!spin_context())
 		return -EPERM;
-	if (!batch || batch->head != node)
+	if (!batch || (!batch->spin_batch && batch->head != node))
 		return -EINVAL;
+	if (batch->spin_batch) {
+		bool logical = batch->release_owner.task == current && batch->serving == node;
+
+		/* Only the currently executed batch body completes logically.
+		 * Native handback closes service and retains the physical ACK rule.
+		 */
+		result = kd_mutex_release_request(&node->release, state, node->acquisition,
+			logical ? KD_MUTEX_UNLOCK_ROUTE_OWNER : KD_MUTEX_UNLOCK_ROUTE_SYNC);
+		if (result)
+			return result;
+		if (logical) {
+			result = kd_mutex_release_owner_handle(&node->release);
+			BUG_ON(result);
+		} else {
+			while (release_phase(node) != KD_MUTEX_UNLOCK_PHYSICALLY_RELEASED) {
+				progress_wait(node);
+				cpu_relax();
+			}
+		}
+		*action = KD_MUTEX_UNLOCK_ATOMIC;
+		return 0;
+	}
 	result = kd_mutex_release_request(&node->release, state, node->acquisition,
 					 KD_MUTEX_UNLOCK_ROUTE_ATOMIC_SYNC);
 	if (result)
@@ -1516,6 +1617,9 @@ int kd_mutex_native_node_init(struct kd_mutex_node *node,
 	node->wait_started = false;
 	node->source_granted = false;
 	node->ready = false;
+	node->spin_batch_ready = false;
+	node->spin_batch_allowed = false;
+	node->spin_batch_probe = false;
 	node->atomic_spin = false;
 	node->wait_state = TASK_UNINTERRUPTIBLE;
 	node->admission = KD_MUTEX_ADMISSION_PENDING;

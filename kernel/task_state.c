@@ -29,6 +29,9 @@ void kd_task_root_context_init(struct kd_task_root_context *context)
 	context->lifecycle = NULL;
 	context->storage = NULL;
 	context->source_closing = false;
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+	context->rw_wait_diag = NULL;
+#endif
 }
 
 struct kd_task_root_context *kd_task_root_context_current(void)

@@ -10,6 +10,13 @@ non-PREEMPT_RT**.
 
 ## Current state
 
+A [spin-only batch candidate](docs/design/spin_batch.md) now separates logical
+unlock completion from the final physical ACK while retaining exact per-waiter
+records. It is uncompiled and untested. Per-CPU/per-lock slow-entry windows classify
+contention; occasional bounded queue sampling supplies a separate opportunity
+gate. The candidate requires focused validation before integration or a
+correctness/performance claim. Existing rwsem work remains separate.
+
 The latest working-tree rwsem changes are the [worker-local wait diagnostic and
 ordinary-writer node-wait candidate](docs/design/rwsem_wait_diagnostic.md).
 `CONFIG_KDLOCK_RWSEM_NODE_WAIT` defaults off independently of diagnostic counters.

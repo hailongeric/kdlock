@@ -9,6 +9,7 @@
 #include <linux/sched.h>
 
 #include "mutex_api.h"
+#include "spin_policy.h"
 #include "native_entry.h"
 #include "task_progress.h"
 #include "rw_local.h"
@@ -105,9 +106,34 @@ static enum kd_operation_kind resolve_source_target(unsigned long target)
 	return operation;
 }
 
+/* Cold object construction only, not a shared acquisition counter. Saturation
+ * disables new policy identities rather than reusing an earlier incarnation.
+ */
+static atomic_long_t spin_policy_sequence = ATOMIC_LONG_INIT(0);
+
+static unsigned long new_spin_policy_epoch(void)
+{
+	long old = atomic_long_read(&spin_policy_sequence);
+
+	while (old != -1L) {
+		long next = (long)((unsigned long)old + 1);
+
+		if (atomic_long_try_cmpxchg(&spin_policy_sequence, &old, next))
+			return (unsigned long)next;
+	}
+	return 0;
+}
+
+unsigned long kd_spin_policy_epoch(struct kd_mutex *queue)
+{
+	return READ_ONCE(container_of(queue, struct kd_spinlock, queue)->policy_epoch);
+}
+
 void kd_spin_init(struct kd_spinlock *lock)
 {
+	/* Caller guarantees no remaining users of the previous incarnation. */
 	kd_mutex_init(&lock->queue);
+	lock->policy_epoch = new_spin_policy_epoch();
 }
 
 static void run_native(struct kd_mutex_entry *entry, struct kd_mutex *lock,

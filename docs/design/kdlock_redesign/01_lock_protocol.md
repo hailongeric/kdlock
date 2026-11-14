@@ -641,26 +641,28 @@ reconciles W's preemption depth with the open logical grants in S_W. When
 none remain, W switches to its original stack before dropping the last pin.
 Each physical task manages its own preemption state.
 
-One physical spin turn binds one exact grant. When a local candidate C selects
-its immediate offered successor W, W's completed link ends its access to C's
-old queue position. W becomes the physical head and C owns that turn. C's
-own request stays stopped and ungranted. C publishes W's result before
-pumping any retained foreign physical duties off the queue, then rejoins once
-for its own local turn after those duties physically drain. This ordering lets
-W resume a native suffix, release A and reacquire A while still holding B
-physically owned by C. Rejoining before that drain could put C ahead of W on
-A while C waits for W to reach B's unlock. C retains its request and the
-queue object across both queue positions.
+The owner has approved spin-only logical unlock completion before physical ACK
+for genuine bounded batches. The [pending source candidate](../spin_batch.md)
+retains one physical acquisition while serving independent root waiters. Each
+logical unlock may return to its original task while its acquisition/release
+records remain retained until actual physical ACK and every last user ends.
+Same-lock reacquisition uses a separate record. Miss/native/nested handback closes
+admission and preserves exact continuation and release responsibility, without
+holding earlier completed origins behind the batch ACK.
 
-A spin unlock submits an exact request to the physical owner. The owner
-handles it locally or while polling a child or queue condition. The source
-unlock completes only after acknowledgement of the actual physical release.
-This applies to an out-of-order A unlock while B remains held, including
-when C_B requests A's release from C_A. The mutex deferred marker, unwind
-notification and batch continuation are specific to the sleepable mutex
-lane. Physical spin release can precede the end of the source executor's
-control frames. Retirement still waits for control stop and every retained
-queue, result, source and return user.
+Contention admission uses bounded per-CPU state keyed to lock address and cold
+lifetime epoch: complete 100-acquisition windows with at least 99 contended first
+MCS exchanges permit heavy admission. Requeues do not count. Cold or light
+windows stay local. Every sixteenth heavy observation permits one bounded queue
+sample; it must see at least two queued successors, without requiring both to be
+JIT ready. The sample never waits or retries to fill a batch. Subsequent service
+stops at the first ineligible request or handback and obeys the existing configured
+proxy limit. Fewer completed bodies after authorization are permitted. This
+policy and its reset/static-initializer rules are specified in the candidate guide.
+The candidate is uncompiled and unvalidated and must not be integrated until
+focused checks pass. The preceding
+one-grant/off-queue spin protocol remains available at `2592ce0b` as historical
+source, with its kernel4 receipts retaining their original scope.
 
 The spin wait path polls and advances exact physical-owner work without
 sleeping. Progress requires each necessary actor to have a CPU on which it

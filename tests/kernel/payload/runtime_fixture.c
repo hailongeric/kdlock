@@ -464,7 +464,11 @@ static int notrace worker_main(void *argument)
 			fixture_rw_native_scene(worker);
 		else
 #endif
-		if (worker->scene && worker->role != SCENE_CA && worker->role != SCENE_W)
+		if (worker->scene && worker->role != SCENE_CA && worker->role != SCENE_W
+#ifdef KD_FIXTURE_SPIN
+		    && !(requested_mode == 0 && worker->role == SCENE_CB)
+#endif
+		   )
 			scene_single(worker);
 		else
 			READ_ONCE(body_entry)(worker);
@@ -476,7 +480,11 @@ static int notrace worker_main(void *argument)
 #ifdef KD_FIXTURE_READERS
 		    !worker->rw_scene &&
 #endif
-		    (!worker->scene || worker->role == SCENE_CA || worker->role == SCENE_W) &&
+		    (!worker->scene || worker->role == SCENE_CA || worker->role == SCENE_W
+#ifdef KD_FIXTURE_SPIN
+		     || (requested_mode == 0 && worker->role == SCENE_CB)
+#endif
+		    ) &&
 		    (worker->seen_before != worker->expected_task ||
 		     worker->seen_inside != worker->expected_task ||
 		     worker->seen_pointer != &pointer_value[iteration])) {

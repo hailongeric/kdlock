@@ -16,6 +16,10 @@ from oracle import validate
 def run(spec):
     count = spec['threads']
     before = snapshot()
+    diagnostic_control = None
+    if 'wait_diagnostic' in spec:
+        from wait_diag import set_mode
+        diagnostic_control = set_mode(spec['wait_diagnostic'])
     ready = threading.Barrier(count + 1)
     start = threading.Event()
     state = {}
@@ -100,9 +104,14 @@ def run(spec):
     if spec['arm'] == 'kdlock':
         m['kd_evidence'] = evidence()
     try:
+        if diagnostic_control is not None:
+            from wait_diag import collect, validate as validate_wait_diag
+            m['wait_diagnostic_control'] = diagnostic_control
+            m['wait_diagnostic'] = collect(m['started_ns'], count, before['backend'], spec['wait_diagnostic'])
+            validate_wait_diag(m['wait_diagnostic'], m['reads'], m['writes'])
         validate(m, spec)
         m['data_ok'] = True
-    except (ValueError, KeyError, TypeError) as error:
+    except (ValueError, KeyError, TypeError, OSError) as error:
         m.update(data_ok=False, validation_error=str(error))
     return m
 

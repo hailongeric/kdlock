@@ -21,6 +21,7 @@ static struct rw_bench_config rb_config;
 #ifdef RB_KDLOCK
 #include "runtime.inc"
 #endif
+#include "wait_diag.inc"
 
 static long rb_run(void __user *user)
 {
@@ -33,6 +34,7 @@ static long rb_run(void __user *user)
 	u64 state = 1, limit;
 	unsigned int i, mix, before_preempt;
 	bool before_irqs;
+	bool worker_claimed = false;
 	int error = 0;
 #ifdef RB_KDLOCK
 	int kd_worker = -1;
@@ -55,6 +57,7 @@ static long rb_run(void __user *user)
 		error = -EBUSY;
 		goto out;
 	}
+	worker_claimed = true;
 #ifdef RB_KDLOCK
 	if (!rb_runtime) { error = -ESHUTDOWN; goto out; }
 	kd_worker = run.worker;
@@ -71,6 +74,9 @@ static long rb_run(void __user *user)
 	if (error)
 		goto out;
 #endif
+	error = rb_wait_enter(run.worker);
+	if (error)
+		goto out;
 	before_preempt = preempt_count();
 	before_irqs = irqs_disabled();
 	run.cpu = raw_smp_processor_id();
@@ -133,6 +139,8 @@ out:
 			error = left;
 	}
 #endif
+	if (worker_claimed)
+		rb_wait_end(run.worker, error);
 	(void)atomic_dec_return_release(&rb_control);
 	if (error)
 		return error;
@@ -182,7 +190,8 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	if (cmd == RB_PROGRESS)
 		return rb_read_progress(user);
 	if (cmd != RB_CONFIG && cmd != RB_SNAPSHOT && cmd != RB_PREPARE && cmd != RB_DRAIN &&
-	    cmd != RB_EVIDENCE && cmd != RB_BIND && cmd != RB_DESTROY && cmd != RB_RECORDING)
+	    cmd != RB_EVIDENCE && cmd != RB_BIND && cmd != RB_DESTROY && cmd != RB_RECORDING &&
+	    cmd != RB_WAIT_DIAG_MODE && cmd != RB_WAIT_DIAG_SNAPSHOT)
 		return -ENOTTY;
 	if (atomic_cmpxchg_acquire(&rb_control, 0, -1))
 		return -EBUSY;
@@ -203,6 +212,9 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			error = -EINVAL;
 			break;
 		}
+		error = rb_wait_reset();
+		if (error)
+			break;
 #ifdef RB_KDLOCK
 		if (!rb_runtime) { error = -ESHUTDOWN; break; }
 		rb_evidence_reset();
@@ -236,6 +248,18 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 #else
 		error = -EOPNOTSUPP;
 #endif
+		break;
+	case RB_WAIT_DIAG_MODE:
+		{
+			struct rb_wait_diag_mode mode;
+			if (copy_from_user(&mode, user, sizeof(mode))) { error = -EFAULT; break; }
+			error = rb_wait_set(&mode);
+			if (!error && copy_to_user(user, &mode, sizeof(mode)))
+				error = -EFAULT;
+		}
+		break;
+	case RB_WAIT_DIAG_SNAPSHOT:
+		error = rb_wait_snapshot(user);
 		break;
 	case RB_BIND:
 #ifdef RB_KDLOCK
@@ -306,6 +330,8 @@ static int __init rb_init(void)
 	BUILD_BUG_ON(sizeof(struct rw_bench_snapshot) != 184);
 	BUILD_BUG_ON(sizeof(struct rw_bench_progress) != 552);
 	BUILD_BUG_ON(sizeof(struct rb_progress_slot) != 128);
+	BUILD_BUG_ON(sizeof(struct kd_rw_wait_diag_row) % 128);
+	BUILD_BUG_ON(sizeof(struct rb_wait_diag_mode) != 16);
 #ifdef RB_NANO
 	BUILD_BUG_ON(sizeof(struct rb_nano_record) != 64);
 	BUILD_BUG_ON(offsetof(struct rb_nano_record, copy) != sizeof(u64));

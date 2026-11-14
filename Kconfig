@@ -16,3 +16,26 @@ config KDLOCK_REBUILD
 	  unselected objects keep native behavior. Enabling this option alone
 	  establishes no build, execution or performance evidence.
 	  See kernel/integration/BUILDING.md in the kdlock package.
+
+config KDLOCK_RW_WAIT_DIAG
+	bool "Temporary ordinary rwsem worker wait counters"
+	depends on KDLOCK_REBUILD
+	default n
+	help
+	  Add explicit per-task opt-in aggregate counters for the ordinary rwsem
+	  diagnostic. The provider owns preallocated rows through complete drain.
+	  No event logging, scheduler activation claim or lock policy change.
+	  Disabled versus enabled overhead must be measured on the same image.
+
+config KDLOCK_RWSEM_NODE_WAIT
+	bool "Ordinary rwsem writers wait for their MCS turn separately"
+	depends on KDLOCK_REBUILD
+	default n
+	help
+	  Keep ordinary task-owned uninterruptible native writers off the shared
+	  rwsem wait queue until they own their MCS turn and need reader drain or
+	  WAKE completion. The predecessor's existing direct task wake supplies
+	  turn progress. Selected writers register and recheck before sleeping.
+	  Callable, killable and managed writer paths keep their existing waits.
+	  This candidate is independent of KDLOCK_RW_WAIT_DIAG and has no measured
+	  performance or live-kernel correctness result.

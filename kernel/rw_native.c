@@ -13,6 +13,9 @@
 #include "rw_local.h"
 #include "task_state.h"
 #include "observation.h"
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+#include "rw_wait_diag.h"
+#endif
 
 static bool native_context(void)
 {
@@ -399,6 +402,13 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 	bool cancel = false;
 	bool rollback_write = false;
 	int result;
+#ifdef CONFIG_KDLOCK_RWSEM_NODE_WAIT
+	bool family_wait_started;
+#endif
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+	struct kd_rw_wait_diag_row *diag;
+	bool diag_registered = false;
+#endif
 
 	if (wait_state != TASK_UNINTERRUPTIBLE && wait_state != TASK_KILLABLE)
 		return -EINVAL;
@@ -456,6 +466,12 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 			caller_done(record);
 		return result;
 	}
+#ifdef CONFIG_KDLOCK_RWSEM_NODE_WAIT
+	/* Only ordinary task-owned records use the separate turn wait. */
+	family_wait_started = !(reserved && record->ordinary_write &&
+		record->ordinary_queued && pool->ordinary_free && lock->atomic_admission &&
+		wait_state == TASK_UNINTERRUPTIBLE);
+#endif
 	/* Publish the queue's persistent storage user before its first link. */
 	raw_spin_lock(&pool->guard);
 	record->queue_user = true;
@@ -463,12 +479,36 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 	result = kd_mutex_native_enqueue(&lock->queue, &record->node, false);
 	if (result != 1)
 		return result; /* Unexpected protocol error retains controls. */
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+	diag = kd_rw_wait_diag_current(lock);
+	kd_rw_wait_diag_add(diag, KD_RW_DIAG_WRITE_BEGIN, 1);
+#endif
 	for (;;) {
 		bool start = false;
 		bool acquired = false;
 		bool waking;
+#ifdef CONFIG_KDLOCK_RWSEM_NODE_WAIT
+		bool register_family_wait;
+#endif
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+		bool diag_turn_wait;
+#endif
 
-		prepare_to_wait(&lock->changed, &wait, wait_state);
+#ifdef CONFIG_KDLOCK_RWSEM_NODE_WAIT
+		if (!family_wait_started) {
+			/* Publish sleep state before checking turn. The predecessor
+			 * release-publishes turn and directly wakes this task.
+			 */
+			set_current_state(wait_state);
+		} else
+#endif
+		{
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+			kd_rw_wait_diag_prepare(diag, true, &diag_registered, &lock->changed, &wait, wait_state);
+#else
+			prepare_to_wait(&lock->changed, &wait, wait_state);
+#endif
+		}
 		raw_spin_lock(&lock->guard);
 		/* A wake may precede wait registration. Retain its guarded WAKE
 		 * observation even if the actor clears it before our sleep decision.
@@ -502,35 +542,80 @@ static int write_lock_common(struct kd_rw *lock, unsigned int wait_state, bool t
 			cancel = true;
 			observe_native(KD_OBS_NATIVE_CANCEL, lock, record, true,
 				KD_GRANT_PHYSICAL_WRITE, -EINTR);
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+			kd_rw_wait_diag_wake(diag, &lock->changed, KD_RW_DIAG_WAKE_CANCEL);
+#else
 			wake_up_all(&lock->changed);
+#endif
 		}
+#ifdef CONFIG_KDLOCK_RWSEM_NODE_WAIT
+		register_family_wait = !family_wait_started && record->turn_owned &&
+			!start && !acquired && !cancel;
+#endif
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+		diag_turn_wait = !record->turn_owned;
+#endif
 		raw_spin_unlock(&pool->guard);
 		raw_spin_unlock(&lock->guard);
 		if (start) {
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+			kd_rw_wait_diag_add(diag, KD_RW_DIAG_WRITE_START, 1);
+#endif
 			__set_current_state(TASK_RUNNING);
 			result = native_start(record);
 			if (result) {
 				finish_wait(&lock->changed, &wait);
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+				kd_rw_wait_diag_add(diag, KD_RW_DIAG_WRITE_ERROR, 1);
+#endif
 				return result;
 			}
 			continue;
 		}
 		if (acquired || cancel)
 			break;
+#ifdef CONFIG_KDLOCK_RWSEM_NODE_WAIT
+		if (register_family_wait) {
+			/* A reader release may have preceded registration. Join the
+			 * family queue, then repeat the complete guarded check before
+			 * deciding to sleep on reader drain or WAKE completion.
+			 */
+			__set_current_state(TASK_RUNNING);
+			family_wait_started = true;
+			continue;
+		}
+#endif
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+		kd_rw_wait_diag_add(diag, KD_RW_DIAG_WRITE_TURN_WAIT, diag_turn_wait);
+#endif
 		if (waking) {
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+			kd_rw_wait_diag_add(diag, KD_RW_DIAG_WRITE_WAKE_RETRY, 1);
+#endif
 			__set_current_state(TASK_RUNNING);
 			cond_resched();
 		} else {
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+			kd_rw_wait_diag_add(diag, KD_RW_DIAG_WRITE_SCHEDULE, 1);
+#endif
 			schedule();
 		}
 	}
+	/* finish_wait also restores RUNNING for a never-linked DEFINE_WAIT. */
 	finish_wait(&lock->changed, &wait);
 	if (cancel && record->turn_owned) {
 		result = kd_mutex_native_finish(&record->node, &record->batch);
-		if (result)
+		if (result) {
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+			kd_rw_wait_diag_add(diag, KD_RW_DIAG_WRITE_ERROR, 1);
+#endif
 			return result;
+		}
 	}
 	caller_done(record);
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+	kd_rw_wait_diag_add(diag, cancel ? KD_RW_DIAG_WRITE_CANCEL : KD_RW_DIAG_WRITE_RETURN, 1);
+#endif
 	return cancel ? -EINTR : 0;
 }
 

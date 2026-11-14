@@ -3,6 +3,7 @@
 #define KD_RW_BENCH_API_H
 #include <linux/ioctl.h>
 #include <linux/types.h>
+#include "../../include/kd_rw_wait_diag.h"
 
 #define RB_VERSION 1
 #define RB_MAX_WORKERS 64
@@ -52,4 +53,14 @@ struct rb_recording { __u64 enabled, trace_enabled; };
 #define RB_BIND _IOW('B', 8, struct rb_bind)
 #define RB_DESTROY _IO('B', 9)
 #define RB_RECORDING _IOWR('B', 10, struct rb_recording)
+/* Snapshot ABI2 adds the independent node-wait algorithm identity. */
+struct rb_wait_diag_mode { __u64 enabled, supported; };
+struct rb_wait_diag_snapshot {
+	__u64 version, counter_count, enabled, supported, workers, backend, started_ns, complete;
+	__u64 node_wait;
+	struct kd_rw_wait_diag_counts rows[RB_MAX_WORKERS];
+};
+#define RB_WAIT_DIAG_MODE _IOWR('B', 14, struct rb_wait_diag_mode)
+/* Do not copy the larger snapshot into an ABI1 command-15 buffer. */
+#define RB_WAIT_DIAG_SNAPSHOT _IO('B', 16)
 #endif

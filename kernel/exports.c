@@ -9,6 +9,10 @@
 #include "lifecycle.h"
 #include "rw_native.h"
 #include "rw_admission.h"
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+#include "rw_wait_diag.h"
+EXPORT_SYMBOL_GPL(kd_rw_wait_diag_attach);
+#endif
 #include "../include/kd_linux_rwsem.h"
 
 EXPORT_SYMBOL_GPL(kd_mutex_init);

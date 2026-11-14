@@ -16,6 +16,7 @@ struct kd_episode_resources;
 struct kd_task_storage;
 struct kd_task_lifecycle_context;
 struct kd_request_user;
+struct kd_rw_wait_diag_row;
 
 /* Preallocated per-frame allocation actor, separate from the pool membership.
  * storage.guard owns this record while linked. The exact queue user retains
@@ -70,6 +71,10 @@ struct kd_task_root_context {
 	const struct kd_task_lifecycle_context *lifecycle;
 	struct kd_task_storage *storage;
 	bool source_closing;
+#ifdef CONFIG_KDLOCK_RW_WAIT_DIAG
+	/* Physical-worker-only diagnostic sink, never an active source lookup. */
+	struct kd_rw_wait_diag_row *rw_wait_diag;
+#endif
 };
 
 /* Constructor only, before publication or any retained user. No regs clear. */
