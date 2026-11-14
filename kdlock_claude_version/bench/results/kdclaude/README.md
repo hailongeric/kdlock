@@ -219,7 +219,7 @@ round of work did not change.
   0.72-0.98.
 * **Losses:** spin c01 0.87-0.95 of round 7 at 2-24 workers and rwlock
   writers only 0.88-0.96, unexplained.
-* **Correctness on the same boot:** `corr61.jsonl`, `corr61.out`.
+* **Correctness on the same boot:** `corr61.jsonl`, `corr61.txt`.
 * **Defect, older than this change set:** mmap1 with `kd_mm=1` hangs this
   VM, also with the previous commit's kernel source. The directory README
   has the evidence.

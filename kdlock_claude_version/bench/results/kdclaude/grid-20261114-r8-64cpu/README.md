@@ -128,7 +128,7 @@ between the two boots.
 | `api_stress` setfd/ofd/pipe/seek/xattr at 4/32/63 threads x 20 s | all passed except `setfd 63`, the fd-limit case of the test (round 7) |
 | Kernel log | no warning or stall |
 
-`corr61.out` is the raw output.
+`corr61.txt` is the raw output.
 
 ## Defect found while checking mmap1: not caused by this change set
 
