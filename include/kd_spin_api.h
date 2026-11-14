@@ -9,6 +9,8 @@
 /* Distinct source object with the common MCS queue as its first member. */
 struct kd_spinlock {
 	struct kd_mutex queue;
+	/* Zero keeps static-only objects local; cold init assigns a unique epoch. */
+	unsigned long policy_epoch;
 };
 
 #define KD_SPINLOCK_INITIALIZER { .queue = KD_MUTEX_INITIALIZER }

@@ -144,6 +144,11 @@ struct kd_mutex_node {
 	bool wait_started;
 	bool source_granted;
 	bool ready;
+	/* Immutable root-spin offer eligibility, set before queue publication. */
+	bool spin_batch_ready;
+	/* Original enqueue's per-CPU intensity decision; requeues preserve it. */
+	bool spin_batch_allowed;
+	bool spin_batch_probe;
 	bool atomic_spin;
 	/* Explicit root/original-task killable writer lane only. The RW guard
 	 * serializes admission, signal requests, turn ownership and wait-task
@@ -159,7 +164,7 @@ struct kd_mutex_node {
 	/* Exact queue/result/cohort actor bits, not a grant/activity estimate. */
 	atomic_t cancel_users;
 	/* Wait context, service grouping and outer release are independent. The
-	 * legacy default preserves mutex cohorts and one-grant spin turns.
+	 * default preserves mutex cohorts; eligible root spin offers may batch.
 	 */
 	enum kd_mutex_service_policy service_policy;
 	bool synchronous_outer;
@@ -227,6 +232,8 @@ struct kd_mutex_batch {
 	 * cohort. Reaping cannot publish its head reusable until it stops.
 	 */
 	bool cohort_active;
+	/* Spin-only multi-grant ownership; remains true through final reaping. */
+	bool spin_batch;
 	/* Retained ungranted C while this driver serves a W-owned cohort. */
 	struct kd_mutex_node *candidate;
 	struct kd_rw *rw;
