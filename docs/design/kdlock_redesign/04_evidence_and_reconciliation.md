@@ -4,6 +4,14 @@
 **Design basis:** revision 1.11, direct MCS state and task-owned auxiliary entry
 **Target:** Linux kernel 7.0, x86_64, non-PREEMPT_RT
 
+Current pending work: the [ordinary-writer wait candidate and worker-local
+diagnostic](../rwsem_wait_diagnostic.md) have source inspection only. Their code,
+configuration and tests remain uncommitted, unbuilt and unbenchmarked. Prepared
+VM-only helpers have not executed. No correctness, performance or TCLock parity
+result follows from these edits. The [retention guide](../../operations/build_retention.md)
+records dated guest cleanup and kernel16 incremental-build limits separately
+from the historical evidence below; historical receipts remain unchanged.
+
 Later source checkpoints `532b68a6` and `02ffa1ec` add generic Linux rwsem API
 binding and native compatibility on one KD gate. They have independent source
 review, [focused compile/unit/unselected-baseline receipts](../../../tests/evidence/kernel6-focused-20261111/README.md)

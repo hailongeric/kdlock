@@ -20,6 +20,17 @@ claim that every historical nano workload is equivalent.
 
 ## Binding and measurement
 
+For the pending [rwsem wait candidate](../../docs/design/rwsem_wait_diagnostic.md),
+Native is the immediate matched control. TCLock rwsem exists, but its supported
+Linux7 context, exact current workload, functional checks and complete drain must
+be verified before comparison. Neither the archived Linux5.14 results nor the
+kernel9 report establishes a kernel16 matched lane. The candidate is unbuilt
+and unbenchmarked; its 17 boundary cases across four configurations and decoder
+helper remain unrun. Diagnostic overhead and algorithm A/B require separate
+measurements; the prior probe's 41.65% slowdown invalidates normal-run frequency
+inference. No reader batching, fast-path, delegation, JIT or mmap change belongs
+to this candidate according to the recorded source review.
+
 [direct.h](../../workload_modules/nano/direct.h) selects the actual mutex or
 rwsem API. KD readers remain local and concurrent; only writers can delegate.
 [runtime.inc](../../workload_modules/nano/runtime.inc) admits immutable module
@@ -56,7 +67,8 @@ timeout. A bounded command failure preserves its child/module state for review.
 
 [build.py](build.py) accepts `--repo`, `--kernel-source`, `--kernel-output` and
 a fresh `--output`. It builds/signs the six family/backend workload modules and
-two TCLock providers for `7.0.0-38-kdrebuild9`, records tool/module hashes and
+two TCLock providers with an explicit `--expected-release` (default
+`7.0.0-38-kdrebuild9`), records tool/module hashes and
 requires emitted TCLock context audits. It does not establish a new kernel's
 identity or recovery readiness itself.
 

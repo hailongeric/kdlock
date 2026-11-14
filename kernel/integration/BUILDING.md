@@ -51,6 +51,18 @@ Full mitigation and auxiliary-stack unwind coverage remain outstanding.
 All authorized builds, modules, tests and timing run only in the development VM.
 Source edits and static inspection remain on the source host.
 
+Current output retention and dated space observations are maintained in the
+[build retention guide](../../docs/operations/build_retention.md). Recheck the
+unchanged 40 GiB gate before a new full build. Kernel16 is the suggested current
+kernel/core incremental base; its one-entry `modules.order` does not cover the
+6,709 configured module targets. Do not describe it as a complete all-module
+build or mutate its frozen benchmark identity.
+
+The pending `CONFIG_KDLOCK_RW_WAIT_DIAG` and independent default-off
+`CONFIG_KDLOCK_RWSEM_NODE_WAIT` changes have source checks only. Pin both settings
+and the entire pending implementation for later builds; this documentation
+commit includes no implementation. See the [focused handoff](../../docs/design/rwsem_wait_diagnostic.md).
+
 Use the following layout when integrating the package into the selected kernel
 source tree, retaining its internal relative paths:
 

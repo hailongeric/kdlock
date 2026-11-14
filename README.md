@@ -10,6 +10,21 @@ non-PREEMPT_RT**.
 
 ## Current state
 
+The latest working-tree rwsem changes are the [worker-local wait diagnostic and
+ordinary-writer node-wait candidate](docs/design/rwsem_wait_diagnostic.md).
+`CONFIG_KDLOCK_RWSEM_NODE_WAIT` defaults off independently of diagnostic counters.
+Their implementation remains uncommitted, unbuilt and unbenchmarked; source
+checks are separate from correctness and performance evidence. Prepared helpers
+remain unrun under the VM-only execution rule. Native is the immediate matched
+control; a supported current Linux7/workload TCLock rwsem lane needs fresh
+verification. Archived Linux5.14 results establish no current parity.
+
+The [current build retention guide](docs/operations/build_retention.md) records
+completed November 13 guest cleanup, the observed headroom, and kernel16 as the
+current kernel/core incremental base, not a complete all-module build. The older
+checkpoints below retain their original scope and do not describe current disk
+availability or the currently running boot.
+
 The later kernel8 checkpoint records passing native rwsem API and actual
 mmap/munmap syscall checks, independent private rwsem-query and mutex
 regressions, and the bounded managed-cancellation fixture. A later
