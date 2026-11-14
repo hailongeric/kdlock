@@ -103,6 +103,13 @@ between the two boots.
     0.78-0.82).
   * rwsem with 1% writes: 1.2-1.4 times from 16 workers; across both nodes
     kd/TCLock from 0.63-0.80 to 0.82-0.99.
+* **Boot-to-boot variation limits the kd/TCLock ratios.** Mutex c01 at
+  64 workers, single points in other boots of the same source: kd
+  2.62-2.67 against TCLock 2.57 (#58) and kd 2.65 against TCLock 2.82
+  (#64); this grid has 3.08 against 2.55. So "kd ahead of TCLock for
+  mutex c01" holds for this boot only; across boots the two are within
+  about 10% of each other. The gain against round 7 (1.99 Mops/s there)
+  shows in every boot.
 * **Losses and open points:**
   * spin c01 is 0.87-0.95 of round 7 at 2-24 workers, and rwlock writers
     only 0.88-0.96 at 8-64, while TCLock rose 0-10% at the same points.
