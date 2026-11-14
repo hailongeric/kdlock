@@ -239,6 +239,38 @@ touches the reader fairness area AGENTS.md lists as deferred). Data:
   * the single-node spin and mutex region;
   * the rwsem c16 1% loss.
 
+Status 2026-11-14, second part (the user asked why kd falls behind TCLock
+across nodes and degrades with more workers, and to reduce cache
+overhead). Data: `grid-20261114-r8-64cpu/` (#61, commit `3bf4bfaa`);
+in-boot A/B numbers in LOCKS 4 and 5.
+
+* **Causes found by profiling #56 at 64 workers:**
+  * The combiner claimed every waiter with a cmpxchg on the node line
+    that the waiter polls: 72% of `kd_session`'s samples.
+  * A mutex handoff went to a sleeping waiter. The queue head and new
+    callers then saw an owner off the CPU and parked in turn: 13000 parked
+    waits per second at 64 workers.
+  * Waiting rwsem readers polled `count`, which the readers that are in
+    write on entry and exit.
+  * Each rwsem reader got one section per writer phase.
+* **Changes:** plain-store announcement one section ahead; handoff only to
+  a running waiter; reader phase counter in its own line; reader phase of
+  1000 ns per reader before the queue head closes the read side.
+* **Round 8 against round 7:** mutex c01 1.17-1.54 times from 8 workers
+  and flat to 64; rwsem writers only 1.45-1.52; rwsem 20% writes 1.3-1.8;
+  rwsem 1% writes 1.2-1.4 from 16 workers. Across nodes kd/TCLock: mutex
+  c01 1.15-1.21, rwsem writers only 1.13-1.21, rwsem 20% writes 0.85-0.90,
+  1% writes 0.82-0.99.
+* **Losses, unexplained:** spin c01 0.87-0.95 of round 7 at 2-24 workers
+  and rwlock writers only 0.88-0.96 at 8-64, with TCLock up 0-10%.
+* **Rejected with data:** dropping the look before the add on the read
+  fast path (1% writes 9-11% lower, #59).
+* **Defect found, older than this change set:** mmap1 with `kd_mm=1` hangs
+  the 64-vCPU VM, also with the kernel source of `041653e4` (round 8
+  README). Open, and it blocks measuring the reader phase on mmap1.
+* **Next:** that hang; an in-boot A/B for the spin-class loss; rwsem with
+  readers and rwlock with writers across nodes; spin within one node.
+
 ### Task D: API switch and micro/API stage
 
 Status 2026-11-13: the mmap lock is switched (`CONFIG_KDLOCK_MM`,

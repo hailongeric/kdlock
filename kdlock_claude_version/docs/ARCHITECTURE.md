@@ -81,7 +81,8 @@ Queue nodes (`struct kd_node`, one cache line) live in per-CPU arrays:
 spin-class nodes are a per-CPU LIFO stack, sleepable-class nodes are
 allocated from a FREE-state pool. Four nodes per CPU and class
 (`KD_MAX_NODES`); when they run out the caller waits without queueing.
-Node states: `FREE, WAIT, RUN, HEAD, HEAD_D, RESUME, ABANDON, HWAIT, HBACK`.
+Node states: `FREE, WAIT, HEAD, HEAD_D, RESUME, ABANDON, HWAIT, HBACK, DROP`
+(`RUN` is no longer used).
 
 Where the per-CPU state sits matters for the plain path (measured, see
 `bench/results/kdclaude/README.md`): everything other CPUs write (nodes, the
@@ -145,7 +146,9 @@ while the next node n exists and the budget is not exhausted:
     stop if n has no image, need_resched(), or the mutex HANDOFF flag is set
     if NUMA order is on and n is on another node: defer it (see 7)
     stop if n's saved interrupt state is incompatible with ours
-    sleepable class: claim n with WAIT -> RUN; if the waiter withdrew, free it
+    sleepable class: n was announced (claim = true) during the previous
+        section; barrier, then read n.state; if the waiter withdrew, unlink it
+    sleepable class: announce the waiter after n (LOCKS 4)
     prefetch the next waiter's node and packet
     done = kd_exec_one(root, n)          # run n's section, section 5
     unlink n from the queue

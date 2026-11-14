@@ -298,8 +298,9 @@ the count before adding to it.
 * **After `kd_rwsem_rspin_ns` (50 us) or `need_resched()`:** the reader
   queues on `->m` as before.
 
-As before, every waiting reader polls the count (there is no head-only
-reader queue), readers never delegate, and downgrade is one atomic that is
+Waiting readers poll a phase counter in its own line, not the count (from
+#57; LOCKS 5), a queue head leaves the readers a bounded phase before it
+closes the read side (from #59), readers never delegate, and downgrade is one atomic that is
 handed back inside a delegated section. The earlier history:
 * Until `63f8de2a` a reader that met a writer slept on `->m`.
 * From `63f8de2a` it spun up to 1024 iterations and then queued on `->m`.
@@ -326,10 +327,21 @@ handed back inside a delegated section. The earlier history:
     TCLock and Native stayed flat. Not yet explained.
 * **Round 7** (10.176.26.71, 64 vCPUs; `grid-20261114-r7-64cpu/`): across
   both nodes (40-64 workers) kd/TCLock is still 0.52-0.53 with 20% writes,
-  0.63-0.80 with 1% and 0.70-0.75 writers only. **Open.** Candidates, not
-  yet measured: a head-only reader queue (every waiting reader now polls the
-  count line) and longer writer phases under reader pressure, which
-  TCLock's AQS reader gate may give it.
+  0.63-0.80 with 1% and 0.70-0.75 writers only.
+* **Causes found on that host and what was changed** (#57-#60, LOCKS 4 and
+  5 have the in-boot measurements):
+  * The combiner's claim of each waiter was a locked instruction on the
+    line the waiter polls. Now a plain store one section ahead.
+  * Waiting readers polled the count line that the readers in must write.
+    Now a phase counter in its own line.
+  * Each reader got one section per writer phase. Now the queue head leaves
+    the readers a phase that grows with their number.
+  * Mutex only: a handoff to a sleeping waiter made the queue park in turn.
+    Now granted only to a running waiter.
+  * **Round 8** (#61, `grid-20261114-r8-64cpu/`): across both nodes
+    kd/TCLock is 0.85-0.90 with 20% writes (round 7: 0.52-0.53), 0.89-0.99
+    with 1%, 0.78-0.90 for c16 and 1.13-1.21 writers only. Still behind
+    with readers. **Open.**
 * **Rejected with data** (in-boot A/B on 380G10):
   * The same admission for the rwlock (#47): -18 to -46% at 20-32 workers,
     +2 to +12% at 4. The patch was not kept.

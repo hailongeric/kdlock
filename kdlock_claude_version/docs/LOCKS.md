@@ -111,16 +111,42 @@ call.
     continuation; the queue head, once it owns the mutex, runs their
     sections before its own.
   * **Parked** waiters sleep on `->waiters` under `wait_lock`.
-* A spinning waiter becomes a parked one by **withdrawing first**:
-  `WAIT -> ABANDON` by cmpxchg. The combiner claims by `WAIT -> RUN`. One
-  cmpxchg decides, so a section is executed by exactly one of them and a task
-  is never run by a combiner and by itself.
+* A spinning waiter becomes a parked one by **withdrawing first**, and a
+  section is executed by exactly one of the waiter and the combiner
+  (`kd_node_abandon()` in `kd_internal.h`):
+  * The combiner announces a waiter with a plain store (`claim = true`)
+    and reads its `state` after a full barrier. It announces the waiter
+    after next while it executes the current one, so nothing waits for the
+    store.
+  * The waiter withdraws with `WAIT -> ABANDON` by cmpxchg and then reads
+    `claim`. If it is clear, the waiter has left and the head unlinks the
+    node (`ABANDON -> DROP -> FREE`). If it is set, the waiter takes the
+    withdrawal back (`ABANDON -> WAIT`) unless the head already moved the
+    node to `DROP`.
+  * A head that does not execute an announced waiter clears `claim` while
+    it still is the head.
+  * Before build #57 the combiner claimed with a cmpxchg `WAIT -> RUN` per
+    section. The waiter polls that line, so the locked instruction waited
+    for an exclusive copy each time: 72% of `kd_session`'s samples for
+    rwsem writers at 64 workers (#56). Without it, rwsem writers only went
+    from 2.04 to 2.60 Mops/s at 64 workers and from 2.14 to 2.70 at 32
+    (#57 against round 7; TCLock 2.58 and 2.70 in the same boot).
 * **Handoff.** A parked waiter that keeps losing sets `KD_QF_HANDOFF`; a
   running session then stops early, and the next release takes the lock
   again for the first parked waiter (`owner` changes, the waiter is woken)
   unless somebody was faster in between, in which case the flag stays for
   the release after that. This bounds sleeper starvation in practice; it is
   not the strict handoff of the native mutex.
+* **A handoff is granted only to a waiter that is running**
+  (`kd_handoff_running`, default 1). If the requester went back to sleep,
+  the release only wakes it and the request stays for the release that
+  finds it running. A grant to a sleeping task left the mutex with an
+  owner off the CPU until the wakeup arrived; the queue head and every new
+  caller then parked as well and asked for a handoff in turn. Measured
+  (#58, in-boot alternation, 3 rounds, mutex c01, Mops/s): 64 workers
+  2.15-2.31 -> 2.62-2.67 with parked waits per second from 7900-13100 to
+  390-770; 40 workers 2.44-2.64 -> 2.69-2.70; 32 workers 2.74-2.75 ->
+  2.79-2.80; c16 at 64 workers 2.27-2.35 -> 2.50-2.52.
 * Release is one atomic operation whether or not spinners are queued: a
   locked subtraction clears the lock byte and returns the flags as they
   were, so there is no lost wakeup. The lock word is not read before the
@@ -160,7 +186,29 @@ call.
   * **The wait is bounded** by `kd_rwsem_rspin_ns` (50 us) and by
     `need_resched()`. After that the reader deregisters and parks on `m`,
     where it can sleep and is not passed by later writers.
-  * Every waiting reader polls `count`; there is no head-only reader queue.
+  * **Waiting readers do not poll `count`.** They poll a phase counter in
+    a cache line of its own (`kd_rwsem_phase()`, 256 counters shared by
+    hash of the semaphore address). It changes when a writer leaves with
+    readers registered behind it, on a downgrade, and when a queued writer
+    gets in; a change only means "look at `count` again". `count` is
+    written by every reader that enters or leaves, and each poller held a
+    shared copy that those writes first had to take away. A reader also
+    looks at `count` every 64 iterations without a change.
+* **Reader phase** (`kd_rwsem_rphase_ns`, default 1000). A queue head that
+  finds readers in waits that long per reader it found, at most 50 us,
+  before it sets `WWAIT`. Otherwise each reader got one section per writer
+  phase and then waited through the next session.
+  * Fixed lengths (#59, in-boot alternation, 2 rounds, 20% writes, Mops/s):
+    8 workers 4.64 -> 5.80 at 5 us; 32 workers 4.42 -> 5.82 at 20 us; 64
+    workers 2.92 -> 4.00 at 30 us; lower again for longer phases; 4 workers
+    7.29 -> 7.00 at 5 us.
+  * Per reader, 1000 ns (#60, same method): 8 workers 4.68 -> 5.71, 16
+    workers 4.69 -> 5.88, 32 workers 4.32 -> 5.63, 64 workers 2.77 -> 3.98,
+    4 workers 7.47 -> 7.41; 1% writes at 64 workers 5.53 -> 6.54; c16 with
+    20% writes at 8 workers 3.91 -> 4.31, at 64 workers 2.48 -> 2.57.
+  * It delays a writer by a bounded time per phase. This is a fairness
+    change in the area AGENTS.md lists as deferred, made at the user's
+    request.
   * Counters: `rd_behind` counts readers admitted behind a writer phase,
     `rd_queue` counts readers that fell back to `m`.
 * **NUMA deferral starts late** (`kd_family.numa_after = 32`): a rwsem
@@ -227,6 +275,8 @@ sees neither effect.
 | `kd_batch` (core param, 0644) | 1024 | executions (served + passed over) per wait |
 | `kd_numa` (core param, 0644) | 1 | NUMA-ordered sessions |
 | `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
+| `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |
+| `kd_handoff_running` (core param, 0644) | 1 | mutex handoff only to a parked waiter that is running; 0: also to a sleeping one |
 | `kd_adapt` (core param, 0644) | 1 | plain mode below the queue depths that follow; 0: always delegation mode |
 | `kd_deleg_enter` (core param, 0644) | 5 | spinlock: waiters behind a queue head that switch the lock to delegation mode |
 | `kd_deleg_enter_sleep` (core param, 0644) | 3 | the same for a mutex |

@@ -203,3 +203,23 @@ round of work did not change.
   0.69-0.93, mutex c01 0.71-0.83.
 * **Within one node:** spin and mutex c01 are below Native from 6-8
   workers (0.73-0.91).
+
+## Round 8 (`grid-20261114-r8-64cpu/`)
+
+* **Host and VM:** as round 7. Build #61, commit `3bf4bfaa`; same grid,
+  1512 points, no failed point.
+* **Changes:** session announcement without an atomic per section, mutex
+  handoff only to a running waiter, rwsem reader phase counter and reader
+  phase (LOCKS 4 and 5).
+* **Against round 7:** mutex c01 1.17-1.54 times from 8 workers, rwsem
+  writers only 1.45-1.52, rwsem 20% writes 1.3-1.8, 1% writes 1.2-1.4
+  from 16 workers.
+* **Across nodes, kd/TCLock:** mutex c01 1.15-1.21, rwsem writers only
+  1.13-1.21, rwsem with readers 0.78-0.99, rwlock with 20% writes
+  0.72-0.98.
+* **Losses:** spin c01 0.87-0.95 of round 7 at 2-24 workers and rwlock
+  writers only 0.88-0.96, unexplained.
+* **Correctness on the same boot:** `corr61.jsonl`, `corr61.out`.
+* **Defect, older than this change set:** mmap1 with `kd_mm=1` hangs this
+  VM, also with the previous commit's kernel source. The directory README
+  has the evidence.
