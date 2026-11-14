@@ -1,7 +1,8 @@
 # Bounded ordinary spin batches: pending source candidate
 
 Base: `2592ce0b64b00e8bc0d1eda2ab766b20f5d740ec`. This source candidate
-changes atomic spin only. It is uncompiled, untested and unbenchmarked. Existing
+changes atomic spin only. The kernel candidate is uncompiled and unbenchmarked; focused excerpt and checker
+tests have passed in the VM, as recorded below. Live batching remains unverified. Existing
 rwsem diagnostics and node-wait work remain separate and pending.
 
 ## Contention admission and queue opportunity
@@ -98,8 +99,10 @@ collision reset, saturation, light queues, probe-not-due queues and no requeue
 resampling. The witness
 checks two foreign callback bodies, one unchanged physical owner, no intervening
 release/rejoin, one final backend release and remaining-queue handoff. Counters
-alone do not satisfy the witness. These checks have not compiled or executed;
-their native callbacks do not establish generated-body or weak-memory behavior.
+alone do not satisfy the witness. The extractor regression and all eighteen cases compiled and passed in the VM on
+`7.0.0-38-kdrebuild16`. Their native callbacks do not establish generated-body or
+weak-memory behavior. The extractor now excludes the `detach_proxy` forward
+declaration and requires exactly one function definition.
 
 The benchmark session must pin the exact spin-only candidate, source/config/compiler and modules, check
 idle/recovery/space, build the affected core/fixture and run only focused tests.
@@ -116,7 +119,48 @@ reacquisition and proxy-off cases. Preserve failure and incomplete evidence.
 No matched performance or TCLock parity claim is available.
 
 Source inspection and preservation checks are separate from this unrun VM work.
-No build, test execution or VM action belongs to this implementation phase. A
+Live core validation requires a separate exact candidate build and boot. A
 spin-only candidate commit may be prepared with a separate index and branch ref;
 main, its original index and the pending rwsem working tree must remain unchanged.
 Integration into main requires successful focused validation of that exact candidate.
+
+## Focused continuous-ownership JIT test
+
+Run `tests/kernel/spin/run_spin_batch_fixture.py` in the designated VM with the
+same explicit identity, immutable-text, auxiliary-stack, source limits, event
+capacity and six distinct CPU arguments as `run_spin_runtime_fixture.py`. The
+module must be rebuilt from these fixture sources against a kernel containing
+the spin candidate. A successful run on an older core is not accepted evidence.
+Use the existing exact kernel ELF/configuration/GS receipts and recovery checks;
+do not modify a frozen benchmark kernel or infer recovery from a timeout.
+
+This entry point runs only the focused spin scene and required publication and
+shutdown plumbing. Scene zero is enabled only for the spin fixture. H holds A;
+C, W1 and W2 enqueue in observed order on A before H releases it. The independent
+B holder supplies no protected source effect. Each round checks all five tasks,
+three exactly-once A effects and ordinary callee effects, original contexts and
+complete lock drain. The same lock incarnation and C CPU persist across rounds.
+The runner permits at most 164 rounds, observes every genuine contended C entry,
+and allows source learning at the policy's 16-acquisition probe intervals after
+the initial 100-acquisition window. It never sets policy counters or shortens the
+production window. Every round and all failed/incomplete evidence are retained.
+
+Acceptance requires two distinct foreign origins, canonical states and acquisition
+records, generated entry/normal exits and exactly one typed unlock each, followed
+by their proxy returns before one physical release callback. Both grants must name
+one owner on the same object. No intervening other owner, release or C requeue is
+allowed. Existing exact source-drop, ACK, record retirement and slot-free checks
+apply to both requests; the image stays fixed throughout the accepted round.
+Empty feedback and ordinary archival/destroy/unload complete the successful run.
+A selection count, image publication, native callback or handed-back suffix cannot
+satisfy this witness.
+
+Eight focused checker regressions passed in the VM, including negative examples
+for separate owners, absent JIT entry, native execution, handback, intervening
+release, different objects and C requeue. These synthetic records test rejection logic only. The
+live scene has not run: the inspected VM remains on `7.0.0-38-kdrebuild16`, not a
+kernel built from this spin candidate. No two-foreign-JIT-body runtime result or
+performance improvement is claimed. Keep the candidate unmerged until that exact
+kernel/module/image run succeeds.
+
+[Focused VM receipts](../../tests/evidence/spin-batch-focused-20261113/README.md).

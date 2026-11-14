@@ -34,6 +34,30 @@ CASES = ('zero', 'one', 'two', 'cap', 'second_ineligible', 'later_hole', 'miss',
          'reacquire', 'proxy_off', 'cap_one', 'retirement', 'policy', 'light', 'not_due', 'accounting', 'head_hole', 'epoch')
 
 
+def extract_definition(text, symbol):
+    """Select a file-scope definition, excluding forward declarations/calls."""
+    pattern = (r"^[A-Za-z_][\w *]*\b" + re.escape(symbol)
+               + r"\([^;{}]*\)\s*\n\{")
+    matches = list(re.finditer(pattern, text, re.M))
+    if len(matches) != 1:
+        raise ValueError(f"expected one definition of {symbol}, found {len(matches)}")
+    match = matches[0]
+    # These production excerpts use file-scope closing braces in column zero.
+    return text[match.start():text.index("\n}", match.end()) + 2]
+
+
+class ExtractorTests(unittest.TestCase):
+    def test_forward_declaration_is_not_a_definition(self):
+        source = ("static void detach_proxy(struct batch *b, struct node *n);\n"
+                  "static void unrelated(void)\n{\n}\n"
+                  "static void detach_proxy(struct batch *b, struct node *n)\n"
+                  "{\n    consume(b, n);\n}\n")
+        self.assertEqual(extract_definition(source, "detach_proxy"),
+                         source[source.rindex("static void detach_proxy"):].rstrip())
+        with self.assertRaises(ValueError):
+            extract_definition(source.split("static void unrelated")[0], "detach_proxy")
+
+
 class SpinBatchTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -60,10 +84,7 @@ class SpinBatchTests(unittest.TestCase):
             if name == 'kernel/observation.h':
                 types += re.findall(r'^#define KD_OBS_FLAG_.*$', text, re.M)
             for symbol in FUNCTIONS.get(name, ()):
-                match = re.search(r'^[\w *]+\b' + symbol + r'\(', text, re.M)
-                if match is None:
-                    raise ValueError('missing function ' + symbol)
-                functions.append(text[match.start():text.index('\n}', match.end()) + 2])
+                functions.append(extract_definition(text, symbol))
         (cls.output / 'batch_types.h').write_text('\n'.join(types) + '\n')
         (cls.output / 'batch_functions.h').write_text('\n'.join(functions) + '\n')
         policy = (ROOT / 'kernel/spin_policy.h').read_bytes()

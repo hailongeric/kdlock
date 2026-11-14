@@ -1,0 +1,16 @@
+{
+  "base_candidate": "4e2f48eca8b37c1d3c84afa656a6c11b3a4f3603",
+  "running_kernel": "7.0.0-38-kdrebuild16",
+  "source_hashes": {
+    "tests/test_spin_batch.py": "d1365f773294663ebad0c3a24aa0144f8ec234b529404fb0e754224bf0d6e246",
+    "tests/spin_batch/batch_check.c": "fdf1fa23a2b7113ca770665a489425366f70efeca78fb345a67169a50ed77f59",
+    "tests/test_spin_batch_evidence.py": "2d1ecd57c5ab8b58f152a940ca6694806aeea54816880dd0346371ce2533a3a2",
+    "tests/kernel/spin/batch_cases.py": "e64f494d8094966478b4733fd456da2fd408d9a3179b3c80847a9acaad0b233c",
+    "tests/kernel/spin/run_spin_batch_fixture.py": "c84faf822a3d724dedf09d2dba4ac0174e75afe2a58afd645f5a1e318ea4e71f",
+    "tests/kernel/run_runtime_fixture.py": "d483e13e5f285e6135002bc6bf1dfb7a137a302571d71777d57ced84ae3eede0",
+    "tests/kernel/payload/runtime_fixture.c": "e280b11b5264d05982d98e1ed62a6be4eb13754de77a0d34abc9611f35b3e0da",
+    "tests/kernel/payload/runtime_fixture_observe.inc": "69a37645dee8f79c2ccf6d4f195996ca3e4d6eedfb205fa191aa524fa521aa36"
+  },
+  "live_jit_scene_executed": false,
+  "kernel_candidate_compiled": false
+}

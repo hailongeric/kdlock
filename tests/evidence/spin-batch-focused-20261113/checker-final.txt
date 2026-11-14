@@ -1,0 +1,6 @@
+tar: tests/test_spin_batch_evidence.py: time stamp 2026-11-13 23:51:04.6478808 is 1.036473048 s in the future
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.001s
+
+OK

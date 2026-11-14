@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/tmp/spin-batch-shw7mp7t/batch_check",
+    "later_hole"
+  ],
+  "returncode": 0,
+  "stdout": "PASS later_hole\n",
+  "stderr": ""
+}

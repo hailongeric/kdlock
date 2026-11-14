@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/tmp/spin-batch-shw7mp7t/batch_check",
+    "nested"
+  ],
+  "returncode": 0,
+  "stdout": "PASS nested\n",
+  "stderr": ""
+}

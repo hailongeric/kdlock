@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/tmp/spin-batch-shw7mp7t/batch_check",
+    "proxy_off"
+  ],
+  "returncode": 0,
+  "stdout": "PASS proxy_off\n",
+  "stderr": ""
+}

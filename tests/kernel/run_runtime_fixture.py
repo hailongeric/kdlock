@@ -164,11 +164,13 @@ def scan_operation_calls(exported, objdump, directory, timeout):
     return classified.snapshot, tuple(sorted(set(lock_roots))), tuple(calls), tuple(indirect)
 
 
-def main(*, spin=False, family=None):
+def main(*, spin=False, family=None, spin_batch=False):
     family = ("spin" if spin else "mutex") if family is None else family
     if family not in ("mutex", "spin", "rwsem", "rwlock") or (spin and family != "spin"):
         raise ValueError("one exact supported fixture family is required")
     spin = family == "spin"
+    if spin_batch and not spin:
+        raise ValueError("batch proof is spin-only")
     atomic = family in ("spin", "rwlock")
     readers = family in ("rwsem", "rwlock")
     synchronous = family != "mutex"
@@ -993,10 +995,11 @@ def main(*, spin=False, family=None):
         control = os.open(f"/dev/{module_name}_ctl", os.O_RDWR | os.O_CLOEXEC)
         event_fd = os.open(f"/dev/{module_name}_events", os.O_RDONLY | os.O_CLOEXEC)
         managed_fork_case()
-        body_case("native-local", 0, 1, args.iterations)
+        if not spin_batch:
+            body_case("native-local", 0, 1, args.iterations)
         if reader_checks is not None:
             reader_checks.native()
-        if atomic:
+        if atomic and not spin_batch:
             body_case("spin-native-nesting", 4, 1, args.iterations)
             scene_case(3, 0)
         limits = WireLimits(2 * 1024 * 1024, 4096, 256, 256, 512 * 1024)
@@ -1088,55 +1091,79 @@ def main(*, spin=False, family=None):
             })
             return result
 
-        compiler_cycle(force=True)
-        for number, mode in enumerate((0, 1, 2)):
-            body_case(("contended-local", "nested", "out-of-order")[number], mode, args.workers, args.iterations)
-            compiler_cycle(run_pending_probe=number == 0)
-        if reader_checks is not None:
-            reader_checks.training(compiler_cycle, lambda: old, lambda: coordinator.facts())
-        # Prefix learning retains deliberate checkpoint facts without ACK.
-        # Fixed-image completion must add no fact to that exact baseline.
-        warm_retained = reader_checks.intentional_keys(coordinator.facts()) if reader_checks else set()
-        if readers and set(coordinator.pending_keys()) != warm_retained:
-            raise AssertionError("controlled learning left an uncovered ordinary or unexpected fact")
-        # The final candidate is now fixed. No image replacement or pending
-        # probe is permitted in these completion checks.
-        fixed_image = old
-        results["warm_image_identity"] = fixed_image
-        if family == "mutex":
-            # An image is available, but an outer fast owner keeps each
-            # nested source local. Exercise both ordinary and non-LIFO release.
-            body_case("fast-native-nesting", 1, 1, 1)
-            body_case("fast-native-non-lifo", 2, 1, 1)
-        warm_start = len(observations())
-        body_case("warm-plain", 0, args.workers, args.iterations)
-        warm_plain_end = len(observations())
-        warm_proofs = [{"name": "warm-plain", "start": warm_start, "end": warm_plain_end}]
-        for mode in (1, 2):
-            warm_proofs.append(scene_case(mode, fixed_image))
-        save_observations("observations-before-shutdown")
-        results["warm_completion"] = warm_proofs
-        if reader_checks is not None:
-            reader_checks.warm(fixed_image)
-        # The actual claim must equal its retained intentional baseline.
-        # Other families still require the original completely empty claim.
-        empty_cycle = compiler_cycle(claim_only=True)
-        if ({fact.key for fact in empty_cycle.claim.records} != warm_retained
-                or empty_cycle.publication is not None or old != fixed_image):
-            raise AssertionError("warm completion generated misses or replaced its fixed image")
-        results["warm_claim_empty"] = not empty_cycle.claim.records
-        results["warm_claim_no_new_facts"] = True
-        if readers:
-            results["warm_retained_intentional_keys"] = [{"record": key.record_identity.hex(),
-                "incarnation": key.incarnation} for key in sorted(warm_retained,
-                    key=lambda key: (key.record_identity, key.incarnation))]
-        validate_warm_plain(event_rows[warm_start:warm_plain_end], fixed_image)
-        if atomic:
-            results["spin_miss_handback"] = scene_case(3, fixed_image)
-            save_observations("observations-after-miss")
-        if reader_checks is not None:
-            reader_checks.deliberate_misses(fixed_image)
-            save_observations("observations-after-reader-misses")
+        if spin_batch:
+            from spin.batch_cases import SpinBatchCases
+            batch_checks = SpinBatchCases(control_command, wait_scene, observations, has,
+                check_spin_status, typed_unlock, validate_retirement)
+            compiler_cycle(force=True)
+            results["spin_batch_rounds"] = []
+            # Same lock incarnation and assigned C CPU throughout. No policy
+            # writes or shortened windows: each round observes a real slow entry.
+            for number in range(1, 165):
+                item = batch_checks.round(old)
+                item["round"] = number
+                results["spin_batch_rounds"].append(item)
+                if item["proof"] is not None:
+                    results["spin_batch_continuous_owner"] = item["proof"]
+                    break
+                if number >= 100 and (number - 100) % 16 == 0:
+                    compiler_cycle()
+            else:
+                raise AssertionError("164 bounded rounds produced no two-body continuous JIT batch")
+            empty = compiler_cycle(claim_only=True)
+            if empty.claim.records or empty.publication is not None:
+                raise AssertionError("complete spin batch left unexpected translation feedback")
+            save_observations("observations-spin-batch")
+        else:
+            compiler_cycle(force=True)
+            for number, mode in enumerate((0, 1, 2)):
+                body_case(("contended-local", "nested", "out-of-order")[number], mode, args.workers, args.iterations)
+                compiler_cycle(run_pending_probe=number == 0)
+            if reader_checks is not None:
+                reader_checks.training(compiler_cycle, lambda: old, lambda: coordinator.facts())
+            # Prefix learning retains deliberate checkpoint facts without ACK.
+            # Fixed-image completion must add no fact to that exact baseline.
+            warm_retained = reader_checks.intentional_keys(coordinator.facts()) if reader_checks else set()
+            if readers and set(coordinator.pending_keys()) != warm_retained:
+                raise AssertionError("controlled learning left an uncovered ordinary or unexpected fact")
+            # The final candidate is now fixed. No image replacement or pending
+            # probe is permitted in these completion checks.
+            fixed_image = old
+            results["warm_image_identity"] = fixed_image
+            if family == "mutex":
+                # An image is available, but an outer fast owner keeps each
+                # nested source local. Exercise both ordinary and non-LIFO release.
+                body_case("fast-native-nesting", 1, 1, 1)
+                body_case("fast-native-non-lifo", 2, 1, 1)
+            warm_start = len(observations())
+            body_case("warm-plain", 0, args.workers, args.iterations)
+            warm_plain_end = len(observations())
+            warm_proofs = [{"name": "warm-plain", "start": warm_start, "end": warm_plain_end}]
+            for mode in (1, 2):
+                warm_proofs.append(scene_case(mode, fixed_image))
+            save_observations("observations-before-shutdown")
+            results["warm_completion"] = warm_proofs
+            if reader_checks is not None:
+                reader_checks.warm(fixed_image)
+            # The actual claim must equal its retained intentional baseline.
+            # Other families still require the original completely empty claim.
+            empty_cycle = compiler_cycle(claim_only=True)
+            if ({fact.key for fact in empty_cycle.claim.records} != warm_retained
+                    or empty_cycle.publication is not None or old != fixed_image):
+                raise AssertionError("warm completion generated misses or replaced its fixed image")
+            results["warm_claim_empty"] = not empty_cycle.claim.records
+            results["warm_claim_no_new_facts"] = True
+            if readers:
+                results["warm_retained_intentional_keys"] = [{"record": key.record_identity.hex(),
+                    "incarnation": key.incarnation} for key in sorted(warm_retained,
+                        key=lambda key: (key.record_identity, key.incarnation))]
+            validate_warm_plain(event_rows[warm_start:warm_plain_end], fixed_image)
+            if atomic:
+                results["spin_miss_handback"] = scene_case(3, fixed_image)
+                save_observations("observations-after-miss")
+            if reader_checks is not None:
+                reader_checks.deliberate_misses(fixed_image)
+                save_observations("observations-after-reader-misses")
         states = coordinator.facts()
         successful_exits = tuple(state for state in states if state.recorded.fact.entry_result == 0
                                  and state.recorded.fact.exit.kind == int(ExitKind.COVERAGE_MISS))
@@ -1199,7 +1226,7 @@ def main(*, spin=False, family=None):
         results["settled_keys"] = len(archive.settlement.keys)
         if reader_checks is not None:
             reader_checks.archived(coordinator.facts(), archive)
-        if atomic:
+        if atomic and not spin_batch:
             miss = results["spin_miss_handback"]["exited"]
             retained = [state for state in coordinator.facts()
                         if state.recorded.fact.exit.source_ip == miss["ip"]
@@ -1225,6 +1252,8 @@ def main(*, spin=False, family=None):
                              "spin": "protected_spin_jit_recursive_mechanism_pass",
                              "rwsem": "protected_rwsem_jit_reader_mechanism_pass",
                              "rwlock": "protected_rwlock_jit_reader_mechanism_pass"}[family]
+        if spin_batch:
+            results["status"] = "spin_two_foreign_jit_bodies_one_physical_acquisition_pass"
         (args.output / "result.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
         return 0
     except BaseException as error:
