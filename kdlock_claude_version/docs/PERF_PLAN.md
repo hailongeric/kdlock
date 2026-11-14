@@ -201,6 +201,44 @@ Status 2026-11-13 (adaptive delegation, role exchange, API coverage; commits
   are slower than Native at 32 workers (spin body with a sixteenth handed
   back: about 0.8) and are not switched off until handbacks dominate.
 
+Status 2026-11-14 (rwsem across NUMA nodes; the user asked to optimize the
+cases where rwsem and similar locks across nodes are far from TCLock, which
+touches the reader fairness area AGENTS.md lists as deferred). Data:
+`grid-20261113-r6/` (380G10, #56) and `grid-20261114-r7-64cpu/`
+(10.176.26.71, 64 vCPUs, #56). Details: DIFFERENCES D11, LOCKS 5.
+
+* **Changes:**
+  * rwsem readers wait outside `->m`, registered behind an active writer.
+  * The read fast path looks before it adds.
+  * NUMA deferral in rwsem writer sessions starts after 32 waiters
+    (`kd_family.numa_after`).
+  * `kd_rwsem_is_contended` also reports readers registered behind a
+    writer.
+* **Gain:** round 6 against round 5 (same host): rwsem with 20% writes is
+  1.2-2.3 times faster from 8 workers. Across nodes kd/TCLock went from
+  0.23-0.38 to 0.55-0.64.
+* **Loss:** rwsem c16 with 1% writes is 0.80-0.94 of round 5, while TCLock
+  and Native are flat at those points; not yet explained.
+* **Rejected with data:**
+  * the same admission for the rwlock, -18 to -46%;
+  * writer-bit pass on release, archived as
+    `refs/archive/kdclaude-rwsem-writer-pass-20261113`;
+  * reader poll spacing.
+* **On 64 vCPUs** (workers 1-32 on one node, 40-64 across both):
+  * Across nodes, kd/TCLock is still 0.52-0.53 for rwsem with 20% writes,
+    0.57-0.80 for the other rwsem profiles, 0.69-0.93 for rwlock with
+    writers and 0.71-0.83 for mutex c01.
+  * kd is ahead for mutex c16 (1.48-1.59), rwlock writers only (1.21-1.25)
+    and spin c08 (1.14).
+  * Within one node, delegation is below Native for spin (0.73-0.89 at
+    6-32 workers), mutex c01 (0.84-0.91 from 8) and rwsem writers only
+    (0.72-0.75).
+* **Next:**
+  * a head-only reader queue for rwsem;
+  * longer writer phases under reader pressure;
+  * the single-node spin and mutex region;
+  * the rwsem c16 1% loss.
+
 ### Task D: API switch and micro/API stage
 
 Status 2026-11-13: the mmap lock is switched (`CONFIG_KDLOCK_MM`,

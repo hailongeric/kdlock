@@ -235,10 +235,16 @@ static inline int kd_rwsem_is_write_locked(struct kd_rwsem *sem)
 	return (atomic_long_read(&sem->count) & KD_RWSEM_WLOCKED) != 0;
 }
 
-/* Somebody waits in the slow path, as rwsem_is_contended(). */
+/*
+ * Somebody waits in the slow path, as rwsem_is_contended(): a queued writer
+ * or reader, or readers registered behind the writer that holds the lock.
+ */
 static inline int kd_rwsem_is_contended(struct kd_rwsem *sem)
 {
-	return atomic_read(&sem->m.q.val) != 0 || !list_empty(&sem->m.waiters);
+	long c = atomic_long_read(&sem->count);
+
+	return atomic_read(&sem->m.q.val) != 0 || !list_empty(&sem->m.waiters) ||
+	       ((c & KD_RWSEM_WLOCKED) && (c >> KD_RWSEM_RSHIFT));
 }
 
 #endif /* _KDLOCK_KD_API_H */

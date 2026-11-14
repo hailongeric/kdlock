@@ -762,6 +762,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_node *n, *nn, *first = NULL, *last = NULL;
 	bool numa = READ_ONCE(kd_numa);
+	unsigned int numa_after = f ? f->numa_after : 0;
 	bool adapt = READ_ONCE(kd_adapt) && !(f && f->always_deleg);
 	bool handed = false, leave = false;
 	unsigned int served = 0, passed = 0;
@@ -799,7 +800,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			kd_stat_inc(kc, KD_STAT_STOP_HANDOFF);
 			break;
 		}
-		if (numa && n->nid != me->nid) {
+		if (numa && n->nid != me->nid && served >= numa_after) {
 			/*
 			 * Not claimed: a sleepable-class waiter may still
 			 * withdraw while it is on the list; whoever meets it

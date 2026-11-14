@@ -177,3 +177,29 @@ c16 everywhere from 6 (1.12-1.25). Below: mutex c01 at 12-32 workers
 20-32 (0.64-0.83), rwsem at 20-32 (w1 0.66-0.84, w20 0.23-0.38). The rwsem
 and rwlock gaps across both NUMA nodes are the reader paths, which this
 round of work did not change.
+
+## Round 6 (`grid-20261113-r6/`)
+
+* **Run:** 380G10, build #56 with the Task C rwsem changes (DIFFERENCES
+  D11). 10 profiles, Native, kd and TCLock, 2 rounds, 840 points, no failed
+  point.
+* **Gain:** rwsem with 20% writes is 1.2-2.3 times round 5 from 8 workers.
+  Across both nodes kd/TCLock went from 0.23-0.38 to 0.55-0.64.
+* **Loss:** rwsem c16 with 1% writes is 0.80-0.94 of round 5.
+* **`nodaemon.jsonl`:** the same grid on the same boot without the daemon
+  (0% delegated); a control, not a kd result. The directory README has the
+  tables.
+
+## Round 7 (`grid-20261114-r7-64cpu/`)
+
+* **Host:** 10.176.26.71, VM with 64 vCPUs (2 x 32) and 24 GiB; not
+  comparable with rounds 1-6.
+* **Run:** build #56, 14 profiles, workers 1-64, Native, kd and TCLock,
+  2 rounds, 1512 points, no failed point. Workers 1-32 run on one node,
+  40-64 span both.
+* **Correctness on the same boot:** `corr56.jsonl` and the directory
+  README.
+* **Across nodes, kd/TCLock:** rwsem 0.52-0.80, rwlock with writers
+  0.69-0.93, mutex c01 0.71-0.83.
+* **Within one node:** spin and mutex c01 are below Native from 6-8
+  workers (0.73-0.91).

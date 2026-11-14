@@ -181,6 +181,9 @@ enum {
 	KD_STAT_HB_ACQUIRE,	/* sleeping acquire that could not be completed here */
 	KD_STAT_HB_DOWNGRADE,	/* rwsem downgrade: the read-side remainder is the origin's */
 	KD_STAT_HB_OTHER,
+	/* Rwsem readers that missed the fast path. */
+	KD_STAT_RD_BEHIND,	/* registered behind an active writer and waited for it */
+	KD_STAT_RD_QUEUE,	/* gave up spinning and queued on ->m */
 	KD_STAT_NR,
 };
 
@@ -294,6 +297,14 @@ struct kd_family {
 	void (*xflag)(void *root, bool set);
 	bool keeps_q;
 	bool always_deleg;
+	/*
+	 * NUMA deferral (kd_numa) starts only after a session has served this
+	 * many waiters in queue order (0: from the first). Passing a waiter
+	 * over splits the session into one per node; that pays only when the
+	 * sessions are long enough to amortise the extra start of a session
+	 * (queue handoff, family post, a reader phase for an rwsem).
+	 */
+	unsigned int numa_after;
 };
 
 /* kd_entry.S */

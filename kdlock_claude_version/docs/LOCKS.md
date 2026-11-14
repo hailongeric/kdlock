@@ -146,8 +146,26 @@ call.
   queue. The head takes `m`, sets the writer bit and waits for readers to
   drain (`post()`); if draining would need sleep it returns
   `KD_WAIT_SLEEP_HELD` and the stub sleeps for `count` while holding `m`.
-* **Readers never delegate.** A reader takes `count` by cmpxchg and parks on
-  `m` when a writer holds or waits.
+* **Readers never delegate, and normally do not queue on `m`**
+  (`kd_down_read_admit()`). The fast path reads `count` first and adds the
+  reader bias only when no writer bit is set.
+  * **A writer is in (`WLOCKED`):** the reader registers (adds its bias)
+    and waits for the writer bit to clear. That is the end of the
+    writer's session, since the combiner keeps the bit for all the writers
+    it serves. The readers registered behind one writer phase enter
+    together, and the next writer waits for exactly that batch.
+  * **A writer is only waiting (`WWAIT`):** the reader stays out until
+    that writer is in, then registers behind it. Registering earlier would
+    keep the waiting writer out indefinitely.
+  * **The wait is bounded** by `kd_rwsem_rspin_ns` (50 us) and by
+    `need_resched()`. After that the reader deregisters and parks on `m`,
+    where it can sleep and is not passed by later writers.
+  * Every waiting reader polls `count`; there is no head-only reader queue.
+  * Counters: `rd_behind` counts readers admitted behind a writer phase,
+    `rd_queue` counts readers that fell back to `m`.
+* **NUMA deferral starts late** (`kd_family.numa_after = 32`): a rwsem
+  writer session serves the first 32 waiters in queue order and defers
+  remote-node waiters only after that (ARCHITECTURE 7).
 * **Downgrade** (`kd_downgrade_write`) is one atomic and, inside a section,
   is always handed back: the origin performs it natively.
 * **Write release** (`kd_up_write`) is one locked subtraction, as for the
@@ -208,6 +226,7 @@ sees neither effect.
 | --- | --- | --- |
 | `kd_batch` (core param, 0644) | 1024 | executions (served + passed over) per wait |
 | `kd_numa` (core param, 0644) | 1 | NUMA-ordered sessions |
+| `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
 | `kd_adapt` (core param, 0644) | 1 | plain mode below the queue depths that follow; 0: always delegation mode |
 | `kd_deleg_enter` (core param, 0644) | 5 | spinlock: waiters behind a queue head that switch the lock to delegation mode |
 | `kd_deleg_enter_sleep` (core param, 0644) | 3 | the same for a mutex |

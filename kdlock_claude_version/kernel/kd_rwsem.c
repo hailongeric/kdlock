@@ -3,15 +3,16 @@
  * kdlock rwsem.
  *
  * ->count holds the writer bit, a writer-waiting bit and the reader count,
- * as in the rwlock. ->m is a kdlock mutex used as the ordering queue for
- * everything that cannot take the fast path. Only the task holding ->m
- * ever waits on ->count, so ->m.owner names the single task a release may
- * have to wake (KD_RWSEM_NEEDWAKE).
+ * as in the rwlock. ->m is a kdlock mutex used as the queue of writers that
+ * cannot take the fast path, and of readers that waited too long to keep
+ * spinning. Only the task holding ->m ever sleeps on ->count, so ->m.owner
+ * names the single task a release may have to wake (KD_RWSEM_NEEDWAKE).
  *
  * Writers are delegable. A writer that reaches the head of ->m takes the
  * writer bit and then, as combiner, keeps the bit and ->m while executing
- * the writers queued behind it. Readers queue on ->m without publishing a
- * continuation, so a session ends at the first queued reader.
+ * the writers queued behind it. Readers wait outside ->m, registered
+ * behind the active writer (kd_down_read_admit()), so they do not end a
+ * session; one that falls back to ->m does, as it publishes nothing.
  *
  * Releasing the write side clears the writer bit and wakes the holder of
  * ->m if it sleeps; it never touches ->m. That makes the release identical
@@ -30,8 +31,6 @@
 #include <linux/preempt.h>
 #include "kd_internal.h"
 
-#define KD_RWSEM_SPIN	1024	/* iterations a reader spins before queueing */
-
 /*
  * How long the writer at the head of the queue spins for the readers to
  * leave before it sleeps holding ->m. Sleeping there is expensive: every
@@ -44,6 +43,10 @@
  */
 static unsigned int kd_rwsem_wspin_ns __read_mostly = 50000;
 core_param(kd_rwsem_wspin_ns, kd_rwsem_wspin_ns, uint, 0644);
+
+/* How long a reader that missed the fast path waits before it queues on ->m. */
+static unsigned int kd_rwsem_rspin_ns __read_mostly = 50000;
+core_param(kd_rwsem_rspin_ns, kd_rwsem_rspin_ns, uint, 0644);
 
 static __always_inline bool kd_rwsem_readers(long c)
 {
@@ -150,6 +153,13 @@ static const struct kd_family kd_rwsem_family = {
 	.xflag		= kd_rwsem_xflag,
 	.keeps_q	= true,
 	.always_deleg	= true,
+	/*
+	 * NUMA deferral only in long sessions; see kd_family.numa_after.
+	 * Measured (build #49, in-boot alternation, 3 rounds, 32 workers):
+	 * deferral +128% with writers only (1.56 -> 3.56 Mops/s), -22% with
+	 * 20% writers (2.34 -> 1.82), where sessions serve 6-11 writers.
+	 */
+	.numa_after	= 32,
 };
 
 /* Called by the entry stub on the wait stack. */
@@ -368,41 +378,94 @@ int kd_down_read_trylock(struct kd_rwsem *sem)
 EXPORT_SYMBOL(kd_down_read_trylock);
 
 /*
- * Before queueing on ->m, wait a bounded time for the writer side to clear.
- * Write sections are usually short, and the queue path costs at least one
- * sleep and wakeup per reader, in sequence: the holder of ->m sleeps on
- * ->count, and the next reader sleeps behind it. Readers waiting here do
- * not hold back writers: a queued writer's KD_RWSEM_WWAIT keeps them out
- * until it has had its turn.
+ * Reader admission without the queue mutex (D11).
+ *
+ * A reader that finds a writer inside (KD_RWSEM_WLOCKED) stays registered
+ * and waits for that writer, or the combiner's whole session, to leave.
+ * The registered count keeps the next writer out (a writer takes the lock
+ * only with no reader in), so the readers that arrived during one writer
+ * phase enter together right after it, and the next writer waits for
+ * exactly that batch. A reader that finds a writer only waiting
+ * (KD_RWSEM_WWAIT: the head of ->m waits for the readers in to leave) does
+ * not register, which would keep that writer out indefinitely; it waits
+ * for the writer to get in and then registers behind it.
+ *
+ * This replaces a passage through ->m per reader: ->m serialised the
+ * readers (one handoff of the queue each, across nodes on a two-node
+ * machine), and every queued reader ended the session of the combiner
+ * in front of it, so writer sessions stayed short. With readers out of
+ * ->m, ->m orders writers only, as the writer queue does in TCLocks.
+ *
+ * Every registered reader polls ->count; there is no head-only reader
+ * queue. Waiting is bounded by time and by need_resched(): then the reader
+ * deregisters and queues on ->m, where it can sleep and from where it
+ * cannot be passed by later writers.
+ *
+ * @reg: the reader is registered (its increment is in ->count, behind an
+ * active writer). Returns true with the read side held.
  */
-static bool kd_down_read_spin(struct kd_rwsem *sem)
+static bool kd_down_read_admit(struct kd_rwsem *sem, long c, bool reg)
 {
-	long c;
+	u64 end = 0;
 	int i;
 
-	for (i = 0; i < KD_RWSEM_SPIN; i++) {
-		c = atomic_long_read(&sem->count);
-		if (!(c & KD_RWSEM_WMASK)) {
-			if (atomic_long_try_cmpxchg_acquire(&sem->count, &c, c + KD_RWSEM_RBIAS))
+	for (i = 0;; i++) {
+		if (reg) {
+			/* Registered behind an active writer: wait for it to leave. */
+			if (!(atomic_long_read(&sem->count) & KD_RWSEM_WLOCKED)) {
+				smp_acquire__after_ctrl_dep();
+				kd_stat_inc(raw_cpu_ptr(&kd_cpu), KD_STAT_RD_BEHIND);
 				return true;
-			continue;
+			}
+		} else {
+			c = atomic_long_read(&sem->count);
+			if (!(c & KD_RWSEM_WMASK)) {
+				if (atomic_long_try_cmpxchg_acquire(&sem->count, &c,
+								    c + KD_RWSEM_RBIAS))
+					return true;
+				continue;
+			}
+			if (c & KD_RWSEM_WLOCKED) {
+				/* A writer is in: register behind it. */
+				c = atomic_long_add_return_acquire(KD_RWSEM_RBIAS, &sem->count);
+				if (!(c & KD_RWSEM_WLOCKED))
+					return true;	/* it left already: we are in */
+				reg = true;
+				continue;
+			}
+			/* Only a writer waiting: stay out until it is in. */
 		}
 		if (need_resched())
 			break;
+		if (!(i & 63)) {
+			u64 now = local_clock();
+
+			if (!end)
+				end = now + READ_ONCE(kd_rwsem_rspin_ns);
+			else if (now > end)
+				break;
+		}
 		cpu_relax();
 	}
+	if (reg)
+		kd_rwsem_read_undo(sem);
 	return false;
 }
 
-static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state)
+static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state, long c,
+				      bool added)
 {
 	int ret;
+	bool reg = added && (c & KD_RWSEM_WLOCKED);
 
-	kd_rwsem_read_undo(sem);
-	if (kd_down_read_spin(sem))
+	/* Behind an active writer the fast path's increment stays. */
+	if (added && !reg)
+		kd_rwsem_read_undo(sem);
+	if (kd_down_read_admit(sem, c, reg))
 		return 0;
 
 	/* Queue behind earlier writers and readers. */
+	kd_stat_inc(raw_cpu_ptr(&kd_cpu), KD_STAT_RD_QUEUE);
 	ret = kd_mutex_sleep(&sem->m, state, NULL);
 	if (ret)
 		return ret;
@@ -416,10 +479,7 @@ static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state)
 	 * The writer still inside is usually a combiner running its own
 	 * section right after releasing ->m, which takes nanoseconds. Spin
 	 * for it before sleeping: a holder of ->m that sleeps makes every
-	 * queued writer see an off-CPU owner and park. Measured (A/B in one
-	 * boot): w20 at 20 workers +16-33%, no change elsewhere; the larger
-	 * high-worker-count rwsem loss has other causes (readers serialise
-	 * through ->m), see docs/DIFFERENCES.md D11.
+	 * queued writer see an off-CPU owner and park.
 	 */
 	kd_rwsem_spin_for(sem, false);
 	ret = kd_rwsem_sleep_on(sem, state,
@@ -435,10 +495,20 @@ static __always_inline int __kd_down_read(struct kd_rwsem *sem, unsigned int sta
 	long c;
 
 	might_sleep();
+	/*
+	 * Look before adding: while a writer is in or waiting, the increment
+	 * and its undo are two more locked operations on the line that the
+	 * readers leaving and the waiting writer need (measured, in-boot A/B,
+	 * build #55: 20% writes +5-18% at 4-32 workers; 1% writes +3-8% from
+	 * 8 workers, -4% at 4).
+	 */
+	c = atomic_long_read(&sem->count);
+	if (unlikely(c & KD_RWSEM_WMASK))
+		return kd_down_read_slow(sem, state, c, false);
 	c = atomic_long_add_return_acquire(KD_RWSEM_RBIAS, &sem->count);
 	if (likely(!(c & KD_RWSEM_WMASK)))
 		return 0;
-	return kd_down_read_slow(sem, state);
+	return kd_down_read_slow(sem, state, c, true);
 }
 
 void kd_down_read(struct kd_rwsem *sem)

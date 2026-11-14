@@ -307,6 +307,15 @@ head and combines for its own node. Passed-over waiters count against the
 batch budget (`kd_batch`, default 1024) so handbacks cannot extend it;
 waiters without an image are never passed over. `kd_numa=0` restores FIFO.
 
+A family can delay the deferral (`kd_family.numa_after`): the session then
+serves that many waiters in queue order before it defers any. Only rwsem sets
+it, to 32; the other families use 0. On 380G10 (build #49, in-boot
+alternation, 3 rounds, 32 workers across two nodes), deferral from the
+first waiter took writers-only rwsem from 1.56 to 3.56 Mops/s. The same
+setting took 20% writes from 2.34 down to 1.82 Mops/s, because those
+sessions serve only 6-11 writers before a reader phase. With 32, both
+profiles kept the better value: w100 at 3.63, w20 at 2.31.
+
 Consequence: a waiter is delayed by at most (batch × number of nodes ahead of
 it) executions. This is a bound on batches, not a fairness guarantee for
 arbitrary workloads.

@@ -1,19 +1,23 @@
 # Build and test
 
 All builds and runs happen in the `kdclaude` VM, never on the source host.
-Source edits are made on the host and reach the VM through the 9p share.
+Source edits are made on 380G10. Since 2026-11-14 the VM runs on
+10.176.26.71, and its 9p share is that host's `vm-shared`, so edited files
+are copied there (rsync) before a build or run. Do not run it at the same
+time as the other VM on that host (`ubuntu-build`): memory and CPUs are
+not enough for both, and timings would interfere.
 
 ## 1. The VM
 
 | Item | Value |
 | --- | --- |
-| Start / stop / monitor / pin | `/home/eric/vm/qemu-scripts/run_claude_vm.sh [start\|stop\|monitor\|pin]` |
-| SSH | `ssh -p 2223 root@127.0.0.1` |
+| Start / stop / monitor / pin | on 10.176.26.71: `/home/eric/vm/qemu-scripts/run_claude_vm.sh [start\|stop\|monitor\|pin]` (pin after every start) |
+| SSH | `ssh -p 2223 root@127.0.0.1` on 10.176.26.71; from 380G10 first `ssh -f -N -L 2223:127.0.0.1:2223 eric@10.176.26.71` |
 | OS / kernel | Ubuntu 26.04.1 LTS; default boot `7.0.0-38-kdlock1`; the kdlock kernel `7.0.0-38-kdclaude1` is installed next to it and booted once with `grub-reboot` |
-| Size | 32 vCPUs (2 nodes x 16), 16 GiB, pinned to host CPUs 0-15 and 20-35 |
+| Size | 64 vCPUs (2 sockets x 32, guest node 0 = CPUs 0-31 on host node 0, node 1 = 32-63 on host node 1), 24 GiB (12 per node); one vCPU pinned per host CPU. Until 2026-11-13: 380G10, 32 vCPUs (2 x 16), 16 GiB |
 | Disks | `/home/eric/vm/qemu-disks/kdclaude-root.qcow2`, `kdclaude-builds.qcow2` (mounted at `/mnt/kdlock-builds`) |
 | Source in the VM | `/root/host_fs/kdlock/kdlock_claude_version` (9p share of the host's `vm-shared`) |
-| Serial log | `/tmp/qemu-claude-serial.log` (on the host) |
+| Serial log | `/tmp/qemu-claude-serial.log` (on 10.176.26.71) |
 | Snapshot | `pre-kdclaude1-boot` (internal, both disks), taken before the first boot of the kdlock kernel |
 
 The VM was created from the original build VM's root filesystem with the same

@@ -288,30 +288,57 @@ queues, reader OSQ); readers use eight short admission attempts and then an
 c01/20% writes at 16/32 workers went from 4.2/3.2 to 5.0/5.1 Mops/s); proxy
 downgrade keeps the retained writer through the read tail.
 
-Here: a reader that finds a writer present or waiting undoes its increment and
-**sleeps on the queue mutex** (`kd_mutex_sleep`), then registers and waits for
-the active writer to leave. Since `63f8de2a`, before that, the reader spins up
-to `KD_RWSEM_SPIN` iterations for the writer bits to clear (every spinning
-reader polls the count; there is no head-only queue). Downgrade is one
-atomic, and inside a delegated section it is always handed back.
+Here (since the Task C rwsem work, build #56): a reader waits **outside the
+queue mutex** (LOCKS 5, `kd_down_read_admit()`). The read fast path looks at
+the count before adding to it.
+* **A writer is in:** the reader registers behind it and waits for the
+  writer bit to clear, which happens at the end of the combiner's session.
+* **A writer is only waiting:** the reader stays out until that writer is
+  in.
+* **After `kd_rwsem_rspin_ns` (50 us) or `need_resched()`:** the reader
+  queues on `->m` as before.
 
-* **Effect (performance):** without the spin, each reader that met a writer
-  slept behind the holder of `->m`, which itself slept on the count: one
-  wakeup per reader in sequence. rwsem w20 was flat at about 0.88 Mops from
-  4 to 12 workers (0.5 of Native). With the spin, the same points ran at
-  1.6–1.8 of Native in a single round, with per-worker progress near
-  Native's. Readers still never delegate, and the per-reader polling is not
-  head-only; both remain open.
-* **Measured against TCLock** (original `tclock_backend` rwsem, AQS reader
-  gate): equal up to 16 workers, but across both NUMA nodes (20–32
-  workers, 20% writes) kd is about a quarter of TCLock. Diagnosis: a
-  reader whose spin runs out queues on `->m` and, holding it, sleeps on the
-  count; every queued writer then sees an off-CPU owner and parks. Bounding
-  the spins by time, a holder spin (kept; +16–33% at 20 workers only) and
-  checking before adding did not change the regime. **Next step:** a reader
-  admission path that does not hold `->m` while it waits (a reader queue of
-  its own whose head alone polls, as TCLock's AQS and the GPT-era design
-  do).
+As before, every waiting reader polls the count (there is no head-only
+reader queue), readers never delegate, and downgrade is one atomic that is
+handed back inside a delegated section. The earlier history:
+* Until `63f8de2a` a reader that met a writer slept on `->m`.
+* From `63f8de2a` it spun up to 1024 iterations and then queued on `->m`.
+
+* **Effect of the old queueing (performance):** each reader that met a
+  writer passed through `->m`, one queue handoff per reader, across nodes on
+  a two-node machine. Every queued reader also ended the session of the
+  combiner in front of it, because it publishes nothing, so writer sessions
+  stayed short. Round 5 (380G10, #39), across both nodes: kd/TCLock was
+  0.23-0.38 with 20% writes.
+* **Measured steps** (in-boot A/B on 380G10, delegation active):
+  * Admission outside `->m` (#46): 20% writes +21 to +37% at 8-32
+    workers. c16 with 1% writes -2 to -6% at 20 and 32 workers.
+  * `numa_after = 32` for rwsem (#49/#53, ARCHITECTURE 7): writers only at
+    32 workers 1.53 -> 3.63 Mops/s. 20% writes unchanged against no
+    deferral (2.32 -> 2.31). Deferral from the first waiter would cost
+    -24% there.
+  * Look before adding on the read fast path (#55): 20% writes +5 to +18%
+    at 4-32 workers. 1% writes +3 to +8% from 8 workers, -4% at 4.
+* **Round 6 against round 5** (380G10, #56 against #39; `grid-20261113-r6/`):
+  * 20% writes: 1.2-2.3 times from 8 workers; across both nodes kd/TCLock
+    is now 0.55-0.64.
+  * Loss: c16 with 1% writes, 0.80-0.94 of round 5 at 4-32 workers, while
+    TCLock and Native stayed flat. Not yet explained.
+* **Round 7** (10.176.26.71, 64 vCPUs; `grid-20261114-r7-64cpu/`): across
+  both nodes (40-64 workers) kd/TCLock is still 0.52-0.53 with 20% writes,
+  0.63-0.80 with 1% and 0.70-0.75 writers only. **Open.** Candidates, not
+  yet measured: a head-only reader queue (every waiting reader now polls the
+  count line) and longer writer phases under reader pressure, which
+  TCLock's AQS reader gate may give it.
+* **Rejected with data** (in-boot A/B on 380G10):
+  * The same admission for the rwlock (#47): -18 to -46% at 20-32 workers,
+    +2 to +12% at 4. The patch was not kept.
+  * Passing the writer bit from `kd_up_write` straight to the next queued
+    writer (#52): 1% writes +5 to +7% at 20-32 workers, but 20% writes -4
+    to -11% and c16 with 20% writes -23% at 32 workers. Archived as
+    `refs/archive/kdclaude-rwsem-writer-pass-20261113`.
+  * Readers polling the count every 1, 8 or 32 iterations (#48): no
+    consistent difference (within 5%, overlapping ranges).
 * **Effect (MM):** `mmap_write_downgrade` is used on common paths (munmap with
   downgrade); a delegated section that reaches it is handed back, so those
   sections lose delegation at that point. Not a correctness issue.

@@ -41,6 +41,9 @@ PROFILES = {
     "rwlock_c01_w20": ("rwlock", 1, 20, 256),
     "rwlock_c16_w1": ("rwlock", 16, 1, 256),
     "rwlock_c16_w20": ("rwlock", 16, 20, 256),
+    # Writers only: the delegation path of the rw families without readers.
+    "rwsem_c01_w100": ("rwsem", 1, 100, 256),
+    "rwlock_c01_w100": ("rwlock", 1, 100, 256),
     # `current` inside the section; compare with spin_c01 / mutex_c01.
     "spin_c01_curr": ("spin_curr", 1, 100, 64),
     "spin_c01_curw": ("spin_curw", 1, 100, 64),
@@ -54,8 +57,8 @@ PROFILES = {
     "mutex_c01_hb": ("mix", 1, 100, 256),
 }
 # The default grid; the other profiles are run on request.
-GRID = [p for p in PROFILES if not p.endswith(("_curr", "_curw", "_raw", "_hb"))]
-WORKERS = [1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32]
+GRID = [p for p in PROFILES if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100"))]
+WORKERS = [1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64]
 
 
 def identity():
@@ -67,6 +70,9 @@ def identity():
                                capture_output=True, text=True, timeout=10).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         commit, dirty = "", ""
+    # A tree without .git (a synced copy) names its source through KD_COMMIT/KD_DIRTY.
+    commit = commit or os.environ.get("KD_COMMIT", "")
+    dirty = dirty or os.environ.get("KD_DIRTY", "")
     return {"kernel": platform.release(), "build": platform.version(),
             "commit": commit or "unknown", "dirty": bool(dirty)}
 
