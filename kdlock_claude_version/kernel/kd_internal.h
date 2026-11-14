@@ -107,13 +107,14 @@ enum {
 enum {
 	KD_N_FREE = 0,		/* sleepable pool only: node may be allocated */
 	KD_N_WAIT,		/* queued, not yet claimed */
-	KD_N_RUN,		/* sleepable only: claimed by the combiner */
+	KD_N_RUN,		/* unused; kept so the values below do not move */
 	KD_N_HEAD,		/* promoted: acquire the lock yourself */
 	KD_N_RESUME,		/* packet holds the state to continue from */
 	KD_N_ABANDON,		/* sleepable only: waiter left to sleep; skip and free */
 	KD_N_HEAD_D,		/* spin class: promoted, lock is in delegation mode */
 	KD_N_HWAIT,		/* queue head offering itself to the lock holder (role exchange) */
 	KD_N_HBACK,		/* that offer was declined or withdrawn: head as before */
+	KD_N_DROP,		/* sleepable only: abandoned node being unlinked by the head */
 };
 
 struct kd_node {
@@ -138,6 +139,11 @@ struct kd_node {
 	unsigned long	nplain;		/* KD_STAT_PLAIN, spin class */
 	struct kd_qlock	*mode_q;	/* lock this CPU last waited for ... */
 	bool		mode_deleg;	/* ... and the mode it was in (kd_mode_note()) */
+	/*
+	 * Sleepable class: the queue head announced that it will execute this
+	 * waiter's section. See kd_node_abandon().
+	 */
+	bool		claim;
 } ____cacheline_aligned_in_smp;
 
 #define KD_MAX_NODES	4
@@ -676,6 +682,55 @@ static __always_inline void kd_q_splice_front(struct kd_qlock *q,
 }
 
 /*
+ * Sleepable class: how a waiter and the queue head agree on who runs the
+ * waiter's section, without an atomic operation of the head per section.
+ *
+ * The head used to claim each waiter with cmpxchg(state, WAIT, RUN). The
+ * waiter polls that very line, so the locked instruction waited for an
+ * exclusive copy every time and nothing else in the session could proceed
+ * meanwhile (measured, build #56, rwsem writers at 64 workers: 72% of
+ * kd_session's samples were on that instruction).
+ *
+ * Now the head announces with a plain store, ->claim = true, and reads
+ * ->state after a full barrier; it announces the waiter after next while
+ * it still executes the current one, so the store has left the store
+ * buffer long before the barrier. The waiter withdraws with an atomic:
+ * cmpxchg(state, WAIT, ABANDON), then reads ->claim. One side always sees
+ * the other (store, barrier, load on both sides):
+ *
+ *   waiter reads claim == false   it has left; the head will find ABANDON
+ *                                 and unlink the node (kd_node_drop())
+ *   waiter reads claim == true    the head may or may not have seen
+ *                                 ABANDON. The waiter takes the withdrawal
+ *                                 back (ABANDON -> WAIT) unless the head
+ *                                 already moved the node to DROP.
+ *
+ * A head that will not execute an announced waiter after all clears
+ * ->claim again while it still is the head; the waiter may then withdraw.
+ * Everyone who unlinks an abandoned node goes through kd_node_drop(), so a
+ * withdrawal that was taken back is never unlinked.
+ */
+static __always_inline bool kd_node_drop(struct kd_node *n)
+{
+	return cmpxchg(&n->state, KD_N_ABANDON, KD_N_DROP) == KD_N_ABANDON;
+}
+
+/* Waiter: leave the queue to sleep. Returns false if it must keep waiting. */
+static __always_inline bool kd_node_abandon(struct kd_node *me)
+{
+	u32 st;
+
+	if (cmpxchg(&me->state, KD_N_WAIT, KD_N_ABANDON) != KD_N_WAIT)
+		return false;		/* promoted or resumed meanwhile */
+	if (!READ_ONCE(me->claim))
+		return true;
+	if (cmpxchg(&me->state, KD_N_ABANDON, KD_N_WAIT) == KD_N_ABANDON)
+		return false;
+	st = READ_ONCE(me->state);
+	return st == KD_N_DROP || st == KD_N_FREE;
+}
+
+/*
  * Head @me leaves the queue: promote the first live successor, or clear the
  * tail. Abandoned sleepable nodes are skipped and returned to their pool.
  * @head_state is what a spin-class successor is promoted with (KD_N_HEAD or
@@ -697,8 +752,13 @@ static __always_inline void kd_q_pass(struct kd_qlock *q, struct kd_node *me,
 			smp_store_release(&succ->state, head_state);
 			return;
 		}
-		if (cmpxchg(&succ->state, KD_N_WAIT, KD_N_HEAD) == KD_N_WAIT)
-			return;
+		for (;;) {
+			if (cmpxchg(&succ->state, KD_N_WAIT, KD_N_HEAD) == KD_N_WAIT)
+				return;
+			if (kd_node_drop(succ))
+				break;
+			cpu_relax();
+		}
 		kd_q_detach(q, me, succ);
 		smp_store_release(&succ->state, KD_N_FREE);
 	}

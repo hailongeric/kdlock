@@ -760,7 +760,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 		       struct task_struct **xowner)
 {
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
-	struct kd_node *n, *nn, *first = NULL, *last = NULL;
+	struct kd_node *n, *nn, *first = NULL, *last = NULL, *claimed = NULL;
 	bool numa = READ_ONCE(kd_numa);
 	unsigned int numa_after = f ? f->numa_after : 0;
 	bool adapt = READ_ONCE(kd_adapt) && !(f && f->always_deleg);
@@ -806,6 +806,10 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			 * withdraw while it is on the list; whoever meets it
 			 * in the queue later frees it as usual.
 			 */
+			if (claimed == n) {
+				WRITE_ONCE(n->claim, false);
+				claimed = NULL;
+			}
 			kd_q_detach(q, me, n);
 			if (last)
 				WRITE_ONCE(last->next, n);
@@ -821,12 +825,26 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			kd_stat_inc(kc, KD_STAT_STOP_CTX);
 			break;
 		}
-		if (sleepable &&
-		    cmpxchg(&n->state, KD_N_WAIT, KD_N_RUN) != KD_N_WAIT) {
-			/* Left to sleep before we got here. */
-			kd_q_detach(q, me, n);
-			smp_store_release(&n->state, KD_N_FREE);
-			continue;
+		if (sleepable) {
+			/*
+			 * Announced during the previous section as a rule; see
+			 * kd_node_abandon() for the protocol.
+			 */
+			if (claimed != n) {
+				if (claimed)
+					WRITE_ONCE(claimed->claim, false);
+				WRITE_ONCE(n->claim, true);
+				claimed = n;
+			}
+			smp_mb();
+			if (READ_ONCE(n->state) != KD_N_WAIT && kd_node_drop(n)) {
+				/* Left to sleep before we got here. */
+				claimed = NULL;
+				kd_q_detach(q, me, n);
+				smp_store_release(&n->state, KD_N_FREE);
+				continue;
+			}
+			claimed = NULL;		/* ours now: nothing to take back */
 		}
 		/*
 		 * Warm the next waiter while this one runs, without loading
@@ -843,7 +861,15 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 		 */
 		nn = READ_ONCE(n->next);
 		guess = NULL;
-		if (nn) {
+		if (nn && sleepable) {
+			/*
+			 * Announce the next waiter instead of prefetching its
+			 * node: the store asks for the line while this section
+			 * runs and nothing waits for it.
+			 */
+			WRITE_ONCE(nn->claim, true);
+			claimed = nn;
+		} else if (nn) {
 			prefetch(nn);
 			/*
 			 * Spin class only. Measured A/B in one boot: spin
@@ -880,6 +906,11 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 				kd_q_splice_front(q, me, first, last);
 				first = NULL;
 			}
+			/* While this CPU still is the only head. */
+			if (claimed) {
+				WRITE_ONCE(claimed->claim, false);
+				claimed = NULL;
+			}
 			if (xowner && kd_xhead_offer(me, root, f, n->regs, sleepable))
 				*xowner = n->regs->task;
 		}
@@ -895,6 +926,8 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			break;
 		}
 	}
+	if (claimed)
+		WRITE_ONCE(claimed->claim, false);
 	if (first)
 		kd_q_splice_front(q, me, first, last);
 	/*
@@ -1024,6 +1057,7 @@ static __always_inline void kd_node_init(struct kd_node *n, int cpu, int idx)
 {
 	n->next = NULL;
 	n->tail = kd_tail(cpu, idx);
+	n->claim = false;
 	WRITE_ONCE(n->state, KD_N_WAIT);
 }
 
@@ -1327,16 +1361,14 @@ again:
 				break;
 			if (need_resched() ||
 			    (!(spins % KD_OWNER_POLL) && !kd_mutex_can_spin(m))) {
-				if (cmpxchg(&me->state, KD_N_WAIT, KD_N_ABANDON) == KD_N_WAIT) {
+				/* Announced: its section is about to run. */
+				if (!READ_ONCE(me->claim) && kd_node_abandon(me)) {
 					kd_stat_inc(kc, KD_STAT_ABANDON);
 					return KD_WAIT_SLEEP;	/* the queue frees the node */
 				}
-				continue;
 			}
 			cpu_relax();
 		}
-		if (st == KD_N_RUN)
-			st = smp_cond_load_relaxed(&me->state, VAL != KD_N_RUN);
 		if (st == KD_N_RESUME) {
 			smp_acquire__after_ctrl_dep();
 			smp_store_release(&me->state, KD_N_FREE);
