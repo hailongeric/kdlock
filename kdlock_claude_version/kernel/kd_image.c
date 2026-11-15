@@ -111,9 +111,50 @@ void kd_site_request(unsigned long rip)
 }
 
 /*
+ * Serialises the changes of ->entry that must not interleave: loading and
+ * removing an image against switching a site on again (kd_site_retry()).
+ */
+static DEFINE_RAW_SPINLOCK(kd_site_switch);
+
+#define KD_SITE_RETRY_MAX	6	/* longest wait: HZ << 6 */
+
+/*
+ * A switched-off site is tried again after a while: what it executes may
+ * have changed. mmap and munmap were switched off by a test that unmaps
+ * touched memory (most sections end at a frontier there) and then stayed
+ * off for a workload they would have served completely. The wait doubles
+ * with every switch-off in a row, from 1 s to 64 s, so a site that stays
+ * bad costs one window of handed-back sections per wait.
+ *
+ * Called by a contended caller that found the site off; preemption is
+ * off. Whoever gets the lock decides; the others go on without.
+ */
+void kd_site_retry(struct kd_site *site)
+{
+	unsigned long flags;
+	void *e;
+
+	if (!READ_ONCE(site->entry_saved) ||
+	    time_before(jiffies, READ_ONCE(site->retry_at)))
+		return;
+	if (!raw_spin_trylock_irqsave(&kd_site_switch, flags))
+		return;
+	e = READ_ONCE(site->entry_saved);
+	if (e && !READ_ONCE(site->entry) &&
+	    !time_before(jiffies, READ_ONCE(site->retry_at))) {
+		WRITE_ONCE(site->ok, 0);
+		WRITE_ONCE(site->bad, 0);
+		smp_store_release(&site->entry, e);
+		raw_cpu_inc(kd_cpu.stat[KD_STAT_SITE_RETRY]);
+	}
+	raw_spin_unlock_irqrestore(&kd_site_switch, flags);
+}
+
+/*
  * Combiner-side accounting. A site whose sections are mostly handed back
  * costs more than it saves, so it is switched off until the translator
- * publishes a better image. Counters are approximate by design.
+ * publishes a better image or the retry time has passed. Counters are
+ * approximate by design.
  */
 void kd_site_account(struct kd_site *site, bool done)
 {
@@ -130,8 +171,15 @@ void kd_site_account(struct kd_site *site, bool done)
 	WRITE_ONCE(site->ok, 0);
 	WRITE_ONCE(site->bad, 0);
 	if (bad > ok && READ_ONCE(site->entry)) {
+		u32 offs = READ_ONCE(site->offs);
+
+		WRITE_ONCE(site->retry_at, jiffies + (HZ << offs));
+		if (offs < KD_SITE_RETRY_MAX)
+			WRITE_ONCE(site->offs, offs + 1);
 		WRITE_ONCE(site->entry, NULL);
 		kd_event_push(KD_EV_SITE_OFF, site->rip, site->rip, bad);
+	} else if (bad <= ok && READ_ONCE(site->offs)) {
+		WRITE_ONCE(site->offs, 0);
 	}
 }
 
@@ -299,6 +347,7 @@ static long kd_image_load(struct kd_image_load __user *uarg)
 	struct kd_image_load l;
 	struct kd_image *img = NULL, *it, *old = NULL;
 	struct kd_site *site;
+	unsigned long flags;
 	unsigned long start, end;
 	struct module *mod;
 	long ret = 0;
@@ -362,7 +411,11 @@ static long kd_image_load(struct kd_image_load __user *uarg)
 	WRITE_ONCE(site->bad, 0);
 	atomic_set(&site->miss_budget, KD_MISS_BUDGET);
 	atomic_set(&site->hb_budget, 256);
+	raw_spin_lock_irqsave(&kd_site_switch, flags);
+	WRITE_ONCE(site->entry_saved, site->img->text + l.entry_off);
+	WRITE_ONCE(site->offs, 0);
 	smp_store_release(&site->entry, site->img->text + l.entry_off);
+	raw_spin_unlock_irqrestore(&kd_site_switch, flags);
 out:
 	mutex_unlock(&kd_image_mutex);
 	/* Never published: nobody can be running it. */
@@ -383,14 +436,19 @@ static void kd_text_gone(unsigned long start, unsigned long end)
 {
 	struct kd_site *s;
 	struct hlist_node *tmp;
+	unsigned long flags;
 	unsigned int b;
 	u32 gen;
 
 	mutex_lock(&kd_image_mutex);
 	gen = ++kd_text_gen;
+	raw_spin_lock_irqsave(&kd_site_switch, flags);
 	for (b = 0; b < ARRAY_SIZE(kd_sites); b++)
-		hlist_for_each_entry(s, &kd_sites[b], hash)
+		hlist_for_each_entry(s, &kd_sites[b], hash) {
+			WRITE_ONCE(s->entry_saved, NULL);
 			WRITE_ONCE(s->entry, NULL);
+		}
+	raw_spin_unlock_irqrestore(&kd_site_switch, flags);
 	/* Waiters hold preemption off from lookup until they resume. */
 	synchronize_rcu();
 	for (b = 0; b < ARRAY_SIZE(kd_sites); b++) {
@@ -455,7 +513,12 @@ static long kd_site_drop(struct kd_site_ctl __user *uarg)
 	mutex_lock(&kd_image_mutex);
 	site = kd_site_find(c.site);
 	if (site) {
+		unsigned long flags;
+
+		raw_spin_lock_irqsave(&kd_site_switch, flags);
+		WRITE_ONCE(site->entry_saved, NULL);
 		WRITE_ONCE(site->entry, NULL);
+		raw_spin_unlock_irqrestore(&kd_site_switch, flags);
 		hlist_del_rcu(&site->hash);
 		img = site->img;
 	}

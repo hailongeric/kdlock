@@ -18,6 +18,7 @@ not enough for both, and timings would interfere.
 | Disks | `/home/eric/vm/qemu-disks/kdclaude-root.qcow2`, `kdclaude-builds.qcow2` (mounted at `/mnt/kdlock-builds`) |
 | Source in the VM | `/root/host_fs/kdlock/kdlock_claude_version` (9p share of the host's `vm-shared`) |
 | Serial log | `/tmp/qemu-claude-serial.log` (on 10.176.26.71) |
+| Host frequency | from 2026-11-15: turbo on, every CPU fixed at 2.7 GHz, the all-core turbo limit (`intel_pstate/no_turbo` = 0, `scaling_min_freq` = `scaling_max_freq` = 2700000, governor `performance`); 2699 MHz measured with 64 busy CPUs. Before: turbo off, 2.0 GHz fixed. Results at the two frequencies are not comparable. To go back: `no_turbo` = 1 and both limits 2000000 |
 | Snapshot | `pre-kdclaude1-boot` (internal, both disks), taken before the first boot of the kdlock kernel |
 
 The VM was created from the original build VM's root filesystem with the same

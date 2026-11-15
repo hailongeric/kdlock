@@ -197,6 +197,7 @@ enum {
 	KD_STAT_RD_QUEUE,	/* gave up spinning and queued on ->m */
 	KD_STAT_VDOWN,		/* downgrades executed with the write side kept */
 	KD_STAT_VDOWN_HB,	/* ... whose read part was then handed back */
+	KD_STAT_SITE_RETRY,	/* switched-off sites switched on again for a trial */
 	KD_STAT_NR,
 };
 
@@ -438,17 +439,21 @@ struct kd_site {
 	unsigned long	rip;		/* return address of the root lock call */
 	void		*entry;		/* NULL: site known but not delegable now */
 	struct kd_image	*img;
+	void		*entry_saved;	/* ->entry of the loaded image while the site is switched off */
 
 	u32		ok ____cacheline_aligned_in_smp;	/* approximate, combiner-updated */
 	u32		bad;
 	atomic_t	miss_budget;	/* learning reports left for this image */
 	atomic_t	hb_budget;	/* handback reports left for this image */
 	struct rcu_head	rcu;
+	unsigned long	retry_at;	/* jiffies: when a switched-off site is tried again */
+	u32		offs;		/* consecutive switch-offs; sets the wait until the retry */
 } ____cacheline_aligned_in_smp;
 
 struct kd_site *kd_site_find(unsigned long rip);
 void kd_site_request(unsigned long rip);
 void kd_site_account(struct kd_site *site, bool done);
+void kd_site_retry(struct kd_site *site);
 void kd_event_push(u32 type, unsigned long site, unsigned long ip, unsigned long target);
 long kd_image_ioctl(unsigned int cmd, unsigned long arg);
 ssize_t kd_event_read(char __user *buf, size_t len);

@@ -78,8 +78,21 @@ run the daemon with `--config` `{"max_insns": 250000}` there.
 Handbacks for reasons the translator cannot learn are reported as
 `KD_EV_HANDBACK` events (256 per image) and counted by reason in debugfs
 (`hb_frontier`, `hb_miss`, `hb_acquire`, `hb_downgrade`, `hb_other`); the
-daemon logs them with `-v`. A handback at a downgrade counts as useful for
-the site's usefulness account: the write part ran on the combiner.
+daemon logs them with `-v`. A handback at a downgrade, or of the read part
+after a downgrade the combiner kept (`kd_vdown`), counts as useful for the
+site's usefulness account: the write part ran on the combiner.
+
+A site that the kernel switched off (most executions handed back) is
+switched on again by the kernel after a wait, 1 s at first and doubled
+with each switch-off in a row up to 64 s (`kd_site_retry()`, counter
+`site_retry`). What a site executes changes with the workload: `mmap` and
+`munmap` were switched off by a test that unmaps touched memory and stayed
+off for mmap1 until build #71.
+
+The daemon's stored knowledge is keyed by release and build (`uname -r`
+and `uname -v`). It is addresses; a rebuild under the same release moves
+the text, and until build #70 the knowledge of earlier builds was
+republished as images for addresses that were no longer lock calls.
 
 **Frontiers** are: instructions with an exception-table entry (they rely on
 their own address being in the table), text outside a live text region,

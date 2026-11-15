@@ -91,6 +91,17 @@ count of nodes in use, the plain-wait statistic and the mode memory are in
 the first node's own line, as the native lock keeps its node count; and the
 sampling counter is deliberately *not* in that line.
 
+The per-site record (`struct kd_site`) is two cache lines for the same
+reason. Every contended caller reads its first line (`rip`, `entry`); the
+combiner writes the counters in the second once per section. As one
+72-byte object from the 96-byte slab it began at offset 0 or 32 of a line,
+and at 0 the counters shared the line with `rip` and `entry`: each section
+then took that line from every waiter reading it. Which offset a site got
+was decided at allocation, so each site ran at one of two rates per boot
+(kd spin c01 at 32 workers, 2.7 GHz: 6.4-6.5 Mops/s in builds #67 and #68,
+4.4 in #69, with the same session code). That was the boot-to-boot
+difference of rounds 7 and 8; rounds before the split (build #70) carry it.
+
 ## 4. The contended acquisition, step by step
 
 ### 4.1 Entry stub (`kd_entry.S`)
@@ -125,6 +136,16 @@ The waiter queues a **delegable** node (`entry` = image entry, `regs` =
 packet). A site without an image is counted instead; at 64 contended waits
 (`KD_REQ_THRESHOLD`) a `KD_EV_REQUEST` event asks the translator to build
 one, and until then its callers wait without publishing.
+
+Once queued, a spin-class waiter demotes its packet and the top of its
+stack from its private caches to the shared level (`CLDEMOTE`,
+`kd_cldemote`, a no-op on CPUs without it): the combiner is the next to
+touch them. Measured (builds #67 and #70, in-boot A/B, 3 rounds): spin c01
+and rwlock writers +1 to +3% from 8 workers, spin c08 -0.2 to +1.3%. The
+sleepable class gains nothing (mutex c16 loses up to 2.7%), so it does not
+demote. The effect is small because the combiner already requests the
+packet one section ahead; the combiner demoting the lines back after a
+section loses 3 to 20% and was not kept.
 
 The node is appended with one `xchg` on the queue tail. A node with a
 predecessor spins on its own `state`:
@@ -196,6 +217,7 @@ The image leaves through an **exit stub** (`mov` only, to
 | Exit | Meaning | Action |
 | --- | --- | --- |
 | `UNLOCK` | the section called the release of the **session root** | do not release; record its effects on the origin (`kd_apply_unlock`: preempt count, IF, BH) in the packet; the section is complete (`KD_STOP_DONE`) |
+| `UNLOCK` with a downgrade of the root (rwsem) | the section goes on as a reader | `kd_vdown=1`: keep the write side, mark the packet (`vdown`) and continue in generated code; the root's `kd_up_read()` then completes the section. A handback while marked performs the downgrade first (LOCKS 5). `kd_vdown=0`: hand back |
 | `UNLOCK_ANC` | release of a non-root lock while outer sessions exist | if the lock is an outer root: mark `released`; else perform the release natively and continue |
 | `NESTED` | a contended inner spin-class lock inside the section | acquire it recursively (section 8) |
 | `ACQUIRE` | a sleeping-family acquire (mutex, rwsem) inside the section | try to take it as the origin without sleeping; else hand back |
@@ -316,8 +338,16 @@ node is unlinked, still waiting, onto a session-private list, and the session
 continues with the waiters behind it. At the end the list is spliced back
 *in front of* the queue in its original order, so its first waiter is the next
 head and combines for its own node. Passed-over waiters count against the
-batch budget (`kd_batch`, default 1024) so handbacks cannot extend it;
+batch budget (`kd_batch`, default 4096) so handbacks cannot extend it;
 waiters without an image are never passed over. `kd_numa=0` restores FIFO.
+
+The batch was 1024 until build #68. Within one node its value does not
+matter from 1024 up. Across two nodes every end of a session moves the
+lock's data to the other node (64 workers, in-boot A/B, 4096 against 1024:
+spin c01 +5.1%, rwlock writers +3.0%, rwsem writers +2.0%, mutex +1.2 to
++1.6%; 16384 under 1% more; 256 costs 10 to 17%). The TCLock backend of
+the bench runs with 1024, its maximum, so kd's sessions are up to four
+times as long as TCLock's in the comparisons from round 9 on.
 
 A family can delay the deferral (`kd_family.numa_after`): the session then
 serves that many waiters in queue order before it defers any. Only rwsem sets

@@ -217,8 +217,37 @@ call.
 * **NUMA deferral starts late** (`kd_family.numa_after = 32`): a rwsem
   writer session serves the first 32 waiters in queue order and defers
   remote-node waiters only after that (ARCHITECTURE 7).
-* **Downgrade** (`kd_downgrade_write`) is one atomic and, inside a section,
-  is always handed back: the origin performs it natively.
+* **Downgrade** (`kd_downgrade_write`) is one atomic when called natively.
+  Inside a delegated section (`kd_vdown`, default 1) it does not end the
+  session:
+  * The combiner keeps the write side and goes on executing the read part
+    of the section; the write side covers everything the read side
+    allows. `kd_up_read()` of the session's rwsem then ends the section as
+    a write release would, and the combiner serves the next waiter.
+  * If the read part has to be handed back (a frontier such as a TLB
+    shootdown or a call that can sleep, or code the translator has not
+    learned yet), the downgrade is done for real at that point and the
+    origin continues as a reader. The combiner makes no role-exchange
+    offer then and takes the write side again as queue head.
+  * With `kd_vdown=0` the section is handed back at the downgrade, as
+    before build #67, and the session ends there. munmap downgrades on
+    every call, so in mmap1 every session then served one waiter.
+  * **Measured** (will-it-scale mmap1, threads, 2.7 GHz, #69, in-boot
+    alternation, 3 runs; iterations per second, `kd_vdown` 0 -> 1 after
+    the translator had learned the read part): 4 threads 271000-294000 ->
+    374000-383000, 16 threads 253000-290000 -> 359000-373000, 32 threads
+    239000-257000 -> 366000-374000, 64 threads 147000-152000 ->
+    304000-325000. Sessions at 32 and 64 threads then run to the batch
+    limit, with handbacks near zero. Native in the same boot: 319000-329000,
+    285000, 278000-280000 and 150000-152000. Build #71 gives the same
+    (`bench/results/kdclaude/tune-20261115-2700MHz/`): kd/Native 1.11-1.26
+    at 4 threads, 1.28-1.38 at 8-32, 2.03-2.08 at 64; with `kd_vdown=0`
+    0.77-0.83, 0.90-0.96 and 1.00-1.03.
+  * **Cost:** other readers of that rwsem wait through the read parts
+    instead of sharing them. The counters `vdown` and `vdown_hb` count the
+    kept downgrades and those whose read part was handed back.
+  * The first seconds after the daemon starts are slower: until the read
+    part is learned it is handed back (248000-270000 in the first run).
 * **Write release** (`kd_up_write`) is one locked subtraction, as for the
   mutex.
 * **Every holder of `m` spins before it sleeps on `count`**, bounded by
@@ -275,7 +304,9 @@ sees neither effect.
 
 | Name | Default | Meaning |
 | --- | --- | --- |
-| `kd_batch` (core param, 0644) | 1024 | executions (served + passed over) per wait |
+| `kd_batch` (core param, 0644) | 4096 | executions (served + passed over) per wait; 1024 until build #68 (ARCHITECTURE 7) |
+| `kd_vdown` (core param, 0644) | 1 | a downgrade in a delegated rwsem section keeps the write side and the session goes on (section 5); 0: handed back |
+| `kd_cldemote` (core param, 0644) | 3 | bits: a queued spin-class waiter demotes 1 its packet, 2 its stack top (CLDEMOTE); 16 and 32 the same for the sleepable class (ARCHITECTURE 4.2) |
 | `kd_numa` (core param, 0644) | 1 | NUMA-ordered sessions |
 | `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
 | `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |

@@ -233,3 +233,29 @@ round of work did not change.
   where a single reader gets no phase.
 * **kd/Native on this host (#66):** 0.83-0.86 at 4 threads, 0.92-0.99 at
   16-32, 1.02-1.03 at 64.
+
+## From 2026-11-15: 2.7 GHz
+
+The host is fixed at 2.7 GHz with turbo on from here (before: 2.0 GHz,
+turbo off). Do not compare with rounds 7 and 8 in absolute numbers or in
+ratios.
+
+### Tuning (`tune-20261115-2700MHz/`)
+
+In-boot A/B on builds #67-#71: the site-line split that removed the
+differences between boots, CLDEMOTE, session prefetch stages (rejected),
+`kd_batch`, the downgrade kept under the write side on mmap1, the retry of
+switched-off sites, the reader phase at 2.7 GHz. The directory README has
+the tables.
+
+### Round 9 (`grid-20261115-r9-64cpu/`)
+
+* **Run:** build #70, commit `ee5db2c5`, same grid as rounds 7 and 8, 1512
+  points, no failed point. Two boots of the build agree within 2.2%.
+* **Writer-only profiles** are flat from 8 to 64 workers and ahead of
+  TCLock: mutex c01 1.12-1.25, mutex c16 1.84-2.04, spin 1.34-1.56, rwlock
+  writers 1.50-1.87, rwsem writers 1.13-1.26. kd's batch is 4096, TCLock's
+  1024.
+* **With readers across both nodes** kd is behind TCLock: rwsem 1% writes
+  0.62-0.69, rwsem 20% writes 0.78-0.82, rwlock c16 20% writes 0.64-0.74.
+* **Correctness on the same boot:** `corr70.jsonl`, `corr70.txt`.

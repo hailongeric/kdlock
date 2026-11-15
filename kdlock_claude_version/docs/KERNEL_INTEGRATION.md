@@ -86,9 +86,13 @@ release must likewise be a direct call to `kd_up_write()` there.
 
 **What is delegated.** Contended writers: `mmap`, `munmap`, `mprotect`,
 `mremap`, `brk`, `fork` (the parent's lock), and the rest. Readers stay
-local. munmap downgrades to a read hold before it unmaps; the write part
-is delegated and the downgrade hands the read-side remainder back to the
-caller, which counts as useful for the site (`hb_downgrade`). Inside a
+local. munmap downgrades to a read hold before it unmaps. The write part
+is delegated; from build #67 the combiner keeps the write side at the
+downgrade and executes the read part as well, until the release of the
+read hold or the first frontier (`kd_vdown`, LOCKS 5). At a frontier the
+downgrade is done for real and the remainder goes back to the caller,
+which counts as useful for the site. With `kd_vdown=0` the downgrade itself
+hands the remainder back (`hb_downgrade`). Inside a
 section, the following are handed back to the caller rather than run on the
 lock holder's CPU (TRANSLATOR frontier list): native sleeping-lock acquires
 (`down_write` of `anon_vma` and `i_mmap_rwsem`, `mutex_lock`, ...), TLB

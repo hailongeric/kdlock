@@ -281,6 +281,41 @@ in-boot A/B numbers in LOCKS 4 and 5.
   below Native on this host; rwsem with
   readers and rwlock with writers across nodes; spin within one node.
 
+Status 2026-11-15 (the user asked for a fixed higher frequency, an
+analysis of prefetching with CLDEMOTE on the waiter side, long sessions,
+and the read part after a downgrade executed under the kept write side).
+Data: `tune-20261115-2700MHz/` (in-boot A/B, builds #67-#71) and
+`grid-20261115-r9-64cpu/` (#70, commit `ee5db2c5`).
+
+* **Frequency:** the host was already fixed at 2.0 GHz. It is now fixed at
+  2.7 GHz with turbo on. That did not remove the differences between
+  boots; the next item did.
+* **Site lines:** `struct kd_site` put the fields every waiter reads and
+  the counters the combiner writes in one line or in two, by allocation.
+  Each site ran at one of two rates per boot (spin c01 at 32 workers 6.4
+  or 4.4 Mops/s). Split in #70; two boots now agree within 2.2%. Every kd
+  number of rounds 1-8 carries the old behaviour.
+* **CLDEMOTE:** a queued spin-class waiter demotes its packet and stack
+  top: +1 to +3% for spin c01 and rwlock writers, about 0 for spin c08,
+  nothing for the sleepable class (off there). The combiner demoting
+  lines back: -3 to -20%, not kept.
+* **Prefetch:** more than the existing one-ahead requests loses 1 to 27%;
+  archived.
+* **Session length:** `kd_batch` 4096; +1 to +5% across nodes, nothing
+  within one. TCLock runs with 1024.
+* **Downgrade under the write side (`kd_vdown`):** mmap1 kd/Native from
+  0.77-0.96 to 1.11-1.38 at 4-32 threads and from 1.0 to 2.0 at 64.
+* **Found and fixed on the way:** switched-off sites were never tried
+  again (#71); the daemon reused the knowledge of earlier builds (#70).
+* **Round 9:** writer-only profiles are flat from 8 to 64 workers and
+  ahead of TCLock by 1.12-2.04. With readers across both nodes kd is
+  behind TCLock: rwsem 1% writes 0.62-0.69, 20% writes 0.78-0.82, rwlock
+  c16 20% writes 0.64-0.74.
+* **Next:** rwsem and rwlock with readers across nodes (a longer reader
+  phase helps 1% writes and costs 20% writes; it needs a rule, not a
+  constant); the 3-worker points below Native; the effect of `kd_vdown`
+  on a workload with readers.
+
 ### Task D: API switch and micro/API stage
 
 Status 2026-11-13: the mmap lock is switched (`CONFIG_KDLOCK_MM`,

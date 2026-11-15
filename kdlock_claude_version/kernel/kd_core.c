@@ -1107,6 +1107,9 @@ bool kd_can_offer(unsigned long rip)
 		kd_site_request(rip);
 		return false;
 	}
+	if (likely(READ_ONCE(site->entry)))
+		return true;
+	kd_site_retry(site);		/* switched off: time to try it again? */
 	return READ_ONCE(site->entry) != NULL;
 }
 
