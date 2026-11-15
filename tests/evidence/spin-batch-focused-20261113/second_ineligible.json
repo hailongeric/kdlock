@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/tmp/spin-batch-shw7mp7t/batch_check",
+    "second_ineligible"
+  ],
+  "returncode": 0,
+  "stdout": "PASS second_ineligible\n",
+  "stderr": ""
+}

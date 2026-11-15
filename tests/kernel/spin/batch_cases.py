@@ -31,15 +31,27 @@ def continuous_pair(rows, has, typed_unlock, image, tasks, validate_retirement):
         exits = [row for row in exact if has(row, "JIT_EXIT")]
         unlocks = [row for row in exact if typed_unlock(row, request["node"], image)]
         returned = [row for row in exact if has(row, "PROXY_RETURN") and row["result"] == 4]
-        if (len(grants) != 1 or not entries or not exits or len(unlocks) != 1 or len(returned) != 1
+        if (len(grants) != 1 or not entries or len(entries) != len(exits)
+                or len(unlocks) != 1 or len(returned) != 1
                 or any(row["task"] != tasks[2] or row["origin"] != request["origin"]
+                       or row["state"] != request["state"]
                        or row["image"] != image or not row["flags"] & (1 << 12) for row in entries)
-                or any(row["result"] != 1 or row["image"] != image for row in exits)
+                or any(row["result"] != 1 or row["image"] != image
+                       or row["task"] != tasks[2] or row["origin"] != request["origin"]
+                       or row["state"] != request["state"] for row in exits)
                 or any(has(row, "FORWARD") or has(row, "NATIVE_UNLOCK") for row in exact)):
             raise AssertionError("selection is not a complete foreign JIT critical section")
         if not (request["index"] < grants[0]["index"] < entries[0]["index"]
                 < unlocks[0]["index"] < returned[0]["index"] < begin["index"] < end["index"]):
             raise AssertionError("generated completion did not precede physical release")
+        # episode.c emits ENTER before each kd_jit_enter and EXIT after its
+        # normal return. Every fragment must finish before the accepted unlock;
+        # an unrelated, stale or late normal exit cannot complete this body.
+        previous_exit = grants[0]["index"]
+        for entry, exit_row in zip(entries, exits):
+            if not previous_exit < entry["index"] < exit_row["index"] < unlocks[0]["index"]:
+                raise AssertionError("generated entry/exit pairs do not precede the exact unlock")
+            previous_exit = exit_row["index"]
         validate_retirement(rows, request, None, 0, image)
         proofs.append(dict(origin=request["origin"], state=request["state"],
             acquisition=request["acquisition"], node=request["node"],

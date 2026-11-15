@@ -158,9 +158,28 @@ satisfy this witness.
 Eight focused checker regressions passed in the VM, including negative examples
 for separate owners, absent JIT entry, native execution, handback, intervening
 release, different objects and C requeue. These synthetic records test rejection logic only. The
-live scene has not run: the inspected VM remains on `7.0.0-38-kdrebuild16`, not a
+live scene has not run. The earlier VM checks used `7.0.0-38-kdrebuild16`, not a
 kernel built from this spin candidate. No two-foreign-JIT-body runtime result or
 performance improvement is claimed. Keep the candidate unmerged until that exact
 kernel/module/image run succeeds.
 
 [Focused VM receipts](../../tests/evidence/spin-batch-focused-20261113/README.md).
+
+## Offline checker correction — November 14, 2026
+
+The original checker could accept a normal JIT exit outside its entry/unlock
+interval, an unmatched entry, or an exit naming a different executor, origin or
+canonical state. Targeted negative cases reproduced seven false acceptances
+before correction. The checker now requires equal entry/exit counts and ordered,
+non-overlapping pairs after the exact grant and before the typed unlock. Each
+pair retains the selected executor, origin, canonical state and image. A positive
+case still permits multiple ordered generated fragments within one body.
+
+`timeout 20 python3 -B tests/test_spin_batch_evidence.py` passed all 13 offline
+synthetic tests on the source host after correction; `git diff --check` also
+passed. These checks exercise the evidence reader only. They do not compile a
+kernel/module, execute generated kernel instructions, validate continuous live
+physical ownership, or establish performance. The earlier eight-case VM receipts
+remain unchanged and describe the earlier checker revision. The candidate kernel
+has not been built or booted, and the focused live two-foreign-body proof remains
+unrun.

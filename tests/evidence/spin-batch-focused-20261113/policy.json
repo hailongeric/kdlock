@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/tmp/spin-batch-shw7mp7t/batch_check",
+    "policy"
+  ],
+  "returncode": 0,
+  "stdout": "PASS policy\n",
+  "stderr": ""
+}

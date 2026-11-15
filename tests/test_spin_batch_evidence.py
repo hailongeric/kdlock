@@ -1,4 +1,4 @@
-"""VM-only checker regressions; synthetic rows are not live JIT evidence."""
+"""Offline checker regressions; synthetic rows are not live JIT evidence."""
 from copy import deepcopy
 from pathlib import Path
 import sys
@@ -57,6 +57,46 @@ class BatchEvidenceTests(unittest.TestCase):
         queued=deepcopy(self.rows[0]);queued.update(kind="ENQUEUE",index=5.5)
         self.rows.insert(6,queued)
         with self.assertRaises(AssertionError):self.check()
+
+    def test_exit_must_precede_unlock_and_follow_entry(self):
+        original = deepcopy(self.rows)
+        for index in (0.5, 4.5, 14):
+            with self.subTest(exit_index=index):
+                self.rows = deepcopy(original)
+                self.rows[3]["index"] = index
+                self.rows.sort(key=lambda row: row["index"])
+                with self.assertRaises(AssertionError):
+                    self.check()
+
+    def test_each_generated_entry_requires_its_exit(self):
+        extra = deepcopy(self.rows[2])
+        extra["index"] = 3.5
+        self.rows.insert(4, extra)
+        with self.assertRaises(AssertionError):
+            self.check()
+
+    def test_exit_keeps_exact_executor_origin_and_state(self):
+        original = deepcopy(self.rows)
+        for field in ("task", "origin", "state"):
+            with self.subTest(field=field):
+                self.rows = deepcopy(original)
+                self.rows[3][field] += 1
+                with self.assertRaises(AssertionError):
+                    self.check()
+
+    def test_balanced_but_overlapping_fragments_are_rejected(self):
+        entry, exit_row = deepcopy(self.rows[2]), deepcopy(self.rows[3])
+        entry["index"], exit_row["index"] = 2.5, 3.5
+        self.rows.extend((entry, exit_row))
+        self.rows.sort(key=lambda row: row["index"])
+        with self.assertRaises(AssertionError):
+            self.check()
+
+    def test_multiple_ordered_generated_fragments_are_allowed(self):
+        entry, exit_row = deepcopy(self.rows[2]), deepcopy(self.rows[3])
+        entry["index"], exit_row["index"] = 3.25, 3.5
+        self.rows[4:4] = [entry, exit_row]
+        self.assertEqual(self.check()["completed_foreign_jit_bodies"], 2)
 
     def test_native_executor_is_not_foreign_jit(self):
         self.rows[2]["task"]=13

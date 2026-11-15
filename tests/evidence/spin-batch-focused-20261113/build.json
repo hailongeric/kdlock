@@ -1,0 +1,27 @@
+{
+  "command": [
+    "/usr/bin/gcc",
+    "-std=gnu11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "/tmp/spin-batch-shw7mp7t/batch_check.c",
+    "-o",
+    "/tmp/spin-batch-shw7mp7t/batch_check"
+  ],
+  "inputs": {
+    "kernel/mutex_release.h": "a2805d3e5d1bdff89390c54f9ddf66ed02f5c470d07b5ee83ec51b9304a279ce",
+    "kernel/mutex.h": "d7e19887d6b09511c77896979ba210ef1e155f9090ba5e5bd6fe17024ced4528",
+    "kernel/observation.h": "e1d9fae7baf6618d50a55d14c60256e800ba830441fd767d8640a86206ba45b8",
+    "kernel/mutex_release.c": "2d9639fcf6688e0923b1fcc7f6475edff26957710984785212fe40dda5dcc7f8",
+    "kernel/mutex_api.c": "68ee6c03cdb199a96aaae3b667de40ed368317c12368b7beee0f926ac2d3eaab",
+    "kernel/mutex.c": "eba4194873d90a1d15ac73f1cb3e70f3e61530e8611d2054a99cd118258e69ce",
+    "kernel/owner_progress.c": "b29db1465b3ff6c5e53ae447ab8b4f099cbc02161f5a8de6b3585c8c94a82527",
+    "kernel/spin_policy.h": "4e74540e7e9abe7111d8c7698fb668fa6d61d2eca3cc11faac18c26a391a491c",
+    "tests/spin_batch/batch_check.c": "fdf1fa23a2b7113ca770665a489425366f70efeca78fb345a67169a50ed77f59"
+  },
+  "returncode": 0,
+  "stdout": "",
+  "stderr": ""
+}

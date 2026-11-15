@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/tmp/spin-batch-shw7mp7t/batch_check",
+    "cap"
+  ],
+  "returncode": 0,
+  "stdout": "PASS cap\n",
+  "stderr": ""
+}

@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/tmp/spin-batch-shw7mp7t/batch_check",
+    "reacquire"
+  ],
+  "returncode": 0,
+  "stdout": "PASS reacquire\n",
+  "stderr": ""
+}

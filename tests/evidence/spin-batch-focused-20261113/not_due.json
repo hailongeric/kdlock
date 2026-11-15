@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/tmp/spin-batch-shw7mp7t/batch_check",
+    "not_due"
+  ],
+  "returncode": 0,
+  "stdout": "PASS not_due\n",
+  "stderr": ""
+}
