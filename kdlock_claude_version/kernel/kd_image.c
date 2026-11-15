@@ -344,6 +344,8 @@ static long kd_image_load(struct kd_image_load __user *uarg)
 
 	site = kd_site_find(l.site);
 	if (!site) {
+		/* A power-of-two size, so the slab aligns it to its cache lines. */
+		BUILD_BUG_ON(sizeof(*site) != 2 * SMP_CACHE_BYTES);
 		site = kzalloc(sizeof(*site), GFP_KERNEL);
 		if (!site) {
 			ret = -ENOMEM;
@@ -566,6 +568,7 @@ static const struct kd_sym kd_syms[] = {
 	KD_SYM(kd_mutex_unlock,			KD_SYM_UNLOCK,	KD_OP_UNLOCK_SLEEPABLE),
 	KD_SYM(kd_up_write,			KD_SYM_UNLOCK,	KD_OP_UNLOCK_SLEEPABLE),
 	KD_SYM(kd_downgrade_write,		KD_SYM_UNLOCK,	KD_OP_DOWNGRADE),
+	KD_SYM(kd_up_read,			KD_SYM_UNLOCK,	KD_OP_UP_READ),
 	KD_SYM(kd_mutex_lock,			KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
 	KD_SYM(kd_mutex_lock_interruptible,	KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
 	KD_SYM(kd_mutex_lock_killable,		KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
@@ -612,7 +615,6 @@ static const struct kd_sym kd_syms[] = {
 	KD_SYM(kd_ww_mutex_unlock,		KD_SYM_LOCAL,	0),
 	KD_SYM(kd_down_read_trylock,		KD_SYM_LOCAL,	0),
 	KD_SYM(kd_down_write_trylock,		KD_SYM_LOCAL,	0),
-	KD_SYM(kd_up_read,			KD_SYM_LOCAL,	0),
 };
 static_assert(ARRAY_SIZE(kd_syms) <= KD_MAX_SYMS);
 

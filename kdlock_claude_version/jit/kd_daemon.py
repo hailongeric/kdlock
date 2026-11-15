@@ -21,9 +21,13 @@ the image is loaded, the kernel refuses it and the site is built again.
 The kernel never waits for this process. A section that meets unknown code
 is handed back to its own task; the daemon only improves later runs.
 
-Knowledge is stored per kernel release in a JSON file, so a restart resumes
+Knowledge is stored per kernel build in a JSON file, so a restart resumes
 with everything learned so far. It is keyed by text address and therefore
-discarded when the release string changes.
+discarded when the release string or the build (uname -v) changes: a
+rebuild under the same release moves the text, and the sites and targets of
+the previous build would otherwise be republished as images for addresses
+that are no longer lock calls (seen with 124 stored sites of which most
+were from earlier builds).
 """
 
 import argparse
@@ -53,7 +57,7 @@ class Daemon:
             with open(args.config) as f:
                 config = json.load(f)
         self.translator = Translator(self.kv, self.info, config)
-        self.release = os.uname().release
+        self.release = os.uname().release + " " + os.uname().version
         self.sites = {}         # site -> Learned
         self.dirty = {}         # site -> time of first unprocessed change
         self.failed = set()     # sites the translator could not handle

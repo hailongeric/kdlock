@@ -45,6 +45,8 @@ enum kd_op {
 	/* contended nested spin-class acquires (KD_SYM_NESTED) */
 	KD_OP_NEST_SPIN,
 	KD_OP_NEST_WRITE,
+	/* release of the read side kept after a downgrade (KD_SYM_UNLOCK) */
+	KD_OP_UP_READ,
 };
 
 /* ---- KD_IOC_INFO ------------------------------------------------------- */

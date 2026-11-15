@@ -96,6 +96,11 @@ struct kd_regs {
 	 * brings its own count in line when it resumes (kd_rcu_sync()).
 	 */
 	int rcu_depth;
+	/*
+	 * Bit i: roots[i] was downgraded by the continuation while its
+	 * combiner kept the write side; see kd_vdown in kd_core.c.
+	 */
+	u8 vdown;
 };
 
 enum {
@@ -190,6 +195,8 @@ enum {
 	/* Rwsem readers that missed the fast path. */
 	KD_STAT_RD_BEHIND,	/* registered behind an active writer and waited for it */
 	KD_STAT_RD_QUEUE,	/* gave up spinning and queued on ->m */
+	KD_STAT_VDOWN,		/* downgrades executed with the write side kept */
+	KD_STAT_VDOWN_HB,	/* ... whose read part was then handed back */
 	KD_STAT_NR,
 };
 
@@ -301,6 +308,11 @@ struct kd_family {
 	 * needs none: see kd_cpu.xcount.
 	 */
 	void (*xflag)(void *root, bool set);
+	/*
+	 * rwsem only: turn the session's write hold into a read hold of the
+	 * origin. Set by a family that allows kd_vdown.
+	 */
+	void (*downgrade)(void *root);
 	bool keeps_q;
 	bool always_deleg;
 	/*
@@ -406,16 +418,33 @@ bool kd_down_read_trylock_raw(struct kd_rwsem *sem);
 bool kd_down_write_trylock_raw(struct kd_rwsem *sem);
 
 /* kd_image.c */
+/*
+ * Two cache lines on purpose. Every contended caller of the site reads the
+ * first one (kd_site_find(), ->entry); it is written only when an image is
+ * loaded or switched off. The combiner writes the second one once per
+ * section.
+ *
+ * With both in one 72-byte object from the 96-byte slab, an object began
+ * at offset 0 or 32 of a cache line. At 0, ->rip, ->entry and the counters
+ * shared a line, and every section's count took that line from all the
+ * waiters that were reading it; at 32 they did not. Each site therefore
+ * ran at one of two rates, decided by the allocation: kd spin c01 at 32
+ * workers was 6.4-6.5 Mops/s in builds #67 and #68 and 4.4 in #69 (same
+ * session code), while Native and TCLock stayed put. This was the
+ * boot-to-boot difference of rounds 7 and 8.
+ */
 struct kd_site {
 	struct hlist_node hash;
 	unsigned long	rip;		/* return address of the root lock call */
 	void		*entry;		/* NULL: site known but not delegable now */
 	struct kd_image	*img;
-	u32		ok, bad;	/* approximate, combiner-updated */
+
+	u32		ok ____cacheline_aligned_in_smp;	/* approximate, combiner-updated */
+	u32		bad;
 	atomic_t	miss_budget;	/* learning reports left for this image */
 	atomic_t	hb_budget;	/* handback reports left for this image */
 	struct rcu_head	rcu;
-};
+} ____cacheline_aligned_in_smp;
 
 struct kd_site *kd_site_find(unsigned long rip);
 void kd_site_request(unsigned long rip);

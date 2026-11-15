@@ -237,10 +237,17 @@ static void kd_rwsem_xflag(void *root, bool set)
 		atomic_long_andnot(KD_RWSEM_XHEAD, &sem->count);
 }
 
+/* kd_family.downgrade: the origin continues as a reader. */
+static void kd_rwsem_grant_downgrade(void *root)
+{
+	kd_downgrade_write(root);
+}
+
 static const struct kd_family kd_rwsem_family = {
 	.post		= kd_rwsem_post,
 	.release	= kd_rwsem_release_queue,
 	.xflag		= kd_rwsem_xflag,
+	.downgrade	= kd_rwsem_grant_downgrade,
 	.keeps_q	= true,
 	.always_deleg	= true,
 	/*

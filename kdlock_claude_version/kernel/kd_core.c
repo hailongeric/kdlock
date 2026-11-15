@@ -31,8 +31,19 @@ EXPORT_PER_CPU_SYMBOL_GPL(kd_cpu);
 
 DEFINE_STATIC_KEY_FALSE(kd_delegation);
 
-/* Most waiters one session serves before the combiner runs its own section. */
-unsigned int kd_batch __read_mostly = 1024;
+/*
+ * Most waiters one session serves before the combiner runs its own section.
+ *
+ * Within one NUMA node the value does not matter from 1024 up. Across two
+ * nodes every end of a session moves the lock's data to the other node,
+ * so longer sessions pay (build #68, in-boot A/B, 3 rounds, 64 workers on
+ * two nodes, 4096 against 1024): spin c01 +5.1%, rwlock writers +3.0%,
+ * rwsem writers +2.0%, mutex +1.2 to +1.6%; 16384 adds under 1% more, 256
+ * costs 10 to 17%. With NUMA order a waiter of the other node waits for up
+ * to this many sections, so the bound on its delay is four times that of
+ * 1024. The TCLock backend of the bench runs with 1024, its maximum.
+ */
+unsigned int kd_batch __read_mostly = 4096;
 core_param(kd_batch, kd_batch, uint, 0644);
 
 
@@ -319,6 +330,7 @@ static void kd_report_exit(struct kd_regs *r, u32 x, unsigned long ip,
 struct kd_irq_hold {
 	bool		held;
 	bool		bh;
+	bool		no_offer;	/* the grant did not go to the origin as it was */
 	unsigned long	flags;
 };
 
@@ -330,6 +342,56 @@ static __always_inline void kd_irq_release(struct kd_irq_hold *h)
 	local_irq_restore(h->flags);
 	if (h->bh)
 		local_bh_enable();
+}
+
+/*
+ * Downgrade inside a delegated rwsem section (munmap does it on every
+ * call). kd_vdown = 0: the section is handed back at the downgrade, so
+ * the origin runs the read part itself and the session ends there. With
+ * 1 the combiner keeps the write side and goes on executing: the read
+ * part needs no more than the write side gives. The read release of the
+ * root then ends the section like a write release would. If the read part
+ * has to be handed back after all, the downgrade is done for real at that
+ * point and the origin continues as a reader.
+ *
+ * Cost: readers of that rwsem wait through read parts they could have
+ * shared. It is a throughput choice for writer-dominated use.
+ *
+ * kd_cldemote (bits): a queued waiter moves its packet (1) and the top of
+ * its stack (2) out of its private caches, so that the combiner finds
+ * those lines in the shared cache level (CLDEMOTE; a no-op where the CPU
+ * lacks it). 16 and 32 are the same for the sleepable class.
+ *
+ * Measured (build #67, in-boot A/B, 3 rounds, 2.7 GHz, against 0): with 3
+ * the spin class gains 0 to 2% from 8 workers (spin c01 +0.6 to +1.2,
+ * rwlock writers +0.6 to +2.2, spin c08 -0.1 to +1.6). The sleepable
+ * class does not (mutex c01 -0.3 to +0.2, mutex c16 -0.4 to -0.9, rwsem
+ * writers +0.2 to +1.4), so its bits are off. The effect is small because
+ * the combiner already requests the packet one section ahead. The
+ * combiner demoting the lines back after a section loses 3 to 20% and is
+ * not kept.
+ */
+static unsigned int kd_vdown __read_mostly = 1;
+core_param(kd_vdown, kd_vdown, uint, 0644);
+static unsigned int kd_cldemote __read_mostly = 3;
+core_param(kd_cldemote, kd_cldemote, uint, 0644);
+
+static __always_inline void kd_demote(const void *p, long len)
+{
+	const char *c = (const char *)((unsigned long)p & ~63UL);
+	const char *end = (const char *)p + len;
+
+	for (; c < end; c += 64)
+		asm volatile(".byte 0x0f, 0x1c, 0x00" : : "a" (c));	/* cldemote (%rax) */
+}
+
+/* The lines a section starts on: the packet and the origin's stack top. */
+static __always_inline void kd_demote_packet(struct kd_regs *r, unsigned int how)
+{
+	if (how & 1)
+		kd_demote(r, 256);
+	if (how & 2)
+		kd_demote((void *)(r->rsp - 128), 448);
 }
 
 static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f,
@@ -391,8 +453,19 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 		kind = KD_X_KIND(x);
 		op = KD_X_OP(x);
 
-		if (kind == KD_X_UNLOCK && op != KD_OP_DOWNGRADE) {
+		if (kind == KD_X_UNLOCK && op == KD_OP_DOWNGRADE && !(x & KD_X_TAIL) &&
+		    f && f->downgrade && READ_ONCE(kd_vdown)) {
+			/* Keep the write side and run the read part too. */
+			r->vdown |= BIT(level);
+			kd_stat_inc(kc, KD_STAT_VDOWN);
+			code = resume;
+			continue;
+		}
+
+		if (kind == KD_X_UNLOCK && op != KD_OP_DOWNGRADE &&
+		    (op != KD_OP_UP_READ || (r->vdown & BIT(level)))) {
 			/* Release of our root: this level's section is complete. */
+			r->vdown &= ~BIT(level);
 			kd_apply_unlock(r, op);
 			if (x & KD_X_TAIL) {
 				/* Sibling call: the API's ret would pop the caller's address. */
@@ -409,13 +482,16 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 		}
 
 		if (kind == KD_X_UNLOCK_ANC && !(x & KD_X_TAIL) && op != KD_OP_DOWNGRADE) {
+			/* A read release only ends an outer root that was downgraded. */
+			u8 ok = op == KD_OP_UP_READ ? r->vdown : 0xff;
+
 			/*
 			 * Release of some other lock while outer sessions exist.
 			 * An outer root stays physically held by its combiner and
 			 * is only marked; anything else is released for real.
 			 */
 			for (i = level - 1; i >= 0; i--) {
-				if (r->roots[i] == (void *)r->rdi)
+				if (r->roots[i] == (void *)r->rdi && (ok & BIT(i)))
 					break;
 			}
 			if (i >= 0) {
@@ -504,6 +580,16 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	 */
 	if (native && !done && f && f->set_owner)
 		f->set_owner(root, r->task);
+	if (r->vdown & BIT(level)) {
+		r->vdown &= ~BIT(level);
+		if (native && !done) {
+			/* The read part goes back: the origin gets a read hold. */
+			f->downgrade(root);
+			hold->no_offer = true;
+			planned = true;
+			kd_stat_inc(kc, KD_STAT_VDOWN_HB);
+		}
+	}
 
 	d = preempt_count() - pc0;
 	if (d) {
@@ -562,6 +648,14 @@ static bool kd_ctx_compatible(const struct kd_regs *r)
 static __always_inline struct kd_regs *kd_packet_guess(struct kd_node *n)
 {
 	return &container_of(n, struct kd_cpu, nodes[0])->regs;
+}
+
+static __always_inline void kd_prefetch_packet(struct kd_regs *r)
+{
+	prefetchw(r);
+	prefetchw((void *)r + 64);
+	prefetchw((void *)r + 128);
+	prefetchw((void *)r + 192);
 }
 
 /* ---- role exchange after a handback ----------------------------------------- */
@@ -914,28 +1008,30 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			prefetch(nn);
 			/*
 			 * Spin class only. Measured A/B in one boot: spin
-			 * +1-3% at 8-32 workers; mutex c01 -6%, cause not
-			 * established, so the sleepable class does not use it.
+			 * +1-3% at 8-32 workers. The sleepable class gains
+			 * nothing from it (build #68, at the address guessed
+			 * from mnodes[0]: -2 to +1%).
 			 */
-			if (!sleepable) {
-				guess = kd_packet_guess(nn);
-				prefetchw(guess);
-				prefetchw((void *)guess + 64);
-				prefetchw((void *)guess + 128);
-				prefetchw((void *)guess + 192);
-			}
+			guess = kd_packet_guess(nn);
+			kd_prefetch_packet(guess);
 		}
+		/*
+		 * Requesting more than this ahead loses (build #68, in-boot
+		 * A/B, 8-64 workers): the next waiter's stack top after the
+		 * section, mutex and rwsem writers -15 to -27% and spin -1 to
+		 * -10%; node and packet of the waiter after next, -1 to -14%.
+		 * The nano sections do not touch the origin's stack, and each
+		 * extra line is one more transfer from a core that needs it
+		 * back. Archived: refs/archive/kdclaude-session-prefetch-stages-20261115.
+		 */
 
+		hold.no_offer = false;
 		handed = !kd_exec_one(root, n, f, &hold);
 		if (nn) {
 			struct kd_regs *nr = READ_ONCE(nn->regs);
 
-			if (nr && nr != guess) {
-				prefetchw(nr);
-				prefetchw((void *)nr + 64);
-				prefetchw((void *)nr + 128);
-				prefetchw((void *)nr + 192);
-			}
+			if (nr && nr != guess)
+				kd_prefetch_packet(nr);
 		}
 		kd_q_detach(q, me, n);
 		if (handed) {
@@ -952,7 +1048,8 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 				WRITE_ONCE(claimed->claim, false);
 				claimed = NULL;
 			}
-			if (xowner && kd_xhead_offer(me, root, f, n->regs, sleepable))
+			if (xowner && !hold.no_offer &&
+			    kd_xhead_offer(me, root, f, n->regs, sleepable))
 				*xowner = n->regs->task;
 		}
 		smp_store_release(&n->state, KD_N_RESUME);
@@ -1045,6 +1142,7 @@ static void kd_prepare_offer(struct kd_cpu *kc, struct kd_node *me)
 	r->pc_delta = 0;
 	r->bh_off = softirq_count() != 0;
 	r->nroots = 0;
+	r->vdown = 0;
 	r->released = 0;
 	r->xoffers = 0;
 	r->xs_root = NULL;
@@ -1263,6 +1361,8 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 	kd_node_offer(kc, me, nested, entry);
 
 	if (kd_q_enqueue(q, me, false)) {
+		if (me->regs == &kc->regs && (READ_ONCE(kd_cldemote) & 3))
+			kd_demote_packet(me->regs, READ_ONCE(kd_cldemote));
 		st = smp_cond_load_acquire(&me->state, VAL != KD_N_WAIT);
 		if (st == KD_N_RESUME) {
 			me->entry = NULL;
@@ -1390,6 +1490,8 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 	}
 
 	queued = kd_q_enqueue(q, me, true) != NULL;
+	if (queued && me->regs == &kc->regs && unlikely(READ_ONCE(kd_cldemote) & 0x30))
+		kd_demote_packet(me->regs, READ_ONCE(kd_cldemote) >> 4);
 again:
 	if (queued) {
 		/*
