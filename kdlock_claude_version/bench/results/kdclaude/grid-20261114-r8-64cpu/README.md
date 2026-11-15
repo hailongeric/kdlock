@@ -116,6 +116,18 @@ between the two boots.
     The spin-class paths were not meant to change (`kd_node` gained one
     byte, and `kd_session` one branch). Not explained and not separated
     from boot-to-boot placement effects by an in-boot A/B.
+  * **Checked later on #66** (same spin-class code; 3 rounds, Native, kd
+    and TCLock alternating; `../mmap1-20261115-64cpu/spin66.jsonl`): the
+    loss does not reappear. spin c01, kd Mops/s at 8, 16 and 32 workers:
+    4.87, 5.74, 5.58 (this round 3.66, 3.70, 3.91; round 7 4.22, 4.10,
+    3.92), with Native at 5.53-5.74 and TCLock at 3.73-3.94 as in both
+    rounds. rwlock writers only: 3.73, 4.07, 3.87 (this round 3.54, 3.60,
+    3.63; round 7 3.70, 4.08, 3.97). All three boots delegate fully there.
+    So kd's spin-class rate differs between boots by far more than the
+    loss in question (spin c01 at 16 workers: 3.70 to 5.74), while Native
+    and TCLock do not move. What differs between the boots is not known;
+    it has to be found before spin-class numbers from different boots are
+    compared at all.
   * Within one node, spin is still below Native (c01 0.66-0.80 at 6-32
     workers, c08 0.88-0.91) and rwsem writers only is 0.80-0.86 at 4-5
     workers.

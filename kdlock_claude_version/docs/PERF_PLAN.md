@@ -273,8 +273,12 @@ in-boot A/B numbers in LOCKS 4 and 5.
   lock the origin held. The reader phase cost mmap1 12% until a single
   reader was exempted (#66). mmap1 on this host: kd/Native 0.83-0.86 at 4
   threads, 0.92-0.99 at 16-32, 1.02-1.03 at 64.
-* **Next:** an in-boot A/B for the spin-class loss; mmap1 below Native on
-  this host; rwsem with
+* **The spin-class loss of round 8 did not reappear** on #66, but kd's
+  spin-class rate turned out to differ between boots far more than that
+  loss: spin c01 at 16 workers 3.70 (#61), 4.10 (#56) and 5.74 (#66) Mops/s,
+  all fully delegated, with Native and TCLock unchanged. Cause unknown.
+* **Next:** what makes kd's spin-class rate differ between boots; mmap1
+  below Native on this host; rwsem with
   readers and rwlock with writers across nodes; spin within one node.
 
 ### Task D: API switch and micro/API stage

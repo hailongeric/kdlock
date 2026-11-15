@@ -78,6 +78,8 @@ investigated.
 
 * `m66_rphase0.jsonl`, `m66_rphase1000.jsonl`: the last run on #66.
   Earlier runs were overwritten in the VM; their means are in the tables.
+* `spin66.jsonl`: spin c01 and rwlock writers only on the same boot of
+  #66, 3 rounds; the round 8 README uses it.
 * `corr66.jsonl`, `corr66.txt`: correctness on #66 after these runs:
   `run_corr` 312 points with 0 failed, `mm_stress` and `api_stress` passed
   except `setfd 63` (the fd limit of the test, round 7), no kernel
