@@ -320,6 +320,24 @@ Data: `tune-20261115-2700MHz/` (in-boot A/B, builds #67-#71) and
   phase helps 1% writes and costs 20% writes; it needs a rule, not a
   constant); the 3-worker points below Native; the effect of `kd_vdown`
   on a workload with readers.
+* **Readers across nodes: eras (builds #73 to #80).** The user asked why
+  rwsem and rwlock lose across NUMA nodes where mutex and spinlock do not.
+  * *Cause, measured with the worker count fixed* (32 workers on one node
+    or as 16+16, `bench/run_place.py`): where every section is delegated kd
+    keeps 0.95-0.97 of its one-node rate, because a session serves its own
+    node first. With 20% writes it kept 0.57-0.74, which is what the native
+    locks keep (0.61-0.71). Readers are never delegated, and nothing
+    ordered them by node.
+  * *Change*: a reader-writer lock under pressure serves one node at a time
+    (`kernel/kd_era.c`, ARCHITECTURE 7b). Callers of the other node wait
+    before they touch the lock.
+  * *Result* (#80, same placements): rwsem 0.93-1.08, rwlock 0.87-0.99 of
+    the one-node rate. No placement, worker count or one-node point loses
+    rate; with unequal numbers on the nodes the shares per worker are less
+    even than without eras (20% writes: least over most 0.54-0.89, from
+    0.84-0.98).
+  * All of it, step by step, with what was tried and removed:
+    `bench/results/kdclaude/era-20261115-64cpu/`.
 * **Reader spinning needs a rule too.** A reader registered behind an
   *active* writer spins out `kd_rwsem_rspin_ns` (50 us) even when the holder
   will not leave for milliseconds. That is two thirds of will-it-scale
