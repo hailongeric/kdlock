@@ -241,7 +241,7 @@ call.
     limit, with handbacks near zero. Native in the same boot: 319000-329000,
     285000, 278000-280000 and 150000-152000. Build #71 gives the same
     (`bench/results/kdclaude/tune-20261115-2700MHz/`): kd/Native 1.11-1.26
-    at 4 threads, 1.28-1.38 at 8-32, 2.03-2.08 at 64; with `kd_vdown=0`
+    at 4 threads, 1.28-1.38 at 8-32, 2.02-2.08 at 64; with `kd_vdown=0`
     0.77-0.83, 0.90-0.96 and 1.00-1.03.
   * **Cost:** other readers of that rwsem wait through the read parts
     instead of sharing them. The counters `vdown` and `vdown_hb` count the

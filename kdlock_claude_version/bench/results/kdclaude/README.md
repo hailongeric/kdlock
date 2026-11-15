@@ -253,7 +253,7 @@ the tables.
 * **Run:** build #70, commit `ee5db2c5`, same grid as rounds 7 and 8, 1512
   points, no failed point. Two boots of the build agree within 2.2%.
 * **Writer-only profiles** are flat from 8 to 64 workers and ahead of
-  TCLock: mutex c01 1.12-1.25, mutex c16 1.84-2.04, spin 1.34-1.56, rwlock
+  TCLock: mutex c01 1.12-1.25, mutex c16 1.90-2.04, spin 1.34-1.56, rwlock
   writers 1.50-1.87, rwsem writers 1.13-1.26. kd's batch is 4096, TCLock's
   1024.
 * **With readers across both nodes** kd is behind TCLock: rwsem 1% writes

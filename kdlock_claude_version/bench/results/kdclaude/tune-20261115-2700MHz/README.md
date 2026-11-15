@@ -34,10 +34,11 @@ both classes).
 
 | Value | Build | Result against 0 |
 | --- | --- | --- |
-| 3 | #67 (both classes) | spin c01 +0.6 to +1.2%, rwlock writers +0.6 to +2.2%, spin c08 +0.3 to +1.6% (16-64 workers); mutex c01 -0.3 to +0.2%, mutex c16 -0.4 to -0.9%, rwsem writers +0.2 to +1.4% |
+| 3 | #67 (both classes) | spin c01 +0.6 to +1.2%, rwlock writers +0.6 to +2.1%, spin c08 +0.3 to +1.6% (16-64 workers); mutex c01 -0.3 to +0.2%, mutex c16 -0.4 to -0.9%, rwsem writers +0.2 to +1.4% |
 | 3 | #70 (spin class) | spin c01 +3.0, +1.3, +1.4% at 8, 32, 64 workers; rwlock writers +2.0, +1.2, +1.4%; spin c08 -0.2, +0.4, +1.3% |
 | 51 | #70 (both classes) | as 3 for the spin class; mutex c01 +0.3 to +0.7%, mutex c16 -0.6 to -2.7%, rwsem writers +0.4 to +1.1% |
-| 4, 7 | #67 | -3 to -20% (spin c01 -20%, rwlock writers -18%, mutex c16 -11%) |
+| 4 | #67 | -3 to -21% from 8 workers (spin c01 -21%, rwlock writers -20%, mutex c16 -12%) |
+| 7 | #67 | +1 to -19% |
 
 * Default 3: spin class only. Not kept: the combiner side.
 * `dem69` is from the boot of #69 in which the spin c01 site was at the
@@ -53,10 +54,10 @@ both classes).
 | Value | Meaning | Result |
 | --- | --- | --- |
 | 1 | sleepable class requests the next packet early, at the address guessed from `mnodes[0]` | -2 to +1% (mutex c01 at 8 workers +6%) |
-| 2 | next waiter's stack top after the section | mutex and rwsem writers -15 to -27%, spin c01 -1 to -10%, spin c08 -7 to -8% |
+| 2 | next waiter's stack top after the section | mutex and rwsem writers -15 to -27%, spin c01 -1 to -10%, spin c08 -7 to -8%, rwlock writers -2 to -3% |
 | 3 | 1 and 2 | -1 to -10% |
 | 6, 7 | plus node and guessed packet of the waiter after next | -1 to -14% |
-| 14, 15 | plus the next stack top before the section | -1 to -18% |
+| 14, 15 | plus the next stack top before the section | -0.4 to -18% |
 
 The nano sections do not touch the origin's stack, and each line requested
 is a transfer from a core that needs it back. Code archived as
@@ -91,7 +92,7 @@ same boot; `kd_vdown` 0 and 1 alternating, 3 runs (`mmv.sh` recipe).
 | #71 | 64 | 147800-151200 | 150600-152200 | 305600-307700 |
 
 * kd/Native with `kd_vdown=1`: 1.11-1.26 at 4 threads, 1.28-1.38 at 8-32,
-  2.03-2.08 at 64. With 0: 0.77-0.83 at 4, 0.90-0.96 at 8-32, 1.00-1.03 at
+  2.02-2.08 at 64. With 0: 0.77-0.83 at 4, 0.90-0.96 at 8-32, 1.00-1.03 at
   64.
 * Sessions: with 0 every session serves one waiter and ends in a handback
   (`mmv_vdown0`: sessions = handbacks). With 1 at 32 and 64 threads the

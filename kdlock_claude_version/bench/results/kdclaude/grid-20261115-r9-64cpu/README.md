@@ -18,8 +18,8 @@
   * `kd_batch` 4096 (was 1024). **The TCLock backend runs with 1024**, its
     maximum, so kd's sessions are up to four times as long as TCLock's
     here. `../tune-20261115-2700MHz/batch68_b68.summary.txt` has kd at
-    1024 against 4096 in one boot: across nodes (64 workers) 1024 is
-    1.2-5.1% lower, within one node the same.
+    1024 against 4096 in one boot: across nodes (64 workers) 4096 is
+    1.2-5.1% higher, within one node the same.
   * `kd_cldemote` 3: queued spin-class waiters demote their packet and
     stack top.
   * `kd_vdown` 1 (no effect on these profiles: no downgrade).
@@ -115,7 +115,7 @@ the same comparison gave 6.4 against 4.4 for spin c01 at 32 workers.
   a half or less past the node boundary; TCLock stays flat at a lower
   level.
 * **Ahead of TCLock** from 8 workers: mutex c01 1.12-1.25, mutex c16
-  1.84-2.04, spin c01 1.34-1.48, spin c08 1.42-1.56, rwlock writers
+  1.90-2.04, spin c01 1.34-1.48, spin c08 1.50-1.56, rwlock writers
   1.50-1.87, rwsem writers 1.13-1.26. Part of the margin across nodes is
   the longer batch (above).
 * **Behind TCLock across both nodes (40-64 workers), with readers:**
@@ -134,9 +134,11 @@ the same comparison gave 6.4 against 4.4 for spin c01 at 32 workers.
   * rwlock 1% writes 0.84-0.95 at 6-24 workers; rwlock 20% writes
     0.81-0.96 from 4 workers.
   * 3 workers: mutex c01 0.89, rwlock writers 0.74, rwsem writers 0.74;
-    rwsem writers 0.86-0.87 at 4-5. TCLock is at 6.5-7.8 Mops/s there
-    where kd is at 2.8-4.5 (kd/TCLock 0.44-0.58): at 3 workers the queue
-    is too short for a session and TCLock still takes its fast path.
+    rwsem writers 0.86-0.87 at 4-5. For the rwlock and rwsem writers
+    TCLock is at 7.76 and 6.46 Mops/s there where kd is at 4.46 and 2.81
+    (kd/TCLock 0.58 and 0.44): with 3 workers there is rarely a second
+    waiter to serve, and TCLock's writers still get through without
+    queueing.
   * spin c01 0.84 at 2 workers.
   * spin c01 and c08 are at Native within one node (0.97-1.17) and no
     longer below it as in rounds 7 and 8, whose kd spin values were at the
