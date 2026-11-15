@@ -14,7 +14,7 @@ Consequently this standalone module includes the exported source-provider/runtim
 
 ## Test and lifetime design
 
-Two kthreads are bound to distinct explicitly selected online CPUs (defaults 0 and 1). CPU hotplug is held off for this short test. Both finish setup before a common start gate opens. Each performs 64 acquisitions, increments a shared non-atomic total while holding KD, records its own count and releases KD. An independent atomic occupancy diagnostic detects overlapping critical sections; it is not used to guard the total. A passing result requires two completed workers, 64 increments each, total128, zero remaining occupants, zero overlaps and no setup/join error. This finite test does not prove all interleavings or guarantee observed queue contention.
+Two kthreads are bound to distinct explicitly selected online CPUs (defaults 0 and 1). CPU hotplug is held off for this short test. Both finish setup before a common start gate opens. Each performs 64 acquisitions, increments a shared non-atomic total while holding KD, records its own count and releases KD. An independent atomic occupancy diagnostic detects overlapping critical sections; it is not used to guard the total. A passing result requires two completed workers, 64 increments each, total 128, zero remaining occupants, zero overlaps and no setup/join error. This finite test does not prove all interleavings or guarantee observed queue contention.
 
 All allocations occur before lock-loop calls. No allocation, sleeping or scheduling occurs inside the critical section. cond_resched occurs only after unlock. No source owner, request, stack, binding or release-ACK record is fabricated or replaced by the diagnostic counter.
 
@@ -30,7 +30,7 @@ Module parameters immutable_text, auxiliary_contract and gs_verified default fal
 
 ## Build status and precise prerequisite
 
-No .ko was built. The host exposes GCC11/12; the exact old compiler is GCC15.2.0-16ubuntu1 with a declared libc6>=2.38 dependency, retained inside the stopped source system. Prepared kernel16 inputs also remain on the stopped source build disk. The source lookup verified126 recorded hashes, including the full ELF and generated ABI inputs. No compatible already-running, authorized build environment containing those inputs is available in this task. A new environment, package installation and booting the source VM were expressly excluded, so compilation stops here.
+No .ko was built. The host exposes GCC 11/12; the exact old compiler is GCC 15.2.0-16ubuntu1 with a declared libc6 >= 2.38 dependency, retained inside the stopped source system. Prepared kernel16 inputs also remain on the stopped source build disk. The source lookup verified 126 recorded hashes, including the full ELF and generated ABI inputs. No compatible already-running, authorized build environment containing those inputs is available in this task. A new environment, package installation and booting the source VM were expressly excluded, so compilation stops here.
 
 Target release: 7.0.0-38-kdrebuild16
 Target GNU Build ID: 40d0694cb395dfcc98f8275d033b96797d2e5cb2
@@ -50,13 +50,13 @@ The new guest remains stopped. Its recovery snapshot/profile is preserved. Same-
 
 Run python3 check_offline.py to reproduce:
 
-1. GCC11 C syntax checking with -Wall -Wextra -Werror and mocked Linux/runtime declarations. No object is emitted. This does not verify kernel declarations, linking or ABI.
+1. GCC 11 C syntax checking with -Wall -Wextra -Werror and mocked Linux/runtime declarations. No object is emitted. This does not verify kernel declarations, linking or ABI.
 2. Preprocess the actual pinned kd_spin_api.h and kd_mutex_api.h; confirm routing to the exact spin assembly entry symbols. Linux dependency declarations and queue types are mocked for this check.
-3. Verify all11 expected KD imported symbol names appear as GPL exports in pinned source. This is source evidence; actual .ko imports/CRCs are unrun.
-4. Match all88 packaged KD source files against the retained kernel16 build receipt, including the private headers and exports.
+3. Verify all 11 expected KD imported symbol names appear as GPL exports in pinned source. This is source evidence; actual .ko imports/CRCs are unrun.
+4. Match all 88 packaged KD source files against the retained kernel16 build receipt, including the private headers and exports.
 
 All four checks passed. No kernel test, module build, live exclusion/progress check, signature check, throughput run or recovery test was performed. checks.json and the two logs retain actual offline results. This candidate still requires a real kernel compile and review of its runtime prerequisites before live use.
 
 ## Git preservation
 
-This directory preserves the standalone source candidate on a dedicated branch from7338197a. The checker now resolves this checkout and its retained expected-kernel receipt through relative paths. Only Python AST/path inspection was repeated during Git finalization; the four recorded offline checks predate that path-only change. Original checker and results are preserved under tests/evidence/spin-preparation-kernel16-20261114/fixture. Export/CRC inspection later confirmed all11 source-expected KD exports in the exact retained Module.symvers; this is not an emitted-module CRC comparison. No new compile, test execution or live work occurred during finalization.
+This directory preserves the standalone source candidate on a dedicated branch from 7338197a. The checker now resolves this checkout and its retained expected-kernel receipt through relative paths. Only Python AST/path inspection was repeated during Git finalization; the four recorded offline checks predate that path-only change. Original checker and results are preserved under tests/evidence/spin-preparation-kernel16-20261114/fixture. Export/CRC inspection later confirmed all 11 source-expected KD exports in the exact retained Module.symvers; this is not an emitted-module CRC comparison. No new compile, test execution or live work occurred during finalization.

@@ -1,15 +1,15 @@
 # Source-prepared kernel16 spin pair
 
-This isolated lane extends exact source7338197a for an explicit Native/KD plain
+This isolated lane extends exact source 7338197a for an explicit Native/KD plain
 spin comparison. It has offline routing/validator checks only. No module was
 built, signed, loaded or run; no throughput or full kernel compatibility result
 exists. Kernel16 private headers and core implementation are unchanged. Do not
-apply the patch blindly to8e88f001 or9a8801cb: the newer spin layout differs.
+apply the patch blindly to 8e88f001 or 9a8801cb: the newer spin layout differs.
 
-The workload remains one increment of the same padded counter, followed by256
+The workload remains one increment of the same padded counter, followed by 256
 register-only post-work rounds outside the lock, one bulk ioctl per pinned
-worker and100% writes. Spin snapshot version2 distinguishes it from the existing
-mutex/rwsem version1 without changing the snapshot size. The built module's
+worker and 100% writes. Spin snapshot version 2 distinguishes it from the existing
+mutex/rwsem version 1 without changing the snapshot size. The built module's
 nano_family/nano_backend metadata and build receipt must agree. KD uses its
 plain spin clobber entries, exact spin family/unlock kind and existing lifetime
 records; Native uses native spin_lock/spin_unlock. Unsupported TCLock/spin and
@@ -26,23 +26,24 @@ TCLock build is part of this lane.
 
 Future runner selection is `--family spin --scope spin-pair`, an explicit
 `--worker-cpus` list of eight distinct available guest CPUs and a distinct
-`--collector-cpu`. Functional phases use1/2/4/8workers; timing requires paired
+`--collector-cpu`. Functional phases use 1/2/4/8 workers; timing requires paired
 Native/KD spin functional receipts from the same build, boot, runner and CPU
-placement. It adds one1-second interval per count, with training/compilation
+placement. It adds one 1-second interval per count, with training/compilation
 outside timing and fixed-image claim checks between phases. Spin reports raw
 whole-run throughput without peak qualification; no normalization is supplied.
 KD recording remains on and Native has no KD recorder, so overhead differs and
-must be disclosed. A pristine spin guest may start at taint0; after the expected
-signed out-of-tree module the existing final4096 check remains mandatory.
+must be disclosed. A pristine spin guest may start at taint 0; after the expected
+signed out-of-tree module the existing final 4096 check remains mandatory.
 
 A matching recovery point, pinned provider/compiler dependencies and fresh
-GS/return-symbol proof are required before execution. The new guest has no
-verified recovery point; these changes do not authorize a boot/load or create
-one. The surrounding validated controller must perform recovery and host
-placement checks; this selected-family runner is not a standalone VM launcher.
+GS/return-symbol proof are required before execution. At source preparation,
+the new guest had no verified recovery point. A later recovery task verified
+a restore in the same QEMU process; fresh-process restore remains untested.
+These source changes do not authorize a boot or module load. The surrounding
+validated controller must perform recovery and host placement checks; this selected-family runner is not a standalone VM launcher.
 
 The existing process-wide eight-host-CPU allowance does not prove per-vCPU
-pinning. Keep the40-vCPU/64GiB profile and allowed host CPUs16–19,36–39. The
+pinning. Keep the 40-vCPU/64 GiB profile and allowed host CPUs 16–19, 36–39. The
 controller must record equivalent worker/collector/service placement; at eight
 workers, collector/service sharing is unavoidable within that allowance.
 
