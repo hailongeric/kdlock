@@ -268,7 +268,13 @@ in-boot A/B numbers in LOCKS 4 and 5.
 * **Defect found, older than this change set:** mmap1 with `kd_mm=1` hangs
   the 64-vCPU VM, also with the kernel source of `041653e4` (round 8
   README). Open, and it blocks measuring the reader phase on mmap1.
-* **Next:** that hang; an in-boot A/B for the spin-class loss; rwsem with
+* **The hang is fixed** (#65, `mmap1-20261115-64cpu/`): a handback with
+  interrupts off left the executor open to a timer interrupt that needed a
+  lock the origin held. The reader phase cost mmap1 12% until a single
+  reader was exempted (#66). mmap1 on this host: kd/Native 0.83-0.86 at 4
+  threads, 0.92-0.99 at 16-32, 1.02-1.03 at 64.
+* **Next:** an in-boot A/B for the spin-class loss; mmap1 below Native on
+  this host; rwsem with
   readers and rwlock with writers across nodes; spin within one node.
 
 ### Task D: API switch and micro/API stage

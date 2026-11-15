@@ -223,3 +223,13 @@ round of work did not change.
 * **Defect, older than this change set:** mmap1 with `kd_mm=1` hangs this
   VM, also with the previous commit's kernel source. The directory README
   has the evidence.
+
+## mmap1 on 64 vCPUs (`mmap1-20261115-64cpu/`)
+
+* **Hang fixed (#65):** after a handback with interrupts off the executor
+  enabled interrupts before the origin was resumed; a timer interrupt then
+  waited for a lock the origin held. Older than round 8.
+* **Reader phase:** cost mmap1 12% at 4-32 threads on #65; none on #66,
+  where a single reader gets no phase.
+* **kd/Native on this host (#66):** 0.83-0.86 at 4 threads, 0.92-0.99 at
+  16-32, 1.02-1.03 at 64.

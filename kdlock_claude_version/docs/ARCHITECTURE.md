@@ -218,6 +218,15 @@ switch tasks (`schedule` and its relatives, `yield`, the sleeps) is a
 frontier, so a section that would block is always back on its own task
 before it does.
 
+A section can be handed back with interrupts off and an interrupt-safe
+lock held, and that lock can belong to the executor's CPU, because the
+copy's per-CPU accesses are the executor's (a wakeup takes the executor's
+runqueue lock and its hrtimer base lock). The executor therefore keeps its
+own interrupts off until it has published the resume (`kd_irq_release()`).
+Before build #65 it enabled them first, and a timer interrupt in that
+window waited for a lock the origin could not release, as it was never
+resumed (`bench/results/kdclaude/mmap1-20261115-64cpu/`).
+
 Families where the queue word is only a wait lock (`keeps_q`: rwlock, rwsem)
 transfer the grant (writer byte / writer bit) but not the queue word.
 

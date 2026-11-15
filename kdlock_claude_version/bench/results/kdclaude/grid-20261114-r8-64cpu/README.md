@@ -154,8 +154,7 @@ Native and kd alternating) hung the VM on this host.
   off, and its stack does not unwind (it was interrupted off its own
   stack). Other CPUs wait in `smp_call_function_many_cond` for it, and
   the queued writers wait in `kd_wait_sleepable`.
-* **Not found:** who holds that lock. Open; `kd_mm=1` should not be used
-  on this VM until it is.
+* **Found and fixed afterwards** (#65): `../mmap1-20261115-64cpu/`.
 * An in-boot comparison of the reader phase on mmap1 could not be made for
   this reason. The reader phase delays writers, so its effect on mmap1 is
   unmeasured.

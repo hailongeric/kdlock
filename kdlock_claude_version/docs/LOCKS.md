@@ -206,6 +206,9 @@ call.
     workers 4.69 -> 5.88, 32 workers 4.32 -> 5.63, 64 workers 2.77 -> 3.98,
     4 workers 7.47 -> 7.41; 1% writes at 64 workers 5.53 -> 6.54; c16 with
     20% writes at 8 workers 3.91 -> 4.31, at 64 workers 2.48 -> 2.57.
+  * A single reader gets no phase (from #66): in mmap1 it is the tail of
+    the previous munmap after its downgrade, and a phase per operation
+    cost 12% at 4-32 threads (`bench/results/kdclaude/mmap1-20261115-64cpu/`).
   * It delays a writer by a bounded time per phase. This is a fairness
     change in the area AGENTS.md lists as deferred, made at the user's
     request.
