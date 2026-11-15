@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0
-"""will-it-scale mmap1 with the mmap lock of each new mm chosen per run.
+"""A will-it-scale test with the mmap lock of each new mm chosen per run.
 
 The kernel needs CONFIG_KDLOCK_MM. The kd_mm core parameter decides which
 lock a new mm gets (0 native rw_semaphore, 1 kdlock rwsem), so every run
 starts new processes after setting it and Native and kd alternate within
-one boot. The workload is the unchanged will-it-scale mmap1 test from
-bench/wis (TCLocks' copy): each iteration maps 128 MiB of anonymous
-private memory and unmaps it untouched.
+one boot. The workloads are the unchanged will-it-scale tests in bench/wis
+(TCLocks' copy): mmap1 (map 128 MiB of anonymous private memory and unmap it
+untouched), mmap2 (the same with a file mapping), page_fault1 (touch every
+page of a 128 MiB anonymous mapping, so the fault path, not mmap itself) and
+brk1.
 
   run_mmap1.py --out mmap1.jsonl --workers 1 2 4 8 16 32 --rounds 2
+  run_mmap1.py --out pf1.jsonl --test page_fault1 --models processes
 
 Per point: the harness's own warmup, then --samples one-second samples;
 the result is its `average` (iterations per second over all tasks) with
@@ -54,6 +57,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", required=True)
     ap.add_argument("--wis", default="/root/wis/build")
+    ap.add_argument("--test", default="mmap1",
+                    help="will-it-scale test name in --wis (mmap1, mmap2, page_fault1, brk1)")
     ap.add_argument("--models", nargs="+", default=["threads", "processes"])
     ap.add_argument("--workers", type=int, nargs="+", default=[1, 2, 4, 8, 16, 24, 32])
     ap.add_argument("--backends", nargs="+", default=["native", "kd"])
@@ -62,7 +67,8 @@ def main():
     ap.add_argument("--tag", default="")
     args = ap.parse_args()
 
-    ident = {"kernel": platform.release(), "build": platform.version(), "tag": args.tag}
+    ident = {"kernel": platform.release(), "build": platform.version(), "tag": args.tag,
+             "test": args.test}
     bad = 0
     with open(args.out, "a") as out:
         for rnd in range(args.rounds):
@@ -74,7 +80,7 @@ def main():
                             f.write("1" if backend == "kd" else "0")
                         complaints = len(run_corr.kernel_complaints())
                         before = run_nano.kd_stats()
-                        res = run_point("%s/mmap1_%s" % (args.wis, model), n, args.samples,
+                        res = run_point("%s/%s_%s" % (args.wis, args.test, model), n, args.samples,
                                         60 + 10 * args.samples)
                         after = run_nano.kd_stats()
                         new = run_corr.kernel_complaints()[complaints:]

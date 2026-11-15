@@ -58,7 +58,9 @@ PROFILES = {
 }
 # The default grid; the other profiles are run on request.
 GRID = [p for p in PROFILES if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100"))]
-WORKERS = [1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64]
+# 1-8 one by one, then every fourth up to 64 (the user asked for this grid on
+# 2026-11-15; rounds up to 9 had 40, 48, 56, 64 instead of every fourth).
+WORKERS = [1, 2, 3, 4, 5, 6, 7, 8] + list(range(12, 65, 4))
 
 
 def identity():
