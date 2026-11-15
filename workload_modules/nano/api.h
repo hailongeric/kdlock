@@ -4,7 +4,13 @@
 #include <linux/ioctl.h>
 #include <linux/types.h>
 
+/* Same snapshot extent; version 2 identifies this exclusive spin lane and
+ * prevents a mutex/rwsem module from being relabeled by its controller. */
+#ifdef RB_SPIN
+#define RB_VERSION 2
+#else
 #define RB_VERSION 1
+#endif
 #define RB_MAX_WORKERS 64
 #define RB_BATCH 256
 #define RB_SLOTS 16

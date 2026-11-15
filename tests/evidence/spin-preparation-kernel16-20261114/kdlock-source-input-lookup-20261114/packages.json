@@ -1,0 +1,206 @@
+{
+  "binutils": {
+    "Package": "binutils",
+    "Status": "install ok installed",
+    "Version": "2.46-3ubuntu2",
+    "Architecture": "amd64",
+    "Depends": "libbinutils (= 2.46-3ubuntu2), libc6 (>= 2.38), libgcc-s1 (>= 3.0), libgprofng0 (>= 2.45.50), libstdc++6 (>= 13.1), binutils-common (= 2.46-3ubuntu2), binutils-x86-64-linux-gnu (= 2.46-3ubuntu2)"
+  },
+  "binutils-common": {
+    "Package": "binutils-common",
+    "Status": "install ok installed",
+    "Version": "2.46-3ubuntu2",
+    "Source": "binutils",
+    "Architecture": "amd64"
+  },
+  "binutils-x86-64-linux-gnu": {
+    "Package": "binutils-x86-64-linux-gnu",
+    "Status": "install ok installed",
+    "Version": "2.46-3ubuntu2",
+    "Source": "binutils",
+    "Architecture": "amd64",
+    "Depends": "binutils-common (= 2.46-3ubuntu2), libbinutils (= 2.46-3ubuntu2), libc6 (>= 2.38), libctf-nobfd0 (>= 2.36), libctf0 (>= 2.36), libjansson4 (>= 2.14), libsframe3 (>= 2.45.50), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.1.4)"
+  },
+  "cpp-15": {
+    "Package": "cpp-15",
+    "Status": "install ok installed",
+    "Version": "15.2.0-16ubuntu1",
+    "Source": "gcc-15",
+    "Architecture": "amd64",
+    "Depends": "gcc-15-base (= 15.2.0-16ubuntu1), cpp-15-x86-64-linux-gnu (= 15.2.0-16ubuntu1)"
+  },
+  "cpp-15-x86-64-linux-gnu": {
+    "Package": "cpp-15-x86-64-linux-gnu",
+    "Status": "install ok installed",
+    "Version": "15.2.0-16ubuntu1",
+    "Source": "gcc-15",
+    "Architecture": "amd64",
+    "Depends": "gcc-15-base (= 15.2.0-16ubuntu1), libc6 (>= 2.38), libgmp10 (>= 2:6.3.0+dfsg), libisl23 (>= 0.15), libmpc3 (>= 1.1.0), libmpfr6 (>= 3.1.3), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.1.4)"
+  },
+  "gcc-15": {
+    "Package": "gcc-15",
+    "Status": "install ok installed",
+    "Version": "15.2.0-16ubuntu1",
+    "Architecture": "amd64",
+    "Depends": "gcc-15-x86-64-linux-gnu (= 15.2.0-16ubuntu1), gcc-15-base (= 15.2.0-16ubuntu1), cpp-15 (= 15.2.0-16ubuntu1), binutils (>= 2.39)"
+  },
+  "gcc-15-base": {
+    "Package": "gcc-15-base",
+    "Status": "install ok installed",
+    "Version": "15.2.0-16ubuntu1",
+    "Source": "gcc-15",
+    "Architecture": "amd64"
+  },
+  "gcc-15-x86-64-linux-gnu": {
+    "Package": "gcc-15-x86-64-linux-gnu",
+    "Status": "install ok installed",
+    "Version": "15.2.0-16ubuntu1",
+    "Source": "gcc-15",
+    "Architecture": "amd64",
+    "Depends": "cpp-15-x86-64-linux-gnu (= 15.2.0-16ubuntu1), gcc-15-base (= 15.2.0-16ubuntu1), libcc1-0 (>= 15.2.0-16ubuntu1), binutils-x86-64-linux-gnu (>= 2.39), libgcc-15-dev (= 15.2.0-16ubuntu1), libc6 (>= 2.38), libgcc-s1 (>= 3.0), libgmp10 (>= 2:6.3.0+dfsg), libisl23 (>= 0.15), libmpc3 (>= 1.1.0), libmpfr6 (>= 3.1.3), libstdc++6 (>= 5), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.1.4)"
+  },
+  "libc6": {
+    "Package": "libc6",
+    "Status": "install ok installed",
+    "Version": "2.43-2ubuntu2.4",
+    "Source": "glibc",
+    "Architecture": "amd64",
+    "Depends": "libgcc-s1, libc-gconv-modules-extra (= 2.43-2ubuntu2.4)"
+  },
+  "libc6-dev": {
+    "Package": "libc6-dev",
+    "Status": "install ok installed",
+    "Version": "2.43-2ubuntu2.4",
+    "Source": "glibc",
+    "Architecture": "amd64",
+    "Depends": "libc6 (= 2.43-2ubuntu2.4), libc-dev-bin (= 2.43-2ubuntu2.4), linux-libc-dev, rpcsvc-proto"
+  },
+  "libc6-i386": {
+    "Package": "libc6-i386",
+    "Status": "install ok installed",
+    "Version": "2.43-2ubuntu2.4",
+    "Source": "glibc",
+    "Architecture": "amd64",
+    "Depends": "libc6 (= 2.43-2ubuntu2.4)"
+  },
+  "libdw-dev": {
+    "Package": "libdw-dev",
+    "Status": "install ok installed",
+    "Version": "0.194-4",
+    "Source": "elfutils",
+    "Architecture": "amd64",
+    "Depends": "libelf-dev, libdw1t64 (= 0.194-4), zlib1g-dev, liblzma-dev"
+  },
+  "libdw1t64": {
+    "Package": "libdw1t64",
+    "Status": "install ok installed",
+    "Version": "0.194-4",
+    "Source": "elfutils",
+    "Architecture": "amd64",
+    "Depends": "libbz2-1.0, libc6 (>= 2.38), libelf1t64 (= 0.194-4), liblzma5 (>= 5.1.1alpha+20120614), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.2.2.3)"
+  },
+  "libdwarves1": {
+    "Package": "libdwarves1",
+    "Status": "install ok installed",
+    "Version": "1.31-2ubuntu1",
+    "Source": "dwarves",
+    "Architecture": "amd64",
+    "Depends": "libbpf1 (>= 1:1.6.1), libc6 (>= 2.34), libdw1t64 (>= 0.157), libelf1t64 (>= 0.142), zlib1g (>= 1:1.1.4)"
+  },
+  "libelf-dev": {
+    "Package": "libelf-dev",
+    "Status": "install ok installed",
+    "Version": "0.194-4",
+    "Source": "elfutils",
+    "Architecture": "amd64",
+    "Depends": "libelf1t64 (= 0.194-4), zlib1g-dev, libzstd-dev"
+  },
+  "libelf1t64": {
+    "Package": "libelf1t64",
+    "Status": "install ok installed",
+    "Version": "0.194-4",
+    "Source": "elfutils",
+    "Architecture": "amd64",
+    "Depends": "libc6 (>= 2.38), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.1.4)"
+  },
+  "libgcc-15-dev": {
+    "Package": "libgcc-15-dev",
+    "Status": "install ok installed",
+    "Version": "15.2.0-16ubuntu1",
+    "Source": "gcc-15",
+    "Architecture": "amd64",
+    "Depends": "gcc-15-base (= 15.2.0-16ubuntu1), libgcc-s1 (>= 15.2.0-16ubuntu1), libgomp1 (>= 15.2.0-16ubuntu1), libitm1 (>= 15.2.0-16ubuntu1), libatomic1 (>= 15.2.0-16ubuntu1), libasan8 (>= 15.2.0-16ubuntu1), liblsan0 (>= 15.2.0-16ubuntu1), libtsan2 (>= 15.2.0-16ubuntu1), libubsan1 (>= 15.2.0-16ubuntu1), libhwasan0 (>= 15.2.0-16ubuntu1), libquadmath0 (>= 15.2.0-16ubuntu1)"
+  },
+  "libgmp10": {
+    "Package": "libgmp10",
+    "Status": "install ok installed",
+    "Version": "2:6.3.0+dfsg-5ubuntu2",
+    "Source": "gmp",
+    "Architecture": "amd64",
+    "Depends": "libc6 (>= 2.38)"
+  },
+  "libisl23": {
+    "Package": "libisl23",
+    "Status": "install ok installed",
+    "Version": "0.27-1build1",
+    "Source": "isl",
+    "Architecture": "amd64",
+    "Depends": "libc6 (>= 2.38), libgmp10 (>= 2:6.3.0+dfsg)"
+  },
+  "libmpc3": {
+    "Package": "libmpc3",
+    "Status": "install ok installed",
+    "Version": "1.3.1-3",
+    "Source": "mpclib3",
+    "Architecture": "amd64",
+    "Depends": "libc6 (>= 2.4), libgmp10 (>= 2:6.3.0+dfsg), libmpfr6 (>= 4.0.0)"
+  },
+  "libmpfr6": {
+    "Package": "libmpfr6",
+    "Status": "install ok installed",
+    "Version": "4.2.2-3",
+    "Source": "mpfr4",
+    "Architecture": "amd64",
+    "Depends": "libc6 (>= 2.38), libgmp10 (>= 2:6.3.0+dfsg)"
+  },
+  "libzstd-dev": {
+    "Package": "libzstd-dev",
+    "Status": "install ok installed",
+    "Version": "1.5.7+dfsg-3",
+    "Source": "libzstd",
+    "Architecture": "amd64",
+    "Depends": "libzstd1 (= 1.5.7+dfsg-3)"
+  },
+  "libzstd1": {
+    "Package": "libzstd1",
+    "Status": "install ok installed",
+    "Version": "1.5.7+dfsg-3",
+    "Source": "libzstd",
+    "Architecture": "amd64",
+    "Depends": "libc6 (>= 2.34)"
+  },
+  "pahole": {
+    "Package": "pahole",
+    "Status": "install ok installed",
+    "Version": "1.31-2ubuntu1",
+    "Source": "dwarves",
+    "Architecture": "amd64",
+    "Depends": "libdwarves1 (= 1.31-2ubuntu1), libbpf1 (>= 1:1.6.1), libc6 (>= 2.38), libelf1t64 (>= 0.142)"
+  },
+  "zlib1g": {
+    "Package": "zlib1g",
+    "Status": "install ok installed",
+    "Version": "1:1.3.dfsg+really1.3.1-1ubuntu3.2",
+    "Source": "zlib",
+    "Architecture": "amd64",
+    "Depends": "libc6 (>= 2.14)"
+  },
+  "zlib1g-dev": {
+    "Package": "zlib1g-dev",
+    "Status": "install ok installed",
+    "Version": "1:1.3.dfsg+really1.3.1-1ubuntu3.2",
+    "Source": "zlib",
+    "Architecture": "amd64",
+    "Depends": "zlib1g (= 1:1.3.dfsg+really1.3.1-1ubuntu3.2), libc6-dev | libc-dev"
+  }
+}

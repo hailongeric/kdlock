@@ -71,6 +71,8 @@ def validate_kd(measurement, compiler, *, recording=True):
                 entry['task'] != entry['origin'] and entry['image'] == compiler.old and
                 exit_row['image'] == unlock['image'] == compiler.old and exit_row['result'] == 1,
                 'foreign generated execution/image/exit differs')
+        if measurement.get('spec', {}).get('lock_kind') == 'spin':
+            require(unlock['result'] == 5, 'spin witness has a non-spin unlock')
         require(unlock['related'] == prepare['node'] and unlock['ip'] == compiler.unlock['site'] and
                 unlock['cursor'] == compiler.unlock['site'] + compiler.unlock['length'],
                 'typed unlock is not the actual source CALL and exact request')

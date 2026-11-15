@@ -1,0 +1,7 @@
+{
+  "tests/kernel/spin_simple/payload/kd_spin_simple.c": "7100604312f70f304409536d7e345c3685e3375694342d461e1aa9dfbc4c5681",
+  "tests/kernel/spin_simple/payload/Makefile": "f6a752b242a8758a2eaaf9170cc9caccaf21f0fc562a556f8fd1e44676c7892e",
+  "check_offline.py": "416295c68eb36c299e4d82698eba1cbfccc425a867a6e6977f176ff14a6bcd12",
+  "README.md": "2d439c47f0bd37a80cd5527589d0004df749a30b5ac678a25bfe3546123f27d3",
+  "checks.json": "00cf942adcff75149718968f89bd833af04c966b348d3b6a4e4c286d296e7d73"
+}

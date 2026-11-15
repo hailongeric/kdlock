@@ -41,7 +41,12 @@ static const unsigned char rb_load_identity;
 
 #include "evidence.inc"
 
-#ifdef RB_RWSEM
+#ifdef RB_SPIN
+static const struct kd_jit_runtime_boundary rb_boundaries[] = {
+	{ (unsigned long)kd_spin_lock_entry_asm, KD_JIT_RUNTIME_LOCK },
+	{ (unsigned long)kd_spin_unlock_entry_asm, KD_JIT_RUNTIME_UNLOCK },
+};
+#elif defined(RB_RWSEM)
 static const struct kd_jit_runtime_boundary rb_boundaries[] = {
 	{ (unsigned long)kd_rwsem_down_read_entry_asm, KD_JIT_RUNTIME_LOCK },
 	{ (unsigned long)kd_rwsem_up_read_entry_asm, KD_JIT_RUNTIME_UNLOCK },
@@ -203,7 +208,7 @@ static int rb_runtime_init(void)
 			.producer = RB_SYMBOL("kd_nano_producer"), .entry = RB_SYMBOL("kd_nano_entry") },
 #undef RB_SYMBOL
 		.family = RB_FAMILY,
-#ifdef RB_RWSEM
+#if defined(RB_RWSEM) || defined(RB_SPIN)
 		.boundaries = rb_boundaries, .boundary_count = ARRAY_SIZE(rb_boundaries),
 #endif
 		.channel_name = "kd_nano_source", .owner = THIS_MODULE,

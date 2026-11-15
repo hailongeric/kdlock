@@ -27,7 +27,40 @@ def sha(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
+def validate_family_scope(family, scope, backend):
+    require((family == 'spin') == (scope == 'spin-pair'),
+            'spin requires its isolated paired scope')
+    if family == 'spin':
+        require(backend in ('native', 'kdlock'), 'TCLock spin is unsupported')
+
+
+def validate_spin_placement(worker_cpus, collector_cpu, available):
+    require(worker_cpus is not None and len(worker_cpus) == 8 and
+            len(set(worker_cpus)) == 8 and collector_cpu not in worker_cpus and
+            set(worker_cpus + [collector_cpu]) <= set(available),
+            'spin requires eight explicit worker vCPUs and a distinct collector vCPU')
+
+
+def validate_initial_taint(family, taint):
+    require(taint in ((0, 4096) if family == 'spin' else (4096,)),
+            'unexpected prior kernel taint')
+
+
+def validate_spin_build(receipt):
+    require(receipt.get('families') == ['spin'] and
+            set(receipt.get('backends', [])) == {'native', 'kdlock'} and
+            set(receipt['modules']) == {'spin-native', 'spin-kdlock'} and
+            bool(receipt.get('spin_abi_headers_sha256')),
+            'exact spin Native/KD build and ABI header receipt required')
+    for backend in ('native', 'kdlock'):
+        metadata = receipt['modules']['spin-' + backend].get('metadata', {})
+        require((metadata.get('nano_family'), metadata.get('nano_backend')) == ('spin', backend),
+                'compiled spin family/backend metadata differs')
+
+
 def validate_scope(scope, backend):
+    require(scope != 'spin-pair' or backend in ('native', 'kdlock'),
+            'spin-pair requires Native or KD')
     require(scope != 'recorder-pair' or backend == 'kdlock',
             'recorder-pair scope requires the KD backend')
     require(scope != 'native-current' or backend in ('native', 'kdlock'),
@@ -37,6 +70,13 @@ def validate_scope(scope, backend):
 
 
 def measurement_plan(scope, stage, backend=None):
+    if scope == 'spin-pair':
+        validate_scope(scope, backend)
+        mode = 'on' if backend == 'kdlock' else 'unavailable'
+        plan = [(f'functional-w{n}', n, False, mode) for n in (1, 2, 4, 8)]
+        if stage == 'timing':
+            plan.extend((f'timed-w{n}', n, True, mode) for n in (1, 2, 4, 8))
+        return plan
     if scope == 'rwsem-split':
         validate_scope(scope, backend)
         modes = ('on', 'off') if backend == 'kdlock' else ('unavailable',)
@@ -72,7 +112,16 @@ def measurement_plan(scope, stage, backend=None):
 def validate_prerequisites(prior, scope, family, build_sha256, boot_id, runner_sha256=None):
     require(all(p['status'] == 'FUNCTIONAL_PASS' and p['build_receipt_sha256'] == build_sha256 and
                 p['boot_id'] == boot_id for p in prior), 'functional build/boot receipt differs')
-    if scope == 'rwsem-split':
+    if scope == 'spin-pair':
+        require(family == 'spin' and bool(runner_sha256) and len(prior) == 2 and
+                {p['backend'] for p in prior} == {'native', 'kdlock'} and
+                all(p['family'] == 'spin' and p.get('scope') == scope and
+                    p.get('stage') == 'functional' and p.get('runner_sha256') == runner_sha256 and
+                    p.get('recorder_modes') == (['on'] if p['backend'] == 'kdlock' else ['unavailable'])
+                    for p in prior), 'matching spin Native/KD functional receipts required')
+        require(prior[0].get('placement') is not None and
+                prior[0]['placement'] == prior[1].get('placement'), 'paired spin placement differs')
+    elif scope == 'rwsem-split':
         require(bool(runner_sha256) and family == 'rwsem' and len(prior) == 3 and
                 {(p['backend'], p.get('kd_delegation')) for p in prior} ==
                 {('native', None), ('kdlock', 'on'), ('kdlock', 'off')} and
@@ -101,7 +150,7 @@ def validate_prerequisites(prior, scope, family, build_sha256, boot_id, runner_s
 
 def phase_recording(scope, backend, mode):
     # Native has no KD observation subscription or recorder-control ioctl.
-    if backend == 'kdlock' and scope in ('recorder-pair', 'native-current', 'rwsem-split'):
+    if backend == 'kdlock' and scope in ('recorder-pair', 'native-current', 'rwsem-split', 'spin-pair'):
         require(mode in ('on', 'off'), 'KD recorder mode differs')
         return set_recording(mode == 'on')
     return None
@@ -125,10 +174,10 @@ def main():
     parser.add_argument('--repo', type=Path, required=True)
     parser.add_argument('--build-receipt', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--family', choices=('mutex', 'rwsem'), required=True)
+    parser.add_argument('--family', choices=('mutex', 'rwsem', 'spin'), required=True)
     parser.add_argument('--backend', choices=('native', 'kdlock', 'tclock'), required=True)
     parser.add_argument('--stage', choices=('functional', 'timing'), required=True)
-    parser.add_argument('--scope', choices=('comparison', 'recorder-pair', 'native-current', 'rwsem-split'), default='comparison')
+    parser.add_argument('--scope', choices=('comparison', 'recorder-pair', 'native-current', 'rwsem-split', 'spin-pair'), default='comparison')
     parser.add_argument('--delegation', choices=('on', 'off'), default='on',
                         help='Immutable KD runtime mode; independent of recorder state')
     parser.add_argument('--boot-id', required=True)
@@ -140,7 +189,15 @@ def main():
     parser.add_argument('--kernel-elf', type=Path, required=True)
     parser.add_argument('--gs-proof', type=Path, required=True)
     parser.add_argument('--prerequisite', type=Path, action='append', default=[])
+    parser.add_argument('--worker-cpus', nargs='+', type=int)
+    parser.add_argument('--collector-cpu', type=int, default=63)
     args = parser.parse_args()
+    validate_family_scope(args.family, args.scope, args.backend)
+    if args.family == 'spin':
+        validate_spin_placement(args.worker_cpus, args.collector_cpu, os.sched_getaffinity(0))
+    else:
+        require(args.worker_cpus is None and args.collector_cpu == 63,
+                'explicit placement belongs to the spin lane')
     validate_scope(args.scope, args.backend)
     require(args.scope != 'rwsem-split' or args.family == 'rwsem', 'rwsem-split requires rwsem')
     require(args.delegation == 'on' or args.backend == 'kdlock', 'delegation-off requires KD')
@@ -149,12 +206,12 @@ def main():
     require(os.uname().release == args.expected_release and
             Path('/proc/sys/kernel/random/boot_id').read_text().strip() == args.boot_id,
             'running kernel/boot identity differs')
-    require(int(Path('/proc/sys/kernel/tainted').read_text()) == 4096, 'unexpected prior kernel taint')
+    validate_initial_taint(args.family, int(Path('/proc/sys/kernel/tainted').read_text()))
     require({line.split()[0] for line in Path('/proc/modules').read_text().splitlines()} <= {'nls_iso8859_1'},
             'a previous experiment remains loaded')
     require(not Path(DEVICE).exists(), 'previous workload device remains')
     args.output.mkdir()
-    os.sched_setaffinity(0, {63})
+    os.sched_setaffinity(0, {args.collector_cpu})
     sys.path.insert(0, str(args.repo))
     from compiler import Compiler, symbol_size, executable_elf_bytes
     from evidence import validate_kd
@@ -162,15 +219,21 @@ def main():
     kernel_sha256 = sha(args.kernel_elf)
     runner_sha256 = sha(Path(__file__))
     validate_kernel_receipt(receipt, args.expected_release, kernel_sha256)
+    if args.family == 'spin':
+        validate_spin_build(receipt)
     if args.stage == 'timing':
         prior = [json.loads(p.read_text()) for p in args.prerequisite]
         validate_prerequisites(prior, args.scope, args.family, sha(args.build_receipt), args.boot_id,
                                runner_sha256)
+        if args.family == 'spin':
+            require(all(p['placement'] == dict(workers=args.worker_cpus, collector=args.collector_cpu)
+                        for p in prior), 'timing placement differs from functional checks')
     row = dict(status='STARTED', family=args.family, backend=args.backend, stage=args.stage,
                scope=args.scope, recorder_modes=list(dict.fromkeys(
                    mode for _, _, _, mode in measurement_plan(args.scope, 'functional', args.backend))),
                runner_sha256=runner_sha256,
-               profile='mutex-throughput' if args.family == 'mutex' else 'rwsem-throughput-mixed',
+               profile={'mutex': 'mutex-throughput', 'rwsem': 'rwsem-throughput-mixed', 'spin': 'spin-cacheline1-post256'}[args.family],
+               placement=dict(workers=args.worker_cpus, collector=args.collector_cpu),
                boot_id=args.boot_id, kernel_release=os.uname().release,
                kernel_elf_sha256=kernel_sha256,
                build_receipt_sha256=sha(args.build_receipt), measurements=[], commands=[],
@@ -261,6 +324,9 @@ def main():
         layout = snapshot()
         require(layout['values'] == [0] * 16 and not any(layout[n] for n in ('cnts', 'gate', 'active')),
                 'initial workload not empty')
+        if args.family == 'spin':
+            require(layout['version'] == 2 and layout['backend'] == {'native': 0, 'kdlock': 2}[args.backend],
+                    'loaded module is not the selected spin backend')
         row['layout'] = layout
         if args.backend == 'tclock':
             (tc_params / 'target_lock').write_text(str(layout['lock_addr']))
@@ -273,13 +339,15 @@ def main():
 
         def phase(label, workers, *, duration=0, iterations=256, timed=False, recorder=None):
             if recorder is None:
-                recorder = 'unavailable' if args.scope in ('native-current', 'rwsem-split') and args.backend == 'native' else 'on'
+                recorder = 'unavailable' if args.scope in ('native-current', 'rwsem-split', 'spin-pair') and args.backend == 'native' else 'on'
             control = phase_recording(args.scope, args.backend, recorder)
             spec = dict(arm=args.backend, lock_kind=args.family, workload='cacheline', cachelines=1,
-                        post_work_rounds=256, threads=workers, cpus=list(range(workers)), collector_cpu=63,
-                        write_percent=100 if args.family == 'mutex' else 20, duration_ms=duration,
+                        post_work_rounds=256, threads=workers,
+                        cpus=args.worker_cpus[:workers] if args.family == 'spin' else list(range(workers)),
+                        collector_cpu=args.collector_cpu,
+                        write_percent=100 if args.family in ('mutex', 'spin') else 20, duration_ms=duration,
                         iterations=iterations, sample_ms=10, peak_window_ms=300, peak_settle_ms=300,
-                        recorder=recorder, delegation=args.backend == 'kdlock' and args.delegation == 'on')
+                        raw_only=args.family == 'spin', recorder=recorder, delegation=args.backend == 'kdlock' and args.delegation == 'on')
             save(args.output / (label + '.spec.json'), spec)
             text = command(label, [sys.executable, '-B', args.repo / 'bench/nano/client.py',
                                    '--spec', args.output / (label + '.spec.json')], 120)
@@ -324,7 +392,7 @@ def main():
         # Recorder changes leave each module load's selected delegation mode fixed.
         # Every switch and claim occurs between fully returned worker phases.
         for label, count, timed, recorder in measurement_plan(args.scope, args.stage, args.backend):
-            checked = phase(label, count, duration=2000 if timed else 0,
+            checked = phase(label, count, duration=(1000 if args.family == 'spin' else 2000) if timed else 0,
                             timed=timed, recorder=recorder)
             if compiler is not None:
                 cycle = compiler.cycle(claim_only=True)

@@ -29,7 +29,7 @@ def post_work_checksum(completed, rounds):
 
 def check_snapshot(row, spec):
     require((row['version'], row['backend'], row['workload'], row['lines'], row['post_work_rounds']) ==
-            (1, {'native': 0, 'tclock': 1, 'kdlock': 2}[spec['arm']],
+            (2 if spec.get('lock_kind') == 'spin' else 1, {'native': 0, 'tclock': 1, 'kdlock': 2}[spec['arm']],
              {'cacheline': 0, 'rcuht': 1, 'taskname': 2, 'argbounds': 3,
               'nano': 6}[spec['workload']],
              spec['cachelines'], spec['post_work_rounds']),
@@ -45,6 +45,11 @@ def check_snapshot(row, spec):
 
 
 def validate(measurement, spec):
+    require(not spec.get('raw_only') or spec.get('lock_kind') == 'spin',
+            'raw-only reporting belongs to the spin pilot')
+    if spec.get('lock_kind') == 'spin':
+        require(spec['arm'] in ('native', 'kdlock') and spec['write_percent'] == 100,
+                'spin requires an exclusive Native/KD workload')
     m = measurement
     require(m['schema'] == 1 and m['complete'] is True, 'client did not complete')
     require(m['wall_ns'] == m['finished_ns'] - m['started_ns'] > 0, 'invalid whole-run interval')
@@ -86,7 +91,7 @@ def validate(measurement, spec):
         require(delta[0] == m['writes'] == sum(delta[1:4]) and all(x >= 0 for x in delta[:4]) and
                 before['values'][4:] == after['values'][4:] == [0] * 12,
                 'hash outcome totals differ')
-    if not spec['duration_ms']:
+    if not spec['duration_ms'] or spec.get('raw_only'):
         return None
     peak = analyze_peak(m, spec)
     start = m['samples'][peak['start_sample_index']]['completed']

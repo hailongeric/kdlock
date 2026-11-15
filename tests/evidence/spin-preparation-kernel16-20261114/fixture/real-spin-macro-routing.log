@@ -1,0 +1,592 @@
+# 0 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 0 "<command-line>" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h" 1
+
+
+
+# 1 "/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h" 1 3 4
+# 143 "/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h" 3 4
+
+# 143 "/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h" 3 4
+typedef long int ptrdiff_t;
+# 209 "/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h" 3 4
+typedef long unsigned int size_t;
+# 321 "/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h" 3 4
+typedef int wchar_t;
+# 415 "/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h" 3 4
+typedef struct {
+  long long __max_align_ll __attribute__((__aligned__(__alignof__(long long))));
+  long double __max_align_ld __attribute__((__aligned__(__alignof__(long double))));
+# 426 "/usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h" 3 4
+} max_align_t;
+# 5 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h" 2
+# 1 "/usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h" 1 3 4
+# 6 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h" 2
+# 1 "/usr/include/errno.h" 1 3 4
+# 25 "/usr/include/errno.h" 3 4
+# 1 "/usr/include/features.h" 1 3 4
+# 392 "/usr/include/features.h" 3 4
+# 1 "/usr/include/features-time64.h" 1 3 4
+# 20 "/usr/include/features-time64.h" 3 4
+# 1 "/usr/include/x86_64-linux-gnu/bits/wordsize.h" 1 3 4
+# 21 "/usr/include/features-time64.h" 2 3 4
+# 1 "/usr/include/x86_64-linux-gnu/bits/timesize.h" 1 3 4
+# 19 "/usr/include/x86_64-linux-gnu/bits/timesize.h" 3 4
+# 1 "/usr/include/x86_64-linux-gnu/bits/wordsize.h" 1 3 4
+# 20 "/usr/include/x86_64-linux-gnu/bits/timesize.h" 2 3 4
+# 22 "/usr/include/features-time64.h" 2 3 4
+# 393 "/usr/include/features.h" 2 3 4
+# 486 "/usr/include/features.h" 3 4
+# 1 "/usr/include/x86_64-linux-gnu/sys/cdefs.h" 1 3 4
+# 559 "/usr/include/x86_64-linux-gnu/sys/cdefs.h" 3 4
+# 1 "/usr/include/x86_64-linux-gnu/bits/wordsize.h" 1 3 4
+# 560 "/usr/include/x86_64-linux-gnu/sys/cdefs.h" 2 3 4
+# 1 "/usr/include/x86_64-linux-gnu/bits/long-double.h" 1 3 4
+# 561 "/usr/include/x86_64-linux-gnu/sys/cdefs.h" 2 3 4
+# 487 "/usr/include/features.h" 2 3 4
+# 510 "/usr/include/features.h" 3 4
+# 1 "/usr/include/x86_64-linux-gnu/gnu/stubs.h" 1 3 4
+# 10 "/usr/include/x86_64-linux-gnu/gnu/stubs.h" 3 4
+# 1 "/usr/include/x86_64-linux-gnu/gnu/stubs-64.h" 1 3 4
+# 11 "/usr/include/x86_64-linux-gnu/gnu/stubs.h" 2 3 4
+# 511 "/usr/include/features.h" 2 3 4
+# 26 "/usr/include/errno.h" 2 3 4
+
+
+# 1 "/usr/include/x86_64-linux-gnu/bits/errno.h" 1 3 4
+# 26 "/usr/include/x86_64-linux-gnu/bits/errno.h" 3 4
+# 1 "/usr/include/linux/errno.h" 1 3 4
+# 1 "/usr/include/x86_64-linux-gnu/asm/errno.h" 1 3 4
+# 1 "/usr/include/asm-generic/errno.h" 1 3 4
+
+
+
+
+# 1 "/usr/include/asm-generic/errno-base.h" 1 3 4
+# 6 "/usr/include/asm-generic/errno.h" 2 3 4
+# 2 "/usr/include/x86_64-linux-gnu/asm/errno.h" 2 3 4
+# 2 "/usr/include/linux/errno.h" 2 3 4
+# 27 "/usr/include/x86_64-linux-gnu/bits/errno.h" 2 3 4
+# 29 "/usr/include/errno.h" 2 3 4
+
+
+
+
+
+
+
+
+extern int *__errno_location (void) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+# 52 "/usr/include/errno.h" 3 4
+
+# 7 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h" 2
+
+
+# 8 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h"
+struct kd_mutex { void *tail; void *owner; };
+# 33 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h"
+struct module { struct {void *base; size_t size;} mem[1]; };
+extern struct module mock_module;
+
+struct task_struct;
+struct completion { int unused; };
+typedef struct {int counter;} atomic_t;
+
+extern int atomic_inc_return(atomic_t *);
+extern int atomic_dec_return(atomic_t *);
+extern int atomic_read(const atomic_t *);
+extern void atomic_inc(atomic_t *);
+extern void preempt_disable(void),preempt_enable(void),cond_resched(void);
+extern void msleep(unsigned int);
+extern void complete(struct completion *),complete_all(struct completion *);
+extern void init_completion(struct completion *),wait_for_completion(struct completion *);
+extern unsigned long wait_for_completion_timeout(struct completion *,unsigned long);
+extern struct task_struct *kthread_create(int (*)(void *),void *,const char *,...);
+extern void kthread_bind(struct task_struct *,unsigned int);
+extern int kthread_stop(struct task_struct *),wake_up_process(struct task_struct *);
+extern 
+# 52 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h" 3 4
+      _Bool 
+# 52 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h"
+           kthread_should_stop(void),cpu_online(unsigned int);
+extern long schedule_timeout_interruptible(long);
+extern void cpus_read_lock(void),cpus_read_unlock(void);
+extern unsigned int nr_cpu_ids;
+
+
+extern int mock_log(const char *,...) __attribute__((format(printf,1,2)));
+
+
+
+
+
+struct kd_task_storage;
+struct kd_execution_binding;
+struct kd_task_root_context {struct {struct kd_execution_binding *binding;} core;};
+struct kd_jit_source_provider;
+struct kd_jit_runtime;
+struct kd_jit_source_load_region {unsigned long start;size_t length;};
+
+
+struct kd_jit_source_provider_args {
+ unsigned int contract;const unsigned char *version;size_t version_length;
+ const struct kd_jit_source_load_region *regions;unsigned int region_count;
+ const void *configuration_identity,*load_identity;unsigned long current_task_gs_offset;
+ struct module *const *modules;unsigned int module_count;
+};
+struct mock_symbol {const char *data; size_t length;};
+struct kd_jit_runtime_config {
+ struct kd_jit_source_provider *source;unsigned int feedback_capacity,cycle_capacity,image_capacity,claim_capacity;
+ struct {size_t code_capacity,artifact_capacity,flat_capacity,entry_capacity,source_capacity,observation_capacity;} compiled;
+ struct {struct mock_symbol descriptor,source,producer,entry;} symbols;
+ const char *channel_name;struct module *owner;size_t frame_capacity;unsigned int request_capacity;
+ size_t auxiliary_bytes;unsigned long required_control_bytes;unsigned int proxy_limit;
+# 84 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h" 3 4
+                                                                                     _Bool 
+# 84 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h"
+                                                                                          atomic_spin;int family;
+};
+extern int kd_jit_source_provider_create(const struct kd_jit_source_provider_args *,struct kd_jit_source_provider **);
+extern int kd_jit_source_provider_close(struct kd_jit_source_provider *),kd_jit_source_provider_destroy(struct kd_jit_source_provider *);
+extern int kd_jit_runtime_create(const struct kd_jit_runtime_config *,struct kd_jit_runtime **);
+extern int kd_jit_runtime_enter_current(struct kd_jit_runtime *,unsigned long,struct kd_task_storage **);
+extern int kd_jit_runtime_leave_current(struct kd_task_storage *,struct kd_execution_binding *,
+# 90 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h" 3 4
+                                                                                              _Bool 
+# 90 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h"
+                                                                                                   *);
+extern int kd_jit_runtime_destroy(struct kd_jit_runtime *);
+extern struct kd_task_root_context *kd_task_storage_root(struct kd_task_storage *);
+# 0 "<command-line>" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+
+
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/module.h" 1
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/common.h" 1
+# 2 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/module.h" 2
+# 4 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/kthread.h" 1
+# 5 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/completion.h" 1
+# 6 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/cpu.h" 1
+# 7 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/delay.h" 1
+# 8 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/err.h" 1
+# 9 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/build_bug.h" 1
+# 10 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/preempt.h" 1
+# 11 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/sched.h" 1
+# 12 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/jiffies.h" 1
+# 13 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/asm/msr.h" 1
+# 14 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/asm/msr-index.h" 1
+# 15 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-nano-source-7338197a-20261114/base/include/kd_spin_api.h" 1
+
+
+
+
+
+# 1 "/tmp/kdlock-spin-nano-source-7338197a-20261114/base/include/../kernel/mutex.h" 1
+# 7 "/tmp/kdlock-spin-nano-source-7338197a-20261114/base/include/kd_spin_api.h" 2
+# 1 "/tmp/kdlock-spin-nano-source-7338197a-20261114/base/include/kd_mutex_api.h" 1
+
+
+
+
+
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/linux/compiler.h" 1
+# 7 "/tmp/kdlock-spin-nano-source-7338197a-20261114/base/include/kd_mutex_api.h" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/asm/asm.h" 1
+# 8 "/tmp/kdlock-spin-nano-source-7338197a-20261114/base/include/kd_mutex_api.h" 2
+
+struct kd_mutex;
+struct kd_mutex_entry;
+
+
+
+
+
+struct kd_source_prepare_result {
+ struct kd_mutex_entry *entry;
+ unsigned long result;
+};
+
+
+void kd_mutex_lock_entry_asm(struct kd_mutex *lock,
+  unsigned long source_sp, unsigned long continuation_ip,
+  unsigned long source_bp);
+void kd_mutex_unlock_entry_asm(struct kd_mutex *lock,
+  unsigned long source_sp, unsigned long continuation_ip,
+  unsigned long source_bp);
+# 8 "/tmp/kdlock-spin-nano-source-7338197a-20261114/base/include/kd_spin_api.h" 2
+
+
+struct kd_spinlock {
+ struct kd_mutex queue;
+};
+
+
+
+void kd_spin_init(struct kd_spinlock *lock);
+void kd_spin_lock_entry_asm(struct kd_spinlock *lock, unsigned long source_sp,
+  unsigned long continuation_ip, unsigned long source_bp);
+void kd_spin_unlock_entry_asm(struct kd_spinlock *lock, unsigned long source_sp,
+  unsigned long continuation_ip, unsigned long source_bp);
+# 16 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/kernel/runtime.h" 1
+# 17 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+# 1 "/tmp/kdlock-spin-simple-7338197a-20261114/offline-stubs/kernel/task_state.h" 1
+# 18 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 2
+
+
+
+
+
+
+static 
+# 24 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+      _Bool 
+# 24 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+           immutable_text, auxiliary_contract, gs_verified;
+static unsigned long gs_offset;
+static unsigned int cpu_a, cpu_b = 1;
+;
+;
+;
+;
+;
+;
+
+static struct kd_spinlock lock;
+static struct kd_jit_source_provider *provider;
+static struct kd_jit_runtime *runtime;
+static struct completion gate;
+static atomic_t inside = {0};
+static atomic_t overlaps = {0};
+static unsigned long total;
+static 
+# 41 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+      _Bool 
+# 41 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+           abort_run;
+static const char version[] = "7338197a587fd84110fe710be63abafde270c02b-spin-simple";
+static unsigned int config_identity, load_identity;
+static struct module *source_modules[] = { (&mock_module) };
+
+struct worker {
+ struct task_struct *task;
+ struct completion ready, done;
+ struct kd_task_storage *storage;
+ unsigned int cpu, increments;
+ int error;
+};
+static struct worker workers[2];
+
+
+
+
+static void retain_failure(const char *stage, int error)
+{
+ mock_log("kd_spin_simple: retained at %s error=%d; no forced cleanup\n", stage, error);
+ for (;;)
+  msleep(1000);
+}
+
+static int worker_main(void *arg)
+{
+ struct worker *w = arg;
+ unsigned long gs;
+ unsigned int i;
+ int error;
+
+ preempt_disable();
+ ((gs)=0);
+ preempt_enable();
+ error = kd_jit_runtime_enter_current(runtime, gs, &w->storage);
+ w->error = error;
+ if (error)
+  ((abort_run)=(
+# 78 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+ 1
+# 78 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+ ));
+ complete(&w->ready);
+ wait_for_completion(&gate);
+ if (!error && !(abort_run)) {
+  for (i = 0; i < 64; ++i) {
+   ({ __auto_type kd_mutex_source_object = ((&lock)); struct kd_spinlock *kd_mutex_arg = kd_mutex_source_object; unsigned long kd_mutex_sp, kd_mutex_ip, kd_mutex_bp; asm volatile("movq %%rsp, %%rsi\n\t" "leaq 1f(%%rip), %%rdx\n\t" "movq %%rbp, %%rcx\n\t" "call " "kd_spin_lock_entry_asm" "\n\t1:\n\t" : "+D"(kd_mutex_arg), "=S"(kd_mutex_sp), "=d"(kd_mutex_ip), "=c"(kd_mutex_bp), "=m"(*(char *)0) : : "rax", "rbx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "cc", "memory"); (void)0; });
+
+   if (atomic_inc_return(&inside) != 1)
+    atomic_inc(&overlaps);
+   ((total)=((total) + 1));
+   w->increments++;
+   if (atomic_dec_return(&inside) != 0)
+    atomic_inc(&overlaps);
+   ({ __auto_type kd_mutex_source_object = ((&lock)); struct kd_spinlock *kd_mutex_arg = kd_mutex_source_object; unsigned long kd_mutex_sp, kd_mutex_ip, kd_mutex_bp; asm volatile("movq %%rsp, %%rsi\n\t" "leaq 1f(%%rip), %%rdx\n\t" "movq %%rbp, %%rcx\n\t" "call " "kd_spin_unlock_entry_asm" "\n\t1:\n\t" : "+D"(kd_mutex_arg), "=S"(kd_mutex_sp), "=d"(kd_mutex_ip), "=c"(kd_mutex_bp), "=m"(*(char *)0) : : "rax", "rbx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "cc", "memory"); (void)0; });
+   cond_resched();
+  }
+ }
+ while (w->storage) {
+  struct kd_task_root_context *root = kd_task_storage_root(w->storage);
+  struct kd_execution_binding *binding = (*(&root->core.binding));
+  
+# 98 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+ _Bool 
+# 98 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+      pending;
+
+  error = kd_jit_runtime_leave_current(w->storage, binding, &pending);
+  if (!error) {
+
+   w->storage = 
+# 103 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+               ((void *)0)
+# 103 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                   ;
+   break;
+  }
+  if (error != -
+# 106 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+               16 
+# 106 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                     && error != -
+# 106 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+                                  11
+# 106 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                                        )
+   retain_failure("task detach", error);
+  cond_resched();
+ }
+ complete(&w->done);
+
+ while (!kthread_should_stop())
+  schedule_timeout_interruptible(100 / 10);
+ return w->error;
+}
+
+static void observe_completion(struct completion *done, const char *stage)
+{
+ if (!wait_for_completion_timeout(done, 5 * 100)) {
+  mock_log("kd_spin_simple: %s exceeded observer deadline; retaining state\n", stage);
+
+  wait_for_completion(done);
+ }
+}
+
+static void close_runtime(void)
+{
+ int error;
+
+ while (runtime) {
+  error = kd_jit_runtime_destroy(runtime);
+  if (!error) {
+   runtime = 
+# 133 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+            ((void *)0)
+# 133 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                ;
+   break;
+  }
+  if (error != -
+# 136 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+               16 
+# 136 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                     && error != -
+# 136 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+                                  11
+# 136 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                                        )
+   retain_failure("runtime destroy", error);
+  msleep(20);
+ }
+ if (!provider)
+  return;
+ error = kd_jit_source_provider_close(provider);
+ if (error && error != -
+# 143 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+                       114
+# 143 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                               )
+  retain_failure("provider close", error);
+ error = kd_jit_source_provider_destroy(provider);
+ if (error)
+  retain_failure("provider destroy", error);
+ provider = 
+# 148 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+           ((void *)0)
+# 148 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+               ;
+}
+
+static int simple_init(void)
+{
+ struct kd_jit_source_load_region region;
+ struct kd_jit_source_provider_args source;
+ struct kd_jit_runtime_config config;
+ unsigned int i, created = 0;
+ int error = 0;
+
+ _Static_assert(!(sizeof(struct kd_spinlock) != 2 * sizeof(void *)), "sizeof(struct kd_spinlock) != 2 * sizeof(void *)");
+ _Static_assert(!(
+# 160 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+__builtin_offsetof (
+# 160 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+struct kd_spinlock
+# 160 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+, 
+# 160 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+queue
+# 160 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+) 
+# 160 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+!= 0), "offsetof(struct kd_spinlock, queue) != 0");
+ if (!(1) || !(1) ||
+     (0) || (0) ||
+     (0) || (0) ||
+     (0))
+  return -
+# 165 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+         95
+# 165 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                   ;
+ if (!immutable_text || !auxiliary_contract || !gs_verified)
+  return -
+# 167 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+         22
+# 167 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+               ;
+ cpus_read_lock();
+ if (cpu_a == cpu_b || cpu_a >= nr_cpu_ids || cpu_b >= nr_cpu_ids ||
+     !cpu_online(cpu_a) || !cpu_online(cpu_b)) {
+  error = -
+# 171 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+          22
+# 171 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                ;
+  goto unlock_cpus;
+ }
+ region = (struct kd_jit_source_load_region) {
+  .start = (unsigned long)(&mock_module)->mem[0].base,
+  .length = (&mock_module)->mem[0].size,
+ };
+ source = (struct kd_jit_source_provider_args) {
+  .contract = 1,
+  .version = (const unsigned char *)version, .version_length = sizeof(version) - 1,
+  .regions = &region, .region_count = 1,
+  .configuration_identity = &config_identity, .load_identity = &load_identity,
+  .current_task_gs_offset = gs_offset,
+  .modules = source_modules, .module_count = (sizeof(source_modules)/sizeof((source_modules)[0])),
+ };
+ error = kd_jit_source_provider_create(&source, &provider);
+ if (error)
+  goto unlock_cpus;
+ config = (struct kd_jit_runtime_config) {
+  .source = provider, .feedback_capacity = 4096, .cycle_capacity = 2,
+  .image_capacity = 1, .claim_capacity = 4096,
+  .compiled = { .code_capacity = 128 * 1024, .artifact_capacity = 512 * 1024,
+   .flat_capacity = 256 * 1024, .entry_capacity = 64,
+   .source_capacity = 4096, .observation_capacity = 4096 },
+  .symbols = { .descriptor = { .data = ("kd_spin_simple_image"), .length = sizeof("kd_spin_simple_image") - 1 },
+   .source = { .data = ("kd_spin_simple_epoch"), .length = sizeof("kd_spin_simple_epoch") - 1 },
+   .producer = { .data = ("kd_spin_simple_producer"), .length = sizeof("kd_spin_simple_producer") - 1 },
+   .entry = { .data = ("kd_spin_simple_entry"), .length = sizeof("kd_spin_simple_entry") - 1 } },
+  .channel_name = "kd_spin_simple", .owner = (&mock_module),
+  .frame_capacity = 2 * 1024 * 1024, .request_capacity = 256,
+  .auxiliary_bytes = 128 * 1024, .required_control_bytes = 32 * 1024,
+  .atomic_spin = 
+# 202 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+                1
+# 202 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                    , .family = 1, .proxy_limit = 1,
+ };
+
+ error = kd_jit_runtime_create(&config, &runtime);
+ if (error)
+  goto close;
+ kd_spin_init(&lock);
+ init_completion(&gate);
+ workers[0].cpu = cpu_a;
+ workers[1].cpu = cpu_b;
+ for (i = 0; i < 2; ++i) {
+  struct worker *w = &workers[i];
+
+  init_completion(&w->ready);
+  init_completion(&w->done);
+  w->task = kthread_create(worker_main, w, "kd_spin_simple/%u", i);
+  if (((unsigned long)(w->task) > (unsigned long)-4096)) {
+   error = ((long)(w->task));
+   w->task = 
+# 220 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+            ((void *)0)
+# 220 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                ;
+   ((abort_run)=(
+# 221 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+  1
+# 221 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+  ));
+   break;
+  }
+  created++;
+  kthread_bind(w->task, w->cpu);
+  wake_up_process(w->task);
+ }
+ for (i = 0; i < created; ++i)
+  observe_completion(&workers[i].ready, "task setup");
+ complete_all(&gate);
+ for (i = 0; i < created; ++i) {
+  int joined;
+
+  observe_completion(&workers[i].done, "worker completion/detach");
+  joined = kthread_stop(workers[i].task);
+  workers[i].task = 
+# 236 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+                   ((void *)0)
+# 236 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                       ;
+  if (joined && !error)
+   error = joined;
+  mock_log("kd_spin_simple: worker=%u cpu=%u increments=%u error=%d\n",
+   i, workers[i].cpu, workers[i].increments, workers[i].error);
+ }
+ if (!error && (created != 2 || (abort_run) ||
+     atomic_read(&inside) || atomic_read(&overlaps) || total != 2 * 64))
+  error = -
+# 244 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+          117
+# 244 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                 ;
+ for (i = 0; i < created; ++i)
+  if (workers[i].increments != 64 && !error)
+   error = -
+# 247 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c" 3 4
+           117
+# 247 "/tmp/kdlock-spin-simple-7338197a-20261114/tests/kernel/spin_simple/payload/kd_spin_simple.c"
+                  ;
+close:
+ close_runtime();
+ mock_log("kd_spin_simple: result=%d total=%lu expected=%u overlaps=%d\n",
+  error, total, 2 * 64, atomic_read(&overlaps));
+unlock_cpus:
+ cpus_read_unlock();
+ return error;
+}
+
+static void simple_exit(void)
+{
+
+}
+;
+;
+;
+;

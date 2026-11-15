@@ -1,0 +1,646 @@
+{
+  "status": "ALL_REQUESTED_RECEIPT_HASHES_MATCH",
+  "comparisons": {
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/.config": {
+      "expected": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "actual": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/Module.symvers": {
+      "expected": "de0efc1f0aedfe4b2f48fe2d01a4fa6dfa9082b9af71ed572f8844f5ac8781b8",
+      "actual": "de0efc1f0aedfe4b2f48fe2d01a4fa6dfa9082b9af71ed572f8844f5ac8781b8",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/System.map": {
+      "expected": "e3e8201a3d91c8c180824ab725d54edcec5976dc2de9ba242e8b71571566fe3c",
+      "actual": "e3e8201a3d91c8c180824ab725d54edcec5976dc2de9ba242e8b71571566fe3c",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/arch/x86/boot/bzImage": {
+      "expected": "2d1202b693a6aa3fa1b1e56073d4ac3206d87f4b48bee15b7eb9f335295f8851",
+      "actual": "2d1202b693a6aa3fa1b1e56073d4ac3206d87f4b48bee15b7eb9f335295f8851",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/fs/nls/nls_iso8859-1.ko": {
+      "expected": "7c2eb3d52c179eac288b0845bb95b525798b45fa8113f90e3dc17f085e44cbca",
+      "actual": "7c2eb3d52c179eac288b0845bb95b525798b45fa8113f90e3dc17f085e44cbca",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/include/config/auto.conf": {
+      "expected": "d731f7137d4af0af8468041db3b03292d174ed184d3916fa9162a29cb8f63243",
+      "actual": "d731f7137d4af0af8468041db3b03292d174ed184d3916fa9162a29cb8f63243",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/include/config/kernel.release": {
+      "expected": "6a44485b1e091849c5af3207cf356dd44f7191aaf9f3b666912e04d6abceefdb",
+      "actual": "6a44485b1e091849c5af3207cf356dd44f7191aaf9f3b666912e04d6abceefdb",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/include/generated/autoconf.h": {
+      "expected": "ba620d16cd34149765ecae7223c519826d89e1bd51ef996f25af495b7cf18314",
+      "actual": "ba620d16cd34149765ecae7223c519826d89e1bd51ef996f25af495b7cf18314",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/include/generated/utsrelease.h": {
+      "expected": "2f11a6341f8e8ee26c7592cf5d7ff1a72ed00c92a0837d5728ecc80047cb9406",
+      "actual": "2f11a6341f8e8ee26c7592cf5d7ff1a72ed00c92a0837d5728ecc80047cb9406",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/include/generated/utsversion.h": {
+      "expected": "427e03c4dbd2756ffa5fc2333109cd57c7438b8883ee390e31d232e0036019a1",
+      "actual": "427e03c4dbd2756ffa5fc2333109cd57c7438b8883ee390e31d232e0036019a1",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/modules.builtin": {
+      "expected": "ef55d7bc5528d2c01f38fc0d8f6473c75e14ec62349898f6529be9bbac871366",
+      "actual": "ef55d7bc5528d2c01f38fc0d8f6473c75e14ec62349898f6529be9bbac871366",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/modules.builtin.modinfo": {
+      "expected": "f173376892f5d1a020884e4c6062b51e7cf26718928e1225be5e4fb507c34d0c",
+      "actual": "f173376892f5d1a020884e4c6062b51e7cf26718928e1225be5e4fb507c34d0c",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/modules.order": {
+      "expected": "1677c25390fae9177f7760e08b471621e6c06b376705f1bd56232e071e32dcfe",
+      "actual": "1677c25390fae9177f7760e08b471621e6c06b376705f1bd56232e071e32dcfe",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/vmlinux": {
+      "expected": "3026a7a5b496833a10ea58c0cf7e7be3c60aa6ee5249e137f5506aca81579b1a",
+      "actual": "3026a7a5b496833a10ea58c0cf7e7be3c60aa6ee5249e137f5506aca81579b1a",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/vmlinux.symvers": {
+      "expected": "de0efc1f0aedfe4b2f48fe2d01a4fa6dfa9082b9af71ed572f8844f5ac8781b8",
+      "actual": "de0efc1f0aedfe4b2f48fe2d01a4fa6dfa9082b9af71ed572f8844f5ac8781b8",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/Makefile": {
+      "expected": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+      "actual": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/include/linux/rwsem.h": {
+      "expected": "6a3a13b6b0031851512cd2ff3a9e8307813ff114f51a0529a234aa39827da67c",
+      "actual": "6a3a13b6b0031851512cd2ff3a9e8307813ff114f51a0529a234aa39827da67c",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/include/linux/sched.h": {
+      "expected": "c0ddfcc8be427faebb47d9807a891a650081e3bcd26e139253da9c8b67f264e8",
+      "actual": "c0ddfcc8be427faebb47d9807a891a650081e3bcd26e139253da9c8b67f264e8",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/init/Kconfig": {
+      "expected": "4a715d514aadc22c22bacd33964596336ace7b0e18bc4ea55dcca6b53d29d872",
+      "actual": "4a715d514aadc22c22bacd33964596336ace7b0e18bc4ea55dcca6b53d29d872",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/Makefile": {
+      "expected": "81d7f2489749b47d6cc57735885c9a749dfe82ad120b73e8f9f5a298cdb8d6fb",
+      "actual": "81d7f2489749b47d6cc57735885c9a749dfe82ad120b73e8f9f5a298cdb8d6fb",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/exit.c": {
+      "expected": "1bb762d02021af4d2d61945bc3deb01372d9468a7762acc6612e8ad43561e6cb",
+      "actual": "1bb762d02021af4d2d61945bc3deb01372d9468a7762acc6612e8ad43561e6cb",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/fork.c": {
+      "expected": "330c947b46444b7eb4543febb26b16f80ce6e632de88af540c4f462844f05bb1",
+      "actual": "330c947b46444b7eb4543febb26b16f80ce6e632de88af540c4f462844f05bb1",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/locking/rwsem.c": {
+      "expected": "05313c275f12547fb00d1576cfe9590ce41c5bdd7db2bc9d9ec5650779bb9de7",
+      "actual": "05313c275f12547fb00d1576cfe9590ce41c5bdd7db2bc9d9ec5650779bb9de7",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/arch/x86/mm/fault.c": {
+      "expected": "20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73",
+      "actual": "20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/include/linux/mm.h": {
+      "expected": "92c812f7d025c2edafba391fcbda7e2f62ff2763c0d2682dbb02696d194b1f59",
+      "actual": "92c812f7d025c2edafba391fcbda7e2f62ff2763c0d2682dbb02696d194b1f59",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/include/linux/mm_types.h": {
+      "expected": "6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa",
+      "actual": "6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/include/linux/mmap_lock.h": {
+      "expected": "4c10da7d1cf32d7ffc1f052d93c15403774ecb6a2b4dfd83cabb358d0bcea759",
+      "actual": "4c10da7d1cf32d7ffc1f052d93c15403774ecb6a2b4dfd83cabb358d0bcea759",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/mm/memory.c": {
+      "expected": "8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127",
+      "actual": "8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/mm/mmap.c": {
+      "expected": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+      "actual": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/mm/mmap_lock.c": {
+      "expected": "0694371fa007d5d88d512ce169a05085353f332c44c76eeb2b7b34c2e0b2a455",
+      "actual": "0694371fa007d5d88d512ce169a05085353f332c44c76eeb2b7b34c2e0b2a455",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/mm/mprotect.c": {
+      "expected": "982e96216c2e5e258aeba0d4dc891a4ba3567cc22aedd07ac32d814cc8eebaab",
+      "actual": "982e96216c2e5e258aeba0d4dc891a4ba3567cc22aedd07ac32d814cc8eebaab",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/mm/util.c": {
+      "expected": "dcd21ee1618380902d7217afc844dd810ec98213d2c71a225e3049993d551826",
+      "actual": "dcd21ee1618380902d7217afc844dd810ec98213d2c71a225e3049993d551826",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/mm/vma.c": {
+      "expected": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05",
+      "actual": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/mm/vma.h": {
+      "expected": "c0ac05052b6359a80457f0c82c7037013c7e0c9bc1f687ff09ebed71772fd3bb",
+      "actual": "c0ac05052b6359a80457f0c82c7037013c7e0c9bc1f687ff09ebed71772fd3bb",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/Kbuild": {
+      "expected": "144cf64718c0c635941f0cb1c526b2f327b56e7cf84fee28a963773504f3386f",
+      "actual": "144cf64718c0c635941f0cb1c526b2f327b56e7cf84fee28a963773504f3386f",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/Kconfig": {
+      "expected": "f57bcb6c2e27799559fa139630b6090b0371c62119298b62429b006e5c788c29",
+      "actual": "f57bcb6c2e27799559fa139630b6090b0371c62119298b62429b006e5c788c29",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/asm_head.h": {
+      "expected": "dcae354686db004a515957fb73f6645d19f98bbb1fe3a07f1b73dfaff318455c",
+      "actual": "dcae354686db004a515957fb73f6645d19f98bbb1fe3a07f1b73dfaff318455c",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_control.h": {
+      "expected": "403b7ef160f75b5f149abafd35da59bac89215a5f5e22c4138714d6b6dcbad6a",
+      "actual": "403b7ef160f75b5f149abafd35da59bac89215a5f5e22c4138714d6b6dcbad6a",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_linux_rwsem.h": {
+      "expected": "3430bdaf9c7c4bbd1185b4be5c6e9ba8d4993ed04ff9263a78a7a0c85190b17f",
+      "actual": "3430bdaf9c7c4bbd1185b4be5c6e9ba8d4993ed04ff9263a78a7a0c85190b17f",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_linux_rwsem_query.h": {
+      "expected": "57587ca44373f4512a98d89c21509f9c183927a324898952d86fbfe8473f6448",
+      "actual": "57587ca44373f4512a98d89c21509f9c183927a324898952d86fbfe8473f6448",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_linux_rwsem_source.h": {
+      "expected": "617fdca332a6fdf3ec26324e9c35318ae79ad5c81f390aa2efdcfab92fdd0397",
+      "actual": "617fdca332a6fdf3ec26324e9c35318ae79ad5c81f390aa2efdcfab92fdd0397",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_mutex.h": {
+      "expected": "56b8541b70beb5c9b952d66b2eab8f89d57ea9e92bdec4617757fdf5eefdad3e",
+      "actual": "56b8541b70beb5c9b952d66b2eab8f89d57ea9e92bdec4617757fdf5eefdad3e",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_mutex_api.h": {
+      "expected": "24f6664232d16a6483b567a88e46182e9acec4e8abc062cea2a2091c09c80b62",
+      "actual": "24f6664232d16a6483b567a88e46182e9acec4e8abc062cea2a2091c09c80b62",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_regs.h": {
+      "expected": "68664e6ce8234314e3b725be99996f358b92496869a3487558fabc6d97f13466",
+      "actual": "68664e6ce8234314e3b725be99996f358b92496869a3487558fabc6d97f13466",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_rwlock_api.h": {
+      "expected": "971e0cd072fe48f15a1dd21c6b3c89e40acbe3d16bdbcc80efadc77db4d759b3",
+      "actual": "971e0cd072fe48f15a1dd21c6b3c89e40acbe3d16bdbcc80efadc77db4d759b3",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_rwsem_api.h": {
+      "expected": "f771b0fcdfbf88b93be072dc471bdfd45a206b528c155d087f098608b5b0d2c9",
+      "actual": "f771b0fcdfbf88b93be072dc471bdfd45a206b528c155d087f098608b5b0d2c9",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/kd_spin_api.h": {
+      "expected": "bc34bd6327f35172d2671d11e98eab8a5e50b8aeb5508ad49dc095598a843908",
+      "actual": "bc34bd6327f35172d2671d11e98eab8a5e50b8aeb5508ad49dc095598a843908",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/mutex_api.S": {
+      "expected": "8723f147d35e5039c7aef16ce14bef7d932bf971396f02bf9b494733a9a1852a",
+      "actual": "8723f147d35e5039c7aef16ce14bef7d932bf971396f02bf9b494733a9a1852a",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/mutex_entry.S": {
+      "expected": "6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108",
+      "actual": "6e5c771a27e665100a05198c87e6dbfd58a0a5e6a21bfffd55bd7f1f142be108",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/native_resume.S": {
+      "expected": "6c57676d9194a2f2090d602fdf55bba891add8b6f8d560472bfb4fd7bbf4b0dd",
+      "actual": "6c57676d9194a2f2090d602fdf55bba891add8b6f8d560472bfb4fd7bbf4b0dd",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/include/wrapper.S": {
+      "expected": "42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5",
+      "actual": "42328e050708ab68ac6f94a1a2d76903e4b0d8cffd273082bb1daabb9b789ff5",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/channel.c": {
+      "expected": "17803ac448b5f836c311457451106df047fc73e2dd5a3aa32b837159e3c69b03",
+      "actual": "17803ac448b5f836c311457451106df047fc73e2dd5a3aa32b837159e3c69b03",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/channel.h": {
+      "expected": "606ce81101fc1c53805dc22c870747b6faba3b931302fcf003a3b7bd2fd948f3",
+      "actual": "606ce81101fc1c53805dc22c870747b6faba3b931302fcf003a3b7bd2fd948f3",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/compiled_image.c": {
+      "expected": "0ef92a96b335041523341c2918641cef0c7aa7c0cbfc32e5f3ccd0484db47f2d",
+      "actual": "0ef92a96b335041523341c2918641cef0c7aa7c0cbfc32e5f3ccd0484db47f2d",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/compiled_image.h": {
+      "expected": "ec54afc42d2aa32079c2c28de7af7ba7141abbdece9c0c1e36361ea6ad2b29c9",
+      "actual": "ec54afc42d2aa32079c2c28de7af7ba7141abbdece9c0c1e36361ea6ad2b29c9",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/control.c": {
+      "expected": "c50a6de92ef238f387e023473937c418c02314bd7353082db69915a7fb79853d",
+      "actual": "c50a6de92ef238f387e023473937c418c02314bd7353082db69915a7fb79853d",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/control.h": {
+      "expected": "410021ca0e235e57e093b1056af2cb19d9d2199d679a3811efebaeef53002912",
+      "actual": "410021ca0e235e57e093b1056af2cb19d9d2199d679a3811efebaeef53002912",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/episode.c": {
+      "expected": "d4d2aaaa281963cd80352f905789ecd901eee6648c2961f8d25db8d0866d4098",
+      "actual": "d4d2aaaa281963cd80352f905789ecd901eee6648c2961f8d25db8d0866d4098",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/episode.h": {
+      "expected": "83c04bec9eefc6924d59aca097b507185a7273ea7022fa65f343e7d20536bc41",
+      "actual": "83c04bec9eefc6924d59aca097b507185a7273ea7022fa65f343e7d20536bc41",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/exports.c": {
+      "expected": "e8a2a6a79d2eac77b49251a19bdfcf7c85417bf35492de98f829c83e7717222a",
+      "actual": "e8a2a6a79d2eac77b49251a19bdfcf7c85417bf35492de98f829c83e7717222a",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/feedback.c": {
+      "expected": "fb00418fd7443ff0cff4ab5af9d1a4ffe0fd691f29f0b17ae33d8baa653960f0",
+      "actual": "fb00418fd7443ff0cff4ab5af9d1a4ffe0fd691f29f0b17ae33d8baa653960f0",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/feedback.h": {
+      "expected": "e65def1ab23fdc490a7ab0b18a2f1b8bc00f538c17e62e0f1cacbc6c809a0464",
+      "actual": "e65def1ab23fdc490a7ab0b18a2f1b8bc00f538c17e62e0f1cacbc6c809a0464",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/feedback_publish.c": {
+      "expected": "eab297e4eb31259d1f0ca9b32be051c6604e2f80d5fe7a0c2fa7c89017c96104",
+      "actual": "eab297e4eb31259d1f0ca9b32be051c6604e2f80d5fe7a0c2fa7c89017c96104",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/feedback_publish.h": {
+      "expected": "04c14ae7abb8346230fbe2f6eeadf79c57f91be4cf8204676b7e79a1153d4066",
+      "actual": "04c14ae7abb8346230fbe2f6eeadf79c57f91be4cf8204676b7e79a1153d4066",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/image.c": {
+      "expected": "2045cb89d88175e9b73f7d3b247b72943fbcfa8eaaa3a2ffede0e670968e2bd3",
+      "actual": "2045cb89d88175e9b73f7d3b247b72943fbcfa8eaaa3a2ffede0e670968e2bd3",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/image.h": {
+      "expected": "49b080029f0abc3ea87e6230cbb925a22f8dbdea50242b42664ce47b135044e5",
+      "actual": "49b080029f0abc3ea87e6230cbb925a22f8dbdea50242b42664ce47b135044e5",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/image_inputs.h": {
+      "expected": "a56154b1717dfa494c767a87355128d92f9f710c9bc4ebdc0729a4ca3f8bdc40",
+      "actual": "a56154b1717dfa494c767a87355128d92f9f710c9bc4ebdc0729a4ca3f8bdc40",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/image_owner.c": {
+      "expected": "c647127502b78d6a3d0d29040d98bf97bc87e666f5418755a876ff0a6b14ff15",
+      "actual": "c647127502b78d6a3d0d29040d98bf97bc87e666f5418755a876ff0a6b14ff15",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/image_owner.h": {
+      "expected": "0bdc71a22db182ee6ffc89834a30c28a348c1724c60ea6649ef53141380ffccb",
+      "actual": "0bdc71a22db182ee6ffc89834a30c28a348c1724c60ea6649ef53141380ffccb",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/integration/BUILDING.md": {
+      "expected": "f6c282ff70b6219496b88479f8f5f0670df5ef818b7ee236350c341088edb675",
+      "actual": "f6c282ff70b6219496b88479f8f5f0670df5ef818b7ee236350c341088edb675",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/integration/CONTROL.md": {
+      "expected": "e91043bc2c7502ed0318b397ada15e37af1029db4d2f591aaa639529abbc34ae",
+      "actual": "e91043bc2c7502ed0318b397ada15e37af1029db4d2f591aaa639529abbc34ae",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/integration/IMAGES.md": {
+      "expected": "94a3ee669e29e680f3c09d491bf9e92bb9066e4be7cdaaacafab82d76de19f30",
+      "actual": "94a3ee669e29e680f3c09d491bf9e92bb9066e4be7cdaaacafab82d76de19f30",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/integration/README.md": {
+      "expected": "92a5a9f154a92a29ba7e96ce274abb7c2417dedb28ee0f18d57527106d88367f",
+      "actual": "92a5a9f154a92a29ba7e96ce274abb7c2417dedb28ee0f18d57527106d88367f",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/integration/RWSEM.md": {
+      "expected": "4964921960090815deb5ade60271c7e38f0a6a1b1dc79115cd2250ffbf31fb7f",
+      "actual": "4964921960090815deb5ade60271c7e38f0a6a1b1dc79115cd2250ffbf31fb7f",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/integration/apply_target.py": {
+      "expected": "470673f8a526337aaa3899b7214a8990023e1103ef6ceca4490765ce5b7839eb",
+      "actual": "470673f8a526337aaa3899b7214a8990023e1103ef6ceca4490765ce5b7839eb",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/integration/task_struct.patch": {
+      "expected": "ce09f22277695687904b9d181b52e5429c05413a9768060d405152fb848eb4ec",
+      "actual": "ce09f22277695687904b9d181b52e5429c05413a9768060d405152fb848eb4ec",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/jit.c": {
+      "expected": "8afc20568eea8d7f4022033ec6b14c70752a0e225fd2cb0d58f0957e5746a6b2",
+      "actual": "8afc20568eea8d7f4022033ec6b14c70752a0e225fd2cb0d58f0957e5746a6b2",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/jit.h": {
+      "expected": "de4581fbe630aa921881456ae5d4747b7953ab9e391a21f96981d55b9d213260",
+      "actual": "de4581fbe630aa921881456ae5d4747b7953ab9e391a21f96981d55b9d213260",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/lifecycle.c": {
+      "expected": "ce27c3cdc0328e88d468883567c34bdcbd9cf3dd0e7504fabb587ca7ccae4b71",
+      "actual": "ce27c3cdc0328e88d468883567c34bdcbd9cf3dd0e7504fabb587ca7ccae4b71",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/lifecycle.h": {
+      "expected": "1ed47fe6fa11afa4bb68489dac42ed955d5c2af54f2591d89bd260aefb9d9f76",
+      "actual": "1ed47fe6fa11afa4bb68489dac42ed955d5c2af54f2591d89bd260aefb9d9f76",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/linux_rwsem.c": {
+      "expected": "93305eadc11b1d51b184d995d07a51f668978870660226a4526b310b943bb11d",
+      "actual": "93305eadc11b1d51b184d995d07a51f668978870660226a4526b310b943bb11d",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/mutex.c": {
+      "expected": "ec26bdb3d58e584b2a21c687c18ef9cdf9c37dbaa782c236dc8dee7e91e197cc",
+      "actual": "ec26bdb3d58e584b2a21c687c18ef9cdf9c37dbaa782c236dc8dee7e91e197cc",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/mutex.h": {
+      "expected": "fb9ea3a2875b507728b49f8eb41a4cca448d5b64509da77d7253bf1341ffd3a9",
+      "actual": "fb9ea3a2875b507728b49f8eb41a4cca448d5b64509da77d7253bf1341ffd3a9",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/mutex_api.c": {
+      "expected": "a869a513d7a6832698f261070d898c178008daa17befb86c8bde194b1624a294",
+      "actual": "a869a513d7a6832698f261070d898c178008daa17befb86c8bde194b1624a294",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/mutex_api.h": {
+      "expected": "e10a4886a75f466eae74015cdbde0ca4660f44624bf2d9119e16d46c401a3063",
+      "actual": "e10a4886a75f466eae74015cdbde0ca4660f44624bf2d9119e16d46c401a3063",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/mutex_release.c": {
+      "expected": "2d9639fcf6688e0923b1fcc7f6475edff26957710984785212fe40dda5dcc7f8",
+      "actual": "2d9639fcf6688e0923b1fcc7f6475edff26957710984785212fe40dda5dcc7f8",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/mutex_release.h": {
+      "expected": "a2805d3e5d1bdff89390c54f9ddf66ed02f5c470d07b5ee83ec51b9304a279ce",
+      "actual": "a2805d3e5d1bdff89390c54f9ddf66ed02f5c470d07b5ee83ec51b9304a279ce",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/native_entry.c": {
+      "expected": "8d452d7c27a955dafe022af389ccf6b55520f8c69e23f35f9fd7c32f31708aa4",
+      "actual": "8d452d7c27a955dafe022af389ccf6b55520f8c69e23f35f9fd7c32f31708aa4",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/native_entry.h": {
+      "expected": "80d60672aaa65bb4cdf1884b5f25031571c1ab5e2d7f589cf2fce6524bb70c2e",
+      "actual": "80d60672aaa65bb4cdf1884b5f25031571c1ab5e2d7f589cf2fce6524bb70c2e",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/observation.c": {
+      "expected": "1d9a4ac626de10516682680904c958bd0af1539eae0828b4236b5e0bea2b2e3a",
+      "actual": "1d9a4ac626de10516682680904c958bd0af1539eae0828b4236b5e0bea2b2e3a",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/observation.h": {
+      "expected": "e1d9fae7baf6618d50a55d14c60256e800ba830441fd767d8640a86206ba45b8",
+      "actual": "e1d9fae7baf6618d50a55d14c60256e800ba830441fd767d8640a86206ba45b8",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/owner_progress.c": {
+      "expected": "8184208d878b467a7a269c2606029aa22cba64d4a45fd56026855b04171178d3",
+      "actual": "8184208d878b467a7a269c2606029aa22cba64d4a45fd56026855b04171178d3",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/owner_progress.h": {
+      "expected": "cc092ec0df8a74b6b993a6a3a7034ee713a896e0bf0f3a2ed32702692cea1052",
+      "actual": "cc092ec0df8a74b6b993a6a3a7034ee713a896e0bf0f3a2ed32702692cea1052",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/request_pool.c": {
+      "expected": "df30718bf96fcdb637ed6ff8b1459de5963e255069556001685dc1d5cf59ee4e",
+      "actual": "df30718bf96fcdb637ed6ff8b1459de5963e255069556001685dc1d5cf59ee4e",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/request_pool.h": {
+      "expected": "1caf78b544d56e74d95d44d31a76ac35cd904791b752dbb0f9521ee4f8996c70",
+      "actual": "1caf78b544d56e74d95d44d31a76ac35cd904791b752dbb0f9521ee4f8996c70",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/runtime.c": {
+      "expected": "fae5a2a00facf055ccb054c6b98c919f293961410ffbed82f30934ec492ba9ae",
+      "actual": "fae5a2a00facf055ccb054c6b98c919f293961410ffbed82f30934ec492ba9ae",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/runtime.h": {
+      "expected": "1e9fbf4d205df38b3ab301124ecedd65e36e1d38798e49c9df2375bc8ee468e6",
+      "actual": "1e9fbf4d205df38b3ab301124ecedd65e36e1d38798e49c9df2375bc8ee468e6",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/rw.c": {
+      "expected": "784989c7fe99fd2765ef3d9f5d41e17095c1411aa625c2278f3c82d02e8cb8e3",
+      "actual": "784989c7fe99fd2765ef3d9f5d41e17095c1411aa625c2278f3c82d02e8cb8e3",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/rw.h": {
+      "expected": "584fe2af0e25a988444d6cfe2e47bd29d80cc6fe7ade37fecbfcb628290c9ee5",
+      "actual": "584fe2af0e25a988444d6cfe2e47bd29d80cc6fe7ade37fecbfcb628290c9ee5",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/rw_admission.c": {
+      "expected": "a23e3e141a583c89b220b4c4e623e9d84d293de9b5131be3f33ae1a15c6bae61",
+      "actual": "a23e3e141a583c89b220b4c4e623e9d84d293de9b5131be3f33ae1a15c6bae61",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/rw_admission.h": {
+      "expected": "1869f284f37b8777687c42b99ad8423d88dced11147ec4aa257943af76f963f6",
+      "actual": "1869f284f37b8777687c42b99ad8423d88dced11147ec4aa257943af76f963f6",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/rw_local.c": {
+      "expected": "1ab9f15adff49f36337c4846fea65392be1bca4348c553ef4c7893753d1b1853",
+      "actual": "1ab9f15adff49f36337c4846fea65392be1bca4348c553ef4c7893753d1b1853",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/rw_local.h": {
+      "expected": "2ddeec972f72a4d79b7278e109f1fe45485a5ba54f2c9725c5d19d1d35cc6ae6",
+      "actual": "2ddeec972f72a4d79b7278e109f1fe45485a5ba54f2c9725c5d19d1d35cc6ae6",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/rw_native.c": {
+      "expected": "06f206acd6284fcddd709e9258913ea884afc273defd100d14dafb1b9e54e3b6",
+      "actual": "06f206acd6284fcddd709e9258913ea884afc273defd100d14dafb1b9e54e3b6",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/rw_native.h": {
+      "expected": "6cae46be281ca6eefb5114554e5e1de6116636d780e1eef082fccb1e79cb04df",
+      "actual": "6cae46be281ca6eefb5114554e5e1de6116636d780e1eef082fccb1e79cb04df",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/source_epoch.c": {
+      "expected": "2ef40e9ad005caf758c31f9947bf0b49b67f7bf19eae3a0ec8684090ebe8ff12",
+      "actual": "2ef40e9ad005caf758c31f9947bf0b49b67f7bf19eae3a0ec8684090ebe8ff12",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/source_epoch.h": {
+      "expected": "f1838dbd76af0232cbee8909f85dbefe2972bd8bce8271faf909a98ec05fe0bb",
+      "actual": "f1838dbd76af0232cbee8909f85dbefe2972bd8bce8271faf909a98ec05fe0bb",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/source_provider.c": {
+      "expected": "c242e5bd9a091461a2c6f9d5d8907102d8986c62897959629c04789f8f0aa49e",
+      "actual": "c242e5bd9a091461a2c6f9d5d8907102d8986c62897959629c04789f8f0aa49e",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/source_provider.h": {
+      "expected": "0bde73385ec8620af476303299b559440d2da181797fb82a1d39a36a26c5f261",
+      "actual": "0bde73385ec8620af476303299b559440d2da181797fb82a1d39a36a26c5f261",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/source_stack.c": {
+      "expected": "81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302",
+      "actual": "81141070c7a35a1615d0acff3cb0d6300d2c8ab51d968542ce401cb268fdd302",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/source_stack.h": {
+      "expected": "91458b0aa42309ebcf3c8b474bd2420f24574558e3362b1f993f21f0d7d4f16d",
+      "actual": "91458b0aa42309ebcf3c8b474bd2420f24574558e3362b1f993f21f0d7d4f16d",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/state.c": {
+      "expected": "3260f35acf2886cfafdd1f3925c5dc1bbeb7961670019fcccde51dd7e8f3ed80",
+      "actual": "3260f35acf2886cfafdd1f3925c5dc1bbeb7961670019fcccde51dd7e8f3ed80",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/state.h": {
+      "expected": "92c42170fa24e3391cb0019ab87b97feec39750e01dc2b05e4c4a032d7451ee6",
+      "actual": "92c42170fa24e3391cb0019ab87b97feec39750e01dc2b05e4c4a032d7451ee6",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/target.h": {
+      "expected": "37c98012e3bca9db2ff3bac401bfb3eefe2c63b0625cb96ec67774bd8e3a225f",
+      "actual": "37c98012e3bca9db2ff3bac401bfb3eefe2c63b0625cb96ec67774bd8e3a225f",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/task_progress.c": {
+      "expected": "300853a8702b740f85ffc7425c51844a55dcbb3e7c292ba1010e28b0c061bd08",
+      "actual": "300853a8702b740f85ffc7425c51844a55dcbb3e7c292ba1010e28b0c061bd08",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/task_progress.h": {
+      "expected": "f4be1001cd1b3ab7cb67c3562ec1e021c873a207bce09803abea35b17bfdec07",
+      "actual": "f4be1001cd1b3ab7cb67c3562ec1e021c873a207bce09803abea35b17bfdec07",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/task_setup.c": {
+      "expected": "a4a510f30b3dddeff1b9eb8d3f09f25bfd5b98529326aaa3628db7fc4160c30a",
+      "actual": "a4a510f30b3dddeff1b9eb8d3f09f25bfd5b98529326aaa3628db7fc4160c30a",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/task_setup.h": {
+      "expected": "bb1e830d13f49f6235dc0587a4828bb3ecf2307fa3a8901698c658399420f975",
+      "actual": "bb1e830d13f49f6235dc0587a4828bb3ecf2307fa3a8901698c658399420f975",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/task_state.c": {
+      "expected": "630cc2966f092c0ed402014a270348e2b43138c9ebe126e858ea17b21ee4d096",
+      "actual": "630cc2966f092c0ed402014a270348e2b43138c9ebe126e858ea17b21ee4d096",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/task_state.h": {
+      "expected": "83b503c1f1ee8dff4cbfa97d23938759487a051eb580d45a78f99ec8e344f813",
+      "actual": "83b503c1f1ee8dff4cbfa97d23938759487a051eb580d45a78f99ec8e344f813",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/task_storage.c": {
+      "expected": "199712250db1dfad005a28de58a4114c35ff67bc98c1f9a17aa45ced2066fd9b",
+      "actual": "199712250db1dfad005a28de58a4114c35ff67bc98c1f9a17aa45ced2066fd9b",
+      "match": true
+    },
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/source/kernel/kdlock/kernel/task_storage.h": {
+      "expected": "14c062ac9cdfa83b557a28b885295982441bed5abd9b2d76d41593f31facee1f",
+      "actual": "14c062ac9cdfa83b557a28b885295982441bed5abd9b2d76d41593f31facee1f",
+      "match": true
+    },
+    "/usr/bin/x86_64-linux-gnu-gcc-15": {
+      "expected": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+      "actual": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+      "match": true
+    },
+    "/usr/bin/x86_64-linux-gnu-as": {
+      "expected": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+      "actual": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+      "match": true
+    },
+    "/usr/bin/x86_64-linux-gnu-ld.bfd": {
+      "expected": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+      "actual": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+      "match": true
+    },
+    "/usr/bin/make": {
+      "expected": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+      "actual": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+      "match": true
+    }
+  },
+  "extra_hashes": {
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/scripts/mod/modpost": "667cd803c1315e228d7e7f0b44f150b0223bba70fcbb42b00589eae89ccf687a",
+    "/mnt/kdlock-builds2/kdlock-main-kernel16-7338197a-01/build/tools/objtool/objtool": "8000462015e9e63f7cf7da93685471adc96b80da2edb6c677622674e01db1ca1",
+    "/usr/libexec/gcc/x86_64-linux-gnu/15/cc1": "30510b346885152c4fce41d2b501751c95d3690b1c34eaa04ebb970e70eae620"
+  },
+  "historical_build_id": "40d0694cb395dfcc98f8275d033b96797d2e5cb2",
+  "source_core_commit": "7338197a587fd84110fe710be63abafde270c02b",
+  "first_metadata_command_failure": "cc1 absent at /usr/lib/gcc/x86_64-linux-gnu/15/cc1; later is-file confirms /usr/libexec/gcc/x86_64-linux-gnu/15/cc1 exists",
+  "private_key_read": false,
+  "payload_transfer": false,
+  "final_source_image_open_users": []
+}

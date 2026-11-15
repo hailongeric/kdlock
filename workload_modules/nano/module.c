@@ -193,7 +193,7 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			break;
 		}
 		if (!config.workers || config.workers > RB_MAX_WORKERS || config.write_percent > 100 ||
-#ifdef RB_MUTEX
+#if defined(RB_MUTEX) || defined(RB_SPIN)
 		    config.write_percent != 100 ||
 #endif
 		    !config.started_ns || config.started_ns > ktime_get_ns() ||
@@ -313,9 +313,14 @@ static int __init rb_init(void)
 #ifdef RB_HASH
 	sc_hash_init();
 #endif
+#if defined(RB_SPIN) && !defined(RB_KDLOCK)
+	spin_lock_init(&rb_lock);
+#endif
 #ifdef RB_KDLOCK
 	BUILD_BUG_ON(sizeof(struct kd_observation) != sizeof(rb_evidence[0].row.proof[0]));
-#ifdef RB_MUTEX
+#ifdef RB_SPIN
+	kd_spin_init(&rb_lock);
+#elif defined(RB_MUTEX)
 	kd_mutex_init(&rb_lock);
 #else
 	kd_rwsem_init(&rb_lock);
@@ -346,3 +351,12 @@ module_init(rb_init);
 module_exit(rb_exit);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Native/TCLock/rebuilt KD matched single-counter nano");
+
+#ifdef RB_SPIN
+MODULE_INFO(nano_family, "spin");
+#ifdef RB_KDLOCK
+MODULE_INFO(nano_backend, "kdlock");
+#else
+MODULE_INFO(nano_backend, "native");
+#endif
+#endif

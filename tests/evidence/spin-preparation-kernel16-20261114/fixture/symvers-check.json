@@ -1,0 +1,90 @@
+{
+  "status": "EXPECTED_KD_EXPORTS_PRESENT_BUILD_NOT_RUN",
+  "symvers_sha256": "de0efc1f0aedfe4b2f48fe2d01a4fa6dfa9082b9af71ed572f8844f5ac8781b8",
+  "required": [
+    "kd_spin_init",
+    "kd_spin_lock_entry_asm",
+    "kd_spin_unlock_entry_asm",
+    "kd_jit_source_provider_create",
+    "kd_jit_source_provider_close",
+    "kd_jit_source_provider_destroy",
+    "kd_jit_runtime_create",
+    "kd_jit_runtime_enter_current",
+    "kd_jit_runtime_leave_current",
+    "kd_jit_runtime_destroy",
+    "kd_task_storage_root"
+  ],
+  "missing": [],
+  "exports": [
+    {
+      "crc": "0x208789bf",
+      "symbol": "kd_spin_init",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0x3de58388",
+      "symbol": "kd_spin_lock_entry_asm",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0x3de58388",
+      "symbol": "kd_spin_unlock_entry_asm",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0x6019fcd1",
+      "symbol": "kd_jit_source_provider_create",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0x3a860009",
+      "symbol": "kd_jit_source_provider_close",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0x3a860009",
+      "symbol": "kd_jit_source_provider_destroy",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0xe4664310",
+      "symbol": "kd_jit_runtime_create",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0x952f9665",
+      "symbol": "kd_jit_runtime_enter_current",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0x61f1bca6",
+      "symbol": "kd_jit_runtime_leave_current",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0xda9d005d",
+      "symbol": "kd_jit_runtime_destroy",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    },
+    {
+      "crc": "0x81d4d4db",
+      "symbol": "kd_task_storage_root",
+      "object": "vmlinux",
+      "export_type": "EXPORT_SYMBOL_GPL"
+    }
+  ],
+  "limitation": "Source-expected KD symbols only; no compiled module or emitted import/CRC comparison.",
+  "build_blocker": "Exact GCC15 and prepared kernel16 build tree are not available in the current host execution environment. Existing tools remain inside the stopped source guest.",
+  "vm_booted": false,
+  "module_loaded": false
+}

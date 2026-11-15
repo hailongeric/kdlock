@@ -1,0 +1,41 @@
+test_build_requires_both_live_and_output_release (test_nano_identity.CandidateIdentity) ... ok
+test_its_binding_requires_one_nonzero_builtin_text_symbol (test_nano_identity.CandidateIdentity) ... ok
+test_its_return_thunk_may_move_only_with_exact_live_binding (test_nano_identity.CandidateIdentity) ... ok
+test_kernel9_its_and_x86_return_thunks_have_distinct_bindings (test_nano_identity.CandidateIdentity) ... ok
+test_run_rejects_old_build_release_or_elf (test_nano_identity.CandidateIdentity) ... ok
+test_all_four_distinct_functional_lanes_are_required (test_nano_native_current.NativeCurrentPlan) ... ok
+test_bounded_receipts_cannot_replace_existing_scope_prerequisites (test_nano_native_current.NativeCurrentPlan) ... ok
+test_four_lanes_total_twelve_matching_single_worker_timings (test_nano_native_current.NativeCurrentPlan) ... ok
+test_native_has_no_kd_recorder_control_and_tclock_is_refused (test_nano_native_current.NativeCurrentPlan) ... ok
+test_other_scopes_and_missing_kd_functional_mode_cannot_qualify (test_nano_native_current.NativeCurrentPlan) ... ok
+test_prerequisites_bind_status_stage_build_boot_and_runner (test_nano_native_current.NativeCurrentPlan) ... ok
+test_atomic_ordinary_records_require_release_and_local_only_evidence (test_nano_recording.RecordingEvidence) ... ok
+test_evidence_v4_preserves_proof_offsets_and_immutable_mode (test_nano_recording.RecordingEvidence) ... ok
+test_fast_pairs_have_separate_exact_lifetimes (test_nano_recording.RecordingEvidence) ... ok
+test_fast_read_accounting_requires_exact_final_release (test_nano_recording.RecordingEvidence) ... ok
+test_off_has_no_invented_zero_counts_or_completion_pass (test_nano_recording.RecordingEvidence) ... ok
+test_off_refuses_a_remaining_observation_listener (test_nano_recording.RecordingEvidence) ... ok
+test_off_rejects_observation_rows (test_nano_recording.RecordingEvidence) ... ok
+test_on_retains_no_jit_and_lifetime_validation (test_nano_recording.RecordingEvidence) ... ok
+test_only_unsupported_evidence_maps_to_unavailable (test_nano_recording.RecordingEvidence) ... ok
+test_rwsem_cannot_supply_fast_mutex_pairs (test_nano_recording.RecordingEvidence) ... ok
+test_default_comparison_keeps_all_requested_sizes (test_nano_recording.RecordingPlan) ... ok
+test_pair_has_only_six_single_worker_timings (test_nano_recording.RecordingPlan) ... ok
+test_pair_prerequisite_cannot_substitute_for_comparison (test_nano_recording.RecordingPlan) ... ok
+test_rwsem_split_requires_both_immutable_delegation_modes (test_nano_recording.RecordingPlan) ... ok
+test_rwsem_split_uses_one_and_eight_workers_with_unrecorded_timings (test_nano_recording.RecordingPlan) ... ok
+test_build_pair_refuses_mislabel_and_unsupported_combinations (test_nano_spin.SpinSelection) ... ok
+test_direct_header_expands_real_selected_calls (test_nano_spin.SpinSelection) ... ok
+test_makefile_routes_only_explicit_pair (test_nano_spin.SpinSelection) ... ok
+test_nonspin_unlock_cannot_be_spin_jit_evidence (test_nano_spin.SpinSelection) ... ok
+test_pair_prerequisites_bind_family_boot_and_placement (test_nano_spin.SpinSelection) ... ok
+test_paired_plan_same_counts_and_no_tclock (test_nano_spin.SpinSelection) ... ok
+test_private_header_mismatch_refused (test_nano_spin.SpinSelection) ... ok
+test_snapshot_refuses_nonspin_and_wrong_backend (test_nano_spin.SpinSelection) ... ok
+test_spin_build_receipt_cannot_relabel_rwsem (test_nano_spin.SpinSelection) ... ok
+test_spin_scope_and_placement_are_explicit (test_nano_spin.SpinSelection) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 0.081s
+
+OK

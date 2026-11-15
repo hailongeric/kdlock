@@ -3,11 +3,28 @@
 #ifndef KD_NANO_DIRECT_H
 #define KD_NANO_DIRECT_H
 
+/* Refuse ambiguous families before selecting any lock implementation. */
+#if (defined(RB_MUTEX) + defined(RB_RWSEM) + defined(RB_SPIN)) != 1
+#error "exactly one nano lock family is required"
+#endif
+#if defined(RB_SPIN) && defined(RB_TCLOCK)
+#error "TCLock spin nano is unsupported"
+#endif
+
 #ifdef RB_KDLOCK
 #include "kernel/runtime.h"
 #include "kernel/task_state.h"
 #include "kernel/observation.h"
-#ifdef RB_MUTEX
+#ifdef RB_SPIN
+#include "include/kd_spin_api.h"
+static struct kd_spinlock rb_lock __aligned(64);
+#define RB_WRITE_LOCK() kd_spin_lock(&rb_lock)
+#define RB_WRITE_UNLOCK() kd_spin_unlock(&rb_lock)
+#define RB_READ_LOCK() kd_spin_lock(&rb_lock)
+#define RB_READ_UNLOCK() kd_spin_unlock(&rb_lock)
+#define RB_UNLOCK_KIND KD_OPERATION_SPIN_UNLOCK
+#define RB_FAMILY KD_LOCK_FAMILY_SPIN
+#elif defined(RB_MUTEX)
 #include "include/kd_mutex_api.h"
 static struct kd_mutex rb_lock __aligned(64);
 #define RB_WRITE_LOCK() kd_mutex_lock(&rb_lock)
@@ -50,7 +67,14 @@ extern int tc_rwsem_workers_drain(void);
 #endif
 #define RB_BACKEND 1
 #else
-#ifdef RB_MUTEX
+#ifdef RB_SPIN
+#include <linux/spinlock.h>
+static spinlock_t rb_lock __aligned(64);
+#define RB_WRITE_LOCK() spin_lock(&rb_lock)
+#define RB_WRITE_UNLOCK() spin_unlock(&rb_lock)
+#define RB_READ_LOCK() spin_lock(&rb_lock)
+#define RB_READ_UNLOCK() spin_unlock(&rb_lock)
+#elif defined(RB_MUTEX)
 #include <linux/mutex.h>
 static struct mutex rb_lock __aligned(64) = __MUTEX_INITIALIZER(rb_lock);
 #define RB_WRITE_LOCK() (mutex_lock)(&rb_lock)
@@ -74,7 +98,11 @@ static void rb_lock_snapshot(struct rw_bench_snapshot *s)
 {
 	s->lock_addr = (unsigned long)&rb_lock;
 	s->gate_addr = s->lock_addr;
-#if defined(RB_KDLOCK) && defined(RB_MUTEX)
+#if defined(RB_KDLOCK) && defined(RB_SPIN)
+	s->gate = READ_ONCE(rb_lock.queue.tail) || READ_ONCE(rb_lock.queue.owner);
+#elif defined(RB_SPIN)
+	s->gate = spin_is_locked(&rb_lock);
+#elif defined(RB_KDLOCK) && defined(RB_MUTEX)
 	s->gate = READ_ONCE(rb_lock.tail) || READ_ONCE(rb_lock.owner);
 #elif defined(RB_KDLOCK)
 	s->cnts = kd_rw_admission_readers(&rb_lock.core);

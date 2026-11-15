@@ -22,6 +22,28 @@ def validate_kernel_release(expected, running, built):
         raise RuntimeError('exact running/build kernel release differs')
 
 
+def validate_selection(families, backends):
+    if (not families or len(families) != len(set(families)) or
+            not set(families) <= {'mutex', 'rwsem', 'spin'} or not backends or
+            len(backends) != len(set(backends)) or
+            not set(backends) <= {'native', 'kdlock', 'tclock'}):
+        raise ValueError('invalid family/backend selection')
+    if 'spin' in families and (families != ['spin'] or set(backends) != {'native', 'kdlock'}):
+        raise ValueError('spin requires exactly the isolated Native/KD pair')
+
+
+def validate_spin_headers(repo, kernel_source):
+    # Reusing a release string cannot make different private layouts compatible.
+    def headers(base):
+        return {str(p.relative_to(base)): hashlib.sha256(p.read_bytes()).hexdigest()
+                for directory in ('include', 'kernel')
+                for p in (base / directory).rglob('*.h')}
+    local, built = headers(repo), headers(kernel_source / 'kernel/kdlock')
+    if not local or local != built:
+        raise ValueError('spin private ABI headers differ from the kernel source')
+    return local
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo', type=Path, required=True)
@@ -32,14 +54,16 @@ def main():
                         help='Exact running/build release; default preserves the kernel9 baseline')
     parser.add_argument('--backends', nargs='+', choices=('native', 'kdlock', 'tclock'),
                         default=['native', 'kdlock', 'tclock'])
+    parser.add_argument('--families', nargs='+', choices=('mutex', 'rwsem', 'spin'),
+                        default=['mutex', 'rwsem'])
     args = parser.parse_args()
-    if len(args.backends) != len(set(args.backends)):
-        raise ValueError('duplicate backend selection')
+    validate_selection(args.families, args.backends)
+    spin_headers = validate_spin_headers(args.repo, args.kernel_source) if args.families == ['spin'] else None
     validate_kernel_release(args.expected_release, os.uname().release,
                             (args.kernel_output / 'include/config/kernel.release').read_text().strip())
     args.output.mkdir()
     result = dict(status='STARTED', kernel_release=os.uname().release, backends=args.backends,
-                  commands=[], modules={})
+                  commands=[], modules={}, families=args.families, spin_abi_headers_sha256=spin_headers)
 
     def save(name, value):
         with (args.output / name).open('x') as stream:
@@ -112,6 +136,12 @@ def main():
         if (metadata['vermagic'].split()[0] != args.expected_release or
                 not metadata['signer'] or not metadata['sig_key'] or metadata['sig_hashalgo'] != 'sha512'):
             raise ValueError('signed module identity differs: ' + key)
+        if key.startswith('spin-'):
+            for field in ('nano_family', 'nano_backend'):
+                metadata[field] = command('metadata-' + key + '-' + field,
+                    [result['tools']['modinfo']['path'], '-F', field, signed], 30).strip()
+            if (metadata['nano_family'], metadata['nano_backend']) != ('spin', key[5:]):
+                raise ValueError('compiled spin family/backend differs')
         result['modules'][key] = item
         if key.startswith('tclock-'):
             family = key.removeprefix('tclock-')
@@ -127,7 +157,7 @@ def main():
         return directory
 
     try:
-        for family in ('mutex', 'rwsem'):
+        for family in args.families:
             if 'tclock' in args.backends:
                 tc = build('tclock-' + family, args.repo / 'tclock_backend',
                     'tclock_' + family + '_backend_km.ko',
@@ -142,6 +172,8 @@ def main():
                 build(family + '-' + backend, args.repo / 'workload_modules/nano', 'kd_nano.ko', extra)
         if result['kernel_files'] != {name: digest(args.kernel_output / name) for name in result['kernel_files']}:
             raise ValueError('kernel build inputs changed')
+        if spin_headers is not None and validate_spin_headers(args.repo, args.kernel_source) != spin_headers:
+            raise ValueError('spin ABI inputs changed during build')
         result['status'] = 'NANO_MODULES_BUILT_SIGNED'
         save('result.json', result)
         return 0

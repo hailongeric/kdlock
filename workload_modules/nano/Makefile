@@ -7,8 +7,13 @@ ifeq ($(RB_LOCK_KIND),mutex)
 ccflags-y += -DRB_MUTEX
 else ifeq ($(RB_LOCK_KIND),rwsem)
 ccflags-y += -DRB_RWSEM
+else ifeq ($(RB_LOCK_KIND),spin)
+ccflags-y += -DRB_SPIN
+ifeq ($(RB_BACKEND),tclock)
+$(error spin supports only native or kdlock)
+endif
 else
-$(error RB_LOCK_KIND must be mutex or rwsem)
+$(error RB_LOCK_KIND must be mutex, rwsem or spin)
 endif
 ifeq ($(RB_BACKEND),kdlock)
 ccflags-y += -DRB_KDLOCK -I$(KD_SOURCE_ROOT)

@@ -1,0 +1,5 @@
+{
+  "base": "7338197a587fd84110fe710be63abafde270c02b",
+  "archive_sha256": "f5866b422f38c0fc0e5def2481f0685224bb72e276795e78afafd00710eae862",
+  "reason": "shared checkout has unrelated ongoing spin-evidence edits; isolated immutable export prevents concurrent-writer conflicts"
+}

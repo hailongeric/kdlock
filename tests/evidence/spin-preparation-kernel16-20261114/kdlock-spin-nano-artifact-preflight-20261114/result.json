@@ -1,0 +1,51 @@
+{
+  "status": "STOPPED_MISSING_EXACT_COMPILER",
+  "utc": "2026-11-14T13:31:20.242231+00:00",
+  "patch_sha256": "5c3b54b4c2c0a77075f08f79b877738407a18a12fccce7f10ed65f8114110b2e",
+  "config_sha256": "31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483",
+  "kernel_sha256": "2d1202b693a6aa3fa1b1e56073d4ac3206d87f4b48bee15b7eb9f335295f8851",
+  "required_compiler": [
+    "CONFIG_CC_VERSION_TEXT=\"gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\""
+  ],
+  "host_compiler": "gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0",
+  "compiler_paths": {
+    "gcc": "/usr/bin/gcc",
+    "gcc-15": null,
+    "x86_64-linux-gnu-gcc": "/usr/bin/x86_64-linux-gnu-gcc",
+    "x86_64-linux-gnu-gcc-15": null
+  },
+  "running_host_kernel": "6.8.0-124-generic",
+  "compiler_inventory": [
+    "/usr/bin/x86_64-linux-gnu-gcc-nm-12",
+    "/usr/bin/x86_64-linux-gnu-gcc-ranlib",
+    "/usr/bin/gcc-nm-12",
+    "/usr/bin/gcc",
+    "/usr/bin/gcc-11",
+    "/usr/bin/gcc-ar-11",
+    "/usr/bin/gcc-ar-12",
+    "/usr/bin/x86_64-linux-gnu-gcc-ranlib-12",
+    "/usr/bin/c89-gcc",
+    "/usr/bin/x86_64-linux-gnu-gcc-nm-11",
+    "/usr/bin/gcc-ar",
+    "/usr/bin/x86_64-linux-gnu-gcc-11",
+    "/usr/bin/gcc-nm",
+    "/usr/bin/gcc-ranlib-11",
+    "/usr/bin/gcc-nm-11",
+    "/usr/bin/x86_64-linux-gnu-gcc",
+    "/usr/bin/gcc-ranlib-12",
+    "/usr/bin/x86_64-linux-gnu-gcc-ar-12",
+    "/usr/bin/gcc-ranlib",
+    "/usr/bin/x86_64-linux-gnu-gcc-ar-11",
+    "/usr/bin/x86_64-linux-gnu-gcc-ar",
+    "/usr/bin/gcc-12",
+    "/usr/bin/x86_64-linux-gnu-gcc-12",
+    "/usr/bin/c99-gcc",
+    "/usr/bin/x86_64-linux-gnu-gcc-nm",
+    "/usr/bin/x86_64-linux-gnu-gcc-ranlib-11"
+  ],
+  "historical_receipt": "/tmp/kdlock-kernel16-fixture-search-20261114/offline-receipts.json",
+  "historical_receipt_sha256": "5f1e9b5c6966e15fe00b59b94c3d1feeae202fd80390d13b1de77d0a10b8ff61",
+  "build_submitted": false,
+  "source_disk_accessed": false,
+  "artifacts": []
+}
