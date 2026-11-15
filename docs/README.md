@@ -21,6 +21,7 @@ measured rounds are in `../bench/results/kdclaude/`. See
 | [INTERFACES.md](INTERFACES.md) | `/dev/kdlock`, debugfs counters, kernel parameters, benchmark device |
 | [KERNEL_INTEGRATION.md](KERNEL_INTEGRATION.md) | putting kdlock into a kernel tree; configuration; what is and is not replaced |
 | [BUILD_AND_TEST.md](BUILD_AND_TEST.md) | the build VM, checks that were done, what is missing |
+| [NATIVE_COMPARISON.md](NATIVE_COMPARISON.md) | kdlock against the native Linux locks path by path, with pseudocode and the register/cache-line accounting |
 | [DIFFERENCES.md](DIFFERENCES.md) | where goals or effects differ from the earlier kdlock documents and `AGENTS.md`, with priorities |
 | [PERF_PLAN.md](PERF_PLAN.md) | what stands between this state and defensible nano/micro numbers, split into tasks |
 
