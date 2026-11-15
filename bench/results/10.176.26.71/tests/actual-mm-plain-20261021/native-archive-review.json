@@ -1,7 +1,0 @@
-{
-  "passed": true,
-  "archives": 5,
-  "regular_files_read": 565,
-  "manifest_sha256": "6ae1c95c9aa8495cdfedfd3f83946dc53321bd7ffae0b31cc6fe1e0a3a05a3fd",
-  "scope": "Archive hashes, sizes and complete regular-member decompression; source-host read-only review"
-}

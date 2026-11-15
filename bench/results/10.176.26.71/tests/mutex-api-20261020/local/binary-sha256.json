@@ -1,4 +1,0 @@
-{
-  "source/kernel_module/kdlock_km.ko": "5e7e8346bbfa278170acebcfcace9f1bb9ece45aa3b94e228deb03cbbacd8ccc",
-  "source/tests/kernel/mutex/local/kd_mutex_local_probe.ko": "6459817a550f7b7319248331833bf1a5f2058e899be3d6230bb9167e7d7842cb"
-}

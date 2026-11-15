@@ -1,50 +1,39 @@
-# Documentation index
+# kdlock (clean rewrite): documentation
 
-kdlock targets relevant in-kernel lock replacement and evaluation of unchanged
-applications such as will-it-scale `mmap1`. The [roadmap](ROADMAP.md) defines the
-three stages and their completion criteria. Current work uses Ubuntu 26.04.1
-and Linux `7.0.0-38-kdlock1`; Linux 6.1 is retained for recovery and historical
-evidence only.
+kdlock lets the holder of a contended kernel lock run the critical sections of
+the waiters queued behind it, from a relocated copy of their code produced by a
+userspace translator, so the protected data stays in one CPU's cache. Anything
+the copy cannot run correctly goes back to its owner at the exact next
+instruction. This directory is a from-scratch implementation of that idea for
+Linux 7 on x86_64, covering spinlock, rwlock, mutex and rwsem.
 
-This index describes maintained implementation and source-specific evidence.
-Use [execution](JIT_EXECUTION.md) for present source/continuation behavior and
-[validation](VALIDATION.md#retained-original-jit-and-proxy-read) for the latest
-retained-MM result. Historical candidate notebooks preserve decisions and
-receipts; their old work orders do not define a new redesign or schedule runs.
-The [documentation archive](history/documentation-20261109/README.md) records
-superseded guides and the full pre-cleanup design/TODO snapshots.
+**Status:** the kernel with kdlock built in boots in the `kdclaude` VM; all
+four families, two-level nesting and handback pass the data checks with and
+without delegation, and module unload with live images is handled. Nine
+measured rounds are in `../bench/results/kdclaude/`. See
+[BUILD_AND_TEST.md](BUILD_AND_TEST.md) and [PERF_PLAN.md](PERF_PLAN.md).
 
-Production trusts kernel and module source. Semantic safety, context/loop-value
-and entry-input proofs are bypassed; ordinary string callees use the normal
-backend. Source leases, faithful lowering, CALL/RET routing and exact runtime
-ownership remain required. See [translation policy](design/admission.md).
-
-| Responsibility | Maintained guide |
+| Read this | For |
 | --- | --- |
-| Goals, stages and next deliverables | [Roadmap](ROADMAP.md) |
-| Environment, synchronization, dependencies and recovery | [VM operations](operations/VM.md) |
-| Public APIs and supported execution modes | [Lock catalog](LOCKS.md), [public headers](../include/README.md) |
-| Architecture and source ownership | [Design](DESIGN.md), [code map](CODE_MAP.md) |
-| KD, TCLock and Native algorithms | [Protocol comparison](design/lock_protocols.md) |
-| Per-family implementation | [Spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md), [rwlock](design/rwlock_implementation.md), [rwsem](design/rwsem_implementation.md) |
-| Mutex object replacement and aliases | [KD-only mutex contract](design/kd_only_mutex.md) |
-| Ownership, acknowledgements and retirement | [Locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) |
-| Translation and execution | [Translation policy](design/admission.md), [execution flow](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md) |
-| Linux 7 source/build identity and MM adapter | [Kernel integration](../kernel_integration/linux70/README.md), [MM integration](../kernel_integration/linux70/MMAP.md) |
-| Module-owned mappings and backing faults | [Mapping/fault contract](design/mmap_fault.md) |
-| Workload definitions and commands | [Workloads](BENCHMARK_WORKLOADS.md), [benchmark runners](../bench/README.md) |
-| Measurements and validation | [Performance](PERFORMANCE.md), [validation](VALIDATION.md), [test selection](../tests/README.md) |
-| Known limits and vocabulary | [Open work](TODO.md), [terminology](TERMINOLOGY.md) |
-| Superseded designs, plans and result narratives | [History](history/README.md) |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | mechanism end to end: objects, wait, session, executor, handback, context transfer, NUMA order, nesting, images, invariants, limits |
+| [LOCKS.md](LOCKS.md) | per-family protocol, API, semantics, tunables |
+| [TRANSLATOR.md](TRANSLATOR.md) | what the userspace translator copies and rewrites, exits, learning loop |
+| [INTERFACES.md](INTERFACES.md) | `/dev/kdlock`, debugfs counters, kernel parameters, benchmark device |
+| [KERNEL_INTEGRATION.md](KERNEL_INTEGRATION.md) | putting kdlock into a kernel tree; configuration; what is and is not replaced |
+| [BUILD_AND_TEST.md](BUILD_AND_TEST.md) | the build VM, checks that were done, what is missing |
+| [DIFFERENCES.md](DIFFERENCES.md) | where goals or effects differ from the earlier kdlock documents and `AGENTS.md`, with priorities |
+| [PERF_PLAN.md](PERF_PLAN.md) | what stands between this state and defensible nano/micro numbers, split into tasks |
 
-The [complete Linux 7 catalog](../bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
-contains 3,402 selected timing observations across separately frozen generations.
-All are exploratory single rounds. Fresh four-family functional checks passed;
-the actual shared-MM performance objective remains unmet. Publication, returned
-JIT execution, functional correctness and performance qualification are separate
-verdicts.
+Source layout (relative to the repository root):
 
-Follow [development rules](../AGENTS.md). Source edits, Git and static review run
-on `380G10`; builds, tests and timing run only in the designated VM. The old
-project quick-start and throughput-plan documents are superseded by this index,
-VM operations and the roadmap; their fixed versions remain in history.
+| Path | Content |
+| --- | --- |
+| `include/kdlock/` | lock objects (`kd_types.h`), API (`kd_api.h`), user interface (`kd_uapi.h`) |
+| `kernel/` | `kd_entry.S` (stubs, resume, jit enter/exit), `kd_core.c` (wait, session, executor), `kd_{spinlock,rwlock,mutex,rwsem}.c`, `kd_image.c` (sites, images, events), `kd_dev.c`, `Makefile`, `Kconfig` |
+| `jit/` | `kd_daemon.py`, `kdjit/translator.py`, `kdjit/kernel.py` |
+| `integration/` | `apply_to_tree.sh`, `kd_linux_map.h` (API mapping reference), notes |
+| `bench/` | `kd_bench.c` (nano workloads), the runners, `wis/` (will-it-scale), `results/` |
+| `tclock_backend/` | the original TCLocks locks, the benchmark's third backend |
+
+Wording rules (from the project `AGENTS.md`): prose and comments in English;
+neutral terms (continuation, handback, local execution) in new names and text.

@@ -1,9 +1,0 @@
-{
-  "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/workloads-20261015T180603Z/workloads-20261015T180603Z.tar.gz",
-  "sha256": "9467977a5f277746f765f8207b4c575cf954882c04c0ae6225da4178ec8acc32",
-  "bytes": 569064406,
-  "utc": "2026-10-16T02:12:58.722594+00:00",
-  "retained_guest": true,
-  "matrix_state": "COMPLETE",
-  "disposition": "Complete fresh workload matrix; earlier attempts are archived separately"
-}

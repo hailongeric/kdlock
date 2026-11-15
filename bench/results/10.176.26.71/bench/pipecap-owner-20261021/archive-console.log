@@ -1,9 +1,0 @@
-ARCHIVE checks
-{"bytes": 1212191, "file": "checks.tar.gz", "group": "checks", "path": "/root/kdlock-evidence/10.176.26.71/bench/pipecap-owner-20261021-archives-1/checks.tar.gz", "roots": ["pipecap-owner-20261021/checks-1"], "sha256": "848aee11ca9c9ee1c24b462be526fe06902d5f0af1c2a159b8f095f34943ac59"}
-ARCHIVE sessions
-{"bytes": 32201717, "file": "sessions.tar.gz", "group": "sessions", "path": "/root/kdlock-evidence/10.176.26.71/bench/pipecap-owner-20261021-archives-1/sessions.tar.gz", "roots": ["pipecap-owner-20261021/run-1"], "sha256": "765cd3ef6f6031698f0dd1a0d1c1240618592dfc9dd87248c898e3fd850ea96c"}
-ARCHIVE host
-{"bytes": 54968, "file": "host.tar.gz", "group": "host", "path": "/root/kdlock-evidence/10.176.26.71/bench/pipecap-owner-20261021-archives-1/host.tar.gz", "roots": ["pipecap-owner-20261021/host-evidence"], "sha256": "e2457eae21ffc642657512a7493ff4af6d32c693d42f51f49e9eb133388da17e"}
-ARCHIVE metadata
-{"bytes": 219554, "file": "metadata.tar.gz", "group": "metadata", "path": "/root/kdlock-evidence/10.176.26.71/bench/pipecap-owner-20261021-archives-1/metadata.tar.gz", "roots": ["pipecap-owner-20261021/checks-1-console.log", "pipecap-owner-20261021/checks-1-launch.json", "pipecap-owner-20261021/final-health.json", "pipecap-owner-20261021/launch-1-exit.json", "pipecap-owner-20261021/preservation-tools", "pipecap-owner-20261021/run-1-console.log", "pipecap-owner-20261021/run-1-supervision.log", "pipecap-owner-20261021/run-1-supervision.log.command.json"], "sha256": "b9e0fc3cf1595169d021087be829ad9f50c23cba4cc70e692773a0b45c411f66"}
-All evidence preserved; unchanged inventory and final guest idle confirmed

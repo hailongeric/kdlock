@@ -1,4 +1,0 @@
-workers,backend,whole_mops_s,peak_mops_s,status,drained,jit_status,jit_entries,jit_completions,host_qualified,session
-1,kdlock,7.686078167856185,7.706770558017416,OK,True,NO_JIT,0,0,False,mutex-cacheline-c16-kdlock-local-w100-t01-r00
-16,kdlock,2.651584523780597,4.663188647359511,OK,True,NO_JIT,0,0,False,mutex-cacheline-c16-kdlock-local-w100-t16-r00
-60,kdlock,0.5186392374425217,0.5326465049340867,OK,True,NO_JIT,0,0,False,mutex-cacheline-c16-kdlock-local-w100-t60-r00

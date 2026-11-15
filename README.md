@@ -1,121 +1,279 @@
 # kdlock
 
-kdlock is an experimental x86_64 Linux lock library. A physical lock holder can
-execute waiting callers' critical sections through generated code, then return
-each caller after its completed work. The project goal is relevant in-kernel lock
-replacement and evaluation of unchanged applications such as will-it-scale
-`mmap1`.
+An x86_64 Linux lock library in which the holder of a contended lock runs the
+critical sections of the waiters queued behind it, from a relocated copy of
+their code produced by a userspace translator, so the protected data stays in
+one CPU's cache. Anything the copy cannot run correctly goes back to its owner
+at the exact next instruction.
 
-The [roadmap](docs/ROADMAP.md) has three stages: demonstrate a useful lock
-micro/nano performance envelope; establish scoped mmap/page-fault improvement or
-parity; then complete declared kernel replacements and compare applications.
-Favorable exploratory nano cases and scoped application measurements exist.
-Repeated performance acceptance and broader kernel replacement remain open.
-Retained original-JIT execution and proxy-read handling are integrated into
-`master`. The latest [actual mmap1 process point](bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
-tested `7e3c90b4`: one compile-excluded, counter-enabled interval at 25,670.9
-pairs per nominal second, with both roots returning every whole-application
-JIT entry. Exact retirement, unload and normal-kernel recovery passed. Quiet
-performance, repeated Native improvement and the merged runtime combination
-with master's independent flags-stack changes remain unvalidated.
-[Validation](docs/VALIDATION.md) retains the earlier failures and exact scopes.
+**Status:** the kernel with kdlock built in boots in the `kdclaude` VM; all
+four families, two-level nesting and handback keep the data exact with and
+without delegation; nine measured rounds against Native and the original
+TCLocks locks are in `bench/results/kdclaude/`. Writer-dominated profiles are
+ahead of both from 8 workers and flat to 64; reader-heavy profiles across two
+NUMA nodes are still behind TCLocks. See
+[docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md) and
+[docs/PERF_PLAN.md](docs/PERF_PLAN.md).
 
-## Current platform and policy
+This tree was written from the project goal and from TCLocks, BCD and a set of
+redesign notes, without reference to the earlier kdlock implementation. Those
+inputs, the earlier implementation and its measurements are not part of this
+tree; they are reachable in git through the tag `full-tree-before-cleanup-20261115`.
 
-The VM uses **Ubuntu 26.04.1 LTS** and normal kernel **`7.0.0-38-kdlock1`**, built
-from authenticated Ubuntu `linux=7.0.0-38.38` source containing upstream 7.0.14.
-The ordinary development image disables the mmap backend. Historical local-MM
-experiments used `7.0.0-38-kdmm1` Native/KD modes; later scoped and retained
-kernels have separately recorded source, configuration and boot identities.
-Linux 6.1 development is retired; results and one legacy recovery version remain
-preserved.
-[VM operations](docs/operations/VM.md) owns paths, identity, dependencies and recovery.
+**Complete documentation is in [docs/](docs/README.md)**: architecture, lock
+protocols, translator, interfaces, kernel integration, build/test status, a
+review of differences from the earlier documents, and the performance plan.
+This file is the short overview.
 
-Production trusts all kernel/module source, including loops. It skips semantic
-safety, context/value and entry-input proofs; the compiler clobber-entry agreement
-is assumed. Strings use ordinary decoded CALL/RET, without named models, services
-or direct native bridges. Source leases, complete selected text, faithful lowering,
-actual return words and exact runtime ownership/retirement remain required.
-The checked analyzer is an explicit regression utility, `trusted_source=False`.
-See [translation policy](docs/design/admission.md).
+## Idea
 
-## Lock interfaces
+TCLocks lets the lock holder (the combiner) run waiters' critical sections
+by switching to their stacks, so the protected data stays in one cache.
+It cannot delegate code that depends on the running task, because
+`current` and the stack canary are read through `%gs`, which still belongs
+to the combiner.
 
-These are the ordinary family interfaces. Separately activated retained service
-capture has the additional root/owner contracts described in the correction.
+kdlock keeps the TCLocks mechanism and changes one thing: the combiner does
+not run the waiter's original code but a **relocated copy** produced by a
+userspace translator. In the copy, the few task-identity accesses read the
+waiter's values. Anything the copy cannot execute correctly ends it with an
+exit, and the waiter continues natively from exactly that instruction.
 
-| Family | Supported execution model |
+```
+waiter W                         combiner C (queue head, holds the lock)
+--------                         ---------------------------------------
+lock() contended
+save rbx rbp r12-r15 rsp rip
+switch to per-CPU wait stack
+queue node -> packet, image
+spin on node state               for each queued node with an image:
+                                   rsp := W.rsp, registers := W packet
+                                   run copy of W's critical section
+                                   ...
+                                   call unlock(this lock)  -> exit, done
+                                 or
+                                   untranslated / sleeping / faulting code
+                                                           -> exit, handback
+resume from packet               next waiter, then C's own section
+```
+
+## What differs from the redesign notes, and why
+
+The notes referred to here are the `kdlock_redesign` documents of the earlier
+tree (tag `full-tree-before-cleanup-20261115`); they are not in this tree.
+They prescribe the BCD backend as is: software register
+virtualisation (five reserved registers, a virtual stack pointer),
+`%gs`-base rewriting, per-lock images and fragments that end at every lock
+operation. This rewrite deliberately does less:
+
+| Topic | Redesign notes | Here | Reason |
+| --- | --- | --- | --- |
+| Stack and registers | Virtual SP/BP, remapped R11-R15, spill/reload | Real `rsp` on the waiter's stack, no register is reserved | Instructions are copied byte for byte; no per-instruction overhead and no mapper to get wrong. BCD needed virtualisation to supervise user code in the kernel; trusted kernel code does not. |
+| `%gs` | Every access rebased to the waiter's per-CPU area | Only `current_task`, `__stack_chk_guard`, `cpu_current_top_of_stack` are redirected (to `kd_cpu` fields) | Per-CPU data means "the CPU running this code". Rebasing it would make the combiner update another CPU's allocator caches and counters without that CPU's interrupt exclusion. |
+| Lock operations in a section | Every lock and unlock ends a fragment | Uncontended spin-class lock calls and ordinary releases are native calls. Generated code is left only for the release of a session root, a contended inner lock, and sleeping-family acquires | A nested spinlock costs what it costs natively when it is free. The lock functions act for the waiter by themselves (`kd_logical_current()`). |
+| Handback | Session states, release mailboxes, ACKs | The lock word stays "held" and now belongs to the waiter; the combiner waits as queue head | No extra lock states: a handed-back waiter releases with the ordinary unlock. |
+| Nested delegation | Child nodes sharing one state through several combiners, with mailboxes and sequence numbers | Recursive, as in TCLocks: the executor queues the continuation it is running for the inner lock (see "Nesting") | One packet per origin, a small stack of session roots in it, and ordinary C recursion on the executor. |
+| Images | Entries, fragments, generations | One immutable image per call site, replaced whole, freed after an RCU grace period | Waiters and combiners are non-preemptible from lookup to resume, so no reference counting is needed. |
+
+Kept from the notes: delegation is optional and decided by one atomic
+transition; exactly one participant advances a continuation; handback is
+exact and never replays; learning is cumulative and never blocks the
+current invocation; readers stay on their own task.
+
+## Layout
+
+| Path | Content |
 | --- | --- |
-| Spin | Exclusive ordinary pinned pair; eligible bodies may delegate; explicit IRQ/BH variants execute locally |
-| Mutex | KD-owned physical exclusion; direct public blocking calls and aliases use ABI2; callable/signal/try/I/O forms execute locally |
-| Rwlock | Concurrent local readers; exclusive ABI3 writers may delegate after writer admission |
-| Rwsem | Concurrent local readers and local default writers; explicitly prepared writer macros can capture through selected admission, gate ownership and reader drain |
+| `include/kdlock/kd_types.h` | Lock objects, same sizes as the native types |
+| `include/kdlock/kd_api.h` | Lock API |
+| `include/kdlock/kd_uapi.h` | `/dev/kdlock` interface, exit and event codes |
+| `kernel/kd_entry.S` | Delegable entry stubs, `kd_resume`, `kd_jit_enter/exit` |
+| `kernel/kd_internal.h` | Packet, node, per-CPU state, MCS queue primitives |
+| `kernel/kd_core.c` | Waiting, combining session, section executor |
+| `kernel/kd_spinlock.c`, `kd_rwlock.c`, `kd_mutex.c`, `kd_rwsem.c` | The four families |
+| `kernel/kd_ww_mutex.c` | ww mutexes on the kd mutex (never delegated) |
+| `kernel/kd_image.c`, `kd_dev.c` | Sites, images, event ring, device, stats |
+| `jit/kdjit/translator.py` | Section translator (capstone) |
+| `jit/kdjit/kernel.py` | Device, kallsyms, text and exception-table access |
+| `jit/kd_daemon.py` | Event loop, cumulative knowledge, publication |
+| `integration/` | How to map the Linux lock API and types onto kdlock; `apply_to_tree.sh`; `linux70/` the one inherited kernel patch this tree builds on |
+| `bench/` | Nano benchmark module, runners (`run_nano.py`, `run_grid.py`, `run_ab.sh`, `run_corr.py`, `run_mmap1.py`, `run_api.py`), `wis/` (will-it-scale), `results/` |
+| `docs/` | Full documentation |
+| `tclock_backend/` | The original TCLocks locks (upstream rs3lab/TCLocks), built as the third backend of the benchmark for comparison |
 
-The maintained mutex is 32 bytes with native alignment. It shares preallocated
-CPU/slot storage between separate OSQ and delegation memberships. Defaults are
-batch cap 1024 and NUMA boundary 1024, removing the earlier count-based local
-cutoff. Terminal/deferred queue handling and bounded FIFO service remain intact.
-KD spin retains its 1024-body limit. The user selected these defaults; no new
-performance gain is established.
+## Lock protocol
 
-Published mutex waiters poll pinned; physical owners may sleep. Every user of an
-object must follow one protocol. Public unlock retains exact acquisition routing.
-Loading the provider does not replace unrelated Linux locks. PREEMPT_RT, debug
-mutexes, debug lock allocation and lockdep are refused. Whole-kernel/ww_mutex,
-broad oversubscription and complete mitigation coverage remain unvalidated.
-[Lock APIs](docs/LOCKS.md) and [open work](docs/TODO.md)
-define the current boundary.
+All families share one queue word with the layout of the native queued
+spinlock (`locked` byte, pending/flags byte, 16-bit MCS tail) and one set
+of queue primitives.
 
-The historical local MM adapter changes only the lock backend and minimal
-API/lifetime wrappers; its native bodies run on the original task (O). Later
-retained candidates execute unchanged native bodies on the executor (E) through
-general lock and service routing. The selected correction uses the original JIT and returns untranslated
-code to O at its current source position, without replay. This remains kdlock
-lock replacement; operation-specific MM algorithms and prepared teardown are
-retired. The contract separates required behavior from implemented and verified
-behavior, including deferred flags/SIMD restoration and IRQ/NMI conflicts.
+**Two modes.** A spinlock or mutex is in *plain mode* until its queue is
+deep. A contended caller then waits as on the native lock (for the
+spinlock: the same algorithm), on its own stack, and publishes nothing. A
+queue head that finds enough waiters behind it switches the lock to
+*delegation mode*; a combiner that finds the queue short switches it back.
+rwlock and rwsem writers always delegate: one session shares one wait for
+the readers. Details and the measured thresholds: ARCHITECTURE 7a.
 
-## Results and validation
+**Waiter.** The entry stub tries the fast path. On failure it calls the
+family's slow function on the caller's stack, which in plain mode acquires
+the lock and returns. In delegation mode, if the call site has an image,
+the stub instead claims the CPU's packet and wait stack (`kd_cpu.busy`),
+stores the continuation, moves to the wait stack and queues a delegable
+node. A site without an image is counted and may request a translation.
 
-The [October 28 Linux 7 catalog](bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
-selects **52 full lock/API configurations plus three MM suites: 3,402 points**.
-It keeps 29 checked-source, 22 trusted-source and one prepared lock/API cohort
-separate, alongside distinct private/shared-MM identities. Each coordinate has
-one two-second round at fixed 2 GHz host policy. All timing is exploratory;
-strict qualification remains failed and no repeat variance is available.
+**Combiner.** A waiter promoted to queue head takes the lock and, in
+delegation mode, runs a session: for each following delegable node it
+executes the section, unlinks the node and publishes `RESUME`. It stops at
+the batch limit, at a plain node, on `need_resched()`, or when a section's
+interrupt state is incompatible with its own. Then it passes headship on
+and returns to run its own section. Fast-path owners never combine.
 
-That catalog's mutex nano profiles exceed Native and TCLock at the measured
-60-worker point, with adverse/local points retained in their full curves. Its
-shared-device-MM workload loses to Native at all 21 counts. The separate
-[November 1 campaign](bench/results/10.176.26.71/bench/master-native-20261101/README.md)
-runs unchanged mmap1 threads/processes and original-body syscalls, retaining
-both gains and losses from one round per point. These workloads, source versions
-and controls are not interchangeable, and no repeated acceptance gate follows.
+**NUMA order.** As in TCLocks, a session serves only waiters of the
+combiner's NUMA node. A delegable waiter of another node is unlinked onto a
+list private to the session, still waiting, and the session continues with
+the waiters behind it. At the end the list is put back in front of the
+queue in its original order, so its first waiter becomes the next head and
+combines for its own node. Passed-over waiters count against the batch
+limit. Plain waiters are never passed over. `kd_numa=0` restores FIFO.
 
-The [indexed reached JIT record](bench/results/10.176.26.71/tests/reached-mm-jit-indexed-20261104/README.md)
-contains later focused actual-mmap1 execution proofs for the superseded separate
-emitter, with failed performance acceptance and no Nano run. It does not validate
-the restored original JIT correction. See the original contract's
-[current validation record](docs/design/kdlock_lock_replacement_contract.md#validation-and-remaining-work)
-for its distinct passes, failures, partial live handback and remaining joins.
+**Section end.** In the copy, every release call first compares its
+argument with `kd_cpu.root`. Equal means the waiter's section is complete:
+the release is not performed (the combiner keeps the lock), its effects on
+the waiter's context (preempt count, interrupt flag) are recorded in the
+packet, and the waiter resumes after the call.
 
-The [fresh normal-kernel basic checkpoint](bench/results/10.176.26.71/tests/linux70-normal-basic-20261028/README.md)
-passed all four selected families with correct data, returned JIT bodies and final
-drain. Failed partial campaigns, the initial MM witness failure and strict
-unscored taskname `NO_JIT` control remain recorded. [Validation](docs/VALIDATION.md)
-separates those verdicts. `NORMAL` means publication, not returned execution.
+**Handback.** Any other exit leaves the packet at the first instruction
+not executed. The lock stays held and now belongs to the waiter, which
+resumes natively and later releases normally. Every call that can switch
+tasks is such an exit, so a section that would block is back on its own
+task before it does.
 
-## Working in the repository
+**Role exchange.** After a handback of a mutex or rwsem-writer section the
+roles swap: the combiner's node, which publishes the combiner's own
+continuation, becomes a delegable waiter at the head of the queue, and the
+waiter that got the lock takes the head role over when it releases, serving
+the former combiner first and then the rest of the queue. If that waiter
+blocks, the former combiner withdraws the offer and carries on as queue
+head. `kd_xchg=2` extends this to spinlock and rwlock, `kd_xchg=0` turns it
+off; measured effect in LOCKS 6a.
 
-[Documentation index](docs/README.md) assigns one guide per responsibility.
-[Code map](docs/CODE_MAP.md) locates implementation and test ownership.
-[Public headers](include/README.md), [benchmark runners](bench/README.md) and
-[test selection](tests/README.md) own their interfaces and commands.
-[Historical evidence](docs/history/README.md) retains superseded protocols,
-campaign plans and full earlier status narratives at fixed Git checkpoints.
+**Nesting.** When the section a combiner C_A is executing for W meets a
+contended inner lock B, C_A does what a TCLocks combiner does: it becomes
+the waiter for B, publishing the continuation it is running. The `_jit`
+lock entry stores that continuation in W's packet (the same packet, no
+copy) and returns to the executor, which queues a node for B that points at
+it. From there the inner queue decides:
 
-`master` is maintained. Source edits, Git and static/offline review run on
-`380G10`; all builds, tests, modules, daemons and timing run only in the designated
-VM. Follow [development rules](AGENTS.md): preserve exact owners, source leases,
-unlock ACKs and frame retirement; synchronize only while idle; verify recovery
-before live work; never force unload or treat timeout as drain.
+- B's combiner C_B claims the node and runs W's continuation onwards. When
+  it reaches `unlock(B)`, C_A's node is resumed and C_A continues W's
+  section in generated code from the state C_B left.
+- C_A reaches the head of B's queue. It takes B, serves B's other waiters
+  as a nested combiner (up to `KD_MAX_DEPTH` open sessions per CPU), and
+  continues W's section.
+- B is a mutex or rwsem and waiting would require sleep: W gets the
+  continuation back with the call to B still pending.
+
+The packet records the locks it is being executed for (`roots[]`, at most
+`KD_MAX_ROOTS`). If an inner executor meets the release of an outer root
+(`lock(A); lock(B); unlock(A); ...; unlock(B)`), it must not unlock it,
+because A is still held by C_A's session; it sets a bit in `released` and
+applies only the logical effects. C_A sees the bit when its node resumes
+and ends W's turn on A. To keep ordinary releases free of this check, the
+copy consults `kd_cpu.anc` (number of outer roots) and leaves generated
+code for a non-root release only when that is nonzero.
+
+A handback from an inner executor propagates outwards through the same
+node states: each level either keeps its lock (its root was already
+released) or passes it to W, and W resumes natively exactly once.
+
+**Context transfer.** While a section runs, the combiner's interrupt flag
+is the waiter's logical flag (`popfq` on entry, `pushfq` on exit), and
+preemption is disabled. The preempt-count change the section caused on the
+combiner is measured, undone there and added on the waiter at resume, so
+both stay balanced across nested spinlocks and handbacks. The RCU
+read-side depth is carried the same way: `rcu_read_lock()` in a section
+counts for the combiner, and the waiter catches up when it resumes.
+
+| Family | Grant | Delegable | Notes |
+| --- | --- | --- | --- |
+| spinlock | queue word | `kd_spin_lock{,_irq,_irqsave,_bh}` | `kd_raw_*` never publish; plain mode is the native queued spinlock |
+| rwlock | writer byte in `cnts`; `wait` orders slow paths | writers | Combiner keeps `wait` and the writer byte for the session; readers local; interrupt-context readers do not queue behind waiting writers |
+| mutex | lock byte; MCS queue for spinners, list for sleepers | `kd_mutex_lock{,_interruptible,_killable,_io}` | A spinner withdraws (`WAIT -> ABANDON`) before sleeping, the combiner claims with `WAIT -> RUN`; handoff flag bounds sleeper starvation; release is one atomic |
+| rwsem | writer bit in `count`; a kd mutex `m` orders slow paths | writers | Only the holder of `m` sleeps on `count`, so `m.owner` is the wake target; downgrade is one atomic and is always handed back inside a section |
+
+A delegated section never sleeps on the combiner. Calls that can sleep are
+frontiers in the copy. A mutex or rwsem-writer acquire inside a section is
+queued and spun for like any other nested lock while its holder is
+running, and handed back with the call pending once that would need sleep.
+
+## Translator
+
+For a site the translator decodes from the return address of the lock
+call, following direct jumps and up to five direct-call edges, and emits a
+copy with these rewrites only:
+
+- direct jumps and calls target the copy; a call pushes the *source* return
+  address, so the waiter's stack always holds ordinary kernel addresses;
+- returns and indirect branches are compare chains over known targets,
+  ending in a learnable exit (this also removes return and indirect-branch
+  mitigations from the copied path);
+- rip-relative displacements are recomputed; the three task-identity
+  per-CPU symbols are redirected;
+- release calls get the root comparison; sleeping acquires become exits;
+- frontiers become exits: instructions with an exception-table entry,
+  privileged/CPU-state instructions (`stac`, `swapgs`, `wrmsr`, `invlpg`,
+  `ud2`, ...), scheduler entry points, user-copy helpers, unknown text;
+- listed leaf helpers (`memcpy`, ...) and all `kd_` functions are called
+  natively.
+
+Unknown targets are reported through `/dev/kdlock`; the daemon adds them to
+the site's knowledge (kept in a JSON file across restarts) and republishes.
+The kernel disables a site whose sections are mostly handed back until a
+new image arrives.
+
+## Known limits and open points
+
+1. **Partly tested.** See [docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md)
+   section 6 for what has not run yet (deeper nesting, interrupt-context
+   interactions, signals, hotplug, the kernel API switch).
+2. **Handback inside a per-CPU-bound region.** If a section is handed back
+   while it has preemption disabled beyond its locks (counted as
+   `handback_pinned`), the waiter continues on a different CPU than the
+   code before the exit ran on. The preempt count is transferred, per-CPU
+   pointers already taken are not.
+3. **Flags across call/ret.** Return and indirect-branch dispatch clobber
+   flags; the System V rule that flags are dead there is assumed.
+4. **Text patching.** Images are built from live text. Later jump-label,
+   static-call, ftrace or livepatch changes are not tracked.
+5. **Module load/unload drops every image** (correct but coarse; sites are
+   translated again).
+6. **Unwinding.** No ORC data for images, the wait stack or the stack
+   switch; stack traces through them stop early.
+7. **Not delegated:** readers, trylocks, `raw_spinlock_t`, waiters in
+   interrupt context. Native code called from a section (leaf helpers, lock
+   internals) that itself blocks on a lock waits without publishing.
+8. **Nesting bounds:** a continuation nested under more than
+   `KD_MAX_ROOTS` (4) session locks, or an executor with `KD_MAX_DEPTH` (3)
+   sessions open, waits for the next inner lock without publishing or
+   combining. A release reached through a sibling `jmp` in a nested run is
+   handed back.
+9. **NUMA order** uses the node of the CPU that queued the node. For a
+   nested waiter that is the executor, not the origin of the continuation.
+10. **API coverage:** every Linux 7.0 operation of the six lock types has a
+   kd counterpart (`integration/kd_linux_map.h`), but no kernel has been
+   built with its own locks replaced; `arch_spin_*` users and the lockref
+   fast path are listed in `integration/README.md`.
+11. **Task fields updated through `current`.** The RCU read-side depth is
+   carried between executor and origin. Any other non-atomic update of an
+   origin task field inside a section (`pagefault_disable()`,
+   `migrate_disable()`) is made from the executor's CPU and can race with
+   interrupt handlers on the origin's CPU.
+12. **Mode thresholds** are queue depths chosen by A/B on the nano bodies.
+   The break-even depth depends on the section length, which is not
+   measured; near the threshold either mode can be a few percent worse.
+13. **Mutex handoff is not strict:** the lock is released and taken again
+   for the parked waiter, so another caller can get in between.
+14. **Role exchange** ends when the holder blocks for long (a parked former
+   combiner cannot be served), and costs a few percent where a handed-back
+   section just finishes (LOCKS 6a).

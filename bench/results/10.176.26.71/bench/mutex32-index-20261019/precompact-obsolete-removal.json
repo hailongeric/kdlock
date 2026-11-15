@@ -1,9 +1,0 @@
-{
-  "idle": true,
-  "removed_verified_files": {
-    "include/kd_mutex_aux.h": "031980bd9825d442885ea0dfa5f116be1c3f57995c9a596e774380c76d9fbc59",
-    "kernel_module/kd_mutex_aux.c": "c93cf7e7caa0198fc18b700689aa8d38f9da29820419cd13b0fa30084e7fb7d8"
-  },
-  "reason": "Only compact runtime files absent from reviewed0324e60 tree; sync retains obsolete files",
-  "time": 1792404550.557411
-}

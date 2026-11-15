@@ -1,249 +1,324 @@
-# Current KD lock catalog
+# Lock families and API
 
-The [project roadmap](ROADMAP.md) targets eventual replacement of the relevant
-kernel locks. This catalog describes today's APIs: micro/nano consumers and the
-scoped mmap adapter. A supported standalone API is a prerequisite for broader
-integration, not evidence that all kernel callers already use it.
+Per-family protocol, public API and semantics. The shared machinery (queue,
+session, executor, handback) is in [ARCHITECTURE.md](ARCHITECTURE.md); this
+page only states what differs per family. Prototypes are in
+`include/kdlock/kd_api.h`, object layouts in `include/kdlock/kd_types.h`.
 
-This is the entry point for the four lock families maintained on `master`.
-The KD-only physical/delegation foundation selected at `d2a2304` and rwsem
-waiting policy selected at `c21345b` remain the basis. Later storage and Linux 7
-ports retain their ownership protocols. API support is distinct from a measured
-performance result; [validation](VALIDATION.md) binds each checked source version.
+## 1. API overview
 
-**Delegation** means that a lock holder executes a waiting caller's protected
-work. The **origin** is that caller; the **executor** runs the work. Local or
-native execution in a KD API still uses the KD object. **Linux Native** names
-the separate Linux implementation used as a benchmark comparator.
+Every lock operation is an **out-of-line call**. That is a protocol
+requirement: generated code recognises lock operations by call target, so an
+inlined release would let a delegated section run past its end. With
+`CONFIG_KDLOCK`, the `CONFIG_INLINE_*` variants and
+`CONFIG_UNINLINE_SPIN_UNLOCK` must be configured so no unlock is inlined.
 
-## Lock families
+| Family | Delegable acquire (assembly stubs) | Local-only |
+| --- | --- | --- |
+| spinlock | `kd_spin_lock`, `_irq`, `_irqsave`, `_bh` | `kd_raw_spin_lock{,_irq,_irqsave,_bh}`, `kd_spin_trylock{,_bh,_irq,_irqsave}`, `kd_arch_spin_{lock,trylock,unlock}` |
+| rwlock | `kd_write_lock`, `_irq`, `_irqsave`, `_bh` | `kd_read_lock{,_irq,_irqsave,_bh}`, `kd_read_trylock`, `kd_write_trylock{,_irqsave}`, `kd_arch_{read,write}_{lock,trylock,unlock}` |
+| mutex | `kd_mutex_lock`, `_interruptible`, `_killable`, `_io` | `kd_mutex_trylock` |
+| ww_mutex | none | `kd_ww_mutex_lock{,_interruptible}`, `kd_ww_mutex_lock_slow{,_interruptible}`, `kd_ww_mutex_trylock` |
+| rwsem | `kd_down_write`, `_killable` | `kd_down_read{,_interruptible,_killable}`, `kd_down_read_trylock`, `kd_down_write_trylock`, `kd_downgrade_write` |
 
-| KD family | Exclusion and object storage | Execution and waiting | Implementation guide |
-| --- | --- | --- | --- |
-| Spinlock | One four-byte `kd_spinlock_t` contains ownership, pending and queue-tail state | Exclusive body; callers poll with preemption disabled. An eligible body may delegate. The body must not sleep. | [Spinlock](design/spin_implementation.md) |
-| Mutex | A 32-byte, native-aligned `struct kd_mutex` contains KD physical ownership, a sleeping-waiter ring head, and the embedded legacy delegation phase and encoded tail; reserved nodes hold exact waiter records | Direct public blocking calls permit delegation; callable lock symbols and task-sensitive variants execute locally. Published delegation waiters poll pinned; physical owners and supported service paths may sleep. | [Mutex](design/mutex_implementation.md) |
-| Rwlock | A 128-byte `kd_rwlock_t` separates the reader/writer count from a KD spin gate | Readers run concurrently and locally. Writers exclude readers and may delegate through the spin engine. Neither body may sleep. | [Reader/writer spinlock](design/rwlock_implementation.md) |
-| Rwsem | A 320-byte `struct kd_rwsem` contains a KD mutex, reader count, exact selected-writer phase and two condition queues | Readers and unprepared ordinary writers run locally. Explicitly prepared writer macros permit retained continuation capture; the selected writer closes admission and drains readers before its body. | [Reader/writer semaphore](design/rwsem_implementation.md) |
+Releases are ordinary C functions (`kd_spin_unlock*`, `kd_write_unlock*`,
+`kd_read_unlock*`, `kd_mutex_unlock`, `kd_ww_mutex_unlock`, `kd_up_write`,
+`kd_up_read`). The translator knows them by symbol: a call to one with `rdi`
+equal to the session root ends the section.
 
-Sizes describe the captured x86_64 configuration, not a portable binary
-interface. They exclude per-CPU queues, stacks, execution frames and translated
-code. The four implementation guides describe those additional resources.
-Preemption is the scheduler's ability to pause a task; a pinned polling waiter
-retains its CPU while waiting. This restriction matters even for a sleeping lock.
+**Coverage.** These are all operations the Linux 7.0 headers declare for
+`spinlock_t`, `raw_spinlock_t`, `rwlock_t`, `struct mutex`, `struct ww_mutex`
+and `struct rw_semaphore`; `integration/kd_linux_map.h` maps each native name.
+The lockdep-only variants (`_nested`, `_nest_lock`) are the plain operations
+without lockdep, and the reader `_non_owner` forms are the plain reader
+operations because no reader owner is recorded. Helpers: `kd_spin_is_locked`,
+`kd_spin_is_contended`, `kd_rwlock_is_contended`, `kd_mutex_is_locked`,
+`kd_mutex_get_owner`, `kd_ww_mutex_is_locked`, `kd_rwsem_is_locked`,
+`kd_rwsem_is_write_locked`, `kd_rwsem_is_contended`. `bench/kd_bench.c`
+(`KDB_IOC_APITEST`) calls every variant once and checks lock state, interrupt
+flag and preempt count against what the native variant leaves.
 
-## Shared engines
+**What "delegable" means for the sleeping and signal variants.** A caller
+of `kd_mutex_lock_interruptible/_killable/_io` or `kd_down_write_killable`
+whose section is delegated gets 0, like an uncontended caller. Signals are
+looked at only once the caller parks, where the native rules apply
+(`-EINTR`); `_io` accounts the parked wait as I/O wait. Readers, trylocks and
+ww mutexes never publish a continuation: a reader runs concurrently with
+other readers, a trylock does not wait, and a ww acquisition may have to
+back off.
 
-```mermaid
-flowchart TD
-    Spin["KD spinlock"] --> SpinEngine["Spin queue and execution engine"]
-    Rwlock["KD rwlock: local readers, exclusive writers"] --> SpinEngine
-    Mutex["KD mutex"] --> MutexEngine["KD physical mutex and legacy delegation queue"]
-    Rwsem["KD rwsem: select writer phase and drain readers"] --> MutexEngine
-    SpinEngine --> Shared["Shared translation, frames and completion checks"]
-    MutexEngine --> Shared
-```
+**All users of one object must use kdlock.** Queue encodings and layouts are
+not interchangeable with the native locks; replacing a lock type means
+replacing the object and every caller (see
+[KERNEL_INTEGRATION.md](KERNEL_INTEGRATION.md)).
 
-The rwlock count grants read/write access; its gate orders contended admission.
-The rwsem selected writer phase blocks new readers, but does not grant physical
-mutex ownership. Those layers have separate responsibilities and must all remain live
-until their matching releases. Neither reader/writer lock adds a third JIT
-engine. JIT means just-in-time translation of the original protected code.
+**What may be delegated.** Only a caller in task context, with an image for its
+call site, whose lock is in delegation mode (ARCHITECTURE 7a), and whose saved
+interrupt state the executor can honor (`kd_ctx_compatible`). Everything else
+queues as a plain waiter. A delegated section must not sleep on the combiner;
+every call that can sleep is a frontier exit and ends the delegation at that
+call.
 
-Use [`include/kd_rwsem_api.h`](../include/kd_rwsem_api.h) and `struct kd_rwsem` for the unified concurrent-reader
-API. Linux mmap callers retain their `mmap_*` wrappers. The internal
-`kd_mutex_local_*` gate implements physical writer exclusion; bypassing rwsem
-admission with that gate does not protect readers. Explicit quiescent preparation
-permits continuation capture through the ordinary writer macros, including
-interruptible and killable forms. Unprepared calls and callable/try/cleanup
-acquisitions execute locally and retain ordinary downgrade semantics. Prepared
-capture may also select local execution when its source or image is unavailable.
-The historical local mmap adapter keeps native MM bodies on their original task;
-separately activated retained capture has its own exact owner and continuation
-contract.
+## 2. Spinlock
 
-The provider builds both engines and shared execution helpers through
-[`kd_spin_runtime.c`](../kernel_module/kd_spin_runtime.c). Ordinary mutex physical
-locking and rwsem admission have separate compilation units. Private `.inc`
-files are source fragments included by their parent; they are not separately
-linked implementations. See the [code map](CODE_MAP.md).
+* The queue word **is** the lock, with the layout of the native queued
+  spinlock. In plain mode it also behaves like it: a free lock with no
+  waiter is taken by one cmpxchg of the whole word, the first contender
+  becomes the *pending* waiter and spins on the lock byte, later ones join
+  an MCS queue whose head waits for holder and pending waiter to leave and
+  then takes the lock with a plain store. Nobody can barge past a queue.
+* In delegation mode a contended caller of a delegable entry publishes its
+  continuation and queues the same way; the queue head, once it holds the
+  lock, serves the waiters behind it and then hands the head role on.
+* `kd_raw_spin_lock*` and the `kd_arch_spin_*` level use the same word but
+  **never publish** (scheduler, timers, lock internals) and never combine.
+* `_irq`, `_irqsave` and `_bh` entries are delegable: the section runs with
+  the origin's logical IF/BH state (see ARCHITECTURE 6). Their releases apply
+  the matching logical effects when they are the session root release
+  (`kd_apply_unlock`).
+* Release is a byte store. A holder that has a role-exchange offer to
+  answer finds out from its own CPU's state (`kd_cpu.xcount`), not from the
+  lock word.
 
-## Caller interfaces and preparation
+## 3. Rwlock (writer-preference queued, qrwlock-like)
 
-| Family | Ordinary/local interface | Interface that permits delegation | Preparation and entry ABI |
-| --- | --- | --- | --- |
-| Spinlock | The ordinary pair selects local execution when cold or refused. Explicit `kd_spin_lock_irqsave/irq/bh` pairs always execute locally. | `kd_spin_lock/unlock` source macros in `kd_spin_api.h`; named benchmark continuations retain `KD_SPIN_DIRECT_LOCK/UNLOCK` | Unified calls register their internal continuation on contention; named entries use `kd_spin_prepare(lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1)`; ABI1 |
-| Mutex | `kd_mutex_local_lock/unlock`; callable lock symbol, trylock, interruptible, killable and I/O forms | Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases; explicit `KD_MUTEX_DIRECT_LOCK/UNLOCK`; `KD_MUTEX_OUTER_LOCK/UNLOCK` retains its outer cookie | Unified calls capture an internal continuation; explicit named entries use `kd_mutex_prepare(lock, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`; ABI2 |
-| Rwlock | `kd_read_lock/unlock`; `kd_write_lock/unlock`; local IRQ/BH and trylock forms | `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`; writers only | `kd_rwlock_prepare(lock, entry, KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)`; ABI3 |
-| Rwsem | Readers, unprepared writer macros and callable/try/cleanup acquisitions execute locally with ordinary downgrade | Prepared `kd_down_write`, `kd_down_write_interruptible` and `kd_down_write_killable` macros permit retained capture; matching releases use exact acquisition routing | `kd_rwsem_prepare(sem, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)` on a quiescent object; ABI2 |
+* `cnts`: writer byte (`0xff` = locked), writer-waiting bit (`0x100`), reader
+  count from bit 9. `wait` orders slow-path readers and writers.
+* **Writers are delegable.** A queued writer at the head takes `wait`, sets the
+  waiting bit, waits for readers to drain (`kd_rw_post`) and takes the writer
+  byte. As combiner it keeps **both** `wait` and the writer byte while serving
+  the writers behind it; release only clears the writer byte, so after a
+  handback the origin releases with the ordinary call while the combiner still
+  holds `wait` and reacquires the byte as the next writer (`keeps_q`).
+* **Readers are never delegated** and run on their own task. A session stops
+  at the first queued reader, which preserves FIFO between readers and writers.
+  Interrupt-context readers do not queue behind waiting writers (as in
+  qrwlock), so an interrupted reader cannot deadlock.
+* Cost note: delegation only helps writers. Reader-heavy mixes are
+  determined by the reader path and the writer-wait bit.
 
-An **ABI**, or application binary interface, specifies registers and data layout.
-ABI1/2/3 are declared in [`exe_info.h`](../include/exe_info.h). ABI3 starts
-after rwlock writer admission; rwsem uses the existing mutex ABI2 boundary.
-The shared generated-code wrapper still receives two words: the origin's kernel
-GS base and logical task pointer. GS is the x86 register used to address per-CPU
-kernel data. ABI0 remains an internal legacy compatibility path, not the
-recommended interface for new callers.
+## 4. Mutex
 
-For explicit named entries, prepare a unique continuation after its source module
-is live and before starting workload workers. A continuation identifies where the
-protected body begins. The direct macros declare register clobbers so the compiler saves live
-values; their containing function uses `noipa` to prevent cloning and other
-interprocedural transformations. Registration is separate from successful
-translation, publication and actual execution. Cold or unprepared calls can
-still execute locally. An image marked `NORMAL` proves publication only.
-Unified mutex calls use an internal numeric continuation; contention admission
-registers that entry without requiring a caller-supplied label. Address-taking
-and indirect lock calls retain the ordinary C ABI and execute locally.
+* `q.locked` is the lock; everybody acquires by cmpxchg on that byte, so
+  parked waiters, the queue head and new callers compete like in the native
+  mutex.
+* Two kinds of waiter:
+  * **Spinning** waiters stay in the MCS queue **while the owner is running**
+    (`kd_mutex_can_spin`: no `need_resched()`, owner on a CPU), the role the
+    optimistic-spin queue has in the native mutex. They are non-preemptible.
+    In plain mode they wait on their own stack and each takes the lock
+    itself at the queue head. In delegation mode they publish their
+    continuation; the queue head, once it owns the mutex, runs their
+    sections before its own.
+  * **Parked** waiters sleep on `->waiters` under `wait_lock`.
+* A spinning waiter becomes a parked one by **withdrawing first**, and a
+  section is executed by exactly one of the waiter and the combiner
+  (`kd_node_abandon()` in `kd_internal.h`):
+  * The combiner announces a waiter with a plain store (`claim = true`)
+    and reads its `state` after a full barrier. It announces the waiter
+    after next while it executes the current one, so nothing waits for the
+    store.
+  * The waiter withdraws with `WAIT -> ABANDON` by cmpxchg and then reads
+    `claim`. If it is clear, the waiter has left and the head unlinks the
+    node (`ABANDON -> DROP -> FREE`). If it is set, the waiter takes the
+    withdrawal back (`ABANDON -> WAIT`) unless the head already moved the
+    node to `DROP`.
+  * A head that does not execute an announced waiter clears `claim` while
+    it still is the head.
+  * Before build #57 the combiner claimed with a cmpxchg `WAIT -> RUN` per
+    section. The waiter polls that line, so the locked instruction waited
+    for an exclusive copy each time: 72% of `kd_session`'s samples for
+    rwsem writers at 64 workers (#56). Without it, rwsem writers only went
+    from 2.04 to 2.60 Mops/s at 64 workers and from 2.14 to 2.70 at 32
+    (#57 against round 7; TCLock 2.58 and 2.70 in the same boot).
+* **Handoff.** A parked waiter that keeps losing sets `KD_QF_HANDOFF`; a
+  running session then stops early, and the next release takes the lock
+  again for the first parked waiter (`owner` changes, the waiter is woken)
+  unless somebody was faster in between, in which case the flag stays for
+  the release after that. This bounds sleeper starvation in practice; it is
+  not the strict handoff of the native mutex.
+* **A handoff is granted only to a waiter that is running**
+  (`kd_handoff_running`, default 1). If the requester went back to sleep,
+  the release only wakes it and the request stays for the release that
+  finds it running. A grant to a sleeping task left the mutex with an
+  owner off the CPU until the wakeup arrived; the queue head and every new
+  caller then parked as well and asked for a handoff in turn. Measured
+  (#58, in-boot alternation, 3 rounds, mutex c01, Mops/s): 64 workers
+  2.15-2.31 -> 2.62-2.67 with parked waits per second from 7900-13100 to
+  390-770; 40 workers 2.44-2.64 -> 2.69-2.70; 32 workers 2.74-2.75 ->
+  2.79-2.80; c16 at 64 workers 2.27-2.35 -> 2.50-2.52.
+* Release is one atomic operation whether or not spinners are queued: a
+  locked subtraction clears the lock byte and returns the flags as they
+  were, so there is no lost wakeup. The lock word is not read before the
+  release and nothing is read after it (either costs a cache transfer on
+  the handover path); what a flag asks for (`SLEEPERS`, `HANDOFF`, `XHEAD`)
+  is done after the release, with the lock taken again where needed.
+* `owner` is the **logical** owner (the origin, also for delegated sections).
+  `kd_mutex_nested` takes it for `r->task`.
+* Signals: while a waiter spins in the queue it does not observe signals
+  (bounded by the owner running). Once it parks, `interruptible`/`killable`
+  behave like the native mutex (`-EINTR`). A section delegated for a
+  `killable` caller is not cancelled by a signal.
+* A mutex section that blocks (calls anything that can sleep) is handed back
+  to its origin at that call; the origin continues as the ordinary owner.
 
-The named DIRECT spin/rwlock macro's `cookie` names a shared per-CPU heat indicator; it is
-not an ownership token. A mutex/rwsem outer cookie instead belongs to one exact,
-same-task acquisition and must not be copied, transferred or reused before its
-matching unlock. Follow the individual guide's paired API and initialization
-rules. Ordinary `kd_spin_lock/unlock` emit the unpinned clobber control CALL;
-the provider owns their native pin. Internal pinned spin helpers are not
-interchangeable with public pairs.
+## 5. Rwsem
 
-## Compatibility and execution limits
+* `count`: writer bit, waiting-writer bit, need-wake bit, reader bias. A
+  `kd_mutex m` is the queue and the single point where writers wait; **only the
+  holder of `m` sleeps on `count`**, so `m.owner` is always the right wake
+  target.
+* **Writers are delegable** (`kd_down_write`, `_killable`), through the mutex
+  queue. The head takes `m`, sets the writer bit and waits for readers to
+  drain (`post()`); if draining would need sleep it returns
+  `KD_WAIT_SLEEP_HELD` and the stub sleeps for `count` while holding `m`.
+* **Readers never delegate, and normally do not queue on `m`**
+  (`kd_down_read_admit()`). The fast path reads `count` first and adds the
+  reader bias only when no writer bit is set.
+  * **A writer is in (`WLOCKED`):** the reader registers (adds its bias)
+    and waits for the writer bit to clear. That is the end of the
+    writer's session, since the combiner keeps the bit for all the writers
+    it serves. The readers registered behind one writer phase enter
+    together, and the next writer waits for exactly that batch.
+  * **A writer is only waiting (`WWAIT`):** the reader stays out until
+    that writer is in, then registers behind it. Registering earlier would
+    keep the waiting writer out indefinitely.
+  * **The wait is bounded** by `kd_rwsem_rspin_ns` (50 us) and by
+    `need_resched()`. After that the reader deregisters and parks on `m`,
+    where it can sleep and is not passed by later writers.
+  * **Waiting readers do not poll `count`.** They poll a phase counter in
+    a cache line of its own (`kd_rwsem_phase()`, 256 counters shared by
+    hash of the semaphore address). It changes when a writer leaves with
+    readers registered behind it, on a downgrade, and when a queued writer
+    gets in; a change only means "look at `count` again". `count` is
+    written by every reader that enters or leaves, and each poller held a
+    shared copy that those writes first had to take away. A reader also
+    looks at `count` every 64 iterations without a change.
+* **Reader phase** (`kd_rwsem_rphase_ns`, default 1000). A queue head that
+  finds readers in waits that long per reader it found, at most 50 us,
+  before it sets `WWAIT`. Otherwise each reader got one section per writer
+  phase and then waited through the next session.
+  * Fixed lengths (#59, in-boot alternation, 2 rounds, 20% writes, Mops/s):
+    8 workers 4.64 -> 5.80 at 5 us; 32 workers 4.42 -> 5.82 at 20 us; 64
+    workers 2.92 -> 4.00 at 30 us; lower again for longer phases; 4 workers
+    7.29 -> 7.00 at 5 us.
+  * Per reader, 1000 ns (#60, same method): 8 workers 4.68 -> 5.71, 16
+    workers 4.69 -> 5.88, 32 workers 4.32 -> 5.63, 64 workers 2.77 -> 3.98,
+    4 workers 7.47 -> 7.41; 1% writes at 64 workers 5.53 -> 6.54; c16 with
+    20% writes at 8 workers 3.91 -> 4.31, at 64 workers 2.48 -> 2.57.
+  * A single reader gets no phase (from #66): in mmap1 it is the tail of
+    the previous munmap after its downgrade, and a phase per operation
+    cost 12% at 4-32 threads (`bench/results/kdclaude/mmap1-20261115-64cpu/`).
+  * It delays a writer by a bounded time per phase. This is a fairness
+    change in the area AGENTS.md lists as deferred, made at the user's
+    request.
+  * Counters: `rd_behind` counts readers admitted behind a writer phase,
+    `rd_queue` counts readers that fell back to `m`.
+* **NUMA deferral starts late** (`kd_family.numa_after = 32`): a rwsem
+  writer session serves the first 32 waiters in queue order and defers
+  remote-node waiters only after that (ARCHITECTURE 7).
+* **Downgrade** (`kd_downgrade_write`) is one atomic when called natively.
+  Inside a delegated section (`kd_vdown`, default 1) it does not end the
+  session:
+  * The combiner keeps the write side and goes on executing the read part
+    of the section; the write side covers everything the read side
+    allows. `kd_up_read()` of the session's rwsem then ends the section as
+    a write release would, and the combiner serves the next waiter.
+  * If the read part has to be handed back (a frontier such as a TLB
+    shootdown or a call that can sleep, or code the translator has not
+    learned yet), the downgrade is done for real at that point and the
+    origin continues as a reader. The combiner makes no role-exchange
+    offer then and takes the write side again as queue head.
+  * With `kd_vdown=0` the section is handed back at the downgrade, as
+    before build #67, and the session ends there. munmap downgrades on
+    every call, so in mmap1 every session then served one waiter.
+  * **Measured** (will-it-scale mmap1, threads, 2.7 GHz, #69, in-boot
+    alternation, 3 runs; iterations per second, `kd_vdown` 0 -> 1 after
+    the translator had learned the read part): 4 threads 271000-294000 ->
+    374000-383000, 16 threads 253000-290000 -> 359000-373000, 32 threads
+    239000-257000 -> 366000-374000, 64 threads 147000-152000 ->
+    304000-325000. Sessions at 32 and 64 threads then run to the batch
+    limit, with handbacks near zero. Native in the same boot: 319000-329000,
+    285000, 278000-280000 and 150000-152000. Build #71 gives the same
+    (`bench/results/kdclaude/tune-20261115-2700MHz/`): kd/Native 1.11-1.26
+    at 4 threads, 1.28-1.38 at 8-32, 2.02-2.08 at 64; with `kd_vdown=0`
+    0.77-0.83, 0.90-0.96 and 1.00-1.03.
+  * **Cost:** other readers of that rwsem wait through the read parts
+    instead of sharing them. The counters `vdown` and `vdown_hb` count the
+    kept downgrades and those whose read part was handed back.
+  * The first seconds after the daemon starts are slower: until the read
+    part is learned it is handed back (248000-270000 in the first run).
+* **Write release** (`kd_up_write`) is one locked subtraction, as for the
+  mutex.
+* **Every holder of `m` spins before it sleeps on `count`**, bounded by
+  time (`kd_rwsem_wspin_ns`, 50 us): the writer at the queue head, a parked
+  writer that got `m`, and a reader that queued. A holder of `m` that sleeps
+  makes every later waiter see an owner off the CPU and park as well, and
+  they are then woken one by one. mmap1 hit this behind munmap, whose
+  unmap runs as a reader after a downgrade: 0.33 of Native at 4 threads
+  before, 0.98 after. Nano rwsem: unchanged at 4-16 workers, 20% writers at
+  32 workers +74-87%.
+* Writers publish whenever they can; there is no plain mode for the writer
+  queue (ARCHITECTURE 7a).
+* A nested rwsem writer acquire inside a section is queued and spun for like
+  any nested lock while its holder runs, and handed back with the call
+  pending once it would need to sleep.
 
-The static audit at `6a7350291ebab8c50a43431561e11085098d628b` does not
-qualify arbitrary Linux lock replacement. All users and containing objects must
-adopt the same KD protocol; native object layouts and internal ownership fields
-are not interchangeable with KD. Callable, signal, try and I/O mutex operations
-retain local execution, including signal results and I/O accounting. Nested
-mutex annotations match the non-lockdep configuration, not lockdep semantics.
-`CONFIG_PREEMPT_RT`, `CONFIG_DEBUG_MUTEXES`, `CONFIG_DEBUG_LOCK_ALLOC` and lockdep
-are explicitly outside support. The shared `kd_config.h` build contract refuses
-all four, including `CONFIG_LOCKDEP`, through the public spin/mutex object
-headers inherited by rwlock/rwsem and through provider initialization source.
-The Linux 7 identity verifier independently requires these options to be off.
-Whole-kernel replacement and `ww_mutex` remain unvalidated.
+## 6. Semantics that differ from the native locks
 
-At `ee7ace6684b5257ae08d82648e9e2dcb4ceb8986`, a recognized ordinary unpinned
-spin CALL inside a delegated ABI2 mutex body uses one CAS and an exact spin
-ticket. Success continues JIT with a ledger entry. A miss preserves the pending
-CALL; an eligible root holding only its outer mutex can transfer that physical
-owner directly to the original waiter. Other owner chains retain native borrowing.
-The former executor retains source/frame state through real unlock ACK and
-reacquires for its own request without republishing a delegation node. The
-recipient resumes its native suffix, not a new combiner loop. Immediate queued
-role exchange is still unimplemented. This replaces the earlier blanket mixed-control
-`-EOPNOTSUPP`; the corrected `20baf5c2` probe validates scoped physical owner
-handoff, not arbitrary mixed nesting. Pinned DIRECT controls and spin-to-mutex
-controls take pending native continuation; sleeping while a spinlock is held
-remains invalid. Retained service capture recognizes selected mutex and rwsem
-writer operations with exact owner
-records; this does not provide a general rwlock/rwsem mode ledger or arbitrary
-mixed nesting. See
-[ownership and limits](design/locking.md#53-nested-ab-and-native-continuation) and
-[implementation/check status](VALIDATION.md).
+| Topic | Native | kdlock |
+| --- | --- | --- |
+| Spin fairness | qspinlock pending bit + MCS | the same |
+| Who runs a contended section | its own task | its own task in plain mode; the queue head's CPU in delegation mode, if an image exists |
+| Who serves the queue after a section is handed back (mutex, rwsem writer) | n/a | the task it was handed back to, when it releases (role exchange) |
+| RCU read-side depth during a delegated section | origin's | executor's, carried over to the origin |
+| Mutex handoff to a parked waiter | lock never free in between | released, then taken again for the waiter if nobody was faster |
+| Preempt count / IF during a delegated section | origin's | executor's, with the origin's logical IF and a transferred count |
+| Per-CPU data accessed in a section | origin's CPU | executor's CPU (except the three task-identity symbols) |
+| Mutex waiting | optimistic spin then sleep | MCS spin while owner runs, then park; handoff flag |
+| Spin waiters in IRQ context | normal | never published, plain queue |
+| Recursive lock of one object | deadlock | deadlock |
+| `ww_mutex` deadlock avoidance | wound-wait or wait-die per class | wait-die for every class; callers see the same `-EDEADLK` / `-EALREADY` contract |
+| `rt_mutex`, lockdep, PREEMPT_RT, debug locks | supported | `rt_mutex` is untouched (it does not use the replaced types); Kconfig refuses RT, lockdep and lock debugging |
 
-All users of one object must use the same protocol. KD local and delegating
-interfaces can share their corresponding KD object with matching unlocks.
-Linux and TCLock operations cannot operate on that object. The source aliases
-in [`kd_mutex_compat.h`](../include/kd_mutex_compat.h) require rebuilding every
-containing object and caller; they do not convert existing Linux mutex memory.
-See [mutex replacement](design/kd_only_mutex.md) and its
-[semantic differences and replacement limits](design/kd_only_mutex.md#semantic-differences-and-replacement-limits)
-for native-object compatibility, original-task execution and unsupported integration.
+## 6a. What the role exchange costs and gains
 
-Ordinary spin and rwlock pairs preserve interrupt/bottom-half state and pair
-preemption protection. Spin and rwlock explicit interrupt and bottom-half variants
-stay on the calling CPU. Rwlock interrupt/BH readers bypass a waiting writer to
-avoid blocking an interrupted reader; active writers still exclude them. Mutex
-operations and sleeping rwsem acquisitions require task context. KD rwsem read trylock and matching read
-unlock also preserve IRQ/preemption-disabled contexts; atomic final release is
-observed through timed writer-drain rechecks. Source trust does not switch hardware
-task identity or make unsupported execution/backend protocols available.
+A/B in one boot (`kd_xchg` 0 against every family offering; build #37, three
+rounds, medians, Mops; bodies in which every sixteenth write section is
+handed back). `bench/results/kdclaude/probes-20261112/ab37xchg.jsonl`.
 
-Prepared interruptible/killable writer captures preserve cancellation before
-acquisition commits, including after request publication. A canceled request
-returns `-EINTR` only after its queue and owner obligations are acknowledged;
-successful commitment retains the acquisition and its exact matching release.
-Callable signalable symbols and cleanup constructors keep local C admission.
+| Workers | mutex | rwsem writer | rwlock writer | spinlock |
+| ---: | --- | --- | --- | --- |
+| 4 | 3.118 → 3.116 | 2.646 → 2.618 | 3.249 → 3.235 | 4.436 → 4.435 |
+| 8 | 3.066 → 2.934 (−4%) | 3.258 → 3.111 (−5%, ranges overlap) | 4.177 → 4.070 (−3%) | 4.601 → 4.512 (−2%) |
+| 16 | 2.980 → 2.843 (−5%) | 2.552 → 3.049 (+19%) | 4.460 → 4.247 (−5%) | 4.591 → 4.391 (−4%) |
+| 32 | 1.476 → 1.627 (+10%) | 1.037 → 1.028 | 2.560 → 2.686 (+5%) | 2.470 → 2.417 (−2%) |
 
-A downgrade consumed while the JIT proxies an acquisition makes that ownership
-logically read-only but retains its exact physical writer gate and selected phase.
-The same root image continues through its decoded read suffix. The matching typed
-`kd_up_read` releases that retained writer exactly once. Handback after this
-transition routes the original logical task's final release to the executor.
-This proxy release requires ordinary task context: IRQ-off, preemption-disabled,
-preemptible-RCU and cross-task non-owner release are unsupported. Ordinary local
-read releases retain their existing atomic-context contract.
+The default (`kd_xchg=1`) therefore offers only for mutex and rwsem writer:
+that is where a section can block, and where the alternative is a combiner
+that ends up sleeping with the queue in its hands. The spinlock only lost.
+These bodies hand back 6% of their sections; a site that hands back rarely
+sees neither effect.
 
-If native handback occurs before downgrade, the original task's downgrade instead
-creates a real reader credit and releases the writer gate and phase. Local
-downgrade does the same. Its later read release consumes that credit. These paths
-do not add reader delegation or the redesign proposal's general operation-boundary
-and separate-entry protocol.
+## 7. Tunables
 
-| Current rwsem behavior | Evidence / limit |
-| --- | --- |
-| Concurrent local readers, exclusive local writers, trylock, signal cancellation and downgrade | The [Linux 7 enabled-MM checkpoint](../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md) records fresh bounded API/lifetime and actual-MM prerequisites in both modes. These are not full Linux equivalence claims. |
-| Read trylock/rollback and matching release with IRQs/preemption disabled | Focused standalone and actual mmap checks; no synchronous wake from atomic final release. Writer drain rechecks after one jiffy. |
-| Prepared ordinary writers and proxy downgrade | The [focused proxy-read checks](../bench/results/10.176.26.71/tests/rwsem-proxy-read-20261109/README.md) cover exact retained-writer release, native routing and cancellation boundaries. The later [mmap1 point](../bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md) records returned bodies, not proof that a particular proxy-downgrade branch was consumed. Neither result validates the merged runtime combination or arbitrary nesting. |
-| Teardown | Callers must stop/join all users and retire published work. An idle predicate alone does not establish object lifetime. |
-| Fairness, starvation bounds, performance neutrality | Unestablished; historical shared-MM controls remain exploratory and below Native. The later instrumented mmap1 point has no matched Native comparison. See [performance](PERFORMANCE.md). |
-| Whole-kernel and `ww_mutex` | Unvalidated. RT, debug-mutex/debug-lock-allocation and lockdep configurations are explicitly refused, not future acceptance milestones. |
-| TCLock rwsem | Restricted ordinary registered-worker pairs only; no equivalent cancellation, downgrade or actual mmap arm. |
-
-The atomic reader-release correction retains fully ordered count updates and
-avoids a synchronous scheduler/waitqueue wake when IRQs or preemption are
-disabled. Writers recheck reader drain after one jiffy (4 ms at the captured
-HZ=250, with additional scheduling delay possible). This is an unmeasured latency
-tradeoff. Ordinary uninterruptible acquisitions have bounded polling of at most
-16,384 checks per stage. Signalable admission uses its original task's predicate
-and the same success-before-cancellation election; historical MM profiles retain
-their own captured polling behavior.
-Neither mechanism establishes fairness or a maximum acquisition latency.
-
-The current translator trusts kernel and module source. Semantic safety,
-context/loop-value and entry-input proofs are bypassed; the compiler input
-contract is assumed. Ordinary strings use decoded CALL/RET without named helper
-models, services or direct native bridges. Source leases, complete selected
-text, faithful lowering, actual return words and runtime ownership remain required.
-
-Supported instruction exits preserve their documented original-waiter and
-arithmetic-flags contract. Optional checked pointer-load guards and legacy string
-routes are compatibility/regression features, not current production emission.
-See [translation policy](design/admission.md) and [register ABI](JIT_REGISTER_ABI.md).
-Sharing an engine does not expand an entry ABI or switch executor task/GS/IRQ state.
-
-Whole-kernel replacement, wound/wait mutexes and arbitrary oversubscription
-remain unvalidated. RT, debug mutexes and lockdep configurations are excluded by
-the shared build contract. The separate [Linux 7 mmap-lock adapter](../kernel_integration/linux70/MMAP.md)
-replaces the guest's `mm_struct::mmap_lock` API in its tested configuration,
-using local concurrent readers and original-task writers. Arbitrary MM-body
-delegation remains unsupported. Oversubscription
-means more runnable tasks than CPUs. Pinned waiters can prevent dependencies
-from running; bounded batches alone provide no starvation guarantee.
-
-## Completion, lifetime and reading order
-
-Before execution, KD must hold the required physical lock and retain the
-request's source and execution state. A successful delegated body completes
-through its matching unlock boundary. The origin resumes after that boundary
-and must not execute the body or unlock again. If execution has already made
-progress, an allowed native continuation resumes that state; it cannot restart
-the body. Exact ownership and unlock acknowledgements survive until all users
-of the request have finished.
-
-Stop new calls and join users before checking idle state. Queues, readers,
-selected writer phases, physical owners, native continuations and execution frames
-must drain before freeing lock/data storage or unloading source/provider code.
-An idle-object helper or throughput counter cannot substitute for those checks.
-
-Use one guide for each responsibility:
-
-| Question | Guide |
-| --- | --- |
-| How does each KD lock acquire, wait, delegate and release? | The four implementation guides in the first table |
-| How does it differ from the benchmark comparators? | [KD, TCLock and Linux Native protocols](design/lock_protocols.md); original TCLock rwsem has narrower API support than Linux rwsem |
-| Who owns a lock during nested execution or native recovery? | [Ownership](design/locking.md) |
-| How are execution state and code retained? | [Frames](design/frames.md), [lifetimes](design/lifetimes.md) |
-| What can translated code execute? | [Admission](design/admission.md), [register ABI](JIT_REGISTER_ABI.md) |
-| What is tested and how fast is it? | [Validation](VALIDATION.md), [performance](PERFORMANCE.md), [workload catalog](BENCHMARK_WORKLOADS.md) |
-| What do the terms mean? | [Terminology](TERMINOLOGY.md) |
-
-Historical protocols and measurements stay in [history](history/README.md) and
-their source-specific result records. This documentation organization makes no
-new runtime or performance acceptance claim.
+| Name | Default | Meaning |
+| --- | --- | --- |
+| `kd_batch` (core param, 0644) | 4096 | executions (served + passed over) per wait; 1024 until build #68 (ARCHITECTURE 7) |
+| `kd_vdown` (core param, 0644) | 1 | a downgrade in a delegated rwsem section keeps the write side and the session goes on (section 5); 0: handed back |
+| `kd_cldemote` (core param, 0644) | 3 | bits: a queued spin-class waiter demotes 1 its packet, 2 its stack top (CLDEMOTE); 16 and 32 the same for the sleepable class (ARCHITECTURE 4.2) |
+| `kd_numa` (core param, 0644) | 1 | NUMA-ordered sessions |
+| `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
+| `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |
+| `kd_handoff_running` (core param, 0644) | 1 | mutex handoff only to a parked waiter that is running; 0: also to a sleeping one |
+| `kd_adapt` (core param, 0644) | 1 | plain mode below the queue depths that follow; 0: always delegation mode |
+| `kd_deleg_enter` (core param, 0644) | 5 | spinlock: waiters behind a queue head that switch the lock to delegation mode |
+| `kd_deleg_enter_sleep` (core param, 0644) | 3 | the same for a mutex |
+| `kd_deleg_exit` (core param, 0644) | 2 | a session leaves delegation mode with fewer waiters queued behind it |
+| `kd_xchg` (core param, 0644) | 1 | role exchange after a handback: 0 never, 1 mutex and rwsem writer, 2 every family |
+| `KD_PROBE_PERIOD` / `KD_VOTE_PERIOD` | 128 / 32 | contended acquisitions per depth sample in plain mode / sections per sample in a session |
+| `KD_MAX_NODES` | 4 | queue nodes per CPU and class |
+| `KD_MAX_ROOTS` / `KD_MAX_DEPTH` | 4 / 3 | nesting bounds |
+| `KD_REQ_THRESHOLD` | 64 | contended waits before a site is requested |
+| `KD_MISS_BUDGET` | 64 | learning reports per image |
+| `KD_SITE_WINDOW` | 256 | executions between usefulness checks |

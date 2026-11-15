@@ -1,6 +1,0 @@
-{
-  "source_files_verified": 233,
-  "all_match": true,
-  "source_manifest_sha256": "4ab41cc461d68945022c74a305a1e28258901bd6dbab2dc907128e78c8ef41e3",
-  "scope": "Frozen benchmark runtime source versus final source-host files; documentation/result artifacts excluded from runtime input manifest"
-}

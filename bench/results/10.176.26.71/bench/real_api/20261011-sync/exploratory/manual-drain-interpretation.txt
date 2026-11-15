@@ -1,1 +1,0 @@
-The original cleanup note attributes EBUSY to delayed kernel task exit. That timing is an inference, not a traced observation. The observed facts are post-join EBUSY, later successful checked drain with no bypassed checks, quiescent state, and normal unload. The original failed session and cleanup note are preserved unchanged.

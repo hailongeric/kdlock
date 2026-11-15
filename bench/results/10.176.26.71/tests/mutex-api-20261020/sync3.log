@@ -1,5 +1,0 @@
-Snapshot: 2795 tracked files, 205,292,793 bytes; dry-run=False
-{"changed": ["include/kd_mutex_api.h", "include/kd_mutex_direct.h", "kernel_module/lock/mutex_calls.inc", "tests/unit/execution/native_after_outer_fixture.c", "tests/unit/execution/test_native_after_outer.py", "tests/unit/mutex/mutex_api_fixture.c"], "guest_changed_files": 6}
-{"approved_files": 2795, "changed": ["include/kd_mutex_api.h", "include/kd_mutex_direct.h", "kernel_module/lock/mutex_calls.inc", "tests/unit/execution/native_after_outer_fixture.c", "tests/unit/execution/test_native_after_outer.py", "tests/unit/mutex/mutex_api_fixture.c"], "changed_files": 6, "dry_run": false}
-Copied 6 changed files; verified all 2795 approved hashes. No project files deleted.
-Synchronization complete; subsequent builds, tests and benchmarks run in the new VM.

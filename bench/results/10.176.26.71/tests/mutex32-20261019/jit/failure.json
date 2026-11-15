@@ -1,4 +1,0 @@
-{
-  "error": "command exited 2: ['make', '-C', PosixPath('/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/jit/variants/kdlock'), 'KDIR=/root/linux-6.1.159-kdclobber2', 'SC_BACKEND=kdlock', 'SC_WORKLOAD=cacheline', 'SC_SCENARIO=0', 'KDLOCK_INCLUDE=/root/host_fs/kdlock/include', 'SC_SHARED=/root/host_fs/kdlock/workload_modules/spin_cacheline', 'TCLOCK_INCLUDE=/root/host_fs/kdlock/tclock_backend/include', 'KBUILD_EXTRA_SYMBOLS=/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/Module.symvers']; see /root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/jit/build-kdlock.log",
-  "status": "PREPARATION_FAILED"
-}

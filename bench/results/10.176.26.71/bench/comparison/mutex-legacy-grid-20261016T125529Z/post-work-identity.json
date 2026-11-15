@@ -1,8 +1,0 @@
-{
-  "file": "workload_modules/spin_cacheline/post_work.h",
-  "historical_215_source_inputs_still_match": true,
-  "rounds": 64,
-  "scope": "Same synthetic post-unlock register work for all three backends; no provider/API change.",
-  "sha256": "2fdb17ee1afe3b88ecb8a88eb928789bef399fd7a586416bf6b49f2a9806caee",
-  "source_commit": "09bfffe07f0123622b7b68ae67057339d18ca7f2"
-}

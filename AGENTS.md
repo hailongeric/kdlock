@@ -1,8 +1,15 @@
 # Development rules
 
+**Scope.** This repository holds one implementation of kdlock, the clean
+rewrite, plus the original TCLocks locks it is compared against. The earlier
+implementation and its documents, benchmarks and results are not in this tree;
+every reference below to a document or directory that is not here points into
+the earlier tree, which is reachable in git through the tag `full-tree-before-cleanup-20261115`.
+This tree's own guides are under [docs/](docs/README.md).
+
 The project goal is relevant in-kernel lock replacement and evaluation of
-unchanged applications such as will-it-scale `mmap1`. Follow the three stages in
-[the project roadmap](docs/ROADMAP.md): micro/nano performance evidence, scoped
+unchanged applications such as will-it-scale `mmap1`. Follow the three stages of
+the project roadmap (the earlier `docs/ROADMAP.md`): micro/nano performance evidence, scoped
 mmap/page-fault improvement or parity, then broader kernel integration. Current
 support and performance limits remain explicit; a future milestone does not
 override the implementation or VM rules below.
@@ -10,12 +17,14 @@ override the implementation or VM rules below.
 Linux 6.1 kernel development is retired; no further adaptation targets it.
 The development VM uses Ubuntu 26.04.1 LTS and the custom
 `7.0.0-38-kdlock1` kernel from authenticated Ubuntu `linux=7.0.0-38.38`
-source. The [port record](bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+source. The earlier port record
+(`bench/results/10.176.26.71/tests/linux70-port-20261027/README.md`)
 separates source/build identity, boot, focused checks and live validation.
-Use the source/output-separated build and schema-2 bundle in
-[VM operations](docs/operations/VM.md). Preserve benchmark results and the
-single legacy `6.1.159-kdclobber2` recovery version under the
-[retirement record](docs/history/kernel-retirement-20261027.md). Legacy commands
+Use the source/output-separated build of the earlier VM operations guide
+(`docs/operations/VM.md`); this tree's build and test procedure is
+[docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md). Preserve benchmark results
+and the single legacy `6.1.159-kdclobber2` recovery version under the earlier
+retirement record (`docs/history/kernel-retirement-20261027.md`). Legacy commands
 and measurements are historical references only. The Linux 7 mmap backend is
 disabled in the ordinary development kernel; enabled compilation does not
 validate actual MM execution. Active call-depth tracking is refused because
@@ -74,7 +83,8 @@ validate whole-kernel replacement.
    prose and comments use English. Explain protocol purpose and ordering.
 2. Source edits, Git, static inspection and read-only offline archive checks run
    on `380G10`. All builds, unit tests, modules, daemons and timing run only in the
-   VM on `10.176.26.71`. Follow [VM operations](docs/operations/VM.md).
+   VM on `10.176.26.71`. Follow [docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md)
+   (and, for the earlier tree, its `docs/operations/VM.md`).
 3. Use basic plus directly affected checks. Full suites require an explicit user
    request. Missing dependencies, skips and compile failures are not passes.
 4. Keep exact physical owners, acquisitions, source leases, unlock ACKs and frame
@@ -106,7 +116,8 @@ validate whole-kernel replacement.
    live owner-handoff validation cannot be reported as completing that request.
 7. Modifying, building and installing the guest kernel, and rebooting the guest,
    are approved by default; no additional user permission is required.
-   Captured kernel experiments under `kernel_baseline/experiments/` are historical inputs.
+   Captured kernel experiments under the earlier `kernel_baseline/experiments/`
+   are historical inputs.
    Spin still requires spin-clobber-v1; KD mutex owns its clobber entry.
    MM integration is limited to the lock backend and minimal API/lifetime wrappers.
    Keep native MM bodies and semantics unchanged and execute them on their original
@@ -118,6 +129,10 @@ validate whole-kernel replacement.
    in `bench/`. Keep correctness-only code in `tests/`, with kernel payloads in
    a `payload/` subdirectory beside their `tests/kernel/` runner. Provider probes
    remain in `tests/kernel/`. Include private `.inc` files in snapshots.
+   In this tree the benchmark module, its runners and the results are in
+   `bench/`, the correctness runner is `bench/run_corr.py`, and there is no
+   separate payload or provider-probe directory yet; the named directories are
+   the earlier tree's.
 10. Keep one guide per responsibility. Current instructions belong in maintained
     docs; historical protocols/results belong in history or fixed Git evidence.
     Preserve captured hashes, numeric evidence, failures and topology identities.
@@ -127,7 +142,8 @@ validate whole-kernel replacement.
     binding/routing/lifetime glue. Preserve native bodies, surrounding semantics
     and data structures; prefer leaving kernel source unchanged. Extracted-body
     calls and test ioctls are mechanism evidence, not real-world API substitutes.
-    See [the workload contract](docs/BENCHMARK_WORKLOADS.md#permanent-testing-constraint).
+    See the workload contract (the earlier
+    `docs/BENCHMARK_WORKLOADS.md#permanent-testing-constraint`).
 
 ## Naming and wording
 
@@ -152,7 +168,8 @@ change implementation behavior or validation requirements.
 Ongoing local commits and branch organization are authorized. Review staged
 changes, commit coherent work and report validation limits. Use a reviewed
 path-specific restore or revert for rollback, never reset unknown work.
-Keep rejected experiments and user WIP reachable through explicit archive refs.
+Keep rejected experiments and user WIP reachable through explicit archive refs;
+the tree as it was before this one was separated out is the tag `full-tree-before-cleanup-20261115`.
 Do not claim a performance gain without measurements; do not pool source versions,
 topologies, call shells, workloads or instrumentation settings. A NORMAL image
 is publication evidence, not proof of a returned JIT body.

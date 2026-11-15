@@ -1,9 +1,0 @@
-{"state": "FAILED", "passed": false, "drained": false, "mode": "kd", "model": "threads", "workers": 2, "upstream": null, "error": "AssertionError()"}
-{"state": "FAILED", "passed": false, "drained": false, "mode": "kd", "model": "threads", "workers": 2, "upstream": null, "error": "AssertionError('exact image-session retirement did not drain')"}
-{"state": "COMPLETE", "passed": true, "drained": true, "mode": "kd", "model": "threads", "workers": 2, "upstream": null, "error": null}
-{"state": "FAILED", "passed": false, "drained": false, "mode": "kd", "model": "threads", "workers": 2, "upstream": null, "error": "AssertionError()"}
-....
-----------------------------------------------------------------------
-Ran 4 tests in 0.016s
-
-OK

@@ -1,2 +1,0 @@
-ffffffff816e3d10 T strscpy_pad
-ffffffff81e00b90 T strcmp

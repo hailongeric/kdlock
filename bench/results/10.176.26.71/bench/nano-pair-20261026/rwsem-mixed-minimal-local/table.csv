@@ -1,4 +1,0 @@
-workers,backend,whole_mops_s,peak_mops_s,status,drained,jit_status,jit_entries,jit_completions,host_qualified,session
-1,kdlock,21.540093783964966,21.69580788467073,OK,True,NO_JIT,0,0,False,rwsem-nano-pair-kdlock-local-w020-t01-r00
-16,kdlock,1.8750790613735442,2.8704553530388868,OK,True,NO_JIT,0,0,False,rwsem-nano-pair-kdlock-local-w020-t16-r00
-60,kdlock,1.2356999419230934,1.2634838895989762,OK,True,NO_JIT,0,0,False,rwsem-nano-pair-kdlock-local-w020-t60-r00

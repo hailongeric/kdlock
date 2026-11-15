@@ -1,9 +1,0 @@
-{
-  "method": "live_pv_ops_two_function_pointers",
-  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
-  "pv_lock_address": "0xffffffff83064e18",
-  "functions": {
-    "native_queued_spin_lock_slowpath": "0xffffffff81eecf40",
-    "__raw_callee_save___native_queued_spin_unlock": "0xffffffff810a2330"
-  }
-}

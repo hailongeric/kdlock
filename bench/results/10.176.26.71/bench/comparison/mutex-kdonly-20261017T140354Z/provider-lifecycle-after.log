@@ -1,2 +1,0 @@
-PASS control publication after KD runtime initialization; 7 failure paths unwind; unpublish before teardown
-PASS control publication after KD runtime initialization; 10 failure paths unwind; unpublish before teardown

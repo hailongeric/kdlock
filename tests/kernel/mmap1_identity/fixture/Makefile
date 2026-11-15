@@ -1,7 +1,0 @@
-obj-m += kd_mmap1_identity.o
-kd_mmap1_identity-y := module.o
-KDIR ?= /lib/modules/$(shell uname -r)/build
-all:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) modules
-clean:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) clean

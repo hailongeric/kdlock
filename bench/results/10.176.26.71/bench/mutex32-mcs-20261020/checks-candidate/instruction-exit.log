@@ -1,5 +1,0 @@
-{"name": "cold-warmup", "operations": 3200000, "jit_delta": {"bench_jit_bodies": 3116749, "bench_jit_completions": 3116749, "native_escape_count": 0}}
-{"name": "cold-delegated", "operations": 3200000, "jit_delta": {"bench_jit_bodies": 3180890, "bench_jit_completions": 3180890, "native_escape_count": 0}}
-{"name": "hot-escape", "operations": 3200000, "jit_delta": {"bench_jit_bodies": 1, "bench_jit_completions": 0, "native_escape_count": 1}}
-{"name": "post-ban", "operations": 3200000, "jit_delta": {"bench_jit_bodies": 0, "bench_jit_completions": 0, "native_escape_count": 0}}
-PASS: cold branch delegated; hot instruction resumed on original task; exact effects/flags; permanent native-only state; final drain

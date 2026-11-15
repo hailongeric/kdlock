@@ -1,9 +1,0 @@
-{
-  "source_package": "linux=7.0.0-38.38",
-  "kernel_release": "7.0.0-38-kdlock1",
-  "capture": "read-only authenticated development kernel source, 2026-10-29",
-  "files": {
-    "include/linux/rwsem.h": "4630401ebc68d2e4879e2513d8fd8d418ea7423503b2198fe1699914c2e3747c",
-    "include/linux/cleanup.h": "e63c529f7c4010cc4c0f6e0dad0a3a29ed196ae21a2f78eed1d277b432edf5ff"
-  }
-}

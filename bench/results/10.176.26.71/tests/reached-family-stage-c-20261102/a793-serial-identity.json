@@ -1,9 +1,0 @@
-{
-  "full_local": "/tmp/kdlock-stage-c-a793-serial-20261102.log",
-  "full_bytes": 12549068,
-  "full_sha256": "49c713b0a1fa7a5152f9d558a3c07e0b9bce2018632efac1a52aeb980fe1e48c",
-  "excerpt_sha256": "166877caddfee2f5261a4f255d0235376336e9d4fdd4f5d9bef1b4ab54395c12",
-  "source_commit": "a7935391b1d7fffe121473da9382aa2e0e7b5de8",
-  "boot_id": "22c0a1d3-64b3-4de3-867c-e0521c6ba8c3",
-  "kernel_build_id": "5f2fce72a33480f6e79a79b374b21a0db377ecd1"
-}

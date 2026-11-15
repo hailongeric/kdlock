@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/tmp/kdlock-writer-queue-kernel-20261031.py", line 52, in <module>
-    run('unit-'+label,[c['python'],script],600)
-    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/tmp/kdlock-writer-queue-kernel-20261031.py", line 44, in run
-    r['drain_unknown']=False;save();assert rc==0,name
-                                           ^^^^^
-AssertionError: unit-shared-mm

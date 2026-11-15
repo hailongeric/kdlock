@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/tmp/kdlock-reader-mm-offline-r2-20261101/mmap_compare.py", line 7, in <module>
-    import nano_core as a
-  File "/tmp/kdlock-reader-mm-offline-r2-20261101/nano_core.py", line 600, in <module>
-    from fresh_controls import load_control, host_identity
-ImportError: cannot import name 'load_control' from 'fresh_controls' (/tmp/kdlock-reader-mm-offline-r2-20261101/fresh_controls.py)

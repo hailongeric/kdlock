@@ -1,7 +1,0 @@
-{
-  "source_ip": "ffffffff817b9883",
-  "bytes_hex": "65 0f b6 07 48 63 f2 48 0f be d0 65 49 0f be",
-  "sha256": "6d9d22dd1ad2a18575a6637f0ed2e7b323125412e8b5f448b8d3a5125fec518c",
-  "pre_reset": true,
-  "boot_id": "a2887015-5808-4947-ae2f-f3d7d3416a98"
-}

@@ -1,7 +1,0 @@
-workers,backend,whole_mops_s,peak_mops_s,status,drained,jit_status,jit_entries,jit_completions,host_qualified,session
-16,native,5.985205549640802,7.461235906191174,OK,True,NATIVE,0,0,False,mutex-cacheline-c16-native-w100-t16-r00
-16,kdlock,5.1955290998242365,5.36233167001243,OK,True,RETURNED_JIT,10252626,10252626,False,mutex-cacheline-c16-kdlock-w100-t16-r00
-36,native,3.9888044932078435,4.670336243307254,OK,True,NATIVE,0,0,False,mutex-cacheline-c16-native-w100-t36-r00
-36,kdlock,3.953632841728989,3.9866411363132532,OK,True,RETURNED_JIT,7875657,7875657,False,mutex-cacheline-c16-kdlock-w100-t36-r00
-60,native,2.6157507088356575,2.860566416981868,OK,True,NATIVE,0,0,False,mutex-cacheline-c16-native-w100-t60-r00
-60,kdlock,4.173524934355141,4.226960934505725,OK,True,RETURNED_JIT,8237111,8237111,False,mutex-cacheline-c16-kdlock-w100-t60-r00
