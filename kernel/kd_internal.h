@@ -41,6 +41,8 @@
 #include <linux/jump_label.h>
 #include <asm/rmwcc.h>
 #include <linux/hash.h>
+#include <linux/jiffies.h>
+#include <linux/topology.h>
 #include <kdlock/kd_types.h>
 #include <kdlock/kd_api.h>
 #include <kdlock/kd_uapi.h>
@@ -198,6 +200,10 @@ enum {
 	KD_STAT_VDOWN,		/* downgrades executed with the write side kept */
 	KD_STAT_VDOWN_HB,	/* ... whose read part was then handed back */
 	KD_STAT_SITE_RETRY,	/* switched-off sites switched on again for a trial */
+	/* Eras (kd_era.c): a reader-writer lock serving one node at a time. */
+	KD_STAT_ERA_GATE,	/* callers that waited for their node's era */
+	KD_STAT_ERA_CLAIM,	/* ... and took the era over after the bound */
+	KD_STAT_ERA_START,	/* eras started by a queue head */
 	KD_STAT_NR,
 };
 
@@ -283,11 +289,56 @@ extern unsigned int kd_xchg;
 #define kd_stat_inc(kc, s)	((kc)->stat[s]++)
 
 /*
+ * Eras of the reader-writer families (kd_era.c). Low byte of the word: the
+ * NUMA node served, plus one; 0 for none. Above it: the jiffies of the last
+ * writer session that renewed it.
+ */
+#define KD_RW_ERA_BITS		8
+#define KD_POST_DEPTH		2	/* kd_family.post: queued callers counted */
+#define KD_ERA_NODE(v)		((v) & 0xffU)
+#define KD_ERA_STAMP_MAX	0xffffffU
+
+struct kd_rw_era_word {
+	u32	v;
+} ____cacheline_aligned_in_smp;
+
+extern struct kd_rw_era_word kd_rw_eras[1 << KD_RW_ERA_BITS];
+extern unsigned int kd_rw_era_ns, kd_rw_era_min;
+
+static __always_inline u32 *kd_rw_era(const void *lock)
+{
+	return &kd_rw_eras[hash_ptr((void *)lock, KD_RW_ERA_BITS)].v;
+}
+
+/* Nodes that differ by a multiple of 128 share their eras. */
+static __always_inline u32 kd_era_node(void)
+{
+	return (numa_node_id() & 0x7f) + 1;
+}
+
+static __always_inline bool kd_era_fresh(u32 v)
+{
+	return v && (((u32)jiffies - (v >> 8)) & KD_ERA_STAMP_MAX) <= 1;
+}
+
+/* Does @lock currently serve another node than this CPU's? */
+static __always_inline bool kd_rw_era_other(const void *lock)
+{
+	u32 v = READ_ONCE(*kd_rw_era(lock));
+
+	return v && KD_ERA_NODE(v) != kd_era_node() && kd_era_fresh(v);
+}
+
+void kd_rw_era_wait(const void *lock, unsigned int max_ns);
+void kd_rw_era_writer(const void *lock, long nr, int queued, u64 drain_ns);
+
+/*
  * Family glue used by the generic wait/session code.
  *
  * @post:	called by the queue head once it holds the queue lock, to
  *		obtain the rest of the grant (writer bit). Returns false if
- *		that would require sleeping (rwsem only).
+ *		that would require sleeping (rwsem only). @queued: callers
+ *		queued behind the head, counted up to KD_POST_DEPTH.
  * @release:	the queue lock is only a wait lock for this family; drop it
  *		when the session ends.
  * @set_owner:	record the logical owner (mutex).
@@ -298,7 +349,7 @@ extern unsigned int kd_xchg;
  *		off with a single queued writer.
  */
 struct kd_family {
-	bool (*post)(void *root);
+	bool (*post)(void *root, int queued);
 	void (*release)(void *root);
 	void (*set_owner)(void *root, struct task_struct *t);
 	/*

@@ -96,6 +96,15 @@ call.
   qrwlock), so an interrupted reader cannot deadlock.
 * Cost note: delegation only helps writers. Reader-heavy mixes are
   determined by the reader path and the writer-wait bit.
+* **Across NUMA nodes** a session's own order cannot help while readers are
+  present, because each queued reader ends the session (round 10: 1.4-1.8
+  sections per session with 20% writes). Under pressure the lock therefore
+  serves one node at a time (an *era*, ARCHITECTURE 7b): a reader that met
+  a writer, and a writer whose fast path failed, wait for their node's era
+  before they queue, polling the era word and not the lock. The wait is
+  bounded by twice `kd_rw_era_ns` and ends at `need_resched()`; a caller
+  with interrupts or bottom halves off, or outside task context, does not
+  wait at all. A reader that finds no writer is never held back.
 
 ## 4. Mutex
 
@@ -217,6 +226,20 @@ call.
 * **NUMA deferral starts late** (`kd_family.numa_after = 32`): a rwsem
   writer session serves the first 32 waiters in queue order and defers
   remote-node waiters only after that (ARCHITECTURE 7).
+* **Eras** (ARCHITECTURE 7b, `kernel/kd_era.c`): readers are admitted
+  outside the queue, so no order inside a session reaches them. Under
+  pressure the rwsem serves one node at a time.
+  * Who waits for its node's era: a reader whose fast path saw a writer, or
+    at least `kd_rw_era_min` readers in; a writer whose fast path failed.
+    They wait before touching `count`, polling the era word only, for at
+    most twice `kd_rw_era_ns`, and the wait ends at `need_resched()`.
+  * Not every reader is admitted when a writer session ends: only those of
+    the era's node have registered behind it. The readers of the other node
+    are still outside, and enter when the era is theirs.
+  * `kd_rwsem_post()` supplies what decides whether there is an era: the
+    readers the queue head found in, how long they took to leave, and how
+    many callers were queued behind it.
+  * `kd_down_read_trylock()` and `kd_down_write_trylock()` ignore the era.
 * **Downgrade** (`kd_downgrade_write`) is one atomic when called natively.
   Inside a delegated section (`kd_vdown`, default 1) it does not end the
   session:
@@ -308,6 +331,12 @@ sees neither effect.
 | `kd_vdown` (core param, 0644) | 1 | a downgrade in a delegated rwsem section keeps the write side and the session goes on (section 5); 0: handed back |
 | `kd_cldemote` (core param, 0644) | 3 | bits: a queued spin-class waiter demotes 1 its packet, 2 its stack top (CLDEMOTE); 16 and 32 the same for the sleepable class (ARCHITECTURE 4.2) |
 | `kd_numa` (core param, 0644) | 1 | NUMA-ordered sessions |
+| `kd_numa_after` (core param, 0644) | 32 | rwsem: waiters a session serves in queue order before it defers other nodes' (ARCHITECTURE 7) |
+| `kd_rw_era_ns` (core param, 0644) | 200000 | rwsem and rwlock: the era bound (a waiter waits at most twice this); 0: no eras (ARCHITECTURE 7b) |
+| `kd_rw_era_press` (core param, 0644) | 225 | hundredths of a caller: average company a queue-head writer must find (readers in + up to 2 queued behind) for an era to start or be renewed |
+| `kd_rw_era_drain_ns` (core param, 0644) | 5000 | no era while the readers a queue head finds take longer than this to leave, on average |
+| `kd_rw_era_min` (core param, 0644) | 2 | rwsem reader fast path: readers in from which another node's era is honoured without a writer present |
+| `kd_rw_era_dbg_drain`, `kd_rw_era_dbg_press` (0444) | - | the last averages a queue head computed (ns; sixteenths of a caller) |
 | `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
 | `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |
 | `kd_handoff_running` (core param, 0644) | 1 | mutex handoff only to a parked waiter that is running; 0: also to a sleeping one |

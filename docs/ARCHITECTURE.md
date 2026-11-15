@@ -362,6 +362,99 @@ Consequence: a waiter is delayed by at most (batch × number of nodes ahead of
 it) executions. This is a bound on batches, not a fairness guarantee for
 arbitrary workloads.
 
+`kd_numa_after` (default 32) is the value a family with `numa_after` set
+uses, so it can be compared within one boot. Rechecked on build #74 (32
+workers as 16+16, in-boot alternation): 0 against 32 is 1.00-1.02 for 1%
+writes and writers only, 1.18 for c16 with 20% writes and 1.00 for c01; with
+eras (7b) 0 gains nothing over 32 and loses 17% on c01 with 20% writes. It
+stays at 32.
+
+## 7b. Eras: readers and NUMA
+
+The NUMA order above acts inside a session, so it reaches delegated writers
+only. Readers are never delegated: each runs on its own CPU, writes the
+reader count there and reads the protected data there. With the same 32
+workers placed on one node or as 16+16 (`bench/run_place.py`, build #72):
+
+| profile | Native | kd | TCLock |
+|---|---|---|---|
+| mutex, rwlock writers, rwsem writers | 0.52-0.58 | **0.95-0.97** | 0.97-0.99 |
+| rwlock, 20% writes (c01 / c16) | 0.71 / 0.61 | 0.74 / 0.57 | 1.00 / 1.00 |
+| rwsem, 20% writes (c01 / c16) | 0.64 / 0.62 | 0.63 / 0.57 | 0.71 / 0.71 |
+| rwlock / rwsem, 1% writes | 0.80 / 0.79 | 0.83 / 0.88 | 0.83 / 0.83 |
+
+Rate on two nodes over rate on one. Where every section is delegated kdlock
+loses 3-5% across nodes; with readers it lost what the native lock loses,
+because the readers of both nodes took the lock's lines back and forth and
+nothing ordered them. For the rwlock there is a second reason: a reader that
+meets a writer queues on `wait` without a continuation and ends the session
+(1.4-1.8 sections per session with 20% writes, round 10), so the order of the
+session rarely applies to anything. TCLock's rwlock does not lose because its
+readers pass through the combining queue as well, which is served one socket
+at a time; it pays for that within one node (4.97 against kd's 6.23 on c01).
+
+An **era** (`kernel/kd_era.c`) gives the reader-writer families the same
+property without putting readers into the queue: a lock under pressure
+serves one node at a time.
+
+```
+era word of a lock (shared by hash, a line of its own):
+    node served + 1 | jiffies of the last writer session that renewed it
+
+queue head, after taking the write side (kd_rwsem_post, kd_rw_post):
+    pressure = readers it found in the lock + callers queued behind it (up to 2)
+    drain    = how long those readers took to leave
+    average both over the last sessions
+    if pressure >= kd_rw_era_press (2.25) and drain < kd_rw_era_drain_ns (5 us):
+        start an era for this node, or renew the stamp of the one that exists
+
+caller of another node, before it touches the lock:
+    rwsem reader:  the fast path saw >= kd_rw_era_min readers in, or a writer
+    rwsem writer:  the fast path failed
+    rwlock reader: it met a writer;  rwlock writer: the fast path failed
+                   (neither with interrupts or bottom halves off)
+    -> count itself as waiting, then poll the era word only (kd_rw_era_wait):
+         era is ours, or ran out   -> go on as usual
+         bound passed              -> take the era over, note how many of us waited
+```
+
+Three properties make it safe to leave on:
+
+* **It is advisory.** The era never admits a caller the lock word would not
+  admit, and a caller that ignores it is only slower. All of its state may be
+  stale or lost to a race.
+* **It exists only where it can pay.** The pressure threshold cannot be
+  reached by two callers in all, and by a few only if most of them are at
+  the lock at once, so a lock that two nodes merely share has no era. Neither
+  have writers without readers (the session's own order does that job), nor
+  locks with long read sections (drain average over 5 us), where the readers'
+  parallelism is worth more than the lines. A queue head only starts or
+  renews an era; one that is no longer renewed runs out within two ticks.
+* **The lock's time is divided by callers, not by nodes.** Waiting callers
+  count themselves in a line only they write; the bound of a waiter is
+  `2 x bound x theirs / (theirs + ours)`, where *theirs* is how many callers
+  of the era's node waited when it took the era. Equal numbers give the plain
+  bound (`kd_rw_era_ns`, 200 us, for both families). A bound is never under a
+  quarter of that: an era begins with the lock still full of the other node's
+  callers, and its node gets nothing done until they have left. An rwlock
+  waiter spins with preemption off, as it would in the queue; its wait ends
+  at `need_resched()` like the rwsem's, and it does not wait at all with
+  interrupts or bottom halves off.
+
+A waiter never looks at the lock itself. One look per waiter, taking the era
+over if the lock was idle, was tried (#77, #78) and removed: it ended the eras
+of a node with few callers after a few microseconds, and with the time of the
+look derived from the CPU number one node kept winning.
+
+What it costs is order: a caller can be passed by later callers of the era's
+node for at most twice its bound per acquisition. That is the same kind of
+bound the session's NUMA order puts on a passed-over writer, and like the
+reader phase it is a change in the area `AGENTS.md` lists as deferred, made
+because the user asked for the cross-node behaviour of the rw families to be
+addressed. The measurements, including the placements with unequal numbers
+and what each step of the design fixed, are in
+`bench/results/kdclaude/era-20261115-64cpu/`.
+
 ## 7a. Plain mode and delegation mode
 
 Delegation pays off only while the combiner keeps finding the next waiter

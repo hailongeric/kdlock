@@ -10,7 +10,7 @@
 ccflags-y += -I$(src)
 
 obj-$(CONFIG_KDLOCK) += kd_entry.o kd_core.o kd_spinlock.o kd_rwlock.o \
-			kd_mutex.o kd_ww_mutex.o kd_rwsem.o kd_image.o kd_dev.o
+			kd_mutex.o kd_ww_mutex.o kd_rwsem.o kd_era.o kd_image.o kd_dev.o
 obj-$(CONFIG_KDLOCK_MM) += kd_mm.o
 obj-$(CONFIG_KDLOCK_API) += kd_sw.o
 
@@ -26,3 +26,4 @@ CFLAGS_REMOVE_kd_rwlock.o = $(CC_FLAGS_FTRACE)
 CFLAGS_REMOVE_kd_mutex.o = $(CC_FLAGS_FTRACE)
 CFLAGS_REMOVE_kd_rwsem.o = $(CC_FLAGS_FTRACE)
 CFLAGS_REMOVE_kd_ww_mutex.o = $(CC_FLAGS_FTRACE)
+CFLAGS_REMOVE_kd_era.o = $(CC_FLAGS_FTRACE)

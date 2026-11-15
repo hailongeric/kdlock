@@ -28,18 +28,42 @@
 #include <linux/bottom_half.h>
 #include <linux/irqflags.h>
 #include <linux/hardirq.h>
+#include <linux/sched/clock.h>
 #include "kd_internal.h"
 
-/* Queue head holds ->wait: wait for readers and a fast-path writer to leave. */
-static bool kd_rw_post(void *root)
+/*
+ * Queue head holds ->wait: wait for readers and a fast-path writer to leave.
+ * How many readers were in and how long they took is what decides whether
+ * the lock gets an era (kd_era.c).
+ */
+static bool kd_rw_post(void *root, int queued)
 {
 	struct kd_rwlock *rw = root;
-	int c;
+	int c, nr;
+	u64 t0 = 0;
 
-	atomic_or(KD_RW_WWAIT, &rw->cnts);
+	nr = atomic_fetch_or(KD_RW_WWAIT, &rw->cnts) >> KD_RW_RSHIFT;
+	if (nr)
+		t0 = local_clock();
 	do {
 		c = atomic_cond_read_relaxed(&rw->cnts, VAL == KD_RW_WWAIT);
 	} while (!atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED));
+	kd_rw_era_writer(rw, nr, queued, nr ? local_clock() - t0 : 0);
+	return true;
+}
+
+/*
+ * The lock serves another node: wait for this node's era before touching
+ * it (kd_era.c). The caller spins with preemption off, as it would in the
+ * queue; the wait ends at need_resched(). Not with interrupts or bottom
+ * halves off, nor outside task context: there the caller holds up more than
+ * itself.
+ */
+static __always_inline bool kd_rw_era_gate(struct kd_rwlock *rw)
+{
+	if (likely(!kd_rw_era_other(rw)) || irqs_disabled() || !in_task() || softirq_count())
+		return false;
+	kd_rw_era_wait(rw, READ_ONCE(kd_rw_era_ns));
 	return true;
 }
 
@@ -71,7 +95,7 @@ void kd_write_lock_plain(struct kd_rwlock *rw)
 {
 	if (unlikely(!kd_q_trylock_fifo(&rw->wait)))
 		kd_q_lock_plain(&rw->wait);
-	kd_rw_post(rw);
+	kd_rw_post(rw, 0);
 	kd_q_unlock(&rw->wait);
 }
 
@@ -85,6 +109,12 @@ void kd_write_lock_plain(struct kd_rwlock *rw)
  */
 bool kd_write_lock_slow(struct kd_rwlock *rw, unsigned long site)
 {
+	if (kd_rw_era_gate(rw)) {
+		int c = 0;
+
+		if (atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED))
+			return true;
+	}
 	if (kd_can_offer(site))
 		return false;
 	raw_cpu_inc(kd_cpu.nodes[0].nplain);
@@ -188,6 +218,7 @@ static noinline void kd_read_lock_slow(struct kd_rwlock *rw)
 		return;
 	}
 	atomic_sub(KD_RW_RBIAS, &rw->cnts);
+	kd_rw_era_gate(rw);
 
 	if (unlikely(!kd_q_trylock_fifo(&rw->wait)))
 		kd_q_lock_plain(&rw->wait);

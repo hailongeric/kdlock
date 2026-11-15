@@ -83,6 +83,9 @@ static const char * const kd_stat_names[KD_STAT_NR] = {
 	[KD_STAT_VDOWN]			= "vdown",
 	[KD_STAT_VDOWN_HB]		= "vdown_hb",
 	[KD_STAT_SITE_RETRY]		= "site_retry",
+	[KD_STAT_ERA_GATE]		= "era_gate",
+	[KD_STAT_ERA_CLAIM]		= "era_claim",
+	[KD_STAT_ERA_START]		= "era_start",
 };
 
 static int kd_stats_show(struct seq_file *m, void *v)

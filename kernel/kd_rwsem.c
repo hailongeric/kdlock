@@ -20,6 +20,10 @@
  * got its section handed back.
  *
  * Readers always run on their own task.
+ *
+ * Under pressure from both NUMA nodes the lock serves one node at a time:
+ * callers of the other node wait for their era before they touch ->count
+ * (kd_era.c). The queue head's post supplies the measurements for it.
  */
 #include <linux/kernel.h>
 #include <linux/export.h>
@@ -183,13 +187,15 @@ static unsigned int kd_rwsem_rphase_ns __read_mostly = 1000;
 core_param(kd_rwsem_rphase_ns, kd_rwsem_rphase_ns, uint, 0644);
 #define KD_RWSEM_RPHASE_MAX_NS	50000
 
-static bool kd_rwsem_post(void *root)
+static bool kd_rwsem_post(void *root, int queued)
 {
 	struct kd_rwsem *sem = root;
 	u64 rphase = READ_ONCE(kd_rwsem_rphase_ns);
+	u64 t0 = 0;
+	long nr;
 
 	if (rphase) {
-		long nr = atomic_long_read(&sem->count) >> KD_RWSEM_RSHIFT;
+		nr = atomic_long_read(&sem->count) >> KD_RWSEM_RSHIFT;
 
 		/*
 		 * One reader gets no phase. In mmap1 the one reader is the
@@ -211,9 +217,15 @@ static bool kd_rwsem_post(void *root)
 			cpu_relax();
 		}
 	}
-	atomic_long_or(KD_RWSEM_WWAIT, &sem->count);
-	if (!kd_rwsem_spin_for(sem, true))
+	nr = atomic_long_fetch_or(KD_RWSEM_WWAIT, &sem->count) >> KD_RWSEM_RSHIFT;
+	if (nr)
+		t0 = local_clock();
+	if (!kd_rwsem_spin_for(sem, true)) {
+		/* The readers stay longer than the spin budget: no eras. */
+		kd_rw_era_writer(sem, nr, queued, READ_ONCE(kd_rwsem_wspin_ns));
 		return false;
+	}
+	kd_rw_era_writer(sem, nr, queued, nr ? local_clock() - t0 : 0);
 	/* Readers that stayed out for this writer may register behind it. */
 	kd_rwsem_phase_change(sem);
 	return true;
@@ -364,6 +376,12 @@ static __always_inline int __kd_down_write_slow(struct kd_rwsem *sem, unsigned l
 	int ret;
 
 	might_sleep();
+	/* The lock is in use and serves another node: wait for our era (kd_era.c). */
+	if (kd_rw_era_other(sem)) {
+		kd_rw_era_wait(sem, READ_ONCE(kd_rw_era_ns));
+		if (kd_down_write_trylock_raw(sem))
+			return 0;
+	}
 	preempt_disable();
 	if (kd_can_offer(site))
 		return KD_SLOW_OFFER;
@@ -581,6 +599,9 @@ static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state, 
 	/* Behind an active writer the fast path's increment stays. */
 	if (added && !reg)
 		kd_rwsem_read_undo(sem);
+	/* Not in yet, and the lock serves another node: wait for our era. */
+	if (!reg && kd_rw_era_other(sem))
+		kd_rw_era_wait(sem, READ_ONCE(kd_rw_era_ns));
 	if (kd_down_read_admit(sem, c, reg))
 		return 0;
 
@@ -626,6 +647,10 @@ static __always_inline int __kd_down_read(struct kd_rwsem *sem, unsigned int sta
 	 */
 	c = atomic_long_read(&sem->count);
 	if (unlikely(c & KD_RWSEM_WMASK))
+		return kd_down_read_slow(sem, state, c, false);
+	/* In use by readers, and it is another node's era: wait for ours. */
+	if (unlikely((c >> KD_RWSEM_RSHIFT) >= READ_ONCE(kd_rw_era_min)) &&
+	    kd_rw_era_other(sem))
 		return kd_down_read_slow(sem, state, c, false);
 	c = atomic_long_add_return_acquire(KD_RWSEM_RBIAS, &sem->count);
 	if (likely(!(c & KD_RWSEM_WMASK)))

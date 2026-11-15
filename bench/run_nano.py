@@ -58,9 +58,12 @@ def run_once(fd, args, workers, ms):
     wops, wwr = f[13:13 + MAXW][:workers], f[13 + MAXW:13 + 2 * MAXW][:workers]
     lines = args.lines
     ok = all(wops) and bad == 0 and delta == writes * lines
-    return {"ok": ok, "mops": ops / elapsed * 1e3 if elapsed else 0.0, "ops": ops,
-            "writes": writes, "torn_reads": bad, "sum_delta": delta,
-            "min_worker_ops": min(wops), "max_worker_ops": max(wops)}
+    res = {"ok": ok, "mops": ops / elapsed * 1e3 if elapsed else 0.0, "ops": ops,
+           "writes": writes, "torn_reads": bad, "sum_delta": delta,
+           "min_worker_ops": min(wops), "max_worker_ops": max(wops)}
+    if getattr(args, "per_worker", False):
+        res["worker_ops"] = list(wops)
+    return res
 
 
 def main():
@@ -80,6 +83,8 @@ def main():
     ap.add_argument("--ms", type=int, default=2000)
     ap.add_argument("--warmup-ms", type=int, default=1000)
     ap.add_argument("--repeat", type=int, default=1)
+    ap.add_argument("--per-worker", action="store_true",
+                    help="add the operations of every worker (worker i runs on CPU first+i)")
     args = ap.parse_args()
 
     fd = os.open(args.dev, os.O_RDWR)

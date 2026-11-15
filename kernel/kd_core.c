@@ -50,6 +50,9 @@ core_param(kd_batch, kd_batch, uint, 0644);
 /* Serve waiters of the combiner's NUMA node first (see kd_session()). */
 bool kd_numa __read_mostly = true;
 core_param(kd_numa, kd_numa, bool, 0644);
+/* For a family with kd_family.numa_after set: the value used. */
+unsigned int kd_numa_after __read_mostly = 32;
+core_param(kd_numa_after, kd_numa_after, uint, 0644);
 
 /*
  * Adaptive delegation.
@@ -896,7 +899,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_node *n, *nn, *first = NULL, *last = NULL, *claimed = NULL;
 	bool numa = READ_ONCE(kd_numa);
-	unsigned int numa_after = f ? f->numa_after : 0;
+	unsigned int numa_after = f && f->numa_after ? READ_ONCE(kd_numa_after) : 0;
 	bool adapt = READ_ONCE(kd_adapt) && !(f && f->always_deleg);
 	bool handed = false, leave = false;
 	unsigned int served = 0, passed = 0;
@@ -1351,7 +1354,7 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 		while (!kd_q_trylock_fifo(q))
 			cpu_relax();
 		if (f && f->post)
-			f->post(root);
+			f->post(root, 0);
 		if (f && f->release)
 			f->release(root);
 		return KD_WAIT_LOCAL;
@@ -1392,7 +1395,7 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 			out = kd_q_head_take(q, me, deleg ? KD_Q_LOCKED | KD_Q_DELEG :
 							    KD_Q_LOCKED);
 		if (f && f->post)
-			f->post(root);
+			f->post(root, out ? 0 : kd_q_depth(me, KD_POST_DEPTH));
 		if (out)
 			break;		/* nobody is queued behind us */
 		if (!deleg)
@@ -1547,7 +1550,7 @@ again:
 			}
 			WRITE_ONCE(m->owner, current);
 		}
-		if (f->post && !f->post(root)) {
+		if (f->post && !f->post(root, kd_q_depth(me, KD_POST_DEPTH))) {
 			/* Keep the queue mutex; the caller decides how to wait on. */
 			kd_q_pass(q, me, true, 0);
 			smp_store_release(&me->state, KD_N_FREE);
