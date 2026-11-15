@@ -188,8 +188,18 @@ static bool kd_rwsem_post(void *root)
 	struct kd_rwsem *sem = root;
 	u64 rphase = READ_ONCE(kd_rwsem_rphase_ns);
 
-	if (rphase)
-		rphase *= atomic_long_read(&sem->count) >> KD_RWSEM_RSHIFT;
+	if (rphase) {
+		long nr = atomic_long_read(&sem->count) >> KD_RWSEM_RSHIFT;
+
+		/*
+		 * One reader gets no phase. In mmap1 the one reader is the
+		 * tail of the previous munmap after its downgrade, and waiting
+		 * for it per operation cost 12% at 4-32 threads (build #65,
+		 * in-boot alternation, 5 runs: about 203000 -> 180000
+		 * iterations per second).
+		 */
+		rphase = nr > 1 ? rphase * (nr - 1) : 0;
+	}
 	if (rphase) {
 		u64 end = local_clock() + min_t(u64, rphase, KD_RWSEM_RPHASE_MAX_NS);
 		int i;

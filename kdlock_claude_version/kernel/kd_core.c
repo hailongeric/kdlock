@@ -312,7 +312,28 @@ static void kd_report_exit(struct kd_regs *r, u32 x, unsigned long ip,
  * nested session run from here balances itself the same way, so it does
  * not disturb this measurement.
  */
-static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f)
+/*
+ * Interrupt state the executor still owes itself after a handback; see the
+ * end of kd_exec_one().
+ */
+struct kd_irq_hold {
+	bool		held;
+	bool		bh;
+	unsigned long	flags;
+};
+
+static __always_inline void kd_irq_release(struct kd_irq_hold *h)
+{
+	if (!h->held)
+		return;
+	h->held = false;
+	local_irq_restore(h->flags);
+	if (h->bh)
+		local_bh_enable();
+}
+
+static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f,
+			struct kd_irq_hold *hold)
 {
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_regs *r = n->regs;
@@ -492,9 +513,28 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 			kd_stat_inc(kc, KD_STAT_HANDBACK_PINNED);
 	}
 	__preempt_count_sub(KD_EXEC_PIN);
-	local_irq_restore(flags);
-	if (bh)
-		local_bh_enable();
+	/*
+	 * A section handed back with interrupts off usually holds an
+	 * interrupt-safe lock it took here, and such a lock can belong to
+	 * this CPU (the copy's per-CPU accesses are the executor's: a wakeup
+	 * inside the section takes this CPU's runqueue lock and, for the
+	 * fair server's timer, its hrtimer base lock). The origin releases
+	 * it, but only after it has been resumed. If this CPU enabled
+	 * interrupts first, a timer interrupt here would wait for that lock
+	 * with the origin never resumed (seen as a hang of mmap1 on 64
+	 * vCPUs: the combiner in hrtimer_interrupt() on its own base lock,
+	 * every other CPU behind it). So interrupts stay off until the
+	 * caller has published the resume; see kd_irq_release().
+	 */
+	if (native && !(r->rflags & X86_EFLAGS_IF) && !raw_irqs_disabled_flags(flags)) {
+		hold->held = true;
+		hold->bh = bh;
+		hold->flags = flags;
+	} else {
+		local_irq_restore(flags);
+		if (bh)
+			local_bh_enable();
+	}
 
 	kd_stat_inc(kc, native ? KD_STAT_HANDBACK : KD_STAT_DELEGATED);
 	kd_site_account(r->site, !native || planned);
@@ -768,6 +808,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	unsigned int served = 0, passed = 0;
 	int exit_below = READ_ONCE(kd_deleg_exit);
 	struct kd_regs *guess;
+	struct kd_irq_hold hold = { .held = false };
 
 	if (!static_branch_likely(&kd_delegation) || !in_task() ||
 	    kc->depth >= KD_MAX_DEPTH)
@@ -885,7 +926,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			}
 		}
 
-		handed = !kd_exec_one(root, n, f);
+		handed = !kd_exec_one(root, n, f, &hold);
 		if (nn) {
 			struct kd_regs *nr = READ_ONCE(nn->regs);
 
@@ -915,6 +956,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 				*xowner = n->regs->task;
 		}
 		smp_store_release(&n->state, KD_N_RESUME);
+		kd_irq_release(&hold);
 		++*budget;
 		if (!served++)
 			kd_stat_inc(kc, KD_STAT_SESSIONS);
