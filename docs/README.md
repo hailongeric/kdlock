@@ -9,8 +9,9 @@ Linux 7 on x86_64, covering spinlock, rwlock, mutex and rwsem.
 
 **Status:** the kernel with kdlock built in boots in the `kdclaude` VM; all
 four families, two-level nesting and handback pass the data checks with and
-without delegation, and module unload with live images is handled. Nine
-measured rounds are in `../bench/results/kdclaude/`. See
+without delegation, and module unload with live images is handled. Ten
+measured rounds are in `../bench/results/kdclaude/`; the full worker grid and
+the will-it-scale runs behind [MMAP_LOCKS.md](MMAP_LOCKS.md) are round 10. See
 [BUILD_AND_TEST.md](BUILD_AND_TEST.md) and [PERF_PLAN.md](PERF_PLAN.md).
 
 | Read this | For |
@@ -22,6 +23,7 @@ measured rounds are in `../bench/results/kdclaude/`. See
 | [KERNEL_INTEGRATION.md](KERNEL_INTEGRATION.md) | putting kdlock into a kernel tree; configuration; what is and is not replaced |
 | [BUILD_AND_TEST.md](BUILD_AND_TEST.md) | the build VM, checks that were done, what is missing |
 | [NATIVE_COMPARISON.md](NATIVE_COMPARISON.md) | kdlock against the native Linux locks path by path, with pseudocode and the register/cache-line accounting |
+| [MMAP_LOCKS.md](MMAP_LOCKS.md) | every lock inside the mmap write section, which of them kdlock can own, and what the will-it-scale counters say about each |
 | [DIFFERENCES.md](DIFFERENCES.md) | where goals or effects differ from the earlier kdlock documents and `AGENTS.md`, with priorities |
 | [PERF_PLAN.md](PERF_PLAN.md) | what stands between this state and defensible nano/micro numbers, split into tasks |
 

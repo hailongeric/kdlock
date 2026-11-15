@@ -97,7 +97,12 @@ section, the following are handed back to the caller rather than run on the
 lock holder's CPU (TRANSLATOR frontier list): native sleeping-lock acquires
 (`down_write` of `anon_vma` and `i_mmap_rwsem`, `mutex_lock`, ...), TLB
 shootdowns and cross-CPU calls, `schedule`. Native spinlocks inside a
-section are called directly.
+section are called directly. [MMAP_LOCKS.md](MMAP_LOCKS.md) goes through every
+lock of the mmap write section, says which ones kdlock could own and which are
+not locks at all, and attaches the will-it-scale counters to each case; the
+short version is that `mapping->i_mmap_rwsem` is what stops `mmap2`
+(0.78-0.86 of Native, every session handed back at the frontier) and
+`anon_vma->root->rwsem` is what stops the ordinary merging anon case.
 
 **Translator policy for this kernel.** Images for the mmap paths copy the
 memory allocator, maple tree and VMA code: about 50 000 instructions per

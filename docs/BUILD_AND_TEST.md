@@ -113,8 +113,13 @@ Bugs found by these runs and fixed:
 
 `bench/run_grid.py` runs the profiles of [PERF_PLAN.md](PERF_PLAN.md) task C,
 alternating the backends at every point; `bench/grid_summary.py` prints the
-medians with the execution-class shares. Results and the map from build
-number to source are in `bench/results/kdclaude/`.
+medians with the execution-class shares, and `bench/grid_table.py` exports one
+row per (profile, workers) with every backend's rate and the ratios, as CSV for
+plotting or as a markdown table. `bench/wis_table.py` does the same for the
+will-it-scale runs of `bench/run_mmap1.py`, adding the delegation counters so
+that "kdlock is not helping" stays distinguishable from "kdlock is not even
+running here". Results and the map from build number to source are in
+`bench/results/kdclaude/`.
 
 The original TCLock locks are a third backend when the bench is built with
 them (`/root/tcbuild.sh` in the VM):

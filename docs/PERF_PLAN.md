@@ -312,10 +312,26 @@ Data: `tune-20261115-2700MHz/` (in-boot A/B, builds #67-#71) and
   ahead of TCLock by 1.12-2.04. With readers across both nodes kd is
   behind TCLock: rwsem 1% writes 0.62-0.69, 20% writes 0.78-0.82, rwlock
   c16 20% writes 0.64-0.74.
+* **Round 10:** the same shape on the user's full worker grid (1 to 8, then
+  every fourth to 64), 1848 points, no failed point
+  (`bench/results/kdclaude/grid-20261115-r10-64cpu/`). `r10.csv` is the
+  plotting form.
 * **Next:** rwsem and rwlock with readers across nodes (a longer reader
   phase helps 1% writes and costs 20% writes; it needs a rule, not a
   constant); the 3-worker points below Native; the effect of `kd_vdown`
   on a workload with readers.
+* **Reader spinning needs a rule too.** A reader registered behind an
+  *active* writer spins out `kd_rwsem_rspin_ns` (50 us) even when the holder
+  will not leave for milliseconds. That is two thirds of will-it-scale
+  `page_fault1`'s 9-17% loss at 2-16 threads, measured by switching the spin
+  off (`bench/results/kdclaude/wis-20261115-64cpu/`). The fix is to stop
+  spinning once the phase counter has stood still, not to lower the constant:
+  the reader-heavy grid profiles live on that spin.
+* **Nested delegated rwsem, then `mapping->i_mmap_rwsem`.** `mmap2` opens
+  1.28 M sessions and hands every one back at `down_write` of the file
+  mapping's rwsem, for 0.78-0.86 of Native. This is the largest single
+  measured loss with a known cause; [MMAP_LOCKS.md](MMAP_LOCKS.md) has the
+  lock-by-lock analysis and what else would follow from it.
 
 ### Task D: API switch and micro/API stage
 

@@ -259,3 +259,31 @@ the tables.
 * **With readers across both nodes** kd is behind TCLock: rwsem 1% writes
   0.62-0.69, rwsem 20% writes 0.78-0.82, rwlock c16 20% writes 0.64-0.74.
 * **Correctness on the same boot:** `corr70.jsonl`, `corr70.txt`.
+
+### Round 10 (`grid-20261115-r10-64cpu/`)
+
+* **Run:** build #72, source commit `b2958b0b`, the worker grid the user asked
+  for on 2026-11-15 (1 to 8 one by one, then every fourth to 64) for all 14
+  profiles and all three backends: 1848 points, no failed point.
+* **Tables:** `r10.csv` (for plotting) and `r10.md`, from
+  `bench/grid_table.py`. The directory README lists where kd leads and where
+  it does not.
+* **Same shape as round 9**, with the extra counts filling in the step at 36
+  workers, which is the first count that crosses nodes.
+
+### will-it-scale on 64 vCPUs (`wis-20261115-64cpu/`)
+
+* **Run:** build #72, `mmap1`, `mmap2`, `page_fault1`, `brk1`, `threads` and
+  `processes`, 1 to 64 workers, Native and kd alternating in one boot
+  (`kd_mm`): 224 points, no failed point, no kernel complaints.
+* **mmap1** 1.25-1.37 of Native at 4-32 threads, 2.06 at 64, with ~3500
+  delegated waiter sections per session.
+* **mmap2** 0.78-0.86: every session hands back at `down_write` of
+  `mapping->i_mmap_rwsem` (1.28 M handbacks, all `hb_frontier`, 16 bodies
+  delegated).
+* **page_fault1** 0.84-0.91 at 2-16 threads with no delegation at all; faults
+  take no `mmap_lock` in this kernel (`CONFIG_PER_VMA_LOCK=y`). Attributed to
+  kd rwsem reader spinning (`kd_rwsem_rspin_ns`), which recovers two thirds of
+  it when switched off.
+* **brk1** parity inside the spread.
+* The lock-by-lock analysis of the mmap section is `docs/MMAP_LOCKS.md`.
