@@ -1,6 +1,18 @@
 # Original TCLock spin, mutex, rwlock and rwsem ports
 
-These are the stage 1 reference backends in the [project roadmap](../docs/ROADMAP.md).
+**Where this fits.** These modules are the comparison backend of this
+repository's benchmark: `bench/kd_bench.c` built with `KDB_TCLOCK=1` links
+against them, and every `tclock` column in `bench/results/kdclaude/` comes from
+them. They are an upstream implementation with a port, not part of kdlock.
+This file and the port records below were written for the earlier kdlock tree
+and keep its references: the documents and result directories under `../docs/`,
+`../bench/results/10.176.26.71/`, `../bench/rwlock_compare/`,
+`../bench/tclock_compare/`, `../tests/` and `../kernel_integration/` are not in
+this repository any more. They are reachable in git through the tag
+`full-tree-before-cleanup-20261115`.
+
+These are the stage 1 reference backends in the project roadmap (the earlier
+`docs/ROADMAP.md`).
 TCLock's paper evaluated mmap1 using modified kernel lock implementations. This
 external-module port has no equivalent actual-MM integration; that is a local
 port limit, not a claim that the paper lacked a mmap comparison. A future stage 3
