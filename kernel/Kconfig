@@ -27,7 +27,7 @@ config KDLOCK
 config KDLOCK_CLOBBER_ENTRY
 	bool "kdlock: clobber entries for the kd_*_cl() lock calls"
 	depends on KDLOCK
-	default y
+	default n
 	help
 	  The kd_*_cl() macros of include/kdlock/kd_api.h make the lock call
 	  from inline assembly that declares every general register except
@@ -35,8 +35,11 @@ config KDLOCK_CLOBBER_ENTRY
 	  delegated section's end are a few words instead of the full register
 	  set, and the lock holder fetches fewer cache lines per section.
 
-	  With this off, the macros are the ordinary calls. The entries
-	  themselves are always built.
+	  With this off (the default), the macros are the ordinary calls.
+	  The entries themselves are always built. Measured gain with it on:
+	  2-4% for one-line spinlock and rwlock writer sections, 0.5-2% for
+	  the sleeping locks, and a 0.5-0.8% loss for a mutex with sixteen
+	  lines (bench/results/kdclaude/clobber-20261116-64cpu/).
 
 config KDLOCK_MM
 	bool "kdlock: mm_struct mmap lock as a kdlock rwsem"

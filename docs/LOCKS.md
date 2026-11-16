@@ -411,8 +411,8 @@ functions. They are declared as arrays (`__kd_spin_lock_cl[]` and so on),
 which lets the symbol table and module versioning name them but makes a
 direct call or an assignment to a function pointer a compile error. A lock
 operation reached through a function pointer, from code that does not use
-the macros, or with `CONFIG_KDLOCK_CLOBBER_ENTRY` off (the macros are then
-the ordinary calls) uses the ordinary functions, which keep the C calling
+the macros, or with `CONFIG_KDLOCK_CLOBBER_ENTRY` off (the default since
+2026-11-16; the macros are then the ordinary calls) uses the ordinary functions, which keep the C calling
 convention. The two kinds of entry take the same lock object and queue on
 the same queue, and one session serves both kinds of waiter: the kind is per
 packet. A release can be through either kind, whatever the acquire was.

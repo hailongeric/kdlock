@@ -89,3 +89,13 @@ queue fields and, in `nodes[0]`, the per-CPU fields the plain path depends on
 because the origin reads it when it resumes. At the measured 2.5 ns per line,
 moving line 0 into the node would be worth about 1.5% for one-line sections
 and would cost the plain path a line of its own again. It is not done.
+
+## Off by default (build #85)
+
+On 2026-11-16 the user asked for the option to be off by default:
+`CONFIG_KDLOCK_CLOBBER_ENTRY` is now `default n`. Build `#85 SMP
+PREEMPT_DYNAMIC Mon Nov 16 18:35:56 UTC 2026` has it off. `run_corr.py`
+there: 586 points, 0 failed, 0 kernel complaints, API check 0 failed
+(`corr85.jsonl`). `cl_offered` and `cl_done` stay 0, because the `kd_*_cl()`
+macros, including those of the clobber bench bodies, are then the ordinary
+calls.
