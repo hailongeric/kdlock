@@ -179,6 +179,13 @@ behind an *active* writer should stop spinning once the phase counter has
 stood still for a while, instead of running out a fixed 50 us budget against a
 holder that will not leave for milliseconds. That is open work.
 
+A test that does contend for `mmap_lock` through faults is in
+[`../bench/results/kdclaude/pfshared-20261116-64cpu/`](../bench/results/kdclaude/pfshared-20261116-64cpu/README.md):
+threads fault on one shared mapping while `mprotect` splits it, so faults
+fall back to the read side behind the writer. There kd's reader spinning is
+what puts it ahead of Native (1.02-1.13 at 2-16 threads), and with every
+fault a reader it is also what costs it at 48 threads.
+
 ## 6. Answer
 
 No. Of the eleven kinds of serialization in the mmap write section, **three**

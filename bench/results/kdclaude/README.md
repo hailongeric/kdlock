@@ -345,3 +345,18 @@ the tables.
 * **Gain** (in-boot A/B on #83): 2-4% for one-line spin and rwlock writer
   sections, 0.5-2% for the rwsem, up to 2% for the mutex, -0.5 to -0.8% for
   the mutex with sixteen lines.
+
+### Page faults on one shared mapping (`pfshared-20261116-64cpu/`)
+
+* **What:** `bench/wis/tests/page_fault_shared{1,2,3}.c`: all threads fault
+  on one mapping; 2 adds an `mprotect` pair per pass that splits the shared
+  VMA (`mmap_lock` for writing, faults behind it fall back to reading), and 3
+  makes every fault from kernel mode (always `mmap_lock` for reading).
+  Native puts about 220 000 rwsem readers to sleep per second at 16 threads;
+  `page_fault1` and `shared1` barely take `mmap_lock`.
+* **Result** (build #84): `shared1` 0.99-1.04 (control). `shared2` 1.02-1.13
+  at 2-16 threads, 0.86 at 64. `shared3` 1.05-1.10 at 2-8, 0.78-0.82 at
+  32-48. Nothing is delegated (every `mprotect` section stops at
+  `anon_vma`'s rwsem); the gains come from reader spinning, which an A/B with
+  `kd_rwsem_rspin_ns=0` confirms (0.48-0.93 without it), and so does the loss
+  at 48 threads of `shared3`.

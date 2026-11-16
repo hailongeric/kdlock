@@ -13,7 +13,7 @@ in `integration/kd_linux_map.h`; this page is the procedure and the status.
 | Booted | **yes**, in the `kdclaude` VM next to `kdlock1` (one-shot `grub-reboot`); see BUILD_AND_TEST.md |
 | `mm->mmap_lock` switched to kdlock (`CONFIG_KDLOCK_MM`, section 4a) | **done** (build #43): every mmap lock operation of the kernel goes through kdlock for mms created while `kd_mm=1`; will-it-scale mmap1 runs, writers are delegated, data-checked stress and the nano correctness pass are clean |
 | Syscall-path lock objects switchable (`CONFIG_KDLOCK_API`, section 4b) | **done** (build #45): `file_lock`, `flc_lock`, pipe mutex, `f_pos_lock`, `simple_xattrs.lock`, `uts_sem`, for all their kernel users; data-checked syscall stress and a native/kd build comparison clean (`bench/results/kdclaude/api-20261113/`) |
-| Whole kernel lock API switched to kdlock (`kd_linux_map.h` applied) | **no**. Only the objects above and the mmap lock are switchable; every other kernel lock is native |
+| Whole kernel lock API switched to kdlock (`kd_linux_map.h` applied) | **no**. Only the objects above and the mmap lock are switchable; every other kernel lock is native. Whether it would run: section 4c |
 | Per-subsystem lock objects converted | the mmap lock and the six objects of 4b |
 
 ## 2. Placing the code
@@ -211,6 +211,97 @@ write holders record no owner), `lockref`'s cmpxchg fast path check beyond
 `arch_spin_value_unlocked`, lockdep and debug lock checks. `rt_mutex`,
 `percpu_rwsem`, `semaphore`, `local_lock`, `bit_spin_lock` and seqlocks need
 nothing: they are built on raw spinlocks or on the operations above.
+
+## 4c. Would a kernel with every lock switched run?
+
+The question the user asked on 2026-11-16. It has not been tried: no kernel
+with `kd_linux_map.h` applied has been compiled. What follows is from the
+Linux 7.0 source in the VM, this kernel's configuration and the limits the
+implementation states itself (ARCHITECTURE 11, DIFFERENCES D3). The answer
+has three layers, and each depends on the one before it.
+
+**1. Building it: work, no obstacle found.** The type sizes match (4, 8, 32,
+40 bytes), static initialisers have counterparts, and every operation the 7.0
+headers declare has a mapping. The search found these users of the native
+lock internals outside `kernel/locking/` (x86 and generic code):
+
+| Where | What it relies on | What it needs |
+|---|---|---|
+| `arch/x86/include/asm/qspinlock*.h`, `CONFIG_PARAVIRT_SPINLOCKS=y` | the paravirt slow path and unlock, `virt_spin_lock()` | configured out; the switch replaces `queued_spin_*` |
+| `kernel/bpf/rqspinlock.c` (BPF's resilient lock) | its own copy of the qspinlock algorithm on `struct qspinlock` with its own per-CPU nodes; not `arch_spinlock_t` | keeps compiling against the qspinlock headers after rule 3 drops `qspinlock.c`; stays native |
+| `kernel/trace/{ring_buffer,trace,trace_clock,...}.c`, `kernel/rcu/tree.c`, `arch/x86/kernel/{dumpstack,tsc_sync,hpet}.c`, `bpf_spin_lock` | `arch_spin_lock()` with interrupts off, the oops path also in NMI | `kd_arch_*` (no preempt count change, never publish); an NMI past four nested nodes spins on the lock word (`kd_core.c`, `idx >= KD_MAX_NODES`) as qspinlock does |
+| `kernel/hung_task.c:153,160` (`CONFIG_DETECT_HUNG_TASK_BLOCKER=y`) | `mutex_get_owner()`, `rwsem_owner()` | `kd_mutex_get_owner()`; a kd rwsem has no owner, so the detector names no blocker for it (diagnostics only) |
+| `kernel/sched/core.c:6634` | `__mutex_owner()` | only with `CONFIG_SCHED_PROXY_EXEC`, which is off |
+
+**2. Running it with delegation off: the realistic first step.** Without
+the translator, or with `KD_IOC_ENABLE` off, every lock is a plain queued
+lock, which is the same algorithm as qspinlock with a different word layout.
+Nothing in that mode depends on task identity or on running another task's
+code. What is not tested even in this mode (ARCHITECTURE 11.1): interrupt
+and NMI paths at scale, CPU hotplug, signals. Stack traces through the
+entry stubs stop early (11.6), which also matters for livepatch's
+reliable-stack check and BPF stack maps, not for booting. Every release
+becomes an out-of-line call (`CONFIG_UNINLINE_SPIN_UNLOCK`). The kernel's
+own `locktorture` module (`CONFIG_LOCK_TORTURE_TEST`) exercises spinlock,
+rwlock, mutex and rwsem through the ordinary API and would be the
+correctness check for this step.
+
+**3. Running it with delegation on for every lock: not today.** Today
+delegation is reached only by the mmap lock and the six objects of 4b, whose
+sections were measured and checked one by one. For the whole kernel, three
+stated limits change from "not observed" to "certain to happen":
+
+* **Text patching is not followed** (ARCHITECTURE 11.4). An image is a
+  copy of the text as it was when it was translated. In a whole kernel,
+  jump labels and static calls change at run time: every tracepoint that is
+  enabled or disabled, `static_branch` keys of cgroup, memcg, scheduler and
+  networking features, `PREEMPT_DYNAMIC` (static calls, `CONFIG_PREEMPT_DYNAMIC=y`
+  here), ftrace, kprobes and livepatch. An image translated before the change
+  keeps running the old branch. A tracepoint missing from a delegated section
+  is harmless. A feature key that changes what a section does is a
+  correctness error. An `int3` that a kprobe or `text_poke_bp()` left in the
+  text at translation time is a frontier, so that case only costs a
+  handback. The fix is a kernel hook in the text-patching paths that drops
+  images whose source range covers the patched address, the way a module
+  unload drops images now.
+* **Per-CPU data is the executor's** (DIFFERENCES D3, ARCHITECTURE 11.2).
+  Only `current`, the stack canary and the stack top are redirected. Counters
+  and caches kept consistent by the lock are correct on any CPU. A section
+  that relies on running on the origin's CPU is wrong: one that records
+  `smp_processor_id()`, uses a per-CPU pointer taken before the lock after a
+  handback, or updates per-CPU state that the origin's code around the lock
+  assumes only it touches. Across the whole kernel that cannot be audited by
+  hand. The translator would have to report or stop at `%gs` accesses to
+  per-CPU symbols it has no rule for.
+* **Task fields written through `current`** (11.7): `pagefault_disable()`
+  and `migrate_disable()` inside a section are the known candidates.
+
+Two more limits become costs. Module load and unload drop every image
+(11.5), and a booting system loads modules continuously. The translator
+handles one site at a time with up to 250 000 copied instructions (4a); the
+vmlinux of build #84 alone, without modules, has about 13 400 direct
+acquire call sites (`objdump`): 6 933 spinlock calls, `raw_spinlock_t`
+included, of which 3 229 are `_irq`/`_irqsave` forms that execute locally
+anyway; 461 rwlock; 4 815 mutex; 1 204 rwsem.
+
+**What replacement costs where it does not delegate.** Replacing a lock pays
+only where its sections delegate. Where they hand back, the replacement
+costs (MMAP_LOCKS 3: `mmap2` 0.78-0.86 of Native, every session handed back
+at `i_mmap_rwsem`; `page_fault1` 0.84-0.91 from reader spinning). A
+whole-kernel switch therefore also depends on the per-site usefulness account
+turning delegation off where it does not pay.
+
+**Order of work** if this is pursued:
+
+1. The switched kernel with delegation off: build, boot, `locktorture`, and
+   the nano correctness runs. This establishes the plain path for every
+   kernel user.
+2. Images follow text patching (drop on `text_poke`).
+3. The translator classifies `%gs` accesses: the three redirected ones, a
+   list of symbols known to be correct on any CPU (statistics counters), and
+   a frontier for everything else.
+4. Delegation enabled by an allow list of lock objects or sites, extended as
+   their sections are checked, as for the mmap lock and the objects of 4b.
 
 ## 5. Symbols and memory the code depends on
 
