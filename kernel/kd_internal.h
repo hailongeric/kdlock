@@ -294,7 +294,7 @@ extern unsigned int kd_xchg;
  * writer session that renewed it.
  */
 #define KD_RW_ERA_BITS		8
-#define KD_POST_DEPTH		2	/* kd_family.post: queued callers counted */
+#define KD_POST_DEPTH		2	/* callers queued behind a head that count as pressure */
 #define KD_ERA_NODE(v)		((v) & 0xffU)
 #define KD_ERA_STAMP_MAX	0xffffffU
 
@@ -303,7 +303,7 @@ struct kd_rw_era_word {
 } ____cacheline_aligned_in_smp;
 
 extern struct kd_rw_era_word kd_rw_eras[1 << KD_RW_ERA_BITS];
-extern unsigned int kd_rw_era_ns, kd_rw_era_min;
+extern unsigned int kd_rw_era_ns;
 
 static __always_inline u32 *kd_rw_era(const void *lock)
 {
@@ -337,8 +337,9 @@ void kd_rw_era_writer(const void *lock, long nr, int queued, u64 drain_ns);
  *
  * @post:	called by the queue head once it holds the queue lock, to
  *		obtain the rest of the grant (writer bit). Returns false if
- *		that would require sleeping (rwsem only). @queued: callers
- *		queued behind the head, counted up to KD_POST_DEPTH.
+ *		that would require sleeping (rwsem only). @head: the head's
+ *		queue node, for a look at who is queued behind it; NULL if
+ *		nobody is, or the head has no node.
  * @release:	the queue lock is only a wait lock for this family; drop it
  *		when the session ends.
  * @set_owner:	record the logical owner (mutex).
@@ -349,7 +350,7 @@ void kd_rw_era_writer(const void *lock, long nr, int queued, u64 drain_ns);
  *		off with a single queued writer.
  */
 struct kd_family {
-	bool (*post)(void *root, int queued);
+	bool (*post)(void *root, struct kd_node *head);
 	void (*release)(void *root);
 	void (*set_owner)(void *root, struct task_struct *t);
 	/*

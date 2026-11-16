@@ -92,9 +92,9 @@ Counters are per-CPU, summed on read, non-atomic and approximate by design.
 `kd_batch=<n>` (default 4096), `kd_numa=<0|1>` (default 1), `kd_adapt=<0|1>`
 (1), `kd_deleg_enter=<n>` (5), `kd_deleg_enter_sleep=<n>` (3),
 `kd_deleg_exit=<n>` (2), `kd_xchg=<0|1|2>` (1), `kd_numa_after=<n>` (32),
-`kd_rw_era_ns=<ns>` (200000; 0 switches eras off), `kd_rw_era_press=<n>`
-(225), `kd_rw_era_drain_ns=<ns>` (5000), `kd_rw_era_min=<n>` (2); meanings
-in LOCKS.md 7. All
+`kd_rw_era_ns=<ns>` (200000; 0 switches eras off and measures nothing),
+`kd_rw_era_press=<n>` (225), `kd_rw_era_drain_ns=<ns>` (5000); meanings in
+LOCKS.md 7. All
 are also writable at runtime under `/sys/module/kernel/parameters/` (core
 params, mode 0644), which is what `bench/run_ab.sh` uses to compare settings
 within one boot.

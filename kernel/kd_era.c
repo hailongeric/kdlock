@@ -15,8 +15,9 @@
  * native locks lose there as well (0.61-0.71).
  *
  * So a lock under pressure has an era: the node whose callers it serves. A
- * caller of another node that finds the lock in use waits before it touches
- * the lock at all, until the era is its node's. When its wait runs out it
+ * caller of another node that finds the lock in use (a reader that meets a
+ * writer, a writer whose fast path fails) waits before it touches the lock
+ * further, until the era is its node's. When its wait runs out it
  * takes the era over for its node, and the callers of the node that had it
  * wait in turn. The lock's lines then cross between the nodes once per era
  * instead of once per section. TCLocks gets the same from its queue, which
@@ -51,7 +52,7 @@
  * The era words are shared between locks by hash, as the lock objects have
  * no room for one; a collision only makes two locks share their era. A word
  * changes when the era changes hands and when its stamp is renewed (once a
- * tick), so the fast paths can load it and waiting callers can poll it. The
+ * tick), so the slow paths can load it and waiting callers can poll it. The
  * averages are written by every queue head, the counts of waiting callers by
  * those callers; each lives in a line of its own.
  */
@@ -75,8 +76,6 @@
  */
 unsigned int kd_rw_era_ns __read_mostly = 200000;
 core_param(kd_rw_era_ns, kd_rw_era_ns, uint, 0644);
-unsigned int kd_rw_era_min __read_mostly = 2;
-core_param(kd_rw_era_min, kd_rw_era_min, uint, 0644);
 static unsigned int kd_rw_era_drain_ns __read_mostly = 5000;
 core_param(kd_rw_era_drain_ns, kd_rw_era_drain_ns, uint, 0644);
 /* In hundredths of a caller; see kd_rw_era_writer(). */
@@ -238,9 +237,10 @@ void kd_rw_era_writer(const void *lock, long nr, int queued, u64 drain_ns)
 	/*
 	 * Only start or renew. An era the conditions no longer support is
 	 * left to run out (one or two ticks): clearing it here would store
-	 * to the word every time the averages cross a threshold, and every
-	 * reader's fast path loads that word (measured, #75: rwsem 1% writes
-	 * on one node, 16 workers, -5% when clearing).
+	 * to the word every time the averages cross a threshold, and the
+	 * callers that load it would miss every time (measured, #75, when the
+	 * reader fast path still loaded it: rwsem 1% writes on one node, 16
+	 * workers, -5% when clearing).
 	 */
 	if (!READ_ONCE(kd_rw_era_ns) || d >= READ_ONCE(kd_rw_era_drain_ns) ||
 	    p * 100 < READ_ONCE(kd_rw_era_press) * KD_ERA_PRESS_ONE)

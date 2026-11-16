@@ -1354,7 +1354,7 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 		while (!kd_q_trylock_fifo(q))
 			cpu_relax();
 		if (f && f->post)
-			f->post(root, 0);
+			f->post(root, NULL);
 		if (f && f->release)
 			f->release(root);
 		return KD_WAIT_LOCAL;
@@ -1395,7 +1395,7 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 			out = kd_q_head_take(q, me, deleg ? KD_Q_LOCKED | KD_Q_DELEG :
 							    KD_Q_LOCKED);
 		if (f && f->post)
-			f->post(root, out ? 0 : kd_q_depth(me, KD_POST_DEPTH));
+			f->post(root, out ? NULL : me);
 		if (out)
 			break;		/* nobody is queued behind us */
 		if (!deleg)
@@ -1550,7 +1550,7 @@ again:
 			}
 			WRITE_ONCE(m->owner, current);
 		}
-		if (f->post && !f->post(root, kd_q_depth(me, KD_POST_DEPTH))) {
+		if (f->post && !f->post(root, me)) {
 			/* Keep the queue mutex; the caller decides how to wait on. */
 			kd_q_pass(q, me, true, 0);
 			smp_store_release(&me->state, KD_N_FREE);

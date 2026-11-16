@@ -187,10 +187,12 @@ static unsigned int kd_rwsem_rphase_ns __read_mostly = 1000;
 core_param(kd_rwsem_rphase_ns, kd_rwsem_rphase_ns, uint, 0644);
 #define KD_RWSEM_RPHASE_MAX_NS	50000
 
-static bool kd_rwsem_post(void *root, int queued)
+static bool kd_rwsem_post(void *root, struct kd_node *head)
 {
 	struct kd_rwsem *sem = root;
 	u64 rphase = READ_ONCE(kd_rwsem_rphase_ns);
+	/* Without eras nothing is measured: kd_rw_era_ns=0 costs this one load. */
+	bool era = READ_ONCE(kd_rw_era_ns);
 	u64 t0 = 0;
 	long nr;
 
@@ -218,14 +220,17 @@ static bool kd_rwsem_post(void *root, int queued)
 		}
 	}
 	nr = atomic_long_fetch_or(KD_RWSEM_WWAIT, &sem->count) >> KD_RWSEM_RSHIFT;
-	if (nr)
+	if (era && nr)
 		t0 = local_clock();
 	if (!kd_rwsem_spin_for(sem, true)) {
 		/* The readers stay longer than the spin budget: no eras. */
-		kd_rw_era_writer(sem, nr, queued, READ_ONCE(kd_rwsem_wspin_ns));
+		if (era)
+			kd_rw_era_writer(sem, nr, 0, READ_ONCE(kd_rwsem_wspin_ns));
 		return false;
 	}
-	kd_rw_era_writer(sem, nr, queued, nr ? local_clock() - t0 : 0);
+	if (era)
+		kd_rw_era_writer(sem, nr, head ? kd_q_depth(head, KD_POST_DEPTH) : 0,
+				 t0 ? local_clock() - t0 : 0);
 	/* Readers that stayed out for this writer may register behind it. */
 	kd_rwsem_phase_change(sem);
 	return true;
@@ -648,10 +653,15 @@ static __always_inline int __kd_down_read(struct kd_rwsem *sem, unsigned int sta
 	c = atomic_long_read(&sem->count);
 	if (unlikely(c & KD_RWSEM_WMASK))
 		return kd_down_read_slow(sem, state, c, false);
-	/* In use by readers, and it is another node's era: wait for ours. */
-	if (unlikely((c >> KD_RWSEM_RSHIFT) >= READ_ONCE(kd_rw_era_min)) &&
-	    kd_rw_era_other(sem))
-		return kd_down_read_slow(sem, state, c, false);
+	/*
+	 * No look at the era here: only a reader that meets a writer waits
+	 * for its node's era (kd_down_read_slow()). Checking the era word on
+	 * this path whenever two readers were in cost every reader of every
+	 * rwsem 3-12% on one node, and across nodes the lock was faster
+	 * without it as well (build #81, in-boot, 32 workers: one node
+	 * 0.93-0.98 -> 0.99-1.00 of the rate without any era code; 16+16
+	 * with 1% writes 10.87 -> 12.17 Mops/s).
+	 */
 	c = atomic_long_add_return_acquire(KD_RWSEM_RBIAS, &sem->count);
 	if (likely(!(c & KD_RWSEM_WMASK)))
 		return 0;

@@ -408,11 +408,9 @@ queue head, after taking the write side (kd_rwsem_post, kd_rw_post):
     if pressure >= kd_rw_era_press (2.25) and drain < kd_rw_era_drain_ns (5 us):
         start an era for this node, or renew the stamp of the one that exists
 
-caller of another node, before it touches the lock:
-    rwsem reader:  the fast path saw >= kd_rw_era_min readers in, or a writer
-    rwsem writer:  the fast path failed
-    rwlock reader: it met a writer;  rwlock writer: the fast path failed
-                   (neither with interrupts or bottom halves off)
+caller of another node that found the lock in use:
+    reader: it met a writer            writer: its fast path failed
+    (rwlock: neither with interrupts or bottom halves off)
     -> count itself as waiting, then poll the era word only (kd_rw_era_wait):
          era is ours, or ran out   -> go on as usual
          bound passed              -> take the era over, note how many of us waited
@@ -445,6 +443,13 @@ A waiter never looks at the lock itself. One look per waiter, taking the era
 over if the lock was idle, was tried (#77, #78) and removed: it ended the eras
 of a node with few callers after a few microseconds, and with the time of the
 look derived from the CPU number one node kept winning.
+
+A reader that finds no writer is never held back, and no fast path looks at
+the era. The rwsem's reader fast path did until build #80 (whenever two
+readers were in). In-boot on #81, 32 workers: that check alone cost 3-12% on
+one node, and across nodes the lock was faster without it (16+16 with 1%
+writes 10.87 -> 12.17 Mops/s). What the queue heads measure costs 0-3% (rwlock
+with 20% writes), and nothing with `kd_rw_era_ns=0`.
 
 What it costs is order: a caller can be passed by later callers of the era's
 node for at most twice its bound per acquisition. That is the same kind of

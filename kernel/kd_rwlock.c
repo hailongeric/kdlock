@@ -36,19 +36,23 @@
  * How many readers were in and how long they took is what decides whether
  * the lock gets an era (kd_era.c).
  */
-static bool kd_rw_post(void *root, int queued)
+static bool kd_rw_post(void *root, struct kd_node *head)
 {
 	struct kd_rwlock *rw = root;
+	/* Without eras nothing is measured: kd_rw_era_ns=0 costs this one load. */
+	bool era = READ_ONCE(kd_rw_era_ns);
 	int c, nr;
 	u64 t0 = 0;
 
 	nr = atomic_fetch_or(KD_RW_WWAIT, &rw->cnts) >> KD_RW_RSHIFT;
-	if (nr)
+	if (era && nr)
 		t0 = local_clock();
 	do {
 		c = atomic_cond_read_relaxed(&rw->cnts, VAL == KD_RW_WWAIT);
 	} while (!atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED));
-	kd_rw_era_writer(rw, nr, queued, nr ? local_clock() - t0 : 0);
+	if (era)
+		kd_rw_era_writer(rw, nr, head ? kd_q_depth(head, KD_POST_DEPTH) : 0,
+				 t0 ? local_clock() - t0 : 0);
 	return true;
 }
 
@@ -95,7 +99,7 @@ void kd_write_lock_plain(struct kd_rwlock *rw)
 {
 	if (unlikely(!kd_q_trylock_fifo(&rw->wait)))
 		kd_q_lock_plain(&rw->wait);
-	kd_rw_post(rw, 0);
+	kd_rw_post(rw, NULL);
 	kd_q_unlock(&rw->wait);
 }
 

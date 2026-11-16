@@ -229,10 +229,14 @@ call.
 * **Eras** (ARCHITECTURE 7b, `kernel/kd_era.c`): readers are admitted
   outside the queue, so no order inside a session reaches them. Under
   pressure the rwsem serves one node at a time.
-  * Who waits for its node's era: a reader whose fast path saw a writer, or
-    at least `kd_rw_era_min` readers in; a writer whose fast path failed.
-    They wait before touching `count`, polling the era word only, for at
-    most twice `kd_rw_era_ns`, and the wait ends at `need_resched()`.
+  * Who waits for its node's era: a reader that meets a writer, and a
+    writer whose fast path failed. They wait before touching `count`
+    again, polling the era word only, for at most twice `kd_rw_era_ns`,
+    and the wait ends at `need_resched()`.
+  * A reader that finds no writer is never held back, and its fast path
+    does not look at the era. A check there (whenever two readers were in)
+    cost every reader 3-12% on one node and gained nothing across nodes
+    (build #81).
   * Not every reader is admitted when a writer session ends: only those of
     the era's node have registered behind it. The readers of the other node
     are still outside, and enter when the era is theirs.
@@ -332,10 +336,9 @@ sees neither effect.
 | `kd_cldemote` (core param, 0644) | 3 | bits: a queued spin-class waiter demotes 1 its packet, 2 its stack top (CLDEMOTE); 16 and 32 the same for the sleepable class (ARCHITECTURE 4.2) |
 | `kd_numa` (core param, 0644) | 1 | NUMA-ordered sessions |
 | `kd_numa_after` (core param, 0644) | 32 | rwsem: waiters a session serves in queue order before it defers other nodes' (ARCHITECTURE 7) |
-| `kd_rw_era_ns` (core param, 0644) | 200000 | rwsem and rwlock: the era bound (a waiter waits at most twice this); 0: no eras (ARCHITECTURE 7b) |
+| `kd_rw_era_ns` (core param, 0644) | 200000 | rwsem and rwlock: the era bound (a waiter waits at most twice this); 0: no eras, and the queue heads measure nothing (ARCHITECTURE 7b) |
 | `kd_rw_era_press` (core param, 0644) | 225 | hundredths of a caller: average company a queue-head writer must find (readers in + up to 2 queued behind) for an era to start or be renewed |
 | `kd_rw_era_drain_ns` (core param, 0644) | 5000 | no era while the readers a queue head finds take longer than this to leave, on average |
-| `kd_rw_era_min` (core param, 0644) | 2 | rwsem reader fast path: readers in from which another node's era is honoured without a writer present |
 | `kd_rw_era_dbg_drain`, `kd_rw_era_dbg_press` (0444) | - | the last averages a queue head computed (ns; sixteenths of a caller) |
 | `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
 | `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |
