@@ -22,6 +22,7 @@
 #define _KDLOCK_KD_API_H
 
 #include <kdlock/kd_types.h>
+#include <asm/asm.h>
 
 /* ---- spinlock --------------------------------------------------------- */
 
@@ -246,5 +247,81 @@ static inline int kd_rwsem_is_contended(struct kd_rwsem *sem)
 	return atomic_read(&sem->m.q.val) != 0 || !list_empty(&sem->m.waiters) ||
 	       ((c & KD_RWSEM_WLOCKED) && (c >> KD_RWSEM_RSHIFT));
 }
+
+/* ---- clobber entries --------------------------------------------------- */
+
+/*
+ * kd_spin_lock_cl(), kd_spin_unlock_cl(), kd_write_lock_cl(),
+ * kd_write_unlock_cl(), kd_mutex_lock_cl(), kd_mutex_unlock_cl(),
+ * kd_down_write_cl(), kd_up_write_cl().
+ *
+ * The same operations as kd_spin_lock() and the others, for call sites
+ * whose critical section is worth the most to delegate. The call is made
+ * from inline assembly that declares every general register except rsp and
+ * rbp lost across it (rbp is the frame pointer). The compiler then keeps
+ * nothing in rbx and r12-r15 across the lock and release calls; what it
+ * needs afterwards it reloads, and the registers the function itself must
+ * preserve are saved once in its prologue, on its own CPU.
+ *
+ * What that buys: a waiter that queues through such an entry publishes
+ * rsp, rbp, its return address and its flags instead of every register,
+ * and so does a delegated section that ends at such a release. The
+ * combiner then fetches two lines of the waiter's packet instead of four
+ * per section, and writes one instead of three when the section ends
+ * (struct kd_regs, kind KD_RS_COMPACT).
+ *
+ * Semantics are those of the ordinary calls, and both kinds of entry can be
+ * mixed on one lock and at the two ends of one section: wherever one end is
+ * an ordinary call, the full state is kept. Not covered: the irq, irqsave
+ * and bh variants, the interruptible and killable ones (they return a value
+ * the macros would have to carry) and the readers, which are never
+ * delegated.
+ *
+ * Use them only as calls in C code. The entries they call are not C
+ * functions and are declared below as arrays, so that they can neither be
+ * called directly nor stored in a function pointer; code that reaches a
+ * lock operation through a pointer uses the ordinary functions above.
+ *
+ * With CONFIG_KDLOCK_CLOBBER_ENTRY off the macros are the ordinary calls.
+ */
+extern const unsigned char __kd_spin_lock_cl[], __kd_spin_unlock_cl[];
+extern const unsigned char __kd_write_lock_cl[], __kd_write_unlock_cl[];
+extern const unsigned char __kd_mutex_lock_cl[], __kd_mutex_unlock_cl[];
+extern const unsigned char __kd_down_write_cl[], __kd_up_write_cl[];
+
+#ifdef CONFIG_KDLOCK_CLOBBER_ENTRY
+
+#define __KD_CL_LOST	"memory", "cc", "rax", "rcx", "rdx", "rsi", "r8", "r9",	\
+			"r10", "r11", "rbx", "r12", "r13", "r14", "r15"
+
+/* rdi carries the lock in and is lost like the others: an in-out operand. */
+#define __kd_cl_call(entry, type, lock) do {				\
+	type *__kd_cl_lock = (lock);					\
+	asm volatile("call " #entry					\
+		     : ASM_CALL_CONSTRAINT, "+D" (__kd_cl_lock)		\
+		     : : __KD_CL_LOST);					\
+} while (0)
+
+#define kd_spin_lock_cl(l)	__kd_cl_call(__kd_spin_lock_cl, struct kd_spinlock, l)
+#define kd_spin_unlock_cl(l)	__kd_cl_call(__kd_spin_unlock_cl, struct kd_spinlock, l)
+#define kd_write_lock_cl(rw)	__kd_cl_call(__kd_write_lock_cl, struct kd_rwlock, rw)
+#define kd_write_unlock_cl(rw)	__kd_cl_call(__kd_write_unlock_cl, struct kd_rwlock, rw)
+#define kd_mutex_lock_cl(m)	__kd_cl_call(__kd_mutex_lock_cl, struct kd_mutex, m)
+#define kd_mutex_unlock_cl(m)	__kd_cl_call(__kd_mutex_unlock_cl, struct kd_mutex, m)
+#define kd_down_write_cl(sem)	__kd_cl_call(__kd_down_write_cl, struct kd_rwsem, sem)
+#define kd_up_write_cl(sem)	__kd_cl_call(__kd_up_write_cl, struct kd_rwsem, sem)
+
+#else
+
+#define kd_spin_lock_cl(l)	kd_spin_lock(l)
+#define kd_spin_unlock_cl(l)	kd_spin_unlock(l)
+#define kd_write_lock_cl(rw)	kd_write_lock(rw)
+#define kd_write_unlock_cl(rw)	kd_write_unlock(rw)
+#define kd_mutex_lock_cl(m)	kd_mutex_lock(m)
+#define kd_mutex_unlock_cl(m)	kd_mutex_unlock(m)
+#define kd_down_write_cl(sem)	kd_down_write(sem)
+#define kd_up_write_cl(sem)	kd_up_write(sem)
+
+#endif
 
 #endif /* _KDLOCK_KD_API_H */

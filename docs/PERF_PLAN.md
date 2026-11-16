@@ -348,6 +348,19 @@ Data: `tune-20261115-2700MHz/` (in-boot A/B, builds #67-#71) and
     (BUILD_AND_TEST 5a).
   * All of it, step by step, with what was tried and removed:
     `bench/results/kdclaude/era-20261115-64cpu/`.
+* **Clobber entries** (#83, #84; LOCKS 8): the `kd_*_cl()` macros declare
+  every register but `rsp` and `rbp` lost across the lock and release
+  calls, so the continuation is two packet lines instead of four. In-boot
+  A/B: +2-4% for one-line spin and rwlock writer sections, +0.5-2% for the
+  rwsem, up to +2% for the mutex, -0.5 to -0.8% for the mutex with sixteen
+  lines. Two packet lines cost about 2.5 ns each per section, so moving the
+  rest of the continuation into the queue node would be worth about 1.5%
+  and is not done (`bench/results/kdclaude/clobber-20261116-64cpu/`).
+* **More threads than CPUs** (#82): the spin class is unaffected; the
+  sleepable class loses less than Native (kd/Native 1.16-1.62), but rwsem
+  writer sessions collapse to 11-33 sections because a queue head waits out
+  its spin budget for a writer bit whose holder lost its CPU
+  (`bench/results/kdclaude/oversub-20261116-64cpu/`).
 * **Still open after round 12:**
   * The rwsem with 1% writes against TCLock, 0.75-0.93 on either side of
     the node boundary. It is the read side on one line of a 40-byte object
@@ -361,6 +374,9 @@ Data: `tune-20261115-2700MHz/` (in-boot A/B, builds #67-#71) and
     0.83 of Native in rounds 10, 11 and 12 with the same mutex code).
   * Evenness of eras with very unequal numbers on the nodes (28+4 with 20%
     writes: 0.54-0.83).
+  * Rwsem writer sessions under oversubscription (above): the queue head
+    cannot see that a fast-path writer lost its CPU, because the writer bit
+    has no owner.
 * **Reader spinning needs a rule too.** A reader registered behind an
   *active* writer spins out `kd_rwsem_rspin_ns` (50 us) even when the holder
   will not leave for milliseconds. That is two thirds of will-it-scale

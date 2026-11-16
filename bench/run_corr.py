@@ -45,6 +45,15 @@ POINTS = [
     ("spin_hb", (1, 16), (100,), (2, 3, 5, 8, 32), ("native", "kd")),
     ("rwlock_hb", (1,), (20, 100), (2, 8, 32), ("native", "kd")),
     ("rwsem_hb", (1,), (20, 100), (2, 8, 32), ("native", "kd")),
+    # Clobber entries; Native and TCLock run their ordinary bodies.
+    ("spin_cl", (1, 16), (100,), (1, 2, 3, 5, 8, 32), None),
+    ("mutex_cl", (1, 16), (100,), (1, 2, 3, 5, 8, 32), None),
+    ("rwlock_cl", (1, 16), (1, 20, 100), (1, 2, 8, 32), None),
+    ("rwsem_cl", (1, 16), (1, 20, 100), (1, 2, 8, 32), None),
+    ("spin_hb_cl", (1, 16), (100,), (2, 3, 5, 8, 32), ("native", "kd")),
+    ("rwsem_hb_cl", (1,), (20, 100), (2, 8, 32), ("native", "kd")),
+    ("spin_mixend", (1, 16), (100,), (2, 3, 5, 8, 32), ("native", "kd")),
+    ("nest_spin_cl", (1,), (50,), (2, 8, 32), ("native", "kd")),
 ]
 
 

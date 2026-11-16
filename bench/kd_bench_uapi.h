@@ -50,6 +50,21 @@ enum { KDB_SPIN, KDB_MUTEX, KDB_RWLOCK, KDB_RWSEM,
 	 *   RWSEM_HB            yield()
 	 */
 	KDB_SPIN_HB, KDB_RWLOCK_HB, KDB_RWSEM_HB,
+	/*
+	 * kd only: the clobber entries (kd_api.h, kd_*_cl()). The workloads
+	 * are those of SPIN, MUTEX, RWLOCK and RWSEM with the writers' lock
+	 * and release calls made through the macros; Native and TCLock run
+	 * their ordinary bodies, so the three can be compared as usual.
+	 *   SPIN_HB_CL, RWSEM_HB_CL  the handback bodies with clobber entries:
+	 *                            a compact continuation continued from a
+	 *                            full state
+	 *   SPIN_MIXEND              alternately a clobber lock with an
+	 *                            ordinary release and the reverse
+	 *   NEST_SPIN_CL             NEST_SPIN with the outer lock through
+	 *                            the clobber entries
+	 */
+	KDB_SPIN_CL, KDB_MUTEX_CL, KDB_RWLOCK_CL, KDB_RWSEM_CL,
+	KDB_SPIN_HB_CL, KDB_RWSEM_HB_CL, KDB_SPIN_MIXEND, KDB_NEST_SPIN_CL,
 	KDB_NR_FAMILY };
 /*
  * KDB_TCLOCK: the original TCLock locks from tclock_backend/ (komb_*),

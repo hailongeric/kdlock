@@ -320,3 +320,28 @@ the tables.
     Behind: the rwsem with 1% writes, 0.79-0.93, the same margin as within
     one node.
   * One node: kd's rates are 0.96-1.05 of round 10 in every profile.
+
+### More threads than CPUs (`oversub-20261116-64cpu/`)
+
+* **Run:** build #82, 1 to 8 workers per CPU on 8 and 16 CPUs, Native and
+  kd, 224 points, every data check passed, no kernel complaint.
+* **Spin class:** no effect, Native and kd alike; waiters and holders run
+  with preemption off, so a CPU's other threads never reach the lock.
+* **Sleepable class:** both lose, kd less; kd/Native 1.04-1.40 with one
+  worker per CPU, 1.16-1.62 with more. kd's sessions get shorter; the rwsem
+  with writers only falls to 11-33 sections per session and has less even
+  shares per worker than Native there.
+* **TCLock** crashed the guest with two workers per CPU on its spinlock
+  (stack protector in `__schedule`, twice); its mutex and rwsem adapters
+  allow one task per CPU. Not in the comparison.
+
+### Clobber entries (`clobber-20261116-64cpu/`)
+
+* **What:** the `kd_*_cl()` macros (LOCKS 8): a compact continuation, two
+  packet lines instead of four per section.
+* **Correctness:** 586 points with eight new bodies, 0 failed, on #83 and
+  #84; the counters show a compact state exactly where both ends are
+  clobber calls.
+* **Gain** (in-boot A/B on #83): 2-4% for one-line spin and rwlock writer
+  sections, 0.5-2% for the rwsem, up to 2% for the mutex, -0.5 to -0.8% for
+  the mutex with sixteen lines.

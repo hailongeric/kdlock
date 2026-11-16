@@ -58,18 +58,47 @@ struct kd_site;
  * task while its section is delegated. Exactly one participant advances
  * it at a time: the origin before it queues, the combiner while the node
  * is claimed, the origin again after RESUME.
+ *
+ * Layout by use. The waiter writes the packet when it queues and the
+ * combiner reads it from the waiter's cache, so every line in use is a
+ * transfer per section. Lines 0 and 1 hold what every section needs; the
+ * general registers that only a full state needs are in lines 2 and 3.
+ *
+ * ->kind says which registers are valid:
+ *  KD_RS_FULL     all of them. Written by the ordinary entries, which keep
+ *                 the C calling convention, and by every exit from
+ *                 generated code except the one below.
+ *  KD_RS_COMPACT  rsp, rbp, rip, rflags and rax only. Written by the clobber
+ *                 entries (kd_api.h), whose callers have declared every
+ *                 other general register lost across the call, and by the
+ *                 exit at a clobber release. Lines 0 and 1 only.
+ * Full is always a correct substitute for compact, never the reverse.
  */
 struct kd_regs {
-	unsigned long rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp;
-	unsigned long r8, r9, r10, r11, r12, r13, r14, r15;
+	/* ---- line 0 ---- */
+	unsigned long rsp, rbp;
 	unsigned long rip;		/* next source instruction */
 	unsigned long rflags;		/* includes the origin's logical IF */
+	unsigned long rax;
 	struct task_struct *task;	/* origin */
 	unsigned long canary;
 	unsigned long stack_top;
+	/* ---- line 1 ---- */
 	struct kd_site *site;		/* root call site, for accounting and learning */
 	long pc_delta;			/* preempt count the origin must add on resume */
-	u32 bh_off;			/* origin had softirqs disabled when it queued */
+	void *jit_resume;		/* generated code to continue at after KD_STOP_DONE */
+	/*
+	 * Sleepable-class lock this continuation was handed back with whose
+	 * combiner offered itself (role exchange); becomes kd_cpu.xs_hint.
+	 */
+	void *xs_root;
+	/*
+	 * Preemptible-RCU read-side sections the continuation is inside right
+	 * now. Whoever executes it holds that many itself, and the origin
+	 * brings its own count in line when it resumes (kd_rcu_sync()).
+	 */
+	int rcu_depth;
+	u8 bh_off;			/* origin had softirqs disabled when it queued */
 	/*
 	 * Nested delegation. Each executor that runs this continuation pushes
 	 * the lock it runs it for. A deeper executor that meets the release
@@ -85,24 +114,16 @@ struct kd_regs {
 	 * moves it to kd_cpu.xcount when it resumes.
 	 */
 	u8 xoffers;
-	void *jit_resume;		/* generated code to continue at after KD_STOP_DONE */
-	void *roots[KD_MAX_ROOTS];
-	/*
-	 * Sleepable-class lock this continuation was handed back with whose
-	 * combiner offered itself (role exchange); becomes kd_cpu.xs_hint.
-	 */
-	void *xs_root;
-	/*
-	 * Preemptible-RCU read-side sections the continuation is inside right
-	 * now. Whoever executes it holds that many itself, and the origin
-	 * brings its own count in line when it resumes (kd_rcu_sync()).
-	 */
-	int rcu_depth;
 	/*
 	 * Bit i: roots[i] was downgraded by the continuation while its
 	 * combiner kept the write side; see kd_vdown in kd_core.c.
 	 */
 	u8 vdown;
+	u8 kind;			/* KD_RS_* */
+	void *roots[KD_MAX_ROOTS];	/* the first two in line 1 */
+	/* ---- lines 2 and 3: full state only ---- */
+	unsigned long rbx, rcx, rdx, rsi, rdi;
+	unsigned long r8, r9, r10, r11, r12, r13, r14, r15;
 };
 
 enum {
@@ -151,6 +172,11 @@ struct kd_node {
 	 * waiter's section. See kd_node_abandon().
 	 */
 	bool		claim;
+	/*
+	 * The published packet holds a full state (struct kd_regs). Only a
+	 * hint, for how many packet lines the combiner requests ahead.
+	 */
+	bool		full;
 } ____cacheline_aligned_in_smp;
 
 #define KD_MAX_NODES	4
@@ -204,6 +230,9 @@ enum {
 	KD_STAT_ERA_GATE,	/* callers that waited for their node's era */
 	KD_STAT_ERA_CLAIM,	/* ... and took the era over after the bound */
 	KD_STAT_ERA_START,	/* eras started by a queue head */
+	/* Clobber entries (kd_api.h kd_*_cl()). */
+	KD_STAT_CL_OFFERED,	/* waiters queued with a compact state */
+	KD_STAT_CL_DONE,	/* sections that ended at a clobber release, compact */
 	KD_STAT_NR,
 };
 
@@ -381,6 +410,7 @@ struct kd_family {
 /* kd_entry.S */
 void kd_jit_enter(struct kd_regs *regs, void *code);
 void kd_jit_exit(void);
+void kd_jit_exit_cl(void);
 
 /* kd_core.c */
 int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,

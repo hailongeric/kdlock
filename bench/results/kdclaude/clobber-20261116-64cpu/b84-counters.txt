@@ -1,0 +1,15 @@
+delegation 1
+#84 SMP PREEMPT_DYNAMIC Mon Nov 16 16:31:32 UTC 2026
+KBLDONE
+#84 SMP PREEMPT_DYNAMIC Mon Nov 16 16:31:32 UTC 2026
+spin          ok=True  6.47 Mops del= 6740328 hb=      0 cl_offered=       0 cl_done=       0
+spin_cl       ok=True  6.62 Mops del= 6627472 hb=      0 cl_offered= 6629138 cl_done= 6627472
+mutex         ok=True  3.81 Mops del= 4032467 hb=      0 cl_offered=       0 cl_done=       0
+mutex_cl      ok=True  3.86 Mops del= 3928289 hb=      0 cl_offered= 3929681 cl_done= 3928289
+rwlock_cl     ok=True  4.85 Mops del= 1062504 hb=      0 cl_offered= 1875647 cl_done= 1062504
+rwsem_cl      ok=True  4.65 Mops del= 1586089 hb=      0 cl_offered= 1615078 cl_done= 1586089
+spin_hb_cl    ok=True  5.62 Mops del= 5466039 hb= 364403 cl_offered= 5831888 cl_done= 5466039
+spin_mixend   ok=True  6.02 Mops del= 6138088 hb=      0 cl_offered= 3042063 cl_done= 3096796
+nest_spin_cl  ok=True  4.20 Mops del= 2158772 hb=      0 cl_offered= 2159234 cl_done= 2158692
+
+[exited with code 0]

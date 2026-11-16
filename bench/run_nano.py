@@ -32,7 +32,10 @@ FAMILY = {"spin": 0, "mutex": 1, "rwlock": 2, "rwsem": 3,
           # `current` inside the section (read / write); ww mutex test body
           "spin_curr": 7, "spin_curw": 8, "mutex_curr": 9, "mutex_curw": 10, "ww": 11,
           # raw (never delegated) spin acquire; handback bodies
-          "spin_raw": 12, "spin_hb": 13, "rwlock_hb": 14, "rwsem_hb": 15}
+          "spin_raw": 12, "spin_hb": 13, "rwlock_hb": 14, "rwsem_hb": 15,
+          # the same through the clobber entries (kd); Native/TCLock: ordinary bodies
+          "spin_cl": 16, "mutex_cl": 17, "rwlock_cl": 18, "rwsem_cl": 19,
+          "spin_hb_cl": 20, "rwsem_hb_cl": 21, "spin_mixend": 22, "nest_spin_cl": 23}
 BACKEND = {"native": 0, "kd": 1, "tclock": 2}
 # _IOWR('B', 1, struct kdb_run)
 IOC = (3 << 30) | (struct.calcsize(RUN_FMT) << 16) | (ord("B") << 8) | 1
@@ -109,8 +112,9 @@ def main():
             res.update(family=args.family, backend=args.backend, lines=args.lines,
                        write_pct=args.write_pct
                        if args.family in ("rwlock", "rwsem", "nest_spin", "nest_mutex",
-                                          "rwlock_hb", "rwsem_hb") else 100,
-                       post=args.post, workers=n, rep=rep,
+                                          "rwlock_hb", "rwsem_hb", "rwlock_cl", "rwsem_cl",
+                                          "rwsem_hb_cl", "nest_spin_cl") else 100,
+                       post=args.post, workers=n, cpus=args.cpus or n, rep=rep,
                        kd_delta={k: after[k] - before.get(k, 0) for k in after if k != "delegation"})
             print(json.dumps(res), flush=True)
             bad |= not res["ok"]

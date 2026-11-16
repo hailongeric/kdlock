@@ -354,3 +354,77 @@ sees neither effect.
 | `KD_REQ_THRESHOLD` | 64 | contended waits before a site is requested |
 | `KD_MISS_BUDGET` | 64 | learning reports per image |
 | `KD_SITE_WINDOW` | 256 | executions between usefulness checks |
+
+## 8. Clobber entries (`kd_*_cl()`)
+
+`include/kdlock/kd_api.h` has a second way to make the delegable calls:
+
+| Macro | Same operation as |
+| --- | --- |
+| `kd_spin_lock_cl(l)`, `kd_spin_unlock_cl(l)` | `kd_spin_lock()`, `kd_spin_unlock()` |
+| `kd_write_lock_cl(rw)`, `kd_write_unlock_cl(rw)` | `kd_write_lock()`, `kd_write_unlock()` |
+| `kd_mutex_lock_cl(m)`, `kd_mutex_unlock_cl(m)` | `kd_mutex_lock()`, `kd_mutex_unlock()` |
+| `kd_down_write_cl(sem)`, `kd_up_write_cl(sem)` | `kd_down_write()`, `kd_up_write()` |
+
+**What they change.** The call is made from inline assembly that declares
+every general register except `rsp` and `rbp` lost across it (`rbp` is the
+frame pointer and cannot be declared lost). The compiler then keeps nothing
+in `rbx` and `r12`-`r15` across the lock and release calls: values needed
+afterwards are reloaded, and the registers the function must preserve for
+its own caller are saved once in its prologue, on its own CPU.
+
+So the continuation of such a caller is `rsp`, `rbp`, the return address and
+the flags. The entry records exactly that (`KD_OFFER_CL`), and the packet says
+so (`kd_regs.kind = KD_RS_COMPACT`). The packet is laid out for it: line 0
+holds `rsp`, `rbp`, `rip`, `rflags`, `rax`, `task`, `canary`, `stack_top`,
+line 1 the execution bookkeeping, lines 2 and 3 the general registers only a
+full state needs. Per section, with both ends of the section clobber calls:
+
+| | ordinary entries (full) | clobber entries (compact) |
+| --- | --- | --- |
+| waiter stores at the offer | 10 words in lines 0-3 | 5 words in line 0, the kind in line 1 |
+| combiner loads at `kd_jit_enter` | 16 registers + `rsp` + flags, lines 0-3 | `rsp`, `rbp`, flags, `rax`, lines 0-1; the other registers are cleared |
+| combiner stores at the end of the section | 16 registers + `rsp` + flags (`kd_jit_exit`), lines 0-3 | `rsp`, `rbp`, flags (`kd_jit_exit_cl`), lines 0-1 |
+| origin loads at `kd_resume` | 19 words, lines 0-3 | 5 words, lines 0-1 |
+| packet lines prefetched per section | 4 | 2 |
+
+**When the full state is kept anyway.** Full is a correct substitute for
+compact and never the reverse, so a compact state is recorded only where
+both the code before and the code after rely on nothing but `rsp` and `rbp`:
+
+* an ordinary lock call at the start, or an ordinary release at the end, of
+  the section: full at that end;
+* every exit from generated code other than the root release at a clobber
+  call (handback, unknown code, nested acquire, a release of another lock):
+  full, as before. The origin that continues from a handback gets every
+  register;
+* a clobber lock call inside a section is made through the ordinary `_jit`
+  entry (spin class) or exits as an acquire (sleepable class): full;
+* a clobber release reached by a sibling call: full. (From the macros it
+  cannot be one.)
+
+The entries clear the registers the caller gave up instead of leaving values
+of the wait path or of the executor in them.
+
+**Two entries per operation, one lock.** The clobber entries are not C
+functions. They are declared as arrays (`__kd_spin_lock_cl[]` and so on),
+which lets the symbol table and module versioning name them but makes a
+direct call or an assignment to a function pointer a compile error. A lock
+operation reached through a function pointer, from code that does not use
+the macros, or with `CONFIG_KDLOCK_CLOBBER_ENTRY` off (the macros are then
+the ordinary calls) uses the ordinary functions, which keep the C calling
+convention. The two kinds of entry take the same lock object and queue on
+the same queue, and one session serves both kinds of waiter: the kind is per
+packet. A release can be through either kind, whatever the acquire was.
+
+The translator learns that a release is a clobber release from its address
+(`KD_SYM_UNLOCK_CL` in `kd_uapi.h`, ABI 4); that is why the clobber
+releases are entries of their own, a jump to the ordinary release, and not
+aliases.
+
+**Not covered.** The irq, irqsave and bh variants, the interruptible and
+killable ones (the macros would have to carry a return value), trylocks, the
+readers (never delegated) and downgrade.
+
+**Counters.** `cl_offered` counts waiters that queued with a compact state,
+`cl_done` sections that ended at a clobber release with one (INTERFACES 2).

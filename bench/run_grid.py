@@ -55,9 +55,19 @@ PROFILES = {
     "rwlock_c01_hb": ("rwlock_hb", 1, 100, 256),
     "rwsem_c01_hb": ("rwsem_hb", 1, 100, 256),
     "mutex_c01_hb": ("mix", 1, 100, 256),
+    # The clobber entries (kd_api.h kd_*_cl()); Native and TCLock run their
+    # ordinary bodies, so these compare with the profiles without _cl.
+    "spin_c01_cl": ("spin_cl", 1, 100, 64),
+    "spin_c08_cl": ("spin_cl", 8, 100, 64),
+    "mutex_c01_cl": ("mutex_cl", 1, 100, 256),
+    "mutex_c16_cl": ("mutex_cl", 16, 100, 256),
+    "rwlock_c01_w100_cl": ("rwlock_cl", 1, 100, 256),
+    "rwlock_c16_w20_cl": ("rwlock_cl", 16, 20, 256),
+    "rwsem_c01_w100_cl": ("rwsem_cl", 1, 100, 256),
+    "rwsem_c16_w20_cl": ("rwsem_cl", 16, 20, 256),
 }
 # The default grid; the other profiles are run on request.
-GRID = [p for p in PROFILES if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100"))]
+GRID = [p for p in PROFILES if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100", "_cl"))]
 # 1-8 one by one, then every fourth up to 64 (the user asked for this grid on
 # 2026-11-15; rounds up to 9 had 40, 48, 56, 64 instead of every fourth).
 WORKERS = [1, 2, 3, 4, 5, 6, 7, 8] + list(range(12, 65, 4))

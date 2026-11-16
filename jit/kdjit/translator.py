@@ -43,7 +43,8 @@ from collections import defaultdict
 import capstone
 from capstone import x86_const as X
 
-from .kernel import (MASK64, KD_SYM_ACQUIRE, KD_SYM_LOCAL, KD_SYM_NESTED, KD_SYM_UNLOCK, KD_X_ACQUIRE,
+from .kernel import (MASK64, KD_SYM_ACQUIRE, KD_SYM_LOCAL, KD_SYM_NESTED, KD_SYM_UNLOCK,
+                     KD_SYM_UNLOCK_CL, KD_X_ACQUIRE,
                      KD_X_FRONTIER, KD_X_MISS_CODE, KD_X_MISS_IND, KD_X_MISS_RET, KD_X_TAIL,
                      KD_X_UNLOCK, KD_X_UNLOCK_ANC)
 
@@ -228,7 +229,7 @@ def _loc(addr):
 
 class Ins:
     __slots__ = ("addr", "size", "raw", "kind", "target", "op", "falls", "depth",
-                 "reg", "mem", "patch")
+                 "reg", "mem", "patch", "compact")
 
     def __init__(self, addr, raw, depth):
         self.addr = addr
@@ -242,6 +243,7 @@ class Ins:
         self.reg = None         # indirect branch through this register number
         self.mem = None         # indirect branch through memory: (prefixes, rex, tail, riprel_target)
         self.patch = None       # (disp_offset, new_target, absolute) for plain instructions
+        self.compact = False    # root release of a clobber call site (KD_SYM_UNLOCK_CL)
 
 
 class Learned:
@@ -299,6 +301,8 @@ class Translator:
             cls, op, alt = sym
             if cls == KD_SYM_UNLOCK:
                 return "unlock", op
+            if cls == KD_SYM_UNLOCK_CL:
+                return "unlock_cl", op
             if cls == KD_SYM_ACQUIRE:
                 return "acquire", op
             if cls == KD_SYM_NESTED:
@@ -393,10 +397,13 @@ class Translator:
                         ins.falls = True
                     else:
                         ins.kind = "ret"
-                elif cls == "unlock":
+                elif cls in ("unlock", "unlock_cl"):
                     ins.kind = "unlock_call" if is_call else "unlock_tail"
                     ins.op = detail
                     ins.falls = is_call
+                    # Only a call returns to code that keeps nothing but
+                    # rsp and rbp; a sibling call returns to its caller's.
+                    ins.compact = cls == "unlock_cl" and is_call
                 elif cls == "acquire":
                     ins.kind = "acquire_call" if is_call else "acquire_tail"
                     ins.op = detail
@@ -637,12 +644,15 @@ class Translator:
             self.asm.raw(b"\x48\x83\xec\x08" + b"\xc7\x04\x24" + struct.pack("<I", lo) +
                          b"\xc7\x44\x24\x04" + struct.pack("<I", hi), cold)
 
-    def _exit(self, code, ip, resume=None, cold=False, aux=None):
+    def _exit(self, code, ip, resume=None, cold=False, aux=None, compact=False):
         """Exit stub: record why and where, then leave through kd_jit_exit.
 
         Uses only mov, so the source program's flags reach the packet.
+        compact: leave through kd_jit_exit_cl, which records rsp, rbp and
+        the flags only (the root release of a clobber call site).
         """
         info = self.info
+        target = info.jit_exit_cl if compact and info.jit_exit_cl else info.jit_exit
         if aux is not None:
             # mov qword gs:[aux], simm32
             self.asm.raw(b"\x65\x48\xc7" + _gs_abs_modrm(info.pcpu_aux) + _simm32(aux), cold)
@@ -653,7 +663,7 @@ class Translator:
             self.asm.emit(len(head) + 4, lambda pc, L: head + _simm32(L[resume]), cold)
         # mov dword gs:[exit_code], imm32
         self.asm.raw(b"\x65\xc7" + _gs_abs_modrm(info.pcpu_exit_code) + struct.pack("<I", code), cold)
-        self.asm.emit(5, lambda pc, L: b"\xe9" + _rel32(info.jit_exit, pc + 5), cold)
+        self.asm.emit(5, lambda pc, L: b"\xe9" + _rel32(target, pc + 5), cold)
 
     def _root_check(self, ins, tail):
         """Guards in front of a release call.
@@ -670,7 +680,8 @@ class Translator:
         self.asm.raw(b"\x65\x48\x3b\x3c\x25" + _simm32(self.info.pcpu_root))
         self._jcc(0x4, label)
         self.asm.label(label, cold=True)
-        self._exit(KD_X_UNLOCK | flags, ins.addr, resume=resume, cold=True)
+        self._exit(KD_X_UNLOCK | flags, ins.addr, resume=resume, cold=True,
+                   compact=ins.compact and not tail)
 
         label = "unlockanc_%x" % ins.addr
         self.asm.raw(b"\x65\x83\x3c\x25" + _simm32(self.info.pcpu_anc) + b"\x00")

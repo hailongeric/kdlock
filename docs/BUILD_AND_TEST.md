@@ -135,6 +135,17 @@ always-on code costs, so the switch must remove that code's work as well
 (`kd_rw_era_ns=0` does since build #81); and equal total rates can hide a
 node that gets a fraction of its share, which is why `--fair` exists.
 
+`bench/run_oversub.py` runs a point with more threads than CPUs: `--cpus`
+CPUs, `--factors` workers per CPU (worker *i* on CPU *first + i mod cpus*,
+`run_nano.py --cpus`). It records the least and most operations per worker
+and per CPU and the workers that completed nothing. TCLock runs only with one
+worker per CPU (its spinlock crashed the guest with two, its sleepable
+adapters refuse more than one task per CPU).
+
+Before any run that may take the guest down, `sync`: a panic loses what the
+page cache had not written, built modules included (build #82: the bench and
+TCLock modules were empty files after the reboot).
+
 The original TCLock locks are a third backend when the bench is built with
 them (`/root/tcbuild.sh` in the VM):
 

@@ -24,6 +24,20 @@ config KDLOCK
 
 	  NR_CPUS must stay below 16384 (queue tail encoding).
 
+config KDLOCK_CLOBBER_ENTRY
+	bool "kdlock: clobber entries for the kd_*_cl() lock calls"
+	depends on KDLOCK
+	default y
+	help
+	  The kd_*_cl() macros of include/kdlock/kd_api.h make the lock call
+	  from inline assembly that declares every general register except
+	  rsp and rbp lost across it, so a waiter's continuation and a
+	  delegated section's end are a few words instead of the full register
+	  set, and the lock holder fetches fewer cache lines per section.
+
+	  With this off, the macros are the ordinary calls. The entries
+	  themselves are always built.
+
 config KDLOCK_MM
 	bool "kdlock: mm_struct mmap lock as a kdlock rwsem"
 	depends on KDLOCK && MMU && !KDLOCK_MMAP

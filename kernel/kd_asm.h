@@ -7,26 +7,32 @@
 #ifndef KD_ASM_H
 #define KD_ASM_H
 
-/* struct kd_regs */
-#define KD_R_rax		0
-#define KD_R_rbx		8
-#define KD_R_rcx		16
-#define KD_R_rdx		24
-#define KD_R_rsi		32
-#define KD_R_rdi		40
-#define KD_R_rbp		48
-#define KD_R_rsp		56
-#define KD_R_r8			64
-#define KD_R_r9			72
-#define KD_R_r10		80
-#define KD_R_r11		88
-#define KD_R_r12		96
-#define KD_R_r13		104
-#define KD_R_r14		112
-#define KD_R_r15		120
-#define KD_R_rip		128
-#define KD_R_rflags		136
+/* struct kd_regs: lines 0 and 1 are what a compact state uses */
+#define KD_R_rsp		0
+#define KD_R_rbp		8
+#define KD_R_rip		16
+#define KD_R_rflags		24
+#define KD_R_rax		32
+#define KD_R_kind		106
+#define KD_R_rbx		144
+#define KD_R_rcx		152
+#define KD_R_rdx		160
+#define KD_R_rsi		168
+#define KD_R_rdi		176
+#define KD_R_r8			184
+#define KD_R_r9			192
+#define KD_R_r10		200
+#define KD_R_r11		208
+#define KD_R_r12		216
+#define KD_R_r13		224
+#define KD_R_r14		232
+#define KD_R_r15		240
 #define KD_R_SIZE		248
+#define KD_R_COMPACT_SIZE	128	/* the lines a compact state touches */
+
+/* struct kd_regs.kind */
+#define KD_RS_FULL		0
+#define KD_RS_COMPACT		1
 
 /* struct kd_cpu */
 #define KD_CPU_task		0

@@ -19,7 +19,7 @@ NUMA node at a time (ARCHITECTURE 7b). See
 | Read this | For |
 | --- | --- |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | mechanism end to end: objects, wait, session, executor, handback, context transfer, NUMA order, nesting, images, invariants, limits |
-| [LOCKS.md](LOCKS.md) | per-family protocol, API, semantics, tunables |
+| [LOCKS.md](LOCKS.md) | per-family protocol, API, semantics, tunables, the clobber entries (`kd_*_cl()`) |
 | [TRANSLATOR.md](TRANSLATOR.md) | what the userspace translator copies and rewrites, exits, learning loop |
 | [INTERFACES.md](INTERFACES.md) | `/dev/kdlock`, debugfs counters, kernel parameters, benchmark device |
 | [KERNEL_INTEGRATION.md](KERNEL_INTEGRATION.md) | putting kdlock into a kernel tree; configuration; what is and is not replaced |
@@ -37,7 +37,7 @@ Source layout (relative to the repository root):
 | `kernel/` | `kd_entry.S` (stubs, resume, jit enter/exit), `kd_core.c` (wait, session, executor), `kd_{spinlock,rwlock,mutex,rwsem}.c`, `kd_era.c` (rw families across NUMA nodes), `kd_image.c` (sites, images, events), `kd_dev.c`, `Makefile`, `Kconfig` |
 | `jit/` | `kd_daemon.py`, `kdjit/translator.py`, `kdjit/kernel.py` |
 | `integration/` | `apply_to_tree.sh`, `kd_linux_map.h` (API mapping reference), notes |
-| `bench/` | `kd_bench.c` (nano workloads), the runners (`run_grid.py` worker grid, `run_place.py` CPU placements and parameter sets in one boot, `run_mmap1.py` will-it-scale), `wis/`, `results/` |
+| `bench/` | `kd_bench.c` (nano workloads), the runners (`run_grid.py` worker grid, `run_place.py` CPU placements and parameter sets in one boot, `run_oversub.py` more threads than CPUs, `run_mmap1.py` will-it-scale), `wis/`, `results/` |
 | `tclock_backend/` | the original TCLocks locks, the benchmark's third backend |
 
 Wording rules (from the project `AGENTS.md`): prose and comments in English;

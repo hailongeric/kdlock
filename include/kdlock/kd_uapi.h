@@ -9,7 +9,7 @@
 #include <linux/types.h>
 #include <linux/ioctl.h>
 
-#define KD_ABI_VERSION		3
+#define KD_ABI_VERSION		4
 
 /* ---- exit codes written by generated code ----------------------------- */
 
@@ -59,6 +59,13 @@ enum kd_op {
 #define KD_SYM_ACQUIRE		2	/* always leave generated code */
 #define KD_SYM_NESTED		3	/* call ->alt instead: same fast path, exits when contended */
 #define KD_SYM_LOCAL		4	/* never sleeps and acts for the origin: call natively */
+/*
+ * As KD_SYM_UNLOCK, for a clobber release (kd_api.h): its callers keep only
+ * rsp and rbp in registers across it, so when it ends the section the exit
+ * may record just those (jit_exit_cl). As a sibling call it is a plain
+ * KD_SYM_UNLOCK.
+ */
+#define KD_SYM_UNLOCK_CL	5
 
 struct kd_sym {
 	__u64 addr;
@@ -87,7 +94,8 @@ struct kd_info {
 	__u64 src_stack_canary;
 	__u64 src_stack_top;
 	__u64 pcpu_anc;			/* u32: number of outer session roots of the running section */
-	__u64 reserved[4];
+	__u64 jit_exit_cl;		/* kd_jit_exit_cl: exit at a clobber release ending the section */
+	__u64 reserved[3];
 	struct kd_sym syms[KD_MAX_SYMS];
 };
 

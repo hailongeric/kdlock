@@ -632,6 +632,17 @@ static const struct kd_sym kd_syms[] = {
 	KD_SYM(kd_up_write,			KD_SYM_UNLOCK,	KD_OP_UNLOCK_SLEEPABLE),
 	KD_SYM(kd_downgrade_write,		KD_SYM_UNLOCK,	KD_OP_DOWNGRADE),
 	KD_SYM(kd_up_read,			KD_SYM_UNLOCK,	KD_OP_UP_READ),
+	/* Clobber entries (kd_api.h); nested acquires go through the full _jit entries. */
+	KD_SYM(__kd_spin_unlock_cl,		KD_SYM_UNLOCK_CL, KD_OP_UNLOCK),
+	KD_SYM(__kd_write_unlock_cl,		KD_SYM_UNLOCK_CL, KD_OP_UNLOCK),
+	KD_SYM(__kd_mutex_unlock_cl,		KD_SYM_UNLOCK_CL, KD_OP_UNLOCK_SLEEPABLE),
+	KD_SYM(__kd_up_write_cl,		KD_SYM_UNLOCK_CL, KD_OP_UNLOCK_SLEEPABLE),
+	KD_SYM(__kd_mutex_lock_cl,		KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
+	KD_SYM(__kd_down_write_cl,		KD_SYM_ACQUIRE,	KD_OP_DOWN_WRITE),
+	{ .addr = (unsigned long)__kd_spin_lock_cl, .alt = (unsigned long)kd_spin_lock_jit,
+	  .cls = KD_SYM_NESTED, .op = KD_OP_NEST_SPIN },
+	{ .addr = (unsigned long)__kd_write_lock_cl, .alt = (unsigned long)kd_write_lock_jit,
+	  .cls = KD_SYM_NESTED, .op = KD_OP_NEST_WRITE },
 	KD_SYM(kd_mutex_lock,			KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
 	KD_SYM(kd_mutex_lock_interruptible,	KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
 	KD_SYM(kd_mutex_lock_killable,		KD_SYM_ACQUIRE,	KD_OP_MUTEX_LOCK),
@@ -691,6 +702,7 @@ static long kd_get_info(struct kd_info __user *uarg)
 		return -ENOMEM;
 	info->abi = KD_ABI_VERSION;
 	info->jit_exit = (unsigned long)kd_jit_exit;
+	info->jit_exit_cl = (unsigned long)kd_jit_exit_cl;
 	info->pcpu_task = KD_PCPU(task);
 	info->pcpu_canary = KD_PCPU(canary);
 	info->pcpu_stack_top = KD_PCPU(stack_top);

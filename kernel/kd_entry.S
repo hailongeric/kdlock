@@ -25,6 +25,16 @@
  *      writes below the caller's stack pointer, so a combiner may run the
  *      caller's critical section on the caller's stack;
  *   5. the C wait function queues and returns how the wait ended.
+ *
+ * Clobber entries (__kd_*_cl, reached only from the kd_*_cl() macros of
+ * kd_api.h). Their callers declare every general register except rsp and
+ * rbp lost across the call, so the continuation is rsp, rbp, the return
+ * address and the flags, and the packet records it as KD_RS_COMPACT: two
+ * cache lines instead of four for the combiner to fetch. They are not C
+ * functions and have no prototype, so they cannot be reached through a
+ * function pointer; such calls use the ordinary entries, which keep the C
+ * convention. Both kinds queue on the same lock and are served by the same
+ * sessions.
  */
 #include <linux/linkage.h>
 #include <linux/export.h>
@@ -63,6 +73,7 @@
 	movq	%rax, KR(KD_R_rip)
 	pushfq
 	popq	KR(KD_R_rflags)
+	movb	$KD_RS_FULL, KR(KD_R_kind)
 	movq	%rdi, %rbx			/* lock pointer survives the C call */
 	movq	KC(KD_CPU_wait_stack), %rsp
 	call	\waitfn
@@ -79,6 +90,34 @@
 .endm
 
 /*
+ * KD_OFFER for the clobber entries: the same steps with a compact state.
+ * The caller has given up rbx, so the lock pointer is kept there without
+ * saving it, and nothing but rsp is put back on the way out.
+ */
+.macro KD_OFFER_CL waitfn:req
+	movq	%rbp, KR(KD_R_rbp)
+	movq	%rax, KR(KD_R_rax)
+	leaq	8(%rsp), %rax
+	movq	%rax, KR(KD_R_rsp)
+	movq	(%rsp), %rax
+	movq	%rax, KR(KD_R_rip)
+	pushfq
+	popq	KR(KD_R_rflags)
+	movb	$KD_RS_COMPACT, KR(KD_R_kind)
+	movq	%rdi, %rbx
+	movq	KC(KD_CPU_wait_stack), %rsp
+	call	\waitfn
+	testl	%eax, %eax
+	jg	kd_resume
+	movl	%eax, %esi
+	movq	%rbx, %rdi
+	movq	KR(KD_R_rsp), %rdx
+	leaq	-8(%rdx), %rsp
+	movq	KR(KD_R_rax), %rdx
+	movl	$0, KC(KD_CPU_busy)
+.endm
+
+/*
  * Spin-class entry (spinlock and rwlock writer).
  *
  * irq:  0 none, 1 disable, 2 save and disable (flags returned in rax)
@@ -88,7 +127,8 @@
  * Interrupt state is changed with a native cli; the configuration must not
  * route irq flags through paravirt or irqflags tracing.
  */
-.macro KD_SPIN_ENTRY name:req, irq:req, bh:req, val:req, slowfn:req, waitfn:req, plainfn:req, nestop:req
+.macro KD_SPIN_ENTRY name:req, irq:req, bh:req, val:req, slowfn:req, waitfn:req, plainfn:req, nestop:req, cl=0
+.if !\cl
 /*
  * Entry used by generated code in place of \name. Same fast path. When
  * contended it does not wait here: the executor is running somebody's
@@ -123,6 +163,7 @@ SYM_FUNC_START(\name\()_jit)
 	jmp	kd_nested_exit
 SYM_FUNC_END(\name\()_jit)
 STACK_FRAME_NON_STANDARD \name\()_jit
+.endif
 
 SYM_FUNC_START(\name)
 .if \irq == 2
@@ -163,7 +204,11 @@ SYM_FUNC_START(\name)
 	btsl	$0, KC(KD_CPU_busy)
 	jc	.Lplain_\name
 	movq	%rcx, %rax
+.if \cl
+	KD_OFFER_CL \waitfn
+.else
 	KD_OFFER \waitfn
+.endif
 	movq	%rdx, %rax
 	RET
 .Lplain_\name:
@@ -191,6 +236,14 @@ KD_SPIN_ENTRY kd_write_lock_irqsave, 2, 0, KD_ASM_RW_WLOCKED, kd_write_lock_slow
 KD_SPIN_ENTRY kd_write_lock_bh,      0, 1, KD_ASM_RW_WLOCKED, kd_write_lock_slow, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE
 
 /*
+ * Clobber entries of the spin class. Inside generated code they are called
+ * through the ordinary _jit entries (kd_image.c), whose full state is a
+ * correct substitute.
+ */
+KD_SPIN_ENTRY __kd_spin_lock_cl,  0, 0, KD_ASM_SPIN_LOCKED, kd_q_lock_slow,     kd_spin_wait,  kd_spin_lock_plain,  KD_ASM_OP_NEST_SPIN,  1
+KD_SPIN_ENTRY __kd_write_lock_cl, 0, 0, KD_ASM_RW_WLOCKED,  kd_write_lock_slow, kd_write_wait, kd_write_lock_plain, KD_ASM_OP_NEST_WRITE, 1
+
+/*
  * Sleepable-class entry (mutex and rwsem writer).
  *
  * The fast path differs per family and is supplied by the caller of this
@@ -201,7 +254,7 @@ KD_SPIN_ENTRY kd_write_lock_bh,      0, 1, KD_ASM_RW_WLOCKED, kd_write_lock_slow
  * not part of the API: every way out of the offer path drops it again
  * (kd_unpin, or the packet's pc_delta on the resume path).
  */
-.macro KD_SLEEPABLE_SLOW name:req, slowfn:req, waitfn:req, sleepfn:req
+.macro KD_SLEEPABLE_SLOW name:req, slowfn:req, waitfn:req, sleepfn:req, cl=0
 .Lslow_\name:
 	movq	(%rsp), %rsi
 	pushq	%rdi
@@ -214,7 +267,11 @@ KD_SPIN_ENTRY kd_write_lock_bh,      0, 1, KD_ASM_RW_WLOCKED, kd_write_lock_slow
 	btsl	$0, KC(KD_CPU_busy)
 	jc	.Lnested_\name
 	xorl	%eax, %eax			/* a delegated acquisition returns 0 */
+.if \cl
+	KD_OFFER_CL \waitfn
+.else
 	KD_OFFER \waitfn
+.endif
 	js	.Lsleep_\name
 	pushq	%rdx
 	call	kd_unpin
@@ -234,7 +291,7 @@ KD_SPIN_ENTRY kd_write_lock_bh,      0, 1, KD_ASM_RW_WLOCKED, kd_write_lock_slow
 	jmp	\sleepfn
 .endm
 
-.macro KD_MUTEX_ENTRY name:req, slowfn:req, sleepfn:req
+.macro KD_MUTEX_ENTRY name:req, slowfn:req, sleepfn:req, cl=0
 SYM_FUNC_START(\name)
 	xorl	%eax, %eax
 	movb	$1, %dl
@@ -244,7 +301,7 @@ SYM_FUNC_START(\name)
 	movq	%rax, KD_MUTEX_owner(%rdi)
 	xorl	%eax, %eax
 	RET
-	KD_SLEEPABLE_SLOW \name, \slowfn, kd_mutex_wait, \sleepfn
+	KD_SLEEPABLE_SLOW \name, \slowfn, kd_mutex_wait, \sleepfn, \cl
 SYM_FUNC_END(\name)
 STACK_FRAME_NON_STANDARD \name
 EXPORT_SYMBOL(\name)
@@ -254,8 +311,9 @@ KD_MUTEX_ENTRY kd_mutex_lock,               kd_mutex_lock_slow,               kd
 KD_MUTEX_ENTRY kd_mutex_lock_interruptible, kd_mutex_lock_slow_interruptible, kd_mutex_lock_sleep_interruptible
 KD_MUTEX_ENTRY kd_mutex_lock_killable,      kd_mutex_lock_slow_killable,      kd_mutex_lock_sleep_killable
 KD_MUTEX_ENTRY kd_mutex_lock_io,            kd_mutex_lock_slow_io,            kd_mutex_lock_sleep_io
+KD_MUTEX_ENTRY __kd_mutex_lock_cl,          kd_mutex_lock_slow,               kd_mutex_lock_sleep, 1
 
-.macro KD_RWSEM_ENTRY name:req, slowfn:req, sleepfn:req
+.macro KD_RWSEM_ENTRY name:req, slowfn:req, sleepfn:req, cl=0
 SYM_FUNC_START(\name)
 	xorl	%eax, %eax
 	movl	$KD_ASM_RWSEM_WLOCKED, %edx
@@ -263,7 +321,7 @@ SYM_FUNC_START(\name)
 	jnz	.Lslow_\name
 	xorl	%eax, %eax
 	RET
-	KD_SLEEPABLE_SLOW \name, \slowfn, kd_down_write_wait, \sleepfn
+	KD_SLEEPABLE_SLOW \name, \slowfn, kd_down_write_wait, \sleepfn, \cl
 SYM_FUNC_END(\name)
 STACK_FRAME_NON_STANDARD \name
 EXPORT_SYMBOL(\name)
@@ -271,6 +329,25 @@ EXPORT_SYMBOL(\name)
 
 KD_RWSEM_ENTRY kd_down_write,          kd_down_write_slow,          kd_down_write_sleep
 KD_RWSEM_ENTRY kd_down_write_killable, kd_down_write_slow_killable, kd_down_write_sleep_killable
+KD_RWSEM_ENTRY __kd_down_write_cl,     kd_down_write_slow,          kd_down_write_sleep, 1
+
+/*
+ * Clobber releases. Called natively they are the ordinary release, which
+ * keeps more than their callers need. Their own addresses are what tells
+ * generated code that a release ends with only rsp and rbp live
+ * (KD_SYM_UNLOCK_CL), so that section can leave through kd_jit_exit_cl.
+ */
+.macro KD_CL_RELEASE name:req, target:req
+SYM_FUNC_START(\name)
+	jmp	\target
+SYM_FUNC_END(\name)
+EXPORT_SYMBOL(\name)
+.endm
+
+KD_CL_RELEASE __kd_spin_unlock_cl,  kd_spin_unlock
+KD_CL_RELEASE __kd_write_unlock_cl, kd_write_unlock
+KD_CL_RELEASE __kd_mutex_unlock_cl, kd_mutex_unlock
+KD_CL_RELEASE __kd_up_write_cl,     kd_up_write
 
 /*
  * kd_resume - continue the origin from its packet.
@@ -286,6 +363,8 @@ KD_RWSEM_ENTRY kd_down_write_killable, kd_down_write_slow_killable, kd_down_writ
 SYM_CODE_START(kd_resume)
 	UNWIND_HINT_UNDEFINED
 	cli
+	cmpb	$KD_RS_COMPACT, KR(KD_R_kind)
+	je	.Lresume_compact
 	movq	KR(KD_R_rbx), %rbx
 	movq	KR(KD_R_rcx), %rcx
 	movq	KR(KD_R_rdx), %rdx
@@ -306,6 +385,34 @@ SYM_CODE_START(kd_resume)
 	movq	KR(KD_R_rax), %rax
 	movl	$0, KC(KD_CPU_busy)
 	popfq					/* installs the logical IF */
+	ANNOTATE_UNRET_SAFE
+	ret
+	int3
+.Lresume_compact:
+	/*
+	 * Only rsp, rbp, flags and rax are the origin's. The others are
+	 * cleared rather than left with values of the wait path.
+	 */
+	xorl	%ebx, %ebx
+	xorl	%ecx, %ecx
+	xorl	%edx, %edx
+	xorl	%esi, %esi
+	xorl	%edi, %edi
+	xorl	%r8d, %r8d
+	xorl	%r9d, %r9d
+	xorl	%r10d, %r10d
+	xorl	%r11d, %r11d
+	xorl	%r12d, %r12d
+	xorl	%r13d, %r13d
+	xorl	%r14d, %r14d
+	xorl	%r15d, %r15d
+	movq	KR(KD_R_rbp), %rbp
+	movq	KR(KD_R_rsp), %rsp
+	pushq	KR(KD_R_rip)
+	pushq	KR(KD_R_rflags)
+	movq	KR(KD_R_rax), %rax
+	movl	$0, KC(KD_CPU_busy)
+	popfq
 	ANNOTATE_UNRET_SAFE
 	ret
 	int3
@@ -333,12 +440,14 @@ SYM_FUNC_START(kd_jit_enter)
 	movq	KD_R_rsp(%rax), %rsp		/* origin's stack from here on */
 	pushq	%rsi
 	pushq	KD_R_rflags(%rax)
+	movq	KD_R_rbp(%rax), %rbp
+	cmpb	$KD_RS_COMPACT, KD_R_kind(%rax)
+	je	.Lenter_compact
 	movq	KD_R_rbx(%rax), %rbx
 	movq	KD_R_rcx(%rax), %rcx
 	movq	KD_R_rdx(%rax), %rdx
 	movq	KD_R_rsi(%rax), %rsi
 	movq	KD_R_rdi(%rax), %rdi
-	movq	KD_R_rbp(%rax), %rbp
 	movq	KD_R_r8(%rax), %r8
 	movq	KD_R_r9(%rax), %r9
 	movq	KD_R_r10(%rax), %r10
@@ -347,6 +456,26 @@ SYM_FUNC_START(kd_jit_enter)
 	movq	KD_R_r13(%rax), %r13
 	movq	KD_R_r14(%rax), %r14
 	movq	KD_R_r15(%rax), %r15
+	movq	KD_R_rax(%rax), %rax
+	popfq
+	ANNOTATE_UNRET_SAFE
+	ret
+	int3
+.Lenter_compact:
+	/* The section relies on nothing else; the executor's values are not passed on. */
+	xorl	%ebx, %ebx
+	xorl	%ecx, %ecx
+	xorl	%edx, %edx
+	xorl	%esi, %esi
+	xorl	%edi, %edi
+	xorl	%r8d, %r8d
+	xorl	%r9d, %r9d
+	xorl	%r10d, %r10d
+	xorl	%r11d, %r11d
+	xorl	%r12d, %r12d
+	xorl	%r13d, %r13d
+	xorl	%r14d, %r14d
+	xorl	%r15d, %r15d
 	movq	KD_R_rax(%rax), %rax
 	popfq
 	ANNOTATE_UNRET_SAFE
@@ -385,6 +514,7 @@ SYM_CODE_START(kd_nested_exit)
 	movq	%rsp, KD_R_rsp(%rdx)
 	pushfq
 	popq	KD_R_rflags(%rdx)
+	movb	$KD_RS_FULL, KD_R_kind(%rdx)
 	movq	KC(KD_CPU_host_rsp), %rsp
 	cld
 	popq	%r15
@@ -425,6 +555,7 @@ SYM_CODE_START(kd_jit_exit)
 	movq	%r15, KD_R_r15(%rax)
 	pushfq
 	popq	KD_R_rflags(%rax)
+	movb	$KD_RS_FULL, KD_R_kind(%rax)
 	movq	KC(KD_CPU_tmp), %rbx
 	movq	%rbx, KD_R_rax(%rax)
 	movq	KC(KD_CPU_host_rsp), %rsp
@@ -437,3 +568,30 @@ SYM_CODE_START(kd_jit_exit)
 	popq	%rbp
 	RET
 SYM_CODE_END(kd_jit_exit)
+
+/*
+ * kd_jit_exit_cl - the exit at a clobber release that ends the section
+ * (KD_SYM_UNLOCK_CL, not a sibling call). Its caller keeps nothing in
+ * registers across the call but rsp and rbp, and the release returns
+ * nothing, so that and the flags are the whole state: a compact one, in
+ * line 0 of the packet (kind is in line 1, which the executor writes
+ * anyway).
+ */
+SYM_CODE_START(kd_jit_exit_cl)
+	UNWIND_HINT_UNDEFINED
+	movq	KC(KD_CPU_cur), %rax
+	movq	%rbp, KD_R_rbp(%rax)
+	movq	%rsp, KD_R_rsp(%rax)
+	pushfq
+	popq	KD_R_rflags(%rax)
+	movb	$KD_RS_COMPACT, KD_R_kind(%rax)
+	movq	KC(KD_CPU_host_rsp), %rsp
+	cld
+	popq	%r15
+	popq	%r14
+	popq	%r13
+	popq	%r12
+	popq	%rbx
+	popq	%rbp
+	RET
+SYM_CODE_END(kd_jit_exit_cl)

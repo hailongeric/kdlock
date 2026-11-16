@@ -84,6 +84,7 @@ Read-only, `/sys/kernel/debug/kdlock_stats`. One `name value` line each:
 | `mode_enter`, `mode_exit` | locks switched to delegation mode by a queue head / back to plain mode by a combiner |
 | `xchg_offer`, `xchg_taken`, `xchg_declined`, `xchg_retract` | role exchange: combiners that offered themselves after a handback, releases that took the head role over, releases that could not, offers withdrawn because the holder stopped running |
 | `era_start`, `era_gate`, `era_claim` | eras of the rw families (ARCHITECTURE 7b): eras started by a queue head, callers that waited for their node's era, waits that ended by taking the era over |
+| `cl_offered`, `cl_done` | clobber entries (LOCKS 8): waiters that queued with a compact state, sections that ended at a clobber release with a compact state |
 
 Counters are per-CPU, summed on read, non-atomic and approximate by design.
 
