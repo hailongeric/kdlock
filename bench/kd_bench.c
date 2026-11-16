@@ -433,7 +433,7 @@ static __always_inline u64 post_work(u64 x, unsigned int rounds)
 struct worker {
 	struct task_struct *task;
 	const struct ops *ops;
-	unsigned int cpu, pct, post;
+	unsigned int cpu, idx, pct, post;
 	u64 ops_done, writes, bad, outer;
 	int reg_err;
 	struct completion done;
@@ -446,7 +446,7 @@ static bool go KDB_BLOCK, stop KDB_BLOCK;
 static int worker_fn(void *arg)
 {
 	struct worker *w = arg;
-	u64 rng = 0x9e3779b97f4a7c15ULL * (w->cpu + 1), sink = 0;
+	u64 rng = 0x9e3779b97f4a7c15ULL * (w->idx + 1), sink = 0;
 	u64 n = 0;
 
 	if (w->ops->reg)
@@ -502,18 +502,21 @@ static int do_run(struct kdb_run *r)
 	struct worker *ws;
 	u64 before, outer;
 	ktime_t t0;
-	unsigned int i;
+	unsigned int i, cpus = r->cpus ?: r->workers;
 	int ret = 0, started = 0;
 
 	if (r->family >= KDB_NR_FAMILY || r->backend > KDB_TCLOCK || r->lines < 1 ||
 	    r->lines > MAX_LINES || !r->workers || r->workers > KDB_MAX_WORKERS ||
-	    r->first_cpu + r->workers > nr_cpu_ids || !r->ms)
+	    cpus > r->workers || r->first_cpu + cpus > nr_cpu_ids || !r->ms)
 		return -EINVAL;
-	for (i = 0; i < r->workers; i++)
+	for (i = 0; i < cpus; i++)
 		if (!cpu_online(r->first_cpu + i))
 			return -EINVAL;
 	ops = &op_table[r->backend][r->family];
 	if (!ops->w && !ops->t)
+		return -EOPNOTSUPP;
+	/* These adapters allow one registered task per CPU. */
+	if (ops->reg && cpus < r->workers)
 		return -EOPNOTSUPP;
 	ws = kcalloc(r->workers, sizeof(*ws), GFP_KERNEL);
 	if (!ws)
@@ -547,7 +550,8 @@ static int do_run(struct kdb_run *r)
 	for (i = 0; i < r->workers; i++) {
 		struct worker *w = &ws[i];
 
-		w->cpu = r->first_cpu + i;
+		w->cpu = r->first_cpu + i % cpus;
+		w->idx = i;
 		w->ops = ops;
 		w->pct = (r->family == KDB_RWLOCK || r->family == KDB_RWSEM ||
 			  r->family == KDB_NEST_SPIN || r->family == KDB_NEST_MUTEX ||
@@ -555,7 +559,7 @@ static int do_run(struct kdb_run *r)
 			 r->write_pct : 100;
 		w->post = r->post;
 		init_completion(&w->done);
-		w->task = kthread_create(worker_fn, w, "kdb/%u", w->cpu);
+		w->task = kthread_create(worker_fn, w, "kdb/%u.%u", w->cpu, i / cpus);
 		if (IS_ERR(w->task)) {
 			ret = PTR_ERR(w->task);
 			w->task = NULL;

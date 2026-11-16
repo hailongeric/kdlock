@@ -60,7 +60,9 @@ enum { KDB_NATIVE, KDB_KD, KDB_TCLOCK };
 
 /*
  * One timed run. Layout is mirrored in bench/run_nano.py (RUN_FMT).
- * Workers are kernel threads bound to CPUs first_cpu .. first_cpu+workers-1.
+ * Workers are kernel threads, each bound to one CPU: worker i to CPU
+ * first_cpu + i, or with cpus set to first_cpu + i % cpus, which puts
+ * several workers on a CPU (more threads than CPUs).
  */
 struct kdb_run {
 	/* in */
@@ -71,6 +73,8 @@ struct kdb_run {
 	__u32 workers;
 	__u32 first_cpu;
 	__u32 ms;
+	__u32 cpus;		/* CPUs the workers share; 0: one each */
+	__u32 pad;
 	/* out */
 	__u64 elapsed_ns;
 	__u64 ops;

@@ -23,7 +23,7 @@ import struct
 import sys
 
 MAXW = 64
-IN_FMT = "<8I"
+IN_FMT = "<10I"
 OUT_FMT = "<5Q" + "Q" * MAXW + "Q" * MAXW
 RUN_FMT = IN_FMT + OUT_FMT[1:]
 FAMILY = {"spin": 0, "mutex": 1, "rwlock": 2, "rwsem": 3,
@@ -50,12 +50,13 @@ def kd_stats():
 
 def run_once(fd, args, workers, ms):
     req = struct.pack(IN_FMT, FAMILY[args.family], BACKEND[args.backend], args.lines,
-                      args.write_pct, args.post, workers, args.first_cpu, ms)
+                      args.write_pct, args.post, workers, args.first_cpu, ms,
+                      getattr(args, "cpus", 0) or 0, 0)
     buf = bytearray(req + bytes(struct.calcsize(RUN_FMT) - len(req)))
     fcntl.ioctl(fd, IOC, buf, True)
     f = struct.unpack(RUN_FMT, bytes(buf))
-    elapsed, ops, writes, bad, delta = f[8:13]
-    wops, wwr = f[13:13 + MAXW][:workers], f[13 + MAXW:13 + 2 * MAXW][:workers]
+    elapsed, ops, writes, bad, delta = f[10:15]
+    wops, wwr = f[15:15 + MAXW][:workers], f[15 + MAXW:15 + 2 * MAXW][:workers]
     lines = args.lines
     ok = all(wops) and bad == 0 and delta == writes * lines
     res = {"ok": ok, "mops": ops / elapsed * 1e3 if elapsed else 0.0, "ops": ops,
@@ -80,6 +81,9 @@ def main():
     ap.add_argument("--post", type=int, default=256)
     ap.add_argument("--workers", type=int, nargs="+")
     ap.add_argument("--first-cpu", type=int, default=0)
+    ap.add_argument("--cpus", type=int, default=0,
+                    help="CPUs the workers share (worker i on CPU first + i %% cpus); "
+                         "default: one CPU per worker")
     ap.add_argument("--ms", type=int, default=2000)
     ap.add_argument("--warmup-ms", type=int, default=1000)
     ap.add_argument("--repeat", type=int, default=1)
