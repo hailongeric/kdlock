@@ -121,6 +121,20 @@ that "kdlock is not helping" stays distinguishable from "kdlock is not even
 running here". Results and the map from build number to source are in
 `bench/results/kdclaude/`.
 
+`bench/run_place.py` runs one point at several CPU placements (worker *i*
+runs on CPU *first + i*, so the first CPU decides how many workers each NUMA
+node gets) and, with `--configs`, under several sets of core parameters in
+one boot, rotating their order per round. The grid cannot separate "more
+workers" from "across nodes", because from 36 workers on both change
+together; a fixed count at two placements can. `bench/place_summary.py`
+prints the rates, the ratios to the first column or to the one-node placement
+(`--cross`), the least over the most operations per worker (`--fair`) and
+chosen counters. Two things this tool taught that apply to any A/B here: a
+comparison of a feature switched off and on does not show what the feature's
+always-on code costs, so the switch must remove that code's work as well
+(`kd_rw_era_ns=0` does since build #81); and equal total rates can hide a
+node that gets a fraction of its share, which is why `--fair` exists.
+
 The original TCLock locks are a third backend when the bench is built with
 them (`/root/tcbuild.sh` in the VM):
 

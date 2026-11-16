@@ -63,15 +63,20 @@ value that was set, the table says what it meant.
 | #77 | each waiter looks at the lock once (time by CPU number) and takes the era if it is idle | `b77-asym-look-press.jsonl` | 31+1 is 1.00-1.24. Equal time per node remains: 24+8 least/most per worker 0.39-0.47 |
 | #78 | time divided by callers; minimum an eighth of the bound; threshold a quarter reader | `b78-asym.jsonl`, `b78-low.jsonl`, `b78-one.jsonl` | 24+8 0.68-0.79. New: one worker on each node 0.72; 4+4 one node's workers do 11 times the other's (the look's time favours low CPU numbers modulo 32); at 31+1 the one worker gets 17-25% of a share |
 | #79 | no look; minimum a quarter; pressure = readers found + callers queued behind the head, threshold 2.25 | `b79-asym.jsonl`, `b79-low.jsonl`, `b79-one.jsonl`, `b79-rwlock-bound.jsonl` | no loss at any placement or count; 1+1 and 2+2 have no era. rwlock bound 50 -> 200 us: +3-12% and 28+4 least/most 0.30 -> 0.76-0.93 |
-| #80 | one bound for both families (200 us); the rwlock does not wait with bottom halves off | section 3 | the committed state |
+| #80 | one bound for both families (200 us); the rwlock does not wait with bottom halves off | section 3 | no loss in any in-boot comparison of eras off and on; round 11 |
+| #81 | `kd_rw_era_ns=0` measures nothing; the reader fast path's check can be put out of reach | section 4 | the check costs the rwsem 3-12% on one node and gains nothing across nodes |
+| #82 | the check and `kd_rw_era_min` removed | section 5 | the committed state; round 12 |
 
 What the rejected pieces cost is recorded where they were removed
 (`kd_rw_era_wait()`, `kd_rw_era_bound()`, `kd_rw_era_writer()`).
 
-## 3. The committed state (build #80)
+## 3. Build #80: the first complete state
 
 `kd_rw_era_ns` 200000 for both families, `kd_rw_era_press` 225,
-`kd_rw_era_drain_ns` 5000, `kd_rw_era_min` 2, `kd_numa_after` 32.
+`kd_rw_era_drain_ns` 5000, `kd_rw_era_min` 2, `kd_numa_after` 32. Round 11
+(`../grid-20261115-r11-64cpu/`) is this build. Section 4 is what it still
+had wrong; the tables of this section are superseded by section 5 for the
+rwsem and stand for the rwlock, whose code did not change afterwards.
 
 ### Across nodes, three backends (`b80-three.jsonl`, 3 rounds)
 
@@ -173,3 +178,163 @@ on it. Threads, kd over Native, 2 rounds each:
   helps the nano profiles. `mmap1`, whose sessions run thousands of sections
   each, neither gains nor loses (315900 -> 309300, inside the two rounds'
   spread of 311700 to 320000).
+
+## 4. What the era code costs where it holds nobody back (build #81)
+
+Round 11 had the rw profiles with readers 1-7% under round 10 on one node,
+and `rwsem_c01_w1` 13-20% under at 8-16 workers, although every in-boot
+comparison of eras off and on had shown 1.00 there. Rounds are different
+boots, so that alone proved nothing; but only the profiles with readers were
+lower, which a difference between boots would not single out. The in-boot
+comparisons could not see it either way: with eras off the same code still
+ran, measuring in every queue head and checking the era word in the rwsem
+reader's fast path whenever two readers were in.
+
+Build #81 makes both removable at run time: `kd_rw_era_ns=0` measures
+nothing, and `kd_rw_era_min` out of reach keeps the fast path away from the
+era word. One node, kd, 4 rounds (`b81-one-node-cost.jsonl`), rate over the
+rate with both removed:
+
+| | rwsem 1% writes | rwsem 20% writes | rwlock |
+|---|---|---|---|
+| default of #80 (eras on, check) | 0.88-0.98 | 0.93-0.97 | 0.97-1.00 |
+| eras on, no check | 0.99-1.00 | 0.99-1.00 | same as default: it never had the check |
+| eras off, check | 0.89-0.98 | 0.93-0.99 | 1.00 |
+
+(The ranges are 8 to 32 workers; at 4 every entry is 0.98-1.00.)
+
+* The cost was the check in the reader fast path, 3-12% of every rwsem's
+  read side on one node. What the queue heads measure costs 0-3%.
+* Across nodes the check gains nothing (`b81-reader-fast-path.jsonl`, 3
+  rounds, rate over no eras):
+
+| placement | rwsem 1% writes, check -> none | rwsem 20% writes, check -> none |
+|---|---|---|
+| one node, 32 | 0.93-0.96 -> 0.99 | 0.95-0.98 -> 1.00 |
+| 31+1 | 1.03-1.04 -> 1.10-1.11 | 1.03-1.18 -> 1.09-1.22 |
+| 24+8 | 1.21-1.22 -> 1.23-1.31 | 1.37-1.55 -> 1.44-1.57 |
+| 16+16 | 1.15-1.20 -> 1.21-1.29 | 1.40-1.59 -> 1.50-1.62 |
+| 32+32 | 1.21-1.24 -> 1.22-1.31 | 1.31-1.35 -> 1.33-1.41 |
+
+So it was removed. A reader now waits for its node's era only when it meets
+a writer, as on the rwlock.
+
+`mmap1` at 8 threads, which went from 1.29 to 1.14 of Native with eras in
+the #80 run, is bimodal by itself (`b81-mmap1-8threads-era*.jsonl`, six runs
+each): 264000-385000 without eras, three low and three high; 278000-389000
+with, one low and five high.
+
+## 5. The committed state (build #82)
+
+`kd_rw_era_ns` 200000, `kd_rw_era_press` 225, `kd_rw_era_drain_ns` 5000,
+`kd_numa_after` 32. Round 12 (`../grid-20261115-r12-64cpu/`) is this build.
+
+### Across nodes, three backends (`b82-three.jsonl`, 3 rounds)
+
+32 workers; rate as 16+16 over the rate on one node, and the 16+16 rate
+itself in Mops/s.
+
+| profile | Native | kd | TCLock | kd, 16+16 | TCLock, 16+16 |
+|---|---|---|---|---|---|
+| mutex c01 | 0.53 | 0.97 | 0.99 | 3.65 | 3.15 |
+| rwlock c01, writers only | 0.59 | 0.98 | 0.98 | 6.57 | 3.50 |
+| rwsem c01, writers only | 0.60 | 0.96 | 0.98 | 3.61 | 3.11 |
+| rwlock c01, 20% writes | 0.73 | **0.97** | 0.99 | 6.18 | 4.99 |
+| rwlock c16, 20% writes | 0.63 | **0.97** | 0.99 | 4.28 | 4.03 |
+| rwlock c01, 1% writes | 0.85 | **1.01** | 0.81 | 14.67 | 11.44 |
+| rwlock c16, 1% writes | 0.83 | **0.87** | 0.80 | 10.46 | 9.24 |
+| rwsem c01, 20% writes | 0.60 | **0.95** | 0.70 | 6.57 | 5.26 |
+| rwsem c16, 20% writes | 0.59 | **0.93** | 0.72 | 4.92 | 3.65 |
+| rwsem c01, 1% writes | 0.78 | **1.17** | 0.86 | 12.25 | 11.92 |
+| rwsem c16, 1% writes | 0.78 | **1.02** | 0.83 | 9.76 | 9.73 |
+
+Section 1 has the kd column before the change: 0.63 / 0.57 for the rwsem
+with 20% writes, 0.74 / 0.57 for the rwlock. The rw families now lose across
+nodes what the mutex loses, and at 16+16 kd is at or ahead of TCLock in all
+eleven profiles. (The rwsem with 1% writes gains across nodes because half
+as many readers contend for the count at a time; on one node TCLock's rwsem
+is still ahead there, 13.89 against 10.47.)
+
+### Eras off and on, by placement (`b82-asym.jsonl`, 3 rounds)
+
+32 workers, kd, `kd_rw_era_ns` 0 against 200000 in the same boot. Rate with
+eras over rate without.
+
+| placement | rwsem 20% writes | rwsem 1% writes | rwlock 20% writes | rwlock 1% writes |
+|---|---|---|---|---|
+| one node | 1.00 | 0.99-1.00 | 0.98-0.99 | 1.00 |
+| 16+16 | 1.55-1.65 | 1.25-1.38 | 1.34-1.68 | 1.09-1.23 |
+| 24+8 | 1.47-1.61 | 1.28-1.40 | 1.27-1.54 | 1.14-1.20 |
+| 28+4 | 1.41-1.48 | 1.28-1.31 | 1.22-1.34 | 1.14-1.15 |
+| 31+1 | 1.09-1.21 | 1.16 | 1.01-1.06 | 1.05-1.06 |
+
+On one node eras hold nobody back; the 1-2% of the rwlock with 20% writes is
+what the queue heads' measurements cost there, where nearly every writer is
+a queue head of its own.
+
+Least over most operations per worker, without eras -> with:
+
+| placement | rwsem 20% | rwsem 1% | rwlock 20% | rwlock 1% |
+|---|---|---|---|---|
+| one node | 0.97-0.98 -> same | 0.65-0.79 -> same | 0.91-0.95 -> 0.90-0.95 | 0.58-0.62 -> same |
+| 16+16 | 0.97 -> 0.90-0.93 | 0.61-0.81 -> 0.65-0.75 | 0.88-0.92 -> 0.89-0.93 | 0.48-0.63 -> 0.52-0.65 |
+| 24+8 | 0.96-0.98 -> 0.78-0.79 | 0.32-0.40 -> 0.64-0.80 | 0.90-0.91 -> 0.87-0.89 | 0.52-0.54 -> 0.54-0.62 |
+| 28+4 | 0.94-0.95 -> 0.54-0.83 | 0.44-0.58 -> 0.53-0.54 | 0.87-0.92 -> 0.75-0.81 | 0.48-0.59 -> 0.40-0.44 |
+| 31+1 | 0.90-0.96 -> 0.77-0.93 | 0.38-0.42 -> 0.50-0.57 | 0.85-0.94 -> 0.54-0.71 | 0.35-0.46 -> 0.42-0.47 |
+
+No placement loses rate. What eras cost is evenness with 20% writes when the
+nodes have unequal numbers: the least-served worker gets 0.54-0.93 of the
+most-served one's operations where it got 0.85-0.98. With 1% writes the
+shares were uneven without eras already (0.32-0.59 with unequal numbers) and
+are 0.40-0.80 with them.
+
+### Few workers (`b82-low.jsonl`, 2 rounds)
+
+| workers | era on / off | eras started? |
+|---|---|---|
+| 1+1 | 0.99-1.00 in all six profiles | never |
+| 2+2 | 0.97-1.03, and 1.33 for rwlock c16 20% writes | rwlock and rwsem c16 20% writes only; the 0.97 and 0.98 are points without an era |
+| 4+4 | 1.00-2.40 (rwsem c01 20% 3.47 -> 8.33, rwlock c01 20% 4.56 -> 8.94, c16 2.37 -> 4.22) | where the callers keep the lock busy |
+| 8+8 | 1.09-1.77 | yes |
+
+Two callers in all can never reach the pressure threshold; that is what
+keeps a lock that two nodes merely share out of this. The least over the
+most operations per worker is the same or better with eras at every one of
+these points (0.62-0.98).
+
+### Correctness on the same boot
+
+* `run_corr.py`, Native, kd and TCLock: 312 points, 0 failed, 0 kernel
+  complaints (`b82-corr.jsonl`).
+* `mm_stress` with `kd_mm=1` at 4, 32 and 63 threads, then the native
+  control: all pass.
+* `api_stress` (setfd, ofd, pipe, seek, xattr at 4, 32, 63): all pass except
+  `setfd 63`, which runs into the test's own descriptor limit ("Too many
+  open files") as on every build before.
+* Kernel log from the start of the chain to the end of the grid: no BUG,
+  WARNING, stall or lockup message.
+
+### will-it-scale, eras off and on (`b82-wis-era0.jsonl`, `b82-wis-era200000.jsonl`)
+
+`mm->mmap_lock` as a kd rwsem goes through the same code, so eras can start
+on it. Threads, kd over Native, 2 rounds each:
+
+| threads | mmap1 off -> on | mmap2 off -> on | page_fault1 off -> on |
+|---|---|---|---|
+| 8 | 1.33 -> 1.45 | 0.77 -> 0.82 | 0.85 -> 0.84 |
+| 16 | 1.36 -> 1.31 | 0.82 -> 0.79 | 0.94 -> 0.88 |
+| 32 | 1.35 -> 1.33 | 0.81 -> 0.77 | 0.87 -> 1.04 |
+| 64 | 2.09 -> 2.11 | **0.90 -> 1.37** | 1.04 -> 1.13 |
+
+* 8 to 32 threads are on one node, where an era holds nobody back. The
+  differences there are the spread of these tests (section 4 has six runs
+  of `mmap1` at 8 threads; `page_fault1` at 16 and 32 threads moves by as
+  much between the two columns in either direction).
+* At 64 threads eras start on `mmap_lock`. `mmap2` gains 55% in kd's own
+  rate (146600 -> 227500): its sessions hand every section back at the file
+  mapping's rwsem (docs/MMAP_LOCKS.md), so the lock behaves like a plain
+  contended rwsem there, and serving one node at a time helps it as it
+  helps the nano profiles. That takes `mmap2` at 64 threads from below
+  Native to 1.37 of it; at 8 to 32 threads it is still 0.77-0.82, for the
+  reason MMAP_LOCKS gives. `mmap1`, whose sessions run thousands of sections
+  each, neither gains nor loses (312800 -> 309300).

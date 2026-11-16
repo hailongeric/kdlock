@@ -347,7 +347,18 @@ handed back inside a delegated section. The earlier history:
   * **Round 8** (#61, `grid-20261114-r8-64cpu/`): across both nodes
     kd/TCLock is 0.85-0.90 with 20% writes (round 7: 0.52-0.53), 0.89-0.99
     with 1%, 0.78-0.90 for c16 and 1.13-1.21 writers only. Still behind
-    with readers. **Open.**
+    with readers.
+  * **Eras** (#73-#82, ARCHITECTURE 7b): what was left was not the wait
+    policy but the nodes. Readers are not delegated, so the session's NUMA
+    order never reached them; with the worker count fixed kd lost across
+    nodes exactly what the native rwsem loses. Under pressure the lock now
+    serves one node at a time. **Round 12** (#82,
+    `grid-20261115-r12-64cpu/`): across both nodes kd/TCLock is 1.08-1.24
+    with 20% writes and 0.79-0.93 with 1%; the latter is the margin within
+    one node as well (0.75-0.93) and is about the 40-byte object, not about
+    nodes. This is a change of order between callers of different nodes,
+    bounded by twice `kd_rw_era_ns` per acquisition, in the area
+    `AGENTS.md` lists as deferred; it was made at the user's request.
 * **Rejected with data** (in-boot A/B on 380G10):
   * The same admission for the rwlock (#47): -18 to -46% at 20-32 workers,
     +2 to +12% at 4. The patch was not kept.

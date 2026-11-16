@@ -9,9 +9,11 @@ Linux 7 on x86_64, covering spinlock, rwlock, mutex and rwsem.
 
 **Status:** the kernel with kdlock built in boots in the `kdclaude` VM; all
 four families, two-level nesting and handback pass the data checks with and
-without delegation, and module unload with live images is handled. Ten
+without delegation, and module unload with live images is handled. Twelve
 measured rounds are in `../bench/results/kdclaude/`; the full worker grid and
-the will-it-scale runs behind [MMAP_LOCKS.md](MMAP_LOCKS.md) are round 10. See
+the will-it-scale runs behind [MMAP_LOCKS.md](MMAP_LOCKS.md) are round 10,
+and rounds 11 and 12 are that grid with the reader-writer families served one
+NUMA node at a time (ARCHITECTURE 7b). See
 [BUILD_AND_TEST.md](BUILD_AND_TEST.md) and [PERF_PLAN.md](PERF_PLAN.md).
 
 | Read this | For |
@@ -32,10 +34,10 @@ Source layout (relative to the repository root):
 | Path | Content |
 | --- | --- |
 | `include/kdlock/` | lock objects (`kd_types.h`), API (`kd_api.h`), user interface (`kd_uapi.h`) |
-| `kernel/` | `kd_entry.S` (stubs, resume, jit enter/exit), `kd_core.c` (wait, session, executor), `kd_{spinlock,rwlock,mutex,rwsem}.c`, `kd_image.c` (sites, images, events), `kd_dev.c`, `Makefile`, `Kconfig` |
+| `kernel/` | `kd_entry.S` (stubs, resume, jit enter/exit), `kd_core.c` (wait, session, executor), `kd_{spinlock,rwlock,mutex,rwsem}.c`, `kd_era.c` (rw families across NUMA nodes), `kd_image.c` (sites, images, events), `kd_dev.c`, `Makefile`, `Kconfig` |
 | `jit/` | `kd_daemon.py`, `kdjit/translator.py`, `kdjit/kernel.py` |
 | `integration/` | `apply_to_tree.sh`, `kd_linux_map.h` (API mapping reference), notes |
-| `bench/` | `kd_bench.c` (nano workloads), the runners, `wis/` (will-it-scale), `results/` |
+| `bench/` | `kd_bench.c` (nano workloads), the runners (`run_grid.py` worker grid, `run_place.py` CPU placements and parameter sets in one boot, `run_mmap1.py` will-it-scale), `wis/`, `results/` |
 | `tclock_backend/` | the original TCLocks locks, the benchmark's third backend |
 
 Wording rules (from the project `AGENTS.md`): prose and comments in English;

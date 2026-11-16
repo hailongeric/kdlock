@@ -331,13 +331,36 @@ Data: `tune-20261115-2700MHz/` (in-boot A/B, builds #67-#71) and
   * *Change*: a reader-writer lock under pressure serves one node at a time
     (`kernel/kd_era.c`, ARCHITECTURE 7b). Callers of the other node wait
     before they touch the lock.
-  * *Result* (#80, same placements): rwsem 0.93-1.08, rwlock 0.87-0.99 of
+  * *Result* (#82, same placements): rwsem 0.93-1.17, rwlock 0.87-1.01 of
     the one-node rate. No placement, worker count or one-node point loses
     rate; with unequal numbers on the nodes the shares per worker are less
-    even than without eras (20% writes: least over most 0.54-0.89, from
-    0.84-0.98).
+    even than without eras (20% writes: least over most 0.54-0.93, from
+    0.85-0.98).
+  * *Round 12* (#82): from 32 to 64 workers the rw families lose 3-12%
+    (round 10: 18-43%); across nodes kd/TCLock is 0.99-1.29 for the rwlock
+    and 1.08-1.24 for the rwsem with 20% writes (round 10: 0.65-1.08 and
+    0.76-0.87). will-it-scale `mmap2` at 64 threads goes from 0.90 to 1.37
+    of Native; `mmap1` and `page_fault1` do not move.
+  * *A lesson about the method*: round 11 (#80) lost up to 20% on one node
+    for the rwsem with readers, and no in-boot comparison of eras off and
+    on had shown it, because the switch left the always-on code running. A
+    switch that is to prove "no cost" has to remove the code's work
+    (BUILD_AND_TEST 5a).
   * All of it, step by step, with what was tried and removed:
     `bench/results/kdclaude/era-20261115-64cpu/`.
+* **Still open after round 12:**
+  * The rwsem with 1% writes against TCLock, 0.75-0.93 on either side of
+    the node boundary. It is the read side on one line of a 40-byte object
+    against TCLock's 500 bytes; no change of the wait policy has moved it.
+  * `rwlock_c01_w20` on one node, 0.89-0.95 of Native: every queued reader
+    ends the writer session. With eras the rwlock no longer needs readers
+    in its queue to be ordered across nodes, so admitting them outside the
+    queue as the rwsem does can be tried again (#47 rejected it before the
+    phase counter and the reader phase existed).
+  * The 3- and 4-worker points, `mutex_c01` at 3 above all (0.94, 0.56 and
+    0.83 of Native in rounds 10, 11 and 12 with the same mutex code).
+  * Evenness of eras with very unequal numbers on the nodes (28+4 with 20%
+    writes: 0.54-0.83).
 * **Reader spinning needs a rule too.** A reader registered behind an
   *active* writer spins out `kd_rwsem_rspin_ns` (50 us) even when the holder
   will not leave for milliseconds. That is two thirds of will-it-scale

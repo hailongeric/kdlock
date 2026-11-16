@@ -460,6 +460,22 @@ addressed. The measurements, including the placements with unequal numbers
 and what each step of the design fixed, are in
 `bench/results/kdclaude/era-20261115-64cpu/`.
 
+The table at the top of this section, on the committed state (build #82,
+same placements, three backends in one boot):
+
+| profile | Native | kd | TCLock |
+|---|---|---|---|
+| mutex, rwlock writers, rwsem writers | 0.53-0.60 | 0.96-0.98 | 0.98-0.99 |
+| rwlock, 20% writes (c01 / c16) | 0.73 / 0.63 | **0.97 / 0.97** | 0.99 / 0.99 |
+| rwsem, 20% writes (c01 / c16) | 0.60 / 0.59 | **0.95 / 0.93** | 0.70 / 0.72 |
+| rwlock, 1% writes (c01 / c16) | 0.85 / 0.83 | **1.01 / 0.87** | 0.81 / 0.80 |
+| rwsem, 1% writes (c01 / c16) | 0.78 / 0.78 | **1.17 / 1.02** | 0.86 / 0.83 |
+
+Eras off and on in the same boot: 1.09-1.68 at 16+16, 1.01-1.21 with 31
+workers on one node and 1 on the other, 0.98-1.00 on one node. With unequal
+numbers and 20% writes the least-served worker gets 0.54-0.93 of the
+most-served one's operations, against 0.85-0.98 without eras.
+
 ## 7a. Plain mode and delegation mode
 
 Delegation pays off only while the combiner keeps finding the next waiter

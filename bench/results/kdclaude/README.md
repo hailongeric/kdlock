@@ -287,3 +287,36 @@ the tables.
   it when switched off.
 * **brk1** parity inside the spread.
 * The lock-by-lock analysis of the mmap section is `docs/MMAP_LOCKS.md`.
+
+### Eras: the rw families across NUMA nodes (`era-20261115-64cpu/`)
+
+* **Question** (the user, 2026-11-15): why rwsem and rwlock lose across
+  nodes where mutex and spinlock do not, and whether the delegation is
+  NUMA-aware.
+* **Cause**, with the worker count fixed (32 on one node or 16+16, #72):
+  kd keeps 0.95-0.97 where every section is delegated, 0.57-0.74 with 20%
+  writes, like the native locks (0.61-0.71). A session's NUMA order reaches
+  writers only; readers are not delegated and nothing ordered them.
+* **Change** (#73 to #82, `kernel/kd_era.c`): under pressure an rw lock
+  serves one node at a time. The directory README has every step, including
+  the three that were removed again and what each cost.
+* **Committed state** (#82): 16+16 over one node is 0.93-1.17 for the
+  rwsem and 0.87-1.01 for the rwlock. No placement, worker count or
+  one-node point loses rate. With unequal numbers on the nodes and 20%
+  writes the least-served worker gets 0.54-0.93 of the most-served one's
+  operations (0.85-0.98 without eras).
+* **Correctness on the same boot:** `b82-corr.jsonl`, mm_stress, api_stress.
+
+### Rounds 11 and 12 (`grid-20261115-r11-64cpu/`, `grid-20261115-r12-64cpu/`)
+
+* **Round 11:** build #80, commit `72fd7552`, the grid of round 10 with
+  eras. Across nodes as round 12; on one node the rwsem profiles with
+  readers were up to 20% under round 10, which led to build #81 and the
+  removal of a check in the reader fast path.
+* **Round 12:** build #82, commit `9ac62b01`, 1848 points, no failed point.
+  * From 32 to 64 workers the rw families lose 3-12% (round 10: 18-43%).
+  * Across nodes kd is at or ahead of TCLock in twelve of fourteen profiles
+    (round 10: six): rwlock 0.99-1.29, rwsem with 20% writes 1.08-1.24.
+    Behind: the rwsem with 1% writes, 0.79-0.93, the same margin as within
+    one node.
+  * One node: kd's rates are 0.96-1.05 of round 10 in every profile.
