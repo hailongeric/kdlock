@@ -1,0 +1,1 @@
+{"variant": "local-baseline", "source": "4669a0855c625a791731224c8fd13b87711a2a8c", "kernel_core": "20e9db0c", "boot_id": "802af0c8-f336-4ddb-a1d3-3a1ba605b6db", "kernel": "7.0.0-38-kdlocalspin1", "build": "#2 SMP PREEMPT_DYNAMIC Tue Nov 17 15:46:44 UTC 2026", "params": {"kd_adapt": "Y", "kd_deleg_enter": "5", "kd_deleg_exit": "2"}, "start": 1794931137.8576365}

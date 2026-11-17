@@ -1,0 +1,94 @@
+
+/work/repo/local-tclock/spin/tclock_backend_km.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000cd0 <komb_spin_lock_slowpath>:
+     cd0:	55                   	push   %rbp
+     cd1:	53                   	push   %rbx
+     cd2:	41 54                	push   %r12
+     cd4:	41 55                	push   %r13
+     cd6:	41 56                	push   %r14
+     cd8:	41 57                	push   %r15
+     cda:	e8 81 f4 ff ff       	call   160 <get_komb_node>
+     cdf:	48 89 60 18          	mov    %rsp,0x18(%rax)
+     ce3:	e8 48 f4 ff ff       	call   130 <get_shadow_stack_ptr>
+     ce8:	48 8b 20             	mov    (%rax),%rsp
+     ceb:	e8 30 fb ff ff       	call   820 <__komb_spin_lock_slowpath>
+     cf0:	85 c0                	test   %eax,%eax
+     cf2:	74 1c                	je     d10 <komb_spin_lock_slowpath+0x40>
+     cf4:	e8 37 f4 ff ff       	call   130 <get_shadow_stack_ptr>
+     cf9:	48 8b 20             	mov    (%rax),%rsp
+     cfc:	41 5f                	pop    %r15
+     cfe:	41 5e                	pop    %r14
+     d00:	41 5d                	pop    %r13
+     d02:	41 5c                	pop    %r12
+     d04:	5b                   	pop    %rbx
+     d05:	5d                   	pop    %rbp
+     d06:	c3                   	ret    
+     d07:	31 c0                	xor    %eax,%eax
+     d09:	31 ff                	xor    %edi,%edi
+     d0b:	e9 00 00 00 00       	jmp    d10 <komb_spin_lock_slowpath+0x40>
+     d10:	e8 1b f4 ff ff       	call   130 <get_shadow_stack_ptr>
+     d15:	48 89 20             	mov    %rsp,(%rax)
+     d18:	e8 43 f4 ff ff       	call   160 <get_komb_node>
+     d1d:	48 8b 60 18          	mov    0x18(%rax),%rsp
+     d21:	41 5f                	pop    %r15
+     d23:	41 5e                	pop    %r14
+     d25:	41 5d                	pop    %r13
+     d27:	41 5c                	pop    %r12
+     d29:	5b                   	pop    %rbx
+     d2a:	5d                   	pop    %rbp
+     d2b:	c3                   	ret    
+     d2c:	31 c0                	xor    %eax,%eax
+     d2e:	31 ff                	xor    %edi,%edi
+     d30:	e9 00 00 00 00       	jmp    d35 <komb_spin_lock_slowpath+0x65>
+
+Disassembly of section .init.text:
+
+Disassembly of section .exit.text:
+
+Disassembly of section .altinstr_replacement:
+
+
+/work/repo/local-tclock/spin/tclock_backend_km.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000001220 <komb_context_switch>:
+    1220:	55                   	push   %rbp
+    1221:	53                   	push   %rbx
+    1222:	41 54                	push   %r12
+    1224:	41 55                	push   %r13
+    1226:	41 56                	push   %r14
+    1228:	41 57                	push   %r15
+    122a:	48 89 26             	mov    %rsp,(%rsi)
+    122d:	48 8b 27             	mov    (%rdi),%rsp
+    1230:	41 5f                	pop    %r15
+    1232:	41 5e                	pop    %r14
+    1234:	41 5d                	pop    %r13
+    1236:	41 5c                	pop    %r12
+    1238:	5b                   	pop    %rbx
+    1239:	5d                   	pop    %rbp
+    123a:	e9 00 00 00 00       	jmp    123f <komb_context_switch+0x1f>
+
+Disassembly of section .init.text:
+
+Disassembly of section .exit.text:
+
+Disassembly of section .altinstr_replacement:
+
+filename:       /mnt/kdlock-builds2/main-spin-local-4669a085-20261117/repo/bench/kd_bench.ko
+license:        GPL
+srcversion:     F28B44748276796AFCD2543
+depends:        tclock_rwsem_backend_km,tclock_rwlock_backend_km,tclock_mutex_backend_km,tclock_backend_km
+name:           kd_bench
+retpoline:      Y
+vermagic:       7.0.0-38-kdlocalspin1 SMP preempt mod_unload modversions 
+
+key files [('out/certs/signing_key.pem', True), ('out/certs/signing_key.x509', True), ('out/scripts/sign-file', True)]
+space Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        15G  2.0G   13G  14% /
+/dev/vdb        165G  125G   39G  77% /mnt/kdlock-builds2

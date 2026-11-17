@@ -1,0 +1,1 @@
+{"id": "candidate-status-after-window", "returncode": 1, "log_bytes": 222, "output": "  File \"<string>\", line 10\n    f=os.open('/dev/ttyS0',os.O_WRONLY|os.O_NOCTTY);os.write(f,('\n                                                                ^\nSyntaxError: unterminated string literal (detected at line 10)\n"}

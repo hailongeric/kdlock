@@ -1,0 +1,265 @@
+{
+  "time": 1794931098.294392,
+  "pid": 3841511,
+  "freq": {
+    "0": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "1396490"
+    },
+    "1": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "2": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "3": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "1117580"
+    },
+    "4": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "5": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "6": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "7": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "8": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "9": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "10": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "11": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "12": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "13": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "14": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "15": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "16": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "17": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "18": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "19": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "20": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "21": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "22": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500014"
+    },
+    "23": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "24": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "25": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "26": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "27": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "28": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500276"
+    },
+    "29": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "30": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "31": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "32": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500221"
+    },
+    "33": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "34": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "35": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "36": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "1000000",
+      "scaling_max_freq": "3000000",
+      "scaling_cur_freq": "1000000"
+    },
+    "37": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "1000000",
+      "scaling_max_freq": "3000000",
+      "scaling_cur_freq": "1000000"
+    },
+    "38": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    "39": {
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "1000000",
+      "scaling_max_freq": "3000000",
+      "scaling_cur_freq": "1000000"
+    }
+  },
+  "load": "0.22 0.75 2.62 1/1808 3843003\n",
+  "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=4243529188\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+  "processes": [
+    "    PID COMMAND         %CPU",
+    "3841511 qemu-system-x86 57.4",
+    "1747166 claude           2.1",
+    "3002626 codex            0.9",
+    "3269327 MainThread       0.6",
+    "1742610 MainThread       0.5",
+    "1272886 codex <defunct>  0.4",
+    "2946223 codex <defunct>  0.4",
+    "3269214 code-69047191fc  0.4",
+    "3835567 claude.exe       0.4",
+    "1742116 code-69047191fc  0.3",
+    "1742228 MainThread       0.3",
+    "2054024 codex            0.3",
+    "3269321 sshd             0.2",
+    "3403895 codex <defunct>  0.2"
+  ]
+}

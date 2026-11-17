@@ -1,0 +1,9 @@
+make: Entering directory '/work/out'
+make[1]: Entering directory '/work/candidate-repo/entry-fixture'
+  CC [M]  kd_spin_entry_check.o
+  MODPOST Module.symvers
+  CC [M]  kd_spin_entry_check.mod.o
+  CC [M]  .module-common.o
+  LD [M]  kd_spin_entry_check.ko
+make[1]: Leaving directory '/work/candidate-repo/entry-fixture'
+make: Leaving directory '/work/out'

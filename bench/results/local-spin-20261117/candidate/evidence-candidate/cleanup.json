@@ -1,0 +1,1 @@
+{"daemon_rc": 0, "unloaded": ["tclock_backend_km", "tclock_mutex_backend_km", "tclock_rwlock_backend_km", "tclock_rwsem_backend_km", "kd_bench"], "restored_params": {"kd_adapt": "Y", "kd_deleg_enter": "5", "kd_deleg_exit": "2"}, "boot_id": "a7859ec4-59ee-479a-a3a2-7f20060a153f"}

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "/lib/modules/7.0.0-38-kdlocalspin1/build",
+    "archived": "/lib/modules/7.0.0-38-kdlocalspin1/build-at-install",
+    "old_target": "/mnt/kdlock-builds2/main-spin-local-4669a085-20261117/out"
+  },
+  {
+    "path": "/lib/modules/7.0.0-38-kdlocalspin1/source",
+    "archived": "/lib/modules/7.0.0-38-kdlocalspin1/source-at-install",
+    "old_target": "/mnt/kdlock-builds2/main-spin-local-4669a085-20261117/source"
+  }
+]

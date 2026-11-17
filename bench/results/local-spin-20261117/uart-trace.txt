@@ -1,0 +1,60 @@
+# tracer: nop
+#
+# entries-in-buffer/entries-written: 48/48   #P:40
+#
+#                                _-----=> irqs-off/BH-disabled
+#                               / _----=> need-resched
+#                              | / _---=> hardirq/softirq
+#                              || / _--=> preempt-depth
+#                              ||| / _-=> migrate-disable
+#                              |||| /     delay
+#           TASK-PID     CPU#  |||||  TIMESTAMP  FUNCTION
+#              | |         |   |||||     |         |
+          <idle>-0       [007] d.h1. 163811.673715: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163811.680292: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163811.680295: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163811.680305: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163811.681151: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163811.685749: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163811.685752: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163811.685763: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163811.686527: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163813.185760: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163813.185778: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163813.185789: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163813.187955: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163813.190634: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163813.190637: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163813.190647: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163813.692461: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163815.190717: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.H1. 163815.190733: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.H1. 163815.190744: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163815.192827: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163815.195518: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163815.195523: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163815.195534: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163815.697177: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.192567: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163817.192574: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.192585: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163817.193560: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.196232: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163817.196236: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.196246: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163817.697396: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.735546: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163817.735551: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.735561: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163817.737641: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.740991: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163817.740995: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.741005: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163817.741340: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.747961: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163817.747963: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.747974: irq_handler_exit: irq=4 ret=unhandled
+          <idle>-0       [007] d.h1. 163817.748693: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.753117: irq_handler_exit: irq=4 ret=handled
+          <idle>-0       [007] d.h1. 163817.753120: irq_handler_entry: irq=4 name=ttyS0
+          <idle>-0       [007] d.h1. 163817.753130: irq_handler_exit: irq=4 ret=unhandled
