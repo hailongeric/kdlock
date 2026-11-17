@@ -1,0 +1,3 @@
+# The lock calls of the locktorture module (kernel/locking/locktorture.c).
+torture_*
+lock_torture_*

@@ -1,0 +1,20 @@
+# The lock users of the CONFIG_KDLOCK_API objects that bench/api_stress
+# contends (found with an empty allow list, kd_daemon.py -v):
+# files_struct.file_lock
+set_close_on_exec
+alloc_fd
+file_close_fd
+# file_lock_context.flc_lock
+posix_test_lock
+posix_lock_inode
+# pipe_inode_info.mutex
+pipe_fcntl
+pipe_ioctl
+anon_pipe_read
+anon_pipe_write
+# file.f_pos_lock
+fdget_pos
+# uts_sem
+__x64_sys_sethostname
+# simple_xattrs.lock
+simple_xattr_set

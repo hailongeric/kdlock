@@ -15,6 +15,13 @@ publishes one image per contended lock call site.
                    image: forget what was learned about that range and
                    republish the rest.
 
+An allow list (--allow, a file of function-name patterns) limits which
+sites get images at all: a site whose function matches no pattern is
+never built, so its waiters keep queueing plainly. This is how delegation
+is switched on one lock user at a time in a kernel where every lock is a
+kdlock (CONFIG_KDLOCK_ALL). Refused sites are counted and, with -v,
+printed once each, which also shows which sites a workload contends.
+
 Every build is based on one text generation; if modules come or go before
 the image is loaded, the kernel refuses it and the site is built again.
 
@@ -32,6 +39,7 @@ were from earlier builds).
 
 import argparse
 import errno
+import fnmatch
 import json
 import os
 import signal
@@ -61,6 +69,12 @@ class Daemon:
         self.sites = {}         # site -> Learned
         self.dirty = {}         # site -> time of first unprocessed change
         self.failed = set()     # sites the translator could not handle
+        self.allow = None       # function-name patterns, None: every site
+        self.refused = {}       # site -> requests, sites outside the allow list
+        if args.allow:
+            with open(args.allow) as f:
+                self.allow = [l.split("#")[0].strip() for l in f]
+            self.allow = [p for p in self.allow if p]
         self.stop = False
         self._load_state()
 
@@ -81,6 +95,10 @@ class Daemon:
         now = time.monotonic()
         for site in self.sites:
             self.dirty[site] = now - self.args.settle
+        # A changed allow list applies to stored sites as well.
+        for site in [s for s in self.sites if not self.allowed(s)]:
+            del self.sites[site]
+            self.dirty.pop(site, None)
 
     def _save_state(self):
         path = self.args.state
@@ -127,6 +145,15 @@ class Daemon:
         names = self.kv.names(f) if f is not None else ()
         return "%s+%#x" % (names[0], addr - f) if names else "%#x" % addr
 
+    def allowed(self, site):
+        if self.allow is None:
+            return True
+        # Modules loaded since the last build: their symbols are new.
+        self.kv.sync()
+        f = self.kv.func_of(site)
+        names = self.kv.names(f) if f is not None else ()
+        return any(fnmatch.fnmatchcase(n, p) for n in names for p in self.allow)
+
     def handle(self, event):
         kind, _cpu, site, ip, target = event
         if kind == KD_EV_TEXT_GONE:
@@ -137,6 +164,16 @@ class Daemon:
                 print("site %#x: handback at %s, exit %#x" % (site, self._where(ip), target))
             return
         if site in self.failed:
+            return
+        if site in self.refused:
+            self.refused[site] += 1
+            return
+        if not self.allowed(site):
+            self.refused[site] = 1
+            self.sites.pop(site, None)
+            self.dirty.pop(site, None)
+            if self.args.verbose:
+                print("site %#x (%s): not in the allow list" % (site, self._where(site)))
             return
         if kind == KD_EV_REQUEST:
             # The kernel only asks for a site that has no image (new, or
@@ -217,6 +254,10 @@ class Daemon:
         if self.args.enable:
             self.dev.enable(False)
         self._save_state()
+        if self.refused:
+            print("refused %d sites outside the allow list:" % len(self.refused))
+            for site, n in sorted(self.refused.items(), key=lambda x: -x[1]):
+                print("  %6d  %#x %s" % (n, site, self._where(site)))
 
 
 def main():
@@ -225,6 +266,8 @@ def main():
     ap.add_argument("--state", default="/var/lib/kdlock/learned.json",
                     help="cumulative knowledge file ('' to disable)")
     ap.add_argument("--config", help="JSON overriding translator policy lists and budgets")
+    ap.add_argument("--allow", help="file of function-name patterns (fnmatch), one per "
+                    "line; only sites in matching functions get images")
     ap.add_argument("--poll", type=float, default=0.01, help="idle poll interval, seconds")
     ap.add_argument("--settle", type=float, default=0.05,
                     help="delay between a site's first new report and its rebuild")
