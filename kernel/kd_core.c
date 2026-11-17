@@ -98,7 +98,7 @@ core_param(kd_deleg_exit, kd_deleg_exit, uint, 0644);
 unsigned int kd_spin_phase_wait __read_mostly;
 core_param(kd_spin_phase_wait, kd_spin_phase_wait, uint, 0644);
 /* A queue-owned phase hint; the last spin tail clears it with itself. */
-bool kd_spin_queue_phase __read_mostly;
+bool kd_spin_queue_phase __read_mostly = true;
 core_param(kd_spin_queue_phase, kd_spin_queue_phase, bool, 0644);
 
 
