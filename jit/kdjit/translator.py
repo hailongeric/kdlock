@@ -26,7 +26,9 @@ these are rewritten:
                     with the continuation stored, when contended.
                     Sleeping-family acquires always leave generated code.
   frontiers         Instructions or callees only the origin may execute end
-                    the path with an exit carrying their own address.
+                    the path with an exit carrying their own address. This
+                    includes voluntary scheduling points whose static call
+                    is patched to something that no longer looks like one.
 
 Every exit records the address of the first source instruction that was not
 executed. The origin resumes there natively; nothing is replayed.
@@ -113,7 +115,20 @@ DEFAULT_CONFIG = {
         "smp_call_function_any", "on_each_cpu_cond_mask",
         "switch_mm", "switch_mm_irqs_off", "leave_mm",
         "__cond_resched", "synchronize_rcu", "synchronize_rcu_expedited",
+        # Static call trampolines of the scheduling points below.
+        "__SCT__cond_resched", "__SCT__might_resched",
     ],
+    # Static calls whose inline call sites are frontiers whatever they are
+    # patched to. With preempt=full, cond_resched() sites are patched to
+    # `xor %eax,%eax`: nothing to see in the text, and the code relies on
+    # preemption at the next preempt_enable() instead. An executor runs the
+    # whole session with preemption off, so a loop that stops on
+    # need_resched() and retries after cond_resched() never progresses
+    # there (zap_pte_range() under a delegated brk() livelocked this way).
+    # At such a site the origin takes over and gets scheduled as usual.
+    # preempt_enable()'s preempt_schedule sites need nothing: they are only
+    # reached at preempt count 0, and their thunk calls preempt_schedule.
+    "frontier_static_call": ["cond_resched", "might_resched"],
     "frontier_prefix": [
         "schedule_timeout_", "wait_for_completion", "__get_user_", "__put_user_",
         "copy_user_", "__copy_user_", "kd_jit_", "kd_resume",
@@ -375,6 +390,9 @@ class Translator:
         # fault fixup (found by their own address), stay with the origin.
         if not self.kv.in_text(addr) or self.kv.has_fixup(addr) or cs.id in FRONTIER_IDS:
             return frontier()
+        # A scheduling point, whatever its static call is patched to.
+        if addr in self.sched_sites:
+            return frontier()
         for op in cs.operands:
             if op.type == X.X86_OP_REG and cs.reg_name(op.reg)[:2] in ("cr", "dr"):
                 return frontier()
@@ -577,6 +595,10 @@ class Translator:
 
     def _decode(self, site, learned):
         self.ins = {}
+        # Per build: the view is synchronised before each one.
+        self.sched_sites = set()
+        for name in self.cfg["frontier_static_call"]:
+            self.sched_sites |= self.kv.static_call_sites(name)
         self.call_edges = []        # (return address, callee)
         self.tail_edges = set()     # (function, function it jumps into)
         work = [(site, 0)]

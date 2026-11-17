@@ -168,6 +168,7 @@ class KernelView:
         gen = self.dev.text_gen()
         if gen != self.gen:
             self.regions = []       # (start, end, fixups)
+            self.sc_sites = {}      # static call name -> call site addresses
             self._load_symbols()
             self.gen = gen
         return self.gen
@@ -206,6 +207,57 @@ class KernelView:
             addr += len(chunk)
             length -= len(chunk)
         return bytes(out)
+
+    def static_call_sites(self, name):
+        """Addresses of the inline call sites of static call `name`.
+
+        The kernel rewrites such a site whenever the call's target changes:
+        it can be `call target`, a 5-byte NOP, or `xor %eax,%eax` for a
+        target that returns 0. So the live text alone does not show that the
+        instruction stands for the call. The kernel's own site tables do,
+        and they cover modules as well: the key (__SCK__name) points either
+        to its run of entries in the core kernel's table (low bit set) or to
+        a list of {next, module, entries}, one per module with sites. Each
+        table is sorted by key, so a key's entries are contiguous. An entry
+        is two 32-bit offsets relative to their own addresses: the site, and
+        the key with two flag bits (include/linux/static_call_types.h).
+        Sites in init text are left out (the kernel no longer patches them).
+        """
+        cached = self.sc_sites.get(name)
+        if cached is not None:
+            return cached
+        out = set()
+        key = self.addr_of.get("__SCK__" + name)
+        if key is not None:
+            try:
+                word = struct.unpack("<Q", self.read(key + 8, 8))[0]
+                runs = []
+                if word & 1:
+                    runs.append(word & ~1)
+                else:
+                    mod = word
+                    while mod and len(runs) < 65536:
+                        nxt, _module, entries = struct.unpack("<QQQ", self.read(mod, 24))
+                        if entries:
+                            runs.append(entries)
+                        mod = nxt
+                for entry in runs:
+                    while True:
+                        addr, kref = struct.unpack("<ii", self.read(entry, 8))
+                        if ((entry + 4 + kref) & MASK64) & ~3 != key:
+                            break
+                        # STATIC_CALL_SITE_INIT: init text, freed after
+                        # init; a later module may reuse the addresses.
+                        if not kref & 2:
+                            out.add((entry + addr) & MASK64)
+                        entry += 8
+            except OSError:
+                # A module went away while its table was read; the
+                # generation changed, so the image will be refused and
+                # built again from a fresh view.
+                pass
+        self.sc_sites[name] = out
+        return out
 
     def func_of(self, addr):
         """Start address of the text symbol containing addr, or None."""
