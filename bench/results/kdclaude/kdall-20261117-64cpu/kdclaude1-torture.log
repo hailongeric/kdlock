@@ -1,0 +1,52 @@
+7.0.0-38-kdclaude1 #85 SMP PREEMPT_DYNAMIC Mon Nov 16 18:35:56 UTC 2026
+no daemon
+N
+0
+== torture lock_busted 04:08:48
+Writes:  Total: 253568146  Max/Min: 2365024/1581590   Fail: 1 !!!
+lock_busted-torture:--- End of test: FAILURE: 
+== torture spin_lock 04:09:48
+Writes:  Total: 169406387  Max/Min: 1558197/948557   Fail: 0 
+spin_lock-torture:--- End of test: SUCCESS: 
+== torture spin_lock_irq 04:10:49
+Writes:  Total: 127817554  Max/Min: 1279495/692547   Fail: 0 
+spin_lock_irq-torture:--- End of test: SUCCESS: 
+== torture raw_spin_lock 04:11:49
+Writes:  Total: 168007149  Max/Min: 1604163/961880   Fail: 0 
+raw_spin_lock-torture:--- End of test: SUCCESS: 
+== torture raw_spin_lock_irq 04:12:49
+Writes:  Total: 124920417  Max/Min: 1282417/671425   Fail: 0 
+raw_spin_lock_irq-torture:--- End of test: SUCCESS: 
+== torture rw_lock 04:13:50
+Writes:  Total: 10160972  Max/Min: 183048/125506   Fail: 0 
+rw_lock-torture:--- End of test: SUCCESS: 
+== torture rw_lock_irq 04:14:50
+Writes:  Total: 11497707  Max/Min: 207471/145221   Fail: 0 
+rw_lock_irq-torture:--- End of test: SUCCESS: 
+== torture mutex_lock 04:15:51
+Writes:  Total: 76471286  Max/Min: 709763/484960   Fail: 0 
+mutex_lock-torture:--- End of test: SUCCESS: 
+== torture ww_mutex_lock 04:16:51
+Writes:  Total: 39273938  Max/Min: 394069/201273   Fail: 0 
+ww_mutex_lock-torture:--- End of test: SUCCESS: 
+== torture rwsem_lock 04:17:51
+Writes:  Total: 1377006  Max/Min: 28382/14614   Fail: 0 
+rwsem_lock-torture:--- End of test: SUCCESS: 
+== torture rtmutex_lock 04:18:52
+Writes:  Total: 7669808  Max/Min: 154918/20735 ???  Fail: 0 
+rtmutex_lock-torture:--- End of test: SUCCESS: 
+== torture percpu_rwsem_lock 04:19:52
+Writes:  Total: 6705  Max/Min: 107/103   Fail: 0 
+percpu_rwsem_lock-torture:--- End of test: SUCCESS: 
+== wwrep 1 04:20:53
+insmod rc=0
+run 1: Beginning ww (wound) mutex selftests|stress (stress_inorder_work) failed with -35|Beginning ww (die) mutex selftests|All ww mutex selftests passed|
+== wwrep 2 04:21:07
+insmod rc=0
+run 2: Beginning ww (wound) mutex selftests|stress (stress_inorder_work) failed with -35|Beginning ww (die) mutex selftests|All ww mutex selftests passed|
+== wwrep 3 04:21:21
+insmod rc=0
+run 3: Beginning ww (wound) mutex selftests|stress (stress_inorder_work) failed with -35|Beginning ww (die) mutex selftests|All ww mutex selftests passed|
+complaints:
+[   50.604914] WARNING: locktorture.c:934 at lock_torture_writer+0x296/0x2e0 [locktorture_ext], CPU#63: lock_torture_wr/3416
+NAT_DONE

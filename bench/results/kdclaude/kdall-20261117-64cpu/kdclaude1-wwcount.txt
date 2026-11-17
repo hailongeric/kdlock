@@ -1,0 +1,9 @@
+kdc ww_class_acquire inorder: rounds 18594 deadlk 17649 failed_workers 100
+kdc wd_class_acquire inorder: rounds 30269 deadlk 29288 failed_workers 106
+All ww mutex selftests passed
+kdc ww_class_acquire inorder: rounds 18699 deadlk 17751 failed_workers 95
+kdc wd_class_acquire inorder: rounds 32755 deadlk 31760 failed_workers 91
+All ww mutex selftests passed
+kdc ww_class_acquire inorder: rounds 19790 deadlk 18853 failed_workers 107
+kdc wd_class_acquire inorder: rounds 21718 deadlk 20636 failed_workers 8
+All ww mutex selftests passed

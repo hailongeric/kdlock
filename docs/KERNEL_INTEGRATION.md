@@ -13,7 +13,7 @@ in `integration/kd_linux_map.h`; this page is the procedure and the status.
 | Booted | **yes**, in the `kdclaude` VM next to `kdlock1` (one-shot `grub-reboot`); see BUILD_AND_TEST.md |
 | `mm->mmap_lock` switched to kdlock (`CONFIG_KDLOCK_MM`, section 4a) | **done** (build #43): every mmap lock operation of the kernel goes through kdlock for mms created while `kd_mm=1`; will-it-scale mmap1 runs, writers are delegated, data-checked stress and the nano correctness pass are clean |
 | Syscall-path lock objects switchable (`CONFIG_KDLOCK_API`, section 4b) | **done** (build #45): `file_lock`, `flc_lock`, pipe mutex, `f_pos_lock`, `simple_xattrs.lock`, `uts_sem`, for all their kernel users; data-checked syscall stress and a native/kd build comparison clean (`bench/results/kdclaude/api-20261113/`) |
-| Whole kernel lock API switched to kdlock (`kd_linux_map.h` applied) | **no**. Only the objects above and the mmap lock are switchable; every other kernel lock is native. Whether it would run: section 4c |
+| Whole kernel lock API switched to kdlock (`CONFIG_KDLOCK_ALL`, section 4d) | **built, booted and tested with delegation off** (2026-11-17, `7.0.0-38-kdall1`): every spinlock, raw spinlock, rwlock, mutex, ww_mutex and rwsem is a kd lock; locktorture, syscall stress, will-it-scale and the bench correctness pass clean (`bench/results/kdclaude/kdall-20261117-64cpu/`). Delegation on for the whole kernel: not safe, section 4c |
 | Per-subsystem lock objects converted | the mmap lock and the six objects of 4b |
 
 ## 2. Placing the code
@@ -202,7 +202,8 @@ declare for `spinlock_t`, `raw_spinlock_t`, `rwlock_t`, `struct mutex`,
 trylock/interrupt combinations, `mutex_lock_io`, the lockdep aliases, the
 reader `_non_owner` forms and the state helpers (see LOCKS.md 1). The list
 was taken from the 7.0 headers in the VM, and each kd variant is exercised by
-the bench module's API test. It has not been compiled into a switched kernel.
+the bench module's API test. Section 4d compiles it into a switched kernel
+(by casts and macros of its own rather than this header).
 
 ### Not provided
 
@@ -214,10 +215,10 @@ nothing: they are built on raw spinlocks or on the operations above.
 
 ## 4c. Would a kernel with every lock switched run?
 
-The question the user asked on 2026-11-16. It has not been tried: no kernel
-with `kd_linux_map.h` applied has been compiled. What follows is from the
-Linux 7.0 source in the VM, this kernel's configuration and the limits the
-implementation states itself (ARCHITECTURE 11, DIFFERENCES D3). The answer
+The question the user asked on 2026-11-16, analysed from the Linux 7.0
+source in the VM, this kernel's configuration and the limits the
+implementation states itself (ARCHITECTURE 11, DIFFERENCES D3). Layer 2
+was then built and run (section 4d). The answer
 has three layers, and each depends on the one before it.
 
 **1. Building it: work, no obstacle found.** The type sizes match (4, 8, 32,
@@ -302,6 +303,65 @@ turning delegation off where it does not pay.
    a frontier for everything else.
 4. Delegation enabled by an allow list of lock objects or sites, extended as
    their sections are checked, as for the mmap lock and the objects of 4b.
+
+## 4d. The switched kernel, delegation off (`CONFIG_KDLOCK_ALL`)
+
+Step 1 of 4c's order of work, done on 2026-11-17. `integration/apply_all.py`
+(run by `apply_to_tree.sh`) makes every edit inside `#ifdef
+CONFIG_KDLOCK_ALL`, so a tree with the option off is unchanged.
+
+**How each lock type is switched.** No lock user changes; only lock
+headers, three files that read native lock internals, and the locking
+Makefile.
+
+| Native | With `KDLOCK_ALL` | Where |
+|---|---|---|
+| `arch_spinlock_t` (qspinlock) | type kept: the kd queue word has the same layout; `queued_spin_lock()` is `kd_arch_spin_lock()`, so every `raw_spinlock_t` and every direct `arch_spin_lock()` user takes the kd queue algorithm; trylock and unlock are the same operations for both | `asm-generic/qspinlock.h` |
+| `arch_rwlock_t` (qrwlock) | type kept (same count word, bias and writer bits); `arch_read_lock()`/`arch_write_lock()` are the kd ones | `asm-generic/qrwlock.h` |
+| `spinlock_t`, `rwlock_t` operations | macros calling the kd entries from the caller's code (`kd_spin_lock*()`, `kd_write_lock*()` delegable; readers local), defined before the lock guard classes so guards use them too | `include/kdlock/kd_all_spin.h`, included by `linux/spinlock.h` |
+| `struct mutex` | `{ struct kd_mutex kd; }`, 32 bytes; operations are macros to `kd_mutex_*()` | `linux/mutex_types.h`, `include/kdlock/kd_all_mutex.h` |
+| `struct rw_semaphore` | `{ struct kd_rwsem kd; }`, 40 bytes; state tests and initialisers replaced, operations macros to `kd_*()` | `linux/rwsem.h`, `include/kdlock/kd_all_rwsem*.h` |
+| `struct ww_mutex` | definition kept (layout of `kd_ww_mutex`); the native function names call `kd_ww_mutex_*()` (wait-die for every class) | `kernel/kd_all.c` |
+| `kernel/locking/mutex.c`, `rwsem.c` | not built; `kernel/kd_all.c` defines their function names (for address-taken uses and the inline helpers), the `lock:contention_*` tracepoints they instantiated, and static asserts on every layout the casts rely on | `kernel/locking/Makefile` |
+
+Because the mutex and rwsem types lose their native fields, the compiler
+finds every reader of native lock internals. In the whole Ubuntu
+configuration (vmlinux and 6 707 modules) it found three, all outside lock
+users proper: the `task->blocked_on` helpers of `linux/sched.h` (they name
+the mutex's `wait_lock`; with kd nothing sets `blocked_on`, so they become
+plain accessors), `__mutex_owner()` in `kernel/locking/mutex.h` (included
+by the scheduler for proxy execution; it returns the kd mutex's logical
+owner), and the lock tracepoints above. No driver or filesystem needed a
+change.
+
+**Configuration.** `KDLOCK_ALL` depends on `!KDLOCK_MM`, `!KDLOCK_API`
+(both switch single objects and are pointless here), `!PARAVIRT_SPINLOCKS`
+(its slow path and unlock would bypass the redirected level),
+`!DETECT_HUNG_TASK_BLOCKER` (reads native owner words) and
+`!SCHED_PROXY_EXEC` (follows `blocked_on` to the native owner).
+
+**Results** (`bench/results/kdclaude/kdall-20261117-64cpu/`):
+
+* The vmlinux calls 29 318 kd entries directly; nothing calls a native
+  mutex, rwsem, qspinlock or qrwlock slow path.
+* It boots on the 64-vCPU VM, reaches `multi-user`, ran three boots and
+  shut down cleanly each time, without a kernel complaint.
+* locktorture: all 11 lock types `SUCCESS` (60 s each, 128 writer threads);
+  the deliberately broken `lock_busted` fails, as on the native kernel.
+* The data-checked syscall stress, will-it-scale with page checks (64
+  workers, threads and processes), a defconfig kernel build and the bench
+  module's correctness pass (442 points) are clean.
+* test-ww_mutex's wound-wait stress fails here and on the native kernel
+  alike: the test reports an `-EDEADLK` that arrives after its timeout.
+
+**What this does not show.** Nothing was delegated (no translator), so
+4c's layer 3 is untouched. No performance result: native and kd cannot run
+in one boot of a switched kernel, and the cross-boot indicators compare two
+different kernels. They do point at two losses worth a matched study:
+ww_mutex (0.31 of the native kernel's locktorture writes, and 6-17 times
+fewer test-ww_mutex rounds) and rwsem under locktorture (0.50, with one
+writer thread at about a quarter of the native minimum). Interrupt and NMI
+paths were exercised only by the ordinary load; CPU hotplug was not tested.
 
 ## 5. Symbols and memory the code depends on
 

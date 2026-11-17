@@ -1,6 +1,8 @@
 # Wiring kdlock into a Linux 7 tree
 
-The whole-kernel switch below has not been applied or built. This is the list of changes the
+The whole-kernel switch is implemented by `apply_all.py` (`CONFIG_KDLOCK_ALL`;
+docs/KERNEL_INTEGRATION.md 4d), which reaches the same mapping by casts on the
+native types and macros rather than by including `kd_linux_map.h`. This is the list of changes the
 kernel patch has to make, with [kd_linux_map.h](kd_linux_map.h) as the
 symbol-level reference.
 

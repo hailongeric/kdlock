@@ -64,3 +64,27 @@ config KDLOCK_API
 	  simple_xattrs.lock and uts_sem (boot parameter kd_uts). The lock calls
 	  on these fields are unchanged; a _Generic dispatch at the end of
 	  linux/spinlock.h, mutex.h and rwsem.h routes them.
+
+config KDLOCK_ALL
+	bool "kdlock: every spinlock, rwlock, mutex and rwsem of the kernel"
+	depends on KDLOCK && !KDLOCK_MM && !KDLOCK_API
+	# The paravirt slow path and unlock would bypass the redirected
+	# queued_spin_*() level.
+	depends on !PARAVIRT_SPINLOCKS
+	# Reads the native mutex and rwsem owner words.
+	depends on !DETECT_HUNG_TASK_BLOCKER
+	# Follows task->blocked_on to the native mutex owner.
+	depends on !SCHED_PROXY_EXEC
+	default n
+	help
+	  Switch the kernel's lock API as a whole (integration/apply_all.py,
+	  docs/KERNEL_INTEGRATION.md 4d). spinlock_t and rwlock_t operations
+	  become calls to the kd_spin_*() and kd_read/write_*() entries;
+	  raw_spinlock_t and the arch_spin/read/write level take the kd queue
+	  algorithm through kd_arch_*(); struct mutex, struct ww_mutex and
+	  struct rw_semaphore are kdlock objects of the native size, and
+	  kernel/locking/mutex.c and rwsem.c are not built.
+
+	  Delegation still needs the translator. Without it every lock is a
+	  plain queued lock; that is the configuration this option has been
+	  tested in.

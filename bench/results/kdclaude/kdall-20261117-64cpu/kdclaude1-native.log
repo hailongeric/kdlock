@@ -1,0 +1,97 @@
+== kernel 03:31:07
+Linux ubuntu 7.0.0-38-kdclaude1 #85 SMP PREEMPT_DYNAMIC Mon Nov 16 18:35:56 UTC 2026 x86_64 GNU/Linux
+BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdclaude1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0
+64
+boot complaints:
+delegation 0
+sessions 2794542
+delegated 90149704
+handback 1293275
+no daemon
+degraded
+● logrotate.service loaded failed failed Rotate log files
+== torture lock_busted 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture spin_lock 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture spin_lock_irq 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture raw_spin_lock 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture raw_spin_lock_irq 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture rw_lock 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture rw_lock_irq 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture mutex_lock 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture ww_mutex_lock 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture rwsem_lock 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture rtmutex_lock 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== torture percpu_rwsem_lock 03:31:07
+modprobe: FATAL: Module locktorture not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe failed
+== test-ww_mutex 03:31:07
+modprobe: FATAL: Module test-ww_mutex not found in directory /lib/modules/7.0.0-38-kdclaude1
+modprobe rc=1
+kda: test-ww_mutex
+== api_stress 03:31:07
+setfd n16 rc=0 mode setfd threads 16 seconds 20.0 ops 34841972 rate 1740436 ok 
+setfd n64 rc=1 mode setfd threads 64 seconds 0.1 ops 12823 rate 125423 FAILED dup/close of fd 787: -1 Too many open files
+open: Too many open filesdup/close of fd 828: -1 Too many open files
+
+dup/close of fd 802: -1 Too many open files
+open: Too many open files
+dup/close of fd 
+ofd n16 rc=0 mode ofd threads 16 seconds 20.0 ops 24598422 rate 1228758 ok 
+ofd n64 rc=0 mode ofd threads 64 seconds 20.0 ops 19379671 rate 968074 ok 
+pipe n16 rc=0 mode pipe threads 16 seconds 20.0 ops 9126089 rate 455857 ok 
+pipe n64 rc=0 mode pipe threads 64 seconds 20.0 ops 7907216 rate 394752 ok 
+seek n16 rc=0 mode seek threads 16 seconds 19.6 ops 18157904 rate 927332 ok 
+seek n64 rc=0 mode seek threads 64 seconds 20.1 ops 17515200 rate 873176 ok 
+uts n16 rc=0 mode uts threads 16 seconds 20.0 ops 22076259 rate 1102707 ok 
+uts n64 rc=0 mode uts threads 64 seconds 20.0 ops 17538164 rate 876279 ok 
+xattr n16 rc=0 mode xattr threads 16 seconds 20.0 ops 32285456 rate 1612653 ok 
+xattr n64 rc=0 mode xattr threads 64 seconds 20.0 ops 33105024 rate 1651223 ok 
+== wis 03:34:47
+page_fault_shared1 threads rc=0 average:6337625:0:6337625 
+page_fault_shared1 processes rc=0 average:13670259:13670259:0 
+page_fault_shared2 threads rc=0 average:2187251:0:2187251 
+page_fault_shared2 processes rc=0 average:13524096:13524096:0 
+page_fault_shared3 threads rc=0 average:924300:0:924300 
+page_fault_shared3 processes rc=0 average:13684966:13684966:0 
+page_fault1 threads rc=0 average:3444275:0:3444275 
+page_fault1 processes rc=0 average:5746749:5746749:0 
+mmap1 threads rc=0 average:144620:0:144620 
+mmap1 processes rc=0 average:1949459:1949459:0 
+mmap2 threads rc=0 average:177127:0:177127 
+mmap2 processes rc=0 average:1608539:1608539:0 
+brk1 threads rc=0 average:425233:0:425233 
+brk1 processes rc=0 average:54646040:54646040:0 
+== kbuild 03:37:22
+kbuild rc=0 elapsed 58.422846033 s
+make: Leaving directory '/mnt/kdlock-builds/kda/src'
+-rw-r--r-- 1 root root 14791680 Nov 17 03:38 /mnt/kdlock-builds/stress-kdclaude1-native/arch/x86/boot/bzImage
+== done 03:38:27
+complaints since start:
+delegation 0
+sessions 2794542
+delegated 90149704
+handback 1293275
+KDA_TEST_DONE
+mode setfd threads 64 seconds 20.0 ops 40930223 rate 2044806 ok

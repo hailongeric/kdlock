@@ -360,3 +360,18 @@ the tables.
   `anon_vma`'s rwsem); the gains come from reader spinning, which an A/B with
   `kd_rwsem_rspin_ns=0` confirms (0.48-0.93 without it), and so does the loss
   at 48 threads of `shared3`.
+
+### Whole-kernel switch, delegation off (`kdall-20261117-64cpu/`)
+
+* **What:** kernel `7.0.0-38-kdall1` (`CONFIG_KDLOCK_ALL`,
+  KERNEL_INTEGRATION 4d): every spinlock, raw spinlock, rwlock, mutex,
+  ww_mutex and rwsem of the kernel is a kdlock; no translator.
+* **Correctness:** full Ubuntu build (6 707 modules); boots and runs; all
+  11 locktorture lock types pass (60 s, 128 threads), `lock_busted` fails as
+  designed; api_stress, will-it-scale with page checks, a kernel build and
+  `run_corr.py` (442 points) clean; no kernel complaint. test-ww_mutex's
+  wound-wait stress fails on kdall1 and on the native kernel alike (a test
+  timeout race, shown with a counting copy).
+* **Indicators across boots** (no in-boot reference exists): most
+  workloads 0.9-1.3 of the native kernel; ww_mutex 0.31 and rwsem 0.50 under
+  locktorture.

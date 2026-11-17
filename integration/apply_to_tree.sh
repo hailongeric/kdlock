@@ -1,8 +1,9 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0
 # Place kdlock into a Linux 7 source tree: the minimum that lets
-# kernel/locking/kdlock/ build in. It does NOT switch the kernel's lock API
-# over; that is the macro layer in kd_linux_map.h.
+# kernel/locking/kdlock/ build in, plus the switch edits of apply_mm.py,
+# apply_api.py and apply_all.py, each inert until its CONFIG_KDLOCK_* option
+# is set (the whole-kernel switch is CONFIG_KDLOCK_ALL).
 #
 #   apply_to_tree.sh <kernel-source-dir>
 #
@@ -31,4 +32,6 @@ if grep -q "__mmap_sem_down_write" "$tree/include/linux/mmap_lock.h"; then
 fi
 # Switchable lock objects on selected syscall paths (CONFIG_KDLOCK_API).
 python3 "$here/integration/apply_api.py" "$tree"
+# Whole-kernel lock API switch (CONFIG_KDLOCK_ALL); inert while the option is off.
+python3 "$here/integration/apply_all.py" "$tree"
 echo "kdlock placed in $tree"
