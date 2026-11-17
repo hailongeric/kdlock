@@ -63,11 +63,15 @@ threshold. The entry assembly, pending protocol, physical ownership and
 release/handback protocol are unchanged. Old measurements below do not
 validate this candidate.
 
-Validation is pending: the preflight found `kdclaude` running
+Initial validation was delayed: the preflight found `kdclaude` running
 `7.0.0-38-kdall1 #3`, first with `locktorture`, then with `api_stress` and
 a translator. No inputs were synchronized and no build or run was started
-alongside that work. Resume only after the VM is idle, with verified recovery
-coverage and an isolated source/build identity for this main commit.
+alongside that work. After the VM became idle, the isolated candidate build
+and focused Native/KD run completed on `7.0.0-38-kdmainspin1 #86`.
+The [run record](../bench/results/main-spin-20e9db0c-20261117/README.md)
+preserves all 176 passing points, the 65-check API result, three timing rounds,
+the high-contention regressions and cleanup. The controlled no-image
+transition/address-reuse fixture and forced-mode checks below remain unrun.
 
 Required focused checks:
 
@@ -93,7 +97,8 @@ Required focused checks:
   completed delegation and mode transitions. In a whole-kernel switched
   build, global counters include unrelated locks and cannot alone prove
   this benchmark's transitions. Report any high-contention regression as
-  well as low-contention rates; parity is unproved until this run completes.
+  well as low-contention rates. The recorded run found close rates at 1–3
+  workers, but not parity across the full sweep.
 
 ```
 insmod /root/kdb/bench/kd_bench.ko

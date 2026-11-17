@@ -1,0 +1,5 @@
+List of snapshots present on all disks:
+ID        TAG               VM SIZE                DATE     VM CLOCK     ICOUNT
+--        pre-kdclaude1-boot 12.9 GiB 2026-11-11 05:08:07 05:03:14.936
+--        pre-kdall1-boot  18.2 GiB 2026-11-16 19:40:01 11:57:38.257
+(qemu)

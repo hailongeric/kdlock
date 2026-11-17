@@ -1,0 +1,206 @@
+{
+  "vcpus": {
+    "CPU 0/KVM": [
+      0
+    ],
+    "CPU 1/KVM": [
+      1
+    ],
+    "CPU 2/KVM": [
+      2
+    ],
+    "CPU 3/KVM": [
+      3
+    ],
+    "CPU 4/KVM": [
+      4
+    ],
+    "CPU 5/KVM": [
+      5
+    ],
+    "CPU 6/KVM": [
+      6
+    ],
+    "CPU 7/KVM": [
+      7
+    ],
+    "CPU 8/KVM": [
+      8
+    ],
+    "CPU 9/KVM": [
+      9
+    ],
+    "CPU 10/KVM": [
+      10
+    ],
+    "CPU 11/KVM": [
+      11
+    ],
+    "CPU 12/KVM": [
+      12
+    ],
+    "CPU 13/KVM": [
+      13
+    ],
+    "CPU 14/KVM": [
+      14
+    ],
+    "CPU 15/KVM": [
+      15
+    ],
+    "CPU 16/KVM": [
+      16
+    ],
+    "CPU 17/KVM": [
+      17
+    ],
+    "CPU 18/KVM": [
+      18
+    ],
+    "CPU 19/KVM": [
+      19
+    ],
+    "CPU 20/KVM": [
+      20
+    ],
+    "CPU 21/KVM": [
+      21
+    ],
+    "CPU 22/KVM": [
+      22
+    ],
+    "CPU 23/KVM": [
+      23
+    ],
+    "CPU 24/KVM": [
+      24
+    ],
+    "CPU 25/KVM": [
+      25
+    ],
+    "CPU 26/KVM": [
+      26
+    ],
+    "CPU 27/KVM": [
+      27
+    ],
+    "CPU 28/KVM": [
+      28
+    ],
+    "CPU 29/KVM": [
+      29
+    ],
+    "CPU 30/KVM": [
+      30
+    ],
+    "CPU 31/KVM": [
+      31
+    ],
+    "CPU 32/KVM": [
+      32
+    ],
+    "CPU 33/KVM": [
+      33
+    ],
+    "CPU 34/KVM": [
+      34
+    ],
+    "CPU 35/KVM": [
+      35
+    ],
+    "CPU 36/KVM": [
+      36
+    ],
+    "CPU 37/KVM": [
+      37
+    ],
+    "CPU 38/KVM": [
+      38
+    ],
+    "CPU 39/KVM": [
+      39
+    ],
+    "CPU 40/KVM": [
+      40
+    ],
+    "CPU 41/KVM": [
+      41
+    ],
+    "CPU 42/KVM": [
+      42
+    ],
+    "CPU 43/KVM": [
+      43
+    ],
+    "CPU 44/KVM": [
+      44
+    ],
+    "CPU 45/KVM": [
+      45
+    ],
+    "CPU 46/KVM": [
+      46
+    ],
+    "CPU 47/KVM": [
+      47
+    ],
+    "CPU 48/KVM": [
+      48
+    ],
+    "CPU 49/KVM": [
+      49
+    ],
+    "CPU 50/KVM": [
+      50
+    ],
+    "CPU 51/KVM": [
+      51
+    ],
+    "CPU 52/KVM": [
+      52
+    ],
+    "CPU 53/KVM": [
+      53
+    ],
+    "CPU 54/KVM": [
+      54
+    ],
+    "CPU 55/KVM": [
+      55
+    ],
+    "CPU 56/KVM": [
+      56
+    ],
+    "CPU 57/KVM": [
+      57
+    ],
+    "CPU 58/KVM": [
+      58
+    ],
+    "CPU 59/KVM": [
+      59
+    ],
+    "CPU 60/KVM": [
+      60
+    ],
+    "CPU 61/KVM": [
+      61
+    ],
+    "CPU 62/KVM": [
+      62
+    ],
+    "CPU 63/KVM": [
+      63
+    ]
+  },
+  "frequency": {
+    "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq": "2700000",
+    "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors": "conservative ondemand userspace powersave performance schedutil",
+    "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor": "performance",
+    "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq": "2562631",
+    "/sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed": "<unsupported>",
+    "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq": "2700000",
+    "/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver": "intel_cpufreq"
+  },
+  "loadavg": "30.70 12.31 7.07 33/1462 1382049\n"
+}

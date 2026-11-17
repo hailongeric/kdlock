@@ -1,0 +1,9 @@
+7.0.0-38-kdmainspin1
+feda97a4-85d1-415b-9229-1193e865dcfe
+delegation 0
+   5233 zsh             zsh -c uname -r; cat /proc/sys/kernel/random/boot_id; cat /sys/kernel/debug/kdlock_stats | head -1; ps -eo pid,comm,args | grep -E "kdbench|main-spin-20e9db0c-run|kd_daemon"; grub-editenv list; for p in kd_adapt kd_deleg_enter kd_deleg_exit; do cat /sys/module/kernel/parameters/$p; done
+   5239 grep            grep -E kdbench|main-spin-20e9db0c-run|kd_daemon
+next_entry=
+Y
+5
+2
