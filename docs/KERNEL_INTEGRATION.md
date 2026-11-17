@@ -13,7 +13,7 @@ in `integration/kd_linux_map.h`; this page is the procedure and the status.
 | Booted | **yes**, in the `kdclaude` VM next to `kdlock1` (one-shot `grub-reboot`); see BUILD_AND_TEST.md |
 | `mm->mmap_lock` switched to kdlock (`CONFIG_KDLOCK_MM`, section 4a) | **done** (build #43): every mmap lock operation of the kernel goes through kdlock for mms created while `kd_mm=1`; will-it-scale mmap1 runs, writers are delegated, data-checked stress and the nano correctness pass are clean |
 | Syscall-path lock objects switchable (`CONFIG_KDLOCK_API`, section 4b) | **done** (build #45): `file_lock`, `flc_lock`, pipe mutex, `f_pos_lock`, `simple_xattrs.lock`, `uts_sem`, for all their kernel users; data-checked syscall stress and a native/kd build comparison clean (`bench/results/kdclaude/api-20261113/`) |
-| Whole kernel lock API switched to kdlock (`CONFIG_KDLOCK_ALL`, section 4d) | **built, booted and tested with delegation off** (2026-11-17, `7.0.0-38-kdall1`): every spinlock, raw spinlock, rwlock, mutex, ww_mutex and rwsem is a kd lock; locktorture, syscall stress, will-it-scale and the bench correctness pass clean (`bench/results/kdclaude/kdall-20261117-64cpu/`). Delegation on for the whole kernel: not safe, section 4c |
+| Whole kernel lock API switched to kdlock (`CONFIG_KDLOCK_ALL`, section 4d) | **built, booted and tested with delegation off, then with delegation for allow-listed lock users and against a native twin** (2026-11-17, `7.0.0-38-kdall1` to `kdall3`; end of section 4d): every spinlock, raw spinlock, rwlock, mutex, ww_mutex and rwsem is a kd lock; locktorture, syscall stress, will-it-scale and the bench correctness pass clean (`bench/results/kdclaude/kdall-20261117-64cpu/`). Delegation on for the whole kernel: not safe, section 4c |
 | Per-subsystem lock objects converted | the mmap lock and the six objects of 4b |
 
 ## 2. Placing the code
@@ -362,6 +362,28 @@ ww_mutex (0.31 of the native kernel's locktorture writes, and 6-17 times
 fewer test-ww_mutex rounds) and rwsem under locktorture (0.50, with one
 writer thread at about a quarter of the native minimum). Interrupt and NMI
 paths were exercised only by the ordinary load; CPU hotplug was not tested.
+
+**Since then (2026-11-17).**
+
+- **Delegation by allow list.** Delegation is switched on lock user by
+  lock user (`jit/kd_daemon.py --allow`, `bench/allow/`): the syscall-path
+  locks, locktorture, and the mmap lock writers of brk, mmap and munmap
+  (`bench/results/kdclaude/kdall-deleg-20261117-64cpu/`).
+- **A matched comparison with native.** The native side is the same tree
+  and configuration built with `CONFIG_KDLOCK_ALL` off (`kdnat1`); every
+  edit of this section is inside `#ifdef CONFIG_KDLOCK_ALL`. The two kernels
+  alternate over 3 boots each
+  (`bench/results/kdclaude/kdall-native-20261117-64cpu/`).
+  - **Gains with delegation:** up to 9.3x on the syscall-path locks, and
+    1.06-2.45x on will-it-scale mmap1, mmap2 and brk1.
+  - **Page faults:** parity, including a new 10 GB random-order fault
+    benchmark.
+  - **ww_mutex:** from 0.23 to 0.66 of native (spin phase, LOCKS 1).
+  - **Mutex queue in plain mode:** from 0.82-1.00 to 1.02-1.75 of native
+    on seek and pipe (node order, ARCHITECTURE 7a).
+  - **Still behind:** locktorture rwsem (0.53-0.61), ww_mutex (0.66),
+    page_fault_shared3 at 32 threads (0.83), page_fault1 at 16 threads
+    (0.81), and the rwsem writers in plain mode (xattr 0.92-0.97).
 
 ## 5. Symbols and memory the code depends on
 

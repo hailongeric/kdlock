@@ -1,0 +1,13 @@
+05:54:36 step f1: boot kdall2
+06:01:02 suite f1 off done: f1 off complaints 0
+06:01:02 step f2: boot kdnat1
+06:07:29 suite f2 native done: f2 native complaints 0
+06:07:29 step f3: boot kdall1
+06:13:54 suite f3 off done: f3 off complaints 0
+06:13:54 step f4: boot kdall2
+06:20:18 suite f4 off done: f4 off complaints 0
+06:20:18 step f5: boot kdnat1
+06:26:44 suite f5 native done: f5 native complaints 0
+06:26:44 step f6: boot kdall1
+06:33:08 suite f6 off done: f6 off complaints 0
+06:33:08 DRIVE_DONE

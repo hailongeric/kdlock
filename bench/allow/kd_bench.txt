@@ -1,0 +1,11 @@
+# The lock calls of the bench module's bodies (bench/kd_bench.c), generated
+# as k<family>_w / k<family>_r by DEFINE_OPS and the test-body macros. With
+# this list the daemon delegates the bench module only, which is how
+# run_corr.py and the nano runners test delegation in a kernel where every
+# lock is a kdlock (CONFIG_KDLOCK_ALL).
+kspin*
+kmutex*
+krwl*
+krwsem*
+knest*
+kmix*

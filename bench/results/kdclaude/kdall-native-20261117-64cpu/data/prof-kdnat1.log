@@ -1,0 +1,182 @@
+7.0.0-38-kdnat1 #1 SMP PREEMPT_DYNAMIC Tue Nov 17 11:57:56 UTC 2026
+== torture mutex_lock
+             42049      context-switches                                                      
+              7739      cpu-migrations                                                        
+    94.34%  [k] osq_lock
+     1.04%  [k] queued_spin_lock_slowpath
+     0.77%  [k] __mutex_lock.constprop.0
+     0.76%  [k] _raw_spin_lock_irqsave
+     0.58%  [k] mutex_unlock
+     0.53%  [k] mutex_lock
+     0.44%  [k] mutex_spin_on_owner
+     0.31%  [k] __mutex_unlock_slowpath.isra.0
+     0.24%  [k] wake_q_add
+     0.14%  [k] pvclock_clocksource_read_nowd
+     0.09%  [k] lock_torture_writer
+     0.09%  [k] wake_up_q
+     0.05%  [k] osq_unlock
+     0.04%  [k] get_jiffies_update
+     0.04%  [k] try_to_wake_up
+     0.04%  [k] asm_sysvec_apic_timer_interrupt
+Writes:  Total: 25344185  Max/Min: 313030/102321 ???  Fail: 0 
+== torture rwsem_lock
+             32499      context-switches                                                      
+              3954      cpu-migrations                                                        
+    97.79%  [k] delay_halt_tpause
+     1.49%  [k] osq_lock
+     0.07%  [k] delay_halt
+     0.07%  [k] get_jiffies_update
+     0.04%  [k] rwsem_down_write_slowpath
+     0.03%  [k] asm_sysvec_apic_timer_interrupt
+     0.03%  [k] lapic_next_deadline
+     0.02%  [k] intel_pmu_disable_all
+     0.02%  [k] _raw_spin_lock
+     0.02%  [k] update_curr
+     0.02%  [k] native_apic_msr_eoi
+     0.02%  [k] _raw_spin_lock_irqsave
+     0.02%  [k] ktime_get_update_offsets_now
+     0.02%  [k] __intel_pmu_enable_all.isra.0
+     0.02%  [k] pvclock_clocksource_read_nowd
+     0.01%  [k] tick_nohz_handler
+Writes:  Total: 250246  Max/Min: 6467/1761 ???  Fail: 0 
+== api seek 64
+             23636      context-switches                                                      
+               389      cpu-migrations                                                        
+    96.42%  [k] osq_lock
+     0.68%  [k] mutex_spin_on_owner
+     0.41%  [k] __mutex_lock.constprop.0
+     0.23%  [.] seek_work
+     0.23%  [k] filemap_get_entry
+     0.22%  [k] mutex_unlock
+     0.17%  [k] mutex_lock
+     0.16%  [k] touch_atime
+     0.10%  [k] do_syscall_64
+     0.10%  [k] fdget_pos
+     0.09%  [k] entry_SYSCALL_64
+     0.08%  [k] queued_spin_lock_slowpath
+     0.07%  [k] clear_bhb_loop
+     0.07%  [k] _copy_to_iter
+     0.05%  [k] shmem_file_read_iter
+     0.05%  [k] get_jiffies_update
+mode seek threads 64 seconds 14.7 ops 18630400 rate 1265593 ok
+== api xattr 64
+             14807      context-switches                                                      
+               103      cpu-migrations                                                        
+    91.62%  [k] osq_lock
+     1.36%  [k] rwsem_spin_on_owner
+     0.64%  [k] queued_spin_lock_slowpath
+     0.46%  [k] queued_read_lock_slowpath
+     0.41%  [k] _raw_read_lock
+     0.37%  [k] lockref_get_not_dead
+     0.34%  [k] lockref_put_return
+     0.30%  [k] strcmp
+     0.27%  [k] simple_xattr_get
+     0.25%  [k] _raw_read_unlock
+     0.19%  [k] queued_write_lock_slowpath
+     0.13%  [k] __memcg_slab_free_hook
+     0.13%  [k] kfree
+     0.13%  [k] __d_lookup_rcu
+     0.13%  [.] xattr_work
+     0.12%  [k] strncpy_from_user
+mode xattr threads 64 seconds 15.0 ops 26193396 rate 1743528 ok
+== api pipe 16
+              1162      context-switches                                                      
+                72      cpu-migrations                                                        
+    83.71%  [k] osq_lock
+     2.53%  [k] __mutex_lock.constprop.0
+     2.06%  [k] mutex_unlock
+     1.91%  [k] mutex_spin_on_owner
+     1.50%  [k] mutex_lock
+     1.09%  [k] do_syscall_64
+     1.07%  [k] fput
+     0.80%  [.] pipe_work
+     0.69%  [k] fdget_pos
+     0.55%  [k] entry_SYSCALL_64
+     0.45%  [k] _copy_to_iter
+     0.44%  [k] clear_bhb_loop
+     0.40%  [k] fdget
+     0.30%  [k] fdget_raw
+     0.22%  [k] pipe_ioctl
+     0.22%  [k] anon_pipe_write
+mode pipe threads 16 seconds 15.0 ops 8000689 rate 532821 ok
+== api pipe 64
+              5162      context-switches                                                      
+               193      cpu-migrations                                                        
+    95.87%  [k] osq_lock
+     0.56%  [k] __mutex_lock.constprop.0
+     0.47%  [k] mutex_unlock
+     0.44%  [k] mutex_spin_on_owner
+     0.32%  [k] mutex_lock
+     0.26%  [k] do_syscall_64
+     0.20%  [k] fput
+     0.19%  [.] pipe_work
+     0.18%  [k] fdget_pos
+     0.13%  [k] entry_SYSCALL_64
+     0.11%  [k] clear_bhb_loop
+     0.10%  [k] _copy_to_iter
+     0.08%  [k] fdget
+     0.08%  [k] fdget_raw
+     0.07%  [k] pipe_ioctl
+     0.07%  [k] get_jiffies_update
+mode pipe threads 64 seconds 15.0 ops 8230453 rate 548136 ok
+== wis page_fault1 16
+             10730      context-switches                                                      
+                66      cpu-migrations                                                        
+    34.89%  [k] _raw_spin_lock
+    15.45%  [k] charge_memcg
+     7.46%  [k] pte_offset_map_lock
+     6.29%  [k] asm_exc_page_fault
+     4.02%  [.] testcase
+     3.22%  [k] sync_regs
+     2.43%  [k] __pte_offset_map
+     1.81%  [k] unmap_page_range
+     1.64%  [k] do_anonymous_page
+     1.54%  [k] queued_spin_lock_slowpath
+     1.51%  [k] __rmqueue_pcplist
+     1.49%  [k] kernel_init_pages
+     1.31%  [k] lock_vma_under_rcu
+     1.18%  [k] do_user_addr_fault
+     1.00%  [k] page_counter_try_charge
+     0.93%  [k] __rcu_read_lock
+average:2906314:0:2906314
+== wis page_fault_shared1 32
+              1059      context-switches                                                      
+                78      cpu-migrations                                                        
+    58.87%  [k] queued_spin_lock_slowpath
+     4.72%  [k] smp_call_function_many_cond
+     4.67%  [k] asm_exc_page_fault
+     3.53%  [k] do_user_addr_fault
+     3.27%  [k] lock_vma_under_rcu
+     2.45%  [.] testcase
+     2.32%  [k] sync_regs
+     1.90%  [k] asm_sysvec_call_function
+     1.85%  [k] _raw_spin_lock
+     0.96%  [k] llist_reverse_order
+     0.93%  [k] native_apic_msr_eoi
+     0.84%  [k] flush_tlb_func
+     0.78%  [k] kernel_init_pages
+     0.66%  [k] __flush_smp_call_function_queue
+     0.52%  [k] native_flush_tlb_local
+     0.48%  [k] lru_gen_add_folio
+average:4751829:0:4751829
+== wis page_fault_shared3 32
+           3568144      context-switches                                                      
+               116      cpu-migrations                                                        
+    37.09%  [k] queued_spin_lock_slowpath
+     5.80%  [k] down_read_trylock
+     4.77%  [k] asm_exc_page_fault
+     4.00%  [k] smp_call_function_many_cond
+     3.81%  [k] up_read
+     2.91%  [k] read_zero
+     1.73%  [k] pv_native_safe_halt
+     1.61%  [k] osq_lock
+     1.47%  [k] asm_sysvec_call_function
+     1.44%  [k] rwsem_spin_on_owner
+     1.34%  [k] _raw_spin_lock
+     1.13%  [k] native_apic_msr_eoi
+     1.05%  [k] rwsem_down_read_slowpath
+     0.93%  [k] pvclock_clocksource_read_nowd
+     0.89%  [k] llist_reverse_order
+     0.87%  [k] find_vma
+average:1647778:0:1647778
+PROF_DONE

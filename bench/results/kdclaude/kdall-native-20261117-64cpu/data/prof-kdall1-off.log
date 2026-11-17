@@ -1,0 +1,252 @@
+7.0.0-38-kdall1 #3 SMP PREEMPT_DYNAMIC Tue Nov 17 03:28:38 UTC 2026
+== torture mutex_lock
+             36653      context-switches                                                      
+              5511      cpu-migrations                                                        
+    49.91%  [k] kd_q_lock_plain
+    47.14%  [k] kd_wait_sleepable
+     0.39%  [k] kd_mutex_unlock
+     0.37%  [k] kd_mutex_lock
+     0.35%  [k] kd_mutex_wake_first
+     0.29%  [k] wake_q_add
+     0.24%  [k] kd_mutex_can_spin
+     0.21%  [k] kd_arch_spin_lock
+     0.19%  [k] delay_halt_tpause
+     0.15%  [k] kd_mutex_sleep
+     0.09%  [k] kd_mutex_lock_slow
+     0.08%  [k] lock_torture_writer
+     0.08%  [k] pvclock_clocksource_read_nowd
+     0.04%  [k] asm_sysvec_apic_timer_interrupt
+     0.03%  [k] lapic_next_deadline
+     0.02%  [k] torture_random
+Writes:  Total: 16689440  Max/Min: 197953/55569 ???  Fail: 0 
+  abandon          6946
+  handoff          793
+  head_sleep       2892
+  no_spin          7884
+  parked           11552
+  plain            8003227
+  rd_behind        41
+== torture rwsem_lock
+              7654      context-switches                                                      
+               201      cpu-migrations                                                        
+    93.11%  [k] delay_halt_tpause
+     0.37%  [k] kd_arch_spin_lock
+     0.35%  [.] _PyEval_EvalFrameDefault
+     0.18%  [k] pvclock_clocksource_read_nowd
+     0.17%  [k] asm_exc_page_fault
+     0.15%  [k] asm_sysvec_apic_timer_interrupt
+     0.14%  [k] kd_wait_sleepable
+     0.14%  [k] pv_native_safe_halt
+     0.13%  [k] lapic_next_deadline
+     0.10%  [k] affine_move_task
+     0.09%  [k] kd_q_lock_slow
+     0.08%  [k] kd_spin_lock
+     0.06%  [.] 0x0000000000162523
+     0.06%  [k] kd_q_lock_plain
+     0.05%  [k] ktime_get_update_offsets_now
+     0.05%  [k] _raw_spin_lock_irqsave
+Writes:  Total: 182558  Max/Min: 7834/113 ???  Fail: 0 
+  abandon          4
+  head_sleep       117
+  no_spin          351
+  parked           1078
+  plain            15727
+  rd_behind        69
+  rd_queue         469
+== api seek 64
+             15888      context-switches                                                      
+               209      cpu-migrations                                                        
+    96.73%  [k] kd_wait_sleepable
+     1.00%  [k] kd_mutex_can_spin
+     0.24%  [k] kd_mutex_unlock
+     0.23%  [k] kd_mutex_lock
+     0.21%  [.] seek_work
+     0.18%  [k] touch_atime
+     0.15%  [k] filemap_get_entry
+     0.09%  [k] ksys_read
+     0.08%  [k] fdget_pos
+     0.06%  [k] do_syscall_64
+     0.06%  [k] entry_SYSCALL_64
+     0.05%  [k] fput
+     0.05%  [k] clear_bhb_loop
+     0.05%  [k] get_jiffies_update
+     0.05%  [k] _copy_to_iter
+     0.04%  [k] kd_q_lock_slow
+mode seek threads 64 seconds 14.4 ops 13644800 rate 948401 ok
+  abandon          510
+  era_claim        4
+  era_gate         12
+  era_start        1
+  handoff          336
+  head_sleep       281
+  no_spin          5
+  parked           706
+  plain            12048312
+  rd_behind        64
+== api xattr 64
+             15932      context-switches                                                      
+                91      cpu-migrations                                                        
+    91.88%  [k] kd_wait_sleepable
+     1.21%  [k] kd_rwsem_spin_for
+     0.50%  [k] kd_q_lock_plain
+     0.47%  [k] kd_mutex_can_spin
+     0.34%  [k] kd_read_lock_slow
+     0.33%  [k] kd_read_lock
+     0.32%  [k] lockref_put_return
+     0.31%  [k] lockref_get_not_dead
+     0.29%  [k] strcmp
+     0.22%  [k] simple_xattr_get
+     0.18%  [k] kd_read_unlock
+     0.13%  [k] __d_lookup_rcu
+     0.12%  [.] xattr_work
+     0.12%  [k] kd_rw_post
+     0.12%  [k] strncpy_from_user
+     0.11%  [k] kfree
+mode xattr threads 64 seconds 15.0 ops 24000699 rate 1597091 ok
+  abandon          9492
+  era_claim        1184
+  era_gate         2641
+  era_start        225
+  handoff          1261
+  head_sleep       8108
+  no_spin          1677
+  parked           19756
+  plain            7187705
+  rd_behind        3
+== api pipe 16
+              2412      context-switches                                                      
+               148      cpu-migrations                                                        
+    87.95%  [k] kd_wait_sleepable
+     1.67%  [k] kd_mutex_unlock
+     1.39%  [k] kd_mutex_can_spin
+     1.19%  [k] kd_mutex_lock
+     1.09%  [k] do_syscall_64
+     0.87%  [k] fput
+     0.73%  [.] pipe_work
+     0.64%  [k] fdget_pos
+     0.57%  [k] entry_SYSCALL_64
+     0.43%  [k] clear_bhb_loop
+     0.39%  [k] _copy_to_iter
+     0.36%  [k] fdget
+     0.29%  [k] fdget_raw
+     0.20%  [k] kd_mutex_lock_slow
+     0.15%  [k] anon_pipe_write
+     0.14%  [.] 0x00000000000ac7c2
+mode pipe threads 16 seconds 15.0 ops 8078558 rate 538010 ok
+  abandon          25
+  handoff          36
+  head_sleep       78
+  no_spin          1
+  parked           85
+  plain            22114920
+  rd_behind        37
+== api pipe 64
+              1710      context-switches                                                      
+                92      cpu-migrations                                                        
+    96.15%  [k] kd_wait_sleepable
+     0.88%  [k] kd_mutex_can_spin
+     0.45%  [k] kd_mutex_unlock
+     0.38%  [k] kd_mutex_lock
+     0.22%  [k] do_syscall_64
+     0.17%  [.] pipe_work
+     0.16%  [k] fput
+     0.13%  [k] fdget_pos
+     0.11%  [k] kd_q_lock_plain
+     0.10%  [k] entry_SYSCALL_64
+     0.09%  [k] clear_bhb_loop
+     0.07%  [k] _copy_to_iter
+     0.07%  [k] fdget
+     0.07%  [k] fdget_raw
+     0.06%  [k] kd_mutex_lock_slow
+     0.05%  [k] anon_pipe_read
+mode pipe threads 64 seconds 15.0 ops 7321954 rate 487647 ok
+  abandon          662
+  era_claim        5
+  era_gate         21
+  era_start        1
+  handoff          320
+  head_sleep       176
+  no_spin          1
+  parked           603
+  plain            19449026
+  rd_behind        59
+== wis page_fault1 16
+              6486      context-switches                                                      
+                66      cpu-migrations                                                        
+    35.27%  [k] kd_spin_lock
+    16.13%  [k] charge_memcg
+     7.97%  [k] pte_offset_map_lock
+     6.27%  [k] asm_exc_page_fault
+     3.86%  [.] testcase
+     3.20%  [k] sync_regs
+     2.72%  [k] __pte_offset_map
+     1.70%  [k] do_anonymous_page
+     1.52%  [k] kernel_init_pages
+     1.50%  [k] __rmqueue_pcplist
+     1.46%  [k] lock_vma_under_rcu
+     1.27%  [k] do_user_addr_fault
+     1.07%  [k] page_counter_try_charge
+     1.03%  [k] kd_q_lock_slow
+     0.99%  [k] __rcu_read_lock
+     0.73%  [k] lru_gen_add_folio
+average:2406969:0:2406969
+  abandon          1
+  era_start        1
+  head_sleep       14
+  no_spin          2687
+  parked           3167
+  plain            259735
+  rd_behind        11635
+  rd_queue         509
+== wis page_fault_shared1 32
+              1215      context-switches                                                      
+                77      cpu-migrations                                                        
+    67.63%  [k] kd_q_lock_slow
+     4.86%  [k] smp_call_function_many_cond
+     3.57%  [k] asm_exc_page_fault
+     2.12%  [k] lock_vma_under_rcu
+     2.08%  [k] do_user_addr_fault
+     1.82%  [.] testcase
+     1.72%  [k] sync_regs
+     1.66%  [k] asm_sysvec_call_function
+     1.12%  [k] kd_spin_lock
+     0.75%  [k] native_apic_msr_eoi
+     0.75%  [k] llist_reverse_order
+     0.64%  [k] flush_tlb_func
+     0.61%  [k] do_anonymous_page
+     0.57%  [k] kernel_init_pages
+     0.56%  [k] __flush_smp_call_function_queue
+     0.41%  [k] lru_gen_add_folio
+average:4436125:0:4436125
+  plain            79718250
+  rd_behind        30
+== wis page_fault_shared3 32
+             16285      context-switches                                                      
+                79      cpu-migrations                                                        
+    45.71%  [k] kd_wait_sleepable
+    27.59%  [k] kd_down_read_slow
+     5.68%  [k] kd_q_lock_slow
+     1.86%  [k] kd_rwsem_spin_for
+     1.64%  [k] asm_exc_page_fault
+     1.32%  [k] smp_call_function_many_cond
+     1.03%  [k] kd_rwsem_post
+     1.00%  [k] asm_sysvec_call_function
+     0.97%  [k] kd_down_read_trylock
+     0.95%  [k] read_zero
+     0.78%  [k] kd_mutex_sleep
+     0.72%  [k] kd_up_read
+     0.67%  [k] pvclock_clocksource_read_nowd
+     0.49%  [k] native_apic_msr_eoi
+     0.44%  [k] kd_spin_lock
+     0.42%  [k] llist_reverse_order
+average:1375931:0:1375931
+  abandon          3751
+  era_start        72
+  handoff          11349
+  head_sleep       20621
+  no_spin          508
+  parked           67233
+  plain            14117274
+  rd_behind        12802127
+  rd_queue         43714
+PROF_DONE

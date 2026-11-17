@@ -1,0 +1,47 @@
+--- a/kernel/kd_rwsem.c	2026-11-17 07:32:06.609651966 -0800
++++ b/kernel/kd_rwsem.c	2026-11-17 07:32:06.648652593 -0800
+@@ -220,17 +220,21 @@
+ 		}
+ 	}
+ 	nr = atomic_long_fetch_or(KD_RWSEM_WWAIT, &sem->count) >> KD_RWSEM_RSHIFT;
+-	if (era && nr)
++	if (era && nr) {
+ 		t0 = local_clock();
++	} else if (era) {
++		/* No reader to time: measure while the holder ahead still runs. */
++		kd_rw_era_writer(sem, 0, head ? kd_q_depth(head, KD_POST_DEPTH) : 0, 0);
++	}
+ 	if (!kd_rwsem_spin_for(sem, true)) {
+ 		/* The readers stay longer than the spin budget: no eras. */
+-		if (era)
++		if (era && nr)
+ 			kd_rw_era_writer(sem, nr, 0, READ_ONCE(kd_rwsem_wspin_ns));
+ 		return false;
+ 	}
+-	if (era)
++	if (era && nr)
+ 		kd_rw_era_writer(sem, nr, head ? kd_q_depth(head, KD_POST_DEPTH) : 0,
+-				 t0 ? local_clock() - t0 : 0);
++				 local_clock() - t0);
+ 	/* Readers that stayed out for this writer may register behind it. */
+ 	kd_rwsem_phase_change(sem);
+ 	return true;
+--- a/kernel/kd_rwlock.c	2026-11-17 07:32:06.609651966 -0800
++++ b/kernel/kd_rwlock.c	2026-11-17 07:32:06.649652609 -0800
+@@ -47,12 +47,14 @@
+ 	nr = atomic_fetch_or(KD_RW_WWAIT, &rw->cnts) >> KD_RW_RSHIFT;
+ 	if (era && nr)
+ 		t0 = local_clock();
++	else if (era)
++		kd_rw_era_writer(rw, 0, head ? kd_q_depth(head, KD_POST_DEPTH) : 0, 0);
+ 	do {
+ 		c = atomic_cond_read_relaxed(&rw->cnts, VAL == KD_RW_WWAIT);
+ 	} while (!atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED));
+-	if (era)
++	if (era && nr)
+ 		kd_rw_era_writer(rw, nr, head ? kd_q_depth(head, KD_POST_DEPTH) : 0,
+-				 t0 ? local_clock() - t0 : 0);
++				 local_clock() - t0);
+ 	return true;
+ }
+ 

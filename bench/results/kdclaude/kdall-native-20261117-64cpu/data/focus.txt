@@ -1,0 +1,156 @@
+f1 off torture ww_mutex_lock 128 12385156 | 0 0 0 0 0 115947 0 | 0 0 0 0 0 9238533 0 
+f1 off torture mutex_lock 128 37320878 | 0 0 0 0 0 9238548 0 | 0 0 0 0 0 29068618 0 
+f1 off torture rwsem_lock 128 366501 | 0 0 0 0 0 29068618 0 | 0 0 0 0 0 29138150 0 
+f1 off api seek 16 1217344 ok | 0 0 0 0 0 29138150 0 | 0 0 0 0 0 34652953 0 
+f1 off api seek 64 920128 ok | 0 0 0 0 0 34652953 0 | 0 0 0 0 0 39012404 0 
+f1 off api pipe 16 520338 ok | 0 0 0 0 0 39012404 0 | 0 0 0 0 0 46556990 0 
+f1 off api pipe 64 480624 ok | 0 0 0 0 0 46556990 0 | 0 0 0 0 0 53389322 0 
+f1 off api xattr 16 1697032 ok | 0 0 0 0 0 53389322 0 | 0 0 0 0 0 56006633 0 
+f1 off api xattr 64 1617247 ok | 0 0 0 0 0 56006633 0 | 0 0 0 0 0 58479186 0 
+f1 off wis page_fault1 16 2622379 | 0 0 0 0 0 58479213 0 | 0 0 0 0 0 58619950 0 
+f1 off wis page_fault1 32 2945193 | 0 0 0 0 0 58619950 0 | 0 0 0 0 0 58906021 0 
+f1 off wis page_fault_shared3 16 1664665 | 0 0 0 0 0 58906021 0 | 0 0 0 0 0 73547229 0 
+f1 off wis page_fault_shared3 32 1444940 | 0 0 0 0 0 73547287 0 | 0 0 0 0 0 82827130 0 
+f1 off torture ww_mutex_lock 128 13309102 | 0 0 0 0 0 82827131 0 | 0 0 0 0 0 92527857 0 
+f1 off torture mutex_lock 128 35003014 | 0 0 0 0 0 92527861 0 | 0 0 0 0 0 110314693 0 
+f1 off torture rwsem_lock 128 377788 | 0 0 0 0 0 110314694 0 | 0 0 0 0 0 110375466 0 
+f1 off api seek 16 1176443 ok | 0 0 0 0 0 110375466 0 | 0 0 0 0 0 115728600 0 
+f1 off api seek 64 965031 ok | 0 0 0 0 0 115728600 0 | 0 0 0 0 0 120308432 0 
+f1 off api pipe 16 510772 ok | 0 0 0 0 0 120308436 0 | 0 0 0 0 0 127679343 0 
+f1 off api pipe 64 534537 ok | 0 0 0 0 0 127679343 0 | 0 0 0 0 0 132818546 0 
+f1 off api xattr 16 1692949 ok | 0 0 0 0 0 132818547 0 | 0 0 0 0 0 135414549 0 
+f1 off api xattr 64 1602954 ok | 0 0 0 0 0 135414549 0 | 0 0 0 0 0 137850509 0 
+f1 off wis page_fault1 16 2450199 | 0 0 0 0 0 137850509 0 | 0 0 0 0 0 137982210 0 
+f1 off wis page_fault1 32 2995756 | 0 0 0 0 0 137982210 0 | 0 0 0 0 0 138290458 0 
+f1 off wis page_fault_shared3 16 1632819 | 0 0 0 0 0 138290458 0 | 0 0 0 0 0 152571989 0 
+f1 off wis page_fault_shared3 32 1435776 | 0 0 0 0 0 152571993 0 | 0 0 0 0 0 161360108 0 
+f2 native torture ww_mutex_lock 128 26339592 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native torture mutex_lock 128 46997303 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native torture rwsem_lock 128 626064 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api seek 16 1231952 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api seek 64 1159529 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api pipe 16 521895 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api pipe 64 510414 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api xattr 16 1806429 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api xattr 64 1759029 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native wis page_fault1 16 2933168 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native wis page_fault1 32 2862221 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native wis page_fault_shared3 16 1582182 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native wis page_fault_shared3 32 1722880 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native torture ww_mutex_lock 128 26507088 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native torture mutex_lock 128 44416947 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native torture rwsem_lock 128 520804 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api seek 16 1149452 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api seek 64 1090127 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api pipe 16 505917 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api pipe 64 496894 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api xattr 16 1811745 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native api xattr 64 1796624 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native wis page_fault1 16 2934788 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native wis page_fault1 32 2898313 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native wis page_fault_shared3 16 1583180 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f2 native wis page_fault_shared3 32 1691392 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f3 off torture ww_mutex_lock 128 5664866 | 0 0 0 0 0 115755 0 | 0 0 0 0 0 119609 0 
+f3 off torture mutex_lock 128 37897075 | 0 0 0 0 0 119616 0 | 0 0 0 0 0 19602187 0 
+f3 off torture rwsem_lock 128 422262 | 0 0 0 0 0 19602187 0 | 0 0 0 0 0 19682193 0 
+f3 off api seek 16 1143005 ok | 0 0 0 0 0 19682193 0 | 0 0 0 0 0 24866118 0 
+f3 off api seek 64 911062 ok | 0 0 0 0 0 24866118 0 | 0 0 0 0 0 29179658 0 
+f3 off api pipe 16 519519 ok | 0 0 0 0 0 29179665 0 | 0 0 0 0 0 36689407 0 
+f3 off api pipe 64 481707 ok | 0 0 0 0 0 36689408 0 | 0 0 0 0 0 43586431 0 
+f3 off api xattr 16 1649315 ok | 0 0 0 0 0 43586458 0 | 0 0 0 0 0 46132190 0 
+f3 off api xattr 64 1631087 ok | 0 0 0 0 0 46132190 0 | 0 0 0 0 0 48589397 0 
+f3 off wis page_fault1 16 2423323 | 0 0 0 0 0 48589420 0 | 0 0 0 0 0 48727175 0 
+f3 off wis page_fault1 32 2952611 | 0 0 0 0 0 48727175 0 | 0 0 0 0 0 49000073 0 
+f3 off wis page_fault_shared3 16 1664806 | 0 0 0 0 0 49000073 0 | 0 0 0 0 0 62920840 0 
+f3 off wis page_fault_shared3 32 1438118 | 0 0 0 0 0 62920840 0 | 0 0 0 0 0 71866884 0 
+f3 off torture ww_mutex_lock 128 5979004 | 0 0 0 0 0 71866885 0 | 0 0 0 0 0 71871599 0 
+f3 off torture mutex_lock 128 38515698 | 0 0 0 0 0 71871602 0 | 0 0 0 0 0 92239228 0 
+f3 off torture rwsem_lock 128 403439 | 0 0 0 0 0 92239228 0 | 0 0 0 0 0 92309690 0 
+f3 off api seek 16 1113688 ok | 0 0 0 0 0 92309690 0 | 0 0 0 0 0 97369789 0 
+f3 off api seek 64 940266 ok | 0 0 0 0 0 97369789 0 | 0 0 0 0 0 101777768 0 
+f3 off api pipe 16 510728 ok | 0 0 0 0 0 101777781 0 | 0 0 0 0 0 109134918 0 
+f3 off api pipe 64 459342 ok | 0 0 0 0 0 109134918 0 | 0 0 0 0 0 115655737 0 
+f3 off api xattr 16 1684682 ok | 0 0 0 0 0 115655744 0 | 0 0 0 0 0 118220261 0 
+f3 off api xattr 64 1636982 ok | 0 0 0 0 0 118220261 0 | 0 0 0 0 0 120706831 0 
+f3 off wis page_fault1 16 2308184 | 0 0 0 0 0 120706842 0 | 0 0 0 0 0 120835456 0 
+f3 off wis page_fault1 32 3041172 | 0 0 0 0 0 120835456 0 | 0 0 0 0 0 121142741 0 
+f3 off wis page_fault_shared3 16 1653836 | 0 0 0 0 0 121142741 0 | 0 0 0 0 0 135203434 0 
+f3 off wis page_fault_shared3 32 1442060 | 0 0 0 0 0 135203439 0 | 0 0 0 0 0 144247874 0 
+f4 off torture ww_mutex_lock 128 12690636 | 0 0 0 0 0 95115 0 | 0 0 0 0 0 9278001 0 
+f4 off torture mutex_lock 128 35470189 | 0 0 0 0 0 9278001 0 | 0 0 0 0 0 26388840 0 
+f4 off torture rwsem_lock 128 415542 | 0 0 0 0 0 26388840 0 | 0 0 0 0 0 26449606 0 
+f4 off api seek 16 1140029 ok | 0 0 0 0 0 26449606 0 | 0 0 0 0 0 30866407 0 
+f4 off api seek 64 912312 ok | 0 0 0 0 0 30866408 0 | 0 0 0 0 0 35125293 0 
+f4 off api pipe 16 527807 ok | 0 0 0 0 0 35125293 0 | 0 0 0 0 0 42765319 0 
+f4 off api pipe 64 482443 ok | 0 0 0 0 0 42765320 0 | 0 0 0 0 0 49646588 0 
+f4 off api xattr 16 1694877 ok | 0 0 0 0 0 49646617 0 | 0 0 0 0 0 52254167 0 
+f4 off api xattr 64 1628291 ok | 0 0 0 0 0 52254167 0 | 0 0 0 0 0 54754818 0 
+f4 off wis page_fault1 16 2593462 | 0 0 0 0 0 54754836 0 | 0 0 0 0 0 54891034 0 
+f4 off wis page_fault1 32 2912446 | 0 0 0 0 0 54891034 0 | 0 0 0 0 0 55191787 0 
+f4 off wis page_fault_shared3 16 1642252 | 0 0 0 0 0 55191787 0 | 0 0 0 0 0 69577423 0 
+f4 off wis page_fault_shared3 32 1439155 | 0 0 0 0 0 69577423 0 | 0 0 0 0 0 78626857 0 
+f4 off torture ww_mutex_lock 128 12449895 | 0 0 0 0 0 78626857 0 | 0 0 0 0 0 87345662 0 
+f4 off torture mutex_lock 128 35237932 | 0 0 0 0 0 87345668 0 | 0 0 0 0 0 104466512 0 
+f4 off torture rwsem_lock 128 361507 | 0 0 0 0 0 104466512 0 | 0 0 0 0 0 104521643 0 
+f4 off api seek 16 1123630 ok | 0 0 0 0 0 104521647 0 | 0 0 0 0 0 109092160 0 
+f4 off api seek 64 941193 ok | 0 0 0 0 0 109092161 0 | 0 0 0 0 0 113472645 0 
+f4 off api pipe 16 514674 ok | 0 0 0 0 0 113472648 0 | 0 0 0 0 0 120890259 0 
+f4 off api pipe 64 482609 ok | 0 0 0 0 0 120890259 0 | 0 0 0 0 0 127743218 0 
+f4 off api xattr 16 1684007 ok | 0 0 0 0 0 127743222 0 | 0 0 0 0 0 130318230 0 
+f4 off api xattr 64 1642620 ok | 0 0 0 0 0 130318230 0 | 0 0 0 0 0 132822352 0 
+f4 off wis page_fault1 16 2464954 | 0 0 0 0 0 132822385 0 | 0 0 0 0 0 132955909 0 
+f4 off wis page_fault1 32 2210422 | 0 0 0 0 0 132955909 0 | 0 0 0 0 0 133226780 0 
+f4 off wis page_fault_shared3 16 1654924 | 0 0 0 0 0 133226780 0 | 0 0 0 0 0 147326860 0 
+f4 off wis page_fault_shared3 32 1432345 | 0 0 0 0 0 147326860 0 | 0 0 0 0 0 156403906 0 
+f5 native torture ww_mutex_lock 128 25735272 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native torture mutex_lock 128 46319295 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native torture rwsem_lock 128 596728 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api seek 16 1220221 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api seek 64 1199466 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api pipe 16 512483 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api pipe 64 513030 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api xattr 16 1803129 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api xattr 64 1750361 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native wis page_fault1 16 2904375 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native wis page_fault1 32 2844794 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native wis page_fault_shared3 16 1589094 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native wis page_fault_shared3 32 1713088 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native torture ww_mutex_lock 128 25933736 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native torture mutex_lock 128 49254830 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native torture rwsem_lock 128 605950 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api seek 16 1168085 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api seek 64 1225547 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api pipe 16 524518 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api pipe 64 504641 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api xattr 16 1778450 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native api xattr 64 1737831 ok | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native wis page_fault1 16 3033450 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native wis page_fault1 32 2857417 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native wis page_fault_shared3 16 1592832 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f5 native wis page_fault_shared3 32 1729728 | 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 
+f6 off torture ww_mutex_lock 128 5785751 | 0 0 0 0 0 109148 0 | 0 0 0 0 0 112870 0 
+f6 off torture mutex_lock 128 35434408 | 0 0 0 0 0 112888 0 | 0 0 0 0 0 19429261 0 
+f6 off torture rwsem_lock 128 415189 | 0 0 0 0 0 19429261 0 | 0 0 0 0 0 19491423 0 
+f6 off api seek 16 1147515 ok | 0 0 0 0 0 19491423 0 | 0 0 0 0 0 24572507 0 
+f6 off api seek 64 977486 ok | 0 0 0 0 0 24572507 0 | 0 0 0 0 0 29178695 0 
+f6 off api pipe 16 505424 ok | 0 0 0 0 0 29178697 0 | 0 0 0 0 0 36441093 0 
+f6 off api pipe 64 474499 ok | 0 0 0 0 0 36441093 0 | 0 0 0 0 0 43189775 0 
+f6 off api xattr 16 1690325 ok | 0 0 0 0 0 43189776 0 | 0 0 0 0 0 45774011 0 
+f6 off api xattr 64 1643090 ok | 0 0 0 0 0 45774011 0 | 0 0 0 0 0 48271533 0 
+f6 off wis page_fault1 16 2479077 | 0 0 0 0 0 48271533 0 | 0 0 0 0 0 48410188 0 
+f6 off wis page_fault1 32 2977471 | 0 0 0 0 0 48410188 0 | 0 0 0 0 0 48708738 0 
+f6 off wis page_fault_shared3 16 1646617 | 0 0 0 0 0 48708738 0 | 0 0 0 0 0 62831714 0 
+f6 off wis page_fault_shared3 32 1439219 | 0 0 0 0 0 62831714 0 | 0 0 0 0 0 71098856 0 
+f6 off torture ww_mutex_lock 128 5844637 | 0 0 0 0 0 71098856 0 | 0 0 0 0 0 71103675 0 
+f6 off torture mutex_lock 128 35208207 | 0 0 0 0 0 71103675 0 | 0 0 0 0 0 88893756 0 
+f6 off torture rwsem_lock 128 352331 | 0 0 0 0 0 88893757 0 | 0 0 0 0 0 88954297 0 
+f6 off api seek 16 1196998 ok | 0 0 0 0 0 88954299 0 | 0 0 0 0 0 93878312 0 
+f6 off api seek 64 973306 ok | 0 0 0 0 0 93878312 0 | 0 0 0 0 0 98461965 0 
+f6 off api pipe 16 526662 ok | 0 0 0 0 0 98461980 0 | 0 0 0 0 0 106086811 0 
+f6 off api pipe 64 488397 ok | 0 0 0 0 0 106086811 0 | 0 0 0 0 0 113053377 0 
+f6 off api xattr 16 1689795 ok | 0 0 0 0 0 113053377 0 | 0 0 0 0 0 115642854 0 
+f6 off api xattr 64 1632446 ok | 0 0 0 0 0 115642854 0 | 0 0 0 0 0 118125307 0 
+f6 off wis page_fault1 16 2246806 | 0 0 0 0 0 118125307 0 | 0 0 0 0 0 118252580 0 
+f6 off wis page_fault1 32 2986385 | 0 0 0 0 0 118252580 0 | 0 0 0 0 0 118542419 0 
+f6 off wis page_fault_shared3 16 1610073 | 0 0 0 0 0 118542419 0 | 0 0 0 0 0 133043077 0 
+f6 off wis page_fault_shared3 32 1434752 | 0 0 0 0 0 133043087 0 | 0 0 0 0 0 142147167 0 

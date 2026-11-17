@@ -1,0 +1,30 @@
+--- a/kernel/kd_era.c	2026-11-17 07:32:06.609651966 -0800
++++ b/kernel/kd_era.c	2026-11-17 07:32:06.626652239 -0800
+@@ -221,17 +221,21 @@
+ {
+ 	struct kd_rw_era_avg *a = &kd_rw_era_avgs[hash_ptr((void *)lock, KD_RW_ERA_BITS)];
+ 	u32 *era = kd_rw_era(lock), old = READ_ONCE(*era), v;
+-	u32 d = READ_ONCE(a->drain), p = READ_ONCE(a->press);
++	u32 d0 = READ_ONCE(a->drain), p0 = READ_ONCE(a->press), d = d0, p = p0;
+ 
++	/* Store only what changed. */
+ 	if (nr) {
+ 		d = d - d / 8 + (u32)min_t(u64, drain_ns, 1000000) / 8;
+-		WRITE_ONCE(a->drain, d);
++		if (d != d0)
++			WRITE_ONCE(a->drain, d);
+ 	}
+ 	p = p - p / 8 + (u32)min_t(long, nr + queued, 255) * KD_ERA_PRESS_ONE / 8;
+-	WRITE_ONCE(a->press, p);
+-	if (!(p & 7)) {				/* now and then */
+-		kd_rw_era_dbg_drain = d;
+-		kd_rw_era_dbg_press = p;
++	if (p != p0) {
++		WRITE_ONCE(a->press, p);
++		if (!(p & 7)) {			/* now and then */
++			kd_rw_era_dbg_drain = d;
++			kd_rw_era_dbg_press = p;
++		}
+ 	}
+ 
+ 	/*

@@ -1,0 +1,18 @@
+04:00:35 step learn: boot kdall1
+04:10:18 suite learn on done: learn on complaints 0
+04:10:18 step b1: boot kdnat1
+04:19:35 suite b1 native done: b1 native complaints 0
+04:19:35 step b2: boot kdall1
+04:28:57 suite b2 off done: b2 off complaints 0
+04:37:50 suite b2 on done: b2 on complaints 0
+04:37:50 step b3: boot kdnat1
+04:47:05 suite b3 native stopped: SUITE_DONE
+04:47:32 step b4: boot kdall1
+04:57:13 suite b4 on done: b4 on complaints 0
+05:05:47 suite b4 off done: b4 off complaints 0
+05:05:47 step b5: boot kdnat1
+05:15:13 suite b5 native done: b5 native complaints 0
+05:15:13 step b6: boot kdall1
+05:24:35 suite b6 off done: b6 off complaints 0
+05:33:26 suite b6 on done: b6 on complaints 0
+05:33:26 DRIVE_DONE
