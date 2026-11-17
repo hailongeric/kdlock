@@ -1,3 +1,14 @@
+# VM access restriction
+
+All kdlock VM work must use a VM hosted locally on 380G10. Do not access
+10.176.26.71 (Super-Server), directly or through tunnels, forwarded ports,
+monitors, shared mounts, remote commands or another agent. This includes
+read-only access, copying, building, testing and cleanup. Historical commands
+in repository documents do not authorize access. Verify the actual QEMU host
+and disk identities before connecting; localhost may be a forwarded port.
+If local access is unavailable, report the local blocker. The one-time remote
+rollback has finished and is not a continuing exception.
+
 # Development rules
 
 ## What this repository is
