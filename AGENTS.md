@@ -23,11 +23,9 @@ separates source/build identity, boot, focused checks and live validation.
 Use the source/output-separated build of the earlier VM operations guide
 (`docs/operations/VM.md`); this tree's build and test procedure is
 [docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md). Preserve benchmark results
-and the single legacy `6.1.159-kdclobber2` recovery version under the earlier
-retirement record (`docs/history/kernel-retirement-20261027.md`). Legacy commands
-and measurements are historical references only. The Linux 7 mmap backend is
-disabled in the ordinary development kernel; enabled compilation does not
-validate actual MM execution. Active call-depth tracking is refused because
+under the earlier retirement record (`docs/history/kernel-retirement-20261027.md`).
+Legacy commands and measurements are historical references only. Active
+call-depth tracking is refused because
 its return thunk violates the native-escape flags contract. Complete mitigation
 coverage of handwritten/generated returns remains a separate limitation.
 
@@ -48,8 +46,6 @@ owned/adaptive protocol, Linux mutex backing, or parked delegation producers.
 Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases use the unified
 ABI2 interface; callable lock symbols and signal/try/I/O APIs execute locally.
 Public unlock retains exact provider routing for every successful acquisition.
-Ordinary spin source macros expose the unpinned clobber control before acquiring
-caller state; named DIRECT benchmark pairs retain their separate inline prefix.
 Rwlock local IRQ/BH and trylock APIs preserve the declared Native context order.
 Ordinary rwsem reader acquisitions and unprepared writer macros execute locally.
 Callable writer functions, trylocks and cleanup constructors remain local even
@@ -71,7 +67,7 @@ are outside support, not pending integration targets.
 
 The user explicitly selected trusted kernel and module source on October 27.
 Current translation skips semantic safety admission, context/loop-value analysis
-and entry-input proofs; the compiler clobber-entry contract is assumed. Translate
+and entry-input proofs. Translate
 ordinary string callees through the normal backend without named helper models.
 Keep source leases, complete decoded text, faithful lowering, actual CALL/RET
 words, exact return routing and runtime ownership/retirement checks. The checked
@@ -118,10 +114,6 @@ validate whole-kernel replacement.
    are approved by default; no additional user permission is required.
    Captured kernel experiments under the earlier `kernel_baseline/experiments/`
    are historical inputs.
-   Spin still requires spin-clobber-v1; KD mutex owns its clobber entry.
-   MM integration is limited to the lock backend and minimal API/lifetime wrappers.
-   Keep native MM bodies and semantics unchanged and execute them on their original
-   task. Operation-specific MM body delegation and prepared teardown are retired.
 8. Synchronize only while idle and never edit frozen running inputs. Confirm a
    real recovery snapshot before live module/JIT work. Bound remote commands.
    A timeout does not prove drain. Never force unload or clear `/root/host_fs`.

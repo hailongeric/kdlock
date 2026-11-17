@@ -108,11 +108,13 @@ lists are in `bench/allow/`:
   empty list (`disc.sh`, `kdd_disc.log`).
 - `torture.txt`: locktorture.
 
-There is no list for mmap_lock. MM bodies run on their own task
-(AGENTS.md, rule 7). A first A/B run used an `mm.txt` list with
-`vm_mmap_pgoff`, `__vm_munmap`, `__do_sys_brk` and `do_mprotect_pkey`, which
-broke that rule. That run livelocked in a delegated `brk()` (section 3), and
-its numbers are not used. The serial log, the daemon log and the partial
+There is no list for mmap_lock in this run. When it was made, AGENTS.md
+still required MM bodies to run on their own task. That rule came from the
+earlier implementation and was removed afterwards, on the same day. A first
+A/B run used an `mm.txt` list with `vm_mmap_pgoff`, `__vm_munmap`,
+`__do_sys_brk` and `do_mprotect_pkey`. That run livelocked in a delegated
+`brk()` (section 3), and its numbers are not used. No MM site has been
+delegated with the fix of section 3 yet. The serial log, the daemon log and the partial
 results are in `softlockup-brk/`.
 
 ### Results: delegation off against on, in one boot
