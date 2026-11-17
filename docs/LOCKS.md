@@ -75,15 +75,30 @@ call.
   and a depth below two disables it. Plain queue heads also disable it when
   the queue becomes short, so exit does not depend on finding generated
   code. Admission uses an observed holder's mode bit, without consulting
-  previous waits on that address. By default an empty lock byte selects local
-  queuing. The experimental `kd_spin_phase_wait` permits up to 128 additional
-  observations only while a tail exists and both holder and pending bytes are
-  empty. It stops when a holder or pending waiter appears, the tail vanishes,
-  or the bound is exhausted. Only an observed holder's delegation bit permits
-  offering; a pending acquisition still stays local. This adds no node
-  lifetime or ownership claim and changes neither fast acquisition nor unlock.
-  With delegation off the extra observations are skipped. The default is zero
-  pending matched performance evidence; `kd_adapt=0` retains its forced mode.
+  previous waits on that address. A holder selecting plain mode overrides any
+  queue hint. By default an empty lock byte selects local queuing. The optional
+  `kd_spin_queue_phase` keeps the selected phase in bit 9 of the spin-class
+  queue word while its tail exists. The sole head updates it on acquisition;
+  removing the final tail clears the phase in the same atomic operation.
+  Unlock still clears only the holder byte. An arriving caller may therefore
+  observe the live queue phase during an empty-byte handoff without polling
+  or reading a queue node. It remains a capture hint, never an ownership grant.
+* The separate experimental `kd_spin_phase_wait` permits up to 128 additional
+  observations only while a tail exists and no holder or pending waiter is
+  observed. It stops when either appears, the tail vanishes, or the bound is
+  exhausted. A pending acquisition still stays local. With delegation off the
+  additional observations are skipped. Both options default to zero pending
+  matched evidence; `kd_adapt=0` retains its forced mode. Neither changes the
+  uncontended CAS or unlock source paths, nor any packet/source lifetime.
+* Queue phase maintenance applies to the shared spin-class primitives,
+  including rwlock wait gates; it does not interpret or alter sleepable-class
+  flags. The phase bit occupies the same position as sleepable HANDOFF in
+  that distinct protocol. Pending undo clears only its own bit. Both final
+  spin-head acquisition and final-tail removal retry if another word bit
+  changes without a successor: a stale pending caller may fall back without
+  a queue node, so failed CAS alone cannot justify waiting for its link.
+  Turning the option off does not bypass this cleanup. Same-image option
+  comparisons still include these compiled shared-path changes.
 * `kd_raw_spin_lock*` and the `kd_arch_spin_*` level use the same word but
   **never publish** (scheduler, timers, lock internals) and never combine.
 * `_irq`, `_irqsave` and `_bh` entries are delegable: the section runs with
@@ -361,6 +376,7 @@ sees neither effect.
 | `kd_deleg_enter` (core param, 0644) | 5 | spinlock: waiters behind a queue head that switch the lock to delegation mode |
 | `kd_deleg_enter_sleep` (core param, 0644) | 3 | the same for a mutex |
 | `kd_deleg_exit` (core param, 0644) | 2 | a session or a plain delegable spin queue head leaves delegation mode with fewer waiters queued behind it |
+| `kd_spin_queue_phase` (core param, 0644) | 0 | retain a spin-class phase hint only while a live tail exists; holder mode stays authoritative; final tail removal clears the hint atomically |
 | `kd_spin_phase_wait` (core param, 0644) | 0 | bounded extra lock-word observations in an empty queued spin handoff; effective value clamped to 128, without per-address history |
 | `kd_xchg` (core param, 0644) | 1 | role exchange after a handback: 0 never, 1 mutex and rwsem writer, 2 every family |
 | `KD_PROBE_PERIOD` / `KD_VOTE_PERIOD` | 128 / 32 | contended acquisitions per depth sample in plain mode / sections per sample in a session |

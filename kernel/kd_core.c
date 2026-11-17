@@ -97,6 +97,10 @@ core_param(kd_deleg_exit, kd_deleg_exit, uint, 0644);
 /* Extra observations while a queued spin head is between holders. */
 unsigned int kd_spin_phase_wait __read_mostly;
 core_param(kd_spin_phase_wait, kd_spin_phase_wait, uint, 0644);
+/* A queue-owned phase hint; the last spin tail clears it with itself. */
+bool kd_spin_queue_phase __read_mostly;
+core_param(kd_spin_queue_phase, kd_spin_queue_phase, bool, 0644);
+
 
 /*
  * Measuring the queue means reading other waiters' nodes, which the plain
@@ -839,9 +843,13 @@ static void kd_mode_set(struct kd_qlock *q, bool sleepable, bool on)
 		else
 			atomic_andnot(KD_QF_DELEG << KD_QF_SHIFT, &q->val);
 	} else {
-		u8 lv = READ_ONCE(q->locked);
+		u32 val = atomic_read(&q->val);
+		u8 lv = val & KD_Q_LOCKED_MASK;
 
 		WRITE_ONCE(q->locked, on ? lv | KD_Q_DELEG : lv & ~KD_Q_DELEG);
+		/* This session is the sole head; no other CPU can drain its tail. */
+		if (val >> KD_Q_TAIL_SHIFT)
+			kd_q_phase_set(q, val, on);
 	}
 	kd_stat_inc(kc, on ? KD_STAT_MODE_ENTER : KD_STAT_MODE_EXIT);
 }

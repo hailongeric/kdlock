@@ -312,6 +312,7 @@ extern bool kd_numa;
 extern bool kd_adapt;
 extern unsigned int kd_deleg_enter, kd_deleg_enter_sleep, kd_deleg_exit;
 extern unsigned int kd_spin_phase_wait;
+extern bool kd_spin_queue_phase;
 extern unsigned int kd_xchg;
 
 #define kd_stat_inc(kc, s)	((kc)->stat[s]++)
@@ -634,7 +635,7 @@ static __always_inline bool kd_q_pending(struct kd_qlock *q, u32 *valp)
 	if (unlikely(val & ~KD_Q_LOCKED_MASK)) {
 		/* Somebody queued, or was pending first: undo and queue. */
 		if (!(val & KD_Q_PENDING_MASK))
-			WRITE_ONCE(q->pending, 0);
+			atomic_andnot(KD_Q_PENDING_VAL, &q->val);
 		*valp = val;
 		return false;
 	}
@@ -646,29 +647,58 @@ static __always_inline bool kd_q_pending(struct kd_qlock *q, u32 *valp)
 	 * dropping the bit would make the waiters that arrive during this
 	 * hold queue without their continuation in the middle of a
 	 * delegating phase.
+	 * A successful pending waiter excludes head acquisition until this
+	 * store. No head can publish a queue phase while pending owns the grant.
 	 */
 	WRITE_ONCE(q->locked_pending, KD_Q_LOCKED | (val & KD_Q_DELEG));
 	return true;
 }
 
 /*
- * Admit a spin continuation only on an observed holder's mode indication.
- * Between holders, a nonzero tail identifies a queued handoff, but says
- * nothing about that queue's mode. Optionally give its next holder a bounded
- * chance to publish the mode before selecting local execution. Stop when a
- * holder or pending waiter appears, or the queue goes away.
+ * The caller is the sole spin-class head, with a nonzero tail that it alone
+ * can remove. Tail enqueues and transient pending operations may still race;
+ * update only the phase bit. Skip the atomic operation when the phase agrees.
+ * This helper must never operate on a sleepable-class flags byte.
+ */
+static __always_inline void kd_q_phase_set(struct kd_qlock *q, u32 val, bool deleg)
+{
+	bool on = deleg && READ_ONCE(kd_spin_queue_phase);
+
+	if (!!(val & KD_Q_PHASE_VAL) == on)
+		return;
+	if (on)
+		atomic_or(KD_Q_PHASE_VAL, &q->val);
+	else
+		atomic_andnot(KD_Q_PHASE_VAL, &q->val);
+}
+
+/* Only a live tail gives the queue phase meaning; no address history exists. */
+static __always_inline bool kd_q_phase_observed(u32 val)
+{
+	return (val & KD_Q_PHASE_VAL) && (val >> KD_Q_TAIL_SHIFT) &&
+		READ_ONCE(kd_spin_queue_phase);
+}
+
+/*
+ * A holder's byte is authoritative, including an explicit plain phase. With
+ * no holder, a live queue may carry its phase across the handoff gap. Neither
+ * indication grants ownership: capture eligibility and the existing pending
+ * or queue-head acquisition still govern execution.
  *
- * These reads neither grant ownership nor retain any node or address history.
- * The normal pending/queue-head operations still establish the grant, and
- * capture still checks its own eligibility. If an IRQ delays the next head,
- * the fixed observation bound falls back to the unchanged local path.
+ * The separate optional re-observation policy remains bounded. It neither
+ * retains queue nodes nor keeps per-address history; a delayed next head
+ * falls back to local execution once the observation bound is exhausted.
  */
 static __always_inline bool kd_q_deleg_mode(struct kd_qlock *q, u32 val)
 {
 	if (!READ_ONCE(kd_adapt))
 		return true;
-	if (!(val & KD_Q_LOCKED_PENDING_MASK) &&
-	    (val >> KD_Q_TAIL_SHIFT) && static_branch_likely(&kd_delegation)) {
+	if (val & KD_Q_LOCKED_MASK)
+		return val & KD_Q_DELEG;
+	if (kd_q_phase_observed(val))
+		return true;
+	if (!(val & KD_Q_PENDING_MASK) && (val >> KD_Q_TAIL_SHIFT) &&
+	    static_branch_likely(&kd_delegation)) {
 		unsigned int left = min_t(unsigned int,
 					 READ_ONCE(kd_spin_phase_wait), 128);
 
@@ -679,8 +709,11 @@ static __always_inline bool kd_q_deleg_mode(struct kd_qlock *q, u32 val)
 			    !(val >> KD_Q_TAIL_SHIFT))
 				break;
 		}
+		if (val & KD_Q_LOCKED_MASK)
+			return val & KD_Q_DELEG;
+		return kd_q_phase_observed(val);
 	}
-	return val & KD_Q_DELEG;
+	return false;
 }
 
 /* Sleepable class: the mode is a flag that outlives single holds. */
@@ -726,22 +759,34 @@ static __always_inline int kd_q_depth(struct kd_node *n, int limit)
 /*
  * Queue head @me of a spin-class word takes the lock, the way the native
  * queued spinlock does: wait until neither a holder nor a pending waiter
- * is left, then store the lock byte @lv. No atomic operation is needed,
+ * is left, then store the lock byte @lv. The holder grant needs no atomic operation,
  * because while a queue exists the head is the only possible taker (see
  * kd_q_pending() and kd_q_trylock_fifo()).
  *
- * If @me is also the last waiter, lock and tail are settled in one cmpxchg
- * and @me is out of the queue: returns true. Otherwise @me stays the head
- * and must pass that role on with kd_q_pass().
+ * If @me is also the last waiter, lock, tail and queue phase are settled in
+ * one cmpxchg and @me is out of the queue: returns true. Otherwise @me stays
+ * the head and must pass that role on with kd_q_pass().
  */
 static __always_inline bool kd_q_head_take(struct kd_qlock *q, struct kd_node *me, u8 lv)
 {
-	int val = atomic_cond_read_acquire(&q->val, !(VAL & KD_Q_LOCKED_PENDING_MASK));
+	int val;
 
-	if (((u32)val >> KD_Q_TAIL_SHIFT) == me->tail &&
-	    atomic_try_cmpxchg_relaxed(&q->val, &val, lv))
-		return true;
+	for (;;) {
+		val = atomic_cond_read_acquire(&q->val,
+					      !(VAL & KD_Q_LOCKED_PENDING_MASK));
+		if (((u32)val >> KD_Q_TAIL_SHIFT) != me->tail)
+			break;
+		if (atomic_try_cmpxchg_relaxed(&q->val, &val, lv))
+			return true;
+		/*
+		 * A stale pending attempt can change only P and then fall
+		 * back without a node. A failed CAS does not prove that a
+		 * successor will link: wait for P again and retry our tail.
+		 */
+	}
 	WRITE_ONCE(q->locked, lv);
+	/* The queue still exists; the sole head publishes its selected phase. */
+	kd_q_phase_set(q, val, lv & KD_Q_DELEG);
 	return false;
 }
 
@@ -855,8 +900,26 @@ static __always_inline void kd_q_pass(struct kd_qlock *q, struct kd_node *me,
 	for (;;) {
 		succ = READ_ONCE(me->next);
 		if (!succ) {
-			if (cmpxchg(&q->tail, me->tail, 0) == me->tail)
-				return;
+			if (sleepable) {
+				if (cmpxchg(&q->tail, me->tail, 0) == me->tail)
+					return;
+			} else {
+				int val = atomic_read(&q->val);
+
+				/*
+				 * Clear the final tail and its phase together. A
+				 * pending-bit change alone is not a new successor:
+				 * retry while our tail remains, preserving the
+				 * observed holder and pending bits in every attempt.
+				 */
+				while (((u32)val >> KD_Q_TAIL_SHIFT) == me->tail) {
+					int next = val & ~((0xffffU << KD_Q_TAIL_SHIFT) |
+							       KD_Q_PHASE_VAL);
+
+					if (atomic_try_cmpxchg(&q->val, &val, next))
+						return;
+				}
+			}
 			succ = smp_cond_load_relaxed(&me->next, VAL);
 		}
 		if (!sleepable) {

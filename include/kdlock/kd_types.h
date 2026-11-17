@@ -21,7 +21,7 @@ struct task_struct;
  * not delegate.
  *
  *   locked   0 = free; KD_Q_LOCKED while held, plus holder-owned mode bits
- *   pending  spin class: one waiter spins on ->locked outside the queue
+ *   pending  spin class: pending waiter bit plus the live queue phase bit
  *   flags    sleepable class (same byte): KD_QF_*
  *   tail     last queued waiter, (cpu + 1) << 2 | node index, 0 = no queue
  *
@@ -53,9 +53,17 @@ struct kd_qlock {
 #define KD_Q_DELEG		0x02U
 #define KD_Q_LOCKED_MASK	0x000000ffU
 #define KD_Q_PENDING_VAL	0x00000100U
-#define KD_Q_PENDING_MASK	0x0000ff00U
-#define KD_Q_LOCKED_PENDING_MASK 0x0000ffffU
+#define KD_Q_PENDING_MASK	0x00000100U
+#define KD_Q_PHASE_VAL		0x00000200U
+#define KD_Q_LOCKED_PENDING_MASK 0x000001ffU
 #define KD_Q_TAIL_SHIFT		16
+
+/*
+ * Spin class only: KD_Q_PHASE_VAL retains the selected phase while a queue
+ * exists, including an empty holder byte. It never denotes ownership and is
+ * cleared atomically with the last tail. Its bit is KD_QF_HANDOFF in the
+ * separate sleepable-class protocol; spin helpers must not update that word.
+ */
 
 /* ->flags of a mutex queue word (changed with atomic operations only). */
 #define KD_QF_SLEEPERS		0x01	/* tasks are parked on ->waiters */
