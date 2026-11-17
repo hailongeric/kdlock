@@ -1,24 +1,30 @@
-# Local build outputs
-/build/
+# Build artifacts
 *.o
-*.o.d
 *.a
 *.so
+*.out
+*.exe
+
+# Kernel module build outputs
+*.o.d
 *.ko
 *.ko.*
 *.mod
 *.mod.c
 *.mod.o
 *.symvers
-Module.symvers
 modules.order
+Module.symvers
 .tmp_versions/
 .*.cmd
 
-# Python and editor caches
+# Python cache
 __pycache__/
-*.py[cod]
 .ruff_cache/
+*.py[cod]
+*.pyo
+
+# Editor/OS noise
 .vscode/
 .idea/
 .DS_Store

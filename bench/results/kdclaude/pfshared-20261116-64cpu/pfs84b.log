@@ -1,0 +1,39 @@
+threads   n1  kd     ok     754517  deleg 98 hb 17
+threads   n1  native ok     745984  deleg 0 hb 0
+threads   n2  native ok    1104277  deleg 0 hb 0
+threads   n2  kd     ok    1149120  deleg 0 hb 6
+threads   n4  native ok    1367637  deleg 0 hb 0
+threads   n4  kd     ok    1476522  deleg 48 hb 915
+threads   n8  native ok    1248085  deleg 0 hb 0
+threads   n8  kd     ok    1396672  deleg 42 hb 270
+threads   n16 native ok    1580714  deleg 0 hb 0
+threads   n16 kd     ok    1637888  deleg 0 hb 260
+threads   n32 native ok    1813653  deleg 0 hb 0
+threads   n32 kd     ok    1421973  deleg 37 hb 5
+threads   n48 native ok    1244650  deleg 0 hb 0
+threads   n48 kd     ok    1034112  deleg 14 hb 257
+threads   n64 native ok    1039978  deleg 0 hb 0
+threads   n64 kd     ok    1003989  deleg 22 hb 11
+threads   n1  native ok     746752  deleg 0 hb 0
+threads   n1  kd     ok     741738  deleg 47 hb 11
+threads   n2  kd     ok    1098048  deleg 36 hb 10
+threads   n2  native ok    1042944  deleg 0 hb 0
+threads   n4  kd     ok    1484501  deleg 39 hb 265
+threads   n4  native ok    1377664  deleg 0 hb 0
+threads   n8  kd     ok    1373269  deleg 35 hb 11
+threads   n8  native ok    1267306  deleg 0 hb 0
+threads   n16 kd     ok    1594005  deleg 33 hb 7
+threads   n16 native ok    1596565  deleg 0 hb 0
+threads   n32 kd     ok    1418688  deleg 32 hb 9
+threads   n32 native ok    1821674  deleg 0 hb 0
+threads   n48 kd     ok    1005717  deleg 77 hb 295
+threads   n48 native ok    1254890  deleg 0 hb 0
+threads   n64 kd     ok    1000682  deleg 0 hb 0
+threads   n64 native ok    1027648  deleg 0 hb 0
+processes n16 native ok   10693269  deleg 0 hb 0
+processes n16 kd     ok   10574144  deleg 33 hb 6
+processes n64 native ok   13377536  deleg 0 hb 0
+processes n64 kd     ok   13444842  deleg 551 hb 21
+threads   n16 native ok    1552384  deleg 0 hb 0  /s: mmap_read 1788873 mmap_write 47784 rwsem_wait_read 199569 rwsem_wait_write 18596
+threads   n16 kd     ok    1631168  deleg 38 hb 1058  /s: mmap_read 2207982 mmap_write 50552 rwsem_wait_read 0 rwsem_wait_write 0
+PFSDONE

@@ -1,0 +1,2 @@
+Copied unchanged from TCLocks (github rs3lab/TCLocks, commit bbfb9f00a, src/benchmarks/will-it-scale): main.c, Makefile, tests used here. Build: make wl=mmap1.
+Added here, not from TCLocks: tests/page_fault_shared.h and tests/page_fault_shared{1,2,3}.c (page faults on one mapping shared by all threads, with the mmap lock contended; see the header).

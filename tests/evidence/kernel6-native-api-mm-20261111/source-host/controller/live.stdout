@@ -1,5 +1,0 @@
-{"controller_pid": 3075, "final_config_sha256": "f5c4605f0a1179c8ccfb2c170da0dea818af741630b50db7d8e7f1ac3886991d", "recovery_sha256": "d165ff5e57691eed34d48f07c77073621d07dab368c9cc0ce155c3284b7e53b8", "argv": ["python3", "-B", "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-inputs-80c272e5-01/live-controller.py", "--config", "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-inputs-80c272e5-01/live-config.json", "--config-sha256", "f5c4605f0a1179c8ccfb2c170da0dea818af741630b50db7d8e7f1ac3886991d", "--output", "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01", "--seconds", "300"]}
-{
-  "status": "NATIVE_API_AND_MM_COMPLETE",
-  "receipt": "/mnt/kdlock-builds/kdlock-main-work/kernel6-native-api-mm-live-01/result.json"
-}

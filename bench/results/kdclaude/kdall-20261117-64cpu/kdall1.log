@@ -1,0 +1,102 @@
+== kernel 03:41:30
+Linux ubuntu 7.0.0-38-kdall1 #3 SMP PREEMPT_DYNAMIC Tue Nov 17 03:28:38 UTC 2026 x86_64 GNU/Linux
+BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdall1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0
+64
+boot complaints:
+delegation 0
+sessions 0
+delegated 0
+handback 0
+no daemon
+running
+== torture lock_busted 03:41:30
+Writes:  Total: 664564145  Max/Min: 6161143/4622553   Fail: 1 !!!
+lock_busted-torture:--- End of test: FAILURE: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture spin_lock 03:42:31
+Writes:  Total: 167013039  Max/Min: 1558289/1004343   Fail: 0 
+spin_lock-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture spin_lock_irq 03:43:32
+Writes:  Total: 133865062  Max/Min: 1276896/680480   Fail: 0 
+spin_lock_irq-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture raw_spin_lock 03:44:32
+Writes:  Total: 155860748  Max/Min: 1542898/843536   Fail: 0 
+raw_spin_lock-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture raw_spin_lock_irq 03:45:32
+Writes:  Total: 142208634  Max/Min: 1536095/747109 ???  Fail: 0 
+raw_spin_lock_irq-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture rw_lock 03:46:32
+Writes:  Total: 9885281  Max/Min: 177691/121037   Fail: 0 
+rw_lock-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=64 nwriters_stress=64 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture rw_lock_irq 03:47:33
+Writes:  Total: 11175325  Max/Min: 203639/130457   Fail: 0 
+rw_lock_irq-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=64 nwriters_stress=64 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture mutex_lock 03:48:33
+Writes:  Total: 76095842  Max/Min: 730033/462113   Fail: 0 
+mutex_lock-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture ww_mutex_lock 03:49:34
+Writes:  Total: 12011652  Max/Min: 102123/86318   Fail: 0 
+ww_mutex_lock-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture rwsem_lock 03:50:34
+Writes:  Total: 689281  Max/Min: 27925/4010 ???  Fail: 0 
+rwsem_lock-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=64 nwriters_stress=64 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture rtmutex_lock 03:51:35
+Writes:  Total: 8039784  Max/Min: 151924/21308 ???  Fail: 0 
+rtmutex_lock-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== torture percpu_rwsem_lock 03:52:35
+Writes:  Total: 6054  Max/Min: 96/93   Fail: 0 
+percpu_rwsem_lock-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=64 nwriters_stress=64 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+== test-ww_mutex 03:53:36
+modprobe rc=0
+kda: test-ww_mutex
+Beginning ww (wound) mutex selftests
+stress (stress_inorder_work) failed with -35
+Beginning ww (die) mutex selftests
+All ww mutex selftests passed
+== api_stress 03:53:50
+setfd n16 rc=0 mode setfd threads 16 seconds 20.0 ops 36731396 rate 1834808 ok 
+setfd n64 rc=0 mode setfd threads 64 seconds 20.0 ops 37661189 rate 1881497 ok 
+ofd n16 rc=0 mode ofd threads 16 seconds 20.0 ops 28666679 rate 1431913 ok 
+ofd n64 rc=0 mode ofd threads 64 seconds 20.0 ops 22463261 rate 1122180 ok 
+pipe n16 rc=0 mode pipe threads 16 seconds 20.0 ops 10355299 rate 517247 ok 
+pipe n64 rc=0 mode pipe threads 64 seconds 20.0 ops 9118069 rate 455476 ok 
+seek n16 rc=0 mode seek threads 16 seconds 19.2 ops 22746544 rate 1185240 ok 
+seek n64 rc=0 mode seek threads 64 seconds 20.0 ops 19286400 rate 965045 ok 
+uts n16 rc=0 mode uts threads 16 seconds 20.0 ops 64766953 rate 3235145 ok 
+uts n64 rc=0 mode uts threads 64 seconds 20.0 ops 56339533 rate 2813194 ok 
+xattr n16 rc=0 mode xattr threads 16 seconds 20.0 ops 33224734 rate 1659575 ok 
+xattr n64 rc=0 mode xattr threads 64 seconds 20.0 ops 32471830 rate 1620350 ok 
+== wis 03:57:50
+page_fault_shared1 threads rc=0 average:6306611:0:6306611 
+page_fault_shared1 processes rc=0 average:12968972:12968972:0 
+page_fault_shared2 threads rc=0 average:1932595:0:1932595 
+page_fault_shared2 processes rc=0 average:12989017:12989017:0 
+page_fault_shared3 threads rc=0 average:1060083:0:1060083 
+page_fault_shared3 processes rc=0 average:12982118:12982118:0 
+page_fault1 threads rc=0 average:4395284:0:4395284 
+page_fault1 processes rc=0 average:7368968:7368968:0 
+mmap1 threads rc=0 average:275908:0:275908 
+mmap1 processes rc=0 average:2423321:2423321:0 
+mmap2 threads rc=0 average:304676:0:304676 
+mmap2 processes rc=0 average:2041625:2041625:0 
+brk1 threads rc=0 average:818157:0:818157 
+brk1 processes rc=0 average:52787389:52787389:0 
+== kbuild 04:00:24
+kbuild rc=0 elapsed 58.347266017 s
+make: Leaving directory '/mnt/kdlock-builds/kda/src'
+-rw-r--r-- 1 root root 14791680 Nov 17 04:01 /mnt/kdlock-builds/stress-kdall1/arch/x86/boot/bzImage
+== run_corr 04:01:30
+run_corr rc=0
+api test: 0 failed checks
+442 points, 0 failed, 0 kernel complaints
+== done 04:03:51
+complaints since start:
+[   45.557828] WARNING: kernel/locking/locktorture.c:934 at lock_torture_writer+0x296/0x2e0 [locktorture], CPU#29: lock_torture_wr/3171
+[   45.557827] WARNING: kernel/locking/locktorture.c:934 at lock_torture_writer+0x296/0x2e0 [locktorture], CPU#3: lock_torture_wr/3176
+[   45.557957] Call Trace:
+[   45.839893] Call Trace:
+[  105.983011] lock_busted-torture:--- End of test: FAILURE: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+delegation 0
+sessions 0
+delegated 0
+handback 0
+KDA_TEST_DONE

@@ -1,7 +1,0 @@
-[
-  "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
-  "-B",
-  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-provider-ioctl-build-0798c1ab-01/input/tests/kernel/mmap_api/runner.py",
-  "--config-json",
-  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/mm-prefix-input-0798c1ab-01/host-config.json"
-]

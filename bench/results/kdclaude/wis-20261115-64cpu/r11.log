@@ -1,0 +1,52 @@
++ cat /sys/module/kernel/parameters/kd_rwsem_rspin_ns /sys/module/kernel/parameters/kd_rwsem_rphase_ns /sys/module/kernel/parameters/kd_vdown
+50000
+1000
+1
++ python3 -u run_mmap1.py --out /root/grid/pf_base.jsonl --test page_fault1 --models threads --workers 2 8 16 --backends native kd --rounds 2 --samples 3 --tag pf_base
+threads   n2  native ok    1123758  deleg 0 hb 0
+threads   n2  kd     ok    1028069  deleg 286 hb 85
+threads   n8  native ok    2776626  deleg 0 hb 0
+threads   n8  kd     ok    2252966  deleg 0 hb 0
+threads   n16 native ok    3019801  deleg 0 hb 0
+threads   n16 kd     ok    2412408  deleg 117 hb 23
+threads   n2  kd     ok    1017325  deleg 378 hb 69
+threads   n2  native ok    1107834  deleg 0 hb 0
+threads   n8  kd     ok    2243049  deleg 111 hb 18
+threads   n8  native ok    2748982  deleg 0 hb 0
+threads   n16 kd     ok    2400411  deleg 92 hb 22
+threads   n16 native ok    3042538  deleg 0 hb 0
++ echo 0
++ python3 -u run_mmap1.py --out /root/grid/pf_rspin0.jsonl --test page_fault1 --models threads --workers 2 8 16 --backends kd --rounds 2 --samples 3 --tag pf_rspin0
+threads   n2  kd     ok    1021536  deleg 79 hb 15
+threads   n8  kd     ok    2563154  deleg 223 hb 55
+threads   n16 kd     ok    2782940  deleg 67 hb 13
+threads   n2  kd     ok    1008136  deleg 0 hb 0
+threads   n8  kd     ok    2586730  deleg 0 hb 0
+threads   n16 kd     ok    2630551  deleg 8 hb 7
++ echo 50000
++ echo 0
++ python3 -u run_mmap1.py --out /root/grid/pf_rp0.jsonl --test page_fault1 --models threads --workers 2 8 16 --backends kd --rounds 2 --samples 3 --tag pf_rp0
+threads   n2  kd     ok    1012715  deleg 111 hb 11
+threads   n8  kd     ok    2338696  deleg 63 hb 8
+threads   n16 kd     ok    2406323  deleg 228 hb 69
+threads   n2  kd     ok    1006527  deleg 86 hb 11
+threads   n8  kd     ok    2362116  deleg 0 hb 0
+threads   n16 kd     ok    2584360  deleg 55 hb 18
++ echo 1000
++ echo 0
++ python3 -u run_mmap1.py --out /root/grid/mm2_vd0.jsonl --test mmap2 --models threads --workers 4 16 --backends native kd --rounds 2 --samples 3 --tag mm2_vd0
+threads   n4  native ok     293357  deleg 0 hb 0
+threads   n4  kd     ok     272505  deleg 32 hb 1379698
+threads   n16 native ok     310389  deleg 0 hb 0
+threads   n16 kd     ok     256575  deleg 0 hb 1309925
+threads   n4  kd     ok     254743  deleg 20 hb 1285952
+threads   n4  native ok     307871  deleg 0 hb 0
+threads   n16 kd     ok     253205  deleg 17 hb 1330072
+threads   n16 native ok     302741  deleg 0 hb 0
++ echo 1
++ cat /sys/module/kernel/parameters/kd_rwsem_rspin_ns /sys/module/kernel/parameters/kd_rwsem_rphase_ns /sys/module/kernel/parameters/kd_vdown
+50000
+1000
+1
++ set +x
+R11DONE

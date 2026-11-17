@@ -1,8 +1,0 @@
-{
-  "error": "RuntimeError('command failed; preserve partial state: grub-installed')",
-  "one_shot_may_be_set": false,
-  "phase": "install",
-  "preserve_partial_state": true,
-  "reboot_performed": false,
-  "status": "FAILED_NO_AUTOMATIC_RETRY"
-}

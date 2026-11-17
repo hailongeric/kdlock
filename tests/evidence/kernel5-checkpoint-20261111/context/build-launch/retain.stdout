@@ -1,5 +1,0 @@
-{"destination": "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f/receipts/retained-kdrebuild4-2d0ad60b-rw-01", "phase": "RETENTION_STARTED", "unix": 1794374519.9770932}
-{"count": 14, "phase": "BUILD_ARTIFACTS_RETAINED", "unix": 1794374523.5144925}
-{"count": 67, "phase": "PACKAGE_SOURCES_RETAINED", "unix": 1794374523.6662385}
-{"count": 10346, "phase": "GENERATED_HEADERS_RETAINED", "unix": 1794374526.6634498}
-{"build_files": 14, "free_bytes_after": {"/": 1211904000, "/mnt/kdlock-builds2/kdlock-main-build-c6becf81-01a1bc4f": 7965503488}, "generated_members": 10346, "manifest_sha256": "5a065995922c77cd78551d65340938fe67067274428318fc1ef280b78f74a7a1", "package_files": 67, "phase": "KERNEL4_WITNESS_RETAINED", "receipt_files": 266, "retained_logical_bytes": 606851919, "unix": 1794374528.4574478}

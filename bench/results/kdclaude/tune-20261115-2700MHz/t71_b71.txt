@@ -1,0 +1,15 @@
+== 1. mmap1 learning, then vdown 1/0 (clean boot)
+t71warm.jsonl {4: [318744, 406768, 321184], 16: [291756, 373939, 364887], 64: [160562, 330186, 305124]}
+mmv_native.jsonl {4: [318595, 336268], 8: [287966, 288258], 16: [279865, 270953], 32: [273977, 276087], 64: [147825, 151232]}
+mmv_vdown0.jsonl {4: [263902, 262494, 258498], 8: [262195, 259688, 266392], 16: [261366, 255024, 255794], 32: [251808, 257217, 251567], 64: [152162, 150628, 151352]}
+mmv_vdown1.jsonl {4: [401105, 372999, 379225], 8: [375517, 369200, 383549], 16: [368457, 374813, 371025], 32: [375827, 371188, 371416], 64: [305596, 307510, 307715]}
+== 2. mm_stress switches the mmap sites off; mmap1 afterwards
+sessions 34119167 delegated 208277014 handback 32538714 plain 16031434 vdown 66795969 vdown_hb 429960 site_retry 26 
+mm_stress n4 rc=0 threads 4 seconds 20 ops 22361 pages 5741094 forks 6331 ok
+mm_stress n32 rc=0 threads 32 seconds 20 ops 37652 pages 9697893 forks 3242 ok
+mm_stress n63 rc=0 threads 63 seconds 20 ops 32810 pages 8486946 forks 2007 ok
+sessions 34131146 delegated 208279721 handback 32549281 plain 16049707 vdown 66799739 vdown_hb 433684 site_retry 39 
+t71after.jsonl {16: [359445, 369371, 383102, 365495], 64: [306392, 306244, 302483, 298824]}
+sessions 34145412 delegated 257280674 handback 32549890 plain 16049707 vdown 91299743 vdown_hb 433691 site_retry 39 
+57
+T71DONE

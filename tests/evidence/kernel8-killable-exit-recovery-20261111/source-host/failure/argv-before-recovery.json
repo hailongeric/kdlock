@@ -1,9 +1,0 @@
-[
-  "/usr/bin/python3",
-  "-B",
-  "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/managed-killable-input-02/controller.py",
-  "--host-checks-sha256",
-  "ad66e175dfb83ea6b3a8b23ce0782d1a4cfdeebfc3004a0367b2e79d3b17a808",
-  "--recovery-sha256",
-  "FRESH_ACTUAL_RECOVERY_SHA256"
-]

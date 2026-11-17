@@ -1,7 +1,0 @@
-{
-  "argv": [
-    "/usr/sbin/rmmod",
-    "kd_rwsem_runtime_fixture"
-  ],
-  "returncode": 0
-}

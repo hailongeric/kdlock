@@ -1,8 +1,0 @@
-{
-  "bytes": 4187139,
-  "claim": 18379471558730711960,
-  "holder": 36865,
-  "keys": [],
-  "path": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e990fde3-rw-01/recovery-rwsem-capacity-01/shutdown-raw-archive.json",
-  "sha256": "2bf0ad97e9055bbbcf1ed7998571f8471d91a14464c32add8beeeaef1237f8c0"
-}

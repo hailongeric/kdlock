@@ -1,8 +1,0 @@
-{
-  "finalized_sha256": "21980a9b699e13733f584efc9665e89aa2e37e233cfa24cc7ce0e4925bc0e5bc",
-  "module_load_performed": false,
-  "phase": "arm",
-  "reboot_performed": false,
-  "status": "COMPLETE",
-  "unix_time": 1794428083.796325
-}

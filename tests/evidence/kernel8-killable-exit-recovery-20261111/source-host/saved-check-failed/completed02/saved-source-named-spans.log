@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-support-de76da8a-input-01/saved-source-check.py", line 29, in <module>
-    previous=json.loads(old_metadata);assert calls==previous['calls'] and list(roots)==previous['roots'] and list(indirect)==previous['near_indirect_call_sites']
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError

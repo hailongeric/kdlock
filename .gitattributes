@@ -1,0 +1,9 @@
+# Preserve exact upstream bytes and unified-diff context prefixes.
+tclock_backend/upstream/** -whitespace
+# The tested port retains upstream comment indentation; keep all other checks.
+tclock_backend/komb.c whitespace=-space-before-tab
+tclock_backend/port.patch -whitespace
+tclock_backend/rwlock-port.patch -whitespace
+tclock_backend/rwsem-port.patch -whitespace
+# The inherited kernel patch keeps the upstream unified-diff context bytes.
+integration/linux70/mmap-lock.patch -whitespace

@@ -1,9 +1,0 @@
-Traceback (most recent call last):
-  File "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/checks.py", line 396, in <module>
-    main()
-    ~~~~^^
-  File "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/checks.py", line 391, in main
-    data = grub(args.armed)
-  File "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-kdrebuild8-api-01/checks.py", line 346, in grub
-    raise RuntimeError('missing/ambiguous advanced entry: ' + release)
-RuntimeError: missing/ambiguous advanced entry: 7.0.0-38-kdrebuild6

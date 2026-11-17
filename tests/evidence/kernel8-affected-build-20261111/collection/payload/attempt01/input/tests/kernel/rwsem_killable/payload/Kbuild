@@ -1,8 +1,0 @@
-# Private source/continuation mechanism evidence, normal target compiler flags.
-obj-m += kd_rwsem_killable_fixture.o
-kd_rwsem_killable_fixture-y := fixture.o
-ccflags-y += -I$(src)/../../../..
-KASAN_SANITIZE_fixture.o := n
-KCSAN_SANITIZE_fixture.o := n
-KCOV_INSTRUMENT_fixture.o := n
-GCOV_PROFILE_fixture.o := n

@@ -1,7 +1,0 @@
-{
-  "available": "Exact local recovery stdout, command return 0, and matching reviewed helper source.",
-  "guest_recovery_directory": "/mnt/kdlock-builds/kdlock-main-work/kernel5-fixtures-e5b78520-rw-01/recovery-rwlock-native-01",
-  "unavailable": [
-    "Full guest native cleanup directory with raw statuses, task lists, dmesg and result.json"
-  ]
-}

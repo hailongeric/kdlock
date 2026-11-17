@@ -1,8 +1,0 @@
-<5>[ 1278.498962] audit: type=1400 audit(1794446347.442:219): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=3561 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
-<5>[ 1278.498977] audit: type=1400 audit(1794446347.442:220): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=3561 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
-<5>[ 1278.498986] audit: type=1400 audit(1794446347.442:221): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=3561 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
-<5>[ 1278.498990] audit: type=1400 audit(1794446347.442:222): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=3561 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
-<5>[ 1730.937440] audit: type=1400 audit(1794446799.881:223): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=3959 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
-<5>[ 1730.937455] audit: type=1400 audit(1794446799.881:224): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=3959 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
-<5>[ 1730.937463] audit: type=1400 audit(1794446799.881:225): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=3959 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
-<5>[ 1730.937467] audit: type=1400 audit(1794446799.881:226): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=3959 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0

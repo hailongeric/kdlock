@@ -1,0 +1,90 @@
+# SPDX-License-Identifier: GPL-2.0
+
+config KDLOCK
+	bool "kdlock: delegating replacements for spinlock, rwlock, mutex and rwsem"
+	depends on X86_64 && SMP
+	depends on !PREEMPT_RT
+	depends on !DEBUG_SPINLOCK && !DEBUG_MUTEXES && !DEBUG_RWSEMS
+	depends on !DEBUG_LOCK_ALLOC && !LOCKDEP
+	# Entry stubs change the interrupt flag and preempt count directly.
+	depends on !TRACE_IRQFLAGS && !PARAVIRT_XXL
+	# A delegated section runs on its origin's stack from another CPU.
+	depends on VMAP_STACK
+	depends on EXECMEM
+	select KALLSYMS_ALL
+	help
+	  Replace the kernel's blocking primitives with kdlock. Under
+	  contention the lock holder executes the critical sections of queued
+	  waiters itself, from a relocated copy of their code produced by the
+	  userspace translator (jit/kd_daemon.py), so the protected data stays
+	  in one CPU's cache.
+
+	  Without the translator running, or for call sites it has not
+	  translated, the locks behave as plain queued locks.
+
+	  NR_CPUS must stay below 16384 (queue tail encoding).
+
+config KDLOCK_CLOBBER_ENTRY
+	bool "kdlock: clobber entries for the kd_*_cl() lock calls"
+	depends on KDLOCK
+	default n
+	help
+	  The kd_*_cl() macros of include/kdlock/kd_api.h make the lock call
+	  from inline assembly that declares every general register except
+	  rsp and rbp lost across it, so a waiter's continuation and a
+	  delegated section's end are a few words instead of the full register
+	  set, and the lock holder fetches fewer cache lines per section.
+
+	  With this off (the default), the macros are the ordinary calls.
+	  The entries themselves are always built. Measured gain with it on:
+	  2-4% for one-line spinlock and rwlock writer sections, 0.5-2% for
+	  the sleeping locks, and a 0.5-0.8% loss for a mutex with sixteen
+	  lines (bench/results/kdclaude/clobber-20261116-64cpu/).
+
+config KDLOCK_MM
+	bool "kdlock: mm_struct mmap lock as a kdlock rwsem"
+	depends on KDLOCK && MMU && !KDLOCK_MMAP
+	default n
+	help
+	  Make mm->mmap_lock a union of the native rw_semaphore and a kdlock
+	  rwsem. Each new mm chooses one when it is created, from the kd_mm
+	  core parameter (default 0: native). With kdlock, contended mmap
+	  writers (mmap, munmap, mprotect, brk, ...) can have their critical
+	  section run by the queue head. Static mms stay native.
+
+config KDLOCK_API
+	bool "kdlock: switchable lock objects on selected syscall paths"
+	depends on KDLOCK
+	default n
+	help
+	  Change the type of a few lock fields to a union of the native lock
+	  and the kdlock one, chosen per object when it is initialised (kd_api
+	  core parameter, default 0: native): files_struct.file_lock,
+	  file_lock_context.flc_lock, pipe_inode_info.mutex, file.f_pos_lock,
+	  simple_xattrs.lock and uts_sem (boot parameter kd_uts). The lock calls
+	  on these fields are unchanged; a _Generic dispatch at the end of
+	  linux/spinlock.h, mutex.h and rwsem.h routes them.
+
+config KDLOCK_ALL
+	bool "kdlock: every spinlock, rwlock, mutex and rwsem of the kernel"
+	depends on KDLOCK && !KDLOCK_MM && !KDLOCK_API
+	# The paravirt slow path and unlock would bypass the redirected
+	# queued_spin_*() level.
+	depends on !PARAVIRT_SPINLOCKS
+	# Reads the native mutex and rwsem owner words.
+	depends on !DETECT_HUNG_TASK_BLOCKER
+	# Follows task->blocked_on to the native mutex owner.
+	depends on !SCHED_PROXY_EXEC
+	default n
+	help
+	  Switch the kernel's lock API as a whole (integration/apply_all.py,
+	  docs/KERNEL_INTEGRATION.md 4d). spinlock_t and rwlock_t operations
+	  become calls to the kd_spin_*() and kd_read/write_*() entries;
+	  raw_spinlock_t and the arch_spin/read/write level take the kd queue
+	  algorithm through kd_arch_*(); struct mutex, struct ww_mutex and
+	  struct rw_semaphore are kdlock objects of the native size, and
+	  kernel/locking/mutex.c and rwsem.c are not built.
+
+	  Delegation still needs the translator. Without it every lock is a
+	  plain queued lock; that is the configuration this option has been
+	  tested in.

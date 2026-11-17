@@ -1,8 +1,0 @@
-{
-  "archive_sha256": "b16d543bd24e17842f29cd9f2a6e2ed3c4189afce3972ba72df537517e695d13",
-  "bytes": 3426990,
-  "files": 155,
-  "finished_unix": 1794430248.311151,
-  "scope": "Exact named saved-file collection after the controller closed its receipt window.",
-  "status": "COMPLETE"
-}

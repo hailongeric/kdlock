@@ -1,4 +1,0 @@
-{"phase": "stage", "event": "DISPATCHED", "pid": 132414, "driver": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01"}
-{"phase": "stage", "event": "RETURNED", "returncode": 0, "driver": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01"}
-{"phase": "check", "event": "DISPATCHED", "pid": 136801, "driver": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01"}
-{"phase": "check", "event": "RETURNED", "returncode": 0, "driver": "/mnt/kdlock-builds2/kdlock-main-kernel8-0d42063e-01/receipts/install-stage-check-driver-01"}

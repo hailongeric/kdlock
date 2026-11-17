@@ -1,9 +1,0 @@
-{
-  "export_method": "git show of each exact committed regular blob; no recursive worktree copy",
-  "files": 143,
-  "git_status": "",
-  "git_status_scope": "Only the exact selected tracked 143 source names; not whole-worktree cleanliness.",
-  "source_git_head": "6e486ecec398111fb5d5e30ffc76495f32f557b7",
-  "transfer_bytes": 1622641,
-  "whole_worktree_status_at_export": ""
-}

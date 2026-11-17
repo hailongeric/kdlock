@@ -1,8 +1,0 @@
-{
-  "argv": [
-    "python3",
-    "-B",
-    "/mnt/kdlock-builds2/kdlock-main-kernel7-input-0c97cd34-01/finalize.py"
-  ],
-  "helper_sha256": "76a962b5e597386cea4ee44b6a2a774df2f65d2b562bf59ef56cf50baf212694"
-}

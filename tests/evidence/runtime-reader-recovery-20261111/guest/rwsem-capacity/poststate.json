@@ -1,9 +1,0 @@
-{
-  "boot": "6f99fdb9-8d47-46dd-9e72-dfa6ecd774f4",
-  "devices": [],
-  "module_present": false,
-  "modules_sha256": "380ac53d305979d7c43d884558cf22443c8cf03d3aa7c70d0d5936f776572132",
-  "release": "7.0.0-38-kdrebuild5",
-  "taint": 12288,
-  "tasks": []
-}

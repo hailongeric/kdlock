@@ -1,0 +1,333 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * kdlock rwlock.
+ *
+ * Count word as in qrwlock: writer byte, writer-waiting bit, reader count.
+ * ->wait orders slow-path readers and writers.
+ *
+ * Writers are delegable, and a contended writer publishes its continuation
+ * whenever it can: there is no plain mode here, because the writers one
+ * session serves share a single wait for the readers to leave. A queued
+ * writer that reaches the queue head takes the writer byte and then, as
+ * combiner, keeps both the byte and ->wait while it executes the writers
+ * queued behind it. Queued readers are not delegable, so a session stops at
+ * the first reader and FIFO order between readers and writers is preserved.
+ * A writer that cannot publish (interrupt context, no generated code) takes
+ * the native queued rwlock's slow path.
+ *
+ * Readers always run on their own task; reader concurrency is unchanged.
+ *
+ * Releasing the write lock clears the writer byte and nothing else. After
+ * a handback the origin therefore releases with the ordinary call, while
+ * the combiner still holds ->wait and reacquires the byte as next writer
+ * (or, with kd_xchg=2, is served by the origin's release).
+ */
+#include <linux/kernel.h>
+#include <linux/export.h>
+#include <linux/preempt.h>
+#include <linux/bottom_half.h>
+#include <linux/irqflags.h>
+#include <linux/hardirq.h>
+#include <linux/sched/clock.h>
+#include "kd_internal.h"
+
+/*
+ * Queue head holds ->wait: wait for readers and a fast-path writer to leave.
+ * How many readers were in and how long they took is what decides whether
+ * the lock gets an era (kd_era.c).
+ */
+static bool kd_rw_post(void *root, struct kd_node *head)
+{
+	struct kd_rwlock *rw = root;
+	/* Without eras nothing is measured: kd_rw_era_ns=0 costs this one load. */
+	bool era = READ_ONCE(kd_rw_era_ns);
+	int c, nr;
+	u64 t0 = 0;
+
+	nr = atomic_fetch_or(KD_RW_WWAIT, &rw->cnts) >> KD_RW_RSHIFT;
+	if (era && nr)
+		t0 = local_clock();
+	do {
+		c = atomic_cond_read_relaxed(&rw->cnts, VAL == KD_RW_WWAIT);
+	} while (!atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED));
+	if (era)
+		kd_rw_era_writer(rw, nr, head ? kd_q_depth(head, KD_POST_DEPTH) : 0,
+				 t0 ? local_clock() - t0 : 0);
+	return true;
+}
+
+/*
+ * The lock serves another node: wait for this node's era before touching
+ * it (kd_era.c). The caller spins with preemption off, as it would in the
+ * queue; the wait ends at need_resched(). Not with interrupts or bottom
+ * halves off, nor outside task context: there the caller holds up more than
+ * itself.
+ */
+static __always_inline bool kd_rw_era_gate(struct kd_rwlock *rw)
+{
+	if (likely(!kd_rw_era_other(rw)) || irqs_disabled() || !in_task() || softirq_count())
+		return false;
+	kd_rw_era_wait(rw, READ_ONCE(kd_rw_era_ns));
+	return true;
+}
+
+static void kd_rw_release_wait(void *root)
+{
+	struct kd_rwlock *rw = root;
+
+	kd_q_unlock(&rw->wait);
+}
+
+static const struct kd_family kd_rw_family = {
+	.post		= kd_rw_post,
+	.release	= kd_rw_release_wait,
+	.keeps_q	= true,
+	.always_deleg	= true,
+};
+
+/* Release the writer byte; see kd_spin_release(). */
+static __always_inline void kd_write_release(struct kd_rwlock *rw)
+{
+	if (unlikely(raw_cpu_read(kd_cpu.xcount)) &&
+	    kd_release_combine(&rw->wait, NULL, rw, &kd_rw_family))
+		return;
+	smp_store_release(&rw->wlocked, 0);
+}
+
+/* Tail-called by the entry stub when this CPU cannot publish. */
+void kd_write_lock_plain(struct kd_rwlock *rw)
+{
+	if (unlikely(!kd_q_trylock_fifo(&rw->wait)))
+		kd_q_lock_plain(&rw->wait);
+	kd_rw_post(rw, NULL);
+	kd_q_unlock(&rw->wait);
+}
+
+/*
+ * Slow path of the delegable write entries, on the caller's stack with
+ * preemption off; see kd_q_lock_slow(). A contended writer publishes its
+ * continuation whenever it can (kd_family.always_deleg). Otherwise this is
+ * the native queued rwlock's writer slow path: take the wait lock, wait
+ * for readers and the writer to leave, take the writer byte, drop the
+ * wait lock.
+ */
+bool kd_write_lock_slow(struct kd_rwlock *rw, unsigned long site)
+{
+	if (kd_rw_era_gate(rw)) {
+		int c = 0;
+
+		if (atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED))
+			return true;
+	}
+	if (kd_can_offer(site))
+		return false;
+	raw_cpu_inc(kd_cpu.nodes[0].nplain);
+	kd_write_lock_plain(rw);
+	return true;
+}
+
+/* Called by the entry stub on the wait stack. */
+int kd_write_wait(struct kd_rwlock *rw)
+{
+	int ret = kd_wait_spin(&rw->wait, rw, &kd_rw_family, NULL, NULL);
+
+	if (ret == KD_WAIT_RESUMED)
+		kd_finish_resume(0);
+	return ret;
+}
+
+/* Contended kd_write_lock*() inside a section; see kd_nested_acquire(). */
+int kd_write_nested(struct kd_rwlock *rw, struct kd_regs *r, void *entry)
+{
+	if (!entry) {
+		kd_write_lock_plain(rw);
+		return KD_WAIT_LOCAL;
+	}
+	return kd_wait_spin(&rw->wait, rw, &kd_rw_family, r, entry);
+}
+
+int kd_write_trylock(struct kd_rwlock *rw)
+{
+	int c = 0;
+
+	preempt_disable();
+	if (atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED))
+		return 1;
+	preempt_enable();
+	return 0;
+}
+EXPORT_SYMBOL(kd_write_trylock);
+
+int kd_write_trylock_irqsave(struct kd_rwlock *rw, unsigned long *flags)
+{
+	local_irq_save(*flags);
+	if (kd_write_trylock(rw))
+		return 1;
+	local_irq_restore(*flags);
+	return 0;
+}
+EXPORT_SYMBOL(kd_write_trylock_irqsave);
+
+/* arch_write_lock() level: the caller manages preemption. Never delegated. */
+void kd_arch_write_lock(struct kd_rwlock *rw)
+{
+	int c = 0;
+
+	if (unlikely(!atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED)))
+		kd_write_lock_plain(rw);
+}
+EXPORT_SYMBOL(kd_arch_write_lock);
+
+void kd_write_unlock(struct kd_rwlock *rw)
+{
+	kd_write_release(rw);
+	preempt_enable();
+}
+EXPORT_SYMBOL(kd_write_unlock);
+
+void kd_write_unlock_irq(struct kd_rwlock *rw)
+{
+	kd_write_release(rw);
+	local_irq_enable();
+	preempt_enable();
+}
+EXPORT_SYMBOL(kd_write_unlock_irq);
+
+void kd_write_unlock_irqrestore(struct kd_rwlock *rw, unsigned long flags)
+{
+	kd_write_release(rw);
+	local_irq_restore(flags);
+	preempt_enable();
+}
+EXPORT_SYMBOL(kd_write_unlock_irqrestore);
+
+void kd_write_unlock_bh(struct kd_rwlock *rw)
+{
+	kd_write_release(rw);
+	__local_bh_enable_ip(_RET_IP_, SOFTIRQ_LOCK_OFFSET);
+}
+EXPORT_SYMBOL(kd_write_unlock_bh);
+
+/* ---- readers ---------------------------------------------------------------- */
+
+static noinline void kd_read_lock_slow(struct kd_rwlock *rw)
+{
+	/*
+	 * A reader in interrupt context may be nested inside a reader of the
+	 * same lock on this CPU. It must not queue behind a waiting writer;
+	 * it keeps its count and only waits for an active writer.
+	 */
+	if (unlikely(in_interrupt())) {
+		atomic_cond_read_acquire(&rw->cnts, !(VAL & KD_RW_WLOCKED));
+		return;
+	}
+	atomic_sub(KD_RW_RBIAS, &rw->cnts);
+	kd_rw_era_gate(rw);
+
+	if (unlikely(!kd_q_trylock_fifo(&rw->wait)))
+		kd_q_lock_plain(&rw->wait);
+	atomic_add(KD_RW_RBIAS, &rw->cnts);
+	/* Holding ->wait excludes queued writers; a trylock writer may be active. */
+	atomic_cond_read_acquire(&rw->cnts, !(VAL & KD_RW_WLOCKED));
+	kd_q_unlock(&rw->wait);
+}
+
+static __always_inline void __kd_read_lock(struct kd_rwlock *rw)
+{
+	int c = atomic_add_return_acquire(KD_RW_RBIAS, &rw->cnts);
+
+	if (unlikely(c & KD_RW_WMASK))
+		kd_read_lock_slow(rw);
+}
+
+/* arch_read_lock() level: the caller manages preemption. */
+void kd_arch_read_lock(struct kd_rwlock *rw)
+{
+	__kd_read_lock(rw);
+}
+EXPORT_SYMBOL(kd_arch_read_lock);
+
+void kd_read_lock(struct kd_rwlock *rw)
+{
+	preempt_disable();
+	__kd_read_lock(rw);
+}
+EXPORT_SYMBOL(kd_read_lock);
+
+void kd_read_lock_irq(struct kd_rwlock *rw)
+{
+	local_irq_disable();
+	preempt_disable();
+	__kd_read_lock(rw);
+}
+EXPORT_SYMBOL(kd_read_lock_irq);
+
+unsigned long kd_read_lock_irqsave(struct kd_rwlock *rw)
+{
+	unsigned long flags;
+
+	local_irq_save(flags);
+	preempt_disable();
+	__kd_read_lock(rw);
+	return flags;
+}
+EXPORT_SYMBOL(kd_read_lock_irqsave);
+
+void kd_read_lock_bh(struct kd_rwlock *rw)
+{
+	__local_bh_disable_ip(_RET_IP_, SOFTIRQ_LOCK_OFFSET);
+	__kd_read_lock(rw);
+}
+EXPORT_SYMBOL(kd_read_lock_bh);
+
+int kd_read_trylock(struct kd_rwlock *rw)
+{
+	int c;
+
+	preempt_disable();
+	c = atomic_read(&rw->cnts);
+	if (likely(!(c & KD_RW_WMASK))) {
+		c = atomic_add_return_acquire(KD_RW_RBIAS, &rw->cnts);
+		if (likely(!(c & KD_RW_WMASK)))
+			return 1;
+		atomic_sub(KD_RW_RBIAS, &rw->cnts);
+	}
+	preempt_enable();
+	return 0;
+}
+EXPORT_SYMBOL(kd_read_trylock);
+
+static __always_inline void __kd_read_unlock(struct kd_rwlock *rw)
+{
+	(void)atomic_sub_return_release(KD_RW_RBIAS, &rw->cnts);
+}
+
+void kd_read_unlock(struct kd_rwlock *rw)
+{
+	__kd_read_unlock(rw);
+	preempt_enable();
+}
+EXPORT_SYMBOL(kd_read_unlock);
+
+void kd_read_unlock_irq(struct kd_rwlock *rw)
+{
+	__kd_read_unlock(rw);
+	local_irq_enable();
+	preempt_enable();
+}
+EXPORT_SYMBOL(kd_read_unlock_irq);
+
+void kd_read_unlock_irqrestore(struct kd_rwlock *rw, unsigned long flags)
+{
+	__kd_read_unlock(rw);
+	local_irq_restore(flags);
+	preempt_enable();
+}
+EXPORT_SYMBOL(kd_read_unlock_irqrestore);
+
+void kd_read_unlock_bh(struct kd_rwlock *rw)
+{
+	__kd_read_unlock(rw);
+	__local_bh_enable_ip(_RET_IP_, SOFTIRQ_LOCK_OFFSET);
+}
+EXPORT_SYMBOL(kd_read_unlock_bh);

@@ -1,1 +1,0 @@
-{"status": "EXACT_SUPERVISOR_STAGED", "sha256": "09dc900987cec70b89ea60620ddd07c1493fa6c7dd2b4649201421b33c238ebc", "idle": {"identity": {"boot": "2ae5991e-d024-48ac-9f86-24a0a8910172", "release": "7.0.0-38-kdrebuild8", "taint": 0}, "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\n", "activity": []}}

@@ -1,1 +1,0 @@
-{"returncode": 0, "argv": ["ssh", "-T", "-p", "2222", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "root@10.176.26.71", "python3", "-B", "-"], "read_sha256": "333e625fd5b87cea7983a2d0d920538e51608bd005f48231bfe9a8088ccb49f7"}

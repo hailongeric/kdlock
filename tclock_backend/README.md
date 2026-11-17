@@ -1,52 +1,231 @@
-# TCLock comparator sources
+# Original TCLock spin, mutex, rwlock and rwsem ports
 
-This tree retains the original TCLock module ports used as comparison inputs.
-The rebuilt branch currently has kernel9 build, emitted-context audit and live
-evidence for the **ordinary mutex and rwsem** lanes in the
-[cacheline1/post256 runner](../bench/nano/README.md). The other retained source
-files do not establish current spin/rwlock support or validation.
+**Where this fits.** These modules are the comparison backend of this
+repository's benchmark: `bench/kd_bench.c` built with `KDB_TCLOCK=1` links
+against them, and every `tclock` column in `bench/results/kdclaude/` comes from
+them. They are an upstream implementation with a port, not part of kdlock.
+This file and the port records below were written for the earlier kdlock tree
+and keep its references: the documents and result directories under `../docs/`,
+`../bench/results/10.176.26.71/`, `../bench/rwlock_compare/`,
+`../bench/tclock_compare/`, `../tests/` and `../kernel_integration/` are not in
+this repository any more. They are reachable in git through the tag
+`full-tree-before-cleanup-20261115`.
 
-Pinned upstream: [TCLocks](https://github.com/rs3lab/TCLocks), commit
+These are the stage 1 reference backends in the project roadmap (the earlier
+`docs/ROADMAP.md`).
+TCLock's paper evaluated mmap1 using modified kernel lock implementations. This
+external-module port has no equivalent actual-MM integration; that is a local
+port limit, not a claim that the paper lacked a mmap comparison. A future stage 3
+reference needs a compatible full-kernel integration and matched baseline.
+
+These modules provide TCLock spinlocks, mutexes, rwlocks and rwsems for the x86_64
+benchmarks. Callers use `komb_spin_lock/unlock`, `komb_mutex_lock/unlock`, or the
+`komb_read/write` pairs, or `komb_rwsem_down/up_read/write`. Every caller sharing a lock must use that lock's TCLock
+API. Loading a provider does not redirect other kernel lock calls.
+
+`target_lock` identifies a lock for diagnostics. Change or clear it only after
+all users have finished and the lock has drained. It does not select the algorithm
+used by a lock operation.
+
+[Lock protocols](../docs/design/lock_protocols.md) defines exclusion and lifetime.
+[Spin](../docs/design/spin_implementation.md) and
+[mutex](../docs/design/mutex_implementation.md) explain storage and handoff;
+[rwlock protocols](../docs/design/lock_protocols.md#tclock-rwlock) cover reader
+admission and writer delegation.
+
+## Source and organization
+
+Pinned source: [TCLocks](https://github.com/rs3lab/TCLocks), commit
 `bbfb9f00a12af51dff6ca291cb9829a82960c2ef`, subtree `src/kernel/rcuht/`.
-[UPSTREAM.json](UPSTREAM.json) records twelve unchanged upstream file hashes;
-[upstream/](upstream/) retains those files. Review patches describe module and
-Linux compatibility changes. Keep original admission, queue ordering, NUMA
-selection, scheduling, parking/wakeup, batch exits and native-stack switches.
-The adaptation is not a new locking protocol. All private `.inc` files are
-required build inputs and belong in each frozen source manifest.
+[upstream](upstream) retains twelve unchanged upstream files and author statements;
+[UPSTREAM.json](UPSTREAM.json) records their SHA256 hashes.
 
-| Components | Responsibility |
+| Entry/components | Responsibility |
 | --- | --- |
-| [komb_mutex.c](komb_mutex.c), [mutex/](mutex/) | Original mutex queue, combiner, parking and continuation switches |
-| [mutex_provider.c](mutex_provider.c), [mutex_compat.h](mutex_compat.h) | Registered task storage, fixed-affinity context, references and drain |
-| [komb_rwsem.c](komb_rwsem.c), [aqs.c](aqs.c) | Original writer delegation and concurrent reader gate |
-| [rwsem_provider.c](rwsem_provider.c), [rwsem_compat.h](rwsem_compat.h) | Rwsem task storage, context and complete drain |
-| [combiner.c](combiner.c), [include/lib/combiner.h](include/lib/combiner.h) | Native six-register/RSP switching |
+| [komb.c](komb.c) → [spin](spin) | State, queue, combiner, waiter, lifecycle, trampoline, lock and unlock |
+| [komb_mutex.c](komb_mutex.c) → [mutex](mutex) | State, parking/wakeup, queue, combiner, slowpath, trampoline and unlock |
+| [combiner.c](combiner.c), [include/lib/combiner.h](include/lib/combiner.h) | Original six-GPR/RSP switch and shared constants |
+| [provider.c](provider.c), [compat.h](compat.h) | Spin lifecycle, binding and drain |
+| [mutex_provider.c](mutex_provider.c), [mutex_compat.h](mutex_compat.h) | Registered fixed-affinity contexts, stacks, task refs and complete cohort drain |
+| [komb_rwlock.c](komb_rwlock.c), [rwlock_provider.c](rwlock_provider.c) | Upstream rwlock reader counts, fast/queued writers, stack delegation and quiescent drain |
+| [komb_rwsem.c](komb_rwsem.c), [aqs.c](aqs.c), [rwsem_provider.c](rwsem_provider.c) | Original rwsem writer delegation and AQS reader gate; registered task storage and drain |
 
-The current runner selects `TCLOCK_NUMA=1` and `komb_batch_size=1024`. The
-latter tests a continuation counter that starts at zero on the first borrowed
-body and increases on each subsequent waiter jump. Missing next/lookahead nodes
-can end combining earlier. It is not a measured physical batch length.
-Readers run their bodies locally; queued writers can use a waiter's saved
-native stack. Every user of a lock must use the same TCLock API. Loading these
-modules does not replace arbitrary kernel lock calls.
+The private source fragments are included in their original declaration order and
+compiled together. This preserves the assembly strings and reviewed inlining
+boundaries; the Linux 7 frame option below is scoped to the four trampolines. [port.patch](port.patch) compares six upstream files with the maintained
+C files after their fragments have been expanded, plus the corresponding headers.
+Git also records the fragment organization and compatibility/provider changes.
+Use the patch to review how the port differs from upstream; it is not an installer
+for another kernel. Keep the upstream copy unchanged. Regenerate all review patches with
+`python3 tclock_backend/update_patches.py` on the source host.
 
-Build/sign only in the VM using [build.py](../bench/nano/build.py) and the
-source/output-separated exact kernel build. The current evidence retains
-compiler/objtool warnings and both emitted mutex/rwsem context audits; it does
-not establish general return-mitigation coverage. The manually managed entry
-trampolines retain their scoped frame option and explicit register saves.
+The selected source is the upstream RCUHT implementation, not a reconstruction
+of its protocol. Preserve its admission, queue ordering, scheduling, parking,
+wakeup, NUMA selection, batch exits and stack switches. Changes are restricted
+to kernel/module integration, types, explicit caller-context restoration and
+lifetime diagnostics. Do not replace a missing behavior with a newly designed
+lock and label it original TCLock. The original repository already contains
+rwsem; earlier statements that **this port** lacked rwsem described a local
+omission, not an upstream limitation.
 
-Use fixed-affinity, non-nested benchmark workers. Killable cancellation,
-downgrade, migration, oversubscription and arbitrary sleeping bodies remain
-outside this comparator lane. `target_lock` is a diagnostic pointer. Set or
-clear it only when the lock and workers are quiescent, and clear it before
-freeing the workload object. Retain task/context/stack storage through all
-queue and borrowed-stack users. Join/retire workers, require exact ordinary
-drain, unload the workload, then unload the provider; never force unload.
+## Build and drain
 
-The [kernel9 report](../bench/results/10.176.26.71/bench/kernel9-nano-20261112/README.md)
-binds current source/binary/boot/topology identities and preserves all results.
-Its frozen inputs also retain the earlier README verbatim as historical port
-context. Earlier validation claims and old command paths are not current
-kernel9 evidence.
+Guest only; the runner normally creates isolated builds. The current port targets
+Ubuntu `linux=7.0.0-38.38` and the separate
+[Linux 7 build tree](../kernel_integration/linux70/README.md). These commands use
+its completed output directory. All four providers compile; the current emitted
+audit and live drain gates must also pass before a benchmark can run. The retired
+6.1 recipes remain historical evidence only.
+
+```sh
+export KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build
+export CC=x86_64-linux-gnu-gcc
+make -C tclock_backend TCLOCK_NUMA=1
+make -C tclock_backend TCLOCK_MUTEX=1 TCLOCK_NUMA=1
+make -C tclock_backend TCLOCK_RWLOCK=1 TCLOCK_NUMA=1
+make -C tclock_backend TCLOCK_RWSEM=1 TCLOCK_NUMA=1
+```
+
+Do not export `KERNELRELEASE` for these external-module wrapper commands.
+They read the release from KDIR; setting it in the environment selects their
+inner Kbuild branch instead of the outer build target.
+
+The outputs are `tclock_backend_km.ko`, `tclock_mutex_backend_km.ko`,
+`tclock_rwlock_backend_km.ko` and `tclock_rwsem_backend_km.ko`. Load the backend before its workload. To shut down,
+join every worker, check `quiescent=1`, and clear the diagnostic target pointer.
+Then unload the workload before the backend. Keep context storage and task
+references until all workers, queues and borrowed stacks have finished. Never
+force unload.
+
+Linux 7/GCC 15 initially added a compiler RBP frame before the six explicit
+register saves in all four acquisition trampolines. Their inline returns bypass
+that extra frame, so those binaries failed the emitted-context audit and were
+not loaded. Only these four manually managed trampolines now select
+`optimize("O3", "omit-frame-pointer")`; their explicit RBP save/restore remains.
+All ordinary C functions, kernel frame-pointer settings, return mitigations and
+`ZERO_CALL_USED_REGS` stay in effect. All four extracted-code fixtures passed the six-register/RSP checks through
+128 switches and 64 acquisition/64 continuation returns. All four rebuilt
+providers then passed the emitted audit. Rwlock preserves its lock argument in
+R8 because Linux 7 PV IRQ callees may clobber RDI under `ZERO_CALL_USED_REGS`.
+The audit binds the complete argument/return dataflow, both IRQ relocation
+offsets and RAX-only hidden helpers with bound return thunks; 22 negative mutations
+reject altered
+registers, IRQ calls, frames and exits. The fixture stubs IRQ macros, so the
+emitted audit is a separate requirement. A subsequent live functional check
+passed Native and TCLock controls for all four families: one cacheline, eight
+workers and 10,000 operations per worker, with 20% writes for rwlock/rwsem.
+Every session checked exact data and normal drain/unload. TCLock mutex recorded
+78,641 delegated bodies in its 80,000-operation case; delegation counts for
+the other TC families remain unmeasured. This unscored check does not establish
+performance or correctness for the complete workload catalog. The
+[port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+retains the exact build, source and recovery identities.
+
+## Selected comparator scope
+
+| Property | Spin | Ordinary mutex | Rwlock | Rwsem |
+| --- | --- | --- | --- | --- |
+| Body execution | Real native waiter stack | Real native waiter stack | Reads local; queued writers may use native waiter stacks | Reads local; queued writers may use native waiter stacks |
+| Wait | Original RCUHT polling/scheduling | Upstream parking/wakeup retained | Count/gate polling | Original AQS reader gate and writer scheduling/parking |
+| Preemption | Caller brackets operation; upstream wait loop may schedule | Ordinary operation manages it | Caller brackets operation and restores IRQ-enabled context | Original read/write operations manage it |
+| Context storage | Per-CPU nodes/8 KiB shadow stack | Registered context; one fixed worker/CPU | Per-CPU nodes/8 KiB shadow stack; one non-nested worker/CPU | Registered context; one fixed worker/CPU |
+| Benchmark execution counts | Unmeasured | Returned batches/delegated bodies and successful parks | Unmeasured | Unmeasured; separate correctness probe records remote writers |
+
+The mutex port covers ordinary locking only, not unimplemented interruptible/killable/IO
+or rwsem interfaces. Registration/task references replace upstream custom task
+fields without changing parking, NUMA or stack switching. A live exiting task keeps
+drain busy; retry outside measurement rather than releasing early.
+
+The spin and mutex ports retain NUMA/WWJUMP with configured 1,024; zero-based jumps
+can execute 1,025 bodies. The common header enables NUMA even if the Makefile variable is 0, so actual
+ELF metadata must reject misleading off labels. The selected spin comparator disables
+IRQ checks and accepts IRQ-enabled ordinary task-context workloads. It does not
+promise arbitrary IRQ/BH, mixed trylock or nested/oversubscribed support.
+Spin restores the upstream `need_resched()` batch exit and the RCUHT
+wait loop that enables preemption, schedules, then disables preemption again.
+Mutex retains its original batch and parking policy. UBSAN is off for these modules;
+kernel preemption, mitigation and frame-pointer settings belong to each captured
+kernel identity. Linux 7's settings are not assumed equivalent to the legacy
+campaigns. Known stack-switch objtool warnings remain; audit the built trampoline
+and exact paravirtual IRQ relocation before loading.
+
+## Rwlock comparator
+
+The rwlock backend ports the pinned **`komb_rwlock.c`**. An uncontended writer can
+acquire the count word directly. Contended writers and slow readers queue at a
+separate gate. A reader always runs its application body on its original CPU,
+although the short acquisition path through the gate may be delegated. A combiner
+can run a queued writer's body by switching to that waiter's saved native stack.
+The rwlock code returns to the combiner between delegated requests; it does not
+use the spin/mutex ports' WWJUMP chaining.
+
+[rwlock-port.patch](rwlock-port.patch) records Linux qspinlock type substitution,
+pointer typing, exported noipa boundaries, possible-CPU allocation rollback and
+drain bookkeeping. The original code decrements the node count without incrementing
+it; the port balances this at queue entry to make ownership drain observable.
+The original rwlock IRQ toggles are retained. Its inline assembly returns can
+bypass the trailing IRQ enable. The supported callers enter with IRQs enabled
+and restore that context after the complete pair, before enabling preemption.
+This caller adaptation replaces the former deletion of IRQ operations inside
+the lock; it does not alter admission, ownership or stack handoff. Arbitrary
+IRQ-disabled callers remain unsupported. The six-register/RSP switch remains the original code
+and is checked both in a userspace fixture and the built module.
+
+Callers pair preemption disable/enable around the complete read/write operation
+and restore IRQ-enabled task context at the end.
+Only one non-nested, pinned benchmark operation per CPU is supported. The original
+8-bit current-CPU field limits this port to at most 256 possible CPUs. Module
+unload requires zero reader/writer count and gate, balanced per-CPU node counts,
+empty lock/NUMA queues, restored shadow-stack pointers and original CPU context.
+Rwlock delegation counts are unmeasured; the
+[rwlock runner](../bench/rwlock_compare/README.md) reports that explicitly.
+The [RCUHT comparison](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
+records the 1%/20% write mixes, built assembly audit and complete performance
+matrix against Native and KD ABI3.
+
+Spin counts cannot establish a delegation share. Mutex whole-run returned-batch
+counts prove delegation but are not exact selected 300 ms window shares. KD retains
+pinned polling, so mutex parking policies differ. Data/JIT/context/progress/drain
+acceptance and commands live in [the runner](../bench/tclock_compare/README.md).
+
+## Original rwsem comparator
+
+The pinned upstream `locks/komb_rwsem.c` and `include/rwsem/komb_rwsem.h`
+implement a separate reader/writer semaphore. They were missing from the old
+local port. This backend also imports the original AQS (adaptive queue spinlock)
+reader gate from `locks/aqs.c` and `include/spinlock/aqs.h`; it does not substitute
+a Linux spinlock, TCLock rwlock, or a new reader/writer wrapper around the mutex.
+[rwsem-port.patch](rwsem-port.patch) records every adaptation.
+
+Readers use the original count and AQS gate and execute locally. Writers use
+the original fast path or queued waiter-stack execution, including the original
+parking/wakeup states, NUMA selection and WWJUMP chaining. Reader admission can
+spin; calling this a semaphore does not imply that every wait sleeps. BRAVO and
+bounded opportunistic writer spinning remain disabled, as in the selected source.
+
+The upstream kernel adds fields to `task_struct`. To avoid modifying the recovery
+kernel, the external module stores those fields in registered contexts, one
+fixed-affinity worker per CPU. Register before acquisition with
+`tc_rwsem_worker_register()`. Only ordinary read/write pairs are exported for
+benchmark use. Join the entire worker cohort, then invoke
+`tc_rwsem_workers_drain()` (or write `1` to the provider's `drain` parameter).
+An exiting task can still yield `EBUSY`; retry outside measurement and keep the
+context and task reference until retirement. Check `quiescent=1`, clear the
+diagnostic target, and unload the workload before the provider.
+
+The original killable wrappers call ordinary acquisition and return success;
+they do not implement signal cancellation. Original downgrade calls `BUG_ON`.
+These functions are retained in source but are not exported as supported module
+APIs, and this port supplies no equivalent actual-mmap integration API. Nested,
+migrating, oversubscribed and arbitrary sleeping critical sections
+are not validated by this fixed-worker port. Do not claim Linux rwsem API parity.
+
+Use `bench/rwlock_compare/run.py --lock-kind rwsem --backends native tclock kdlock`
+with the documented explicit workload/CPU grid. The TCLock shell is labelled
+`upstream-stack`; worker registration and retirement are outside operation timing.
+Benchmark delegation counts remain unmeasured; the separate correctness probe
+records actual different-task execution. Historical nano reports and their
+unsupported slots remain unchanged because they used the earlier source.
+
+See [original-port validation](../tests/kernel/tclock_original/README.md) for
+short commands, actual coverage, retained failures and adapter limitations.

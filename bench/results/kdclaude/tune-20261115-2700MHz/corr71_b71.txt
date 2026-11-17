@@ -1,0 +1,32 @@
+== run_corr
+run_corr rc=0
+api test: 0 failed checks
+312 points, 0 failed, 0 kernel complaints
+== mm_stress (kd_mm=1, then native control)
+kd_mm=1 n4 rc=0 threads 4 seconds 20 ops 22775 pages 5844238 forks 6043 ok
+kd_mm=1 n32 rc=0 threads 32 seconds 20 ops 40054 pages 10326531 forks 3391 ok
+kd_mm=1 n63 rc=0 threads 63 seconds 20 ops 32406 pages 8379498 forks 1840 ok
+kd_mm=0 n4 rc=0 threads 4 seconds 20 ops 22740 pages 5835328 forks 6531 ok
+kd_mm=0 n32 rc=0 threads 32 seconds 20 ops 38834 pages 10014561 forks 3206 ok
+kd_mm=0 n63 rc=0 threads 63 seconds 20 ops 31305 pages 8097810 forks 1869 ok
+== api_stress
+setfd n4 rc=0 1773964 ok  :: sessions=0 delegated=0 
+setfd n32 rc=0 4452838 ok  :: sessions=151474 delegated=99729323 
+setfd n63 rc=1 3892893 FAILED dup/close of fd 840: -1 Too many open files :: sessions=997 delegated=3539538 
+ofd n4 rc=0 1254282 ok  :: sessions=0 delegated=0 
+ofd n32 rc=0 2447688 ok  :: sessions=89256 delegated=73077764 
+ofd n63 rc=0 2398897 ok  :: sessions=17786 delegated=72019283 
+pipe n4 rc=0 435410 ok  :: sessions=0 delegated=0 
+pipe n32 rc=0 438450 ok  :: sessions=3281536 delegated=5449848 
+pipe n63 rc=0 392525 ok  :: sessions=2958828 delegated=5022875 
+seek n4 rc=0 1123685 ok  :: sessions=0 delegated=0 
+seek n32 rc=0 1039905 ok  :: sessions=1994 delegated=0 
+seek n63 rc=0 962808 ok  :: sessions=316 delegated=0 
+xattr n4 rc=0 1837749 ok  :: sessions=0 delegated=0 
+xattr n32 rc=0 1620441 ok  :: sessions=0 delegated=0 
+xattr n63 rc=0 1651500 ok  :: sessions=0 delegated=0 
+kd_api=0 kd_mm=N
+== kernel log since start
+[  698.344206] kd_bench: api test: 65 checks, 0 failed
+done
+CORRDONE

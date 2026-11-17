@@ -1,1 +1,0 @@
-{"status":"LOCAL_AUDIT_SCHEMA_REFUSED","reason":"The initial one-hunk expectation was narrower than the actual two-hunk e01-to-e936 source diff. No VM or source verdict was produced. The final audit checks both exact hunks."}

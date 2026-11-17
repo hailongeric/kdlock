@@ -1,1 +1,0 @@
-{"status": "PREPARED", "commands": [{"label": "clone-source", "returncode": 0, "pid": 2762}, {"label": "olddefconfig", "returncode": 0, "pid": 2764}, {"label": "mutex-object", "returncode": null, "pid": 4138}], "error": null}

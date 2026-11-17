@@ -1,0 +1,34 @@
+== run_corr
+run_corr rc=0
+api test: 0 failed checks
+312 points, 0 failed, 0 kernel complaints
+== mm_stress (kd_mm=1, then native control)
+kd_mm=1 n4 rc=0 threads 4 seconds 20 ops 22633 pages 5813362 forks 6285 ok
+kd_mm=1 n32 rc=0 threads 32 seconds 20 ops 37618 pages 9691696 forks 3351 ok
+kd_mm=1 n63 rc=0 threads 63 seconds 20 ops 31613 pages 8178200 forks 1737 ok
+kd_mm=0 n4 rc=0 threads 4 seconds 20 ops 23522 pages 6030938 forks 6564 ok
+kd_mm=0 n32 rc=0 threads 32 seconds 20 ops 39803 pages 10254044 forks 3049 ok
+kd_mm=0 n63 rc=0 threads 63 seconds 20 ops 30741 pages 7956334 forks 1863 ok
+== api_stress
+setfd n4 rc=0 1673576 ok  :: sessions=0 delegated=0 
+setfd n32 rc=0 4360680 ok  :: sessions=147755 delegated=97628969 
+setfd n63 rc=1 336607 FAILED dup/close of fd 881: -1 Too many open files
+dup/close of fd 873: -1 Too many open files
+dup/close of fd 939: -1 Too many open files
+dup/close of fd 923: -1 Too many open files :: sessions=81 delegated=39333 
+ofd n4 rc=0 1210418 ok  :: sessions=0 delegated=0 
+ofd n32 rc=0 2300552 ok  :: sessions=80478 delegated=68688855 
+ofd n63 rc=0 2386226 ok  :: sessions=17721 delegated=71737193 
+pipe n4 rc=0 424243 ok  :: sessions=0 delegated=0 
+pipe n32 rc=0 441649 ok  :: sessions=3216768 delegated=5321427 
+pipe n63 rc=0 381497 ok  :: sessions=2901743 delegated=4938868 
+seek n4 rc=0 1149166 ok  :: sessions=0 delegated=0 
+seek n32 rc=0 1051746 ok  :: sessions=854 delegated=0 
+seek n63 rc=0 964211 ok  :: sessions=0 delegated=0 
+xattr n4 rc=0 1782411 ok  :: sessions=0 delegated=0 
+xattr n32 rc=0 1678372 ok  :: sessions=0 delegated=0 
+xattr n63 rc=0 1600305 ok  :: sessions=0 delegated=0 
+kd_api=0 kd_mm=N
+== kernel log since start
+[  271.483988] kd_bench: api test: 65 checks, 0 failed
+done

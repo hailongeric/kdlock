@@ -1,8 +1,0 @@
-{
-  "argv": [
-    "/usr/bin/python3",
-    "-B",
-    "/mnt/kdlock-builds2/kdlock-main-kernel8-fixtures-140aecc4-01/host-support-b2ef338b-input-01/checks.py"
-  ],
-  "helper_sha256": "26f29411efe764db4401c74bfa4e04bd174ca1534fa93a2f8cd73605180f0bc2"
-}

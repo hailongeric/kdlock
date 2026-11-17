@@ -1,4 +1,0 @@
-tests/evidence/runtime-mutex-regression-20261111/runtime/cycle-1/build/image.o
-tests/evidence/runtime-mutex-regression-20261111/runtime/cycle-2/build/image.o
-tests/evidence/runtime-mutex-regression-20261111/runtime/cycle-3/build/image.o
-tests/evidence/runtime-mutex-regression-20261111/runtime/cycle-4/build/image.o

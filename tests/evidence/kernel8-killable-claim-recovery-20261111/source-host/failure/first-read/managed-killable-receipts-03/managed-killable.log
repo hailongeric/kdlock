@@ -1,1 +1,0 @@
-{"status": "failed_retained", "controller_pid": 12651, "error": "AssertionError('fixed-image checks added an unlearned fact or replaced the image')"}
