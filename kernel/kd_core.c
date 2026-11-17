@@ -54,6 +54,11 @@ core_param(kd_numa, kd_numa, bool, 0644);
 unsigned int kd_numa_after __read_mostly = 32;
 core_param(kd_numa_after, kd_numa_after, uint, 0644);
 
+/* Bounded local service past one ordinary task waiter; zero keeps FIFO. */
+static bool kd_spin_plain_pass __read_mostly;
+core_param(kd_spin_plain_pass, kd_spin_plain_pass, bool, 0644);
+#define KD_SPIN_PLAIN_WINDOW 8
+
 /*
  * Sleepable class, plain mode: how often a waiter may be passed over by
  * kd_q_local_first(), at most 255; 0 keeps the queue in arrival order.
@@ -920,7 +925,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	unsigned int numa_after = f && f->numa_after ? READ_ONCE(kd_numa_after) : 0;
 	bool adapt = READ_ONCE(kd_adapt) && !(f && f->always_deleg);
 	bool handed = false, leave = false;
-	unsigned int served = 0, passed = 0;
+	unsigned int served = 0, passed = 0, plain_end = ~0U;
 	int exit_below = READ_ONCE(kd_deleg_exit);
 	struct kd_regs *guess;
 	bool guess_full;
@@ -934,13 +939,38 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 		n = READ_ONCE(me->next);
 		if (!n)
 			break;
-		if (*budget >= kd_batch) {
+		if (*budget >= kd_batch || *budget >= plain_end) {
 			kd_stat_inc(kc, KD_STAT_STOP_BUDGET);
 			break;
 		}
 		if (!n->entry) {
-			kd_stat_inc(kc, KD_STAT_STOP_PLAIN);
-			break;
+			/*
+			 * A task waiter stays pinned and in WAIT while detached.
+			 * Only continue when the next node can execute locally;
+			 * never pass raw/IRQ waiters or pass this node twice.
+			 * Restore this prefix before any promotion or handback.
+			 */
+			nn = READ_ONCE(n->next);
+			if (sleepable || !READ_ONCE(kd_spin_plain_pass) ||
+			    !n->plain_pass || n->passed || need_resched() ||
+			    !nn || !nn->entry || nn->nid != me->nid ||
+			    !kd_ctx_compatible(nn->regs)) {
+				kd_stat_inc(kc, KD_STAT_STOP_PLAIN);
+				break;
+			}
+			if (plain_end == ~0U)
+				plain_end = *budget + KD_SPIN_PLAIN_WINDOW;
+			n->passed = 1;
+			kd_q_detach(q, me, n);
+			if (last)
+				WRITE_ONCE(last->next, n);
+			else
+				first = n;
+			last = n;
+			++*budget;
+			passed++;
+			kd_stat_inc(kc, KD_STAT_PLAIN_DEFERRED);
+			continue;
 		}
 		if (need_resched()) {
 			kd_stat_inc(kc, KD_STAT_STOP_RESCHED);
@@ -1240,6 +1270,7 @@ static __always_inline void kd_node_init(struct kd_node *n, int cpu, int idx)
 	n->tail = kd_tail(cpu, idx);
 	n->claim = false;
 	n->passed = 0;
+	n->plain_pass = false;
 	WRITE_ONCE(n->state, KD_N_WAIT);
 }
 
@@ -1277,6 +1308,7 @@ static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe)
 	barrier();
 	me = &kc->nodes[idx];
 	kd_node_init(me, smp_processor_id(), idx);
+	me->plain_pass = probe && !kc->depth && in_task() && !irqs_disabled();
 
 	/* The node line may have been cold: the lock may be free by now. */
 	if (kd_q_trylock_fifo_read(q))

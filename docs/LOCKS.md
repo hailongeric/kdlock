@@ -438,3 +438,21 @@ readers (never delegated) and downgrade.
 
 **Counters.** `cl_offered` counts waiters that queued with a compact state,
 `cl_done` sections that ended at a clobber release with one (INTERFACES 2).
+
+### Experimental bounded service past an ordinary spin waiter
+
+`kd_spin_plain_pass` defaults to 0. With it enabled, a spin combiner may
+pass an ordinary task waiter once when its immediate successor has generated
+code on the combiner's NUMA node and compatible context. Raw and IRQ-context
+waiters remain FIFO barriers. The ordinary waiter remains pinned in WAIT;
+no continuation is invented and it executes its own body after promotion.
+
+The first such pass limits remaining work under this grant to eight queue
+operations (including passes), also bounded by `kd_batch`. All detached nodes
+are restored in order before promotion or handback. The `passed` marker lives
+until this queue node retires, preventing another combiner from passing it
+again. Existing earlier deferred NUMA nodes may still precede it; this is a
+bound on extra work in the current grant, not a wall-clock latency guarantee.
+`plain_deferred` counts these passes; `stop_plain` still counts blocking nodes.
+This experimental policy needs matched runtime evidence before becoming a
+default. The uncontended entry, unlock, and ordinary ownership checks are unchanged.

@@ -182,6 +182,7 @@ struct kd_node {
 	 * its own node in front of this one (kd_q_local_first()).
 	 */
 	u8		passed;
+	bool		plain_pass;	/* ordinary task node may permit bounded service */
 } ____cacheline_aligned_in_smp;
 
 #define KD_MAX_NODES	4
@@ -201,6 +202,7 @@ enum {
 	KD_STAT_NUMA_DEFERRED,	/* waiters of another node passed over by a session */
 	KD_STAT_NUMA_LOCAL,	/* plain mode: a waiter of the head's node moved to the front */
 	/* Why sessions stopped before the queue was empty or the budget spent. */
+	KD_STAT_PLAIN_DEFERRED,	/* ordinary spin waiter passed once, bounded */
 	KD_STAT_STOP_PLAIN,	/* next waiter has no generated code */
 	KD_STAT_STOP_RESCHED,	/* the combiner's CPU is wanted elsewhere */
 	KD_STAT_STOP_HANDOFF,	/* a parked mutex/rwsem waiter asked for the lock */
