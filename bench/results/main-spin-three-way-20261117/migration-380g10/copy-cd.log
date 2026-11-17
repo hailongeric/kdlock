@@ -1,0 +1,6 @@
+{'id': 'main-spin-migration-cd-20261117', 'pid': 3013, 'started': True}
+{"id": "main-spin-migration-cd-20261117-poll", "returncode": 1, "log_bytes": 234, "output": "Traceback (most recent call last):\n  File \"<string>\", line 9, in <module>\n    with open('/dev/sr0','rb') as f:raw=f.read(meta['bytes'])\n         ~~~~^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/dev/sr0'\n"}
+Traceback (most recent call last):
+  File "/tmp/kdlock-380g10-migration-20261117/copy-cd.py", line 37, in <module>
+    (R/'migration-result.json').write_text(json.dumps(v,indent=2));print(json.dumps(v),flush=True);assert v['returncode']==0
+AssertionError

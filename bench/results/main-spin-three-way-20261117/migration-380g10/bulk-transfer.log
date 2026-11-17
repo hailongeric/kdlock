@@ -1,0 +1,5 @@
+Bulk reader ready
+Traceback (most recent call last):
+  File "/tmp/kdlock-380g10-migration-20261117/bulk-transfer.py", line 61, in <module>
+    s.sendall(wire);print('Bulk payload sent',len(wire),flush=True)
+TimeoutError: timed out

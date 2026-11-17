@@ -1,0 +1,6 @@
+{
+  "id": "main-spin-migration-final-check-poll",
+  "returncode": 0,
+  "log_bytes": 351,
+  "output": "{\"verified_entries\": 416, \"temporary_chunks\": [], \"kernel\": \"7.0.0-38-kdrebuild16\", \"boot\": \"84a3b76f-af03-4db6-86b4-7d81e2472f50\", \"modules_unchanged\": true, \"serial_speed\": [9600, 9600], \"warnings\": [\"[153339.248229] watchdog: BUG: soft lockup - CPU#7 stuck for 26s! [swapper/7:0]\"], \"directory\": \"/mnt/kdlock-builds2/main-spin-migration-20261117\"}\n"
+}

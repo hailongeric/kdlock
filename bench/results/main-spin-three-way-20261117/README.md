@@ -11,8 +11,9 @@ not separately captured, so byte-for-byte restoration of all prior state is not
 claimed. Boot history and system audit logs are retained. No VM disk, snapshot,
 other build tree or existing host SSH tunnel was removed. Final verification is
 in `final-remote-cleanup.log`. No further access to the remote VM is authorized.
-The local source/module/report copies are being moved into the existing 380G10
-VM; complete deleted kernel build outputs are not among those copies.
+The local source/module/report copies have been migrated into the existing
+380G10 VM: [416 entries verified](migration-380g10/README.md). Complete deleted
+kernel build outputs are not among those copies.
 
 
 The trial `1d29a9a1` passed the exercised correctness checks but did not deliver

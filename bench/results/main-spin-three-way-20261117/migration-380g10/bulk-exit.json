@@ -1,0 +1,6 @@
+{
+  "id": "main-spin-migration-bulk-exit-check",
+  "returncode": 1,
+  "log_bytes": 203,
+  "output": "Traceback (most recent call last):\n  File \"<string>\", line 15, in <module>\n    assert time.monotonic()<end,'bulk transfer deadline'\n           ^^^^^^^^^^^^^^^^^^^^\nAssertionError: bulk transfer deadline\n"
+}

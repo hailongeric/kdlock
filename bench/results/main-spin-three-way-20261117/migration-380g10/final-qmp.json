@@ -1,0 +1,146 @@
+{
+  "block": {
+    "return": [
+      {
+        "io-status": "ok",
+        "device": "kd16root",
+        "locked": false,
+        "removable": false,
+        "inserted": {
+          "iops_rd": 0,
+          "detect_zeroes": "off",
+          "image": {
+            "snapshots": [
+              {
+                "vm-clock-nsec": 23707066,
+                "name": "kdlock-kernel16-two-disk-smoke-20261116-01",
+                "date-sec": 1794892526,
+                "date-nsec": 402163000,
+                "vm-clock-sec": 129104,
+                "id": "1",
+                "vm-state-size": 2663132104
+              }
+            ],
+            "virtual-size": 17179869184,
+            "filename": "/home/eric/vm/qemu-disks/kdlock-kernel16-fresh-20261114/root.qcow2",
+            "cluster-size": 65536,
+            "format": "qcow2",
+            "actual-size": 5022277632,
+            "format-specific": {
+              "type": "qcow2",
+              "data": {
+                "compat": "1.1",
+                "compression-type": "zlib",
+                "lazy-refcounts": false,
+                "refcount-bits": 16,
+                "corrupt": false,
+                "extended-l2": false
+              }
+            },
+            "dirty-flag": false
+          },
+          "iops_wr": 0,
+          "ro": false,
+          "node-name": "#block132",
+          "backing_file_depth": 0,
+          "drv": "qcow2",
+          "iops": 0,
+          "bps_wr": 0,
+          "write_threshold": 0,
+          "encrypted": false,
+          "bps": 0,
+          "bps_rd": 0,
+          "cache": {
+            "no-flush": false,
+            "direct": false,
+            "writeback": true
+          },
+          "file": "/home/eric/vm/qemu-disks/kdlock-kernel16-fresh-20261114/root.qcow2"
+        },
+        "qdev": "/machine/peripheral-anon/device[0]/virtio-backend",
+        "type": "unknown"
+      },
+      {
+        "io-status": "ok",
+        "device": "kd16builds",
+        "locked": false,
+        "removable": false,
+        "inserted": {
+          "iops_rd": 0,
+          "detect_zeroes": "off",
+          "image": {
+            "snapshots": [
+              {
+                "vm-clock-nsec": 23707066,
+                "name": "kdlock-kernel16-two-disk-smoke-20261116-01",
+                "date-sec": 1794892526,
+                "date-nsec": 402163000,
+                "vm-clock-sec": 129104,
+                "id": "1",
+                "vm-state-size": 0
+              }
+            ],
+            "virtual-size": 180388626432,
+            "filename": "/home/eric/vm/qemu-disks/kdlock-kernel16-materials-20261115/builds-current.qcow2",
+            "cluster-size": 65536,
+            "format": "qcow2",
+            "actual-size": 159824916480,
+            "format-specific": {
+              "type": "qcow2",
+              "data": {
+                "compat": "1.1",
+                "compression-type": "zlib",
+                "lazy-refcounts": false,
+                "refcount-bits": 16,
+                "corrupt": false,
+                "extended-l2": false
+              }
+            },
+            "dirty-flag": false
+          },
+          "iops_wr": 0,
+          "ro": false,
+          "node-name": "#block332",
+          "backing_file_depth": 0,
+          "drv": "qcow2",
+          "iops": 0,
+          "bps_wr": 0,
+          "write_threshold": 0,
+          "encrypted": false,
+          "bps": 0,
+          "bps_rd": 0,
+          "cache": {
+            "no-flush": false,
+            "direct": false,
+            "writeback": true
+          },
+          "file": "/home/eric/vm/qemu-disks/kdlock-kernel16-materials-20261115/builds-current.qcow2"
+        },
+        "qdev": "/machine/peripheral-anon/device[1]/virtio-backend",
+        "type": "unknown"
+      },
+      {
+        "io-status": "ok",
+        "device": "ide2-cd0",
+        "locked": false,
+        "removable": true,
+        "qdev": "/machine/unattached/device[58]",
+        "tray_open": true,
+        "type": "unknown"
+      },
+      {
+        "device": "sd0",
+        "locked": false,
+        "removable": true,
+        "type": "unknown"
+      }
+    ]
+  },
+  "status": {
+    "return": {
+      "status": "running",
+      "singlestep": false,
+      "running": true
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "main-spin-migration-ahci-preflight-poll",
+  "returncode": 0,
+  "log_bytes": 417,
+  "output": "{\"kernel\": \"7.0.0-38-kdrebuild16\", \"modules\": \"nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\\n\", \"files\": {\".config\": {\"bytes\": 308548, \"sha256\": \"31d9701e739a1f6a596ecca0a76fa913e3938ec80e90560b68a72d0bf1628483\", \"modinfo\": []}, \"drivers/ata/ahci.ko\": {\"missing\": true}, \"drivers/ata/libahci.ko\": {\"missing\": true}}, \"warnings\": [\"[153339.248229] watchdog: BUG: soft lockup - CPU#7 stuck for 26s! [swapper/7:0]\"]}\n"
+}

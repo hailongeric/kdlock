@@ -1,0 +1,6 @@
+{
+  "id": "main-spin-migration-delta-finish-20261117-poll",
+  "returncode": 0,
+  "log_bytes": 668,
+  "output": "{\"destination\": \"/mnt/kdlock-builds2/main-spin-migration-20261117\", \"source_package\": {\"bytes\": 10807823, \"sha256\": \"92c6bc677facc41a9791f4656ab08d0fef63776e35b8afd3d4827dad5e3545b0\", \"destination\": \"/mnt/kdlock-builds2/main-spin-migration-20261117\"}, \"method\": \"verified block reconstruction from transferred prefix and delta\", \"verified_entries\": 416, \"kernel\": \"7.0.0-38-kdrebuild16\", \"boot\": \"84a3b76f-af03-4db6-86b4-7d81e2472f50\", \"modules\": \"nls_iso8859_1 12288 1 - Live 0xffffffffc000a000\\n\", \"loaded_modules\": false, \"built\": false, \"serial_speed\": [9600, 9600], \"warnings\": [\"[153339.248229] watchdog: BUG: soft lockup - CPU#7 stuck for 26s! [swapper/7:0]\"]}\n"
+}
