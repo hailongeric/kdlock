@@ -1,5 +1,12 @@
 # Build and test
 
+**Current VM location rule (2026-11-17): use only a VM on 380G10.**
+Access to VMs on 10.176.26.71 is forbidden, including inspection and cleanup.
+The remote-host commands and topology below are historical records, not
+authorized operating instructions. Verify the real local QEMU identity before
+connecting; localhost port 2223 may be an old remote SSH tunnel.
+
+
 All builds and runs happen in the `kdclaude` VM, never on the source host.
 Source edits are made on 380G10. Since 2026-11-14 the VM runs on
 10.176.26.71, and its 9p share is that host's `vm-shared`, so edited files
@@ -54,6 +61,15 @@ systemctl reboot
 the default and a failed boot comes back on `kdlock1`.
 
 ## 4. Running the tests
+
+### Main three-way spin investigation, 2026-11-17
+
+The follow-up [Native/KD/TCLock report](../bench/results/main-spin-three-way-20261117/README.md)
+covers matched modules, five-worker sampling, daemon-off controls, outside work,
+cross-NUMA placement and same-boot policy controls. Trial `1d29a9a1` passed the
+exercised correctness checks but regressed performance, and was withdrawn.
+The retained implementation remains `20e9db0c`; no new speedup or full Native
+parity is claimed. The rejected source and all observations remain available.
 
 ### Main spin admission change, 2026-11-17
 

@@ -1,0 +1,16 @@
+{
+  "baseline": {
+    "bench/kd_bench.ko": "387242e700c071812415cfc60da8b09728d97f5ffb1164542eb112a0fc122e47",
+    "tc/spin/tclock_backend_km.ko": "9be4a3673312c72984fec922495c829ce1e5bf6a2e1b873faed92064329d249c",
+    "tc/mutex/tclock_mutex_backend_km.ko": "884033153148932505b34acfd7764d2c3d75cd81a05eb38e0b8d4ef9d36a660c",
+    "tc/rwlock/tclock_rwlock_backend_km.ko": "7adaabcefaf8e2d280b44a3c203d5e1f427e34bf71b2ce3b5686e97ac3a2e24c",
+    "tc/rwsem/tclock_rwsem_backend_km.ko": "fadfb395f44c87a13688fed01a7ef6fdd50c0ba5d9331806d05766b90664826f"
+  },
+  "candidate": {
+    "bench/kd_bench.ko": "387242e700c071812415cfc60da8b09728d97f5ffb1164542eb112a0fc122e47",
+    "tc/spin/tclock_backend_km.ko": "9be4a3673312c72984fec922495c829ce1e5bf6a2e1b873faed92064329d249c",
+    "tc/mutex/tclock_mutex_backend_km.ko": "884033153148932505b34acfd7764d2c3d75cd81a05eb38e0b8d4ef9d36a660c",
+    "tc/rwlock/tclock_rwlock_backend_km.ko": "7adaabcefaf8e2d280b44a3c203d5e1f427e34bf71b2ce3b5686e97ac3a2e24c",
+    "tc/rwsem/tclock_rwsem_backend_km.ko": "fadfb395f44c87a13688fed01a7ef6fdd50c0ba5d9331806d05766b90664826f"
+  }
+}

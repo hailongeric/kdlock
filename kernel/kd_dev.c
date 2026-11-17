@@ -88,7 +88,6 @@ static const char * const kd_stat_names[KD_STAT_NR] = {
 	[KD_STAT_ERA_START]		= "era_start",
 	[KD_STAT_CL_OFFERED]		= "cl_offered",
 	[KD_STAT_CL_DONE]		= "cl_done",
-	[KD_STAT_SPIN_SHORT_BATCH]	= "spin_short_batch",
 };
 
 static int kd_stats_show(struct seq_file *m, void *v)

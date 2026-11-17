@@ -1,0 +1,39 @@
+/etc/default/grub: OK
+/etc/default/grub.d/50-cloudimg-settings.cfg: OK
+/etc/default/grub.d/99-kdlock-nopvspin.cfg: OK
+/etc/default/grub: OK
+/etc/default/grub.d/50-cloudimg-settings.cfg: OK
+/etc/default/grub.d/99-kdlock-nopvspin.cfg: OK
+{"remove": ["/boot/vmlinuz-7.0.0-38-kdmainspin1", "/boot/initrd.img-7.0.0-38-kdmainspin1", "/boot/System.map-7.0.0-38-kdmainspin1", "/boot/config-7.0.0-38-kdmainspin1", "/lib/modules/7.0.0-38-kdmainspin1", "/boot/vmlinuz-7.0.0-38-kdmainspin2", "/boot/initrd.img-7.0.0-38-kdmainspin2", "/boot/System.map-7.0.0-38-kdmainspin2", "/boot/config-7.0.0-38-kdmainspin2", "/lib/modules/7.0.0-38-kdmainspin2", "/mnt/kdlock-builds/main-spin-20e9db0c-20261117", "/mnt/kdlock-builds/main-spin-handoff-1d29a9a1-20261117"], "preserve_kernel": "7.0.0-38-kdall1"}
+removed /boot/vmlinuz-7.0.0-38-kdmainspin1
+removed /boot/initrd.img-7.0.0-38-kdmainspin1
+removed /boot/System.map-7.0.0-38-kdmainspin1
+removed /boot/config-7.0.0-38-kdmainspin1
+removed /lib/modules/7.0.0-38-kdmainspin1
+removed /boot/vmlinuz-7.0.0-38-kdmainspin2
+removed /boot/initrd.img-7.0.0-38-kdmainspin2
+removed /boot/System.map-7.0.0-38-kdmainspin2
+removed /boot/config-7.0.0-38-kdmainspin2
+removed /lib/modules/7.0.0-38-kdmainspin2
+removed /mnt/kdlock-builds/main-spin-20e9db0c-20261117
+removed /mnt/kdlock-builds/main-spin-handoff-1d29a9a1-20261117
+Sourcing file `/etc/default/grub'
+Sourcing file `/etc/default/grub.d/50-cloudimg-settings.cfg'
+Sourcing file `/etc/default/grub.d/99-kdlock-nopvspin.cfg'
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-7.0.0-43-generic
+Found initrd image: /boot/initrd.img-7.0.0-43-generic
+Found linux image: /boot/vmlinuz-7.0.0-38-kdlock1
+Found initrd image: /boot/initrd.img-7.0.0-38-kdlock1
+Found linux image: /boot/vmlinuz-7.0.0-38-kdclaude1
+Found initrd image: /boot/initrd.img-7.0.0-38-kdclaude1
+Found linux image: /boot/vmlinuz-7.0.0-38-kdclaude1.old
+Found initrd image: /boot/initrd.img-7.0.0-38-kdclaude1
+Found linux image: /boot/vmlinuz-7.0.0-38-kdall1
+Found initrd image: /boot/initrd.img-7.0.0-38-kdall1
+Warning: os-prober will not be executed to detect other bootable partitions.
+Systems on them will not be added to the GRUB boot configuration.
+Check GRUB_DISABLE_OS_PROBER documentation entry.
+Adding boot menu entry for UEFI Firmware Settings ...
+done
+ROLLBACK_COMPLETE

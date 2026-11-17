@@ -1,0 +1,79 @@
+CPU NODE SOCKET CORE ONLINE
+  0    0      0    0    yes
+  1    0      0    1    yes
+  2    0      0    2    yes
+  3    0      0    3    yes
+  4    0      0    4    yes
+  5    0      0    5    yes
+  6    0      0    6    yes
+  7    0      0    7    yes
+  8    0      0    8    yes
+  9    0      0    9    yes
+ 10    0      0   10    yes
+ 11    0      0   11    yes
+ 12    0      0   12    yes
+ 13    0      0   13    yes
+ 14    0      0   14    yes
+ 15    0      0   15    yes
+ 16    0      0   16    yes
+ 17    0      0   17    yes
+ 18    0      0   18    yes
+ 19    0      0   19    yes
+ 20    0      0   20    yes
+ 21    0      0   21    yes
+ 22    0      0   22    yes
+ 23    0      0   23    yes
+ 24    0      0   24    yes
+ 25    0      0   25    yes
+ 26    0      0   26    yes
+ 27    0      0   27    yes
+ 28    0      0   28    yes
+ 29    0      0   29    yes
+ 30    0      0   30    yes
+ 31    0      0   31    yes
+ 32    1      1   32    yes
+ 33    1      1   33    yes
+ 34    1      1   34    yes
+ 35    1      1   35    yes
+ 36    1      1   36    yes
+ 37    1      1   37    yes
+ 38    1      1   38    yes
+ 39    1      1   39    yes
+ 40    1      1   40    yes
+ 41    1      1   41    yes
+ 42    1      1   42    yes
+ 43    1      1   43    yes
+ 44    1      1   44    yes
+ 45    1      1   45    yes
+ 46    1      1   46    yes
+ 47    1      1   47    yes
+ 48    1      1   48    yes
+ 49    1      1   49    yes
+ 50    1      1   50    yes
+ 51    1      1   51    yes
+ 52    1      1   52    yes
+ 53    1      1   53    yes
+ 54    1      1   54    yes
+ 55    1      1   55    yes
+ 56    1      1   56    yes
+ 57    1      1   57    yes
+ 58    1      1   58    yes
+ 59    1      1   59    yes
+ 60    1      1   60    yes
+ 61    1      1   61    yes
+ 62    1      1   62    yes
+ 63    1      1   63    yes
+    PID COMMAND         %CPU COMMAND
+1378044 qemu-system-x86 1212 qemu-system-x86_64 -name kdclaude,debug-threads=on -enable-kvm -cpu host -smp 64,maxcpus=64,sockets=2,cores=32,threads=1 -m 24G -object memory-backend-ram,id=mem0,size=12G,host-nodes=0,policy=bind -object memory-backend-ram,id=mem1,size=12G,host-nodes=1,policy=bind -numa node,nodeid=0,cpus=0-31,memdev=mem0 -numa node,nodeid=1,cpus=32-63,memdev=mem1 -device virtio-scsi-pci,id=scsi0 -drive file=/home/eric/vm/qemu-disks/kdclaude-root.qcow2,format=qcow2,if=none,id=drive_system,discard=unmap -device scsi-hd,drive=drive_system,bus=scsi0.0,bootindex=0 -drive file=/home/eric/vm/qemu-disks/kdclaude-builds.qcow2,format=qcow2,if=none,id=drive_builds,discard=unmap -device scsi-hd,drive=drive_builds,bus=scsi0.0 -netdev user,id=n1,hostfwd=tcp:127.0.0.1:2223-:22 -device virtio-net-pci,netdev=n1 -virtfs local,path=/home/eric/vm/vm-shared,mount_tag=hostshare,security_model=none,id=hostshare -display none -serial file:/tmp/qemu-claude-serial.log -monitor unix:/tmp/qemu-claude-monitor.sock,server=on,wait=off -pidfile /tmp/kdclaude-qemu.pid -daemonize
+  11835 gnome-shell      1.6 /usr/bin/gnome-shell
+  12416 xdg-desktop-por  0.8 /usr/libexec/xdg-desktop-portal-gtk
+    412 ksmd             0.2 [ksmd]
+1384365 kworker/u128:0-  0.0 [kworker/u128:0-bnxt_pf_wq]
+   1687 dbus-daemon      0.0 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+      1 systemd          0.0 /usr/lib/systemd/systemd --system --deserialize=90 splash
+    411 kcompactd1       0.0 [kcompactd1]
+    410 kcompactd0       0.0 [kcompactd0]
+1387042 kworker/0:1-qat  0.0 [kworker/0:1-qat_misc_wq]
+ 200012 update-manager   0.0 /usr/bin/python3 /usr/bin/update-manager --no-update --no-focus-on-map
+6.06 7.00 13.58 6/1426 1387904
+{"frequency": [[0, "2700000", "2700000", "2700000", "performance"], [1, "2700000", "2700000", "2700000", "performance"], [2, "2700000", "2700000", "2700026", "performance"], [3, "2700000", "2700000", "2700000", "performance"], [4, "2700000", "2700000", "2700000", "performance"], [5, "2700000", "2700000", "2700000", "performance"], [6, "2700000", "2700000", "2700000", "performance"], [7, "2700000", "2700000", "2700000", "performance"], [8, "2700000", "2700000", "2700000", "performance"], [9, "2700000", "2700000", "2700000", "performance"], [10, "2700000", "2700000", "2700000", "performance"], [11, "2700000", "2700000", "2700000", "performance"], [12, "2700000", "2700000", "2700000", "performance"], [13, "2700000", "2700000", "2700000", "performance"], [14, "2700000", "2700000", "2700000", "performance"], [15, "2700000", "2700000", "2700000", "performance"], [16, "2700000", "2700000", "2700000", "performance"], [17, "2700000", "2700000", "2700000", "performance"], [18, "2700000", "2700000", "2700000", "performance"], [19, "2700000", "2700000", "2700000", "performance"], [20, "2700000", "2700000", "2700000", "performance"], [21, "2700000", "2700000", "2700000", "performance"], [22, "2700000", "2700000", "2700000", "performance"], [23, "2700000", "2700000", "2700000", "performance"], [24, "2700000", "2700000", "2700000", "performance"], [25, "2700000", "2700000", "2700000", "performance"], [26, "2700000", "2700000", "2700000", "performance"], [27, "2700000", "2700000", "2700000", "performance"], [28, "2700000", "2700000", "2700000", "performance"], [29, "2700000", "2700000", "2700000", "performance"], [30, "2700000", "2700000", "2700000", "performance"], [31, "2700000", "2700000", "2700000", "performance"], [32, "2700000", "2700000", "2700000", "performance"], [33, "2700000", "2700000", "2707297", "performance"], [34, "2700000", "2700000", "2348393", "performance"], [35, "2700000", "2700000", "2700000", "performance"], [36, "2700000", "2700000", "2700000", "performance"], [37, "2700000", "2700000", "2700000", "performance"], [38, "2700000", "2700000", "2700000", "performance"], [39, "2700000", "2700000", "2700000", "performance"], [40, "2700000", "2700000", "2700000", "performance"], [41, "2700000", "2700000", "2700000", "performance"], [42, "2700000", "2700000", "2613689", "performance"], [43, "2700000", "2700000", "2700000", "performance"], [44, "2700000", "2700000", "2700000", "performance"], [45, "2700000", "2700000", "2700000", "performance"], [46, "2700000", "2700000", "2700000", "performance"], [47, "2700000", "2700000", "2694870", "performance"], [48, "2700000", "2700000", "2700000", "performance"], [49, "2700000", "2700000", "2700000", "performance"], [50, "2700000", "2700000", "2700000", "performance"], [51, "2700000", "2700000", "2700000", "performance"], [52, "2700000", "2700000", "2700000", "performance"], [53, "2700000", "2700000", "2700000", "performance"], [54, "2700000", "2700000", "2700000", "performance"], [55, "2700000", "2700000", "2700000", "performance"], [56, "2700000", "2700000", "2700000", "performance"], [57, "2700000", "2700000", "2700000", "performance"], [58, "2700000", "2700000", "2700000", "performance"], [59, "2700000", "2700000", "2700000", "performance"], [60, "2700000", "2700000", "2700000", "performance"], [61, "2700000", "2700000", "2700000", "performance"], [62, "2700000", "2700000", "2700000", "performance"], [63, "2700000", "2700000", "2700000", "performance"]], "pinning": {"CPU 0/KVM": [0], "CPU 1/KVM": [1], "CPU 2/KVM": [2], "CPU 3/KVM": [3], "CPU 4/KVM": [4], "CPU 5/KVM": [5], "CPU 6/KVM": [6], "CPU 7/KVM": [7], "CPU 8/KVM": [8], "CPU 9/KVM": [9], "CPU 10/KVM": [10], "CPU 11/KVM": [11], "CPU 12/KVM": [12], "CPU 13/KVM": [13], "CPU 14/KVM": [14], "CPU 15/KVM": [15], "CPU 16/KVM": [16], "CPU 17/KVM": [17], "CPU 18/KVM": [18], "CPU 19/KVM": [19], "CPU 20/KVM": [20], "CPU 21/KVM": [21], "CPU 22/KVM": [22], "CPU 23/KVM": [23], "CPU 24/KVM": [24], "CPU 25/KVM": [25], "CPU 26/KVM": [26], "CPU 27/KVM": [27], "CPU 28/KVM": [28], "CPU 29/KVM": [29], "CPU 30/KVM": [30], "CPU 31/KVM": [31], "CPU 32/KVM": [32], "CPU 33/KVM": [33], "CPU 34/KVM": [34], "CPU 35/KVM": [35], "CPU 36/KVM": [36], "CPU 37/KVM": [37], "CPU 38/KVM": [38], "CPU 39/KVM": [39], "CPU 40/KVM": [40], "CPU 41/KVM": [41], "CPU 42/KVM": [42], "CPU 43/KVM": [43], "CPU 44/KVM": [44], "CPU 45/KVM": [45], "CPU 46/KVM": [46], "CPU 47/KVM": [47], "CPU 48/KVM": [48], "CPU 49/KVM": [49], "CPU 50/KVM": [50], "CPU 51/KVM": [51], "CPU 52/KVM": [52], "CPU 53/KVM": [53], "CPU 54/KVM": [54], "CPU 55/KVM": [55], "CPU 56/KVM": [56], "CPU 57/KVM": [57], "CPU 58/KVM": [58], "CPU 59/KVM": [59], "CPU 60/KVM": [60], "CPU 61/KVM": [61], "CPU 62/KVM": [62], "CPU 63/KVM": [63]}}

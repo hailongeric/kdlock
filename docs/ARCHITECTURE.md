@@ -515,14 +515,6 @@ continuation, which is more than the native lock pays.
   absent from uncontended, pending and already-plain acquisitions. A
   successor still publishing its link can cause an early return to plain
   mode; it retains its queue position and executes locally.
-  Adaptive spin sessions also leave when a plain successor ends the session
-  before `kd_spin_min_batch` bodies have been served (default 2, 0 disables
-  this condition). This avoids retaining a phase solely because a long queue
-  of nondelegable nodes exists. The existing sampled depth check can enter
-  again later. `spin_short_batch` records this exit reason. Handbacks retain
-  their grant and mode handling, and this condition does not apply to mutex,
-  rwlock or rwsem sessions. The candidate still requires performance testing;
-  it may reduce useful combining as well as avoid unsuccessful offers.
 * **rwlock and rwsem writers always publish** when they can
   (`kd_family.always_deleg`). There a session saves more than cache
   transfers: the writers it serves share one wait for the readers to leave.

@@ -1,0 +1,24 @@
+removed /tmp/main-spin-20e9db0c-run.py
+removed /tmp/main-spin-layout.py
+removed /tmp/main-spin-handoff-source.tar
+removed /tmp/main-spin-handoff-build.sh
+removed /tmp/main-spin-handoff-install.sh
+removed /tmp/main-spin-handoff-run.py
+removed /tmp/main-spin-20e9db0c-source.tar
+removed /tmp/main-spin-20e9db0c-build.sh
+removed /tmp/main-spin-20e9db0c-install.sh
+7.0.0-38-kdall1
+e02f11d6ea1b3c31d789afdae3bb5589038c49eb94dc0de18f7d8a6d0c475250  /etc/default/grub
+8b08ed0735d3d22d4098b4e10420f5781e8d6d04aab111eec351d27dee4d4243  /etc/default/grub.d/50-cloudimg-settings.cfg
+dcfb2c3feacfe8eddfc4e8a57b315a42113d91d03861da0a2e9bba347a865c2a  /etc/default/grub.d/99-kdlock-nopvspin.cfg
+f7b94f82d3b8f64f46070850f24d9f91d73a1fcafe17864470b09488611f2e04  /boot/vmlinuz-7.0.0-38-kdall1
+lrwxrwxrwx 1 root root 26 Nov 17 11:44 /boot/initrd.img -> initrd.img-7.0.0-38-kdall1
+lrwxrwxrwx 1 root root 29 Nov 17 11:44 /boot/initrd.img.old -> initrd.img-7.0.0-38-kdclaude1
+lrwxrwxrwx 1 root root 23 Nov 17 11:44 /boot/vmlinuz -> vmlinuz-7.0.0-38-kdall1
+lrwxrwxrwx 1 root root 26 Nov 17 11:44 /boot/vmlinuz.old -> vmlinuz-7.0.0-38-kdclaude1
+next_entry=
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb        118G   47G   66G  42% /mnt/kdlock-builds
+
+
+REMOTE_CLEANUP_FINAL_VERIFIED

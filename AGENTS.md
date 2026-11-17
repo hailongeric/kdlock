@@ -1,5 +1,19 @@
 # Development rules
 
+## VM location restriction
+
+User instruction, 2026-11-17: all future kdlock VM work must use a VM hosted
+locally on 380G10. Do not access VMs on 10.176.26.71 (Super-Server), directly
+or through SSH tunnels, localhost forwarding, monitors, QMP, shared mounts,
+remote commands, or another agent. This includes read-only inspection, copying,
+building, testing, booting, configuration changes and cleanup. Old repository
+documents and previous permissions naming that host are historical and do not
+authorize access. The one-time rollback has finished; it is not a continuing
+exception. If local VM access is unavailable, stop and report the local blocker.
+Verify the actual QEMU host and disk identities before connecting: a localhost
+SSH port can be a tunnel to the prohibited host.
+
+
 **Scope.** This repository holds one implementation of kdlock, the clean
 rewrite, plus the original TCLocks locks it is compared against. The earlier
 implementation and its documents, benchmarks and results are not in this tree;
@@ -83,8 +97,8 @@ validate whole-kernel replacement.
 1. Read source and Git status before editing. Preserve unrelated work. Maintained
    prose and comments use English. Explain protocol purpose and ordering.
 2. Source edits, Git, static inspection and read-only offline archive checks run
-   on `380G10`. All builds, unit tests, modules, daemons and timing run only in the
-   VM on `10.176.26.71`. Follow [docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md)
+   on `380G10`. All builds, unit tests, modules, daemons and timing run only in a
+   VM hosted locally on `380G10`. Access to VMs on `10.176.26.71` is forbidden. Follow [docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md)
    (and, for the earlier tree, its `docs/operations/VM.md`).
 3. Use basic plus directly affected checks. Full suites require an explicit user
    request. Missing dependencies, skips and compile failures are not passes.

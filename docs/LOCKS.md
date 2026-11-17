@@ -355,7 +355,6 @@ sees neither effect.
 | `kd_deleg_enter` (core param, 0644) | 5 | spinlock: waiters behind a queue head that switch the lock to delegation mode |
 | `kd_deleg_enter_sleep` (core param, 0644) | 3 | the same for a mutex |
 | `kd_deleg_exit` (core param, 0644) | 2 | a session or a plain delegable spin queue head leaves delegation mode with fewer waiters queued behind it |
-| `kd_spin_min_batch` (core param, 0644) | 2 | adaptive spin only: when a plain successor ends a session, return to plain mode if fewer bodies were served; 0 retains the depth-only policy for comparison |
 | `kd_xchg` (core param, 0644) | 1 | role exchange after a handback: 0 never, 1 mutex and rwsem writer, 2 every family |
 | `KD_PROBE_PERIOD` / `KD_VOTE_PERIOD` | 128 / 32 | contended acquisitions per depth sample in plain mode / sections per sample in a session |
 | `KD_MAX_NODES` | 4 | queue nodes per CPU and class |

@@ -94,15 +94,6 @@ unsigned int kd_deleg_enter_sleep __read_mostly = 3;
 core_param(kd_deleg_enter_sleep, kd_deleg_enter_sleep, uint, 0644);
 unsigned int kd_deleg_exit __read_mostly = 2;
 core_param(kd_deleg_exit, kd_deleg_exit, uint, 0644);
-/*
- * Spin-only: a session stopped by a plain successor must have served this
- * many sections to retain delegation mode. Depth alone does not establish
- * useful combining: a long queue of plain nodes can repeatedly make callers
- * capture packets that nobody executes. Zero retains the depth-only policy
- * for a controlled comparison. This selects a mode, never queue ownership.
- */
-unsigned int kd_spin_min_batch __read_mostly = 2;
-core_param(kd_spin_min_batch, kd_spin_min_batch, uint, 0644);
 
 /*
  * Measuring the queue means reading other waiters' nodes, which the plain
@@ -921,7 +912,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	bool numa = READ_ONCE(kd_numa);
 	unsigned int numa_after = f && f->numa_after ? READ_ONCE(kd_numa_after) : 0;
 	bool adapt = READ_ONCE(kd_adapt) && !(f && f->always_deleg);
-	bool handed = false, leave = false, stopped_plain = false;
+	bool handed = false, leave = false;
 	unsigned int served = 0, passed = 0;
 	int exit_below = READ_ONCE(kd_deleg_exit);
 	struct kd_regs *guess;
@@ -942,7 +933,6 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 		}
 		if (!n->entry) {
 			kd_stat_inc(kc, KD_STAT_STOP_PLAIN);
-			stopped_plain = true;
 			break;
 		}
 		if (need_resched()) {
@@ -1110,16 +1100,10 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	 * A handback leaves the lock with the origin; the mode is judged by
 	 * the next session.
 	 */
-	if (adapt && !handed) {
-		bool short_spin = !sleepable && stopped_plain &&
-			served < READ_ONCE(kd_spin_min_batch);
-
-		if (short_spin)
-			kd_stat_inc(kc, KD_STAT_SPIN_SHORT_BATCH);
-		if (leave || short_spin || kd_q_depth(me, exit_below) < exit_below) {
-			kd_mode_set(q, sleepable, false);
-			*deleg = false;
-		}
+	if (adapt && !handed &&
+	    (leave || kd_q_depth(me, exit_below) < exit_below)) {
+		kd_mode_set(q, sleepable, false);
+		*deleg = false;
 	}
 	return handed;
 }
@@ -1270,7 +1254,7 @@ static __always_inline void kd_node_init(struct kd_node *n, int cpu, int idx)
 static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe)
 {
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
-	struct kd_node *me, *next = NULL;
+	struct kd_node *me, *next;
 	u8 lv = KD_Q_LOCKED;
 	int idx = kd_nr_nodes(kc);
 
@@ -1335,13 +1319,7 @@ static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe)
 
 	if (kd_q_head_take(q, me, lv))
 		goto out;
-	/*
-	 * Keep the successor already read and prefetched while waiting, as
-	 * the native queue does. Plain spin nodes cannot withdraw, and only
-	 * this head can promote its successor; the pointer stays valid until
-	 * that promotion. Reloading it after taking the lock adds a dependent
-	 * read to the serialized handoff path for every queued acquisition.
-	 */
+	next = READ_ONCE(me->next);
 	if (!next)
 		next = smp_cond_load_relaxed(&me->next, VAL);
 	smp_store_release(&next->state,
