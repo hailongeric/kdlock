@@ -44,6 +44,7 @@ fences and `LOCK` prefixes exactly as they are). Only these change:
 | Calls in the `native` list (memcpy, strlen, ..., `__rcu_read_lock`, `__rcu_read_unlock`) and the `kd_` functions the kernel lists as `KD_SYM_LOCAL` | native `call` |
 | Any other `kd_` function | frontier |
 | Calls in `skip` (`__fentry__`, `__might_sleep`, ...) | dropped |
+| Inline `cond_resched()` static-call site, patched to `xor %eax,%eax` or a NOP | `mov rax, gs:[kd_cpu.task]; test byte [rax], TIF_NEED_RESCHED`; set → frontier exit at the site, clear → the site's own instruction |
 | Frontiers | exit carrying the address of the first unexecuted instruction |
 
 `__rcu_read_lock` and `__rcu_read_unlock` are called natively on purpose:
@@ -71,6 +72,33 @@ cross-CPU calls (`flush_tlb_mm_range`, `smp_call_function_many_cond`, ...),
 `switch_mm*`, `__cond_resched` and `synchronize_rcu*` are frontiers: their
 slow paths prepare to sleep for the task, act on "this CPU", or wait for
 other CPUs, among them the origin's.
+
+**Scheduling points patched out of the text.** With `preempt=full`
+(PREEMPT_DYNAMIC), the kernel patches every inline `cond_resched()` call to
+`cs cs cs xor %eax,%eax`, so no call to `__cond_resched` is left to
+classify. Code such as `zap_pmd_range()` then relies on preemption instead:
+`zap_pte_range()` stops when `need_resched()` is true, and the caller
+retries the same address after `cond_resched()`. An executor runs the
+session with preemption off, so a delegated `brk()` shrink spun there for
+37 minutes with two mmap_lock writers queued behind it
+(`bench/results/kdclaude/kdall-deleg-20261117-64cpu/`, section 3).
+
+- **Finding the sites:** `KernelView.static_call_sites()` reads them from
+  the kernel's static-call site tables, starting at the key `__SCK__name`.
+  That covers the core kernel and every module, and leaves out init text.
+- **Copying them:** each site of the calls in `frontier_static_call`
+  (`cond_resched`) is copied behind a test of the origin's
+  `TIF_NEED_RESCHED`, read through the redirected task (row above). The
+  copy ends there exactly when native code would schedule, and goes on
+  otherwise. A site patched to a real call stays a frontier.
+- **Not included:** `might_resched` (from `might_sleep()` and
+  `might_alloc()`). Nothing waits there for `need_resched` to clear, and as
+  a frontier it ended every delegated `mmap()` and `munmap()` at its first
+  slab allocation.
+- **How it was established:** an unconditional frontier at the
+  `cond_resched()` sites handed back about half of all brk1 sections.
+  brk1 at 64 threads fell to 0.54 of no delegation, and with the check
+  it is at 1.10.
 
 The mmap paths need images of about 50 000 instructions after learning;
 run the daemon with `--config` `{"max_insns": 250000}` there.
@@ -120,6 +148,14 @@ start as `MISS_CODE` exits. At most `max_insns` (60000) instructions go into
 one image. Known return addresses (callers inside the image) feed the `ret`
 chains. Indirect branches start with an empty chain.
 
+The site's own code is decoded first. Learned code roots and return
+targets come after it, each again up to `call_depth` deep, in whatever
+budget is left. A root that no longer fits stays a `MISS_CODE` exit. When
+learned roots came first, the mmap and brk sites used up the budget before
+their own code was reached, after about 20-60 learned roots. The build then
+failed ("cannot decode site"), the daemon gave the site up, and the kernel
+kept running the image it had.
+
 ## 4. Learning loop (daemon)
 
 ```
@@ -145,6 +181,15 @@ daemon: poll events (10 ms), add to cumulative knowledge, wait 50 ms (settle),
 * `KD_EV_TEXT_GONE`: knowledge inside the range is discarded (sites, code
   roots, indirect and return targets) and every other site is republished,
   since the kernel dropped all images.
+* An allow list (`--allow FILE`, fnmatch patterns over function names, one
+  per line) limits which sites get images. A site in a function that matches
+  no pattern is never built, and its waiters queue plainly. The refused sites
+  are listed when the daemon exits. This is how delegation is switched on
+  lock user by lock user in a kernel where every lock is a kdlock
+  (`bench/allow/`).
+* Images stay loaded when the daemon exits, and the kernel asks only for
+  sites without an image. To start a measurement from new images, drop the
+  old ones (`Device.site_drop()`, as `deleg_mm.sh` does).
 * `KD_EV_REQUEST` always triggers a build; the kernel sends it only for sites
   without an image. With adaptive delegation that is a site whose lock has
   reached delegation mode: a lock that stays in plain mode never asks.
@@ -176,6 +221,7 @@ daemon: poll events (10 ms), add to cumulative knowledge, wait 50 ms (settle),
 | `jit/kd_dryrun.py` | build images for the lock calls in named functions without loading; print summary or code |
 | `jit/requirements.txt` | `capstone` |
 
-Run: `python3 jit/kd_daemon.py [--config policy.json] [--state FILE] [-v]`.
-Policy lists (`native`, `skip`, `frontier`, `frontier_prefix`, `call_depth`,
-`max_insns`) are overridable from the JSON config.
+Run: `python3 jit/kd_daemon.py [--config policy.json] [--state FILE] [--allow FILE] [-v]`.
+Policy lists and values (`native`, `skip`, `frontier`, `frontier_prefix`,
+`frontier_static_call`, `need_resched_offset`, `need_resched_mask`,
+`call_depth`, `max_insns`) are overridable from the JSON config.

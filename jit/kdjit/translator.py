@@ -115,20 +115,38 @@ DEFAULT_CONFIG = {
         "smp_call_function_any", "on_each_cpu_cond_mask",
         "switch_mm", "switch_mm_irqs_off", "leave_mm",
         "__cond_resched", "synchronize_rcu", "synchronize_rcu_expedited",
-        # Static call trampolines of the scheduling points below.
-        "__SCT__cond_resched", "__SCT__might_resched",
+        # Static call trampoline of the scheduling point below.
+        "__SCT__cond_resched",
     ],
-    # Static calls whose inline call sites are frontiers whatever they are
-    # patched to. With preempt=full, cond_resched() sites are patched to
-    # `xor %eax,%eax`: nothing to see in the text, and the code relies on
-    # preemption at the next preempt_enable() instead. An executor runs the
-    # whole session with preemption off, so a loop that stops on
-    # need_resched() and retries after cond_resched() never progresses
-    # there (zap_pte_range() under a delegated brk() livelocked this way).
-    # At such a site the origin takes over and gets scheduled as usual.
-    # preempt_enable()'s preempt_schedule sites need nothing: they are only
-    # reached at preempt count 0, and their thunk calls preempt_schedule.
-    "frontier_static_call": ["cond_resched", "might_resched"],
+    # Static calls whose inline call sites are scheduling points, whatever
+    # they are patched to. With preempt=full, cond_resched() sites are
+    # patched to `xor %eax,%eax`: nothing to see in the text, and the code
+    # relies on preemption at the next preempt_enable() instead. An executor
+    # runs the whole session with preemption off, so a loop that stops on
+    # need_resched() and retries after cond_resched() never progresses there
+    # (zap_pte_range() under a delegated brk() livelocked this way).
+    #
+    # Such a site ends the copy only when the origin has TIF_NEED_RESCHED
+    # set; the origin then takes over there and is scheduled as usual.
+    # Otherwise the copy goes on through the patched instruction, as native
+    # cond_resched() does when nothing needs to run. (An unconditional exit
+    # handed back about half of all brk() shrinks, at the cond_resched() of
+    # zap_pmd_range().) A site patched to a real call stays a frontier.
+    # Not included:
+    # - might_resched (might_sleep(), might_alloc()): nothing waits there for
+    #   need_resched to clear, and as a frontier it ended every delegated
+    #   mmap() and munmap() at their first slab allocation. With voluntary
+    #   preemption its sites call __cond_resched, a frontier by name.
+    # - preempt_enable()'s preempt_schedule sites: they are only reached at
+    #   preempt count 0, and their thunk calls preempt_schedule.
+    "frontier_static_call": ["cond_resched"],
+    # need_resched() as the kernel compiles it: the thread_info flags word
+    # at offset 0 of the task (THREAD_INFO_IN_TASK) and TIF_NEED_RESCHED
+    # (bit 4 of the generic TIF bits). Taken from the live text of
+    # zap_pte_range() in 7.0.0-38: mov %gs:current_task,%rax;
+    # mov (%rax),%rax; test $0x10,%al.
+    "need_resched_offset": 0,
+    "need_resched_mask": 0x10,
     "frontier_prefix": [
         "schedule_timeout_", "wait_for_completion", "__get_user_", "__put_user_",
         "copy_user_", "__copy_user_", "kd_jit_", "kd_resume",
@@ -390,9 +408,17 @@ class Translator:
         # fault fixup (found by their own address), stay with the origin.
         if not self.kv.in_text(addr) or self.kv.has_fixup(addr) or cs.id in FRONTIER_IDS:
             return frontier()
-        # A scheduling point, whatever its static call is patched to.
+        # A scheduling point, whatever its static call is patched to. Patched
+        # to a real call, it is a frontier. Patched to `xor %eax,%eax` or a
+        # NOP, it is copied behind a check of the origin's need_resched
+        # flag (_resched_point). Neither form has an operand to relocate.
         if addr in self.sched_sites:
-            return frontier()
+            if cs.id == X.X86_INS_CALL or cs.id == X.X86_INS_JMP:
+                return frontier()
+            if cs.id not in (X.X86_INS_XOR, X.X86_INS_NOP) or self._plain_patch(cs) is not None:
+                return frontier()
+            ins.kind = "resched_point"
+            return ins, ()
         for op in cs.operands:
             if op.type == X.X86_OP_REG and cs.reg_name(op.reg)[:2] in ("cr", "dr"):
                 return frontier()
@@ -601,10 +627,14 @@ class Translator:
             self.sched_sites |= self.kv.static_call_sites(name)
         self.call_edges = []        # (return address, callee)
         self.tail_edges = set()     # (function, function it jumps into)
-        work = [(site, 0)]
-        work += [(a, 0) for a in learned.code]
+        # work is a stack: the site goes on last so that its own code is
+        # decoded first. Learned addresses start again at depth 0 and can
+        # each pull in thousands of instructions; taken first, they used up
+        # the budget before the site was reached, and the build failed.
+        work = [(a, 0) for a in learned.code]
         for targets in learned.ret.values():
             work += [(a, 0) for a in targets]
+        work.append((site, 0))
         budget = self.cfg["max_insns"]
         while work:
             addr, depth = work.pop()
@@ -686,6 +716,32 @@ class Translator:
         # mov dword gs:[exit_code], imm32
         self.asm.raw(b"\x65\xc7" + _gs_abs_modrm(info.pcpu_exit_code) + struct.pack("<I", code), cold)
         self.asm.emit(5, lambda pc, L: b"\xe9" + _rel32(target, pc + 5), cold)
+
+    def _resched_point(self, ins):
+        """A cond_resched() site: hand back if the origin should reschedule.
+
+            mov  rax, gs:[task]          ; the origin's task (redirected current)
+            test byte [rax+off], mask    ; its TIF_NEED_RESCHED
+            jnz  -> frontier exit at the site
+            <the site's own xor/nop>
+
+        The site stands for a call, so rax and the flags are dead there, and
+        the site's xor sets both again. The origin resumes at the site and
+        runs natively from there with preemption enabled.
+        """
+        off = self.cfg["need_resched_offset"]
+        mask = self.cfg["need_resched_mask"]
+        if not (0 <= off < 128 and 0 < mask < 256):
+            raise TranslationError("need_resched check needs disp8 and imm8")
+        # mov rax, qword gs:[task]
+        self.asm.raw(b"\x65\x48\x8b" + _gs_abs_modrm(self.info.pcpu_task))
+        # test byte [rax+disp8], imm8
+        self.asm.raw(bytes((0xF6, 0x40, off, mask)))
+        label = "resched_%x" % ins.addr
+        self._jcc(0x5, label)
+        self.asm.label(label, cold=True)
+        self._exit(KD_X_FRONTIER, ins.addr, cold=True)
+        self.asm.raw(ins.raw)
 
     def _root_check(self, ins, tail):
         """Guards in front of a release call.
@@ -839,6 +895,8 @@ class Translator:
             self._indirect(ins, learned)
         elif kind == "frontier":
             self._exit(KD_X_FRONTIER, ins.addr)
+        elif kind == "resched_point":
+            self._resched_point(ins)
         else:
             raise TranslationError("unknown instruction kind %s" % kind)
 
