@@ -231,6 +231,7 @@ enum {
 	/* Clobber entries (kd_api.h kd_*_cl()). */
 	KD_STAT_CL_OFFERED,	/* waiters queued with a compact state */
 	KD_STAT_CL_DONE,	/* sections that ended at a clobber release, compact */
+	KD_STAT_SPIN_SHORT_BATCH, /* plain successor ended an unproductive spin phase */
 	KD_STAT_NR,
 };
 
