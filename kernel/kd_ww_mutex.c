@@ -17,8 +17,19 @@
  * wakes the parked waiters that would have to back off from it
  * (kd_ww_check_waiters()), and every parked waiter rechecks when it wakes.
  *
- * ww mutexes are never delegated: acquisition is trylock, then the parked
- * path of the mutex with the back-off check in its loop.
+ * ww mutexes are never delegated. Acquisition is trylock, then, where it
+ * is safe, a spin in the mutex's spinner queue while the holder runs, then
+ * the parked path of the mutex with the back-off check in its loop.
+ *
+ * The spin (kd_ww_may_spin()) follows the native ww_mutex_spin_on_owner()
+ * for wait-die. A context that holds nothing never has to back off, so it
+ * may wait in any way. A context that holds locks goes to the parked path,
+ * which checks the back-off rule each time it looks at the lock. Nobody
+ * spins while waiters are parked, so a spinner does not take the lock from
+ * an older parked context that may hold a lock the spinner will need next.
+ * Without the spin every contended acquisition parked, and each one walked
+ * the parked waiters under the wait lock (kd_ww_set_ctx()): locktorture's
+ * ww_mutex test ran at 0.23-0.31 of the native kernel.
  */
 #include <linux/kernel.h>
 #include <linux/export.h>
@@ -71,6 +82,14 @@ static void kd_ww_set_ctx(struct kd_ww_mutex *lock, struct ww_acquire_ctx *ctx)
 		kd_mutex_wake_matching(&lock->base, kd_ww_waiter_dies, ctx);
 }
 
+/* May this caller spin for @lock (see the comment at the top)? */
+static __always_inline bool kd_ww_may_spin(struct kd_ww_mutex *lock, struct ww_acquire_ctx *ctx)
+{
+	if (ctx && ctx->acquired > 0)
+		return false;
+	return !(READ_ONCE(lock->base.q.flags) & KD_QF_SLEEPERS);
+}
+
 static int __kd_ww_mutex_lock(struct kd_ww_mutex *lock, struct ww_acquire_ctx *ctx,
 			      unsigned int state, bool slow)
 {
@@ -80,7 +99,8 @@ static int __kd_ww_mutex_lock(struct kd_ww_mutex *lock, struct ww_acquire_ctx *c
 	might_sleep();
 	if (ctx && READ_ONCE(lock->ctx) == ctx)
 		return -EALREADY;
-	if (!kd_mutex_trylock(&lock->base)) {
+	if (!kd_mutex_trylock(&lock->base) &&
+	    !(kd_ww_may_spin(lock, ctx) && kd_mutex_spin_lock(&lock->base))) {
 		/*
 		 * After a back-off the context holds nothing and waits
 		 * unconditionally; kd_ww_dies() already says so.

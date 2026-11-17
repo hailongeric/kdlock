@@ -286,6 +286,22 @@ int kd_mutex_lock_slow_io(struct kd_mutex *m, unsigned long site)
 	return ret;
 }
 
+/*
+ * The plain-mode spin of __kd_mutex_lock_slow() for a caller that never
+ * publishes (ww mutexes): wait in the spinner queue while the holder runs.
+ * True if this task now holds @m; false if spinning stopped paying off,
+ * and the caller goes on to kd_mutex_sleep().
+ */
+bool kd_mutex_spin_lock(struct kd_mutex *m)
+{
+	int ret;
+
+	preempt_disable();
+	ret = kd_wait_sleepable(m, m, &kd_mutex_family, NULL, NULL, false);
+	preempt_enable();
+	return ret == KD_WAIT_LOCAL;
+}
+
 /* Called by the entry stub on the wait stack. */
 int kd_mutex_wait(struct kd_mutex *m)
 {

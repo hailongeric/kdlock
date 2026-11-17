@@ -484,6 +484,7 @@ void kd_write_lock_bh_jit(void);
 struct kd_ww_wait;
 bool kd_mutex_trylock_as(struct kd_mutex *m, struct task_struct *t);
 int kd_mutex_sleep(struct kd_mutex *m, unsigned int state, struct kd_ww_wait *ww);
+bool kd_mutex_spin_lock(struct kd_mutex *m);
 bool kd_mutex_can_spin(struct kd_mutex *m);
 
 /* kd_ww_mutex.c: deadlock avoidance hooks for a parked ww waiter. */

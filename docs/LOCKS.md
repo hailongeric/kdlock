@@ -47,6 +47,15 @@ ww mutexes never publish a continuation: a reader runs concurrently with
 other readers, a trylock does not wait, and a ww acquisition may have to
 back off.
 
+**How a ww acquisition waits.** First trylock. Then, if the context holds
+no lock and no waiter is parked, it spins in the mutex's spinner queue while
+the holder runs, as a plain mutex caller does (`kd_mutex_spin_lock()`).
+Then it parks, with the wait-die check each time it looks at the lock. This
+is the native `ww_mutex_spin_on_owner()` policy for wait-die:
+- a context that holds nothing never has to back off;
+- a context that holds locks must be able to back off at every look;
+- a spinner must not take the lock from an older parked context.
+
 **All users of one object must use kdlock.** Queue encodings and layouts are
 not interchangeable with the native locks; replacing a lock type means
 replacing the object and every caller (see
