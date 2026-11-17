@@ -1,0 +1,21 @@
+{
+  "kernel": "7.0.0-38-kdlocalspin3",
+  "boot_id": "1d97be13-778d-4aed-b4ca-ee0d8e9f459d",
+  "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000 (O)\n",
+  "warnings": [],
+  "jobs": "",
+  "task_processes": [],
+  "disks": {
+    "vda": "kd16-root",
+    "vdb": "kd16-builds-current"
+  },
+  "params": {
+    "kd_adapt": "Y",
+    "kd_deleg_enter": "5",
+    "kd_deleg_exit": "2",
+    "kd_batch": "4096",
+    "kd_numa": "Y",
+    "kd_spin_plain_pass": "N"
+  },
+  "taint": "4096"
+}
