@@ -45,7 +45,12 @@ validate actual MM execution. Active call-depth tracking is refused because
 its return thunk violates the native-escape flags contract. Complete mitigation
 coverage of handwritten/generated returns remains a separate limitation.
 
-The maintained branch for this work is `main`; do not modify `master`.
+The only permitted branch for this work is `main`. Do not access `master`,
+including its code, README files, other documents, history or worktree. Do not
+compare against it or ask another agent to inspect it. Run every source/Git
+command from a verified `main` worktree; a shared default directory may belong
+to the prohibited branch. Existing historical permissions do not override this
+restriction (user instruction, 2026-11-17).
 Preserve the KD-only foundation selected at
 `d2a2304`: KD physical exclusion, ABI2, exact delegation waiter/executor lifetimes,
 immutable mutex images and exact source/runtime lifetime accounting. The current mutex
