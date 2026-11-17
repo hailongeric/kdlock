@@ -1,0 +1,7 @@
+{
+  "name": "main-phase-evidence.tar.gz",
+  "sha256": "aca2f2b69fa698001b82c05fc97a368f79c04cb9a8da3629fb7fd29646c3c40e",
+  "bytes": 423307,
+  "extracted_members": 55,
+  "storage": "Host task directory; report includes extracted evidence, not disk images or signing keys."
+}

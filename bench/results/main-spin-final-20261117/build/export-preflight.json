@@ -1,0 +1,7 @@
+{
+  "first_attempt": "stopped before guestfish invocation",
+  "reason": "destination queue.config already existed",
+  "files_copied_on_first_attempt": 0,
+  "correction": "use new final.config destination",
+  "prior_evidence_overwritten": false
+}

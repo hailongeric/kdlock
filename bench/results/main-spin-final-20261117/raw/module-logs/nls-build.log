@@ -1,0 +1,9 @@
+make: Entering directory '/work/out'
+make[1]: Entering directory '/work/main-final-repo/local-nls'
+  CC [M]  nls_iso8859-1.o
+  MODPOST Module.symvers
+  CC [M]  nls_iso8859-1.mod.o
+  CC [M]  .module-common.o
+  LD [M]  nls_iso8859-1.ko
+make[1]: Leaving directory '/work/main-final-repo/local-nls'
+make: Leaving directory '/work/out'

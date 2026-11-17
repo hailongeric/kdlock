@@ -1,0 +1,6 @@
+{
+  "id": "main-queue-boot-check-poll",
+  "returncode": 0,
+  "log_bytes": 976,
+  "output": "{\"uname\": \"Linux kdlock-kernel16-fresh 7.0.0-38-kdlocalspin5 #1 SMP PREEMPT_DYNAMIC Tue Nov 17 18:18:57 UTC 2026 x86_64 GNU/Linux\\n\", \"boot_id\": \"50ac3f08-891c-4800-ba2c-4ce5580d256b\", \"online\": \"0-39\", \"taint\": \"4096\", \"modules\": \"nls_iso8859_1 12288 1 - Live 0xffffffffc000a000 (O)\\n\", \"jobs\": \"JOB UNIT                                 TYPE  STATE\\n124 remote-fs-pre.target                 start waiting\\n140 timers.target                        start waiting\\n153 update-notifier-download.timer       start waiting\\n125 network-online.target                start waiting\\n123 open-iscsi.service                   start waiting\\n146 update-notifier-motd.timer           start waiting\\n126 systemd-networkd-wait-online.service start running\\n114 blk-availability.service             start waiting\\n\\n8 jobs listed.\\n\", \"config_sha256\": \"1395ae1ff15c215ab680dbb5a4a8af074044cc7de35be82004ddf2647f01ca64\", \"preempt\": \"full (lazy) \\n\", \"tracer\": \"nop\\n\", \"capstone\": \"5.0.7\\n\"}\n"
+}

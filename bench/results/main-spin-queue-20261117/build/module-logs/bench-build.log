@@ -1,0 +1,10 @@
+make: Entering directory '/work/out'
+make[1]: Entering directory '/work/main-queue-repo/bench'
+  CC [M]  kd_bench.o
+  MODPOST Module.symvers
+WARNING: modpost: missing MODULE_DESCRIPTION() in kd_bench.o
+  CC [M]  kd_bench.mod.o
+  CC [M]  .module-common.o
+  LD [M]  kd_bench.ko
+make[1]: Leaving directory '/work/main-queue-repo/bench'
+make: Leaving directory '/work/out'

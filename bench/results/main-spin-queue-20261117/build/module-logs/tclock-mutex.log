@@ -1,0 +1,14 @@
+make: Entering directory '/work/out'
+make[1]: Entering directory '/work/main-queue-repo/local-tclock/mutex'
+  CC [M]  mutex_provider.o
+  CC [M]  komb_mutex.o
+  CC [M]  combiner.o
+  LD [M]  tclock_mutex_backend_km.o
+tclock_mutex_backend_km.o: warning: objtool: __komb_mutex_lock+0x38: 'naked' return found in MITIGATION_RETHUNK build
+tclock_mutex_backend_km.o: warning: objtool: komb_context_switch+0x1a: BP used as a scratch register
+  MODPOST Module.symvers
+  CC [M]  tclock_mutex_backend_km.mod.o
+  CC [M]  .module-common.o
+  LD [M]  tclock_mutex_backend_km.ko
+make[1]: Leaving directory '/work/main-queue-repo/local-tclock/mutex'
+make: Leaving directory '/work/out'

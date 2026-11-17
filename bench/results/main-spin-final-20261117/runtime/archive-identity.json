@@ -1,0 +1,16 @@
+{
+  "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-evidence.tar.gz",
+  "bytes": 345617,
+  "sha256": "81cc6ffe42c9bc1d6dc9f11469769fb75830b50ddc388bcc40565b151857712f",
+  "extraction": "regular files and directories only; paths verified within raw; no existing files overwritten",
+  "frozen_matching_files": {
+    "main-final-identity.json": "main-final-identity.json",
+    "run-main-final.py": "run-final.py",
+    "signed-artifacts-main-final.json": "build/signed-artifacts.json",
+    "build-main-final.log": "build/build.log",
+    "build-main-final-result.json": "build/result.json",
+    "main-final-build-review.json": "build/review.json",
+    "main-final-kd_spin_lock.asm": "build/asm/kd_spin_lock.asm",
+    "main-final-kd_q_lock_slow.asm": "build/asm/kd_q_lock_slow.asm"
+  }
+}

@@ -1,0 +1,206 @@
+{
+  "host": "380G10",
+  "frequencies": {
+    "0": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "1": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "2": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "3": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "4": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "5": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "6": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "7": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "8": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "9": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "10": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "11": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "12": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "13": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "14": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "15": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "16": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "17": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "18": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "19": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "20": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "21": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "22": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "23": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "24": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "25": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "26": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "27": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "28": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "29": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "30": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "31": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "32": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "33": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "34": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "35": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "36": {
+      "scaling_min_freq": "1000000",
+      "scaling_max_freq": "3000000",
+      "scaling_governor": "powersave"
+    },
+    "37": {
+      "scaling_min_freq": "1000000",
+      "scaling_max_freq": "3000000",
+      "scaling_governor": "powersave"
+    },
+    "38": {
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_governor": "powersave"
+    },
+    "39": {
+      "scaling_min_freq": "1000000",
+      "scaling_max_freq": "3000000",
+      "scaling_governor": "powersave"
+    }
+  },
+  "space": "Filesystem        1B-blocks         Used   Available Use% Mounted on\n/dev/nvme0n1p2 982820896768 833303224320 99517587456  90% /\n"
+}

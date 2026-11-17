@@ -1,0 +1,37 @@
+make: Entering directory '/work/out'
+make[1]: Entering directory '/work/main-queue-repo/local-tclock/rwlock'
+  CC [M]  rwlock_provider.o
+  CC [M]  komb_rwlock.o
+  CC [M]  combiner.o
+komb_rwlock.c: In function 'get_next_node':
+komb_rwlock.c:183:49: warning: unused variable 'local_tail' [-Wunused-variable]
+  183 |         struct komb_rwlock_node **local_head, **local_tail;
+      |                                                 ^~~~~~~~~~
+komb_rwlock.c:183:35: warning: unused variable 'local_head' [-Wunused-variable]
+  183 |         struct komb_rwlock_node **local_head, **local_tail;
+      |                                   ^~~~~~~~~~
+In file included from /work/source/include/linux/build_bug.h:5,
+                 from /work/source/include/linux/container_of.h:5,
+                 from /work/source/include/linux/list.h:5,
+                 from /work/source/include/linux/module.h:12,
+                 from rwlock_compat.h:4,
+                 from komb_rwlock.c:10:
+komb_rwlock.c: In function '__kombrw_spin_lock_longjmp':
+komb_rwlock.c:415:32: warning: comparison of constant '3' with boolean expression is always false [-Wbool-compare]
+  415 |         BUG_ON(prev_locked_val >= _Q_LOCKED_COMBINER_VAL);
+      |                                ^~
+/work/source/include/linux/compiler.h:77:45: note: in definition of macro 'unlikely'
+   77 | # define unlikely(x)    __builtin_expect(!!(x), 0)
+      |                                             ^
+komb_rwlock.c:415:9: note: in expansion of macro 'BUG_ON'
+  415 |         BUG_ON(prev_locked_val >= _Q_LOCKED_COMBINER_VAL);
+      |         ^~~~~~
+  LD [M]  tclock_rwlock_backend_km.o
+tclock_rwlock_backend_km.o: warning: objtool: kombrw_spin_lock_slowpath+0x39: 'naked' return found in MITIGATION_RETHUNK build
+tclock_rwlock_backend_km.o: warning: objtool: komb_context_switch+0x1a: BP used as a scratch register
+  MODPOST Module.symvers
+  CC [M]  tclock_rwlock_backend_km.mod.o
+  CC [M]  .module-common.o
+  LD [M]  tclock_rwlock_backend_km.ko
+make[1]: Leaving directory '/work/main-queue-repo/local-tclock/rwlock'
+make: Leaving directory '/work/out'

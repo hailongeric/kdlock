@@ -1,0 +1,6 @@
+{
+  "id": "main-queue-finalize-poll",
+  "returncode": 0,
+  "log_bytes": 245,
+  "output": "{\"release\": \"7.0.0-38-kdlocalspin5\", \"kernel_sha256\": \"0c3b78cd1d58a00ddfcb897fe368fafe5d7573982fed37f3f24e8fa2e7f8f6b8\", \"config_sha256\": \"1395ae1ff15c215ab680dbb5a4a8af074044cc7de35be82004ddf2647f01ca64\", \"depmod_output\": \"\"}\nsigned modules 7\n"
+}

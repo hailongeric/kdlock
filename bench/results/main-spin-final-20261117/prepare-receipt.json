@@ -1,0 +1,6 @@
+{
+  "id": "main-final-prepare-poll",
+  "returncode": 0,
+  "log_bytes": 251,
+  "output": "{\"main_inputs\": 131, \"commit\": \"18dad4a1c372d77a1155db671d56c148918344da\", \"space\": 32049561600, \"source\": \"main-queue-source copied to independent main-final-source\", \"output\": \"independent copy of verified main-queue-out, then incremental rebuild\"}\n"
+}

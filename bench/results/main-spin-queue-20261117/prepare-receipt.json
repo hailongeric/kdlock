@@ -1,0 +1,6 @@
+{
+  "id": "main-queue-prepare-poll",
+  "returncode": 0,
+  "log_bytes": 202,
+  "output": "{\"main_inputs\": 131, \"commit\": \"02e604d32fd0dfa1c563ec6d6e6c6138d3f4be19\", \"space\": 36433739776, \"source\": \"main-phase-source copied to independent main-queue-source\", \"output\": \"fresh main-queue-out\"}\n"
+}

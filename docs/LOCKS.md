@@ -76,8 +76,9 @@ call.
   the queue becomes short, so exit does not depend on finding generated
   code. Admission uses an observed holder's mode bit, without consulting
   previous waits on that address. A holder selecting plain mode overrides any
-  queue hint. The default `kd_spin_queue_phase=1` keeps the selected phase in bit 9 of the spin-class
-  queue word while its tail exists. The sole head updates it on acquisition;
+  queue hint. The default `kd_spin_queue_phase=1` keeps the selected phase in
+  bit 9 of the spin-class queue word while its tail exists. The sole head
+  updates it on acquisition;
   removing the final tail clears the phase in the same atomic operation.
   Unlock still clears only the holder byte. An arriving caller may therefore
   observe the live queue phase during an empty-byte handoff without polling
@@ -89,8 +90,11 @@ call.
   additional observations are skipped. The polling option defaults to zero;
   queue phase defaults on after the matched local comparison retained the
   five-worker rate while restoring high-contention delegation. Setting queue
-  phase to zero supplies a control; `kd_adapt=0` retains its forced mode. Neither changes the
-  uncontended CAS or unlock source paths, nor any packet/source lifetime.
+  phase to zero supplies a control; `kd_adapt=0` retains its forced mode.
+  Neither changes the uncontended CAS or unlock source paths, nor any
+  packet/source lifetime.
+  The [local default-version comparison](../bench/results/main-spin-final-20261117/README.md)
+  records the accepted scope, event counts and remaining performance gaps.
 * Queue phase maintenance applies to the shared spin-class primitives,
   including rwlock wait gates; it does not interpret or alter sleepable-class
   flags. The phase bit occupies the same position as sleepable HANDOFF in

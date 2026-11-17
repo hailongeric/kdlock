@@ -1,0 +1,38 @@
+make: Entering directory '/work/out'
+make[1]: Entering directory '/work/main-queue-repo/local-tclock/rwsem'
+  CC [M]  komb_rwsem.o
+  CC [M]  rwsem_provider.o
+  CC [M]  aqs.o
+  CC [M]  combiner.o
+komb_rwsem.c: In function 'run_combiner':
+komb_rwsem.c:550:13: warning: unused variable 'counter' [-Wunused-variable]
+  550 |         int counter = 0;
+      |             ^~~~~~~
+komb_rwsem.c:549:69: warning: unused variable 'waker' [-Wunused-variable]
+  549 |         struct komb_mutex_node *next_node = curr_node->next_rwsem, *waker = curr_node;
+      |                                                                     ^~~~~
+komb_rwsem.c: At top level:
+komb_rwsem.c:916:1: warning: no previous prototype for '__komb_write_stack_switch' [-Wmissing-prototypes]
+  916 | __komb_write_stack_switch(struct komb_rwsem *lock)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~
+komb_rwsem.c: In function 'komb_rwsem_down_write':
+komb_rwsem.c:993:18: warning: unused variable 'cnt' [-Wunused-variable]
+  993 |         u64 val, cnt;
+      |                  ^~~
+komb_rwsem.c: In function 'komb_rwsem_up_write':
+komb_rwsem.c:1103:29: warning: unused variable 'curr_task' [-Wunused-variable]
+ 1103 |         struct task_struct *curr_task;
+      |                             ^~~~~~~~~
+komb_rwsem.c: In function 'komb_rwsem_down_write_killable_nested':
+komb_rwsem.c:1291:9: warning: ignoring return value of 'komb_rwsem_down_write_killable' declared with attribute 'warn_unused_result' [-Wunused-result]
+ 1291 |         komb_rwsem_down_write_killable(sem);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  LD [M]  tclock_rwsem_backend_km.o
+tclock_rwsem_backend_km.o: warning: objtool: __komb_write_stack_switch+0x38: 'naked' return found in MITIGATION_RETHUNK build
+tclock_rwsem_backend_km.o: warning: objtool: komb_context_switch+0x1a: BP used as a scratch register
+  MODPOST Module.symvers
+  CC [M]  tclock_rwsem_backend_km.mod.o
+  CC [M]  .module-common.o
+  LD [M]  tclock_rwsem_backend_km.ko
+make[1]: Leaving directory '/work/main-queue-repo/local-tclock/rwsem'
+make: Leaving directory '/work/out'

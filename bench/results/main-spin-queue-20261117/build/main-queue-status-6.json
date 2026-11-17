@@ -1,0 +1,6 @@
+{
+  "id": "main-queue-status-6-poll",
+  "returncode": 0,
+  "log_bytes": 764,
+  "output": "{\"result\": {\"rc\": 0, \"start\": 1794939346.79246, \"finish\": 1794939602.328248}, \"tail\": [\"  OBJCOPY arch/x86/boot/vmlinux.bin\", \"  AS      arch/x86/boot/header.o\", \"  LD      arch/x86/boot/setup.elf\", \"  OBJCOPY arch/x86/boot/setup.bin\", \"  BUILD   arch/x86/boot/bzImage\", \"Kernel: arch/x86/boot/bzImage is ready  (#1)\", \"make[1]: Leaving directory '/work/out'\", \"make[1]: Entering directory '/work/out'\", \"  GEN     Makefile\", \"  CALL    /work/source/scripts/checksyscalls.sh\", \"  DESCEND objtool\", \"  INSTALL libsubcmd_headers\", \"  LDS     scripts/module.lds\", \"make[1]: Leaving directory '/work/out'\", \"LOCAL_BUILD_COMPLETE\"], \"errors\": [], \"space\": \"Filesystem      Size  Used Avail Use% Mounted on\\n/dev/vdb        165G  132G   33G  81% /mnt/kdlock-builds2\\n\"}\n"
+}

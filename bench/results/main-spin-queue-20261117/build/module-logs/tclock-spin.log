@@ -1,0 +1,14 @@
+make: Entering directory '/work/out'
+make[1]: Entering directory '/work/main-queue-repo/local-tclock/spin'
+  CC [M]  provider.o
+  CC [M]  combiner.o
+  CC [M]  komb.o
+  LD [M]  tclock_backend_km.o
+tclock_backend_km.o: warning: objtool: komb_spin_lock_slowpath+0x36: 'naked' return found in MITIGATION_RETHUNK build
+tclock_backend_km.o: warning: objtool: komb_context_switch+0x1a: BP used as a scratch register
+  MODPOST Module.symvers
+  CC [M]  tclock_backend_km.mod.o
+  CC [M]  .module-common.o
+  LD [M]  tclock_backend_km.ko
+make[1]: Leaving directory '/work/main-queue-repo/local-tclock/spin'
+make: Leaving directory '/work/out'

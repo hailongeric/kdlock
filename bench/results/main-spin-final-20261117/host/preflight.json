@@ -1,0 +1,289 @@
+{
+  "host": "380G10",
+  "time": 1794941262.755767,
+  "frequency": [
+    {
+      "cpu": 0,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500090"
+    },
+    {
+      "cpu": 1,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 2,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 3,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 4,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 5,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500034"
+    },
+    {
+      "cpu": 6,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 7,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 8,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 9,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2499736"
+    },
+    {
+      "cpu": 10,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 11,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 12,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 13,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 14,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500169"
+    },
+    {
+      "cpu": 15,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2499997"
+    },
+    {
+      "cpu": 16,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 17,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 18,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 19,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 20,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "1000335"
+    },
+    {
+      "cpu": 21,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 22,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "1462680"
+    },
+    {
+      "cpu": 23,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 24,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 25,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "1320809"
+    },
+    {
+      "cpu": 26,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 27,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 28,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 29,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 30,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 31,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 32,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 33,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 34,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 35,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "1000042"
+    },
+    {
+      "cpu": 36,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "1000000",
+      "scaling_max_freq": "3000000",
+      "scaling_cur_freq": "1000000"
+    },
+    {
+      "cpu": 37,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "1000000",
+      "scaling_max_freq": "3000000",
+      "scaling_cur_freq": "1000000"
+    },
+    {
+      "cpu": 38,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "2500000",
+      "scaling_max_freq": "2500000",
+      "scaling_cur_freq": "2500000"
+    },
+    {
+      "cpu": 39,
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "1000000",
+      "scaling_max_freq": "3000000",
+      "scaling_cur_freq": "1000000"
+    }
+  ],
+  "uptime": "12036148.13 478092615.44\n",
+  "load": "0.63 5.09 7.49 1/1824 2\n",
+  "disk": "Filesystem        1B-blocks         Used   Available Use% Mounted on\n/dev/nvme0n1p2 982820896768 840689987584 92130824192  91% /tmp\n"
+}

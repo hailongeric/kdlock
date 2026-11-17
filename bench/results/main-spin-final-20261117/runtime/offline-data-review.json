@@ -1,0 +1,22 @@
+{
+  "scope": "Read-only review of exported artifacts; no kernel or benchmark rerun",
+  "points": 413,
+  "mixed_rows": 4,
+  "mixed_workers": 80,
+  "all_worker_totals_and_mixed_access_match": true,
+  "measured_cells": 66,
+  "cell_counts_ranges_medians_match_raw": true,
+  "boot_id": "fc8104fd-5e0c-406f-b93e-e7c6e6cabf6d",
+  "matched_source": "18dad4a1c372d77a1155db671d56c148918344da",
+  "warning_terms_found": [],
+  "daemon_rc": 0,
+  "unloaded_modules": [
+    "tclock_backend_km",
+    "tclock_mutex_backend_km",
+    "tclock_rwlock_backend_km",
+    "tclock_rwsem_backend_km",
+    "kd_bench"
+  ],
+  "final_idle": true,
+  "parameters_restored": true
+}

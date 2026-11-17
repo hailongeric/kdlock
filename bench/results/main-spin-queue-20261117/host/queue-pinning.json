@@ -1,0 +1,422 @@
+{
+  "pid": 3890629,
+  "vcpus": [
+    {
+      "cpu": 0,
+      "tid": 3890992,
+      "affinity": [
+        0
+      ]
+    },
+    {
+      "cpu": 1,
+      "tid": 3890993,
+      "affinity": [
+        1
+      ]
+    },
+    {
+      "cpu": 2,
+      "tid": 3890994,
+      "affinity": [
+        2
+      ]
+    },
+    {
+      "cpu": 3,
+      "tid": 3890995,
+      "affinity": [
+        3
+      ]
+    },
+    {
+      "cpu": 4,
+      "tid": 3890996,
+      "affinity": [
+        4
+      ]
+    },
+    {
+      "cpu": 5,
+      "tid": 3890997,
+      "affinity": [
+        5
+      ]
+    },
+    {
+      "cpu": 6,
+      "tid": 3890998,
+      "affinity": [
+        6
+      ]
+    },
+    {
+      "cpu": 7,
+      "tid": 3890999,
+      "affinity": [
+        7
+      ]
+    },
+    {
+      "cpu": 8,
+      "tid": 3891000,
+      "affinity": [
+        8
+      ]
+    },
+    {
+      "cpu": 9,
+      "tid": 3891001,
+      "affinity": [
+        9
+      ]
+    },
+    {
+      "cpu": 10,
+      "tid": 3891002,
+      "affinity": [
+        10
+      ]
+    },
+    {
+      "cpu": 11,
+      "tid": 3891003,
+      "affinity": [
+        11
+      ]
+    },
+    {
+      "cpu": 12,
+      "tid": 3891004,
+      "affinity": [
+        12
+      ]
+    },
+    {
+      "cpu": 13,
+      "tid": 3891005,
+      "affinity": [
+        13
+      ]
+    },
+    {
+      "cpu": 14,
+      "tid": 3891006,
+      "affinity": [
+        14
+      ]
+    },
+    {
+      "cpu": 15,
+      "tid": 3891007,
+      "affinity": [
+        15
+      ]
+    },
+    {
+      "cpu": 16,
+      "tid": 3891008,
+      "affinity": [
+        16
+      ]
+    },
+    {
+      "cpu": 17,
+      "tid": 3891009,
+      "affinity": [
+        17
+      ]
+    },
+    {
+      "cpu": 18,
+      "tid": 3891010,
+      "affinity": [
+        18
+      ]
+    },
+    {
+      "cpu": 19,
+      "tid": 3891011,
+      "affinity": [
+        19
+      ]
+    },
+    {
+      "cpu": 20,
+      "tid": 3891012,
+      "affinity": [
+        20
+      ]
+    },
+    {
+      "cpu": 21,
+      "tid": 3891013,
+      "affinity": [
+        21
+      ]
+    },
+    {
+      "cpu": 22,
+      "tid": 3891014,
+      "affinity": [
+        22
+      ]
+    },
+    {
+      "cpu": 23,
+      "tid": 3891015,
+      "affinity": [
+        23
+      ]
+    },
+    {
+      "cpu": 24,
+      "tid": 3891016,
+      "affinity": [
+        24
+      ]
+    },
+    {
+      "cpu": 25,
+      "tid": 3891017,
+      "affinity": [
+        25
+      ]
+    },
+    {
+      "cpu": 26,
+      "tid": 3891018,
+      "affinity": [
+        26
+      ]
+    },
+    {
+      "cpu": 27,
+      "tid": 3891019,
+      "affinity": [
+        27
+      ]
+    },
+    {
+      "cpu": 28,
+      "tid": 3891020,
+      "affinity": [
+        28
+      ]
+    },
+    {
+      "cpu": 29,
+      "tid": 3891021,
+      "affinity": [
+        29
+      ]
+    },
+    {
+      "cpu": 30,
+      "tid": 3891022,
+      "affinity": [
+        30
+      ]
+    },
+    {
+      "cpu": 31,
+      "tid": 3891023,
+      "affinity": [
+        31
+      ]
+    },
+    {
+      "cpu": 32,
+      "tid": 3891024,
+      "affinity": [
+        32
+      ]
+    },
+    {
+      "cpu": 33,
+      "tid": 3891025,
+      "affinity": [
+        33
+      ]
+    },
+    {
+      "cpu": 34,
+      "tid": 3891026,
+      "affinity": [
+        34
+      ]
+    },
+    {
+      "cpu": 35,
+      "tid": 3891027,
+      "affinity": [
+        35
+      ]
+    },
+    {
+      "cpu": 36,
+      "tid": 3891028,
+      "affinity": [
+        36
+      ]
+    },
+    {
+      "cpu": 37,
+      "tid": 3891029,
+      "affinity": [
+        37
+      ]
+    },
+    {
+      "cpu": 38,
+      "tid": 3891030,
+      "affinity": [
+        38
+      ]
+    },
+    {
+      "cpu": 39,
+      "tid": 3891031,
+      "affinity": [
+        39
+      ]
+    }
+  ],
+  "blocks": {
+    "return": [
+      {
+        "io-status": "ok",
+        "device": "kd16root",
+        "locked": false,
+        "removable": false,
+        "inserted": {
+          "iops_rd": 0,
+          "detect_zeroes": "off",
+          "image": {
+            "snapshots": [
+              {
+                "vm-clock-nsec": 23707066,
+                "name": "kdlock-kernel16-two-disk-smoke-20261116-01",
+                "date-sec": 1794892526,
+                "date-nsec": 402163000,
+                "vm-clock-sec": 129104,
+                "id": "1",
+                "vm-state-size": 2663132104
+              }
+            ],
+            "virtual-size": 17179869184,
+            "filename": "/home/eric/vm/qemu-disks/kdlock-kernel16-fresh-20261114/root.qcow2",
+            "cluster-size": 65536,
+            "format": "qcow2",
+            "actual-size": 5065273344,
+            "format-specific": {
+              "type": "qcow2",
+              "data": {
+                "compat": "1.1",
+                "compression-type": "zlib",
+                "lazy-refcounts": false,
+                "refcount-bits": 16,
+                "corrupt": false,
+                "extended-l2": false
+              }
+            },
+            "dirty-flag": false
+          },
+          "iops_wr": 0,
+          "ro": false,
+          "node-name": "#block129",
+          "backing_file_depth": 0,
+          "drv": "qcow2",
+          "iops": 0,
+          "bps_wr": 0,
+          "write_threshold": 0,
+          "encrypted": false,
+          "bps": 0,
+          "bps_rd": 0,
+          "cache": {
+            "no-flush": false,
+            "direct": false,
+            "writeback": true
+          },
+          "file": "/home/eric/vm/qemu-disks/kdlock-kernel16-fresh-20261114/root.qcow2"
+        },
+        "qdev": "/machine/peripheral-anon/device[0]/virtio-backend",
+        "type": "unknown"
+      },
+      {
+        "io-status": "ok",
+        "device": "kd16builds",
+        "locked": false,
+        "removable": false,
+        "inserted": {
+          "iops_rd": 0,
+          "detect_zeroes": "off",
+          "image": {
+            "snapshots": [
+              {
+                "vm-clock-nsec": 23707066,
+                "name": "kdlock-kernel16-two-disk-smoke-20261116-01",
+                "date-sec": 1794892526,
+                "date-nsec": 402163000,
+                "vm-clock-sec": 129104,
+                "id": "1",
+                "vm-state-size": 0
+              }
+            ],
+            "virtual-size": 180388626432,
+            "filename": "/home/eric/vm/qemu-disks/kdlock-kernel16-materials-20261115/builds-current.qcow2",
+            "cluster-size": 65536,
+            "format": "qcow2",
+            "actual-size": 172706455552,
+            "format-specific": {
+              "type": "qcow2",
+              "data": {
+                "compat": "1.1",
+                "compression-type": "zlib",
+                "lazy-refcounts": false,
+                "refcount-bits": 16,
+                "corrupt": false,
+                "extended-l2": false
+              }
+            },
+            "dirty-flag": false
+          },
+          "iops_wr": 0,
+          "ro": false,
+          "node-name": "#block369",
+          "backing_file_depth": 0,
+          "drv": "qcow2",
+          "iops": 0,
+          "bps_wr": 0,
+          "write_threshold": 0,
+          "encrypted": false,
+          "bps": 0,
+          "bps_rd": 0,
+          "cache": {
+            "no-flush": false,
+            "direct": false,
+            "writeback": true
+          },
+          "file": "/home/eric/vm/qemu-disks/kdlock-kernel16-materials-20261115/builds-current.qcow2"
+        },
+        "qdev": "/machine/peripheral-anon/device[1]/virtio-backend",
+        "type": "unknown"
+      },
+      {
+        "io-status": "ok",
+        "device": "ide2-cd0",
+        "locked": false,
+        "removable": true,
+        "qdev": "/machine/unattached/device[58]",
+        "tray_open": false,
+        "type": "unknown"
+      },
+      {
+        "device": "sd0",
+        "locked": false,
+        "removable": true,
+        "type": "unknown"
+      }
+    ]
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "main-final-identity.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-identity.json",
+    "bytes": 13672,
+    "sha256": "76ad9656bf6c88b9d2b36b618bacb78297bc8b7b3c5b318c994fb0005ea83392"
+  },
+  "run-final.py": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/run-final.py",
+    "bytes": 9373,
+    "sha256": "453df7f13f223b0aa7e3df976b7cb806b26fd686b7f498c777ef0c99829be489"
+  },
+  "collect-final.py": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/collect-final.py",
+    "bytes": 5522,
+    "sha256": "121f3a87a265187654948fda35f4321aefeb3e8c2965d272c35c14fb59c3b3f6"
+  },
+  "queue-phase-review.md": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/queue-phase-review.md",
+    "bytes": 5739,
+    "sha256": "3744354a2d5a17b2d588cc2b4eb9e64116783405a950fd896dad53e4c1d3f11e"
+  },
+  "phase-wait-review.md": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/review.md",
+    "bytes": 5041,
+    "sha256": "5cb993c1ad7ca3cff7588494c76440744ad44e1c2f2d7a35740d040faba3715e"
+  },
+  "queue-runner-review.md": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/runner-review.md",
+    "bytes": 4884,
+    "sha256": "bf0cc104c1f2ee7def93c9a2a71f1b2b634a8080ea32b09c8a0991b2b56049fd"
+  },
+  "prepare-receipt.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-prepare.json",
+    "bytes": 360,
+    "sha256": "d51ec87e3104663c11be1ec1e6ecf41addd8ed9dae37a9d33754e47126c354b8"
+  },
+  "build-status-at-draft.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-status-2.json",
+    "bytes": 1035,
+    "sha256": "c532c1007dbd7404a02647334f4ce0e1664eb4fe3d60b09da09ef20f87156fc0"
+  },
+  "build/status.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-status-3.json",
+    "bytes": 913,
+    "sha256": "cf903d2671eac71d72df1c3ab6592515da63583d47f2ff14cc110b2b585a58a0"
+  },
+  "build/review-receipt.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-build-review.json",
+    "bytes": 550,
+    "sha256": "60c928130c3334e91e2f67c141293e6e30a96a4a8d4bfbb6ca30387977971361"
+  },
+  "build/finalization.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-finalize.json",
+    "bytes": 356,
+    "sha256": "394edfd16230623e02473cb138b1631c8d817057731829b1358c2ca52d40db42"
+  },
+  "build/ready.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-ready.json",
+    "bytes": 255,
+    "sha256": "c43a15baf2b6817df19112efff7e7dfb761712c44ee7b9140e6e063dc6cef537"
+  },
+  "build/result.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-build-result.json",
+    "bytes": 67,
+    "sha256": "dce1fe4fc29030e5f1c68e16b8a54c93ca55027f4ff4465b349abdb2f2936a60"
+  },
+  "build/build.log": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-build.log",
+    "bytes": 129388,
+    "sha256": "86a8041b452820a2c790d7af0aecb0c0c0a135dc37a5acac0a1a724d0b61a48d"
+  },
+  "build/review.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-build-review.json",
+    "bytes": 487,
+    "sha256": "63b3c7a0943493e0f37d95d2b71c212b3727f2f2ee09ffef80f31dbcaf89bf1c"
+  },
+  "build/signed-artifacts.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-signed-artifacts.json",
+    "bytes": 19046,
+    "sha256": "e91e6a66f077fc2d59d6f682ccdf3125fa97889de1e7f583d715d5008bb656c7"
+  },
+  "build/config": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final.config",
+    "bytes": 306626,
+    "sha256": "1395ae1ff15c215ab680dbb5a4a8af074044cc7de35be82004ddf2647f01ca64"
+  },
+  "build/asm/kd_q_lock_slow.asm": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-kd_q_lock_slow.asm",
+    "bytes": 20834,
+    "sha256": "554ba1da8d24beacdc597bb7fe74360a9ef02d932023a8cd3a851d36a689f344"
+  },
+  "build/asm/kd_spin_lock.asm": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-kd_spin_lock.asm",
+    "bytes": 4602,
+    "sha256": "42c78dc83b03dbfcd38b68c5013cb35c54bf89ae6f0e2502236bb8727e8e157d"
+  },
+  "build/export-preflight.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-export-preflight.json",
+    "bytes": 245,
+    "sha256": "6a1ad8ea907d79d0c6399928198ee24989ebb148a58717e7c76e91e978462728"
+  },
+  "collect-final-before-count-check.py": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/collect-final.py",
+    "bytes": 5410,
+    "sha256": "6688f5b2046eba608715451d9e87d72f45da47f525f26d1645988b8afa405f3b",
+    "stage": "initial prepared collector before exact point-count assertions"
+  },
+  "boot/boot-check.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-boot-check.json",
+    "bytes": 1128,
+    "sha256": "7d76076aa3abbe54eafcc9fb77f04277cfc52cff1608860293da98be8735a6af"
+  },
+  "host/pinning.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-pinning.json",
+    "bytes": 7763,
+    "sha256": "a0dba9a285779338c0baa9eb89562ca70c814459c9eb7500ff69f581172ae338"
+  },
+  "host/recovery-before-run.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/recovery-before-final-run.json",
+    "bytes": 250,
+    "sha256": "26858ecf9a875b1da7f6bb79d2f4566f33a71c0d76670a077e7c70f95f8c07f5"
+  },
+  "host/preflight.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-host-preflight.json",
+    "bytes": 7451,
+    "sha256": "4cb3fe8ff33ccc45bf5cc97d60df5f915941df4b28a5630526003ec07de6c31e"
+  },
+  "checks/entry-check.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-entry-check.json",
+    "bytes": 639,
+    "sha256": "9beb4219b087240c60221bfe7211b98274f5d600a9188312743efe22e65586f0"
+  },
+  "runtime/comparison-start.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-comparison-start.json",
+    "bytes": 210,
+    "sha256": "b466dc315e9b8d1e4702f29a1141731537a3fe0a6aa9d2fffaf9028891292cca"
+  },
+  "runtime/collection.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-collect.json",
+    "bytes": 20975,
+    "sha256": "a1d4cfeb826e52100082ef21697f8458c76478bd63db695423b336f886b0b0ba"
+  },
+  "runtime/standard-cells-export.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-cells.json",
+    "bytes": 20792,
+    "sha256": "221bd650f306cc28618a02090210de7ccecb93708cd508dfe590bed4ff97e9d1"
+  },
+  "runtime/final-state.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-state-receipt.json",
+    "bytes": 765,
+    "sha256": "a72a890d52eaf6e3e5e7d9e68d9e2ac02ac0d4fb569ca1ee0216291684c4258b"
+  },
+  "host/recovery-after-run.json": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/recovery-after-final-run.json",
+    "bytes": 250,
+    "sha256": "26858ecf9a875b1da7f6bb79d2f4566f33a71c0d76670a077e7c70f95f8c07f5"
+  },
+  "final-independent-review.md": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/final-independent-review.md",
+    "bytes": 6984,
+    "sha256": "efb21d9b966017fe441cfd09dc2c85f6410b178e082f778566e008377f50486d"
+  },
+  "source/overlay.tar.gz": {
+    "source": "/tmp/kdlock-main-spin-phase-20261117/main-final-overlay.tar.gz",
+    "bytes": 26744,
+    "sha256": "fcf9c4ec8f7fdcf724fbfd303f639ad7e30767f4ceb4c9354dd232410b9bfa6c"
+  }
+}

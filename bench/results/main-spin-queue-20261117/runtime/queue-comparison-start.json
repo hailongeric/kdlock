@@ -1,0 +1,9 @@
+{
+  "receipt": {
+    "id": "main-queue-comparison",
+    "pid": 946,
+    "started": true
+  },
+  "time": 1794939954.0884933,
+  "runner_sha256": "970b4b9f7aa3582fd5df5e6334757b19ffccae34ca1ee59b4909b60db8e54b6a"
+}

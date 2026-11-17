@@ -1,0 +1,1 @@
+Linux kdlock-kernel16-fresh 7.0.0-38-kdlocalspin4 #1 SMP PREEMPT_DYNAMIC Tue Nov 17 17:38:49 UTC 2026 x86_64 GNU/Linux

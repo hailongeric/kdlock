@@ -1,0 +1,27 @@
+{
+  "boot_id": "fc8104fd-5e0c-406f-b93e-e7c6e6cabf6d",
+  "release": "7.0.0-38-kdlocalspin6",
+  "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000 (O)\n",
+  "active_test_processes": [],
+  "jobs": "",
+  "params": {
+    "kd_adapt": "Y",
+    "kd_deleg_enter": "5",
+    "kd_deleg_exit": "2",
+    "kd_batch": "4096",
+    "kd_numa": "Y",
+    "kd_numa_after": "32",
+    "kd_spin_phase_wait": "0",
+    "kd_spin_queue_phase": "Y"
+  },
+  "delegation": 0,
+  "taint": "4096",
+  "warnings": [],
+  "space": {
+    "total": 176958459904,
+    "used": 143870402560,
+    "free": 32040488960
+  },
+  "build_link": "/mnt/kdlock-builds2/main-spin-local-4669a085-20261117/main-final-out",
+  "source_link": "/mnt/kdlock-builds2/main-spin-local-4669a085-20261117/main-final-source"
+}

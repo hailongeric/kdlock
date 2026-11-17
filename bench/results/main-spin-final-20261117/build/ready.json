@@ -1,0 +1,6 @@
+{
+  "id": "main-final-ready-poll",
+  "returncode": 0,
+  "log_bytes": 151,
+  "output": "{\"ready\": true, \"modules\": \"nls_iso8859_1 12288 1 - Live 0xffffffffc000a000 (O)\\n\", \"boot_id\": \"50ac3f08-891c-4800-ba2c-4ce5580d256b\", \"warnings\": []}\n"
+}

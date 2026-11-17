@@ -1,0 +1,9 @@
+{
+  "receipt": {
+    "id": "main-queue-rwcheck",
+    "pid": 13874,
+    "started": true
+  },
+  "time": 1794940460.3603084,
+  "runner_sha256": "b02784f07fc949fefc79be6d656fea840fe04930b5bca47b878c8a684ca93b3c"
+}

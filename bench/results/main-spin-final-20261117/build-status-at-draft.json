@@ -1,0 +1,6 @@
+{
+  "id": "main-final-status-2-poll",
+  "returncode": 0,
+  "log_bytes": 899,
+  "output": "{\"result\": null, \"tail\": [\"  CC      drivers/gpu/drm/drm_plane_helper.o\", \"  CC      drivers/firmware/efi/apple-properties.o\", \"  CC      drivers/gpu/drm/drm_probe_helper.o\", \"  CC      drivers/firmware/efi/rci2-table.o\", \"  CC      drivers/firmware/efi/embedded-firmware.o\", \"  CC      drivers/firmware/efi/mokvar-table.o\", \"  CC      drivers/firmware/efi/ovmf-debug-log.o\", \"  CC      drivers/firmware/efi/sysfb_efi.o\", \"  AR      drivers/extcon/built-in.a\", \"  CC      drivers/firmware/efi/earlycon.o\", \"  CC      drivers/gpu/drm/drm_self_refresh_helper.o\", \"  CC      drivers/gpu/drm/drm_simple_kms_helper.o\", \"  CC      drivers/gpu/drm/drm_vblank_helper.o\", \"  CC      drivers/firmware/efi/cper-x86.o\", \"  CC      drivers/firmware/efi/unaccepted_memory.o\"], \"errors\": [], \"space\": \"Filesystem      Size  Used Avail Use% Mounted on\\n/dev/vdb        165G  134G   30G  82% /mnt/kdlock-builds2\\n\"}\n"
+}

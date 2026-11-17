@@ -1,0 +1,10 @@
+{
+  "commit": "18dad4a1c372d77a1155db671d56c148918344da",
+  "bytes": 26744,
+  "sha256": "fcf9c4ec8f7fdcf724fbfd303f639ad7e30767f4ceb4c9354dd232410b9bfa6c",
+  "members": [
+    "kernel/kd_core.c",
+    "main-final-identity.json"
+  ],
+  "member_identity_matches_frozen_input": true
+}

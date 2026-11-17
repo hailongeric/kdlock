@@ -1,0 +1,12 @@
+{
+  "archive": "main-queue-evidence.tar.gz",
+  "bytes": 505747,
+  "sha256": "0e5e6386b91236022a8aa145358f8744b79950de8131cb44df6193b7cb152da6",
+  "members": 85,
+  "extraction_checks": [
+    "relative paths only",
+    "no parent path components",
+    "regular files and directories only",
+    "existing destinations must match bytes"
+  ]
+}

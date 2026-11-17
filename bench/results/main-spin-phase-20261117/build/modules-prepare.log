@@ -1,0 +1,11 @@
+make: Entering directory '/work/source'
+make[1]: Entering directory '/work/out'
+  GEN     Makefile
+  CALL    /work/source/scripts/checksyscalls.sh
+/bin/sh: line 1: cd: HOME not set
+/bin/sh: line 1: cd: HOME not set
+  DESCEND objtool
+  INSTALL libsubcmd_headers
+  LDS     scripts/module.lds
+make[1]: Leaving directory '/work/out'
+make: Leaving directory '/work/source'

@@ -1,0 +1,6 @@
+{
+  "id": "main-queue-build-review-poll",
+  "returncode": 0,
+  "log_bytes": 432,
+  "output": "{\"verified_main_inputs\": 131, \"text_hashes\": {\"bench\": [\"b2ef8124a52507b3f99e72136acffead24e85d4893841ad1763471b391a41eec\", \"b2ef8124a52507b3f99e72136acffead24e85d4893841ad1763471b391a41eec\"], \"tclock-spin\": [\"55d113c7c1680a3d89430ebd88508f005d552cf5b42e6eb060288f77c145317f\", \"55d113c7c1680a3d89430ebd88508f005d552cf5b42e6eb060288f77c145317f\"]}, \"config_sha256\": \"1395ae1ff15c215ab680dbb5a4a8af074044cc7de35be82004ddf2647f01ca64\"}\n"
+}
