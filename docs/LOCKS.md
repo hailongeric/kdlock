@@ -219,7 +219,7 @@ call.
     the previous munmap after its downgrade, and a phase per operation
     cost 12% at 4-32 threads (`bench/results/kdclaude/mmap1-20261115-64cpu/`).
   * It delays a writer by a bounded time per phase. This is a fairness
-    change in the area AGENTS.md lists as deferred, made at the user's
+    change in the area AGENTS.md listed as deferred at the time, made at the user's
     request.
   * Counters: `rd_behind` counts readers admitted behind a writer phase,
     `rd_queue` counts readers that fell back to `m`.

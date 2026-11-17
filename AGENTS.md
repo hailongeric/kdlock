@@ -5,7 +5,9 @@ rewrite, plus the original TCLocks locks it is compared against. The earlier
 implementation and its documents, benchmarks and results are not in this tree;
 every reference below to a document or directory that is not here points into
 the earlier tree, which is reachable in git through the tag `full-tree-before-cleanup-20261115`.
-This tree's own guides are under [docs/](docs/README.md).
+This tree's own guides are under [docs/](docs/README.md). Where this
+implementation differs from the earlier one's documents, and why, is in
+[docs/DIFFERENCES.md](docs/DIFFERENCES.md).
 
 The project goal is relevant in-kernel lock replacement and evaluation of
 unchanged applications such as will-it-scale `mmap1`. Follow the three stages of
@@ -15,116 +17,61 @@ support and performance limits remain explicit; a future milestone does not
 override the implementation or VM rules below.
 
 Linux 6.1 kernel development is retired; no further adaptation targets it.
-The development VM uses Ubuntu 26.04.1 LTS and the custom
-`7.0.0-38-kdlock1` kernel from authenticated Ubuntu `linux=7.0.0-38.38`
-source. The earlier port record
-(`bench/results/10.176.26.71/tests/linux70-port-20261027/README.md`)
-separates source/build identity, boot, focused checks and live validation.
-Use the source/output-separated build of the earlier VM operations guide
-(`docs/operations/VM.md`); this tree's build and test procedure is
-[docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md). Preserve benchmark results
-under the earlier retirement record (`docs/history/kernel-retirement-20261027.md`).
-Legacy commands and measurements are historical references only. Active
-call-depth tracking is refused because
-its return thunk violates the native-escape flags contract. Complete mitigation
-coverage of handwritten/generated returns remains a separate limitation.
+Development targets Linux 7.0 (Ubuntu `linux=7.0.0-38.38` source) on x86_64.
+The VM, its kernels and the build and test procedure are in
+[docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md). Preserve benchmark results.
+Legacy commands and measurements are historical references only.
 
-The maintained branch is `master`. Preserve the KD-only foundation selected at
-`d2a2304`: KD physical exclusion, ABI2, exact delegation waiter/executor lifetimes,
-immutable mutex images and exact source/runtime lifetime accounting. The current mutex
-keeps its 32-byte native-aligned layout, shares preallocated CPU/slot storage
-between independent OSQ and delegation memberships. KD mutex defaults are total
-cap 1024 and NUMA locality boundary 1024, so no earlier count-based local cutoff
-applies. KD spin also retains its 1024-body total limit. Terminal/deferred queue
-handoff, separate links, cancellation and retirement obligations remain intact.
-At an earlier terminal boundary, eight or more deferred mutex requests receive
-handoff; a smaller prefix is serviced before a bounded FIFO remainder. The user
-selected 1024/1024 on October 28; prior 768-boundary results remain historical
-evidence, not a performance guarantee for the new default.
-Do not restore the rejected
-owned/adaptive protocol, Linux mutex backing, or parked delegation producers.
-Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases use the unified
-ABI2 interface; callable lock symbols and signal/try/I/O APIs execute locally.
-Public unlock retains exact provider routing for every successful acquisition.
-Rwlock local IRQ/BH and trylock APIs preserve the declared Native context order.
-Ordinary rwsem reader acquisitions and unprepared writer macros execute locally.
-Callable writer functions, trylocks and cleanup constructors remain local even
-on prepared objects. Quiescent preparation permits eligible ordinary,
-interruptible and killable writer macros to enter retained capture, subject to
-context/resource checks; it does not guarantee delegation. Actual readiness
-wins over applicable signal cancellation before commitment; cancellation returns
-only after exact cleanup and ACK. A JIT-consumed downgrade keeps the exact
-physical writer gate and selected phase across its logical read tail until
-matching typed UP_READ releases it once. Proxy final release requires the same
-logical task in ordinary task context. Local and Native-first downgrade create
-a real reader credit and release the writer gate and phase. Selected typed
-retained controls do not establish arbitrary mixed nesting or separate
-nested-image activation.
-All users of an object must follow one protocol. Whole-kernel replacement and
-ww_mutex remain separately unvalidated. Explicitly refuse CONFIG_PREEMPT_RT,
-CONFIG_DEBUG_MUTEXES, CONFIG_DEBUG_LOCK_ALLOC and lockdep; these configurations
-are outside support, not pending integration targets.
+The maintained branch is `master`. What the implementation does is documented
+in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (mechanism and invariants),
+[docs/LOCKS.md](docs/LOCKS.md) (per-family protocols, what may delegate,
+tunables), [docs/TRANSLATOR.md](docs/TRANSLATOR.md) and
+[docs/KERNEL_INTEGRATION.md](docs/KERNEL_INTEGRATION.md). Change those
+documents together with the code; do not restate their details here.
+All users of an object must follow one protocol. The configurations that
+`kernel/Kconfig` refuses (CONFIG_PREEMPT_RT, lock debugging, lockdep and the
+others listed there) are outside support, not pending integration targets.
+Current validation limits:
+
+* The whole-kernel switch (`CONFIG_KDLOCK_ALL`) has been built and tested
+  with delegation off, and with delegation only for allow-listed lock users
+  (`bench/results/kdclaude/kdall-*`).
+* `ww_mutex` applies wait-die to both classes and is never delegated.
+* Call-depth tracking (`CONFIG_MITIGATION_CALL_DEPTH_TRACKING`) is built into
+  the kdlock kernels. It is active only on CPUs affected by `retbleed`, which
+  the VM's CPU is not, so translated code has not run with it active.
 
 The user explicitly selected trusted kernel and module source on October 27.
-Current translation skips semantic safety admission, context/loop-value analysis
-and entry-input proofs. Translate
-ordinary string callees through the normal backend without named helper models.
-Keep source leases, complete decoded text, faithful lowering, actual CALL/RET
-words, exact return routing and runtime ownership/retirement checks. The checked
-analyzer remains an explicit regression utility (`trusted_source=False`), not
-the production default. Trusting source does not add missing backend support or
-validate whole-kernel replacement.
+The translator does not prove a section safe and does no context or
+loop-value analysis. It copies faithfully, routes calls and returns exactly,
+and hands back to the original task whatever it cannot run (frontiers and
+misses, TRANSLATOR.md). Trusting source does not add missing translator
+support.
 
 1. Read source and Git status before editing. Preserve unrelated work. Maintained
    prose and comments use English. Explain protocol purpose and ordering.
 2. Source edits, Git, static inspection and read-only offline archive checks run
    on `380G10`. All builds, unit tests, modules, daemons and timing run only in the
-   VM on `10.176.26.71`. Follow [docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md)
-   (and, for the earlier tree, its `docs/operations/VM.md`).
+   VM described in [docs/BUILD_AND_TEST.md](docs/BUILD_AND_TEST.md).
 3. Use basic plus directly affected checks. Full suites require an explicit user
    request. Missing dependencies, skips and compile failures are not passes.
-4. Keep exact physical owners, acquisitions, source leases, unlock ACKs and frame
-   retirement. Approximate counters cannot replace ownership records. Never
-   remove ownership/lifetime probes to hide a reproduced failure. Preserve the
-   explicitly selected source-trust policy and label its evidence separately.
-5. Share existing packet/frame storage with explicit lifetime transfer; prefer
-   preallocation. Avoid whole-packet copies, blanket clears or a global lock
-   added only to simplify lifetime accounting. Retain required capture/restore.
-6. Preserve the two-word wrapper ABI. Spin/rwlock ordinary pairs protect
-   preemption and IRQ/BH state. Explicit spin IRQ variants use native interfaces;
-   rwlock IRQ/BH variants require their own local context-preserving contract.
-   The maintained mutex still pins published waiters. The October 29 strict
-   queued/preemptible to selected/pinned candidate passed focused correctness but
-   was archived after a measured regression. The user approved a small bounded
-   immediately selected group on October 29, subject to correctness and timing;
-   its implementation remains a separate candidate pending those checks.
-   Do not promote the regressed strict candidate or describe queue-wide pinning
-   as satisfying that request. Physical mutex owners/services can sleep. Oversubscription redesign
-   and rwsem fairness changes are deferred.
-   Mixed mutex-to-spin known CALLs now have a one-CAS exact-ticket path. Only
-   an eligible ABI2 root with its sole outer mutex may transfer that owner to the
-   original waiter on contention; multi-owner chains retain borrowing. Transfer
-   retains source/frame state through physical unlock ACK and the old executor
-   reacquires before its own body. This is only an owner handoff: the former
-   combiner is not immediately requeued/delegatable, and the recipient does not
-   start a new combiner loop.
-   The requested queued role exchange remains unimplemented; code support and
-   live owner-handoff validation cannot be reported as completing that request.
+4. Lock ownership is the lock word itself, and lifetimes hold by construction
+   (ARCHITECTURE.md). Keep those invariants when changing the code. The
+   `kdlock_stats` counters are approximate and are not evidence of ownership.
+   Never remove a check or a probe to hide a reproduced failure.
+5. Prefer preallocated per-CPU storage and explicit lifetime transfer. Avoid
+   whole-packet copies, blanket clears or a global lock added only to simplify
+   lifetime accounting. Keep the state capture and restore that resumption needs.
+6. Lock entries keep the caller's preemption, interrupt and BH state exactly as
+   the native API does, whether the section runs locally, delegated or handed
+   back.
 7. Modifying, building and installing the guest kernel, and rebooting the guest,
    are approved by default; no additional user permission is required.
-   Captured kernel experiments under the earlier `kernel_baseline/experiments/`
-   are historical inputs.
 8. Synchronize only while idle and never edit frozen running inputs. Confirm a
    real recovery snapshot before live module/JIT work. Bound remote commands.
    A timeout does not prove drain. Never force unload or clear `/root/host_fs`.
-9. Keep benchmark and shared payloads in `workload_modules/` and benchmark runners
-   in `bench/`. Keep correctness-only code in `tests/`, with kernel payloads in
-   a `payload/` subdirectory beside their `tests/kernel/` runner. Provider probes
-   remain in `tests/kernel/`. Include private `.inc` files in snapshots.
-   In this tree the benchmark module, its runners and the results are in
-   `bench/`, the correctness runner is `bench/run_corr.py`, and there is no
-   separate payload or provider-probe directory yet; the named directories are
-   the earlier tree's.
+9. The benchmark module, its runners and the results are in `bench/`. The
+   correctness runner is `bench/run_corr.py`.
 10. Keep one guide per responsibility. Current instructions belong in maintained
     docs; historical protocols/results belong in history or fixed Git evidence.
     Preserve captured hashes, numeric evidence, failures and topology identities.
@@ -134,8 +81,6 @@ validate whole-kernel replacement.
     binding/routing/lifetime glue. Preserve native bodies, surrounding semantics
     and data structures; prefer leaving kernel source unchanged. Extracted-body
     calls and test ioctls are mechanism evidence, not real-world API substitutes.
-    See the workload contract (the earlier
-    `docs/BENCHMARK_WORKLOADS.md#permanent-testing-constraint`).
 
 ## Naming and wording
 
@@ -163,5 +108,6 @@ path-specific restore or revert for rollback, never reset unknown work.
 Keep rejected experiments and user WIP reachable through explicit archive refs;
 the tree as it was before this one was separated out is the tag `full-tree-before-cleanup-20261115`.
 Do not claim a performance gain without measurements; do not pool source versions,
-topologies, call shells, workloads or instrumentation settings. A NORMAL image
-is publication evidence, not proof of a returned JIT body.
+topologies, call shells, workloads or instrumentation settings. A published
+image is not proof that sections ran delegated: report the delegated and
+handback counters with every rate.

@@ -458,7 +458,7 @@ with 20% writes), and nothing with `kd_rw_era_ns=0`.
 What it costs is order: a caller can be passed by later callers of the era's
 node for at most twice its bound per acquisition. That is the same kind of
 bound the session's NUMA order puts on a passed-over writer, and like the
-reader phase it is a change in the area `AGENTS.md` lists as deferred, made
+reader phase it is a change in the area `AGENTS.md` listed as deferred at the time, made
 because the user asked for the cross-node behaviour of the rw families to be
 addressed. The measurements, including the placements with unequal numbers
 and what each step of the design fixed, are in

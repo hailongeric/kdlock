@@ -204,7 +204,7 @@ Status 2026-11-13 (adaptive delegation, role exchange, API coverage; commits
 
 Status 2026-11-14 (rwsem across NUMA nodes; the user asked to optimize the
 cases where rwsem and similar locks across nodes are far from TCLock, which
-touches the reader fairness area AGENTS.md lists as deferred). Data:
+touches the reader fairness area AGENTS.md listed as deferred at the time). Data:
 `grid-20261113-r6/` (380G10, #56) and `grid-20261114-r7-64cpu/`
 (10.176.26.71, 64 vCPUs, #56). Details: DIFFERENCES D11, LOCKS 5.
 

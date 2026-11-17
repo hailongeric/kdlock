@@ -5,6 +5,9 @@ earlier kdlock implementation's guides and design notes; this tree keeps only
 its own code and documentation. All of them are reachable in git through the
 tag `full-tree-before-cleanup-20261115`. The citations are kept as the record
 of what this review was made against.
+Citations of `AGENTS.md` and its rule numbers refer to its version of the
+time (`git show c6c9f232^:AGENTS.md`); the rules this review found
+superseded (D5, D10, D11, D18) were removed from it on 2026-11-17.
 
 This is a review of this implementation against those documents (the
 maintained guides for the earlier kdlock, the design/contract notes, and the
