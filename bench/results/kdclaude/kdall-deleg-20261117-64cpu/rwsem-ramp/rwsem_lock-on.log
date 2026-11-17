@@ -1,0 +1,292 @@
+7.0.0-38-kdall1 #3 SMP PREEMPT_DYNAMIC Tue Nov 17 03:28:38 UTC 2026
+== 0-5 s
+  handback         182
+  hb_miss          182
+  head_sleep       14
+  no_spin          89
+  offered          976
+  parked           250
+  plain            14
+  rd_behind        9
+  rd_queue         101
+  sessions         182
+  stop_handoff     1
+  xchg_offer       91
+  xchg_taken       91
+== 5-10 s
+  delegated        5640
+  era_claim        4
+  era_gate         17
+  era_start        1
+  head_sleep       41
+  no_spin          112
+  numa_deferred    20
+  offered          8855
+  parked           350
+  plain            1347
+  rd_behind        98
+  rd_queue         150
+  sessions         372
+  stop_handoff     2
+== 10-15 s
+  delegated        13778
+  era_claim        6
+  era_gate         23
+  era_start        1
+  handoff          1
+  head_sleep       65
+  mode_enter       1
+  no_spin          151
+  numa_deferred    39
+  offered          17951
+  parked           476
+  plain            1241
+  rd_behind        87
+  rd_queue         213
+  sessions         713
+  stop_handoff     3
+== 15-20 s
+  abandon          4
+  delegated        29119
+  era_claim        6
+  era_gate         21
+  era_start        1
+  handback         3
+  handback_pinned  3
+  handoff          2
+  hb_miss          3
+  head_sleep       68
+  mode_enter       2
+  no_spin          202
+  numa_deferred    152
+  offered          31739
+  parked           587
+  plain            1791
+  rd_behind        154
+  rd_queue         269
+  sessions         539
+  stop_handoff     3
+  xchg_offer       2
+  xchg_taken       2
+== 20-25 s
+  abandon          3
+  delegated        39776
+  head_sleep       87
+  mode_enter       1
+  no_spin          241
+  numa_deferred    197
+  offered          43850
+  parked           707
+  plain            1245
+  rd_behind        99
+  rd_queue         332
+  sessions         908
+  stop_budget      2
+  stop_handoff     2
+  stop_resched     1
+== 25-30 s
+  abandon          1
+  delegated        37118
+  head_sleep       96
+  mode_enter       1
+  no_spin          239
+  numa_deferred    333
+  offered          40276
+  parked           712
+  plain            1090
+  rd_behind        79
+  rd_queue         330
+  sessions         512
+  stop_budget      1
+== 30-35 s
+  abandon          8
+  delegated        74310
+  head_sleep       81
+  mode_enter       2
+  no_spin          260
+  numa_deferred    1399
+  offered          77290
+  parked           728
+  plain            1095
+  rd_behind        103
+  rd_queue         337
+  sessions         1026
+  stop_budget      3
+  stop_handoff     1
+== 35-40 s
+  abandon          4
+  delegated        61003
+  handback         1
+  hb_frontier      1
+  head_sleep       79
+  mode_enter       4
+  no_spin          376
+  numa_deferred    398
+  offered          63805
+  parked           945
+  plain            1755
+  rd_behind        153
+  rd_queue         441
+  sessions         589
+  stop_budget      5
+  stop_handoff     1
+  stop_resched     2
+  xchg_offer       1
+  xchg_taken       1
+== 40-45 s
+  abandon          2
+  delegated        34776
+  head_sleep       78
+  mode_enter       4
+  no_spin          244
+  numa_deferred    271
+  offered          36401
+  parked           711
+  plain            1298
+  rd_behind        103
+  rd_queue         340
+  sessions         306
+  stop_budget      2
+  stop_handoff     1
+== 45-50 s
+  delegated        38486
+  head_sleep       61
+  mode_enter       3
+  no_spin          266
+  numa_deferred    367
+  offered          40420
+  parked           688
+  plain            1089
+  rd_behind        86
+  rd_queue         316
+  sessions         455
+  stop_budget      5
+== 50-55 s
+  abandon          5
+  delegated        29305
+  head_sleep       45
+  mode_enter       1
+  no_spin          219
+  numa_deferred    244
+  offered          34941
+  parked           576
+  plain            1019
+  rd_behind        98
+  rd_queue         262
+  sessions         463
+  stop_budget      4
+  stop_handoff     1
+== 55-60 s
+  abandon          2
+  delegated        24954
+  handoff          1
+  head_sleep       57
+  mode_enter       4
+  no_spin          234
+  numa_deferred    335
+  offered          27046
+  parked           626
+  plain            1827
+  rd_behind        160
+  rd_queue         291
+  sessions         497
+  stop_budget      2
+  stop_resched     1
+== 60-65 s
+  delegated        45724
+  handoff          1
+  head_sleep       34
+  mode_enter       3
+  no_spin          286
+  numa_deferred    430
+  offered          48427
+  parked           678
+  plain            1301
+  rd_behind        97
+  rd_queue         316
+  sessions         650
+  stop_budget      3
+  stop_handoff     2
+== 65-70 s
+  abandon          1
+  delegated        31093
+  handoff          1
+  head_sleep       64
+  mode_enter       2
+  no_spin          202
+  numa_deferred    319
+  offered          33509
+  parked           585
+  plain            1305
+  rd_behind        103
+  rd_queue         272
+  sessions         480
+  stop_budget      1
+  stop_handoff     1
+== 70-75 s
+  abandon          2
+  delegated        14633
+  head_sleep       47
+  mode_enter       3
+  no_spin          223
+  numa_deferred    161
+  offered          16466
+  parked           585
+  plain            1339
+  rd_behind        113
+  rd_queue         268
+  sessions         432
+== 75-80 s
+  abandon          7
+  delegated        16863
+  head_sleep       63
+  mode_enter       4
+  no_spin          159
+  numa_deferred    238
+  offered          18511
+  parked           502
+  plain            1805
+  rd_behind        145
+  rd_queue         224
+  sessions         387
+  stop_handoff     1
+  stop_resched     1
+Writes:  Total: 562453  Max/Min: 15716/2624 ???  Fail: 0 
+rwsem_lock-torture:--- End of test: SUCCESS: 
+Writes:  Total: 54953  Max/Min: 3202/1 ???  Fail: 0 
+Writes:  Total: 110962  Max/Min: 5204/3 ???  Fail: 0 
+Writes:  Total: 174169  Max/Min: 8372/126 ???  Fail: 0 
+Writes:  Total: 236073  Max/Min: 9858/130 ???  Fail: 0 
+Writes:  Total: 303857  Max/Min: 10835/399 ???  Fail: 0 
+Writes:  Total: 360466  Max/Min: 12738/406 ???  Fail: 0 
+Writes:  Total: 436039  Max/Min: 15961/488 ???  Fail: 0 
+Writes:  Total: 511871  Max/Min: 17931/1559 ???  Fail: 0 
+Writes:  Total: 582135  Max/Min: 19537/1566 ???  Fail: 0 
+Writes:  Total: 643915  Max/Min: 24297/1916 ???  Fail: 0 
+Writes:  Total: 699326  Max/Min: 24510/2656 ???  Fail: 0 
+Writes:  Total: 754759  Max/Min: 26261/5041 ???  Fail: 0 
+Writes:  Total: 813732  Max/Min: 26268/5085 ???  Fail: 0 
+Writes:  Total: 879416  Max/Min: 26335/5275 ???  Fail: 0 
+Writes:  Total: 967913  Max/Min: 29041/5723 ???  Fail: 0 
+Writes:  Total: 1005776  Max/Min: 29286/5890 ???  Fail: 0 
+Writes:  Total: 1005776  Max/Min: 29286/5890 ???  Fail: 0 
+rwsem_lock-torture:--- End of test: SUCCESS: 
+Writes:  Total: 46227  Max/Min: 3124/1 ???  Fail: 0 
+Writes:  Total: 96573  Max/Min: 4571/4 ???  Fail: 0 
+Writes:  Total: 158679  Max/Min: 6275/8 ???  Fail: 0 
+Writes:  Total: 218543  Max/Min: 7460/57 ???  Fail: 0 
+Writes:  Total: 315999  Max/Min: 11538/226 ???  Fail: 0 
+Writes:  Total: 381261  Max/Min: 13737/635 ???  Fail: 0 
+Writes:  Total: 508447  Max/Min: 16001/1434 ???  Fail: 0 
+Writes:  Total: 610658  Max/Min: 16904/1759 ???  Fail: 0 
+Writes:  Total: 694057  Max/Min: 24215/2632 ???  Fail: 0 
+Writes:  Total: 776858  Max/Min: 26435/2941 ???  Fail: 0 
+Writes:  Total: 836153  Max/Min: 26439/3143 ???  Fail: 0 
+Writes:  Total: 916634  Max/Min: 27740/3225 ???  Fail: 0 
+Writes:  Total: 1011203  Max/Min: 29018/3293 ???  Fail: 0 
+Writes:  Total: 1091633  Max/Min: 42353/3456 ???  Fail: 0 
+Writes:  Total: 1139534  Max/Min: 42544/5372 ???  Fail: 0 
+Writes:  Total: 1183317  Max/Min: 44219/6645 ???  Fail: 0 
+Writes:  Total: 1183317  Max/Min: 44219/6645 ???  Fail: 0 
+rwsem_lock-torture:--- End of test: SUCCESS: 
+RWD_DONE

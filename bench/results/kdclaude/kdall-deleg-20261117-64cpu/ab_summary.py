@@ -17,7 +17,9 @@ deleg = defaultdict(list)
 hand = defaultdict(list)
 order = []
 for line in open(sys.argv[1]):
-    m = re.match(r"r(\d)-(on|off) (\w+) (\S+) (\d+) (.*) \| (\d+) (\d+) \| (\d+) (\d+)", line)
+    # Each side of the line starts with delegated and handback; deleg_mm.sh
+    # adds more counters after them.
+    m = re.match(r"r(\d)-(on|off) (\w+) (\S+) (\d+) (.*?) \| (\d+) (\d+)[\d ]* \| (\d+) (\d+)", line)
     if not m:
         continue
     _r, mode, kind, name, n, body = m.group(1, 2, 3, 4, 5, 6)

@@ -1,0 +1,9 @@
+# The mmap_lock writers of brk(), mmap() and munmap() (mm/mmap.c, mm/util.c,
+# mm/vma.c). Their sections run delegated up to the first frontier, which
+# for an unmap is at the latest the TLB flush. The cond_resched() sites are
+# frontiers whatever they are patched to, so the zap loops end there instead
+# of livelocking an executor (see
+# bench/results/kdclaude/kdall-deleg-20261117-64cpu/README.md, section 3).
+__do_sys_brk
+vm_mmap_pgoff
+__vm_munmap

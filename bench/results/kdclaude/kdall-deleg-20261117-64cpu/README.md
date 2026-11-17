@@ -113,9 +113,9 @@ still required MM bodies to run on their own task. That rule came from the
 earlier implementation and was removed afterwards, on the same day. A first
 A/B run used an `mm.txt` list with `vm_mmap_pgoff`, `__vm_munmap`,
 `__do_sys_brk` and `do_mprotect_pkey`. That run livelocked in a delegated
-`brk()` (section 3), and its numbers are not used. No MM site has been
-delegated with the fix of section 3 yet. The serial log, the daemon log and the partial
-results are in `softlockup-brk/`.
+`brk()` (section 3), and its numbers are not used. The serial log, the
+daemon log and the partial results are in `softlockup-brk/`. Section 5
+delegates brk, mmap and munmap with the fix of section 3.
 
 ### Results: delegation off against on, in one boot
 
@@ -191,10 +191,9 @@ up to 5% (xattr at 64), so smaller differences elsewhere are not results.
 
 **rwsem under locktorture** is not helped: 30 k sections delegated, and
 0.96 lies within the spread. Section 1's loss against native, a reader phase
-after each write, therefore remains with these lists. The writers' sections
-are empty, so a combining session is short, and most writes still run
-plainly. Why only about one write in seven is delegated was not
-investigated here.
+after each write, therefore remains in 20 s runs. Why only about one write
+in seven is delegated is in section 4: it comes from the 20 s window after
+each module load, and from writes that never wait behind another writer.
 
 The handbacks at `preempt_schedule_thunk+0x11` (52 logged, for a site in
 locktorture's module text) are the case left out of the static-call frontier
@@ -243,36 +242,193 @@ call was left to find: the text held an `xor`. Step 2 of the plan, images
 that follow runtime text patching, covers text changed *after* an image was
 built. Here the text is stable, and the patched form is the problem.
 
-**Fix** (`jit/kdjit/kernel.py`, `jit/kdjit/translator.py`):
+**Fix** (`jit/kdjit/kernel.py`, `jit/kdjit/translator.py`), in its final
+form after the MM runs of section 5:
 
 - `KernelView.static_call_sites(name)` reads the kernel's own static-call
   site tables, starting from the key `__SCK__name`. It covers the core
   kernel and every module, and leaves out init text.
-- Every inline site of `cond_resched` and `might_resched` (policy
-  `frontier_static_call`) is now a frontier, whatever it is patched to.
-  The `__SCT__` trampolines of both are frontiers by name too.
-- At such a site the origin takes over natively and is scheduled as usual.
-- The `preempt_schedule` sites of `preempt_enable()` are left alone. They
-  are reached only at preempt count 0, and their thunk already ends at the
-  `preempt_schedule` frontier.
+- Every inline `cond_resched` site (policy `frontier_static_call`) is copied
+  behind a test of the origin's `TIF_NEED_RESCHED`, read through the
+  redirected task: `mov rax, gs:[kd_cpu.task]; test byte [rax], 0x10`.
+  - If the flag is set, the site is a frontier exit, and the origin takes
+    over there and is scheduled as usual.
+  - If it is clear, the copy runs the site's own `xor`, as native
+    `cond_resched()` does when nothing needs to run.
+  - A site patched to a real call stays a frontier.
+  - The flag word and bit are those of the kernel's own `need_resched()`
+    in `zap_pte_range()`: `mov %gs:current_task,%rax; mov (%rax),%rax;
+    test $0x10,%al`.
+- `__SCT__cond_resched` is a frontier by name.
 
-`sc_check.py` / `sc_check.out` show the result on kdall1. The checks were
-static, done without loading any image:
+**Versions that were measured and changed:**
 
-- The table walk returns 644 `cond_resched` and 1 189 `might_resched` sites,
-  and all of them hold the 5-byte `xor`.
-- The four sites in `unmap_page_range` are among them (`+0x38d` is the
-  `xor` at `0xffffffff817be53d` in the dumped text).
-- The images for `__do_sys_brk` and for the `unmap_page_range` lock sites
-  now end at these sites.
-- In the api list, the new frontiers are allocator slow paths
-  (`might_alloc()` in kmalloc and the page allocator). The pipe and
-  posix-lock sites are in wait loops after the root release, so they are
-  outside the section.
+- **The first version** made the `cond_resched` and `might_resched` sites
+  unconditional frontiers. `sc_check.py` / `sc_check.out` are its static
+  check, done without loading any image:
+  - 644 `cond_resched` and 1 189 `might_resched` sites, all holding the
+    5-byte `xor`;
+  - the four in `unmap_page_range` among them (`+0x38d` is the `xor` at
+    `0xffffffff817be53d` in the dumped text);
+  - the images for `__do_sys_brk` and for the `unmap_page_range` lock
+    sites end there.
+- **`might_resched` was dropped.** It comes from `might_sleep()` and
+  `might_alloc()`. Nothing waits there for `need_resched` to clear, and as
+  a frontier it ended every delegated `mmap()` and `munmap()` at its first
+  slab allocation (`kmem_cache_alloc_noprof+0x29d`;
+  `mm/ab-mightresched-partial.txt`, `mm/kdd-mightresched-partial.log`).
+  With voluntary preemption its sites call `__cond_resched`, a frontier by
+  name.
+- **The test was added.** An unconditional frontier at `cond_resched`
+  handed back about half of all brk1 sections at `unmap_page_range+0x38d`.
+  brk1 at 64 threads fell to 0.54 of no delegation (`mm/run2-decodefail/`).
+  With the test it is at 1.10 (section 5).
+- **The `preempt_schedule` sites** of `preempt_enable()` were never
+  included. They are reached only at preempt count 0, and their thunk
+  already ends at the `preempt_schedule` frontier.
 
-The livelock was not reproduced with the fix: that would mean delegating an
-MM body again.
+The livelock did not come back:
+
+- brk, mmap and munmap ran delegated in 8 passes of will-it-scale at 16,
+  32 and 64 threads (section 5).
+- `mm_stress` ran 30 s at each of 16, 32 and 64 threads. It unmaps touched
+  memory, so the zap loop and its `cond_resched` points really run.
+- There was no kernel complaint in any of these.
+
+These runs do not show that a delegated section met `need_resched` set at
+a `cond_resched` point: the `hb_frontier` counter does not say which
+frontier was met.
 
 Also open: any loop that waits for `need_resched()` to clear without passing
 a `cond_resched()` would still spin in an executor. A bound on a session's
 run time would cover that case as well. It is not implemented.
+
+## 4. Why few locktorture rwsem writes are delegated
+
+`rw_deleg.sh rwsem_lock 80 off|on` runs locktorture's rwsem test for 80 s,
+first with the daemon off, then with it on (`torture.txt` only), in the same
+boot as section 5. It samples every kd counter, and locktorture's own write
+total, every 5 s. Files: `rwsem-ramp/rwsem_lock-{off,on}.log` (counters),
+`rwsem-ramp/rwsem_lock-on.kdd` (daemon). The write totals per 5 s are
+locktorture's `stat_interval=5` lines; they are summarised below.
+
+| 80 s | writes | queued behind a writer (`plain` + `offered`) | delegated |
+|---|---|---|---|
+| off | 1.006 M | 188 k (19%) | 0 |
+| on | 1.183 M | 561 k (47%) | 497 k (42% of writes, 89% of queued) |
+| on, first 20 s | 218 k | 64 k (29%) | 48.5 k (22%) |
+| on, first 5 s | 46 k | 1 k | 0 |
+
+Three things limit it.
+
+- **Only writes that wait behind another writer can be delegated.** A write
+  that finds the lock free, or that waits at the head of the queue for the
+  readers to leave, runs its own section. That is the session's own section,
+  not a delegated one. Locktorture's 64 readers hold the lock for 50 ms each,
+  so most writes are of that kind. Without delegation, only 19% of writes
+  queue behind another writer at all.
+- **Each load of the module starts from no knowledge.** The text is new, so
+  the site has to be learned again. In order, the daemon needs:
+  - the return of `torture_rwsem_down_write` into `lock_torture_writer`
+    (`MISS_RET`);
+  - the indirect call to `torture_rwsem_write_delay` (`MISS_IND`);
+  - the indirect call to `torture_rwsem_up_write` (`MISS_IND`);
+  - and a rebuild of an image of about 8 000 instructions after each one.
+  Nothing is delegated in the first 5 s, and only 5.6 k sections are in the
+  next 5 s. A 20 s run, as in the A/B of section 2, spends a large part of
+  its time here. It sees 22% of writes delegated at best; the A/B measured
+  14% (30 k of 220 k).
+- **Once learned, the queue is served.** 89% of queued writes run delegated.
+  Queueing itself grows with delegation (47% of writes against 19%): a
+  session holds the lock longer, so more writers arrive while it runs.
+  Sessions grow from about 15 sections (5-10 s) to 40-100. The delegated
+  count per 5 s swings between 15 k and 74 k with the reader phases.
+
+The write totals (1.18 M on against 1.01 M off) are one run each, so they
+are an indicator, not a result. A comparison of delegation on and off for
+this test needs runs of 80 s or more, several rounds, and the module loaded
+once per round. A locktorture-specific fix would be keeping knowledge of
+module sites across reloads, keyed by module and offset. Kernel lock users
+do not need it: their text stays.
+
+## 5. Delegating the mmap lock: brk, mmap and munmap
+
+`deleg_mm.sh`, kdall1 #3, in the same boot as section 4, with the final
+translator of section 3.
+
+- **Daemon:** `--allow bench/allow/mm.txt` (`__do_sys_brk`, `vm_mmap_pgoff`,
+  `__vm_munmap`), starting from empty knowledge. The images left loaded
+  from earlier runs are dropped first.
+- **Passes:** two learning passes, then three rounds with the daemon off
+  and on, alternated as in section 2.
+- **Workloads:** will-it-scale threads model, 5 s per run.
+- **Files:** `mm/ab.txt` and `mm/kdd.log`. The handback causes per run
+  (`hb_*`) are in the lines.
+
+| workload | threads | off (r1, r2, r3) | on (r1, r2, r3) | on/off (medians) | delegated per run (median) | handbacks per run (median) |
+|---|---|---|---|---|---|---|
+| wis mmap1 | 16 | 285 k, 290 k, 282 k | 368 k, 368 k, 378 k | **1.29** | 8.11 M | 106 |
+| wis mmap1 | 32 | 288 k, 240 k, 283 k | 375 k, 378 k, 370 k | **1.32** | 8.22 M | 53 |
+| wis mmap1 | 64 | 262 k, 259 k, 265 k | 311 k, 309 k, 308 k | **1.18** | 6.72 M | 13 |
+| wis mmap2 | 16 | 300 k, 301 k, 307 k | 386 k, 362 k, 373 k | **1.24** | 8.13 M | 96 |
+| wis mmap2 | 32 | 312 k, 301 k, 299 k | 371 k, 371 k, 370 k | **1.23** | 8.17 M | 10 |
+| wis mmap2 | 64 | 271 k, 271 k, 270 k | 304 k, 307 k, 300 k | **1.12** | 6.71 M | 10 |
+| wis brk1 | 16 | 640 k, 655 k, 663 k | 895 k, 1.07 M, 1.06 M | **1.61** | 11.5 M | 261 |
+| wis brk1 | 32 | 667 k, 657 k, 664 k | 1.05 M, 1 M, 951 k | **1.51** | 11.2 M | 28 |
+| wis brk1 | 64 | 725 k, 715 k, 703 k | 788 k, 887 k, 690 k | **1.10** | 8.45 M | 11 |
+
+No kernel complaint in the whole run.
+
+- **Gains with no overlap of off and on:** mmap1 and mmap2 at every thread
+  count, and brk1 at 16 and 32 threads.
+- **brk1 at 64 threads:** the median is 1.10, but the runs overlap (on
+  690-887 k, off 703-725 k). That point is not a result.
+- **Nearly every section that waits is delegated** (delegated is within
+  0.04-0.7% of `offered`). Handbacks are 10-261 per run.
+- **What these tests do not cover:** they do not touch the memory they map,
+  so an unmap here finds no page and needs no TLB flush.
+
+**The runs before this one**, kept as a record, each found a defect:
+
+- **`mm/ab-mightresched-partial.txt`**, stopped after two points: the
+  `might_resched` frontier (section 3).
+- **`mm/run2-decodefail/`**, complete, but delegating with stale images.
+  - **The defect:** the translator decoded the learned code roots before
+    the site itself. With 20-60 roots learned, they used up the budget of
+    60 000 instructions before the site was reached. The build then failed
+    ("cannot decode site"), the daemon gave the site up, and the kernel
+    kept running its old image.
+  - **When it happened:** for the mmap site in the first learning pass, and
+    for the brk site from round 1 on.
+  - **The fix:** the site is now decoded first, and the learned roots get
+    the budget that is left.
+  - **Its numbers:** brk1 0.54-0.94 and mmap2 0.87-0.92. They come from
+    that defect and from the unconditional `cond_resched` frontier, and are
+    not used.
+
+**Data check.** `mm_check.sh` runs `bench/mm_stress.c` with the same
+allow list and the daemon on (`mm/check.txt`, `mm/check.kdd`).
+`mm_stress` is data-checked: every page each thread wrote is checked, and
+it exercises mmap, munmap, mprotect, mremap, brk through large malloc,
+and fork.
+
+| threads, 30 s | operations | pages checked | forks | result | delegated | handed back (frontier / miss) |
+|---|---|---|---|---|---|---|
+| 16 | 57 073 | 14.7 M | 7 171 | ok | 1 683 | 3 487 (3 003 / 484) |
+| 32 | 59 721 | 15.4 M | 4 692 | ok | 2 973 | 6 034 (6 029 / 5) |
+| 64 | 47 465 | 12.2 M | 2 478 | ok | 2 466 | 3 528 (3 528 / 0) |
+
+No kernel complaint. Here few sections run from an image: of 46-67 k
+waiters that published a section per run, 5-9 k were run from an image.
+Most of those were handed back, at two frontiers:
+
+- the TLB flush of munmap (`tlb_flush_mmu_tlbonly`), because these unmaps
+  free touched pages;
+- `__vma_start_exclude_readers`, which waits for per-VMA-lock readers
+  (page faults) to leave a VMA before it is changed.
+
+Both act for the origin's CPU or task, so the handback is required. This
+test therefore checks the handback path in the middle of MM sections more
+than delegated execution. A workload that touches memory and gains from MM
+delegation would need the TLB flush delegated, which is outside what a
+section may do on another CPU today.

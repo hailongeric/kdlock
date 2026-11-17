@@ -1,0 +1,4 @@
+counters: delegated handback hb_frontier hb_miss hb_acquire hb_downgrade hb_other offered
+7.0.0-38-kdall1 #3 SMP PREEMPT_DYNAMIC Tue Nov 17 03:28:38 UTC 2026
+learn1 wis mmap1 16 average:309546:0:309546  | 651379 257 1 256 0 0 0 723104 | 673630 8379 4799 3580 0 0 0 778636 
+learn1 wis mmap1 32 average:296473:0:296473  | 673630 8379 4799 3580 0 0 0 778636 | 2005982 82885 78235 4650 0 0 0 3217534 

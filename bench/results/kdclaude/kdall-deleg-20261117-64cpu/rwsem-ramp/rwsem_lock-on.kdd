@@ -1,0 +1,130 @@
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 1 sites
+site 0xffffffffc0981045: 4 instructions, 35 bytes at 0xffffffffc0d33000
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: 8121 instructions, 48958 bytes at 0xffffffffc0d35000
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ret at torture_rwsem_down_write+0x1a -> lock_torture_writer+0xe0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: 8197 instructions, 49491 bytes at 0xffffffffc0d42000
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x13e -> torture_rwsem_write_delay+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x166 -> torture_rwsem_up_write+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x166 -> torture_rwsem_up_write+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x166 -> torture_rwsem_up_write+0x0
+site 0xffffffffc0981045: miss ind at lock_torture_writer+0x166 -> torture_rwsem_up_write+0x0
+site 0xffffffffc0981045: 8205 instructions, 49721 bytes at 0xffffffffc0d33000
+site 0xffffffff81791337 (vm_mmap_pgoff+0xe7): not in the allow list
+site 0xffffffff817d75b2 (do_mprotect_pkey+0xf2): not in the allow list
+site 0xffffffff8143223c (do_exit+0x31c): not in the allow list
+site 0xffffffff81430bc3 (release_task+0x93): not in the allow list
+site 0xffffffff817f5178 (__vm_munmap+0x88): not in the allow list
+site 0xffffffff815d88c4 (taskstats_exit+0x94): not in the allow list
+site 0xffffffff8157b4a0 (acct_collect+0x60): not in the allow list
+site 0xffffffffc0981045: miss code at pvclock_clocksource_read_nowd+0x0 -> -
+site 0xffffffffc0981045: miss code at pvclock_clocksource_read_nowd+0x0 -> -
+site 0xffffffffc0981045: miss code at pvclock_clocksource_read_nowd+0x0 -> -
+site 0xffffffffc0981045: 8291 instructions, 50132 bytes at 0xffffffffc0d41000
+site 0xffffffff81431f92 (do_exit+0x72): not in the allow list
+site 0xffffffffc0981045: handback at preempt_schedule_thunk+0x11, exit 0x6
+site 0xffffffff81447b90 (get_signal+0xc0): not in the allow list
+site 0xffffffff817efe13 (vma_prepare+0x63): not in the allow list
+site 0xffffffff8148ae24 (sched_mm_cid_exit+0x54): not in the allow list
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+refused 11 sites outside the allow list:
+       1  0xffffffff81791337 vm_mmap_pgoff+0xe7
+       1  0xffffffff817d75b2 do_mprotect_pkey+0xf2
+       1  0xffffffff8143223c do_exit+0x31c
+       1  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff817f5178 __vm_munmap+0x88
+       1  0xffffffff815d88c4 taskstats_exit+0x94
+       1  0xffffffff8157b4a0 acct_collect+0x60
+       1  0xffffffff81431f92 do_exit+0x72
+       1  0xffffffff81447b90 get_signal+0xc0
+       1  0xffffffff817efe13 vma_prepare+0x63
+       1  0xffffffff8148ae24 sched_mm_cid_exit+0x54

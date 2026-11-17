@@ -1,0 +1,181 @@
+7.0.0-38-kdall1 #3 SMP PREEMPT_DYNAMIC Tue Nov 17 03:28:38 UTC 2026
+== 0-5 s
+  era_claim        6
+  era_gate         24
+  era_start        1
+  head_sleep       20
+  no_spin          82
+  parked           250
+  plain            2548
+  rd_behind        44
+  rd_queue         99
+== 5-10 s
+  era_claim        5
+  era_gate         19
+  era_start        1
+  handoff          1
+  head_sleep       45
+  no_spin          84
+  parked           302
+  plain            6256
+  rd_behind        79
+  rd_queue         128
+== 10-15 s
+  abandon          1
+  handoff          1
+  head_sleep       67
+  no_spin          116
+  parked           410
+  plain            9387
+  rd_behind        100
+  rd_queue         182
+== 15-20 s
+  handoff          1
+  head_sleep       88
+  no_spin          133
+  parked           487
+  plain            10594
+  rd_behind        93
+  rd_queue         221
+== 20-25 s
+  abandon          1
+  handoff          2
+  head_sleep       106
+  no_spin          138
+  parked           538
+  plain            14257
+  rd_behind        139
+  rd_queue         243
+== 25-30 s
+  abandon          3
+  era_claim        6
+  era_gate         20
+  era_start        1
+  handoff          1
+  head_sleep       111
+  no_spin          208
+  parked           687
+  plain            13251
+  rd_behind        99
+  rd_queue         320
+== 30-35 s
+  abandon          17
+  handoff          3
+  head_sleep       128
+  no_spin          159
+  parked           644
+  plain            17096
+  rd_behind        76
+  rd_queue         293
+== 35-40 s
+  abandon          5
+  handoff          1
+  head_sleep       91
+  no_spin          199
+  parked           627
+  plain            12969
+  rd_behind        101
+  rd_queue         287
+== 40-45 s
+  abandon          9
+  era_claim        14
+  era_gate         82
+  era_start        2
+  handoff          2
+  head_sleep       156
+  no_spin          198
+  parked           753
+  plain            17922
+  rd_behind        137
+  rd_queue         345
+== 45-50 s
+  abandon          5
+  era_claim        7
+  era_gate         21
+  era_start        1
+  handoff          1
+  head_sleep       82
+  no_spin          262
+  parked           748
+  plain            9844
+  rd_behind        85
+  rd_queue         350
+== 50-55 s
+  abandon          8
+  head_sleep       94
+  no_spin          240
+  parked           721
+  plain            11315
+  rd_behind        101
+  rd_queue         332
+== 55-60 s
+  abandon          7
+  handoff          1
+  head_sleep       115
+  no_spin          278
+  parked           838
+  plain            12342
+  rd_behind        99
+  rd_queue         395
+== 60-65 s
+  abandon          5
+  handoff          2
+  head_sleep       52
+  no_spin          355
+  parked           865
+  plain            7468
+  rd_behind        147
+  rd_queue         407
+== 65-70 s
+  abandon          10
+  era_claim        3
+  era_gate         10
+  era_start        1
+  handoff          1
+  head_sleep       119
+  no_spin          188
+  parked           682
+  plain            13860
+  rd_behind        99
+  rd_queue         316
+== 70-75 s
+  abandon          6
+  handoff          1
+  head_sleep       80
+  no_spin          213
+  parked           634
+  plain            16716
+  rd_behind        106
+  rd_queue         291
+== 75-80 s
+  abandon          6
+  era_claim        6
+  era_gate         25
+  era_start        1
+  head_sleep       65
+  no_spin          243
+  parked           657
+  plain            11897
+  rd_behind        93
+  rd_queue         298
+Writes:  Total: 562453  Max/Min: 15716/2624 ???  Fail: 0 
+rwsem_lock-torture:--- End of test: SUCCESS: 
+Writes:  Total: 54953  Max/Min: 3202/1 ???  Fail: 0 
+Writes:  Total: 110962  Max/Min: 5204/3 ???  Fail: 0 
+Writes:  Total: 174169  Max/Min: 8372/126 ???  Fail: 0 
+Writes:  Total: 236073  Max/Min: 9858/130 ???  Fail: 0 
+Writes:  Total: 303857  Max/Min: 10835/399 ???  Fail: 0 
+Writes:  Total: 360466  Max/Min: 12738/406 ???  Fail: 0 
+Writes:  Total: 436039  Max/Min: 15961/488 ???  Fail: 0 
+Writes:  Total: 511871  Max/Min: 17931/1559 ???  Fail: 0 
+Writes:  Total: 582135  Max/Min: 19537/1566 ???  Fail: 0 
+Writes:  Total: 643915  Max/Min: 24297/1916 ???  Fail: 0 
+Writes:  Total: 699326  Max/Min: 24510/2656 ???  Fail: 0 
+Writes:  Total: 754759  Max/Min: 26261/5041 ???  Fail: 0 
+Writes:  Total: 813732  Max/Min: 26268/5085 ???  Fail: 0 
+Writes:  Total: 879416  Max/Min: 26335/5275 ???  Fail: 0 
+Writes:  Total: 967913  Max/Min: 29041/5723 ???  Fail: 0 
+Writes:  Total: 1005776  Max/Min: 29286/5890 ???  Fail: 0 
+Writes:  Total: 1005776  Max/Min: 29286/5890 ???  Fail: 0 
+rwsem_lock-torture:--- End of test: SUCCESS: 
+RWD_DONE
