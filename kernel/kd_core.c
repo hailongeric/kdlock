@@ -94,6 +94,9 @@ unsigned int kd_deleg_enter_sleep __read_mostly = 3;
 core_param(kd_deleg_enter_sleep, kd_deleg_enter_sleep, uint, 0644);
 unsigned int kd_deleg_exit __read_mostly = 2;
 core_param(kd_deleg_exit, kd_deleg_exit, uint, 0644);
+/* Extra observations while a queued spin head is between holders. */
+unsigned int kd_spin_phase_wait __read_mostly;
+core_param(kd_spin_phase_wait, kd_spin_phase_wait, uint, 0644);
 
 /*
  * Measuring the queue means reading other waiters' nodes, which the plain
@@ -1359,7 +1362,7 @@ bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site)
 
 	if (kd_q_pending(q, &val))
 		return true;
-	if (kd_q_deleg_mode(val) && kd_can_offer(site))
+	if (kd_q_deleg_mode(q, val) && kd_can_offer(site))
 		return false;
 	raw_cpu_inc(kd_cpu.nodes[0].nplain);
 	__kd_q_queue(q, true);

@@ -74,10 +74,16 @@ call.
   contention: a sampled queue depth of at least five successors enables it,
   and a depth below two disables it. Plain queue heads also disable it when
   the queue becomes short, so exit does not depend on finding generated
-  code. Admission uses the current holder's mode bit; an empty lock byte
-  selects local queuing, without consulting previous waits on that address.
-  A pending acquisition still stays local. Queue head handoff retains its
-  existing mode and ownership protocol.
+  code. Admission uses an observed holder's mode bit, without consulting
+  previous waits on that address. By default an empty lock byte selects local
+  queuing. The experimental `kd_spin_phase_wait` permits up to 128 additional
+  observations only while a tail exists and both holder and pending bytes are
+  empty. It stops when a holder or pending waiter appears, the tail vanishes,
+  or the bound is exhausted. Only an observed holder's delegation bit permits
+  offering; a pending acquisition still stays local. This adds no node
+  lifetime or ownership claim and changes neither fast acquisition nor unlock.
+  With delegation off the extra observations are skipped. The default is zero
+  pending matched performance evidence; `kd_adapt=0` retains its forced mode.
 * `kd_raw_spin_lock*` and the `kd_arch_spin_*` level use the same word but
   **never publish** (scheduler, timers, lock internals) and never combine.
 * `_irq`, `_irqsave` and `_bh` entries are delegable: the section runs with
@@ -355,6 +361,7 @@ sees neither effect.
 | `kd_deleg_enter` (core param, 0644) | 5 | spinlock: waiters behind a queue head that switch the lock to delegation mode |
 | `kd_deleg_enter_sleep` (core param, 0644) | 3 | the same for a mutex |
 | `kd_deleg_exit` (core param, 0644) | 2 | a session or a plain delegable spin queue head leaves delegation mode with fewer waiters queued behind it |
+| `kd_spin_phase_wait` (core param, 0644) | 0 | bounded extra lock-word observations in an empty queued spin handoff; effective value clamped to 128, without per-address history |
 | `kd_xchg` (core param, 0644) | 1 | role exchange after a handback: 0 never, 1 mutex and rwsem writer, 2 every family |
 | `KD_PROBE_PERIOD` / `KD_VOTE_PERIOD` | 128 / 32 | contended acquisitions per depth sample in plain mode / sections per sample in a session |
 | `KD_MAX_NODES` | 4 | queue nodes per CPU and class |

@@ -311,6 +311,7 @@ extern unsigned int kd_batch;
 extern bool kd_numa;
 extern bool kd_adapt;
 extern unsigned int kd_deleg_enter, kd_deleg_enter_sleep, kd_deleg_exit;
+extern unsigned int kd_spin_phase_wait;
 extern unsigned int kd_xchg;
 
 #define kd_stat_inc(kc, s)	((kc)->stat[s]++)
@@ -651,17 +652,34 @@ static __always_inline bool kd_q_pending(struct kd_qlock *q, u32 *valp)
 }
 
 /*
- * Admit a spin continuation only on a current holder's mode indication.
- * An empty lock byte between holders means a plain wait, even if this CPU
- * delegated on the same address earlier. A cached mode can outlive both
- * the busy phase and the lock object. Queue head handoff still carries
- * KD_N_HEAD_D, so a busy queue can continue its delegating phase without
- * keeping per-CPU history or reading remote nodes at admission.
+ * Admit a spin continuation only on an observed holder's mode indication.
+ * Between holders, a nonzero tail identifies a queued handoff, but says
+ * nothing about that queue's mode. Optionally give its next holder a bounded
+ * chance to publish the mode before selecting local execution. Stop when a
+ * holder or pending waiter appears, or the queue goes away.
+ *
+ * These reads neither grant ownership nor retain any node or address history.
+ * The normal pending/queue-head operations still establish the grant, and
+ * capture still checks its own eligibility. If an IRQ delays the next head,
+ * the fixed observation bound falls back to the unchanged local path.
  */
-static __always_inline bool kd_q_deleg_mode(u32 val)
+static __always_inline bool kd_q_deleg_mode(struct kd_qlock *q, u32 val)
 {
 	if (!READ_ONCE(kd_adapt))
 		return true;
+	if (!(val & KD_Q_LOCKED_PENDING_MASK) &&
+	    (val >> KD_Q_TAIL_SHIFT) && static_branch_likely(&kd_delegation)) {
+		unsigned int left = min_t(unsigned int,
+					 READ_ONCE(kd_spin_phase_wait), 128);
+
+		while (left--) {
+			cpu_relax();
+			val = atomic_read(&q->val);
+			if ((val & KD_Q_LOCKED_PENDING_MASK) ||
+			    !(val >> KD_Q_TAIL_SHIFT))
+				break;
+		}
+	}
 	return val & KD_Q_DELEG;
 }
 
