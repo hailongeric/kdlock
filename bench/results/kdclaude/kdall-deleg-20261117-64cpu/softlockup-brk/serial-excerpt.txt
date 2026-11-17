@@ -1,0 +1,19 @@
+[ 1172.915903] mutex_lock-torture: Stopping lock_torture_writer task
+[ 1172.915955] mutex_lock-torture: Stopping lock_torture_writer task
+[ 1172.916007] mutex_lock-torture: Stopping lock_torture_writer task
+[ 1172.916053] mutex_lock-torture: Stopping lock_torture_writer task
+[ 1172.916103] mutex_lock-torture: Stopping lock_torture_writer task
+[ 1172.916163] Writes:  Total: 33123700  Max/Min: 382817/167375 ???  Fail: 0 
+[ 1172.916199] mutex_lock-torture:--- End of test: SUCCESS: acq_writer_lim=0 bind_readers=0-63 bind_writers=0-63 call_rcu_chains=0 long_hold=100 nested_locks=0 nreaders_stress=0 nwriters_stress=128 onoff_holdoff=0 onoff_interval=0 rt_boost=2 rt_boost_factor=50 shuffle_interval=3 shutdown_secs=0 stat_interval=0 stutter=5 verbose=1 writer_fifo=0
+[ 1300.689816] watchdog: BUG: soft lockup - CPU#11 stuck for 22s! [brk1_threads:49630]
+[ 1300.692807] watchdog: BUG: soft lockup - CPU#15 stuck for 22s! [brk1_threads:49634]
+[ 1304.651808] watchdog: BUG: soft lockup - CPU#0 stuck for 23s! [brk1_threads:49619]
+[ 1324.689807] watchdog: BUG: soft lockup - CPU#11 stuck for 44s! [brk1_threads:49630]
+[ 1324.692807] watchdog: BUG: soft lockup - CPU#15 stuck for 44s! [brk1_threads:49634]
+[ 1328.651807] watchdog: BUG: soft lockup - CPU#0 stuck for 45s! [brk1_threads:49619]
+[ 1340.692536] rcu: INFO: rcu_preempt self-detected stall on CPU
+[ 1340.693525] rcu: 	0-....: (59995 ticks this GP) idle=5404/1/0x4000000000000000 softirq=79733/79733 fqs=14984
+[ 1340.694999] rcu: 	         hardirqs   softirqs   csw/system
+[ 4580.869298] rcu: 	(t=3300176 jiffies g=146189 q=253259 ncpus=64)
+[ 4584.689807] watchdog: BUG: soft lockup - CPU#11 stuck for 3080s! [brk1_threads:49630]
+[ 4596.651807] watchdog: BUG: soft lockup - CPU#0 stuck for 3088s! [brk1_threads:49619]

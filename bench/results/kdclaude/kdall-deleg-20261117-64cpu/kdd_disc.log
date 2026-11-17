@@ -1,0 +1,154 @@
+text 0xffffffffc0019000-0xffffffffc001a000 gone; republishing 0 sites
+text 0xffffffffc0032000-0xffffffffc0033000 gone; republishing 0 sites
+text 0xffffffffc002d000-0xffffffffc002e000 gone; republishing 0 sites
+text 0xffffffffc0038000-0xffffffffc0039000 gone; republishing 0 sites
+text 0xffffffffc0039000-0xffffffffc003a000 gone; republishing 0 sites
+text 0xffffffffc002d000-0xffffffffc002e000 gone; republishing 0 sites
+text 0xffffffffc0030000-0xffffffffc0032000 gone; republishing 0 sites
+text 0xffffffffc002e000-0xffffffffc002f000 gone; republishing 0 sites
+text 0xffffffffc002e000-0xffffffffc002f000 gone; republishing 0 sites
+text 0xffffffffc0038000-0xffffffffc0039000 gone; republishing 0 sites
+text 0xffffffffc002e000-0xffffffffc002f000 gone; republishing 0 sites
+text 0xffffffffc0038000-0xffffffffc0039000 gone; republishing 0 sites
+text 0xffffffffc002e000-0xffffffffc002f000 gone; republishing 0 sites
+text 0xffffffffc006b000-0xffffffffc006c000 gone; republishing 0 sites
+text 0xffffffffc0070000-0xffffffffc0071000 gone; republishing 0 sites
+text 0xffffffffc0095000-0xffffffffc0096000 gone; republishing 0 sites
+text 0xffffffffc0070000-0xffffffffc0071000 gone; republishing 0 sites
+text 0xffffffffc0070000-0xffffffffc0071000 gone; republishing 0 sites
+text 0xffffffffc0070000-0xffffffffc0071000 gone; republishing 0 sites
+text 0xffffffffc01f8000-0xffffffffc01f9000 gone; republishing 0 sites
+text 0xffffffffc01ff000-0xffffffffc0200000 gone; republishing 0 sites
+text 0xffffffffc01f8000-0xffffffffc01f9000 gone; republishing 0 sites
+text 0xffffffffc080a000-0xffffffffc080b000 gone; republishing 0 sites
+text 0xffffffffc01ff000-0xffffffffc0200000 gone; republishing 0 sites
+text 0xffffffffc01f8000-0xffffffffc01f9000 gone; republishing 0 sites
+text 0xffffffffc01f8000-0xffffffffc01f9000 gone; republishing 0 sites
+text 0xffffffffc01f8000-0xffffffffc01f9000 gone; republishing 0 sites
+text 0xffffffffc0822000-0xffffffffc0823000 gone; republishing 0 sites
+text 0xffffffffc0824000-0xffffffffc0825000 gone; republishing 0 sites
+text 0xffffffffc0845000-0xffffffffc0846000 gone; republishing 0 sites
+text 0xffffffffc0820000-0xffffffffc0821000 gone; republishing 0 sites
+text 0xffffffffc0822000-0xffffffffc0823000 gone; republishing 0 sites
+text 0xffffffffc01f8000-0xffffffffc01f9000 gone; republishing 0 sites
+text 0xffffffffc0820000-0xffffffffc0821000 gone; republishing 0 sites
+text 0xffffffffc0852000-0xffffffffc0853000 gone; republishing 0 sites
+text 0xffffffffc0853000-0xffffffffc0854000 gone; republishing 0 sites
+text 0xffffffffc084c000-0xffffffffc084d000 gone; republishing 0 sites
+text 0xffffffffc0824000-0xffffffffc0825000 gone; republishing 0 sites
+text 0xffffffffc01f8000-0xffffffffc01f9000 gone; republishing 0 sites
+text 0xffffffffc0824000-0xffffffffc0825000 gone; republishing 0 sites
+text 0xffffffffc0954000-0xffffffffc0956000 gone; republishing 0 sites
+text 0xffffffffc0824000-0xffffffffc0825000 gone; republishing 0 sites
+text 0xffffffffc0963000-0xffffffffc0965000 gone; republishing 0 sites
+text 0xffffffffc0963000-0xffffffffc0965000 gone; republishing 0 sites
+text 0xffffffffc0955000-0xffffffffc0956000 gone; republishing 0 sites
+text 0xffffffffc0955000-0xffffffffc0956000 gone; republishing 0 sites
+text 0xffffffffc096c000-0xffffffffc096d000 gone; republishing 0 sites
+text 0xffffffffc096c000-0xffffffffc096d000 gone; republishing 0 sites
+text 0xffffffffc096e000-0xffffffffc096f000 gone; republishing 0 sites
+text 0xffffffffc096e000-0xffffffffc096f000 gone; republishing 0 sites
+text 0xffffffffc0972000-0xffffffffc0973000 gone; republishing 0 sites
+text 0xffffffffc096e000-0xffffffffc096f000 gone; republishing 0 sites
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+site 0xffffffffc0981045 (torture_stutter.cold+0x10c0): not in the allow list
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+site 0xffffffff81791337 (vm_mmap_pgoff+0xe7): not in the allow list
+site 0xffffffff817d75b2 (do_mprotect_pkey+0xf2): not in the allow list
+site 0xffffffff8143223c (do_exit+0x31c): not in the allow list
+site 0xffffffff81431f92 (do_exit+0x72): not in the allow list
+site 0xffffffff815d88c4 (taskstats_exit+0x94): not in the allow list
+site 0xffffffff8157b4a0 (acct_collect+0x60): not in the allow list
+site 0xffffffff81430bc3 (release_task+0x93): not in the allow list
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+site 0xffffffffc0981535 (torture_stutter.cold+0x15b0): not in the allow list
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+site 0xffffffff817f5178 (__vm_munmap+0x88): not in the allow list
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+site 0xffffffffc0981965 (torture_stutter.cold+0x19e0): not in the allow list
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+site 0xffffffffc09817a5 (torture_stutter.cold+0x1820): not in the allow list
+text 0xffffffffc0983000-0xffffffffc0984000 gone; republishing 0 sites
+text 0xffffffffc0980000-0xffffffffc0983000 gone; republishing 0 sites
+site 0xffffffff818e1cf0 (set_close_on_exec+0x30): not in the allow list
+site 0xffffffff818e0329 (alloc_fd+0x39): not in the allow list
+site 0xffffffff818e172d (file_close_fd+0x2d): not in the allow list
+site 0xffffffff8195a881 (posix_test_lock+0x61): not in the allow list
+site 0xffffffff8195ba75 (posix_lock_inode+0xa5): not in the allow list
+site 0xffffffff8195de0f (locks_remove_file+0x16f): not in the allow list
+site 0xffffffff818bdb94 (pipe_fcntl+0x44): not in the allow list
+site 0xffffffff818baee8 (pipe_ioctl+0x48): not in the allow list
+site 0xffffffff818bb1ad (anon_pipe_read+0x4d): not in the allow list
+site 0xffffffff818bbe94 (anon_pipe_write+0x54): not in the allow list
+site 0xffffffff818e1ba6 (fdget_pos+0x86): not in the allow list
+site 0xffffffff8157035c (futex_q_lock+0x1c): not in the allow list
+site 0xffffffff8144efbc (__x64_sys_sethostname+0xdc): not in the allow list
+site 0xffffffff818f3b85 (vfs_setxattr+0x75): not in the allow list
+site 0xffffffff818f5312 (simple_xattr_set+0x62): not in the allow list
+site 0xffffffff818168b5 (__slab_free+0x195): not in the allow list
+site 0xffffffff817efe13 (vma_prepare+0x63): not in the allow list
+site 0xffffffff817f38f2 (unlink_file_vma_batch_final+0x42): not in the allow list
+site 0xffffffff81447b90 (get_signal+0xc0): not in the allow list
+site 0xffffffff817d1679 (__do_sys_brk+0x69): not in the allow list
+site 0xffffffff817de14f (pte_offset_map_lock+0x7f): not in the allow list
+site 0xffffffff818849a4 (folio_lruvec_lock_irqsave+0x64): not in the allow list
+site 0xffffffff81443cbf (lock_task_sighand+0x2f): not in the allow list
+site 0xffffffff817caf39 (__handle_mm_fault+0x7d9): not in the allow list
+site 0xffffffff81447508 (signal_setup_done+0xd8): not in the allow list
+site 0xffffffff814445eb (set_current_blocked+0x3b): not in the allow list
+site 0xffffffff817ef8c6 (vma_link_file+0x46): not in the allow list
+refused 39 sites outside the allow list:
+    7907  0xffffffffc0981965 torture_stutter.cold+0x19e0
+    2204  0xffffffffc0981535 torture_stutter.cold+0x15b0
+    2179  0xffffffff818e1cf0 set_close_on_exec+0x30
+    2138  0xffffffff8195a881 posix_test_lock+0x61
+    1674  0xffffffff817d1679 __do_sys_brk+0x69
+    1472  0xffffffff818e1ba6 fdget_pos+0x86
+    1265  0xffffffff81791337 vm_mmap_pgoff+0xe7
+    1262  0xffffffff817f5178 __vm_munmap+0x88
+     595  0xffffffff8144efbc __x64_sys_sethostname+0xdc
+     549  0xffffffffc09817a5 torture_stutter.cold+0x1820
+     489  0xffffffff818bb1ad anon_pipe_read+0x4d
+     487  0xffffffff818baee8 pipe_ioctl+0x48
+     481  0xffffffff818bdb94 pipe_fcntl+0x44
+     467  0xffffffff818bbe94 anon_pipe_write+0x54
+     429  0xffffffff8195ba75 posix_lock_inode+0xa5
+     418  0xffffffff818f3b85 vfs_setxattr+0x75
+     223  0xffffffff818f5312 simple_xattr_set+0x62
+     138  0xffffffff817d75b2 do_mprotect_pkey+0xf2
+     137  0xffffffff818e0329 alloc_fd+0x39
+     137  0xffffffff818e172d file_close_fd+0x2d
+      22  0xffffffff817de14f pte_offset_map_lock+0x7f
+       6  0xffffffffc0981045 torture_stutter.cold+0x10c0
+       4  0xffffffff8143223c do_exit+0x31c
+       4  0xffffffff81430bc3 release_task+0x93
+       4  0xffffffff818849a4 folio_lruvec_lock_irqsave+0x64
+       3  0xffffffff81431f92 do_exit+0x72
+       3  0xffffffff815d88c4 taskstats_exit+0x94
+       3  0xffffffff8157b4a0 acct_collect+0x60
+       2  0xffffffff81443cbf lock_task_sighand+0x2f
+       1  0xffffffff8195de0f locks_remove_file+0x16f
+       1  0xffffffff8157035c futex_q_lock+0x1c
+       1  0xffffffff818168b5 __slab_free+0x195
+       1  0xffffffff817efe13 vma_prepare+0x63
+       1  0xffffffff817f38f2 unlink_file_vma_batch_final+0x42
+       1  0xffffffff81447b90 get_signal+0xc0
+       1  0xffffffff817caf39 __handle_mm_fault+0x7d9
+       1  0xffffffff81447508 signal_setup_done+0xd8
+       1  0xffffffff814445eb set_current_blocked+0x3b
+       1  0xffffffff817ef8c6 vma_link_file+0x46
+DISC_DONE

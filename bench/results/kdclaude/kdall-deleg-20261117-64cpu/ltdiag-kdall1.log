@@ -1,0 +1,87 @@
+7.0.0-38-kdall1 #3 SMP PREEMPT_DYNAMIC Tue Nov 17 03:28:38 UTC 2026
+no daemon
+== torture rwsem_lock 06:32:58
+             16609      context-switches                                                      
+               434      cpu-migrations                                                        
+    93.48%  [k] delay_halt_tpause
+     0.29%  [k] kd_wait_sleepable
+     0.22%  [k] kd_q_lock_slow
+     0.21%  [k] kd_arch_spin_lock
+     0.17%  [.] 0x00000000001ac5f6
+     0.16%  [k] pvclock_clocksource_read_nowd
+     0.15%  [k] lapic_next_deadline
+     0.11%  [k] kd_q_lock_plain
+     0.11%  [k] asm_exc_page_fault
+     0.10%  [k] aa_dfa_leftmatch
+     0.08%  [k] delay_halt
+     0.07%  [k] ktime_get
+     0.06%  [k] next_uptodate_folio
+     0.06%  [k] vma_interval_tree_insert
+Writes:  Total: 496621  Max/Min: 21495/1617 ???  Fail: 0 
+rwsem_lock-torture:--- End of test: SUCCESS: 
+-- kd stat changes
+abandon                21
+handoff                4
+head_sleep             548
+no_spin                1190
+parked                 3866
+plain                  69103
+rd_behind              457
+rd_queue               1725
+== torture ww_mutex_lock 06:33:40
+           1023137      context-switches                                                      
+             47705      cpu-migrations                                                        
+    59.04%  [k] kd_q_lock_plain
+     7.87%  [k] kd_mutex_wake_matching
+     2.76%  [k] kd_mutex_sleep
+     2.43%  [k] kd_ww_waiter_dies
+     1.56%  [k] kd_arch_spin_lock
+     1.53%  [k] lapic_next_deadline
+     1.40%  [k] __kd_ww_mutex_lock.isra.0
+     1.35%  [k] cpupri_set
+     1.32%  [k] pvclock_clocksource_read_nowd
+     1.27%  [k] pv_native_safe_halt
+     0.58%  [k] asm_sysvec_apic_timer_interrupt
+     0.53%  [k] wake_q_add
+     0.52%  [k] torture_ww_mutex_lock
+     0.48%  [k] update_rq_clock
+Writes:  Total: 7912607  Max/Min: 66420/55670   Fail: 0 
+ww_mutex_lock-torture:--- End of test: SUCCESS: 
+-- kd stat changes
+abandon                1
+handoff                129414
+head_sleep             1
+no_spin                2
+parked                 1610214
+plain                  7340
+rd_behind              379
+== torture mutex_lock 06:34:22
+            111723      context-switches                                                      
+             18889      cpu-migrations                                                        
+    49.57%  [k] kd_wait_sleepable
+    47.56%  [k] kd_q_lock_plain
+     0.40%  [k] kd_mutex_unlock
+     0.39%  [k] kd_mutex_lock
+     0.31%  [k] wake_q_add
+     0.31%  [k] kd_mutex_wake_first
+     0.24%  [k] kd_mutex_can_spin
+     0.23%  [k] kd_arch_spin_lock
+     0.21%  [k] kd_mutex_sleep
+     0.09%  [k] pvclock_clocksource_read_nowd
+     0.09%  [k] kd_mutex_lock_slow
+     0.07%  [k] lock_torture_writer
+     0.04%  [k] lapic_next_deadline
+     0.03%  [k] asm_sysvec_apic_timer_interrupt
+Writes:  Total: 53542878  Max/Min: 556224/276922 ???  Fail: 0 
+mutex_lock-torture:--- End of test: SUCCESS: 
+-- kd stat changes
+abandon                27248
+handoff                3608
+head_sleep             12594
+no_spin                36335
+parked                 48797
+plain                  28757402
+rd_behind              206
+rd_queue               1
+complaints:
+LTD_DONE

@@ -1,0 +1,15 @@
+== rspin 50000
+Writes:  Total: 539457  Max/Min: 18565/1397 ???  Fail: 0 
+handoff=11 head_sleep=634 parked=4587 rd_behind=479 rd_queue=2090 
+== rspin 1000000000
+Writes:  Total: 2134  Max/Min: 173/19 ???  Fail: 0 
+head_sleep=92 parked=2548 rd_behind=3731 rd_queue=996 
+== rspin 50000
+Writes:  Total: 2134  Max/Min: 173/19 ???  Fail: 0 
+Writes:  Total: 535079  Max/Min: 15686/2559 ???  Fail: 0 
+handoff=10 head_sleep=692 parked=4728 rd_behind=459 rd_queue=2169 
+== rspin 1000000000
+Writes:  Total: 535079  Max/Min: 15686/2559 ???  Fail: 0 
+Writes:  Total: 1718  Max/Min: 84/18 ???  Fail: 0 
+head_sleep=88 parked=2557 rd_behind=4223 rd_queue=995 
+RS_DONE
