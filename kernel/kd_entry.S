@@ -187,7 +187,11 @@ SYM_FUNC_START(\name)
 .endif
 	RET
 .Lslow_\name:
-	/* \slowfn(lock, call site): true = acquired on this stack. */
+	/* The spin slow path also takes the failed cmpxchg's lock word. */
+.ifc \slowfn,kd_q_lock_slow
+	movl	%eax, %edx
+.endif
+	/* \slowfn(lock, call site[, word]): true = acquired on this stack. */
 	movq	(%rsp), %rsi
 	pushq	%rcx				/* irqsave result; unused otherwise */
 	pushq	%rdi

@@ -1346,18 +1346,18 @@ void kd_q_lock_plain(struct kd_qlock *q)
 /*
  * Slow path of the delegable spinlock entries, called by the entry stub on
  * the caller's stack with preemption off. @site is the caller's return
- * address. One function, like the native slow path it stands for in plain
- * mode.
+ * address. @val is the failed entry cmpxchg's observation, as in the native
+ * slow path. It selects a path, not ownership: the pending RMW or queue-head
+ * acquisition still establishes the grant. Avoid rereading the lock word
+ * solely to make this initial choice.
  *
  * Returns true with the lock held. Returns false, with nothing queued,
  * when the lock is in delegation mode and this caller can publish its
  * continuation; the stub then goes on to the wait stack and kd_wait_spin().
  */
-bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site)
+bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site, u32 val)
 {
-	u32 val;
-
-	if (kd_q_pending(q, &val))
+	if (kd_q_pending_value(q, val, &val))
 		return true;
 	if (kd_q_deleg_mode(val) && kd_can_offer(site))
 		return false;

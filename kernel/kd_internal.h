@@ -418,7 +418,7 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 void kd_finish_resume(int pin);
 void kd_q_lock_plain(struct kd_qlock *q);
 bool kd_q_queue(struct kd_qlock *q, bool probe);
-bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site);
+bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site, u32 val);
 bool kd_can_offer(unsigned long rip);
 bool kd_release_combine(struct kd_qlock *q, struct kd_mutex *m, void *root,
 			const struct kd_family *f);
@@ -614,10 +614,9 @@ static __always_inline u32 kd_q_fetch_set_pending(struct kd_qlock *q)
  * Returns true with the lock held. Otherwise the caller must queue; *@valp
  * is the last value read.
  */
-static __always_inline bool kd_q_pending(struct kd_qlock *q, u32 *valp)
+static __always_inline bool kd_q_pending_value(struct kd_qlock *q, u32 val,
+					      u32 *valp)
 {
-	u32 val = atomic_read(&q->val);
-
 	/* A pending waiter is about to take the free lock: let it (bounded). */
 	if (val == KD_Q_PENDING_VAL) {
 		int cnt = KD_PENDING_LOOPS;
@@ -648,6 +647,11 @@ static __always_inline bool kd_q_pending(struct kd_qlock *q, u32 *valp)
 	 */
 	WRITE_ONCE(q->locked_pending, KD_Q_LOCKED | (val & KD_Q_DELEG));
 	return true;
+}
+
+static __always_inline bool kd_q_pending(struct kd_qlock *q, u32 *valp)
+{
+	return kd_q_pending_value(q, atomic_read(&q->val), valp);
 }
 
 /*
