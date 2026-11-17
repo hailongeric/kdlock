@@ -494,6 +494,23 @@ continuation, which is more than the native lock pays.
   including the pending waiter; a mutex caller spins in the queue while the
   holder runs and parks otherwise, as before. A waiter queued this way never
   combines, and a session ends at its node.
+* **NUMA order in plain mode (sleepable class).** A queue head that still
+  waits for the holder looks up to 8 waiters ahead for one on its own node
+  and moves it directly behind itself (`kd_q_local_first()`). The others
+  keep their order, one place further back, and each counts the pass. A
+  waiter passed `kd_numa_plain` (16) times is not passed again, so it waits
+  at most that many more sections.
+  - **Why:** in arrival order, once the waiters come from both nodes, the
+    shared data moved between nodes at about every other handover. On
+    kdnat2 (native locks, kdlock built in, one boot) the mutex nano body
+    with 16 lines ran at kd/native 1.05 with 32 workers on one node, 0.72
+    at 48 workers and 0.66 at 64. Native kept its rate.
+  - **Measured with the move:** 1.05 at 48 workers and 0.90 at 64; with 1
+    line, 1.50 and 1.35.
+  - **Cost:** a few moves suffice, because the queue then stays in node
+    batches. At 64 workers about 15 000 moves per 2 s point, against more
+    than 4 million handovers.
+  - A delegation session orders its waiters by node itself (section 7).
 * **Entering.** A queue head samples how many waiters are linked behind it
   (`kd_q_depth`, once per 128 contended acquisitions of a CPU, while it
   still waits for the holder so that the walk delays nobody). At

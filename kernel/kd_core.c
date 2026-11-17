@@ -55,6 +55,15 @@ unsigned int kd_numa_after __read_mostly = 32;
 core_param(kd_numa_after, kd_numa_after, uint, 0644);
 
 /*
+ * Sleepable class, plain mode: how often a waiter may be passed over by
+ * kd_q_local_first(), at most 255; 0 keeps the queue in arrival order.
+ */
+static unsigned int kd_numa_plain __read_mostly = 16;
+core_param(kd_numa_plain, kd_numa_plain, uint, 0644);
+/* How many waiters behind the head kd_q_local_first() looks at. */
+#define KD_NUMA_SCAN	8
+
+/*
  * Adaptive delegation.
  *
  * Delegation pays off only while the combiner keeps finding the next
@@ -1230,6 +1239,7 @@ static __always_inline void kd_node_init(struct kd_node *n, int cpu, int idx)
 	n->next = NULL;
 	n->tail = kd_tail(cpu, idx);
 	n->claim = false;
+	n->passed = 0;
 	WRITE_ONCE(n->state, KD_N_WAIT);
 }
 
@@ -1464,6 +1474,69 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 	return KD_WAIT_LOCAL;
 }
 
+/*
+ * Plain mode, NUMA order for the sleepable class. Queue head @me is still
+ * waiting for the holder. Its successor will hold the lock after it, and if
+ * that waiter is on another node, the data the sections share moves there.
+ * In arrival order that happens at about every other handover once the
+ * waiters come from both nodes (measured on kdnat1, mutex nano bench with
+ * 16 lines: kd/native 1.05 at 32 workers on one node, 0.87 with 8 of 40 on
+ * the second node, 0.65 with 32 of 64; native kept its rate throughout).
+ *
+ * So look up to KD_NUMA_SCAN waiters ahead for one on this head's node and
+ * move it directly behind the head. The others keep their order, one place
+ * further back, and each counts the pass. A waiter that was passed
+ * kd_numa_plain times is not passed again, and nobody behind it is moved
+ * ahead of it: a waiter waits at most that many more sections. A delegation
+ * session orders its waiters by node itself (kd_session()).
+ *
+ * Only the head writes links behind itself; an arriving waiter writes only
+ * the next pointer of the node it found as the tail. Moving the tail node
+ * therefore swings the tail back as kd_q_detach() does. A waiter that left
+ * to sleep (KD_N_ABANDON) stays linked until a head drops it, so moving or
+ * passing one is harmless; kd_q_pass() drops it later.
+ */
+static void kd_q_local_first(struct kd_qlock *q, struct kd_node *me)
+{
+	unsigned int limit = min_t(unsigned int, READ_ONCE(kd_numa_plain), 255);
+	struct kd_node *first = READ_ONCE(me->next), *prev, *n, *succ;
+	int i;
+
+	if (!limit || !first || first->nid == me->nid)
+		return;
+	for (n = first, i = 0;; i++) {
+		if (READ_ONCE(n->passed) >= limit || i == KD_NUMA_SCAN)
+			return;
+		prev = n;
+		n = READ_ONCE(n->next);
+		if (!n)
+			return;
+		if (n->nid == me->nid)
+			break;
+	}
+
+	/* Unlink @n from behind @prev. */
+	succ = READ_ONCE(n->next);
+	if (!succ) {
+		WRITE_ONCE(prev->next, NULL);
+		if (cmpxchg(&q->tail, n->tail, prev->tail) != n->tail) {
+			/* A waiter arrived behind @n: it links itself there. */
+			succ = smp_cond_load_relaxed(&n->next, VAL);
+			WRITE_ONCE(prev->next, succ);
+		}
+	} else {
+		WRITE_ONCE(prev->next, succ);
+	}
+	for (succ = first;; succ = READ_ONCE(succ->next)) {
+		WRITE_ONCE(succ->passed, succ->passed + 1);
+		if (succ == prev)
+			break;
+	}
+	WRITE_ONCE(n->next, first);
+	WRITE_ONCE(me->next, n);
+	kd_stat_inc(this_cpu_ptr(&kd_cpu), KD_STAT_NUMA_LOCAL);
+}
+
 static struct kd_node *kd_mnode_alloc(struct kd_cpu *kc)
 {
 	int i;
@@ -1513,8 +1586,8 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 	me = kd_mnode_alloc(kc);
 	if (!me)
 		return KD_WAIT_SLEEP;
+	me->nid = numa_node_id();
 	if (offer) {
-		me->nid = numa_node_id();
 		kd_node_offer(kc, me, nested, entry);
 	} else {
 		me->entry = NULL;
@@ -1562,6 +1635,9 @@ again:
 	 */
 	if (!f->always_deleg && !kd_qs_deleg_mode(q) && kd_probe_enter(kc, me, true))
 		kd_mode_set(q, true, true);
+	/* Plain mode, while the holder keeps the lock: see kd_q_local_first(). */
+	if (!offer && READ_ONCE(q->locked))
+		kd_q_local_first(q, me);
 	if (READ_ONCE(me->next))
 		prefetchw(READ_ONCE(me->next));
 

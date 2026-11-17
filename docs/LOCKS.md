@@ -345,6 +345,7 @@ sees neither effect.
 | `kd_cldemote` (core param, 0644) | 3 | bits: a queued spin-class waiter demotes 1 its packet, 2 its stack top (CLDEMOTE); 16 and 32 the same for the sleepable class (ARCHITECTURE 4.2) |
 | `kd_numa` (core param, 0644) | 1 | NUMA-ordered sessions |
 | `kd_numa_after` (core param, 0644) | 32 | rwsem: waiters a session serves in queue order before it defers other nodes' (ARCHITECTURE 7) |
+| `kd_numa_plain` (core param, 0644) | 16 | mutex and rwsem writer queue in plain mode: how often a waiter may be passed by a queue head that moves a waiter of its own node to the front (at most 255); 0: arrival order (ARCHITECTURE 7a) |
 | `kd_rw_era_ns` (core param, 0644) | 200000 | rwsem and rwlock: the era bound (a waiter waits at most twice this); 0: no eras, and the queue heads measure nothing (ARCHITECTURE 7b) |
 | `kd_rw_era_press` (core param, 0644) | 225 | hundredths of a caller: average company a queue-head writer must find (readers in + up to 2 queued behind) for an era to start or be renewed |
 | `kd_rw_era_drain_ns` (core param, 0644) | 5000 | no era while the readers a queue head finds take longer than this to leave, on average |

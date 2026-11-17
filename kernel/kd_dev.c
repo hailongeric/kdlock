@@ -57,6 +57,7 @@ static const char * const kd_stat_names[KD_STAT_NR] = {
 	[KD_STAT_OFFERED]		= "offered",
 	[KD_STAT_PLAIN]			= "plain",
 	[KD_STAT_NUMA_DEFERRED]		= "numa_deferred",
+	[KD_STAT_NUMA_LOCAL]		= "numa_local",
 	[KD_STAT_STOP_PLAIN]		= "stop_plain",
 	[KD_STAT_STOP_RESCHED]		= "stop_resched",
 	[KD_STAT_STOP_HANDOFF]		= "stop_handoff",

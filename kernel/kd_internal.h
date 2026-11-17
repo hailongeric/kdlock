@@ -177,6 +177,11 @@ struct kd_node {
 	 * hint, for how many packet lines the combiner requests ahead.
 	 */
 	bool		full;
+	/*
+	 * Sleepable class, plain mode: how often a queue head put a waiter of
+	 * its own node in front of this one (kd_q_local_first()).
+	 */
+	u8		passed;
 } ____cacheline_aligned_in_smp;
 
 #define KD_MAX_NODES	4
@@ -194,6 +199,7 @@ enum {
 	KD_STAT_OFFERED,	/* waiters queued with generated code */
 	KD_STAT_PLAIN,		/* waiters queued without */
 	KD_STAT_NUMA_DEFERRED,	/* waiters of another node passed over by a session */
+	KD_STAT_NUMA_LOCAL,	/* plain mode: a waiter of the head's node moved to the front */
 	/* Why sessions stopped before the queue was empty or the budget spent. */
 	KD_STAT_STOP_PLAIN,	/* next waiter has no generated code */
 	KD_STAT_STOP_RESCHED,	/* the combiner's CPU is wanted elsewhere */

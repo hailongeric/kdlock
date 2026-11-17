@@ -79,6 +79,7 @@ Read-only, `/sys/kernel/debug/kdlock_stats`. One `name value` line each:
 | `offered` | waiters queued with an image |
 | `plain` | waiters queued without |
 | `numa_deferred` | waiters of another node passed over by a session |
+| `numa_local` | plain mode, sleepable class: waiters of the queue head's node moved directly behind it (`kd_q_local_first()`) |
 | `stop_plain`, `stop_resched`, `stop_handoff`, `stop_ctx`, `stop_budget` | why sessions stopped before the queue was empty |
 | `no_spin`, `abandon`, `head_sleep`, `parked`, `handoff` | mutex and rwsem: how waiting ended up off the queue, and releases that took the lock again for a parked waiter |
 | `mode_enter`, `mode_exit` | locks switched to delegation mode by a queue head / back to plain mode by a combiner |
