@@ -87,7 +87,7 @@ Node states: `FREE, WAIT, HEAD, HEAD_D, RESUME, ABANDON, HWAIT, HBACK, DROP`
 Where the per-CPU state sits matters for the plain path (measured, see
 `bench/results/kdclaude/README.md`): everything other CPUs write (nodes, the
 packet) is in 128-byte blocks apart from what only the owner writes; the
-count of nodes in use, the plain-wait statistic and the mode memory are in
+count of nodes in use and the plain-wait statistic are in
 the first node's own line, as the native lock keeps its node count; and the
 sampling counter is deliberately *not* in that line.
 
@@ -503,12 +503,18 @@ continuation, which is more than the native lock pays.
   byte, which only the holder writes and a release clears. It travels with
   the head role (`HEAD_D`), also through waiters that do not take part, and
   a pending waiter carries it over. A contended caller reads it from the
-  lock word it has just read anyway; while the byte is momentarily empty
-  (between a release and the next head) it goes by what this CPU saw last
-  for that lock. Mutex: the flag `KD_QF_DELEG`, which outlives single holds.
+  lock word it has just read anyway. While the byte is momentarily empty
+  (between a release and the next head), a new spin caller queues locally.
+  No per-CPU mode history survives a quiet interval or reuse of the lock's
+  address. Mutex: the flag `KD_QF_DELEG`, which outlives single holds.
 * **Leaving.** A session counts the waiters still queued behind it every 32
   sections and when it ends; below `kd_deleg_exit` (2) the lock goes back to
-  plain mode.
+  plain mode. A plain delegable spin head also checks this lower threshold
+  before taking the lock when it inherited delegation mode, even if no
+  image is available. This check is bounded by the exit threshold and is
+  absent from uncontended, pending and already-plain acquisitions. A
+  successor still publishing its link can cause an early return to plain
+  mode; it retains its queue position and executes locally.
 * **rwlock and rwsem writers always publish** when they can
   (`kd_family.always_deleg`). There a session saves more than cache
   transfers: the writers it serves share one wait for the readers to leave.

@@ -31,7 +31,8 @@ validate actual MM execution. Active call-depth tracking is refused because
 its return thunk violates the native-escape flags contract. Complete mitigation
 coverage of handwritten/generated returns remains a separate limitation.
 
-The maintained branch is `master`. Preserve the KD-only foundation selected at
+The maintained branch for this work is `main`; do not modify `master`.
+Preserve the KD-only foundation selected at
 `d2a2304`: KD physical exclusion, ABI2, exact delegation waiter/executor lifetimes,
 immutable mutex images and exact source/runtime lifetime accounting. The current mutex
 keeps its 32-byte native-aligned layout, shares preallocated CPU/slot storage

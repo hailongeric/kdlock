@@ -55,6 +55,46 @@ the default and a failed boot comes back on `kdlock1`.
 
 ## 4. Running the tests
 
+### Main spin admission change, 2026-11-17
+
+The main candidate removes per-CPU spin mode history and lets plain
+delegable queue heads leave delegation mode at the existing lower depth
+threshold. The entry assembly, pending protocol, physical ownership and
+release/handback protocol are unchanged. Old measurements below do not
+validate this candidate.
+
+Validation is pending: the preflight found `kdclaude` running
+`7.0.0-38-kdall1 #3`, first with `locktorture`, then with `api_stress` and
+a translator. No inputs were synchronized and no build or run was started
+alongside that work. Resume only after the VM is idle, with verified recovery
+coverage and an isolated source/build identity for this main commit.
+
+Required focused checks:
+
+* Compile the kdlock objects and benchmark module, including the existing
+  assembly/layout assertions. Check the API variants and spin nesting,
+  raw spin and spin handback cases before timing.
+* With adaptive defaults and a prepared image, run low/high/low worker
+  phases on the same lock: 1, 2, 3, 8, 32, then 3, 2, 1. Require exact data
+  counts, progress from every worker and clean module teardown. A fully
+  drained single-worker phase must publish no continuations; distinguish
+  an outstanding delegated wait from a fresh admission during downshift.
+* Observe a queue with no generated image crossing the enter threshold
+  and later falling below the exit threshold while still queued. Require
+  the plain head to retire the mode without executing a combining session.
+  Repeat address reuse after a full drain; earlier waits must not affect
+  admission. These transitions need a controlled queue fixture, not just
+  aggregate throughput or a mode counter.
+* Verify forced mode (`kd_adapt=0`) separately. Restore test-only parameter
+  changes before measuring the defaults. Preserve pending, IRQ/BH, node
+  exhaustion, exact handback and nested acquisition semantics.
+* Alternate Native and KD at 1/2/3/5/8/32 workers, 1 and 16 cache lines,
+  with repeated samples and matched call shells. Report all samples,
+  completed delegation and mode transitions. In a whole-kernel switched
+  build, global counters include unrelated locks and cannot alone prove
+  this benchmark's transitions. Report any high-contention regression as
+  well as low-contention rates; parity is unproved until this run completes.
+
 ```
 insmod /root/kdb/bench/kd_bench.ko
 cd /root/host_fs/kdlock/jit

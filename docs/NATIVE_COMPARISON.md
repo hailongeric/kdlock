@@ -67,6 +67,11 @@ the compiler left it.
 
 ### 3.2 kdlock
 
+The same fast-path instruction shape is not a claim of identical throughput.
+The public kd entries are out-of-line calls and release checks this CPU's
+role-exchange state. Compare matched call shells, kernel configuration,
+instrumentation and CPU placement before claiming parity with Native.
+
 | Path | Registers saved / restored | Where | Notes |
 | --- | --- | --- | --- |
 | `kd_spin_lock` fast path | **0** | — | `incl __preempt_count` + one `cmpxchg`; identical shape to native |

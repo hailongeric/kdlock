@@ -72,7 +72,9 @@ core_param(kd_numa_after, kd_numa_after, uint, 0644);
  * at least kd_deleg_enter (spinlock) or kd_deleg_enter_sleep (mutex). From
  * then on contended callers publish their continuation. A combiner
  * switches the lock back when fewer than kd_deleg_exit waiters are queued
- * behind it.
+ * behind it. A plain spin queue head can also switch back, even when no
+ * caller has an image and no combining session can start. Spin admission
+ * uses the current holder's bit, never a mode cached by an earlier wait.
  *
  * The defaults come from an A/B in one boot (bench/results/kdclaude,
  * ab34enter): a mutex gains from delegation at a smaller depth than a
@@ -1298,6 +1300,23 @@ static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe)
 		lv |= READ_ONCE(q->locked) & KD_Q_DELEG;
 	}
 
+	/*
+	 * A plain head may have inherited a delegating phase without an
+	 * image to serve it. Let it leave that phase too: waiting for a
+	 * combiner to do this would retain the offer path after contention
+	 * falls. Only the head examines its successors, before taking the
+	 * lock. A link still being published can make us leave early; that
+	 * only selects local execution and does not change queue ownership.
+	 */
+	if (probe && (lv & KD_Q_DELEG) && READ_ONCE(kd_adapt)) {
+		int exit_below = READ_ONCE(kd_deleg_exit);
+
+		if (kd_q_depth(me, exit_below) < exit_below) {
+			lv &= ~KD_Q_DELEG;
+			kd_stat_inc(kc, KD_STAT_MODE_EXIT);
+		}
+	}
+
 	if (kd_q_head_take(q, me, lv))
 		goto out;
 	next = READ_ONCE(me->next);
@@ -1340,10 +1359,10 @@ bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site)
 
 	if (kd_q_pending(q, &val))
 		return true;
-	if (kd_q_deleg_mode(q, val) && kd_can_offer(site))
+	if (kd_q_deleg_mode(val) && kd_can_offer(site))
 		return false;
 	raw_cpu_inc(kd_cpu.nodes[0].nplain);
-	kd_mode_note(q, __kd_q_queue(q, true));
+	__kd_q_queue(q, true);
 	return true;
 }
 
@@ -1399,7 +1418,6 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 		if (st == KD_N_RESUME) {
 			me->entry = NULL;
 			kd_nr_nodes(kc)--;
-			kd_mode_note(q, true);
 			return KD_WAIT_RESUMED;
 		}
 		deleg = st == KD_N_HEAD_D || !READ_ONCE(kd_adapt) ||
@@ -1446,7 +1464,6 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 		if (st == KD_N_RESUME) {
 			me->entry = NULL;
 			kd_nr_nodes(kc)--;
-			kd_mode_note(q, true);
 			return KD_WAIT_RESUMED;
 		}
 		/* Promoted again; the taker dropped the queue lock it inherited. */
@@ -1460,7 +1477,6 @@ int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,
 		kd_q_pass(q, me, false, deleg ? KD_N_HEAD_D : KD_N_HEAD);
 	me->entry = NULL;
 	kd_nr_nodes(kc)--;
-	kd_mode_note(q, deleg);
 	return KD_WAIT_LOCAL;
 }
 

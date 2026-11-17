@@ -165,8 +165,6 @@ struct kd_node {
 	 */
 	int		count;		/* spin-class nodes of this CPU in use (LIFO) */
 	unsigned long	nplain;		/* KD_STAT_PLAIN, spin class */
-	struct kd_qlock	*mode_q;	/* lock this CPU last waited for ... */
-	bool		mode_deleg;	/* ... and the mode it was in (kd_mode_note()) */
 	/*
 	 * Sleepable class: the queue head announced that it will execute this
 	 * waiter's section. See kd_node_abandon().
@@ -208,7 +206,7 @@ enum {
 	KD_STAT_HANDOFF,	/* releases that handed ownership to a parked waiter */
 	/* Adaptive mode (kd_core.c, "adaptive delegation"). */
 	KD_STAT_MODE_ENTER,	/* a queue head switched its lock to delegation mode */
-	KD_STAT_MODE_EXIT,	/* a combiner switched its lock back to plain mode */
+	KD_STAT_MODE_EXIT,	/* a queue head switched its lock back to plain mode */
 	/* Role exchange after a handback. */
 	KD_STAT_XCHG_OFFER,	/* combiners that offered themselves to the new holder */
 	KD_STAT_XCHG_TAKEN,	/* releases that took the head role over */
@@ -653,39 +651,18 @@ static __always_inline bool kd_q_pending(struct kd_qlock *q, u32 *valp)
 }
 
 /*
- * Remember the mode this CPU found the spin-class lock @q in: what a
- * contended caller goes by while the lock byte is momentarily empty. One
- * lock per CPU is enough; a caller that alternates between contended
- * locks just starts each wait in plain mode. Preemption is off.
+ * Admit a spin continuation only on a current holder's mode indication.
+ * An empty lock byte between holders means a plain wait, even if this CPU
+ * delegated on the same address earlier. A cached mode can outlive both
+ * the busy phase and the lock object. Queue head handoff still carries
+ * KD_N_HEAD_D, so a busy queue can continue its delegating phase without
+ * keeping per-CPU history or reading remote nodes at admission.
  */
-static __always_inline void kd_mode_note(struct kd_qlock *q, bool deleg)
+static __always_inline bool kd_q_deleg_mode(u32 val)
 {
-	struct kd_node *n0 = &raw_cpu_ptr(&kd_cpu)->nodes[0];
-
-	if (n0->mode_q != q || n0->mode_deleg != deleg) {
-		n0->mode_q = q;
-		n0->mode_deleg = deleg;
-	}
-}
-
-/*
- * Is the spin-class word @q, last read as @val, in delegation mode? The
- * holder says so in the lock byte. Between a release and the next head
- * taking the lock the byte is empty, and that is when a waiter that was
- * just served comes back; it goes by what it saw last time. Nothing else
- * is read here: any look at the queue would cost this caller a cache miss
- * that the native lock does not have.
- */
-static __always_inline bool kd_q_deleg_mode(struct kd_qlock *q, u32 val)
-{
-	struct kd_node *n0;
-
 	if (!READ_ONCE(kd_adapt))
 		return true;
-	if (val & KD_Q_LOCKED_MASK)
-		return val & KD_Q_DELEG;
-	n0 = &raw_cpu_ptr(&kd_cpu)->nodes[0];
-	return n0->mode_q == q && n0->mode_deleg;
+	return val & KD_Q_DELEG;
 }
 
 /* Sleepable class: the mode is a flag that outlives single holds. */
