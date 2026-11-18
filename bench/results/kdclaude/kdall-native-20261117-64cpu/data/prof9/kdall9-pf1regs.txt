@@ -1,0 +1,37 @@
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+average:2429178:0:2429178
+samples 60808
+  kd_spin_lock                        21632  35.6%
+  charge_memcg                         9896  16.3%
+  pte_offset_map_lock                  4681   7.7%
+  asm_exc_page_fault                   3719   6.1%
+  testcase                             2164   3.6%
+  sync_regs                            1925   3.2%
+  __pte_offset_map                     1839   3.0%
+  lock_vma_under_rcu                   1092   1.8%
+  do_anonymous_page                     943   1.6%
+  do_user_addr_fault                    804   1.3%
+spinlock samples by function and region of %rdi:
+  kd_spin_lock               vmemmap (struct page: split PTE locks)    21629
+  kd_q_lock_slow             direct map (slab, node data)                615
+  kd_spin_lock_irqsave       direct map (slab, node data)                 72
+  _raw_spin_lock             direct map (slab, node data)                  3
+  kd_spin_lock               direct map (slab, node data)                  3
+  _raw_spin_lock_irqsave     direct map (slab, node data)                  3
+  kd_q_lock_plain            direct map (slab, node data)                  2
+  kd_spin_lock_irq           direct map (slab, node data)                  2
+  _raw_spin_lock_irqsave     kernel image (static)                         1
+  _raw_spin_lock             other 0x0                                     1
+  kd_q_lock_plain            other 0x0                                     1
+top %rdi values:
+  kd_q_lock_slow             0xff1100016774bc90    206  direct map (slab, node data)
+  kd_q_lock_slow             0xff1100033ffd65b0     93  direct map (slab, node data)
+  kd_spin_lock_irqsave       0xff1100016774bc90     61  direct map (slab, node data)
+  kd_spin_lock               0xffd40000061676a8     32  vmemmap (struct page: split PTE locks)
+  kd_q_lock_slow             0xff11000332eb3700     32  direct map (slab, node data)
+  kd_spin_lock               0xffd4000006fa3168     32  vmemmap (struct page: split PTE locks)
+  kd_spin_lock               0xffd40000043fbaa8     32  vmemmap (struct page: split PTE locks)
+  kd_spin_lock               0xffd400000466d4a8     32  vmemmap (struct page: split PTE locks)
+  kd_spin_lock               0xffd40000041356e8     31  vmemmap (struct page: split PTE locks)
+  kd_spin_lock               0xffd4000007ce1f68     31  vmemmap (struct page: split PTE locks)
+PF1REGS_DONE

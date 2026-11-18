@@ -1,0 +1,49 @@
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+Writes:  Total: 35084232  Max/Min: 588353/509089   Fail: 0 
+    97.21%  [k] kd_wait_sleepable
+     0.36%  [k] kd_mutex_unlock
+     0.33%  [k] pvclock_clocksource_read_nowd
+     0.32%  [k] delay_halt_tpause
+     0.30%  [k] kd_mutex_lock
+     0.14%  [k] kd_mutex_sleep
+     0.08%  [k] torture_random
+     0.08%  [k] lock_torture_writer
+     0.08%  [k] kd_q_lock_plain
+     0.06%  [k] kd_mutex_can_spin
+     0.06%  [k] ktime_get
+     0.06%  [k] __torture_rt_boost
+     0.06%  [k] get_jiffies_update
+     0.05%  [k] kd_arch_spin_lock
+     0.05%  [k] lapic_next_deadline
+     0.05%  [k] asm_sysvec_apic_timer_interrupt
+     0.04%  [k] kthread_should_stop
+     0.03%  [k] torture_mutex_delay
+     0.02%  [k] nohz_balance_exit_idle
+     0.02%  [k] kd_mutex_lock_slow
+     0.02%  [k] _find_next_and_bit
+     0.02%  [k] tick_nohz_handler
+     0.02%  [k] stutter_wait
+     0.02%  [k] native_apic_msr_eoi
+     0.02%  [k] cpupri_set
+-- annotate of the top kd symbol, hottest instructions
+   82.98 :   ffffffff814d50de:       mov    0x8(%r15),%eax
+   13.09 :   ffffffff814d50e2:       add    $0x1,%edx
+    1.65 :   ffffffff814d50ee:       mov    (%rcx),%rax
+    1.15 :   ffffffff814d50f5:       test   %r13b,%r13b
+    0.34 :   ffffffff814d52ea:       movzbl (%rbx),%eax
+    0.19 :   ffffffff814d51c9:       test   $0x4,%al
+    0.15 :   ffffffff814d5296:       cmp    $0x1,%eax
+    0.12 :   ffffffff814d52ed:       test   %al,%al
+    0.10 :   ffffffff814d5072:       test   %ax,%ax
+    0.05 :   ffffffff814d546c:       movzbl 0x3b(%rdx),%eax
+    0.05 :   ffffffff814d52fb:       test   %al,%al
+    0.01 :   ffffffff814d54c7:       lea    0x1(%rsi),%ecx
+-- kd counters
+  abandon          6390
+  handoff          1685
+  head_sleep       12239
+  no_spin          1094
+  numa_local       185503
+  parked           17098
+  plain            16608975
+PROF_DONE

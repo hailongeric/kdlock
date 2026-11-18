@@ -1,0 +1,166 @@
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+woken=1 mutex_lock 64 round 1 writes 52467654 success 1 | abandon 12111 handoff 3093 head_sleep 20132 no_spin 1963 parked 29747
+woken=1 mutex_lock 128 round 1 writes 78585941 success 1 | abandon 24627 handoff 1842 head_sleep 16521 no_spin 8245 parked 40081
+woken=1 ww_mutex_lock 64 round 1 writes 17431780 success 1 | abandon 9140 handoff 19352 head_sleep 10780 no_spin 298 parked 557858
+woken=1 ww_mutex_lock 128 round 1 writes 23786250 success 1 | abandon 23078 handoff 21202 head_sleep 15882 no_spin 789 parked 506934
+woken=1 rwsem_lock def round 1 writes 448993 success 1 | abandon 4 handoff 28 head_sleep 589 no_spin 846 parked 3151
+woken=0 mutex_lock 64 round 1 writes 40314621 success 1 | abandon 12276 handoff 5367 head_sleep 18220 no_spin 4550 parked 29075
+woken=0 mutex_lock 128 round 1 writes 44643079 success 1 | abandon 21935 handoff 2490 head_sleep 11974 no_spin 9045 parked 32379
+woken=0 ww_mutex_lock 64 round 1 writes 16485639 success 1 | abandon 9061 handoff 8895 head_sleep 11312 no_spin 366 parked 647539
+woken=0 ww_mutex_lock 128 round 1 writes 21313871 success 1 | abandon 22242 handoff 9201 head_sleep 14761 no_spin 781 parked 478743
+woken=0 rwsem_lock def round 1 writes 462941 success 1 | abandon 9 handoff 1 head_sleep 758 no_spin 855 parked 3524
+woken=0 mutex_lock 64 round 2 writes 38135127 success 1 | abandon 10706 handoff 5152 head_sleep 16862 no_spin 4504 parked 26499
+woken=0 mutex_lock 128 round 2 writes 41494701 success 1 | abandon 17791 handoff 2057 head_sleep 10296 no_spin 9420 parked 28112
+woken=0 ww_mutex_lock 64 round 2 writes 15738444 success 1 | abandon 8880 handoff 7315 head_sleep 9946 no_spin 328 parked 577177
+woken=0 ww_mutex_lock 128 round 2 writes 21218417 success 1 | abandon 24462 handoff 8102 head_sleep 15063 no_spin 846 parked 451934
+woken=0 rwsem_lock def round 2 writes 402528 success 1 | abandon 6 head_sleep 375 no_spin 689 parked 2411
+woken=1 mutex_lock 64 round 2 writes 51013233 success 1 | abandon 11336 handoff 3044 head_sleep 19761 no_spin 1868 parked 28967
+woken=1 mutex_lock 128 round 2 writes 76735277 success 1 | abandon 25078 handoff 1997 head_sleep 17441 no_spin 8466 parked 41257
+woken=1 ww_mutex_lock 64 round 2 writes 17909026 success 1 | abandon 9377 handoff 22386 head_sleep 11178 no_spin 402 parked 591624
+woken=1 ww_mutex_lock 128 round 2 writes 22638544 success 1 | abandon 23839 handoff 17222 head_sleep 15554 no_spin 908 parked 530831
+woken=1 rwsem_lock def round 2 writes 470022 success 1 | abandon 2 handoff 14 head_sleep 558 no_spin 907 parked 3195
+woken=1 mutex_lock 64 round 3 writes 59357587 success 1 | abandon 12069 handoff 3490 head_sleep 23108 no_spin 2338 parked 32919
+woken=1 mutex_lock 128 round 3 writes 75095944 success 1 | abandon 25814 handoff 1827 head_sleep 17583 no_spin 8368 parked 42065
+woken=1 ww_mutex_lock 64 round 3 writes 18188551 success 1 | abandon 9170 handoff 20947 head_sleep 11741 no_spin 431 parked 614707
+woken=1 ww_mutex_lock 128 round 3 writes 23170665 success 1 | abandon 24332 handoff 13505 head_sleep 15899 no_spin 928 parked 461736
+woken=1 rwsem_lock def round 3 writes 481648 success 1 | abandon 8 handoff 29 head_sleep 529 no_spin 849 parked 3044
+woken=0 mutex_lock 64 round 3 writes 43059614 success 1 | abandon 12167 handoff 6053 head_sleep 20249 no_spin 5687 parked 31303
+woken=0 mutex_lock 128 round 3 writes 41276715 success 1 | abandon 17728 handoff 2050 head_sleep 9342 no_spin 9442 parked 27113
+woken=0 ww_mutex_lock 64 round 3 writes 16707839 success 1 | abandon 8880 handoff 8931 head_sleep 12001 no_spin 278 parked 595986
+woken=0 ww_mutex_lock 128 round 3 writes 24315536 success 1 | abandon 25264 handoff 10047 head_sleep 16580 no_spin 903 parked 507906
+woken=0 rwsem_lock def round 3 writes 514936 success 1 | abandon 3 handoff 3 head_sleep 605 no_spin 972 parked 3410
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+writers 64
+set kd_mutex_woken=1 (was 1)
+Writes:  Total: 38221032  Max/Min: 778045/554775   Fail: 0 
+context switches 281966 in 20 s
+-- calls per second while profiling (16 s), all CPUs
+  schedule               7394 /s
+  wake_up_q              3752 /s
+  try_to_wake_up         7939 /s
+-- kd counters over the run
+  abandon          8742
+  handoff          2529
+  head_sleep       17279
+  no_spin          1530
+  numa_local       245307
+  parked           24407
+  plain            27911509
+  rd_behind        62
+MWAKE_DONE
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+writers 64
+set kd_mutex_woken=0 (was 1)
+Writes:  Total: 29235973  Max/Min: 487432/432726   Fail: 0 
+context switches 275287 in 20 s
+-- calls per second while profiling (16 s), all CPUs
+  schedule               7161 /s
+  wake_up_q            350282 /s
+  try_to_wake_up       292639 /s
+-- kd counters over the run
+  abandon          7375
+  era_claim        1
+  era_gate         15
+  era_start        1
+  handoff          4047
+  head_sleep       13192
+  no_spin          3835
+  numa_local       784976
+  parked           20569
+  plain            19444797
+  rd_behind        92
+MWAKE_DONE
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+writers 128
+set kd_mutex_woken=1 (was 1)
+Writes:  Total: 53290843  Max/Min: 706690/266567 ???  Fail: 0 
+context switches 264541 in 20 s
+-- calls per second while profiling (16 s), all CPUs
+  schedule               7853 /s
+  wake_up_q              3808 /s
+  try_to_wake_up         8045 /s
+-- kd counters over the run
+  abandon          17840
+  era_claim        1
+  era_gate         10
+  era_start        1
+  handoff          1301
+  head_sleep       12182
+  no_spin          5860
+  numa_local       201595
+  parked           29289
+  plain            40192404
+  rd_behind        114
+  rd_queue         1
+MWAKE_DONE
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+writers 128
+set kd_mutex_woken=0 (was 1)
+Writes:  Total: 26657336  Max/Min: 283624/136310 ???  Fail: 0 
+context switches 180029 in 20 s
+-- calls per second while profiling (16 s), all CPUs
+  schedule               4350 /s
+  wake_up_q            961467 /s
+  try_to_wake_up       509948 /s
+-- kd counters over the run
+  abandon          10380
+  era_start        1
+  handoff          1318
+  head_sleep       6704
+  no_spin          9209
+  numa_local       1464941
+  parked           18692
+  plain            14396301
+  rd_behind        79
+MWAKE_DONE
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+Writes:  Total: 35084232  Max/Min: 588353/509089   Fail: 0 
+    97.21%  [k] kd_wait_sleepable
+     0.36%  [k] kd_mutex_unlock
+     0.33%  [k] pvclock_clocksource_read_nowd
+     0.32%  [k] delay_halt_tpause
+     0.30%  [k] kd_mutex_lock
+     0.14%  [k] kd_mutex_sleep
+     0.08%  [k] torture_random
+     0.08%  [k] lock_torture_writer
+     0.08%  [k] kd_q_lock_plain
+     0.06%  [k] kd_mutex_can_spin
+     0.06%  [k] ktime_get
+     0.06%  [k] __torture_rt_boost
+     0.06%  [k] get_jiffies_update
+     0.05%  [k] kd_arch_spin_lock
+     0.05%  [k] lapic_next_deadline
+     0.05%  [k] asm_sysvec_apic_timer_interrupt
+     0.04%  [k] kthread_should_stop
+     0.03%  [k] torture_mutex_delay
+     0.02%  [k] nohz_balance_exit_idle
+     0.02%  [k] kd_mutex_lock_slow
+     0.02%  [k] _find_next_and_bit
+     0.02%  [k] tick_nohz_handler
+     0.02%  [k] stutter_wait
+     0.02%  [k] native_apic_msr_eoi
+     0.02%  [k] cpupri_set
+-- annotate of the top kd symbol, hottest instructions
+   82.98 :   ffffffff814d50de:       mov    0x8(%r15),%eax
+   13.09 :   ffffffff814d50e2:       add    $0x1,%edx
+    1.65 :   ffffffff814d50ee:       mov    (%rcx),%rax
+    1.15 :   ffffffff814d50f5:       test   %r13b,%r13b
+    0.34 :   ffffffff814d52ea:       movzbl (%rbx),%eax
+    0.19 :   ffffffff814d51c9:       test   $0x4,%al
+    0.15 :   ffffffff814d5296:       cmp    $0x1,%eax
+    0.12 :   ffffffff814d52ed:       test   %al,%al
+    0.10 :   ffffffff814d5072:       test   %ax,%ax
+    0.05 :   ffffffff814d546c:       movzbl 0x3b(%rdx),%eax
+    0.05 :   ffffffff814d52fb:       test   %al,%al
+    0.01 :   ffffffff814d54c7:       lea    0x1(%rsi),%ecx
+-- kd counters
+  abandon          6390
+  handoff          1685
+  head_sleep       12239
+  no_spin          1094
+  numa_local       185503
+  parked           17098
+  plain            16608975
+PROF_DONE
+complaints 0
+WOKEN_DONE

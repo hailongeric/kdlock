@@ -1,0 +1,17 @@
+7.0.0-38-kdall3 #5 SMP PREEMPT_DYNAMIC Tue Nov 17 14:48:59 UTC 2026
+set kd_handoff_running=0 (was 1)
+Writes:  Total: 22332027  Max/Min: 247289/103785 ???  Fail: 0 
+context switches 240130 in 20 s
+-- calls per second while profiling (16 s), all CPUs
+  schedule               6534 /s
+  wake_up_q            668064 /s
+  try_to_wake_up       408225 /s
+-- kd counters over the run
+  abandon          19510
+  handoff          2000
+  head_sleep       8260
+  no_spin          18035
+  numa_local       1193905
+  parked           36937
+  plain            13119637
+MWAKE_DONE

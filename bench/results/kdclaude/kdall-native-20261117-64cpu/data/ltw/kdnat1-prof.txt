@@ -1,0 +1,30 @@
+7.0.0-38-kdnat1 #1 SMP PREEMPT_DYNAMIC Tue Nov 17 11:57:56 UTC 2026
+Writes:  Total: 32651415  Max/Min: 611857/402059   Fail: 0 
+    95.58%  [k] osq_lock
+     0.62%  [k] __mutex_lock.constprop.0
+     0.57%  [k] mutex_unlock
+     0.52%  [k] mutex_spin_on_owner
+     0.45%  [k] mutex_lock
+     0.30%  [k] delay_halt_tpause
+     0.30%  [k] queued_spin_lock_slowpath
+     0.27%  [k] pvclock_clocksource_read_nowd
+     0.19%  [k] _raw_spin_lock_irqsave
+     0.08%  [k] lock_torture_writer
+     0.07%  [k] __mutex_unlock_slowpath.isra.0
+     0.06%  [k] __torture_rt_boost
+     0.06%  [k] lapic_next_deadline
+     0.05%  [k] wake_q_add
+     0.05%  [k] get_jiffies_update
+     0.05%  [k] ktime_get
+     0.05%  [k] torture_random
+     0.04%  [k] asm_sysvec_apic_timer_interrupt
+     0.03%  [k] osq_unlock
+     0.03%  [k] kthread_should_stop
+     0.03%  [k] _find_next_and_bit
+     0.02%  [k] _raw_spin_lock
+     0.02%  [k] wake_up_q
+     0.02%  [k] nohz_balance_exit_idle
+     0.02%  [k] tick_nohz_handler
+-- annotate of the top kd symbol, hottest instructions
+-- kd counters
+PROF_DONE

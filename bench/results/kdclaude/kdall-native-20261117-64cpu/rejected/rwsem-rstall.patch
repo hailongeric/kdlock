@@ -1,0 +1,172 @@
+--- a/kernel/kd_rwsem.c
++++ b/kernel/kd_rwsem.c
+@@ -54,6 +54,16 @@
+ core_param(kd_rwsem_rspin_ns, kd_rwsem_rspin_ns, uint, 0644);
+ 
+ /*
++ * A write phase that outlasted one reader's kd_rwsem_rspin_ns is a long
++ * one, and the readers that arrive during it queue on ->m at once instead
++ * of spinning for it as well; see kd_down_read_admit(). For how long after
++ * the first reader ran out of time this holds; 0: every reader spins its
++ * full time.
++ */
++static unsigned int kd_rwsem_rstall_ns __read_mostly = 1000000;
++core_param(kd_rwsem_rstall_ns, kd_rwsem_rstall_ns, uint, 0644);
++
++/*
+  * The era bound of the rwsem (kd_era.c); 0 uses kd_rw_era_ns, the rwlock's,
+  * and kd_rw_era_ns=0 switches eras off for both families.
+  *
+@@ -107,16 +117,42 @@
+  * are shared between semaphores by hash, as the object has no room for
+  * one; a collision costs an extra look. A reader also looks again once in
+  * a while without a change, so a missed event only delays it.
++ *
++ * ->stall: the phase in which a reader last ran out of kd_rwsem_rspin_ns
++ * (upper half) and when (lower half, local_clock() >> 10, about
++ * microseconds), in one word so that a reader never sees one half without
++ * the other. It is a hint: a wrong look only makes a reader queue early or
++ * spin.
+  */
+ #define KD_RWSEM_PHASE_BITS	8
+ 
+ static struct kd_rwsem_phase {
+ 	atomic_t	seq;
++	u64		stall;
+ } ____cacheline_aligned_in_smp kd_rwsem_phases[1 << KD_RWSEM_PHASE_BITS];
+ 
++static __always_inline struct kd_rwsem_phase *kd_rwsem_phase_of(struct kd_rwsem *sem)
++{
++	return &kd_rwsem_phases[hash_ptr(sem, KD_RWSEM_PHASE_BITS)];
++}
++
+ static __always_inline atomic_t *kd_rwsem_phase(struct kd_rwsem *sem)
+ {
+-	return &kd_rwsem_phases[hash_ptr(sem, KD_RWSEM_PHASE_BITS)].seq;
++	return &kd_rwsem_phase_of(sem)->seq;
++}
++
++/* Did a reader run out of time in phase @seq less than kd_rwsem_rstall_ns ago? */
++static __always_inline bool kd_rwsem_stalled(struct kd_rwsem_phase *ph, int seq, u64 now)
++{
++	u32 win = READ_ONCE(kd_rwsem_rstall_ns) >> 10;
++	u64 s = READ_ONCE(ph->stall);
++
++	return win && (int)(s >> 32) == seq && (u32)(now >> 10) - (u32)s < win;
++}
++
++static __always_inline void kd_rwsem_mark_stall(struct kd_rwsem_phase *ph, int seq, u64 now)
++{
++	WRITE_ONCE(ph->stall, (u64)(u32)seq << 32 | (u32)(now >> 10));
+ }
+ 
+ static __always_inline void kd_rwsem_phase_change(struct kd_rwsem *sem)
+@@ -562,14 +598,26 @@
+  * need_resched(): then the reader deregisters and queues on ->m, where it
+  * can sleep and from where it cannot be passed by later writers.
+  *
++ * A reader that ran out of time while the phase stood still marks that
++ * phase (kd_rwsem_mark_stall()). The readers that find the phase marked
++ * queue on ->m at their next look at the clock instead of spinning out
++ * their own time against a writer phase that already outlasted one: with
++ * a 128 MB munmap in the write phase, every reader that came by spun its
++ * full 50 us (will-it-scale page_fault1, MMAP_LOCKS.md section 5). A write
++ * phase shorter than kd_rwsem_rspin_ns never gets a mark, so the readers
++ * that live on spinning keep doing so. The mark expires after
++ * kd_rwsem_rstall_ns; a phase that is still on then costs one more reader
++ * its time.
++ *
+  * @reg: the reader is registered (its increment is in ->count, behind an
+  * active writer). Returns true with the read side held.
+  */
+ static bool kd_down_read_admit(struct kd_rwsem *sem, long c, bool reg)
+ {
+-	atomic_t *phase = kd_rwsem_phase(sem);
++	struct kd_rwsem_phase *ph = kd_rwsem_phase_of(sem);
++	atomic_t *phase = &ph->seq;
+ 	u64 end = 0;
+-	int seq, i = 0;
++	int seq, seq0 = 0, i = 0;
+ 
+ 	for (;;) {
+ 		/*
+@@ -609,12 +657,21 @@
+ 			if (!(i++ & 63)) {
+ 				u64 now = local_clock();
+ 
+-				if (!end)
++				if (kd_rwsem_stalled(ph, seq, now)) {
++					kd_stat_inc(raw_cpu_ptr(&kd_cpu), KD_STAT_RD_STALL);
++					goto out;
++				}
++				if (!end) {
+ 					end = now + READ_ONCE(kd_rwsem_rspin_ns);
+-				else if (now > end)
++					seq0 = seq;
++				} else if (now > end) {
++					/* The phase lasted all this time: mark it. */
++					if (seq == seq0)
++						kd_rwsem_mark_stall(ph, seq, now);
+ 					goto out;
+-				else
++				} else {
+ 					break;
++				}
+ 			}
+ 			cpu_relax();
+ 			if (atomic_read(phase) != seq)
+--- a/kernel/kd_internal.h
++++ b/kernel/kd_internal.h
+@@ -229,6 +229,7 @@
+ 	/* Rwsem readers that missed the fast path. */
+ 	KD_STAT_RD_BEHIND,	/* registered behind an active writer and waited for it */
+ 	KD_STAT_RD_QUEUE,	/* gave up spinning and queued on ->m */
++	KD_STAT_RD_STALL,	/* of those: queued early, the write phase outlasted another reader */
+ 	KD_STAT_VDOWN,		/* downgrades executed with the write side kept */
+ 	KD_STAT_VDOWN_HB,	/* ... whose read part was then handed back */
+ 	KD_STAT_SITE_RETRY,	/* switched-off sites switched on again for a trial */
+--- a/kernel/kd_dev.c
++++ b/kernel/kd_dev.c
+@@ -81,6 +81,7 @@
+ 	[KD_STAT_HB_OTHER]		= "hb_other",
+ 	[KD_STAT_RD_BEHIND]		= "rd_behind",
+ 	[KD_STAT_RD_QUEUE]		= "rd_queue",
++	[KD_STAT_RD_STALL]		= "rd_stall",
+ 	[KD_STAT_VDOWN]			= "vdown",
+ 	[KD_STAT_VDOWN_HB]		= "vdown_hb",
+ 	[KD_STAT_SITE_RETRY]		= "site_retry",
+--- a/docs/LOCKS.md
++++ b/docs/LOCKS.md
+@@ -243,6 +243,14 @@
+   * **The wait is bounded** by `kd_rwsem_rspin_ns` (50 us) and by
+     `need_resched()`. After that the reader deregisters and parks on `m`,
+     where it can sleep and is not passed by later writers.
++  * **A long write phase is spun for once** (`kd_rwsem_rstall_ns`, 1 ms).
++    A reader that ran out of its time while the phase counter stood still
++    marks that phase; readers that find it marked, less than
++    `kd_rwsem_rstall_ns` ago, park on `m` at their next look at the clock
++    instead of spinning out their own 50 us (counter `rd_stall`). A write
++    phase shorter than `kd_rwsem_rspin_ns` is never marked. Before, every
++    reader that came by during a 128 MB munmap spun its full time
++    (MMAP_LOCKS.md section 5).
+   * **Waiting readers do not poll `count`.** They poll a phase counter in
+     a cache line of its own (`kd_rwsem_phase()`, 256 counters shared by
+     hash of the semaphore address). It changes when a writer leaves with
+@@ -270,7 +278,8 @@
+     change in the area AGENTS.md listed as deferred at the time, made at the user's
+     request.
+   * Counters: `rd_behind` counts readers admitted behind a writer phase,
+-    `rd_queue` counts readers that fell back to `m`.
++    `rd_queue` counts readers that fell back to `m`, `rd_stall` those of
++    them that did so early, in a marked phase.
+ * **NUMA deferral starts late** (`kd_family.numa_after = 32`): a rwsem
+   writer session serves the first 32 waiters in queue order and defers
+   remote-node waiters only after that (ARCHITECTURE 7).
+@@ -392,6 +401,7 @@
+ | `kd_rw_era_drain_ns` (core param, 0644) | 5000 | no era while the readers a queue head finds take longer than this to leave, on average |
+ | `kd_rw_era_dbg_drain`, `kd_rw_era_dbg_press` (0444) | - | the last averages a queue head computed (ns; sixteenths of a caller) |
+ | `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
++| `kd_rwsem_rstall_ns` (core param, 0644) | 1000000 | for how long after a reader ran out of that time in a write phase the readers arriving in the same phase queue at once; 0: every reader spins its full time |
+ | `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |
+ | `kd_handoff_running` (core param, 0644) | 1 | mutex handoff only to a parked waiter that is running; 0: also to a sleeping one |
+ | `kd_mutex_woken` (core param, 0644) | 1 | mutex: a release does not wake a first parked waiter that is awake already (`KD_QF_WOKEN`); 0: the flag is no longer set, and every release with parked waiters wakes the first one |

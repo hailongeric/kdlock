@@ -1,0 +1,85 @@
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+defaults: kd_rwsem_rstall_ns 1000000 kd_rwsem_rspin_ns 50000
+stall page_fault1 8 round 1 rate 2120397 | parked 1228 rd_behind 3343 rd_queue 65 rd_stall 55
+stall page_fault1 16 round 1 rate 2353007 | parked 1513 rd_behind 6225 rd_queue 142 rd_stall 119
+stall page_fault1 32 round 1 rate 2920057 | parked 2666 rd_behind 11336 rd_queue 812 rd_stall 734
+stall page_fault_shared3 16 round 1 rate 1671846 | parked 403 rd_behind 6923357 rd_queue 361 rd_stall 156
+stall page_fault_shared3 32 round 1 rate 1450534 | parked 4109 rd_behind 7214574 rd_queue 2024 rd_stall 928
+stall mmap1 16 round 1 rate 311969 | parked 1847 rd_behind 9
+stall mmap1 64 round 1 rate 323885 | parked 569 rd_behind 88
+stall mmap2 64 round 1 rate 359470 | parked 598 rd_behind 71 rd_queue 6 rd_stall 5
+stall brk1 64 round 1 rate 782846 | parked 294 rd_behind 39
+nostall page_fault1 8 round 1 rate 2144176 | parked 1179 rd_behind 3484 rd_queue 17
+nostall page_fault1 16 round 1 rate 2326402 | parked 1560 rd_behind 6627 rd_queue 130
+nostall page_fault1 32 round 1 rate 2964884 | parked 2659 rd_behind 12212 rd_queue 778
+nostall page_fault_shared3 16 round 1 rate 1719603 | parked 113 rd_behind 7178056 rd_queue 82
+nostall page_fault_shared3 32 round 1 rate 1466713 | parked 2408 rd_behind 7400908 rd_queue 1031
+nostall mmap1 16 round 1 rate 309818 | parked 1914 rd_behind 56
+nostall mmap1 64 round 1 rate 329108 | parked 490 rd_behind 27
+nostall mmap2 64 round 1 rate 305951 | parked 346 rd_behind 54 rd_queue 7
+nostall brk1 64 round 1 rate 769178 | parked 703 rd_behind 69 rd_queue 4
+rspin0 page_fault1 8 round 1 rate 2641793 | parked 2473 rd_behind 118 rd_queue 3001 rd_stall 1551
+rspin0 page_fault1 16 round 1 rate 2761754 | parked 4258 rd_behind 123 rd_queue 4064 rd_stall 2675
+rspin0 page_fault1 32 round 1 rate 2919142 | parked 3965 rd_behind 148 rd_queue 3182 rd_stall 2099
+rspin0 page_fault_shared3 16 round 1 rate 1884236 | parked 1370436 rd_behind 423896 rd_queue 1498910 rd_stall 741418
+rspin0 page_fault_shared3 32 round 1 rate 1513753 | parked 727671 rd_behind 235058 rd_queue 853586 rd_stall 299024
+rspin0 mmap1 16 round 1 rate 319049 | parked 1825
+rspin0 mmap1 64 round 1 rate 329766 | parked 654 rd_behind 34 rd_queue 20 rd_stall 8
+rspin0 mmap2 64 round 1 rate 363137 | parked 441 rd_behind 55 rd_queue 40 rd_stall 11
+rspin0 brk1 64 round 1 rate 795908 | parked 388 rd_behind 35 rd_queue 12 rd_stall 2
+nostall page_fault1 8 round 2 rate 2322191 | parked 1181 rd_behind 3636 rd_queue 31
+nostall page_fault1 16 round 2 rate 2790210 | parked 1663 rd_behind 6055 rd_queue 206
+nostall page_fault1 32 round 2 rate 2913003 | parked 2575 rd_behind 10923 rd_queue 688
+nostall page_fault_shared3 16 round 2 rate 1676121 | parked 122 rd_behind 7027212 rd_queue 95
+nostall page_fault_shared3 32 round 2 rate 1453452 | parked 2451 rd_behind 7256048 rd_queue 1090
+nostall mmap1 16 round 2 rate 322067 | parked 1749 rd_behind 13
+nostall mmap1 64 round 2 rate 325279 | parked 485 rd_behind 82
+nostall mmap2 64 round 2 rate 360667 | parked 344 rd_behind 88 rd_queue 4
+nostall brk1 64 round 2 rate 813860 | parked 585 rd_behind 48
+rspin0 page_fault1 8 round 2 rate 2452226 | parked 2932 rd_behind 158 rd_queue 3071 rd_stall 1847
+rspin0 page_fault1 16 round 2 rate 2713276 | parked 3982 rd_behind 87 rd_queue 3782 rd_stall 2460
+rspin0 page_fault1 32 round 2 rate 3035120 | parked 3991 rd_behind 118 rd_queue 3181 rd_stall 2043
+rspin0 page_fault_shared3 16 round 2 rate 1859366 | parked 1360508 rd_behind 433923 rd_queue 1488795 rd_stall 732205
+rspin0 page_fault_shared3 32 round 2 rate 1538342 | parked 728746 rd_behind 239101 rd_queue 854452 rd_stall 296472
+rspin0 mmap1 16 round 2 rate 318092 | parked 1893 rd_behind 13 rd_queue 1
+rspin0 mmap1 64 round 2 rate 325786 | parked 643 rd_behind 60 rd_queue 51 rd_stall 8
+rspin0 mmap2 64 round 2 rate 364307 | parked 629 rd_behind 18 rd_queue 16 rd_stall 9
+rspin0 brk1 64 round 2 rate 822627 | parked 657 rd_behind 46 rd_queue 38 rd_stall 5
+stall page_fault1 8 round 2 rate 2039235 | parked 1227 rd_behind 3326 rd_queue 52 rd_stall 44
+stall page_fault1 16 round 2 rate 2468259 | parked 1539 rd_behind 6324 rd_queue 122 rd_stall 100
+stall page_fault1 32 round 2 rate 3041218 | parked 2726 rd_behind 10638 rd_queue 843 rd_stall 783
+stall page_fault_shared3 16 round 2 rate 1681638 | parked 109 rd_behind 7007464 rd_queue 78 rd_stall 41
+stall page_fault_shared3 32 round 2 rate 1462540 | parked 3409 rd_behind 7268209 rd_queue 1984 rd_stall 502
+stall mmap1 16 round 2 rate 309612 | parked 1941 rd_behind 41
+stall mmap1 64 round 2 rate 330177 | parked 517 rd_behind 49
+stall mmap2 64 round 2 rate 370403 | parked 624 rd_behind 35 rd_queue 1
+stall brk1 64 round 2 rate 808638 | parked 477 rd_behind 83
+rspin0 page_fault1 8 round 3 rate 2527583 | parked 2735 rd_behind 133 rd_queue 2859 rd_stall 1647
+rspin0 page_fault1 16 round 3 rate 2851601 | parked 4176 rd_behind 129 rd_queue 3979 rd_stall 2560
+rspin0 page_fault1 32 round 3 rate 2820967 | parked 3821 rd_behind 145 rd_queue 3120 rd_stall 1974
+rspin0 page_fault_shared3 16 round 3 rate 1892096 | parked 1381132 rd_behind 443600 rd_queue 1510799 rd_stall 756573
+rspin0 page_fault_shared3 32 round 3 rate 1506649 | parked 724875 rd_behind 223739 rd_queue 851439 rd_stall 296319
+rspin0 mmap1 16 round 3 rate 321198 | parked 1824 rd_behind 1
+rspin0 mmap1 64 round 3 rate 330055 | parked 518 rd_behind 19 rd_queue 9 rd_stall 3
+rspin0 mmap2 64 round 3 rate 364355 | parked 451 rd_behind 44 rd_queue 38 rd_stall 5
+rspin0 brk1 64 round 3 rate 816271 | parked 453 rd_behind 48 rd_queue 17 rd_stall 4
+stall page_fault1 8 round 3 rate 2533773 | parked 1204 rd_behind 3932 rd_queue 78 rd_stall 62
+stall page_fault1 16 round 3 rate 2538301 | parked 1554 rd_behind 6084 rd_queue 150 rd_stall 123
+stall page_fault1 32 round 3 rate 2706369 | parked 2436 rd_behind 6078 rd_queue 550 rd_stall 478
+stall page_fault_shared3 16 round 3 rate 1670899 | parked 188 rd_behind 6996812 rd_queue 144 rd_stall 61
+stall page_fault_shared3 32 round 3 rate 1452556 | parked 3687 rd_behind 7322549 rd_queue 1949 rd_stall 484
+stall mmap1 16 round 3 rate 315416 | parked 1545 rd_behind 78
+stall mmap1 64 round 3 rate 328357 | parked 799 rd_behind 172 rd_queue 25 rd_stall 23
+stall mmap2 64 round 3 rate 361165 | parked 345 rd_behind 31 rd_queue 1
+stall brk1 64 round 3 rate 840412 | parked 721 rd_behind 50
+nostall page_fault1 8 round 3 rate 2181977 | parked 1200 rd_behind 3814 rd_queue 50
+nostall page_fault1 16 round 3 rate 2449827 | parked 1556 rd_behind 6187 rd_queue 169
+nostall page_fault1 32 round 3 rate 2936014 | parked 2613 rd_behind 11947 rd_queue 756
+nostall page_fault_shared3 16 round 3 rate 1658240 | parked 110 rd_behind 6926175 rd_queue 79
+nostall page_fault_shared3 32 round 3 rate 1461926 | parked 3377 rd_behind 7271690 rd_queue 1661
+nostall mmap1 16 round 3 rate 312827 | parked 1901 rd_behind 41
+nostall mmap1 64 round 3 rate 329226 | parked 718 rd_behind 105
+nostall mmap2 64 round 3 rate 367065 | parked 406 rd_behind 97 rd_queue 4
+nostall brk1 64 round 3 rate 827888 | parked 576 rd_behind 139
+complaints 0
+RSTALL_DONE

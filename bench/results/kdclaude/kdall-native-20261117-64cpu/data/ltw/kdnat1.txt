@@ -1,0 +1,11 @@
+7.0.0-38-kdnat1 #1 SMP PREEMPT_DYNAMIC Tue Nov 17 11:57:56 UTC 2026
+mutex_lock 64 1 ctxt 367984 Writes:  Total: 58963937  Max/Min: 1156130/763047   Fail: 0  End of test: SUCCESS:  
+mutex_lock 128 1 ctxt 285703 Writes:  Total: 46158190  Max/Min: 488375/217779 ???  Fail: 0  End of test: SUCCESS:  
+ww_mutex_lock 64 1 ctxt 1234971 Writes:  Total: 22476224  Max/Min: 374039/323788   Fail: 0  End of test: SUCCESS:  
+ww_mutex_lock 128 1 ctxt 1328055 Writes:  Total: 27052800  Max/Min: 300155/115989 ???  Fail: 0  End of test: SUCCESS:  
+mutex_lock 64 2 ctxt 379747 Writes:  Total: 56329650  Max/Min: 1007037/740130   Fail: 0  End of test: SUCCESS:  
+mutex_lock 128 2 ctxt 261324 Writes:  Total: 48471614  Max/Min: 539688/241976 ???  Fail: 0  End of test: SUCCESS:  
+ww_mutex_lock 64 2 ctxt 1216836 Writes:  Total: 23335858  Max/Min: 418619/329719   Fail: 0  End of test: SUCCESS:  
+ww_mutex_lock 128 2 ctxt 1285400 Writes:  Total: 25043087  Max/Min: 256326/137950   Fail: 0  End of test: SUCCESS:  
+complaints 0
+LTW_DONE

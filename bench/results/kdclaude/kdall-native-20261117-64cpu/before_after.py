@@ -2,12 +2,13 @@
 # SPDX-License-Identifier: GPL-2.0
 """Before and after the optimizations, each against its own native boots.
 
-runs.txt holds two comparisons of suite.sh: tags b1-b6 (kdall1 against
-kdnat1) and a1-a6 (kdall3 against kdnat1, later boots). For each, the
-ratio of medians to that comparison's native runs; a ratio is marked "~"
-when the three kd runs overlap the three native runs.
+runs.txt holds the comparisons of suite.sh, one series of tags per letter:
+b1-b6 (kdall1 against kdnat1), a1-a6 (kdall3 against kdnat1, later boots)
+and c1-c6 (kdall9 against kdnat8, section 8). For each series, the ratio of
+medians to that series' native runs; a ratio is marked "~" when the kd runs
+overlap the native runs.
 
-  before_after.py runs.txt
+  before_after.py runs.txt [BEFORE AFTER]    series letters, default b a
 """
 import statistics
 import sys
@@ -15,9 +16,10 @@ from collections import defaultdict
 
 vals = defaultdict(lambda: defaultdict(list))
 order = []
+bs, as_ = (sys.argv[2], sys.argv[3]) if len(sys.argv) > 3 else ("b", "a")
 for line in open(sys.argv[1]):
     f = line.partition(" | ")[0].split()
-    if len(f) < 6 or f[0][0] not in "ab" or not f[0][1:].isdigit():
+    if len(f) < 6 or f[0][0] not in (bs, as_) or not f[0][1:].isdigit():
         continue
     try:
         v = float(f[5])
@@ -43,5 +45,5 @@ for key in order:
     m = vals[key]
     print("| %s %s | %d | %s | %s | %s | %s |" % (
         key[0], key[1], key[2],
-        ratio(m[("b", "off")], m[("b", "native")]), ratio(m[("b", "on")], m[("b", "native")]),
-        ratio(m[("a", "off")], m[("a", "native")]), ratio(m[("a", "on")], m[("a", "native")])))
+        ratio(m[(bs, "off")], m[(bs, "native")]), ratio(m[(bs, "on")], m[(bs, "native")]),
+        ratio(m[(as_, "off")], m[(as_, "native")]), ratio(m[(as_, "on")], m[(as_, "native")])))

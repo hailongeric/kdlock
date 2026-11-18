@@ -384,6 +384,22 @@ paths were exercised only by the ordinary load; CPU hotplug was not tested.
   - **Still behind:** locktorture rwsem (0.53-0.61), ww_mutex (0.66),
     page_fault_shared3 at 32 threads (0.83), page_fault1 at 16 threads
     (0.81), and the rwsem writers in plain mode (xattr 0.92-0.97).
+- **Second round** (kdall10 against kdnat9, 3 boots each, section 8 of the
+  same README):
+  - **mmap1 at 64 threads: 2.06 of native with delegation** (1.77 before),
+    from an era bound of the rwsem's own, 1 ms (ARCHITECTURE 7b).
+  - **Mutex in plain mode:** locktorture mutex_lock 1.60 of native (0.70),
+    ww_mutex 0.90 (0.68), seek 1.41 and pipe 1.39 at 64 threads: only the
+    queue head judges the holder, and a parked waiter is woken once
+    (`KD_QF_WOKEN`, LOCKS 4).
+  - **Why plain mode is far ahead elsewhere:** native locks collapse
+    across the two nodes (setfd, ofd, uts, mmap1, brk1 at 64 threads run at
+    0.40-0.71 of their 16-thread rate), while kd keeps one node at a time
+    or keeps its handovers short.
+  - **Still behind:** locktorture rwsem (0.53-0.57), page_fault_shared3 at
+    32 threads (0.83), page_fault1 at 16 threads (0.87; its threads sleep
+    in the mmap lock, the reader spin time trades it against reader-heavy
+    locks), page_fault_shared1 (0.93), xattr (0.94-0.97).
 
 ## 5. Symbols and memory the code depends on
 

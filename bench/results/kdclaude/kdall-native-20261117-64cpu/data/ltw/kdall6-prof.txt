@@ -1,0 +1,49 @@
+7.0.0-38-kdall6 #9 SMP PREEMPT_DYNAMIC Wed Nov 18 03:11:01 UTC 2026
+Writes:  Total: 20670991  Max/Min: 372717/301650   Fail: 0 
+    75.82%  [k] kd_wait_sleepable
+    20.81%  [k] kd_q_lock_plain
+     0.38%  [k] kd_mutex_unlock
+     0.38%  [k] kd_mutex_lock
+     0.36%  [k] kd_mutex_can_spin
+     0.31%  [k] delay_halt_tpause
+     0.29%  [k] kd_mutex_sleep
+     0.17%  [k] kd_mutex_wake_first
+     0.16%  [k] kd_arch_spin_lock
+     0.16%  [k] pvclock_clocksource_read_nowd
+     0.13%  [k] wake_q_add
+     0.06%  [k] lock_torture_writer
+     0.06%  [k] kd_mutex_lock_slow
+     0.05%  [k] lapic_next_deadline
+     0.04%  [k] __torture_rt_boost
+     0.04%  [k] asm_sysvec_apic_timer_interrupt
+     0.04%  [k] torture_random
+     0.04%  [k] get_jiffies_update
+     0.03%  [k] ktime_get
+     0.03%  [k] _find_next_and_bit
+     0.02%  [k] nohz_balance_exit_idle
+     0.02%  [k] update_sd_lb_stats.constprop.0
+     0.02%  [k] __intel_pmu_enable_all.isra.0
+     0.02%  [k] kthread_should_stop
+     0.02%  [k] intel_pmu_disable_all
+-- annotate of the top kd symbol, hottest instructions
+   82.61 :   ffffffff814d50d7:       mov    0x8(%r15),%eax
+   12.94 :   ffffffff814d50db:       add    $0x1,%edx
+    1.59 :   ffffffff814d50e7:       mov    (%rcx),%rax
+    1.18 :   ffffffff814d50ee:       test   $0x3ff,%edx
+    0.56 :   ffffffff814d52db:       movzbl (%rbx),%eax
+    0.24 :   ffffffff814d52de:       test   %al,%al
+    0.20 :   ffffffff814d51b9:       test   $0x4,%al
+    0.18 :   ffffffff814d506c:       test   %ax,%ax
+    0.15 :   ffffffff814d5287:       cmp    $0x1,%eax
+    0.09 :   ffffffff814d52ec:       test   %al,%al
+    0.06 :   ffffffff814d5459:       movzbl 0x3b(%rdx),%eax
+    0.02 :   ffffffff814d54c7:       lea    0x1(%rsi),%ecx
+-- kd counters
+  abandon          12739
+  handoff          26
+  head_sleep       6261
+  no_spin          2101
+  numa_local       373172
+  parked           15429
+  plain            10800428
+PROF_DONE

@@ -1,0 +1,10 @@
+7.0.0-38-kdnat9 #9 SMP PREEMPT_DYNAMIC Wed Nov 18 07:13:29 UTC 2026
+writers 128
+Writes:  Total: 29781591  Max/Min: 359890/129655 ???  Fail: 0 
+context switches 225944 in 20 s
+-- calls per second while profiling (16 s), all CPUs
+  schedule               6628 /s
+  wake_up_q            739929 /s
+  try_to_wake_up       740360 /s
+-- kd counters over the run
+MWAKE_DONE

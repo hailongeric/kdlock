@@ -1,0 +1,113 @@
+--- a/include/kdlock/kd_types.h	2026-11-17 20:01:17.678444371 -0800
++++ b/include/kdlock/kd_types.h	2026-11-17 20:01:17.650445832 -0800
+@@ -67,6 +67,11 @@
+  * head role over (role exchange, kd_release_combine() in kd_core.c).
+  */
+ #define KD_QF_XHEAD		0x08
++/*
++ * The first parked task is awake, spinning for the lock: a release need
++ * not wake it (kd_mutex_spin_first() in kd_mutex.c).
++ */
++#define KD_QF_AWAKE		0x10
+ #define KD_QF_SHIFT		8
+ 
+ #define __KD_QLOCK_UNLOCKED	{ { .val = ATOMIC_INIT(0) } }
+--- a/kernel/kd_mutex.c	2026-11-17 20:01:17.676444475 -0800
++++ b/kernel/kd_mutex.c	2026-11-17 20:01:17.647445989 -0800
+@@ -113,22 +113,46 @@
+ 
+ /*
+  * First parked waiter: spin while the owner runs, as the native mutex does
+- * for its first waiter. Returns when the lock looks free or was handed to
+- * @w, or when spinning stops paying off; the caller rechecks under the wait
+- * lock. The handoff request is honoured while this task still runs, so the
+- * new owner is on a CPU and the queued spinners keep spinning. Granting to
+- * a sleeping task instead makes every spinner see an off-CPU owner, leave
+- * the queue and park (a convoy). A ww waiter that holds locks stops as soon
+- * as the holder has a context (kd_mutex_ww_may_spin()).
++ * for its first waiter. Returns true if it took the lock; false when the
++ * lock was handed to @w, when spinning stops paying off, or after a few
++ * releases that someone else won (the caller may then ask for a handoff).
++ * The handoff request is honoured while this task still runs, so the new
++ * owner is on a CPU and the queued spinners keep spinning. Granting to a
++ * sleeping task instead makes every spinner see an off-CPU owner, leave the
++ * queue and park (a convoy).
++ *
++ * While it spins it sets KD_QF_AWAKE, and releases that see the flag do not
++ * wake it. Without that, nearly every release took the wait lock, in the
++ * mutex's own cache line, to wake a task that was running anyway
++ * (locktorture mutex_lock, 128 writers on 64 CPUs: 720 000 wake_up_q()
++ * calls per second, 4 300 schedule() calls). The flag is cleared with a
++ * full barrier before the caller looks at the lock again and before it
++ * sleeps; a release reads it with the atomic that releases the lock. So a
++ * release that skipped the wakeup comes before that look and is seen by
++ * it, and every later release wakes as usual.
+  */
+-static void kd_mutex_spin_first(struct kd_mutex *m, struct kd_mutex_waiter *w,
++static bool kd_mutex_spin_first(struct kd_mutex *m, struct kd_mutex_waiter *w,
+ 				struct kd_ww_wait *ww)
+ {
++	bool got = false;
++	int missed = 0;
++
+ 	preempt_disable();
+-	while (!READ_ONCE(w->granted) && READ_ONCE(m->q.locked) &&
+-	       kd_mutex_can_spin(m) && kd_mutex_ww_may_spin(ww))
++	atomic_or(KD_QF_AWAKE << KD_QF_SHIFT, &m->q.val);
++	while (!READ_ONCE(w->granted) && kd_mutex_can_spin(m) && kd_mutex_ww_may_spin(ww)) {
++		if (!READ_ONCE(m->q.locked)) {
++			if (kd_mutex_trylock_as(m, current)) {
++				got = true;
++				break;
++			}
++			if (++missed > 2)
++				break;
++		}
+ 		cpu_relax();
++	}
++	atomic_andnot(KD_QF_AWAKE << KD_QF_SHIFT, &m->q.val);
+ 	preempt_enable();
++	return got;
+ }
+ 
+ /*
+@@ -177,17 +201,22 @@
+ 				break;
+ 		}
+ 		if (first && tries > 1 && kd_mutex_can_spin(m) && kd_mutex_ww_may_spin(ww)) {
++			bool got;
++
+ 			/*
+ 			 * Woken at least once: spin instead of sleeping again.
+-			 * Always recheck from the top afterwards: the grant may
+-			 * have been made, and its wakeup spent, while this task
+-			 * was running, so sleeping now would never end. When
+-			 * spinning stopped for need_resched(), the next pass does
+-			 * not spin (kd_mutex_can_spin() is false) and sleeps.
++			 * Unless it took the lock, recheck from the top
++			 * afterwards: the grant may have been made, and its
++			 * wakeup spent, while this task was running, so
++			 * sleeping now would never end. When spinning stopped
++			 * for need_resched(), the next pass does not spin
++			 * (kd_mutex_can_spin() is false) and sleeps.
+ 			 */
+ 			kd_wait_unlock(m, flags);
+-			kd_mutex_spin_first(m, &w, ww);
++			got = kd_mutex_spin_first(m, &w, ww);
+ 			flags = kd_wait_lock(m);
++			if (got)
++				break;
+ 			continue;
+ 		}
+ 		set_current_state(state);
+@@ -490,7 +519,9 @@
+ 		}
+ 		if (old & (KD_QF_HANDOFF << KD_QF_SHIFT))
+ 			kd_mutex_handoff(m);
+-		else if (old & (KD_QF_SLEEPERS << KD_QF_SHIFT))
++		else if ((old & (KD_QF_SLEEPERS << KD_QF_SHIFT)) &&
++			 !(old & (KD_QF_AWAKE << KD_QF_SHIFT)))
++			/* The first parked task is spinning: kd_mutex_spin_first(). */
+ 			kd_mutex_wake_first(m);
+ 		return;
+ 	}

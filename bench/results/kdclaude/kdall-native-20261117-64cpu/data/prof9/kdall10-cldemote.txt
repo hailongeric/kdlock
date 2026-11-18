@@ -1,0 +1,15 @@
+7.0.0-38-kdall10 #13 SMP PREEMPT_DYNAMIC Wed Nov 18 07:11:45 UTC 2026
+default kd_cldemote 3
+cldemote=3 setfd 64 round 1 mode setfd threads 64 seconds 5.0 ops 10175222 rate 2030528 ok
+cldemote=3 ofd 64 round 1 mode ofd threads 64 seconds 5.0 ops 5308692 rate 1060257 ok
+cldemote=0 setfd 64 round 1 mode setfd threads 64 seconds 5.0 ops 10464667 rate 2089931 ok
+cldemote=0 ofd 64 round 1 mode ofd threads 64 seconds 5.0 ops 5600268 rate 1118545 ok
+cldemote=0 setfd 64 round 2 mode setfd threads 64 seconds 5.0 ops 10366037 rate 2070123 ok
+cldemote=0 ofd 64 round 2 mode ofd threads 64 seconds 5.0 ops 5133229 rate 1024733 ok
+cldemote=3 setfd 64 round 2 mode setfd threads 64 seconds 5.0 ops 10113795 rate 2018782 ok
+cldemote=3 ofd 64 round 2 mode ofd threads 64 seconds 5.0 ops 5924265 rate 1181548 ok
+cldemote=3 setfd 64 round 3 mode setfd threads 64 seconds 5.0 ops 9052393 rate 1808014 ok
+cldemote=3 ofd 64 round 3 mode ofd threads 64 seconds 5.0 ops 5593233 rate 1117088 ok
+cldemote=0 setfd 64 round 3 mode setfd threads 64 seconds 5.0 ops 10411610 rate 2077398 ok
+cldemote=0 ofd 64 round 3 mode ofd threads 64 seconds 5.0 ops 5631409 rate 1124807 ok
+CLDEMOTE_DONE

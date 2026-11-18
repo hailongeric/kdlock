@@ -1,0 +1,15 @@
+7.0.0-38-kdall7 #10 SMP PREEMPT_DYNAMIC Wed Nov 18 04:09:10 UTC 2026
+writers 64 probes: sl_entry:kd_mutex_sleep sl_entry_c:kd_mutex_sleep+0x44c sl_loop:kd_mutex_sleep+0x290 sl_loop_c:kd_mutex_sleep+0x429 sl_sched:kd_mutex_sleep+0x275 wf:kd_mutex_wake_first wf_c:kd_mutex_wake_first+0xc1 ho:kd_mutex_handoff ho_c:kd_mutex_handoff+0x11d lslow:kd_mutex_lock_slow
+Writes:  Total: 15201263  Max/Min: 257647/222313   Fail: 0 
+-- hits per second
+  hits                  0 /s  missed missed
+  hits                  0 /s  missed missed
+  hits                  0 /s  missed missed
+  hits                  0 /s  missed missed
+  hits                  0 /s  missed missed
+  hits                  0 /s  missed missed
+  hits                  0 /s  missed missed
+  hits                  0 /s  missed missed
+  hits                  0 /s  missed missed
+  hits                  0 /s  missed missed
+KP_DONE

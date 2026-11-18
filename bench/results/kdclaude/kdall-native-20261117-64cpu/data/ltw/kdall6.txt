@@ -1,0 +1,11 @@
+7.0.0-38-kdall6 #9 SMP PREEMPT_DYNAMIC Wed Nov 18 03:11:01 UTC 2026
+mutex_lock 64 1 ctxt 383724 Writes:  Total: 36768592  Max/Min: 609443/550322   Fail: 0  End of test: SUCCESS:  
+mutex_lock 128 1 ctxt 277049 Writes:  Total: 32878457  Max/Min: 386180/157895 ???  Fail: 0  End of test: SUCCESS:  
+ww_mutex_lock 64 1 ctxt 1555905 Writes:  Total: 14819776  Max/Min: 243698/219916   Fail: 0  End of test: SUCCESS:  
+ww_mutex_lock 128 1 ctxt 1561624 Writes:  Total: 17263716  Max/Min: 184373/82938 ???  Fail: 0  End of test: SUCCESS:  
+mutex_lock 64 2 ctxt 346013 Writes:  Total: 34736905  Max/Min: 577706/518105   Fail: 0  End of test: SUCCESS:  
+mutex_lock 128 2 ctxt 247884 Writes:  Total: 32510258  Max/Min: 342378/132182 ???  Fail: 0  End of test: SUCCESS:  
+ww_mutex_lock 64 2 ctxt 1636674 Writes:  Total: 14447078  Max/Min: 237534/215303   Fail: 0  End of test: SUCCESS:  
+ww_mutex_lock 128 2 ctxt 1555920 Writes:  Total: 16704099  Max/Min: 192882/66629 ???  Fail: 0  End of test: SUCCESS:  
+complaints 0
+LTW_DONE

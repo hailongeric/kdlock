@@ -1,0 +1,10 @@
+7.0.0-38-kdall7 #10 SMP PREEMPT_DYNAMIC Wed Nov 18 04:09:10 UTC 2026
+torture_mutex ffffffffc0c581a0 runqueues ffffffff83bd07c0
+map entries 129
+Writes:  Total: 16436873  Max/Min: 282174/233042   Fail: 0 
+samples 95237
+top symbols: [('ABI:1', 95211), ('ABI:2', 26)]
+kd_q_lock_plain samples 0 of 95237
+by kind:
+top addresses:
+REGS_DONE

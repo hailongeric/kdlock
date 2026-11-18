@@ -1,0 +1,30 @@
+== suite-learn10-on
+SUITE_DONE
+== suite-c1-native
+SUITE_DONE
+== suite-c2-off
+SUITE_DONE
+== suite-c2-on
+SUITE_DONE
+== suite-c3-native
+SUITE_DONE
+== suite-c4-on
+SUITE_DONE
+== suite-c4-off
+SUITE_DONE
+== suite-c5-native
+SUITE_DONE
+== suite-c6-off
+SUITE_DONE
+== suite-c6-on
+SUITE_DONE
+learn10 on complaints 0
+c1 native complaints 0
+c2 off complaints 0
+c2 on complaints 0
+c3 native complaints 0
+c4 on complaints 0
+c4 off complaints 0
+c5 native complaints 0
+c6 off complaints 0
+c6 on complaints 0

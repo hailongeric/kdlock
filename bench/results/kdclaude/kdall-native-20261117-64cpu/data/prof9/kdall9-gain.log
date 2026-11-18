@@ -1,0 +1,157 @@
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+== api setfd 64
+              4588      context-switches                                                      
+               186      cpu-migrations                                                        
+    97.93%  [k] kd_q_lock_slow
+     0.47%  [k] fput
+     0.31%  [k] kd_spin_lock
+     0.16%  [k] entry_SYSCALL_64
+     0.12%  [k] do_syscall_64
+     0.10%  [k] get_close_on_exec
+     0.10%  [k] clear_bhb_loop
+     0.09%  [k] fdget_raw
+     0.06%  [.] 0x0000000000128d37
+     0.05%  [k] set_close_on_exec
+     0.04%  [k] get_jiffies_update
+     0.04%  [k] lapic_next_deadline
+     0.03%  [k] alloc_fd
+     0.03%  [k] syscall_return_via_sysret
+     0.03%  [k] asm_sysvec_apic_timer_interrupt
+     0.02%  [.] setfd_work
+mode setfd threads 64 seconds 15.0 ops 29511930 rate 1965310 ok
+  era_claim        1
+  era_gate         26
+  era_start        1
+  head_sleep       5
+  no_spin          1
+  numa_local       2
+  parked           25
+  plain            33230931
+  rd_behind        50
+  rd_queue         19
+== api ofd 64
+              1442      context-switches                                                      
+                81      cpu-migrations                                                        
+    98.08%  [k] kd_q_lock_slow
+     0.50%  [k] posix_test_lock
+     0.16%  [k] kd_spin_lock
+     0.16%  [k] _copy_to_user
+     0.14%  [k] posix_lock_inode
+     0.07%  [k] fput
+     0.06%  [k] get_jiffies_update
+     0.05%  [k] entry_SYSCALL_64
+     0.05%  [k] do_syscall_64
+     0.04%  [k] clear_bhb_loop
+     0.04%  [k] _copy_from_user
+     0.04%  [k] kmem_cache_alloc_noprof
+     0.04%  [k] lapic_next_deadline
+     0.03%  [k] fdget_raw
+     0.03%  [k] asm_sysvec_apic_timer_interrupt
+     0.02%  [.] 0x0000000000128d37
+mode ofd threads 64 seconds 15.0 ops 15282353 rate 1017798 ok
+  era_claim        1
+  era_gate         2
+  era_start        4
+  head_sleep       3
+  no_spin          2
+  numa_local       4
+  parked           6
+  plain            22925763
+  rd_behind        124
+  rd_queue         1
+== api uts 64
+            296677      context-switches                                                      
+               291      cpu-migrations                                                        
+    49.34%  [k] kd_wait_sleepable
+    39.92%  [k] kd_rw_era_wait
+     2.11%  [k] kd_down_read_slow
+     0.77%  [k] pvclock_clocksource_read_nowd
+     0.75%  [k] kd_rwsem_post
+     0.68%  [k] kd_down_read
+     0.64%  [k] kd_up_read
+     0.45%  [k] kd_q_lock_slow
+     0.35%  [k] __do_sys_newuname
+     0.27%  [k] kd_rwsem_spin_for
+     0.26%  [k] kd_spin_lock_irqsave
+     0.23%  [.] make_name
+     0.21%  [k] entry_SYSCALL_64
+     0.20%  [k] blake2s_compress_avx512
+     0.19%  [k] do_syscall_64
+     0.18%  [k] _copy_to_user
+mode uts threads 64 seconds 15.0 ops 47332092 rate 3147579 ok
+  abandon          359
+  era_claim        17651
+  era_gate         478170
+  era_start        3
+  handoff          131
+  head_sleep       567
+  no_spin          25
+  parked           1151
+  plain            7783173
+  rd_behind        15696817
+  rd_queue         272
+== wis brk1 64
+              5308      context-switches                                                      
+                87      cpu-migrations                                                        
+    53.99%  [k] kd_rw_era_wait
+    41.75%  [k] kd_wait_sleepable
+     0.84%  [k] pvclock_clocksource_read_nowd
+     0.77%  [k] kd_rwsem_spin_for
+     0.25%  [k] account_system_index_time
+     0.18%  [k] update_se
+     0.08%  [k] kd_down_write_slow_killable
+     0.08%  [k] __do_sys_brk
+     0.08%  [k] kd_rwsem_post
+     0.07%  [k] kd_down_write_killable
+     0.06%  [k] mas_walk
+     0.06%  [k] kd_up_write
+     0.04%  [k] __memcg_slab_free_hook
+     0.04%  [k] ktime_get_update_offsets_now
+     0.04%  [k] tick_nohz_handler
+     0.04%  [k] __refill_objects_node
+average:794147:0:794147
+  abandon          391
+  era_claim        20190
+  era_gate         636904
+  era_start        47
+  handoff          42
+  head_sleep       861
+  no_spin          233
+  numa_local       41
+  parked           1377
+  plain            16553886
+  rd_behind        202
+  rd_queue         1
+== wis mmap1 64
+              6196      context-switches                                                      
+               149      cpu-migrations                                                        
+    50.36%  [k] kd_wait_sleepable
+    45.14%  [k] kd_rw_era_wait
+     1.06%  [k] kd_rwsem_spin_for
+     0.71%  [k] pvclock_clocksource_read_nowd
+     0.24%  [k] account_system_index_time
+     0.19%  [k] update_se
+     0.09%  [k] mas_empty_area_rev
+     0.08%  [k] vms_gather_munmap_vmas
+     0.07%  [k] kd_rwsem_post
+     0.07%  [k] kd_down_write_slow_killable
+     0.06%  [k] kd_down_write_killable
+     0.06%  [k] kd_q_lock_slow
+     0.05%  [k] __vma_start_exclude_readers
+     0.05%  [k] mas_walk
+     0.05%  [k] entry_SYSCALL_64
+     0.04%  [k] __mmap_region
+average:317402:0:317402
+  abandon          480
+  era_claim        19297
+  era_gate         615964
+  era_start        100
+  handoff          108
+  head_sleep       2225
+  no_spin          394
+  numa_local       147
+  parked           2997
+  plain            13295044
+  rd_behind        94
+  rd_queue         20
+PROF_DONE

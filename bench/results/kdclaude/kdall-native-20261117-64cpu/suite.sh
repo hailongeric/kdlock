@@ -71,6 +71,14 @@ for t in spin_lock rw_lock mutex_lock rwsem_lock ww_mutex_lock; do
 	line "torture $t 128 ${r:-0} | $s0| $(st)"
 done
 
+# 5. Added for the c series (section 8): the mmap lock tests at 48 and 60
+# threads as well, after everything else so that sections 1-4 keep their
+# order. 64 threads leave no CPU for anything else, which 60 does.
+for t in mmap1 mmap2 brk1; do for n in 48 60; do
+	s0=$(st); r=$(cd /tmp && timeout 60 /root/wis/build/${t}_threads -t $n -s 5 -n 1 2>&1 | grep -E "^average:" | sed 's/average://; s/:.*//')
+	line "wis $t $n ${r:-0} | $s0| $(st)"
+done; done
+
 [ $MODE = on ] && d_off
 echo "$TAG $MODE complaints $(( $(complaints) - c0 ))" >> $O/complaints.txt
 echo SUITE_DONE

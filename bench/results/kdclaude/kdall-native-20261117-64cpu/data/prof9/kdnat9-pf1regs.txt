@@ -1,0 +1,34 @@
+7.0.0-38-kdnat9 #9 SMP PREEMPT_DYNAMIC Wed Nov 18 07:13:29 UTC 2026
+average:2918115:0:2918115
+samples 80157
+  _raw_spin_lock                      28806  35.9%
+  charge_memcg                        12058  15.0%
+  pte_offset_map_lock                  5679   7.1%
+  asm_exc_page_fault                   4426   5.5%
+  testcase                             2835   3.5%
+  __pte_offset_map                     2419   3.0%
+  sync_regs                            2208   2.8%
+  unmap_page_range                     1315   1.6%
+  kernel_init_pages                    1232   1.5%
+  queued_spin_lock_slowpath            1177   1.5%
+spinlock samples by function and region of %rdi:
+  _raw_spin_lock             vmemmap (struct page: split PTE locks)    28745
+  _raw_spin_lock_irqsave     direct map (slab, node data)                146
+  _raw_spin_lock_irqsave     kernel image (static)                        68
+  _raw_spin_lock             direct map (slab, node data)                 45
+  _raw_spin_lock             other 0x0                                    11
+  _raw_spin_lock_irq         kernel image (static)                        11
+  _raw_spin_lock_irq         direct map (slab, node data)                  9
+  _raw_spin_lock             kernel image (static)                         5
+top %rdi values:
+  _raw_spin_lock_irqsave     0xff1100011a3c1710     70  direct map (slab, node data)
+  _raw_spin_lock             0xffd400000433f7e8     44  vmemmap (struct page: split PTE locks)
+  _raw_spin_lock             0xffd4000004264e28     42  vmemmap (struct page: split PTE locks)
+  _raw_spin_lock             0xffd40000045eeee8     42  vmemmap (struct page: split PTE locks)
+  _raw_spin_lock             0xffd4000004391e28     41  vmemmap (struct page: split PTE locks)
+  _raw_spin_lock             0xffd40000042bc328     39  vmemmap (struct page: split PTE locks)
+  _raw_spin_lock             0xffd400000475a2a8     39  vmemmap (struct page: split PTE locks)
+  _raw_spin_lock             0xffd40000050a60e8     38  vmemmap (struct page: split PTE locks)
+  _raw_spin_lock             0xffd40000048409a8     37  vmemmap (struct page: split PTE locks)
+  _raw_spin_lock             0xffd40000042c8d28     37  vmemmap (struct page: split PTE locks)
+PF1REGS_DONE

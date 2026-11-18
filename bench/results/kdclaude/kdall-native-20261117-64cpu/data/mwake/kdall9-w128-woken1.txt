@@ -1,0 +1,23 @@
+7.0.0-38-kdall9 #12 SMP PREEMPT_DYNAMIC Wed Nov 18 04:49:48 UTC 2026
+writers 128
+set kd_mutex_woken=1 (was 1)
+Writes:  Total: 53290843  Max/Min: 706690/266567 ???  Fail: 0 
+context switches 264541 in 20 s
+-- calls per second while profiling (16 s), all CPUs
+  schedule               7853 /s
+  wake_up_q              3808 /s
+  try_to_wake_up         8045 /s
+-- kd counters over the run
+  abandon          17840
+  era_claim        1
+  era_gate         10
+  era_start        1
+  handoff          1301
+  head_sleep       12182
+  no_spin          5860
+  numa_local       201595
+  parked           29289
+  plain            40192404
+  rd_behind        114
+  rd_queue         1
+MWAKE_DONE

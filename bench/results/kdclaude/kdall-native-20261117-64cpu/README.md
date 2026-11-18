@@ -473,3 +473,439 @@ Run in the last kdall3 boot (a6), after the suite.
 | `data/nano-nat1*.jsonl` | kdnat1: mutex nano against native, and the node spread (section 3, bad case 3) |
 | `data/numa_plain-kdnat2.jsonl.*` | kdnat2: `kd_numa_plain` 0 / 16 / 64 (4.2) |
 | `data/era-kdnat2.jsonl.*`, `data/nat3.jsonl`, `data/nat4.jsonl*` | eras on and off on kdnat2; the two rejected era changes on kdnat3 and kdnat4 (4.3) |
+| `era_ab.sh`, `era_summary.py`, `mm_diag.sh`, `nano_era.sh`, `nano_era_summary.py`, `place_era.sh`, `split.sh`, `mprof.sh`, `mip.sh` | 8.1: era settings for the mmap lock tests, nano and placement fairness, mmap1 profiles |
+| `ltw.sh`, `ltprof.sh`, `mutex_wake.sh`, `ltregs.sh`, `ltregs_an.py`, `ltkp.sh`, `diag/` | 8.3, 8.4: locktorture runs and profiles, wakeup counts, lock words from register samples, kprobe hit counts (`diag/kd_addrs.c`, `diag/kd_kpcount.c`, never left loaded) |
+| `woken_ab.sh`, `rstall_ab.sh`, `rspin_nano.sh`, `ab_summary.py` | 8.4, 8.5: in-boot A/B of `kd_mutex_woken`, of the rejected reader stall rule and of the reader spin time |
+| `nat_check.sh`, `natc_summary.py`, `kdall_check.sh`, `prof_gain.sh`, `pf1_regs.sh`, `cldemote_ab.sh` | 8.2, 8.4, 8.7, 8.8: kdnat checks (nano, oversubscription), correctness, gain profiles, page_fault1 lock words, `kd_cldemote` A/B |
+| `drivers/` | the per-boot driver scripts and the build scripts of this round |
+| `rejected/mutex-awake.patch`, `rejected/rwsem-rstall.patch` | 8.6, 8.5 |
+| `data/era-ab/`, `data/kdc6/`, `data/nano-era/`, `data/place-era/` | 8.1 |
+| `data/ltw/`, `data/mwake/`, `data/woken/`, `data/natc/`, `data/rstall/`, `data/prof9/` | 8.2-8.8 |
+
+## 8. Second round: mmap1 at 64 threads, and plain mode against native
+
+Two questions from the user:
+
+1. Before every lock was switched, mmap1 with 64 threads ran at about 2x
+   native; the whole-kernel build does not reach that. Can it still be
+   optimized?
+2. Without delegation (kd "off"), why are some cases much faster than
+   native and some much slower? Analyse and optimize.
+
+Kernels added in this round, all from `/mnt/kdlock-builds/kda/src` with the
+configuration of section 1 (only `CONFIG_KDLOCK_ALL` differs between a kdall
+kernel and its kdnat twin):
+
+| kernel | contents |
+|---|---|
+| `kdall4`, `kdall5`, `kdnat3`, `kdnat4` | the rejected era changes (4.3) |
+| `kdall6` #9, `kdnat5` | kdall3 + an rwsem era bound of its own, 1 ms (8.1) + the ww spin rule (8.3) + the AWAKE flag (8.6, rejected) |
+| `kdall7` #10, `kdnat6` | kdall6 without AWAKE, + plain queued waiters stop watching the holder (8.3) |
+| `kdall8`, `kdnat7` | kdall7 + `KD_QF_WOKEN` (8.4); built, not booted |
+| `kdall9` #12, `kdnat8` | kdall8 + the reader stall rule (8.5, rejected) |
+| `kdall10` #13, `kdnat9` #9 | kdall9 without the reader stall rule: **the final kernels**, the tree of the commits that come with this section |
+
+### 8.1 mmap1 at 64 threads
+
+**Where the 2x went.** kd's own rate did not drop; native's rose:
+
+| kernel | kd, 64 threads | native, 64 threads | kd/native |
+|---|---|---|---|
+| #71 (`CONFIG_KDLOCK_MM`, mmap lock only; native in the same boot) | 306-308 k | 148-151 k | 2.02-2.08 |
+| kdall1 / kdall3 (every lock), native twin kdnat1 | 314-323 k | 174-178 k | 1.77-1.79 |
+
+The native twin is the same tree and configuration with native locks, and
+it runs mmap1 at 64 threads about 18% faster than native in the #71 kernel
+did. That kernel had a different configuration, so the comparison of the
+two native rates is an indicator only. Against its own twin, kd kept its
+rate and lost the ratio.
+
+**What limits kd: the era bound.** At 48 threads and more, the mmap lock's
+callers sit on both nodes, and the rwsem serves one node at a time (an era,
+ARCHITECTURE 7b). The callers of the other node wait at the era gate, so a
+combining session ends when the era does: about 136 mmap1 sections per
+session at 200 us (`data/era-ab/`, kdall3, one boot, 3 rounds; mmap lock
+writers delegated). Each new era moves the mm's data to the other node.
+#71 predates eras. Measured in one boot of kdall3, two blocks of 3 rounds,
+each against its own 200 us runs (`era_ab.sh`, `era_summary.py`):
+
+| setting | mmap1 48 / 60 / 64 threads, median relative to 200 us | sections per session at 64 |
+|---|---|---|
+| eras, 200 us (then the default) | 325-334 k / 316-325 k / 308-318 k | 136 |
+| no eras (`kd_rw_era_ns=0`) | 0.94 / 0.93 / 0.93 | 3459 |
+| eras that never start (`kd_rw_era_press=400`) | 0.93 / 0.94 / 0.94 | 3479 |
+| eras, 200 us, second block | 324-326 k / 315-317 k / 303-310 k | 137 |
+| eras, 500 us | 1.05 / 1.07 / 1.09 | 363 |
+| eras, 1 ms | 1.12 / 1.14 / 1.11 | 911 |
+
+Without eras the sessions are 25 times longer, but the rate is lower: the
+queue then holds callers of both nodes, which each session serves or steps
+over. Eras help; they were too short.
+
+**The change: an era bound of the rwsem's own,** `kd_rwsem_era_ns`, 1 ms
+(`kernel/kd_rwsem.c`). The rwlock keeps 200 us: it gained nothing from a
+longer bound (0-2%) and lost fairness, and its waiters spin with preemption
+off. On kdall6, one boot, 3 rounds, 1 ms against 200 us for the rwsem only
+(`data/kdc6/kdall6-era-*`): mmap1 at 48 / 60 / 64 threads 1.14 / 1.15 /
+1.12, mmap2 1.12-1.19, brk1 0.78-1.12 (noisy). mmap1 ran at 348-373 k: about
+2.0x the native twin's 178 k (other boots). Nano, kdall3, one boot
+(`data/nano-era/`): rwsem bodies with 20% writes at 48 and 64 workers
+1.08-1.22 in plain mode and 1.06-1.09 delegated; writers only and one node
+unchanged.
+
+**The cost** is the share of a node with very few callers
+(`data/place-era/`, kdall3, run_place.py, 32 workers): with 31 workers on
+one node and 1 on the other, the least-served worker got 0.68 instead of
+0.85 of the most-served one's operations (1 line, 20% writes, plain), 0.72
+instead of 0.94 delegated.
+
+### 8.2 Plain mode against native: where the differences come from
+
+From the a series (section 5, kdall3 off against kdnat1, medians of 3
+boots), the rate at 64 threads relative to 16 threads:
+
+| workload | native 64/16 | kd off 64/16 | off/native at 64 |
+|---|---|---|---|
+| api ofd | 0.40 | 0.78 | 2.78 |
+| api setfd | 0.48 | 1.19 | 3.13 |
+| wis brk1 | 0.55 | 1.08 | 2.08 |
+| wis mmap2 | 0.58 | 0.90 | 1.55 |
+| wis mmap1 | 0.60 | 0.88 | 1.55 |
+| wis page_fault_shared3 | 0.64 | 0.66 | 1.05 |
+| api uts | 0.71 | 0.87 | 3.04 |
+
+**The large gains are native collapsing across nodes.** 64 threads run on
+both nodes; 16 run on one.
+
+Profiles at 64 threads (`prof_gain.sh`, kdnat9 and kdall9 without the
+daemon, `data/prof9/*-gain.log`; 5 s flat profiles and context switches):
+
+| workload | native | kd off |
+|---|---|---|
+| setfd (`files->file_lock`, spinlock) | 95.7% `queued_spin_lock_slowpath`, 645 k ops/s | 97.9% `kd_q_lock_slow`, 1.97 M ops/s |
+| ofd (file lock list, spinlock) | 96.5% `queued_spin_lock_slowpath`, 385 k | 98.1% `kd_q_lock_slow`, 1.02 M |
+| uts (`uts_sem`, rwsem) | 2.74 M context switches; 22% `queued_spin_lock_slowpath` (the rwsem's wait lock), `rwsem_down_read_slowpath` | 297 k context switches; 49% `kd_wait_sleepable`, 40% `kd_rw_era_wait`; 3.15 M ops/s against 877 k |
+| brk1, mmap1 (mmap lock writers) | 95% `osq_lock`, 173-181 k context switches | 42-50% `kd_wait_sleepable`, 45-54% `kd_rw_era_wait` |
+
+- **rwsem (mmap lock, `uts_sem`):** native writers spin in the
+  optimistic-spin queue and hand over in arrival order, across the two
+  nodes at about every other handover; native readers sleep and are woken.
+  kd serves one node at a time (eras): the callers of the other node wait
+  at the era gate, polling a line of their own, so the lock and the data
+  stay on one node for an era, and readers do not sleep.
+- **Spinlocks (setfd, ofd):** both kernels spend nearly all their time in
+  the slow path, and kd's plain mode is the native queued spinlock's
+  algorithm; still kd hands over 2.6-3 times as often. **Not
+  attributed.** It is not `kd_cldemote` (the queued waiter demotes its
+  lines): with it switched off, kdall10, one boot, 3 rounds
+  (`cldemote_ab.sh`, `data/prof9/kdall10-cldemote.txt`), setfd ran at
+  2.07-2.09 M against 1.81-2.03 M and ofd at 1.02-1.12 M against
+  1.06-1.18 M. What remains of the differences is the prefetch of the
+  successor's node and the layout of the queue nodes.
+
+
+**The losses** (section 5, last table), and their causes:
+
+| case | off/native (kdall3) | cause | this round |
+|---|---|---|---|
+| locktorture mutex_lock | 0.70 | queued waiters all watched the holder; every release took the wait lock while tasks were parked | 8.3, 8.4 |
+| locktorture ww_mutex_lock | 0.68 | as mutex, plus kd walks every parked waiter where native checks one | 8.3, 8.4 |
+| locktorture rwsem_lock | 0.53 | reader-phase policy: kd follows each write with a reader phase; native passes the lock writer to writer while readers sleep | not changed |
+| page_fault1, 16 threads | 0.80 | threads sleep about a quarter of the time in the mmap lock; the spinlock share is the same as native's (8.5) | analysed, not changed |
+| page_fault_shared3, 32 threads | 0.83 | readers spin behind mprotect writers; native readers sleep | 8.5, not changed |
+| page_fault_shared1, 16 and 32 threads | 0.92-0.94 | the shared PTE spinlock; the spin class has no node order in plain mode | not changed |
+| xattr | 0.92-0.97 | `i_rwsem` writers in plain mode: queue mutex, writer bit and phase counter where native does one cmpxchg (4.3) | not changed |
+
+### 8.3 Mutex: only the queue head judges the holder (kdall7)
+
+locktorture mutex_lock with one writer per CPU (no oversubscription) was at
+0.62 of native on kdall6. Its profile: 75.8% in the spinner queue
+(`kd_wait_sleepable`), 20.8% in `kd_q_lock_plain` (`data/ltw/kdall6-prof.txt`);
+native: 95.6% `osq_lock`, 0.3% in its spinlock slow path
+(`data/ltw/kdnat1-prof.txt`). In 13 s, 12 700 queued waiters withdrew and
+15 400 times a waiter went to sleep.
+
+**Cause:** every queued waiter looked at the holder every `KD_OWNER_POLL`
+iterations and withdrew when it was off its CPU. A holder off its CPU for a
+moment (the shuffler, a kworker) sent the whole queue into the wait lock and
+to sleep at once, and they were woken one by one. In the native mutex only
+the head of the optimistic-spin queue watches the owner.
+
+**Change** (`kernel/kd_core.c`, `kd_wait_sleepable()`): only a waiter that
+published its section polls the holder; a plain waiter leaves the queue only
+at `need_resched()`. The queue head still parks at once when the holder does
+not run (LOCKS.md 4).
+
+**ww rule, in the same kernel** (`kernel/kd_mutex.c`,
+`kd_mutex_ww_may_spin()`): a parked first waiter that holds locks does not
+spin while the holder has a context, as native `ww_mutex_spin_on_owner()`.
+Without it, two contexts could spin on each other.
+
+kdall6 -> kdall7 against kdnat1 (`ltw.sh`, 30 s, 2 runs; other boots, so
+indicators; kdall6 also had the AWAKE flag of 8.6, which changed nothing):
+
+| test | writers | kdnat1 | kdall6 | kdall7 |
+|---|---|---|---|---|
+| mutex_lock | 64 | 56.3-59.0 M | 34.7-36.8 M (0.62) | 40.3-41.8 M (0.71) |
+| mutex_lock | 128 | 46.2-48.5 M | 32.5-32.9 M (0.69) | 39.5-40.7 M (0.85) |
+| ww_mutex_lock | 64 | 22.5-23.3 M | 14.4-14.8 M (0.64) | 17.2-17.7 M (0.76) |
+| ww_mutex_lock | 128 | 25.0-27.1 M | 16.7-17.3 M (0.65) | 22.7-23.2 M (0.88) |
+
+### 8.4 Mutex: a parked waiter is woken once (`KD_QF_WOKEN`, kdall9)
+
+kdall7 still spent 15.7% of its samples in `kd_q_lock_plain`
+(`data/ltw/kdall7-prof.txt`). Which lock: `ltregs.sh` samples the
+interrupted registers (`perf record -I`, no call graphs); `%rdx` holds the
+lock word for the whole of `kd_q_lock_plain`, and `diag/kd_addrs.c` prints
+the addresses of the writers' `pi_lock`s and of the run queue locks
+(`data/ltw/kdall7-regs.txt`):
+
+| lock word | share of the samples in `kd_q_lock_plain` |
+|---|---|
+| the torture mutex's `wait_lock` | 98.9% |
+| writers' `pi_lock` | 1.0% |
+
+Who takes it: `diag/kd_kpcount.c` counts kprobe hits (tracefs refuses kd's
+functions, which are built without ftrace) at the entries of the mutex slow
+path and at each call of `kd_q_lock_plain` (`ltkp.sh`,
+`data/ltw/kdall7-kp.txt`, 5 s with the probes):
+
+| place | hits | of them contended |
+|---|---|---|
+| `kd_mutex_wake_first()` (release with parked waiters) | 915 k | 893 k (98%) |
+| `kd_mutex_handoff()` | 16.5 k | all |
+| `kd_mutex_sleep()`: entry / after a wait | 4.3 k / 5.9 k | 2.4 k / 4.4 k |
+| `schedule()` in `kd_mutex_sleep()` | 3.5 k | |
+
+**Cause:** while any task was parked, every release took the wait lock to
+wake the first parked task: about 260 wakeup passes per parked wait. The
+task had almost always been woken by the first of them and was on its way
+to its CPU or spinning. The wait lock shares the mutex's cache line, so
+those passes also pulled the lock word away from the next owner. Native
+takes its wait lock in the same way, but with one writer per CPU its
+waiters rarely sleep (118 k `wake_up_q()` per second against kd's 350 k,
+`data/mwake/kdnat9-w64-native.txt`).
+
+**Change** (`kernel/kd_mutex.c`, `include/kdlock/kd_types.h`; protocol in
+LOCKS.md 4): the waker sets `KD_QF_WOKEN`, a release that finds it does
+nothing more, and the first task clears it under the wait lock and tries
+the lock once more before it sleeps again. `kd_mutex_woken=0` switches it
+off for in-boot comparisons.
+
+kdall9, one boot, 3 rounds, `kd_mutex_woken` 1 against 0 (`woken_ab.sh`,
+`data/woken/kdall9.txt`, `ab_summary.py woken`), writes per 30 s:
+
+| test | writers | woken=1 | woken=0 | 1/0 |
+|---|---|---|---|---|
+| mutex_lock | 64 | 52.5 / 51.0 / 59.4 M | 40.3 / 38.1 / 43.1 M | **1.30** |
+| mutex_lock | 128 | 78.6 / 76.7 / 75.1 M | 44.6 / 41.5 / 41.3 M | **1.85** |
+| ww_mutex_lock | 64 | 17.4 / 17.9 / 18.2 M | 16.5 / 15.7 / 16.7 M | **1.09** |
+| ww_mutex_lock | 128 | 23.8 / 22.6 / 23.2 M | 21.3 / 21.2 / 24.3 M | ~1.09 |
+| rwsem_lock | default | 449 / 470 / 482 k | 463 / 403 / 515 k | ~1.02 |
+
+Every run ended in SUCCESS. Wakeup counts in the same boot (`mutex_wake.sh`,
+ftrace function profiler, 20 s): `wake_up_q()` 350 k -> 3.8 k per second
+with 64 writers, 961 k -> 3.8 k with 128. Profile with 64 writers
+(`data/ltw/kdall9-woken1-prof.txt`): 97.2% `kd_wait_sleepable`, 0.08%
+`kd_q_lock_plain`. Per-writer spread with 128 writers (locktorture
+Max/Min): 783 k / 437 k with the flag, native 488-527 k / 209-247 k.
+
+Against the native twin (kdnat9, another boot, `data/ltw/kdnat9.txt`):
+mutex_lock 0.93 with 64 writers (native 54.7-57.7 M) and 1.65 with 128
+(native 44.0-48.8 M); ww_mutex_lock 0.78 and 0.90 (native 23.0-23.2 M and
+25.4-26.5 M).
+
+**Oversubscription** (`nat_check.sh`, kdnat9 against kdnat5, nano, kd
+against native in the same boot, `natc_summary.py`): with 2 workers per
+CPU kd/native went from 0.97 / 1.19 / 1.11 / 1.12 to 1.39 / 1.51 / 2.03 /
+1.99 (mutex 16 lines and 1 line, one node and 16+16 CPUs); with 1 worker
+per CPU 1.01-1.47, as before. No worker starved. The cost: the
+least-served worker's share with 2 workers per CPU is 0.31-0.44 of the
+most-served one's on kd, 0.47-0.53 on native (kdnat5: kd 0.26-0.63).
+
+### 8.5 rwsem readers: page_fault1 and the reader spin time
+
+**page_fault1 at 16 threads (0.80)** is not a spinlock cost. `pf1_regs.sh`
+(`data/prof9/*-pf1regs.txt`) classes the lock argument of the sampled
+spinlock entries by region: on kdall9 all 35.6% of the samples in
+`kd_spin_lock` are on split PTE locks in struct pages, about 32 samples per
+page-table page, so uncontended locks on cold lines, as on native (35.9% in
+`_raw_spin_lock`). The difference is idle time: in 5 s kd collected 60.8 k
+samples, native 80.2 k, and 16 busy threads give 80 k. kd's threads sleep
+about a quarter of the time in the mmap lock.
+
+**A reader stall rule (rejected).** After one reader ran out of its 50 us
+behind a write phase, later readers of that phase would queue at once
+(`rejected/rwsem-rstall.patch`, applies to the final tree). kdall9, one
+boot, 3 rounds (`rstall_ab.sh`, `data/rstall/`):
+
+| test | threads | stall / no stall | readers barely spinning (`kd_rwsem_rspin_ns=0`) / no stall |
+|---|---|---|---|
+| page_fault1 | 8 / 16 / 32 | 0.97 / 1.01 / 0.99 | **1.16 / 1.13** / 0.99 |
+| page_fault_shared3 | 16 / 32 | 1.00 / 0.99 | **1.12** / 1.04 |
+| mmap1, mmap2, brk1 | 16-64 | 0.99-1.00 | 1.00-1.02 |
+| rwsem nano with readers | 32, 64 | 1.00 | - |
+
+The write phases these readers wait for are shorter than 50 us, so the rule
+marks nothing that matters. It is not in the tree.
+
+**What spinning costs, and what it is worth.** Readers that give up after
+about 64 iterations make page_fault1 and page_fault_shared3 faster. With
+50 us, readers register behind the writer and the next writer waits for
+that batch. But the reader-heavy nano bodies lose without it (kdnat9, one
+boot, kd backend, `rspin_nano.sh`, `data/natc/kdnat9-rspin.jsonl.*`):
+
+| body | workers | native | kd, 50 us | 5 us / 50 us | 0 / 50 us |
+|---|---|---|---|---|---|
+| rwsem 1 line, 1% writes | 32 / 64 | 4.52 / 2.49 | 11.46 / 10.77 | 0.94 / 0.90 | 0.97 / 0.97 |
+| rwsem 16 lines, 1% writes | 32 / 64 | 4.34 / 2.37 | 9.54 / 8.77 | 0.99 / 0.92 | 0.91 / 0.90 |
+| rwsem 1 line, 20% writes | 32 / 64 | 3.09 / 1.31 | 6.85 / 6.58 | 1.00 / 0.99 | 1.00 / 0.95 |
+| rwsem 16 lines, 20% writes | 32 / 64 | 2.30 / 1.15 | 3.75 / 3.65 | 1.00 / 0.99 | 1.00 / 0.94 |
+
+The default stays at 50 us: a shorter time trades 3-10% of the reader-heavy
+bodies for 4-16% in these two page-fault tests. A per-lock choice (spin
+only where readers outnumber writers) is open work.
+
+### 8.6 Rejected: the AWAKE flag (kdall6)
+
+`rejected/mutex-awake.patch`: the first parked task set a flag while it
+spun, and a release that saw the flag did not wake it. With 128 writers on
+64 CPUs it changed nothing (`data/mwake/kdall6-kd.txt`: 708 k `wake_up_q()`
+per second against 721 k on kdall3; writes within the spread), because the
+first parked task was spinning only a small part of the time; most
+wakeup passes came while it was still on its way to its CPU. 8.4 sets the
+flag at the wakeup instead.
+
+### 8.7 kdall10 against native: the c series
+
+The suite of section 3 (`suite.sh`, with mmap1, mmap2 and brk1 at 48 and 60
+threads added at the end of the pass, section 5 of the script), kdall10
+against its twin kdnat9, after a learning boot (learn10, not counted), in
+the boot order kdnat9, kdall10 (off, on), kdnat9, kdall10 (on, off), kdnat9,
+kdall10 (off, on): `drive.sh`, tags c1-c6, `data/drive-c.log`. No kernel
+complaint in any boot. Files: `data/runs.txt` (tags learn10, c1-c6),
+`data/summary-c.md` (`cmp_summary.py`, every value),
+`data/before_after-ac.md` (`before_after.py data/runs.txt a c`), reproduced
+here. Each series against its own native boots; bold: the three kd runs and
+the three native runs do not overlap.
+
+| workload | threads | a (kdall3): off/native | a: on/native | c (kdall10): off/native | c: on/native |
+|---|---|---|---|---|---|
+| pf read | 16 | ~1.00 | ~1.02 | ~0.98 | ~0.98 |
+| pf read | 32 | ~0.99 | ~1.00 | ~1.01 | ~0.98 |
+| pf read | 64 | ~0.99 | ~1.00 | ~0.98 | ~0.98 |
+| pf write | 16 | **0.99** | ~0.98 | ~0.98 | ~1.06 |
+| pf write | 32 | **0.95** | ~0.96 | ~1.22 | ~1.03 |
+| pf write | 64 | ~0.97 | ~1.00 | ~1.02 | ~1.03 |
+| wis mmap1 | 16 | ~1.06 | **1.28** | ~0.99 | **1.28** |
+| wis mmap1 | 32 | ~1.03 | **1.29** | ~1.00 | **1.27** |
+| wis mmap1 | 64 | **1.55** | **1.77** | **1.83** | **2.06** |
+| wis mmap2 | 16 | ~0.99 | **1.06** | ~1.06 | **1.14** |
+| wis mmap2 | 32 | ~1.01 | **1.10** | **0.98** | **1.08** |
+| wis mmap2 | 64 | **1.55** | **1.56** | **1.76** | **1.83** |
+| wis brk1 | 16 | ~1.07 | **1.55** | **0.92** | **1.31** |
+| wis brk1 | 32 | **1.09** | **1.61** | ~1.05 | **1.49** |
+| wis brk1 | 64 | **2.08** | **2.45** | **2.10** | **2.12** |
+| wis page_fault1 | 16 | **0.80** | **0.81** | **0.87** | **0.87** |
+| wis page_fault1 | 32 | **1.03** | ~1.05 | **1.04** | ~1.03 |
+| wis page_fault1 | 64 | **1.07** | **1.07** | **1.05** | **1.04** |
+| wis page_fault_shared1 | 16 | **0.92** | **0.94** | **0.93** | **0.95** |
+| wis page_fault_shared1 | 32 | **0.93** | **0.93** | **0.93** | **0.93** |
+| wis page_fault_shared1 | 64 | **0.98** | **0.97** | **0.98** | **0.98** |
+| wis page_fault_shared3 | 16 | **1.03** | **1.02** | **1.02** | ~1.01 |
+| wis page_fault_shared3 | 32 | **0.83** | **0.83** | **0.83** | **0.83** |
+| wis page_fault_shared3 | 64 | **1.05** | **1.06** | **1.07** | **1.07** |
+| api setfd | 16 | **1.25** | **2.32** | **1.17** | **2.18** |
+| api setfd | 64 | **3.13** | **9.31** | **3.11** | **9.65** |
+| api ofd | 16 | **1.43** | **2.56** | **1.44** | **2.56** |
+| api ofd | 64 | **2.78** | **6.64** | **2.82** | **8.04** |
+| api pipe | 16 | **1.38** | **1.14** | **1.40** | **1.18** |
+| api pipe | 64 | **1.15** | **1.02** | **1.39** | **1.07** |
+| api seek | 16 | **1.75** | **1.72** | **1.80** | **1.87** |
+| api seek | 64 | **1.13** | **1.11** | **1.41** | **1.43** |
+| api uts | 16 | **2.46** | **2.94** | **2.67** | **3.20** |
+| api uts | 64 | **3.04** | **4.85** | **3.51** | **5.21** |
+| api xattr | 16 | **0.94** | **0.97** | **0.95** | **0.97** |
+| api xattr | 64 | **0.92** | **0.96** | **0.94** | ~0.97 |
+| torture spin_lock | 128 | **3.72** | **4.65** | **3.62** | **4.37** |
+| torture rw_lock | 128 | **1.26** | **1.23** | **1.21** | **1.25** |
+| torture mutex_lock | 128 | **0.70** | ~1.03 | **1.60** | **1.58** |
+| torture rwsem_lock | 128 | **0.53** | **0.61** | **0.57** | **0.53** |
+| torture ww_mutex_lock | 128 | **0.68** | **0.66** | **0.90** | **0.86** |
+| wis mmap1 | 48 | - | - | **1.74** | **2.06** |
+| wis mmap1 | 60 | - | - | **1.86** | **2.12** |
+| wis mmap2 | 48 | - | - | **1.70** | **1.76** |
+| wis mmap2 | 60 | - | - | **1.78** | **1.82** |
+| wis brk1 | 48 | - | - | **1.88** | **2.37** |
+| wis brk1 | 60 | - | - | **2.04** | **2.52** |
+
+**What changed in kd's own rates** (a -> c, ranges of the three runs, no
+overlap between the series; other boots and kernels, so indicators):
+
+| workload | threads | kd off, a -> c | kd on, a -> c | native, a / c |
+|---|---|---|---|---|
+| wis mmap1 | 64 | 274-279 k -> 321-323 k | 314-320 k -> 357-379 k | 174-178 k / 175-176 k |
+| wis mmap2 | 64 | 311-319 k -> 359-366 k | 317-322 k -> 349-382 k | 203-209 k / 205-209 k |
+| torture mutex_lock | 128 | 32.0-36.9 M -> 71.1-79.5 M | 46.3-49.0 M -> 70.1-71.9 M | 45.0-46.7 M / 44.9-47.5 M |
+| torture ww_mutex_lock | 128 | 17.1-18.1 M -> 22.8-23.5 M | 16.9-17.8 M -> 22.1-22.8 M | 25.3-26.4 M / 25.5-25.9 M |
+| api seek | 64 | 1.36-1.39 M -> 1.69-1.74 M | 1.35-1.40 M -> 1.72-1.76 M | 1.12-1.23 M / 1.13-1.23 M |
+| api pipe | 64 | 588-602 k -> 722-740 k | 522-535 k -> 553-569 k | 516-521 k / 519-530 k |
+| api uts | 64 | 2.77-2.81 M -> 3.21 M | 4.44-4.45 M -> 4.74-4.79 M | 914-920 k / 913-914 k |
+
+- **mmap1 at 64 threads: 2.06 of native with delegation** (1.77 on kdall3),
+  2.12 at 60 threads and 2.06 at 48; 1.83 without delegation. mmap2 at
+  64: 1.83. This is the rwsem era bound (8.1).
+- **locktorture mutex_lock: 1.60 / 1.58** (0.70 / ~1.03 on kdall3), ww
+  0.90 / 0.86 (0.68 / 0.66): 8.3 and 8.4. seek (`f_pos_lock`) and pipe
+  (`pipe->mutex`) are mutexes as well.
+- **brk1 did not gain:** with delegation 1.31 / 1.49 / 2.12 at 16 / 32 / 64
+  threads against 1.55 / 1.61 / 2.45. kd's own rates overlap between the
+  series (64 threads: 847 k-1.01 M on kdall3, 773-881 k on kdall10), and
+  native brk1 at 16 threads ran faster in the c boots (825-882 k against
+  699-789 k). At 48 and 60 threads, measured only in this series: 2.37 and
+  2.52.
+- **page_fault1 at 16 threads:** 0.87 (0.80); kd's rates overlap between
+  the series, so this is not counted as a change.
+- Everything else within the spread of the runs, the gains of section 3
+  included.
+
+### 8.8 Correctness of kdall10
+
+Run in the last kdall10 boot (c6), after the suite (`kdall_check.sh` with
+`ERA=0`, `drivers/kd10.sh`, `data/kdc6/kdall10*`):
+
+- **locktorture**, no daemon, 30 s, 2 runs each: ww_mutex_lock, mutex_lock
+  and rwsem_lock all end in SUCCESS.
+- **`run_corr.py`**, bench module built against kdall10: plain 442 points,
+  0 failed, API check 0 failed, 0 kernel complaints; with the daemon for
+  the bench module only (after a warm-up pass): 442 points, 0 failed, 0
+  kernel complaints.
+- **test-ww_mutex**: "All ww mutex selftests passed", and the wound-wait
+  stress `stress_inorder_work` fails with -35 (`-EDEADLK`), as it does on
+  kdall6 and on the native kernel (KERNEL_INTEGRATION 4d; kd applies
+  wait-die to both classes).
+- **`mm_stress`** with brk, mmap and munmap delegated, 30 s each: 16 / 32 /
+  64 threads, 54 149 / 57 164 / 47 447 operations, 14.0 / 14.7 / 12.2 M
+  pages checked, 6 846 / 4 927 / 2 388 forks, all ok.
+- No kernel complaint in this boot, nor in any boot of the c series
+  (`data/suite-c-tails.txt`).
+- WOKEN in kdall9 (8.4): every locktorture run of `woken_ab.sh` ended in
+  SUCCESS under both settings.
+
+### 8.9 What is still behind native
+
+kdall10 against kdnat9 (8.7), off / on:
+
+| case | kd/native | why | where |
+|---|---|---|---|
+| locktorture rwsem_lock | 0.57 / 0.53 | kd follows each write with a reader phase; native passes the lock writer to writer while readers sleep | bad case 2 |
+| page_fault_shared3, 32 threads | 0.83 / 0.83 | readers spin behind mprotect writers; native readers sleep | bad case 7, 8.5 |
+| page_fault1, 16 threads | 0.87 / 0.87 | threads sleep about a quarter of the time in the mmap lock; a shorter reader spin helps it and costs reader-heavy locks | 8.5 |
+| locktorture ww_mutex_lock | 0.90 / 0.86 | kd walks every parked waiter; native keeps stamp order and checks the first | 4.1 |
+| page_fault_shared1, 16 and 32 threads | 0.93-0.95 | the shared PTE spinlock: the spin class has no node order in plain mode | bad case 6 |
+| xattr | 0.94-0.97 | `i_rwsem` writers in plain mode | bad case 8, 4.3 |
+
+Open: a reader spin time chosen per lock (8.5), stamp order for the ww
+wait list, and why kd's contended spinlock in plain mode hands over 2.6-3
+times faster than native across the two nodes (8.2). Validation limits: CPU hotplug, and call-depth tracking
+active (AGENTS.md), were not tested.
