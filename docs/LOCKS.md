@@ -50,8 +50,12 @@ back off.
 **How a ww acquisition waits.** First trylock. Then, if the context holds
 no lock and no waiter is parked, it spins in the mutex's spinner queue while
 the holder runs, as a plain mutex caller does (`kd_mutex_spin_lock()`).
-Then it parks, with the wait-die check each time it looks at the lock. This
-is the native `ww_mutex_spin_on_owner()` policy for wait-die:
+Then it parks, with the wait-die check each time it looks at the lock. Once
+parked and first, it spins for the holder as a parked mutex waiter does
+(section 4), but a context that holds locks does not while the holder has a
+context (`kd_mutex_ww_may_spin()`): the lock could pass to an older context
+that then waits for one of its locks, and the two would spin on each other.
+This is the native `ww_mutex_spin_on_owner()` policy for wait-die:
 - a context that holds nothing never has to back off;
 - a context that holds locks must be able to back off at every look;
 - a spinner must not take the lock from an older parked context.
@@ -129,6 +133,20 @@ call.
     continuation; the queue head, once it owns the mutex, runs their
     sections before its own.
   * **Parked** waiters sleep on `->waiters` under `wait_lock`.
+* **Only the queue head judges the holder in plain mode.** A queued waiter
+  that published its section looks at the owner every `KD_OWNER_POLL`
+  (1024) iterations and withdraws when it is off its CPU. A plain waiter
+  withdraws only at `need_resched()`; the queue head parks at once when the
+  holder does not run and passes the head role on, so the queue drains one
+  waiter at a time. Only the head of the native mutex's optimistic-spin
+  queue watches the owner as well. When every queued waiter watched it, a
+  holder off its CPU for a moment sent all of them into the wait lock and to
+  sleep at once (kdall6, locktorture mutex_lock with one writer per CPU:
+  12 700 withdrawals and 15 400 sleeps in 13 s). locktorture against the
+  native twin, kdall6 -> kdall7 (other boots, so indicators): mutex_lock
+  0.62 -> 0.71 with 64 writers and 0.69 -> 0.85 with 128, ww_mutex_lock
+  0.64 -> 0.76 and 0.65 -> 0.88
+  (`bench/results/kdclaude/kdall-native-20261117-64cpu/`, section 8).
 * A spinning waiter becomes a parked one by **withdrawing first**, and a
   section is executed by exactly one of the waiter and the combiner
   (`kd_node_abandon()` in `kd_internal.h`):

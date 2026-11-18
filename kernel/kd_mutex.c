@@ -100,19 +100,33 @@ int kd_mutex_trylock(struct kd_mutex *m)
 EXPORT_SYMBOL(kd_mutex_trylock);
 
 /*
+ * A ww waiter that holds locks must look at the holder at every turn, which
+ * spinning does not do: while it spins, the lock may go to an older context
+ * that then waits for one of the waiter's locks, and the two would spin on
+ * each other. So it does not spin while the holder has a context, which is
+ * the rule of the native ww_mutex_spin_on_owner().
+ */
+static __always_inline bool kd_mutex_ww_may_spin(struct kd_ww_wait *ww)
+{
+	return !ww || !ww->ctx->acquired || !READ_ONCE(ww->lock->ctx);
+}
+
+/*
  * First parked waiter: spin while the owner runs, as the native mutex does
  * for its first waiter. Returns when the lock looks free or was handed to
  * @w, or when spinning stops paying off; the caller rechecks under the wait
  * lock. The handoff request is honoured while this task still runs, so the
  * new owner is on a CPU and the queued spinners keep spinning. Granting to
  * a sleeping task instead makes every spinner see an off-CPU owner, leave
- * the queue and park (a convoy).
+ * the queue and park (a convoy). A ww waiter that holds locks stops as soon
+ * as the holder has a context (kd_mutex_ww_may_spin()).
  */
-static void kd_mutex_spin_first(struct kd_mutex *m, struct kd_mutex_waiter *w)
+static void kd_mutex_spin_first(struct kd_mutex *m, struct kd_mutex_waiter *w,
+				struct kd_ww_wait *ww)
 {
 	preempt_disable();
 	while (!READ_ONCE(w->granted) && READ_ONCE(m->q.locked) &&
-	       kd_mutex_can_spin(m))
+	       kd_mutex_can_spin(m) && kd_mutex_ww_may_spin(ww))
 		cpu_relax();
 	preempt_enable();
 }
@@ -162,7 +176,7 @@ int kd_mutex_sleep(struct kd_mutex *m, unsigned int state, struct kd_ww_wait *ww
 			if (kd_mutex_trylock_as(m, current))
 				break;
 		}
-		if (first && tries > 1 && kd_mutex_can_spin(m)) {
+		if (first && tries > 1 && kd_mutex_can_spin(m) && kd_mutex_ww_may_spin(ww)) {
 			/*
 			 * Woken at least once: spin instead of sleeping again.
 			 * Always recheck from the top afterwards: the grant may
@@ -172,7 +186,7 @@ int kd_mutex_sleep(struct kd_mutex *m, unsigned int state, struct kd_ww_wait *ww
 			 * not spin (kd_mutex_can_spin() is false) and sleeps.
 			 */
 			kd_wait_unlock(m, flags);
-			kd_mutex_spin_first(m, &w);
+			kd_mutex_spin_first(m, &w, ww);
 			flags = kd_wait_lock(m);
 			continue;
 		}

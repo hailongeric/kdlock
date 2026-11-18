@@ -1603,13 +1603,28 @@ again:
 		 * The owner word shares its cache line with the queue tail that
 		 * every new waiter swaps, so a queued waiter looks at it only
 		 * once per KD_OWNER_POLL iterations; it mostly reads its own node.
+		 *
+		 * Only a waiter that published its section does. A plain waiter
+		 * leaves the queue only when its own CPU is wanted; whether the
+		 * holder still runs is judged by the queue head alone, which
+		 * goes to sleep at once if it does not, and passes the head role
+		 * on, so the queue drains one waiter at a time. The native
+		 * mutex's spinners behave the same way: only the head of its
+		 * optimistic-spin queue watches the owner. When every queued
+		 * waiter watched the holder, a holder that was off its CPU for a
+		 * moment sent all of them into the wait lock and to sleep at
+		 * once, and they were woken one by one afterwards (measured on
+		 * kdall6, locktorture mutex_lock with one writer per CPU: 12 700
+		 * withdrawals and 15 400 sleeps in 13 s, a fifth of all samples
+		 * in kd_q_lock_plain, the wait lock's slow path, and 0.62 of the
+		 * native kernel's writes).
 		 */
 		for (spins = 1;; spins++) {
 			st = READ_ONCE(me->state);
 			if (st != KD_N_WAIT)
 				break;
 			if (need_resched() ||
-			    (!(spins % KD_OWNER_POLL) && !kd_mutex_can_spin(m))) {
+			    (offer && !(spins % KD_OWNER_POLL) && !kd_mutex_can_spin(m))) {
 				/* Announced: its section is about to run. */
 				if (!READ_ONCE(me->claim) && kd_node_abandon(me)) {
 					kd_stat_inc(kc, KD_STAT_ABANDON);
