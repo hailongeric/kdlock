@@ -4,6 +4,14 @@ Started 2026-11-18. The goal is a macro benchmark set for kdlock built from
 workloads of the Linux kernel performance suite (lkp-tests,
 `https://github.com/intel/lkp-tests`, commit `50c5f0e`): unchanged
 applications whose throughput depends on kernel locks that kdlock replaces.
+
+**The measure of success is kd with delegation against native Linux**
+(the user's goal, 2026-11-18): a workload is worth keeping when kd "on"
+(the daemon running with allow lists) runs faster than the native twin,
+with the delegated sections and handbacks reported for every rate. Plain
+mode ("off") is measured as well, as the reference that separates what
+delegation adds from what node order and eras already give.
+
 This document has three parts:
 
 1. the analysis: which lkp workloads stress which kernel locks;
@@ -38,12 +46,28 @@ A workload belongs in the set when all of the following hold:
    features the VM lacks, at most about 20 GiB of memory.
 4. **It is repeatable** within a few percent in one boot, with a run time
    of seconds to a minute per point.
+5. **Its contended sections can be delegated.** Delegation runs a waiter's
+   section on the combiner from a translated image, so the gain needs:
+   - a lock family that delegates: spinlock, rwlock writers, mutex, rwsem
+     writers (LOCKS.md). Raw spinlocks (run queues, `pi_lock`), readers
+     and ww mutexes never delegate; workloads bound on them can only gain
+     from plain mode;
+   - short sections that stay on the combiner: a call that can sleep, a
+     user copy that faults, a TLB shootdown, or code the translator has
+     not learned ends the delegation there (a handback,
+     TRANSLATOR.md). Sections that hand back often lose (pipe in
+     `../kdall-native-20261117-64cpu/`, bad case 4);
+   - lock users that can be put on an allow list (`bench/allow/`,
+     AGENTS.md goal step 4), found with the daemon as `api.txt` was.
 
 What kdlock can change once a lock is contended: plain mode (node order of
 the sleepable queues, eras of the reader-writer families, the spin queue)
 helps when native collapses across the two nodes; delegation helps when the
 critical sections are short, do not sleep, and their lock users are
-allow-listed (`bench/allow/`, AGENTS.md goal step 4).
+allow-listed. What delegation gained so far, against native at 64 threads
+(same README, section 8.7): setfd (`files->file_lock`) 9.65x, ofd
+(`flc_lock`) 8.04x, uts (`uts_sem` writers) 5.21x, mmap1 / mmap2 / brk1
+(mmap lock writers) 2.06x / 1.83x / 2.12x.
 
 ## 2. lkp-tests at a glance
 
@@ -134,6 +158,40 @@ New here: tlb_flush, malloc1, brk2, vm-scalability, ebizzy, pft.
 - vm-scalability swap and hugetlb jobs (swap devices, 1 TiB sizes).
 - `lock_stat`: needs `CONFIG_LOCK_STAT`, which `kernel/Kconfig` refuses.
 
+### 3.7 Ranking for the goal: kd with delegation faster than native
+
+Expected from the lock family and what runs inside the section; phases 1-3
+check it.
+
+**Tier A: a delegable lock, short sections without sleeping or user
+access, lock users like those already allow-listed.**
+
+| workload | lock | lock users (allow list) |
+|---|---|---|
+| will-it-scale dup1, open1, open3 (thread) | `files->file_lock` | `alloc_fd`, `file_close_fd` (`api.txt`) |
+| will-it-scale lock2 (thread and process), stress-ng flock, fcntl, lockf, lockofd | `flc_lock` | `posix_lock_inode`, `posix_test_lock` (`api.txt`); flock and OFD users new |
+| will-it-scale mmap1, mmap2, brk1, brk2, malloc1 (thread), ebizzy, vm-scalability small-allocs-mt | mmap lock writers | brk, mmap, munmap (`mm.txt`) |
+| will-it-scale signal1 (thread), stress-ng signal, sigq, kill | `sighand->siglock` | new: signal send and dequeue paths |
+| will-it-scale futex1/2, pthread_mutex1/3/4, posix_semaphore1 (thread); perf bench futex hash, wake, wake-parallel; stress-ng futex | futex `hb->lock` | new: futex wait queueing and wake |
+| stress-ng sem, semsysv, msg, mq | SysV/POSIX IPC spinlocks | new |
+
+**Tier B: delegable, but the sections may sleep or touch user memory, so
+handbacks decide.**
+
+| workload | lock | why uncertain |
+|---|---|---|
+| will-it-scale pwrite2/3, writeseek3, fallocate (one file) | file `i_rwsem` writers | page cache allocation and user copies inside |
+| will-it-scale unlink1, open1 create path; stress-ng dentry, dir, link, rename; fsmark, dbench, aim7 creat-clo | directory `i_rwsem` writers | inode and dentry allocation, journal |
+| will-it-scale tlb_flush1-3 (madvise) | mmap lock readers, TLB shootdowns | readers never delegate; shootdowns are frontiers |
+| vm-scalability lru-*, truncate, exit-free | `lru_lock`, `zone->lock`, `i_pages` | short sections, but taken from many call sites inside larger operations |
+| hackbench pipe, stress-ng pipe, pipeherd | `pipe->mutex` | the user copy hands back (bad case 4 of the native comparison) |
+
+**Tier C: bound on locks that never delegate; plain mode only.**
+hackbench socket, perf bench sched messaging and pipe, will-it-scale
+context_switch1 and sched_yield, schbench (run queue locks, `pi_lock`);
+page faults that fall back to the mmap lock read side; fork, exec and exit
+(`tasklist_lock` is an rwlock: its writers delegate, its readers do not).
+
 ## 4. Plan
 
 ### 4.1 Build (no guest network)
@@ -168,32 +226,45 @@ nodes), one run of 10 s each (`screen.sh`):
 
 A candidate passes when its lock share at 64 workers is at least 10%, or
 its rate at 64 workers is below its rate at 16 (native collapse across the
-nodes), or it sleeps in locks for at least a quarter of the time.
+nodes), or it sleeps in locks for at least a quarter of the time. Tier A
+and B candidates (3.7) that pass go on; tier C ones are kept only as plain
+mode references.
 
 ### 4.3 Phase 2: kd without delegation (kdall10 off)
 
 The candidates that pass, same points, plus the kd flat profile and kd
 counters. Result: kd off against native per candidate, with the kd lock
-functions' share.
+functions' share. This separates what plain mode already gives.
 
-### 4.4 Phase 3: delegation for the new lock users
+### 4.4 Phase 3: delegation for the new lock users (the main phase)
 
-For candidates whose contended lock users are not in `bench/allow/` yet:
-run them once with the daemon and an empty allow list
-(`kd_daemon.py -v`, as `api.txt` was made) to list the requested sites,
-keep the ones whose sections are short and do not sleep, and write
-`bench/allow/lkp.txt`. Then kd on (allow lists api, torture, mm and lkp)
-against kd off, with delegated sections and handbacks reported for every
-rate (AGENTS.md).
+1. **Find the lock users.** Each candidate once with the daemon and an
+   empty allow list (`kd_daemon.py -v`, its own state file), as `api.txt`
+   was made: the sites the kernel requests are the contended lock users.
+2. **Keep the delegable ones** in `bench/allow/lkp.txt`: sections that the
+   learning pass shows ending at their release, not at a frontier or a
+   miss; one comment line per lock, as in `api.txt`.
+3. **kd on against native and kd off** at 16, 32 and 64 workers, with the
+   allow lists api, torture, mm and lkp, after a learning pass; delegated
+   sections, sessions and handbacks (frontier and miss) per point.
+4. **Where handbacks eat the gain** (tier B), find the frontier or the
+   miss from the daemon log and decide: a missing translator capability
+   is a change of its own with its tests (TRANSLATOR.md); a call that can
+   sleep inside the section stays a handback, and that lock user leaves
+   the allow list.
+
+Result of the phase: per candidate, on/native and on/off, and for each
+gain the lock users that produce it.
 
 ### 4.5 Phase 4: the macro benchmark set
 
-From phases 1-3, about 10-15 workloads that cover the lock classes of
-section 3 (mmap lock, directory and file `i_rwsem`, file table and file
-locks, signals and fork, futex buckets, LRU and zone locks, run queues and
-pipes), each with its lkp parameters. Full worker grid (1-8, then every
-fourth to 64), native, kd off and kd on, 3 boots each, in the format of
+The workloads where kd on beats native in phase 3, together with the tier
+B and C cases that show the limits, about 10-15 in all, each with its lkp
+parameters. Full worker grid (1-8, then every fourth to 64), native, kd
+off and kd on, 3 boots each, in the format of
 `../kdall-native-20261117-64cpu/suite.sh` so the existing tables apply.
+Workloads where kd on loses stay in the set and are reported with their
+cause, as the bad cases of the native comparison were.
 
 ### 4.6 Rules for the runs
 
