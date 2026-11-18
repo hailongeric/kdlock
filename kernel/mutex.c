@@ -401,6 +401,19 @@ static void wait_request(struct kd_mutex_node *node)
 	__set_current_state(TASK_RUNNING);
 }
 
+/* A plain spin request chosen locally keeps that selection even if its
+ * owner serves a successor and rejoins. Queue turn and physical grant are
+ * published separately. Avoid a locked operation on an already local node;
+ * an offered node must still arbitrate with the competing selector.
+ */
+static int claim_offered(struct kd_mutex_node *node, enum kd_mutex_selection desired)
+{
+	if (node->atomic_spin && !node->rw &&
+	    atomic_read_acquire(&node->selection) == KD_MUTEX_SELECTED_LOCAL)
+		return KD_MUTEX_SELECTED_LOCAL;
+	return atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED, desired);
+}
+
 /* Actual normal backend release, bound to this mutex at batch initialization. */
 static void detach_proxy(struct kd_mutex_batch *batch, struct kd_mutex_node *node);
 
@@ -447,8 +460,7 @@ static void mcs_physical_unlock(void *object)
 		}
 	}
 	BUG_ON(head->atomic_spin != next->atomic_spin);
-	selection = atomic_cmpxchg(&next->selection, KD_MUTEX_OFFERED,
-				  KD_MUTEX_SELECTED_LOCAL);
+	selection = claim_offered(next, KD_MUTEX_SELECTED_LOCAL);
 	BUG_ON(selection != KD_MUTEX_OFFERED &&
 	       selection != KD_MUTEX_SELECTED_LOCAL);
 	rw_queue_put(head);
@@ -796,8 +808,7 @@ static bool spin_serve_successor(struct kd_mutex_node *local)
 	enum kd_mutex_outcome outcome;
 
 	if (!node || !node->atomic_spin ||
-	    atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
-			   KD_MUTEX_SELECTED_PROXY) != KD_MUTEX_OFFERED)
+	    claim_offered(node, KD_MUTEX_SELECTED_PROXY) != KD_MUTEX_OFFERED)
 		return false;
 	BUG_ON(!node->ready || !node->ops || !node->ops->execute_proxy ||
 	       !node->possible_batch || node->lock != local->lock);
@@ -1086,8 +1097,7 @@ int kd_mutex_await(struct kd_mutex_node *node, struct kd_mutex_batch *batch,
 	wait_request(node);
 	if (smp_load_acquire(&node->result_ready))
 		goto returned;
-	selection = atomic_cmpxchg(&node->selection, KD_MUTEX_OFFERED,
-				  KD_MUTEX_SELECTED_LOCAL);
+	selection = claim_offered(node, KD_MUTEX_SELECTED_LOCAL);
 	BUG_ON(selection != KD_MUTEX_OFFERED && selection != KD_MUTEX_SELECTED_LOCAL);
 	if (node->service_policy == KD_MUTEX_SERVICE_WRITER_COHORT && proxy_limit &&
 	    serve_writer_cohort(node, proxy_limit))

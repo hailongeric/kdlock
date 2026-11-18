@@ -16,7 +16,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FUNCTIONS = {
-    'kernel/mutex.c': ('publish_condition', 'wait_link', 'kd_mutex_fast_init',
+    'kernel/mutex.c': ('claim_offered', 'publish_condition', 'wait_link', 'kd_mutex_fast_init',
                        'observe_fast', 'kd_mutex_fast_trylock', 'kd_mutex_fast_unlock'),
     'kernel/mutex_api.c': ('native_fast_eligible',),
     'kernel/rw_local.c': ('kd_rw_local_root',),
@@ -106,6 +106,9 @@ class MutexFastTests(unittest.TestCase):
 
     def test_empty_queue_release_and_same_record_reuse(self):
         self.check_case('reuse')
+
+    def test_plain_spin_reuses_local_selection(self):
+        self.check_case('spin_selection')
 
     def test_failed_claim_leaves_the_operation_and_queue_untouched(self):
         self.check_case('failed')

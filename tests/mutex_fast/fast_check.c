@@ -35,8 +35,13 @@ static void after_cmpxchg(const void *pointer, bool removed);
 })
 #define cmpxchg_release cmpxchg
 typedef int atomic_t;
+#define atomic_read_acquire(ptr) __atomic_load_n((ptr), __ATOMIC_ACQUIRE)
+static atomic_t *observed_selection;
+static unsigned int selection_attempts;
 static int atomic_cmpxchg(atomic_t *ptr, int old, int value)
 {
+	if (ptr == observed_selection)
+		selection_attempts++;
 	__atomic_compare_exchange_n(ptr, &old, value, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 	return old;
 }
@@ -238,6 +243,24 @@ static void check_reuse(void)
 	CHECK(object_inaccessible);
 	check_pair(2);
 }
+static void check_spin_selection(void)
+{
+	struct kd_mutex_node node = { .atomic_spin = true, .selection = KD_MUTEX_OFFERED };
+
+	observed_selection = &node.selection;
+	CHECK(claim_offered(&node, KD_MUTEX_SELECTED_LOCAL) == KD_MUTEX_OFFERED);
+	CHECK(selection_attempts == 1 && node.selection == KD_MUTEX_SELECTED_LOCAL);
+	CHECK(claim_offered(&node, KD_MUTEX_SELECTED_PROXY) == KD_MUTEX_SELECTED_LOCAL);
+	CHECK(claim_offered(&node, KD_MUTEX_SELECTED_LOCAL) == KD_MUTEX_SELECTED_LOCAL);
+	CHECK(selection_attempts == 1 && node.selection == KD_MUTEX_SELECTED_LOCAL && !node.turn);
+
+	node.selection = KD_MUTEX_OFFERED;
+	CHECK(claim_offered(&node, KD_MUTEX_SELECTED_PROXY) == KD_MUTEX_OFFERED);
+	CHECK(claim_offered(&node, KD_MUTEX_SELECTED_LOCAL) == KD_MUTEX_SELECTED_PROXY);
+	CHECK(selection_attempts == 3 && node.selection == KD_MUTEX_SELECTED_PROXY);
+	observed_selection = NULL;
+}
+
 static void check_failed(void)
 {
 	lock->tail = successor;
@@ -533,6 +556,7 @@ int main(int argc, char **argv)
 	CHECK(argc == 2);
 	setup();
 	if (!strcmp(argv[1], "reuse")) check_reuse();
+	else if (!strcmp(argv[1], "spin_selection")) check_spin_selection();
 	else if (!strcmp(argv[1], "failed")) check_failed();
 	else if (!strcmp(argv[1], "linked")) check_linked();
 	else if (!strcmp(argv[1], "delayed")) check_delayed();

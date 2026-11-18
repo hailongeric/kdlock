@@ -650,7 +650,11 @@ for its own local turn after those duties physically drain. This ordering lets
 W resume a native suffix, release A and reacquire A while still holding B
 physically owned by C. Rejoining before that drain could put C ahead of W on
 A while C waits for W to reach B's unlock. C retains its request and the
-queue object across both queue positions.
+queue object across both queue positions. A plain spin request selected locally
+keeps that choice through handoff and requeue. Queue actors can read the local
+selection without a compare/exchange; an offered request still requires the
+atomic claim. Taking the actual turn and acknowledging physical release keep
+their existing publication points.
 
 A spin unlock submits an exact request to the physical owner. The owner
 handles it locally or while polling a child or queue condition. The source
