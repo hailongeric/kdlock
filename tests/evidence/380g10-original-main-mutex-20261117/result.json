@@ -1,0 +1,55 @@
+{
+  "base": "2592ce0b64b00e8bc0d1eda2ab766b20f5d740ec",
+  "vm": {
+    "boot": "fc8104fd-5e0c-406f-b93e-e7c6e6cabf6d",
+    "release": "7.0.0-38-kdlocalspin6",
+    "host_qemu": "380G10",
+    "gcc": "12.3.0"
+  },
+  "snapshot": "kdlock-kernel16-two-disk-smoke-20261116-01",
+  "test": {
+    "original": {
+      "rc": 0,
+      "tests": 9,
+      "failed": [],
+      "build_rc": 0,
+      "dir": "/mnt/kdlock-builds2/main-spin-local-4669a085-20261117/tool-root/tmp/original-main-mutex-1794980286/original"
+    },
+    "original-new-check": {
+      "rc": 1,
+      "tests": 9,
+      "failed": [
+        "linked",
+        "delayed"
+      ],
+      "build_rc": 0,
+      "dir": "/mnt/kdlock-builds2/main-spin-local-4669a085-20261117/tool-root/tmp/original-main-mutex-1794980286/original-new-check"
+    },
+    "candidate": {
+      "rc": 0,
+      "tests": 9,
+      "failed": [],
+      "build_rc": 0,
+      "dir": "/mnt/kdlock-builds2/main-spin-local-4669a085-20261117/tool-root/tmp/original-main-mutex-1794980286/candidate"
+    }
+  },
+  "candidate_input_sha256": {
+    "tests/test_mutex_fast.py": "5c112c6d9cb239d15a0907c1791fccb3cb195eeae6ad0bf9ab26fe4db494affd",
+    "tests/mutex_fast/fast_check.c": "7d80a431482fdf8e05a47f2df6471c2ad482267a4cb0957ab4eaacf8a40c82c1",
+    "kernel/mutex.c": "1182b83fe8c292dbe2db70dbfcabd2cbeaa6fc527778dcf0b5d6710530b64404",
+    "kernel/mutex_api.c": "a869a513d7a6832698f261070d898c178008daa17befb86c8bde194b1624a294",
+    "kernel/rw_local.c": "1ab9f15adff49f36337c4846fea65392be1bca4348c553ef4c7893753d1b1853",
+    "kernel/task_state.c": "630cc2966f092c0ed402014a270348e2b43138c9ebe126e858ea17b21ee4d096",
+    "kernel/task_progress.c": "300853a8702b740f85ffc7425c51844a55dcbb3e7c292ba1010e28b0c061bd08",
+    "kernel/state.h": "92c42170fa24e3391cb0019ab87b97feec39750e01dc2b05e4c4a032d7451ee6",
+    "kernel/mutex.h": "fb9ea3a2875b507728b49f8eb41a4cca448d5b64509da77d7253bf1341ffd3a9",
+    "kernel/observation.h": "e1d9fae7baf6618d50a55d14c60256e800ba830441fd767d8640a86206ba45b8"
+  },
+  "after": {
+    "boot": "fc8104fd-5e0c-406f-b93e-e7c6e6cabf6d",
+    "release": "7.0.0-38-kdlocalspin6",
+    "host_qemu": "380G10",
+    "gcc": "12.3.0"
+  },
+  "scope": "Guest GCC builds of extracted production functions with controlled C stand-ins"
+}

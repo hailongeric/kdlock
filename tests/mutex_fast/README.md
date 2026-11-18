@@ -48,7 +48,9 @@ root layout changes and requires rebuilding the kernel and dependent modules.
 
 Matching native unlock checks the exact record/object/task. It either removes
 that head from tail or waits for the producer's final predecessor-link store,
-selects the normal mutex successor locally and publishes its MCS turn. It uses
+selects the normal mutex successor locally, clears its own link and publishes
+the successor's MCS turn. The head therefore starts each acquisition with an
+empty link, including after a delayed link publication. It uses
 the existing condition publisher, which retains the successor task before
 publication and does not read its node afterward. No lock-object access follows
 tail removal or turn publication. Only then can this root reuse its fast record.
@@ -131,3 +133,8 @@ Recorder-off evidence stays unavailable.
 The [bench handoff](../../bench/nano/FAST_MUTEX.md) pins the baseline, rebuild
 requirements and unchanged small measurement scope. No test in this guide is
 reported as run merely because its source exists.
+
+On the local 380G10 guest, the original source and original checks passed all
+nine cases. Applying the idle-link assertion to that source failed the linked
+and delayed handoffs. With the release-side link clear, all nine passed.
+[Source test receipt](../evidence/380g10-original-main-mutex-20261117/result.json)

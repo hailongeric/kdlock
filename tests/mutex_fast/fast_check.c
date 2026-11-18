@@ -222,6 +222,7 @@ static void check_pair(unsigned int start)
 	CHECK(acquire->acquisition == (unsigned long)&root.mutex_fast && release->acquisition == acquire->acquisition);
 	CHECK(acquire->flags == KD_OBS_FLAG_ENQUEUED);
 	CHECK(release->flags == (KD_OBS_FLAG_QUEUE_DONE | KD_OBS_FLAG_NODE_RETIRABLE));
+	CHECK(!root.mutex_fast.head.next);
 	CHECK(!root.mutex_fast.lock && !release->source_user && !release->return_user && !release->notifier);
 }
 static void check_reuse(void)

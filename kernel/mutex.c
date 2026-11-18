@@ -294,7 +294,6 @@ static void observe_fast(unsigned long kind, struct kd_mutex_fast *fast,
 bool kd_mutex_fast_trylock(struct kd_mutex *lock, struct kd_mutex_fast *fast)
 {
 	BUG_ON(!lock || fast->lock || fast->head.requester != current);
-	WRITE_ONCE(fast->head.next, NULL);
 	/* The empty-tail claim is both execution selection and physical grant.
 	 * On failure this head was never published; the ordinary path starts
 	 * with the same unfinished source operation and its own persistent node.
@@ -328,6 +327,10 @@ void kd_mutex_fast_unlock(struct kd_mutex_fast *fast)
 					  KD_MUTEX_SELECTED_LOCAL);
 		BUG_ON(selection != KD_MUTEX_OFFERED && selection != KD_MUTEX_SELECTED_LOCAL);
 		successor = (unsigned long)next;
+		/* The producer's final link store has been acquired. Restore the
+		 * idle head here so an empty-queue claim needs no link reset.
+		 */
+		WRITE_ONCE(fast->head.next, NULL);
 		publish_condition(next, &next->turn);
 		/* No successor access follows turn publication. */
 	}
