@@ -1,0 +1,10 @@
+refused 9 sites outside the allow list:
+    2181  0xffffffff81444dab do_send_sig_info+0x3b
+    2179  0xffffffff814445eb set_current_blocked+0x3b
+    2179  0xffffffff81447b90 get_signal+0xc0
+    2177  0xffffffff81447508 signal_setup_done+0xd8
+       1  0xffffffff817916f7 vm_mmap_pgoff+0xe7
+       1  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff81443cbf lock_task_sighand+0x2f
+       1  0xffffffff817f3b9c unlink_file_vma_batch_add+0x5c
+       1  0xffffffff81442310 __x64_sys_rt_sigprocmask+0xc0

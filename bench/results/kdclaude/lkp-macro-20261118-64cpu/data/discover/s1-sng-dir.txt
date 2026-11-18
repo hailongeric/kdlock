@@ -1,0 +1,11 @@
+refused 10 sites outside the allow list:
+     480  0xffffffff818d6971 d_move+0x21
+       9  0xffffffff818c9cee filename_rmdir+0x17e
+       4  0xffffffff818d49f6 d_walk+0x256
+       1  0xffffffff817e4880 anon_vma_fork+0x150
+       1  0xffffffff817e0af9 anon_vma_clone+0xd9
+       1  0xffffffff81c68661 lockref_get_not_dead+0x61
+       1  0xffffffff81c68735 lockref_get+0x55
+       1  0xffffffff818c4f55 filename_create+0xb5
+       1  0xffffffff818c0a27 __start_renaming+0x187
+       1  0xffffffff8190e299 prepend_path+0x209

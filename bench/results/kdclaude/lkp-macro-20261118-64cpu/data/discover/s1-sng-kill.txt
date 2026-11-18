@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+       2  0xffffffff8159840f cgroup_enter_frozen+0x2f
+       1  0xffffffff817e0af9 anon_vma_clone+0xd9
+       1  0xffffffff817e452d __put_anon_vma+0x8d

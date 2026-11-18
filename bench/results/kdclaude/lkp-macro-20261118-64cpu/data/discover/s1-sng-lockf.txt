@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+       1  0xffffffff817e494d unlink_anon_vmas+0x5d

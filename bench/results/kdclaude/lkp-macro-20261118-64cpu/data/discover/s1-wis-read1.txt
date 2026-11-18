@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+       4  0xffffffff8197ca33 dquot_add_space+0x33
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2
+       1  0xffffffff817916f7 vm_mmap_pgoff+0xe7
+       1  0xffffffff81884d64 folio_lruvec_lock_irqsave+0x64

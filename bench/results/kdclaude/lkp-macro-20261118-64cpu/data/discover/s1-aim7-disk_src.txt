@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+    2668  0xffffffff818ca010 filename_unlinkat+0x180
+    2481  0xffffffff818c8779 path_openat+0xc69
+       1  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff818dbd6c evict+0x7c
+       1  0xffffffff818da081 inode_sb_list_add+0x21

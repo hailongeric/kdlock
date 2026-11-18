@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+       1  0xffffffff817cb08a __handle_mm_fault+0x56a

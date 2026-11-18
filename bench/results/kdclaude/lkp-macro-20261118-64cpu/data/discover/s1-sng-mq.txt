@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+      28  0xffffffff818c6b35 start_creating_noperm+0x55
+       5  0xffffffff818c6bc5 start_removing_noperm+0x55
+       1  0xffffffff8143223c do_exit+0x31c
+       1  0xffffffff8157b860 acct_collect+0x60

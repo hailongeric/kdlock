@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+     517  0xffffffff8197ca33 dquot_add_space+0x33
+       2  0xffffffff817916f7 vm_mmap_pgoff+0xe7
+       1  0xffffffff817f5538 __vm_munmap+0x88
+       1  0xffffffff817e494d unlink_anon_vmas+0x5d

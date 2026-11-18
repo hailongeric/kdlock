@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    2466  0xffffffff81786371 shmem_file_write_iter+0x31
+       1  0xffffffff817916f7 vm_mmap_pgoff+0xe7
+       1  0xffffffff817e452d __put_anon_vma+0x8d

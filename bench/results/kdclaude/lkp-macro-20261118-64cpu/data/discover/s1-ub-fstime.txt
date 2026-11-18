@@ -1,0 +1,9 @@
+refused 8 sites outside the allow list:
+       3  0xffffffff81a3c02a start_this_handle+0x24a
+       2  0xffffffff818b155f __iterate_supers+0x6f
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2
+       1  0xffffffff818b151f __iterate_supers+0x2f
+       1  0xffffffff81a494af jbd2_log_start_commit+0x1f
+       1  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff817f9509 free_pcppages_bulk+0x39
+       1  0xffffffff81884d64 folio_lruvec_lock_irqsave+0x64

@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    1904  0xffffffff8195be35 posix_lock_inode+0xa5
+     428  0xffffffff8195ac41 posix_test_lock+0x61
+      34  0xffffffff818a7208 do_truncate+0x88
+       1  0xffffffff818c9cee filename_rmdir+0x17e

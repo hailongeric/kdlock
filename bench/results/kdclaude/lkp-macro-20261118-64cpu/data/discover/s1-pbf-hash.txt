@@ -1,0 +1,3 @@
+refused 2 sites outside the allow list:
+      41  0xffffffff8157071c futex_q_lock+0x1c
+       1  0xffffffff8143223c do_exit+0x31c

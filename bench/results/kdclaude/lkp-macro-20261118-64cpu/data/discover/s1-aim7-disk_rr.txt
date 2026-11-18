@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+      45  0xffffffff81884d64 folio_lruvec_lock_irqsave+0x64
+      25  0xffffffff818c8779 path_openat+0xc69
+      22  0xffffffff818ca010 filename_unlinkat+0x180
+       4  0xffffffff818e1f66 fdget_pos+0x86
+       1  0xffffffff819021aa locked_inode_to_wb_and_lock_list+0x5a

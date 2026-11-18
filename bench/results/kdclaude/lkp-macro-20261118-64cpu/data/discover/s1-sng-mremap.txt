@@ -1,0 +1,7 @@
+refused 6 sites outside the allow list:
+    5577  0xffffffff8158502f cgroup_file_notify+0x1f
+     780  0xffffffff81884cbf folio_lruvec_lock_irq+0x5f
+     572  0xffffffff81884d64 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffff817f3cb2 unlink_file_vma_batch_final+0x42
+       1  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff8182c578 folio_alloc_swap+0x2d8

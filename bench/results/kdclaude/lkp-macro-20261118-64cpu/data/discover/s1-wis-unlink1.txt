@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+     715  0xffffffff818ca010 filename_unlinkat+0x180
+     713  0xffffffff818c8779 path_openat+0xc69
+       1  0xffffffff817916f7 vm_mmap_pgoff+0xe7

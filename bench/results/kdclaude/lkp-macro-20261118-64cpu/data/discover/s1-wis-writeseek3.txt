@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    5189  0xffffffff81786371 shmem_file_write_iter+0x31
+       1  0xffffffff81429349 copy_process+0x1519
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2

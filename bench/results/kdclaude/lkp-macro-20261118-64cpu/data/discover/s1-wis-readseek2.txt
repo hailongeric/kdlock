@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+    3149  0xffffffff8174ff6d folio_wake_bit+0x5d
+    2524  0xffffffff8175174e folio_wait_bit_common+0xde
+       1  0xffffffff814c1fae finish_wait+0x3e
+       1  0xffffffff815d8c84 taskstats_exit+0x94
+       1  0xffffffff8143223c do_exit+0x31c

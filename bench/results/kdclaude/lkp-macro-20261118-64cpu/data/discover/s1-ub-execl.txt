@@ -1,0 +1,10 @@
+refused 9 sites outside the allow list:
+    1702  0xffffffff817f01d3 vma_prepare+0x63
+    1280  0xffffffff817efc86 vma_link_file+0x46
+    1161  0xffffffff817f3cb2 unlink_file_vma_batch_final+0x42
+     199  0xffffffff817f3b9c unlink_file_vma_batch_add+0x5c
+      43  0xffffffff8179f389 pcpu_alloc_noprof+0x569
+       1  0xffffffff81431f92 do_exit+0x72
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2
+       1  0xffffffff8181822a __refill_objects_node+0xaa
+       1  0xffffffff8143223c do_exit+0x31c

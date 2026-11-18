@@ -1,0 +1,3 @@
+refused 2 sites outside the allow list:
+    1237  0xffffffff817efc86 vma_link_file+0x46
+     156  0xffffffff817f3b9c unlink_file_vma_batch_add+0x5c

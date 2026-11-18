@@ -1,0 +1,12 @@
+refused 11 sites outside the allow list:
+      30  0xffffffff817e494d unlink_anon_vmas+0x5d
+      27  0xffffffff817d416e dup_mmap+0x32e
+      25  0xffffffff817e0af9 anon_vma_clone+0xd9
+      25  0xffffffff817e4880 anon_vma_fork+0x150
+      12  0xffffffff81884d64 folio_lruvec_lock_irqsave+0x64
+       6  0xffffffff817f3b9c unlink_file_vma_batch_add+0x5c
+       2  0xffffffff817e452d __put_anon_vma+0x8d
+       2  0xffffffff8143223c do_exit+0x31c
+       1  0xffffffff81429349 copy_process+0x1519
+       1  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff817f3cb2 unlink_file_vma_batch_final+0x42

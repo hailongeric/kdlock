@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+      10  0xffffffff8174ff6d folio_wake_bit+0x5d
+       2  0xffffffff8175174e folio_wait_bit_common+0xde
+       1  0xffffffff8157b860 acct_collect+0x60
+       1  0xffffffff81430bc3 release_task+0x93

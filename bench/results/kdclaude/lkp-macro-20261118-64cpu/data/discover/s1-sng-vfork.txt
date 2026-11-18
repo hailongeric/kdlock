@@ -1,0 +1,10 @@
+refused 9 sites outside the allow list:
+     391  0xffffffff8143223c do_exit+0x31c
+     389  0xffffffff81429349 copy_process+0x1519
+     377  0xffffffff81430bc3 release_task+0x93
+       2  0xffffffff8159847b cgroup_leave_frozen+0x1b
+       2  0xffffffff8159840f cgroup_enter_frozen+0x2f
+       2  0xffffffff8159262c cgroup_post_fork+0x3c
+       2  0xffffffff815929b6 cgroup_task_dead+0x26
+       2  0xffffffff81592f30 cgroup_can_fork+0x80
+       1  0xffffffff8146031e alloc_pid+0x2be

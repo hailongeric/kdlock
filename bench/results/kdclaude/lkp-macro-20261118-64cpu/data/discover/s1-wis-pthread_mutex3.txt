@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+    4363  0xffffffff81574e70 futex_wake+0xf0
+    2755  0xffffffff8157071c futex_q_lock+0x1c
+       1  0xffffffff817916f7 vm_mmap_pgoff+0xe7
+       1  0xffffffff817f5538 __vm_munmap+0x88
+       1  0xffffffff815d8eb5 taskstats_exit+0x2c5

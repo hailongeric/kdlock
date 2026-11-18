@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+       4  0xffffffff817f5538 __vm_munmap+0x88
+       4  0xffffffff817916f7 vm_mmap_pgoff+0xe7
+       1  0xffffffff81447922 exit_signals+0xe2

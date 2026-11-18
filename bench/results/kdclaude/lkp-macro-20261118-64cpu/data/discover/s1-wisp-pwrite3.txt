@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    4295  0xffffffff81786371 shmem_file_write_iter+0x31
+       1  0xffffffff815d8c84 taskstats_exit+0x94
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2
