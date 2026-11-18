@@ -62,17 +62,27 @@ def measurement_plan(scope, stage, backend=None):
                 modes = ('on', 'off') if repeat % 2 == 0 else ('off', 'on')
                 plan.extend((f'timed-r{repeat + 1}-{mode}', 1, True, mode) for mode in modes)
         return plan
-    plan = [(f'functional-{count}', count, False, 'on') for count in (1, 8, 36)]
+    mode = ('unavailable' if scope == 'mutex-comparison' and backend != 'kdlock' else 'on')
+    plan = [(f'functional-{count}', count, False, mode) for count in (1, 8, 36)]
     if stage == 'timing':
-        plan.extend((f'timed-r{repeat + 1}-w{count}', count, True, 'on')
+        plan.extend((f'timed-r{repeat + 1}-w{count}', count, True, mode)
                     for repeat in range(3) for count in (1, 8, 36))
     return plan
 
 
-def validate_prerequisites(prior, scope, family, build_sha256, boot_id, runner_sha256=None):
+def validate_prerequisites(prior, scope, family, build_sha256, boot_id, runner_sha256=None,
+                           collector_cpu=63):
     require(all(p['status'] == 'FUNCTIONAL_PASS' and p['build_receipt_sha256'] == build_sha256 and
                 p['boot_id'] == boot_id for p in prior), 'functional build/boot receipt differs')
-    if scope == 'rwsem-split':
+    if scope == 'mutex-comparison':
+        require(family == 'mutex' and len(prior) == 3 and
+                {p['backend'] for p in prior} == {'native', 'kdlock', 'tclock'} and
+                all(p['family'] == family and p.get('scope') == scope and
+                    p.get('stage') == 'functional' and p.get('runner_sha256') == runner_sha256 and
+                    p.get('collector_cpu') == collector_cpu and
+                    p.get('kd_delegation') == ('on' if p['backend'] == 'kdlock' else None)
+                    for p in prior), 'three matched mutex functional receipts required')
+    elif scope == 'rwsem-split':
         require(bool(runner_sha256) and family == 'rwsem' and len(prior) == 3 and
                 {(p['backend'], p.get('kd_delegation')) for p in prior} ==
                 {('native', None), ('kdlock', 'on'), ('kdlock', 'off')} and
@@ -128,9 +138,13 @@ def main():
     parser.add_argument('--family', choices=('mutex', 'rwsem'), required=True)
     parser.add_argument('--backend', choices=('native', 'kdlock', 'tclock'), required=True)
     parser.add_argument('--stage', choices=('functional', 'timing'), required=True)
-    parser.add_argument('--scope', choices=('comparison', 'recorder-pair', 'native-current', 'rwsem-split'), default='comparison')
+    parser.add_argument('--scope', choices=('comparison', 'mutex-comparison', 'recorder-pair', 'native-current', 'rwsem-split'), default='comparison')
     parser.add_argument('--delegation', choices=('on', 'off'), default='on',
                         help='Immutable KD runtime mode; independent of recorder state')
+    parser.add_argument('--collector-cpu', type=int, default=63,
+                        help='Dedicated CPU for the measurement client and controller')
+    parser.add_argument('--timing-round', type=int, choices=(1, 2, 3),
+                        help='Run one numbered mutex comparison round for alternating backends')
     parser.add_argument('--boot-id', required=True)
     parser.add_argument('--expected-release', default='7.0.0-38-kdrebuild9',
                         help='Exact running/module-build release; default preserves the kernel9 baseline')
@@ -142,6 +156,9 @@ def main():
     parser.add_argument('--prerequisite', type=Path, action='append', default=[])
     args = parser.parse_args()
     validate_scope(args.scope, args.backend)
+    require(args.scope != 'mutex-comparison' or args.family == 'mutex', 'mutex-comparison requires mutex')
+    require(args.timing_round is None or (args.scope == 'mutex-comparison' and args.stage == 'timing'),
+            'a selected round requires mutex-comparison timing')
     require(args.scope != 'rwsem-split' or args.family == 'rwsem', 'rwsem-split requires rwsem')
     require(args.delegation == 'on' or args.backend == 'kdlock', 'delegation-off requires KD')
     require(args.delegation == 'on' or args.family == 'rwsem',
@@ -149,12 +166,17 @@ def main():
     require(os.uname().release == args.expected_release and
             Path('/proc/sys/kernel/random/boot_id').read_text().strip() == args.boot_id,
             'running kernel/boot identity differs')
-    require(int(Path('/proc/sys/kernel/tainted').read_text()) == 4096, 'unexpected prior kernel taint')
+    taint = int(Path('/proc/sys/kernel/tainted').read_text())
+    require(taint in ((0, 4096) if args.scope == 'mutex-comparison' else (4096,)),
+            'unexpected prior kernel taint')
     require({line.split()[0] for line in Path('/proc/modules').read_text().splitlines()} <= {'nls_iso8859_1'},
             'a previous experiment remains loaded')
     require(not Path(DEVICE).exists(), 'previous workload device remains')
     args.output.mkdir()
-    os.sched_setaffinity(0, {63})
+    plan = measurement_plan(args.scope, args.stage, args.backend)
+    max_workers = max([8 if args.backend == 'kdlock' else 1] + [p[1] for p in plan])
+    require(args.collector_cpu >= max_workers, 'collector overlaps worker placement')
+    os.sched_setaffinity(0, {args.collector_cpu})
     sys.path.insert(0, str(args.repo))
     from compiler import Compiler, symbol_size, executable_elf_bytes
     from evidence import validate_kd
@@ -165,11 +187,12 @@ def main():
     if args.stage == 'timing':
         prior = [json.loads(p.read_text()) for p in args.prerequisite]
         validate_prerequisites(prior, args.scope, args.family, sha(args.build_receipt), args.boot_id,
-                               runner_sha256)
+                               runner_sha256, args.collector_cpu)
     row = dict(status='STARTED', family=args.family, backend=args.backend, stage=args.stage,
                scope=args.scope, recorder_modes=list(dict.fromkeys(
                    mode for _, _, _, mode in measurement_plan(args.scope, 'functional', args.backend))),
-               runner_sha256=runner_sha256,
+               runner_sha256=runner_sha256, collector_cpu=args.collector_cpu,
+               timing_round=args.timing_round,
                profile='mutex-throughput' if args.family == 'mutex' else 'rwsem-throughput-mixed',
                boot_id=args.boot_id, kernel_release=os.uname().release,
                kernel_elf_sha256=kernel_sha256,
@@ -273,14 +296,17 @@ def main():
 
         def phase(label, workers, *, duration=0, iterations=256, timed=False, recorder=None):
             if recorder is None:
-                recorder = 'unavailable' if args.scope in ('native-current', 'rwsem-split') and args.backend == 'native' else 'on'
+                recorder = ('unavailable' if args.scope in ('native-current', 'rwsem-split', 'mutex-comparison')
+                            and args.backend != 'kdlock' else 'on')
             control = phase_recording(args.scope, args.backend, recorder)
             spec = dict(arm=args.backend, lock_kind=args.family, workload='cacheline', cachelines=1,
-                        post_work_rounds=256, threads=workers, cpus=list(range(workers)), collector_cpu=63,
+                        post_work_rounds=256, threads=workers, cpus=list(range(workers)), collector_cpu=args.collector_cpu,
                         write_percent=100 if args.family == 'mutex' else 20, duration_ms=duration,
                         iterations=iterations, sample_ms=10, peak_window_ms=300, peak_settle_ms=300,
                         recorder=recorder, delegation=args.backend == 'kdlock' and args.delegation == 'on')
             save(args.output / (label + '.spec.json'), spec)
+            if args.backend == 'tclock':
+                tc_before = {k: int((tc_params / k).read_text()) for k in ('delegated', 'batches', 'parks')}
             text = command(label, [sys.executable, '-B', args.repo / 'bench/nano/client.py',
                                    '--spec', args.output / (label + '.spec.json')], 120)
             measurement = json.loads(text)
@@ -300,6 +326,10 @@ def main():
                 require((tc_params / 'quiescent').read_text().strip() == '1', 'TCLock exact drain incomplete')
                 measurement['tclock'] = {p.name: p.read_text().strip() for p in tc_params.iterdir()
                                          if p.name != 'drain'}
+                measurement['tclock_delta'] = {k: int(measurement['tclock'][k]) - v
+                                                for k, v in tc_before.items()}
+                require(all(v >= 0 for v in measurement['tclock_delta'].values()),
+                        'TCLock phase counters went backwards')
             save(args.output / (label + '.json'), measurement)
             row['measurements'].append(measurement)
             fault_check(label + '-dmesg')
@@ -323,7 +353,9 @@ def main():
                 raise ValueError('bounded training lacks the requested foreign-completion or contended local witness')
         # Recorder changes leave each module load's selected delegation mode fixed.
         # Every switch and claim occurs between fully returned worker phases.
-        for label, count, timed, recorder in measurement_plan(args.scope, args.stage, args.backend):
+        for label, count, timed, recorder in plan:
+            if timed and args.timing_round and not label.startswith(f'timed-r{args.timing_round}-'):
+                continue
             checked = phase(label, count, duration=2000 if timed else 0,
                             timed=timed, recorder=recorder)
             if compiler is not None:

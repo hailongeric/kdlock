@@ -14,7 +14,10 @@ from context_audit import audit
 
 def digest(path):
     with Path(path).open('rb') as stream:
-        return hashlib.file_digest(stream, 'sha256').hexdigest()
+        h = hashlib.sha256()
+        for block in iter(lambda: stream.read(1 << 20), b''):
+            h.update(block)
+        return h.hexdigest()
 
 
 def validate_kernel_release(expected, running, built):
@@ -32,13 +35,16 @@ def main():
                         help='Exact running/build release; default preserves the kernel9 baseline')
     parser.add_argument('--backends', nargs='+', choices=('native', 'kdlock', 'tclock'),
                         default=['native', 'kdlock', 'tclock'])
+    parser.add_argument('--families', nargs='+', choices=('mutex', 'rwsem'), default=['mutex', 'rwsem'])
     args = parser.parse_args()
+    if len(args.families) != len(set(args.families)):
+        raise ValueError('duplicate family selection')
     if len(args.backends) != len(set(args.backends)):
         raise ValueError('duplicate backend selection')
     validate_kernel_release(args.expected_release, os.uname().release,
                             (args.kernel_output / 'include/config/kernel.release').read_text().strip())
     args.output.mkdir()
-    result = dict(status='STARTED', kernel_release=os.uname().release, backends=args.backends,
+    result = dict(status='STARTED', kernel_release=os.uname().release, backends=args.backends, families=args.families,
                   commands=[], modules={})
 
     def save(name, value):
@@ -127,7 +133,7 @@ def main():
         return directory
 
     try:
-        for family in ('mutex', 'rwsem'):
+        for family in args.families:
             if 'tclock' in args.backends:
                 tc = build('tclock-' + family, args.repo / 'tclock_backend',
                     'tclock_' + family + '_backend_km.ko',
