@@ -278,6 +278,12 @@ cause, as the bad cases of the native comparison were.
 - One run per point in phases 1-3: they choose candidates, they are not
   results. Performance claims come from phase 4 (matched runs, 3 boots).
 - `sync` before any run that may take the guest down.
+- No core dumps (`ulimit -c 0`; a dump into apport hung a reboot in the
+  appgrid round) and `kernel.print-fatal-signals=1`: every fatal signal of
+  a benchmark process is in the kernel log and is reported with the run.
+  The appgrid round saw a page_fault2 process die at exit on kdall10,
+  under investigation there; a fatal signal on kdall10 that native does not
+  show counts as a correctness failure, not as noise.
 
 ## 5. Status
 

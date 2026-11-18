@@ -26,6 +26,10 @@ OUT=$O/screen.txt
 DUR=${DUR:-10}
 NS=${NS:-"16 64"}
 ulimit -n 65536
+# No core dumps: a dump into apport stuck during shutdown hung a reboot
+# (appgrid round, 2026-11-18); report fatal signals in the kernel log.
+ulimit -c 0
+sysctl -q kernel.print-fatal-signals=1
 C="delegated handback hb_frontier hb_miss offered plain sessions"
 J=/root/host_fs/kdlock-lkp/jit
 AL=/root/host_fs/kdlock-lkp/bench/allow
@@ -71,6 +75,8 @@ point() {
 		  perf report -i $O/tmp/p.data --sort sym --stdio 2>/dev/null | grep -E "^# Samples|^[^#]" | grep . | head -41
 		} > $pf
 		wait $p
+		# Nothing of the point may outlive it (child processes included).
+		pkill -9 -P $p 2>/dev/null
 	else
 		"$@" > $O/tmp/out 2>&1
 	fi
