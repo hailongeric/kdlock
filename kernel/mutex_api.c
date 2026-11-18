@@ -210,21 +210,33 @@ static struct kd_mutex_entry *prepare_current_with_image(struct kd_mutex *lock,
 	return &frame->slot->entry;
 }
 
-struct kd_mutex_entry *kd_mutex_prepare_slow_current(struct kd_mutex *lock,
+static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 		enum kd_operation_kind operation, unsigned long api_target)
 {
 	return prepare_current_with_image(lock, operation, api_target, NULL);
 }
 
+struct kd_mutex_entry *kd_mutex_prepare_lock_slow(struct kd_mutex *lock)
+{
+	return prepare_current(lock, KD_OPERATION_MUTEX_LOCK,
+		(unsigned long)kd_mutex_lock_entry_asm);
+}
+
+void kd_mutex_prepare_unlock_slow(struct kd_mutex *lock)
+{
+	prepare_current(lock, KD_OPERATION_MUTEX_UNLOCK,
+		(unsigned long)kd_mutex_unlock_entry_asm);
+}
+
 struct kd_mutex_entry *kd_spin_prepare_lock_current(struct kd_spinlock *lock)
 {
-	return kd_mutex_prepare_slow_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_LOCK,
+	return prepare_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_LOCK,
 		(unsigned long)kd_spin_lock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_spin_prepare_unlock_current(struct kd_spinlock *lock)
 {
-	return kd_mutex_prepare_slow_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_UNLOCK,
+	return prepare_current(lock ? &lock->queue : NULL, KD_OPERATION_SPIN_UNLOCK,
 		(unsigned long)kd_spin_unlock_entry_asm);
 }
 
@@ -273,7 +285,7 @@ static struct kd_mutex_entry *prepare_rwsem_writer(struct kd_rwsem *lock,
 	int result;
 
 	if (!root)
-		return kd_mutex_prepare_slow_current(&lock->core.queue, KD_OPERATION_RWSEM_DOWN_WRITE, api_target);
+		return prepare_current(&lock->core.queue, KD_OPERATION_RWSEM_DOWN_WRITE, api_target);
 	if (kd_rw_local_write_try(&lock->core, root))
 		return NULL;
 	/* Only contended writers with an actual retained image and either no
@@ -335,7 +347,7 @@ struct kd_mutex_entry *kd_rwsem_prepare_source_current(struct kd_rwsem *lock,
 	}
 	if (operation == KD_OPERATION_RWSEM_DOWN_WRITE)
 		return prepare_rwsem_writer(lock, api_target);
-	return kd_mutex_prepare_slow_current(lock ? &lock->core.queue : NULL, operation, api_target);
+	return prepare_current(lock ? &lock->core.queue : NULL, operation, api_target);
 }
 
 struct kd_mutex_entry *kd_rwsem_prepare_down_read_current(struct kd_rwsem *lock)
@@ -360,7 +372,7 @@ struct kd_source_prepare_result kd_rwsem_prepare_down_write_killable_current(
 		struct kd_rwsem *lock)
 {
 	return (struct kd_source_prepare_result) {
-		.entry = kd_mutex_prepare_slow_current(lock ? &lock->core.queue : NULL,
+		.entry = prepare_current(lock ? &lock->core.queue : NULL,
 			KD_OPERATION_RWSEM_DOWN_WRITE_KILLABLE,
 			(unsigned long)kd_rwsem_down_write_killable_entry_asm),
 		.result = 0,
@@ -381,24 +393,24 @@ struct kd_mutex_entry *kd_rwsem_prepare_downgrade_write_current(struct kd_rwsem 
 
 struct kd_mutex_entry *kd_rwlock_prepare_read_lock_current(struct kd_rwlock *lock)
 {
-	return kd_mutex_prepare_slow_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_READ_LOCK,
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_READ_LOCK,
 		(unsigned long)kd_rwlock_read_lock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwlock_prepare_read_unlock_current(struct kd_rwlock *lock)
 {
-	return kd_mutex_prepare_slow_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_READ_UNLOCK,
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_READ_UNLOCK,
 		(unsigned long)kd_rwlock_read_unlock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwlock_prepare_write_lock_current(struct kd_rwlock *lock)
 {
-	return kd_mutex_prepare_slow_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_WRITE_LOCK,
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_WRITE_LOCK,
 		(unsigned long)kd_rwlock_write_lock_entry_asm);
 }
 
 struct kd_mutex_entry *kd_rwlock_prepare_write_unlock_current(struct kd_rwlock *lock)
 {
-	return kd_mutex_prepare_slow_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_WRITE_UNLOCK,
+	return prepare_current(lock ? &lock->core.queue : NULL, KD_OPERATION_RWLOCK_WRITE_UNLOCK,
 		(unsigned long)kd_rwlock_write_unlock_entry_asm);
 }

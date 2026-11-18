@@ -34,7 +34,8 @@ TYPES = {
 ENTRY_FUNCTIONS = {
     'kernel/state.h': ('kd_operation_is_lock', 'kd_operation_is_unlock', 'kd_operation_is_mode_change',
                        'kd_operation_family', 'kd_lock_family_is_atomic', 'kd_operation_is_atomic'),
-    'kernel/mutex_api.c': ('prepare_current_with_image', 'kd_mutex_prepare_slow_current'),
+    'kernel/mutex_api.c': ('prepare_current_with_image', 'prepare_current',
+                           'kd_mutex_prepare_lock_slow', 'kd_mutex_prepare_unlock_slow'),
     'kernel/mutex.c': ('kd_mutex_prepare_lock_current', 'kd_mutex_prepare_unlock_current'),
 }
 

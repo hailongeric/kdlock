@@ -385,8 +385,7 @@ struct kd_mutex_entry *kd_mutex_prepare_lock_current(struct kd_mutex *lock)
 
 	if (root && kd_mutex_fast_trylock(lock, &root->mutex_fast))
 		return NULL;
-	return kd_mutex_prepare_slow_current(lock, KD_OPERATION_MUTEX_LOCK,
-		(unsigned long)kd_mutex_lock_entry_asm);
+	return kd_mutex_prepare_lock_slow(lock);
 }
 
 void kd_mutex_prepare_unlock_current(struct kd_mutex *lock)
@@ -398,8 +397,7 @@ void kd_mutex_prepare_unlock_current(struct kd_mutex *lock)
 		return;
 	}
 	/* Native unlock completes its own source operation in both routes. */
-	kd_mutex_prepare_slow_current(lock, KD_OPERATION_MUTEX_UNLOCK,
-		(unsigned long)kd_mutex_unlock_entry_asm);
+	kd_mutex_prepare_unlock_slow(lock);
 }
 
 static bool progress_wait(struct kd_mutex_node *node)

@@ -26,8 +26,8 @@ enum kd_operation_kind kd_spin_resolve_entry_operation(unsigned long target);
 enum kd_operation_kind kd_rw_resolve_entry_operation(unsigned long target);
 
 /* Continue a source operation after ordinary local admission declined it. */
-struct kd_mutex_entry *kd_mutex_prepare_slow_current(struct kd_mutex *lock,
-		enum kd_operation_kind operation, unsigned long api_target);
+struct kd_mutex_entry *kd_mutex_prepare_lock_slow(struct kd_mutex *lock);
+void kd_mutex_prepare_unlock_slow(struct kd_mutex *lock);
 
 /* Assembly-only native bootstrap endpoints; ordinary callers use the macros.
  * NULL means the native operation completed through its exact acquisition;

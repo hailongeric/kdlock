@@ -551,7 +551,7 @@ static void check_typed_mutex(void)
 }
 static struct kd_mutex_entry *enter_read(void)
 {
-	return kd_mutex_prepare_slow_current(&entry_rw.queue, KD_OPERATION_RWSEM_DOWN_READ,
+	return prepare_current(&entry_rw.queue, KD_OPERATION_RWSEM_DOWN_READ,
 		(unsigned long)KD_OPERATION_RWSEM_DOWN_READ);
 }
 static void check_read_fallback(void)
