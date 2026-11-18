@@ -1,11 +1,14 @@
-# Kernel9 cacheline1/post256 runner
+# Cacheline1/post256 lock benchmark
 
 This runner binds the rebuilt KD runtime and the retained Native/TCLock
-comparators to one padded-counter workload. The current evidence is the
-[2026-11-12 report](../results/10.176.26.71/bench/kernel9-nano-20261112/README.md):
-six functional lanes and 54 exploratory timed sessions on the exact kernel9
-image. KD trails both comparators in that instrumented configuration; all six
-one-worker KD NO_JIT sessions remain included.
+comparators to one padded-counter workload. The kernel9 run covered six
+functional lanes and 54 exploratory timed sessions. KD trailed both
+comparators with recording enabled, and all six one-worker KD NO_JIT
+sessions remain included. [Kernel9 report](../results/10.176.26.71/bench/kernel9-nano-20261112/README.md)
+
+On 380G10, original `main` also has a same-boot **mutex** comparison for
+Native, KD and TCLock at 1, 8 and 36 workers.
+[380G10 mutex report](../results/380G10/original-main-mutex-nano-20261117/README.md)
 
 The [single-worker recorder comparison](RECORDER.md) is a separate, source-only
 handoff for the test session. It keeps recording enabled by default and adds
@@ -17,6 +20,20 @@ multiply/add rounds outside the lock. It matches the earlier named
 `mutex-throughput` and `rwsem-throughput-mixed` profiles. It does not select
 the separate two-word `RB_NANO` body. The benchmark directory name is not a
 claim that every historical nano workload is equivalent.
+
+## Spinlock coverage on original main
+
+At `deada8a7`, the Nano module and runner accept two lock families,
+`mutex` and `rwsem`. The separate KD spinlock fixture exercises the typed
+`kd_spin_lock` and `kd_spin_unlock` operations. The 1–8-worker Native/KD/TCLock
+spinlock comparison on 380G10 stopped before timing. Throughput for all three
+backends and counts of KD delegated completions and handbacks remain unmeasured.
+[Module build options](../../workload_modules/nano/Makefile) · [Runner](run.py) · [Spinlock fixture](../../tests/kernel/spin/run_spin_runtime_fixture.py)
+
+The spinlock change in `69c489f5` lets a queue participant observe an
+already-published local selection with an acquire load. An offered request
+still uses compare-exchange to choose local or proxy execution.
+[Spinlock protocol](../../docs/design/kdlock_redesign/01_lock_protocol.md#61-plain-spin-context-and-progress)
 
 ## Binding and measurement
 
