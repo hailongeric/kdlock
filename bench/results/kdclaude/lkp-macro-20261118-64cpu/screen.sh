@@ -1,12 +1,21 @@
 #!/bin/bash
-# screen.sh MODE TAG [GROUP...]: phase 1-2 screening (README 4.2, 4.3).
-# Every candidate at 16 workers (one node) and 64 (both nodes), one run of
-# DUR seconds (default 10). At 64 workers also the context switches over 5
-# s and a 5 s flat profile (perf record -a, no call graphs), whose top
+# screen.sh MODE TAG [GROUP...]: screening and delegation runs (README 4.2-4.4).
+# Every candidate at the worker counts NS (default 16 and 64), one run of
+# DUR seconds (default 10). At 64 workers also the context switches over 2
+# s and a 3 s flat profile (perf record -a, no call graphs), whose top
 # symbols are kept for the lock share (screen_summary.py).
-#   MODE native (kdnat kernel) or off (kdall kernel without the daemon)
+#   MODE native    a kdnat kernel
+#        off       a kdall kernel without the daemon (plain mode)
+#        discover  a kdall kernel; per candidate, 64 workers only, a daemon
+#                  with an empty allow list: the sites it refuses are the
+#                  contended lock users (/root/lkpres/discover/TAG-ID.txt)
+#        on        a kdall kernel, one daemon for the whole run with the
+#                  allow lists in ALLOW (default api torture mm lkp of
+#                  bench/allow), state /root/kds_lkp.json; run a pass with
+#                  another TAG first so the images are learned
 #   GROUP wis wisp sng vms hackbench futex ebizzy tlbflush aim7 fsmark
 #         dbench unixbench (default: all)
+#   ONLY  an extended regex: run only the candidates whose ID matches
 # Output: /root/lkpres/screen.txt, one line per point:
 #   TAG MODE ID N VALUE UNIT | kd counters before | after
 # and /root/lkpres/prof/TAG-MODE-ID.txt per profiled point.
@@ -17,7 +26,24 @@ OUT=$O/screen.txt
 DUR=${DUR:-10}
 NS=${NS:-"16 64"}
 ulimit -n 65536
-C="delegated handback offered plain sessions"
+C="delegated handback hb_frontier hb_miss offered plain sessions"
+J=/root/host_fs/kdlock-lkp/jit
+AL=/root/host_fs/kdlock-lkp/bench/allow
+[ $MODE = discover ] && NS=64
+d_start() {	# d_start LOG STATE ALLOWFILE
+	ps -e -o cmd | grep -q "^/root/kdvenv/bin/python -u kd_daemon.py" && { echo "a daemon is running"; exit 1; }
+	(cd $J || exit 1
+	 setsid nohup /root/kdvenv/bin/python -u kd_daemon.py --state "$2" --allow "$3" -v \
+		>> "$1" 2>&1 < /dev/null &
+	 echo $! > /root/kdd_lkp.pid)
+	sleep 8
+}
+d_stop() {
+	local P=$(cat /root/kdd_lkp.pid) i
+	kill -INT $P
+	for i in $(seq 60); do kill -0 $P 2>/dev/null || break; sleep 1; done
+	kill -0 $P 2>/dev/null && { echo "daemon $P did not stop"; exit 1; }
+}
 st() {
 	[ -r /sys/kernel/debug/kdlock_stats ] || { echo -n "- "; return; }
 	local k
@@ -29,6 +55,11 @@ complaints() { dmesg | grep -ciE "BUG:|lockup|hung_task|blocked for more|rcu.*st
 # 64 workers profile it while it runs.
 point() {
 	local id=$1 n=$2 unit=$3 s0 v pf; shift 3
+	[ -n "$ONLY" ] && ! [[ $id =~ $ONLY ]] && return
+	if [ $MODE = discover ]; then
+		mkdir -p $O/discover; : > $O/tmp/kdd.log
+		d_start $O/tmp/kdd.log "" $O/tmp/empty.allow
+	fi
 	s0=$(st)
 	if [ $n = 64 ]; then
 		pf=$O/prof/$TAG-$MODE-$id.txt
@@ -45,6 +76,10 @@ point() {
 	fi
 	v=$(tail -1 $O/tmp/out)
 	echo "$TAG $MODE $id $n ${v:-0} $unit | $s0| $(st)" >> $OUT
+	if [ $MODE = discover ]; then
+		d_stop
+		sed -n '/^refused/,$p' $O/tmp/kdd.log > $O/discover/$TAG-$id.txt
+	fi
 }
 
 # will-it-scale: thread (wis) and process (wisp) models.
@@ -175,12 +210,18 @@ g_unixbench() {
 	done
 }
 
+echo "# empty: refuse every site" > $O/tmp/empty.allow
+if [ $MODE = on ]; then
+	for a in ${ALLOW:-api torture mm lkp}; do cat $AL/$a.txt; done > $O/tmp/on.allow
+	d_start $O/kdd-$TAG.log /root/kds_lkp.json $O/tmp/on.allow
+fi
 c0=$(complaints)
 echo "$TAG $MODE start $(date +%T) $(uname -r)" >> $O/progress.txt
 for g in $GROUPS_; do
 	echo "$TAG $MODE $g $(date +%T)" >> $O/progress.txt
 	g_$g
 done
+[ $MODE = on ] && d_stop
 echo "$TAG $MODE complaints $(( $(complaints) - c0 ))" >> $O/complaints.txt
 echo "$TAG $MODE done $(date +%T)" >> $O/progress.txt
 echo SCREEN_DONE
