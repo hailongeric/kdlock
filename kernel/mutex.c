@@ -280,7 +280,7 @@ void kd_mutex_fast_init(struct kd_mutex_fast *fast, struct task_struct *task,
 	fast->head.state = state;
 }
 
-static void observe_fast(unsigned long kind, struct kd_mutex_fast *fast,
+static __always_inline void observe_fast(unsigned long kind, struct kd_mutex_fast *fast,
 			 unsigned long object, unsigned long next, unsigned long flags)
 {
 	kd_observe(kind, .state = (unsigned long)fast->head.state,

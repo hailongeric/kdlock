@@ -58,7 +58,23 @@
 	.endm
 
 	KD_MUTEX_SOURCE_ENTRY kd_mutex_lock_entry_asm, kd_mutex_prepare_lock_current
-	KD_MUTEX_SOURCE_ENTRY kd_mutex_unlock_entry_asm, kd_mutex_prepare_unlock_current
+	/* Both native unlock routes finish on this stack. There is no capture
+	 * descriptor to carry the four source scalars into an auxiliary entry.
+	 * Preserve the incoming stack alignment contract for the C call.
+	 */
+	.p2align 4
+	.globl kd_mutex_unlock_entry_asm
+	.type kd_mutex_unlock_entry_asm, @function
+kd_mutex_unlock_entry_asm:
+	endbr64
+	push rbp
+	mov rbp, rsp
+	and rsp, -16
+	call kd_mutex_prepare_unlock_current
+	leave
+	ret
+	.size kd_mutex_unlock_entry_asm, .-kd_mutex_unlock_entry_asm
+
 	KD_MUTEX_SOURCE_ENTRY kd_spin_lock_entry_asm, kd_spin_prepare_lock_current
 	KD_MUTEX_SOURCE_ENTRY kd_spin_unlock_entry_asm, kd_spin_prepare_unlock_current
 	KD_MUTEX_SOURCE_ENTRY kd_rwsem_down_read_entry_asm, kd_rwsem_prepare_down_read_current

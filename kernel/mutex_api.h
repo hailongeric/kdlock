@@ -33,7 +33,7 @@ enum kd_operation_kind kd_rw_resolve_entry_operation(unsigned long target);
  * Invalid native context/ownership is outside this API.
  */
 struct kd_mutex_entry *kd_mutex_prepare_lock_current(struct kd_mutex *lock);
-struct kd_mutex_entry *kd_mutex_prepare_unlock_current(struct kd_mutex *lock);
+void kd_mutex_prepare_unlock_current(struct kd_mutex *lock);
 struct kd_mutex_entry *kd_spin_prepare_lock_current(struct kd_spinlock *lock);
 struct kd_mutex_entry *kd_spin_prepare_unlock_current(struct kd_spinlock *lock);
 

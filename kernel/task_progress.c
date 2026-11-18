@@ -14,27 +14,30 @@
 #include "request_pool.h"
 #include "episode.h"
 
-int kd_task_validate_native(struct kd_task_root_context *root,
-			   struct kd_execution_binding *expected_native)
+/* The entry task owns its native binding while its auxiliary stack is idle.
+ * Compare a caller-retained endpoint when supplied. A typed mutex entry can
+ * load its own endpoint once after checking that the root is not borrowed.
+ */
+static inline int native_status(struct kd_task_root_context *root,
+				struct kd_task_root_context *attached,
+				struct kd_execution_binding *expected)
 {
 	struct kd_thread_state *state;
+	struct kd_execution_binding *binding;
 	struct kd_request_pool *pool;
 
-	if (!root || !expected_native)
-		return -EINVAL;
 	if (!in_task() || (in_atomic() && !root->owners.atomic_spin) || irqs_disabled() ||
 	    READ_ONCE(current->__state) != TASK_RUNNING)
 		return -EWOULDBLOCK;
-	/* Reject an own-root auxiliary/borrowed role before any own-core read. */
-	if (kd_task_root_context_current() != root || !root->attached ||
-	    root->task != current)
+	if (root != attached || !root->attached || root->task != current)
 		return -EPERM;
 	if (root->aux_entry)
 		return -EBUSY;
 	state = &root->core;
-	/* expected_native is caller-retained, never an arbitrary sampled pointer. */
-	if (!kd_state_is_current(state, expected_native) ||
-	    expected_native->kind != KD_EXECUTION_NATIVE)
+	binding = smp_load_acquire(&state->binding);
+	if (!binding || (expected && binding != expected) ||
+	    binding->kind != KD_EXECUTION_NATIVE || binding->state != state ||
+	    binding->task != current || state->origin != current)
 		return -EPERM;
 	if (state->exit_image || state->exit_use || state->exit_holder ||
 	    (state->operation.phase != KD_OPERATION_IDLE &&
@@ -45,6 +48,32 @@ int kd_task_validate_native(struct kd_task_root_context *root,
 	    (root->mutex_resources && root->mutex_resources->pool != pool))
 		return -EUCLEAN;
 	return 0;
+}
+
+int kd_task_validate_native(struct kd_task_root_context *root,
+			    struct kd_execution_binding *expected_native)
+{
+	if (!root || !expected_native)
+		return -EINVAL;
+	return native_status(root, kd_task_root_context_current(), expected_native);
+}
+
+struct kd_task_root_context *kd_task_mutex_fast_root(bool acquire)
+{
+	struct kd_task_root_context *root = smp_load_acquire(&current->kd_root_context);
+
+	if (!root || root->aux_entry || !root->mutex_resources ||
+	    root->mutex_resources->config.family != KD_LOCK_FAMILY_MUTEX ||
+	    root->owners.atomic_spin || native_status(root, root, NULL))
+		return NULL;
+	/* A matching local release remains legal during close or with nested
+	 * grants. Only a new top-level acquisition needs an unused fast head.
+	 */
+	if (acquire && (root->source_closing || root->mutex_fast.lock || root->rwsem_fast.lock ||
+			!list_empty(&root->core.grants) || !list_empty(&root->owners.batches) ||
+			!list_empty(&root->native_grants)))
+		return NULL;
+	return root;
 }
 
 int kd_task_progress_native(struct kd_task_root_context *root,

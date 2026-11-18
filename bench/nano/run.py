@@ -30,8 +30,8 @@ def sha(path):
 def validate_scope(scope, backend):
     require(scope != 'recorder-pair' or backend == 'kdlock',
             'recorder-pair scope requires the KD backend')
-    require(scope != 'native-current' or backend in ('native', 'kdlock'),
-            'native-current scope requires Native or KD')
+    require(scope not in ('native-current', 'mutex-uncontended') or backend in ('native', 'kdlock'),
+            'single-worker comparison requires Native or KD')
     require(scope != 'rwsem-split' or backend in ('native', 'kdlock'),
             'rwsem-split scope requires Native or KD')
 
@@ -47,7 +47,7 @@ def measurement_plan(scope, stage, backend=None):
             plan.extend((f'timed-r{repeat + 1}-w{count}-{mode}', count, True, mode)
                         for repeat in range(3) for count in (1, 8))
         return plan
-    if scope == 'native-current':
+    if scope in ('native-current', 'mutex-uncontended'):
         validate_scope(scope, backend)
         modes = ('on', 'off') if backend == 'kdlock' else ('unavailable',)
         plan = [(f'functional-{mode}', 1, False, mode) for mode in modes]
@@ -90,6 +90,15 @@ def validate_prerequisites(prior, scope, family, build_sha256, boot_id, runner_s
                     p.get('stage') == 'functional' and p.get('runner_sha256') == runner_sha256 and
                     p.get('recorder_modes') == (['on', 'off'] if p['backend'] == 'kdlock' else ['unavailable'])
                     for p in prior), 'matching Native, KD delegation-off/on functional receipts required')
+    elif scope == 'mutex-uncontended':
+        require(bool(runner_sha256) and family == 'mutex' and len(prior) == 2 and
+                {p['backend'] for p in prior} == {'native', 'kdlock'} and
+                all(p['family'] == family and p.get('scope') == scope and
+                    p.get('stage') == 'functional' and p.get('runner_sha256') == runner_sha256 and
+                    p.get('collector_cpu') == collector_cpu and
+                    p.get('kd_delegation') == ('on' if p['backend'] == 'kdlock' else None) and
+                    p.get('recorder_modes') == (['on', 'off'] if p['backend'] == 'kdlock' else ['unavailable'])
+                    for p in prior), 'matched single-worker mutex functional receipts required')
     elif scope == 'native-current':
         require(len(prior) == 4 and {(p['family'], p['backend']) for p in prior} ==
                 {(f, b) for f in ('mutex', 'rwsem') for b in ('native', 'kdlock')} and
@@ -111,7 +120,7 @@ def validate_prerequisites(prior, scope, family, build_sha256, boot_id, runner_s
 
 def phase_recording(scope, backend, mode):
     # Native has no KD observation subscription or recorder-control ioctl.
-    if backend == 'kdlock' and scope in ('recorder-pair', 'native-current', 'rwsem-split'):
+    if backend == 'kdlock' and scope in ('recorder-pair', 'native-current', 'mutex-uncontended', 'rwsem-split'):
         require(mode in ('on', 'off'), 'KD recorder mode differs')
         return set_recording(mode == 'on')
     return None
@@ -138,7 +147,7 @@ def main():
     parser.add_argument('--family', choices=('mutex', 'rwsem'), required=True)
     parser.add_argument('--backend', choices=('native', 'kdlock', 'tclock'), required=True)
     parser.add_argument('--stage', choices=('functional', 'timing'), required=True)
-    parser.add_argument('--scope', choices=('comparison', 'mutex-comparison', 'recorder-pair', 'native-current', 'rwsem-split'), default='comparison')
+    parser.add_argument('--scope', choices=('comparison', 'mutex-comparison', 'mutex-uncontended', 'recorder-pair', 'native-current', 'rwsem-split'), default='comparison')
     parser.add_argument('--delegation', choices=('on', 'off'), default='on',
                         help='Immutable KD runtime mode; independent of recorder state')
     parser.add_argument('--collector-cpu', type=int, default=63,
@@ -156,9 +165,10 @@ def main():
     parser.add_argument('--prerequisite', type=Path, action='append', default=[])
     args = parser.parse_args()
     validate_scope(args.scope, args.backend)
-    require(args.scope != 'mutex-comparison' or args.family == 'mutex', 'mutex-comparison requires mutex')
-    require(args.timing_round is None or (args.scope == 'mutex-comparison' and args.stage == 'timing'),
-            'a selected round requires mutex-comparison timing')
+    mutex_pair = args.scope in ('mutex-comparison', 'mutex-uncontended')
+    require(not mutex_pair or args.family == 'mutex', 'mutex comparison requires mutex')
+    require(args.timing_round is None or (mutex_pair and args.stage == 'timing'),
+            'a selected round requires mutex comparison timing')
     require(args.scope != 'rwsem-split' or args.family == 'rwsem', 'rwsem-split requires rwsem')
     require(args.delegation == 'on' or args.backend == 'kdlock', 'delegation-off requires KD')
     require(args.delegation == 'on' or args.family == 'rwsem',
@@ -167,7 +177,7 @@ def main():
             Path('/proc/sys/kernel/random/boot_id').read_text().strip() == args.boot_id,
             'running kernel/boot identity differs')
     taint = int(Path('/proc/sys/kernel/tainted').read_text())
-    require(taint in ((0, 4096) if args.scope == 'mutex-comparison' else (4096,)),
+    require(taint in ((0, 4096) if mutex_pair else (4096,)),
             'unexpected prior kernel taint')
     require({line.split()[0] for line in Path('/proc/modules').read_text().splitlines()} <= {'nls_iso8859_1'},
             'a previous experiment remains loaded')
@@ -205,7 +215,7 @@ def main():
                timing_qualification='exploratory; host strict timing qualification is separate')
     if args.scope == 'recorder-pair':
         row['instrumentation'] = 'quiescent recorder on/off; off completion/retirement observations unavailable'
-    elif args.scope in ('native-current', 'rwsem-split'):
+    elif args.scope in ('native-current', 'mutex-uncontended', 'rwsem-split'):
         row['instrumentation'] = ('KD training and functional recording on/off; all timings off with '
                                   'completion/retirement observations unavailable' if args.backend == 'kdlock'
                                   else 'Native has no KD recorder or generated-completion observations')
@@ -296,7 +306,7 @@ def main():
 
         def phase(label, workers, *, duration=0, iterations=256, timed=False, recorder=None):
             if recorder is None:
-                recorder = ('unavailable' if args.scope in ('native-current', 'rwsem-split', 'mutex-comparison')
+                recorder = ('unavailable' if args.scope in ('native-current', 'mutex-uncontended', 'rwsem-split', 'mutex-comparison')
                             and args.backend != 'kdlock' else 'on')
             control = phase_recording(args.scope, args.backend, recorder)
             spec = dict(arm=args.backend, lock_kind=args.family, workload='cacheline', cachelines=1,
@@ -316,7 +326,7 @@ def main():
                 whole_run_ops_s=measurement['completed'] * 1e9 / measurement['wall_ns'], peak=peak)
             if compiler is not None:
                 measurement['generated'] = validate_kd(measurement, compiler, recording=recorder == 'on')
-                if args.scope in ('recorder-pair', 'native-current', 'rwsem-split'):
+                if args.scope in ('recorder-pair', 'native-current', 'mutex-uncontended', 'rwsem-split'):
                     measurement.update(recording_control=control, fixed_image=compiler.old)
             if args.backend == 'tclock':
                 # The client process has exited; task registration references

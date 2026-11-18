@@ -310,47 +310,51 @@ static void check_delayed(void)
 }
 static void check_eligibility(void)
 {
-	CHECK(native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
-	for (int kind = KD_OPERATION_NONE; kind <= KD_OPERATION_RWSEM_IS_WRITE_LOCKED; ++kind)
-		if (kind != KD_OPERATION_MUTEX_LOCK)
-			CHECK(!native_fast_eligible(&root, kind));
+	struct kd_episode_resources resources = { .pool = &root.pool };
+	root.mutex_resources = &resources;
+	resources.config.family = KD_LOCK_FAMILY_RWSEM;
+	CHECK(!kd_task_mutex_fast_root(true));
+	resources.config.family = KD_LOCK_FAMILY_MUTEX;
+	CHECK(kd_task_mutex_fast_root(true) == &root);
+	root.source_closing = true;
+	CHECK(!kd_task_mutex_fast_root(true) && kd_task_mutex_fast_root(false) == &root);
+	root.source_closing = false;
 	root.rwsem_fast.lock = lock;
-	CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
-	CHECK(!native_fast_eligible(&root, KD_OPERATION_RWSEM_DOWN_READ));
+	CHECK(!kd_task_mutex_fast_root(true));
 	root.rwsem_fast.lock = NULL;
 	root.core.operation.phase = KD_OPERATION_RESUMABLE;
-	CHECK(native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(kd_task_mutex_fast_root(true));
 	for (int phase = KD_OPERATION_TARGET_READY; phase <= KD_OPERATION_DONE; ++phase) {
 		root.core.operation.phase = phase;
-		CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+		CHECK(!kd_task_mutex_fast_root(true));
 	}
 	root.core.operation.phase = KD_OPERATION_IDLE;
 	bool *contexts[] = { &irq_off, &atomic_context };
 	for (unsigned int index = 0; index < sizeof(contexts) / sizeof(contexts[0]); ++index) {
 		*contexts[index] = true;
-		CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+		CHECK(!kd_task_mutex_fast_root(true));
 		*contexts[index] = false;
 	}
 	task_context = false;
-	CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(!kd_task_mutex_fast_root(true));
 	task_context = true;
 	owner.__state = TASK_UNINTERRUPTIBLE;
-	CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(!kd_task_mutex_fast_root(true));
 	owner.__state = TASK_RUNNING;
 	struct list_head marker, *lists[] = { &root.core.grants, &root.owners.batches, &root.native_grants };
 	for (unsigned int index = 0; index < sizeof(lists) / sizeof(lists[0]); ++index) {
 		lists[index]->next = &marker;
-		CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+		CHECK(!kd_task_mutex_fast_root(true));
 		INIT_LIST_HEAD(lists[index]);
 	}
 	void **actors[] = { &root.core.exit_image, &root.core.exit_use, &root.core.exit_holder };
 	for (unsigned int index = 0; index < sizeof(actors) / sizeof(actors[0]); ++index) {
 		*actors[index] = &marker;
-		CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+		CHECK(!kd_task_mutex_fast_root(true));
 		*actors[index] = NULL;
 	}
 	CHECK(kd_mutex_fast_trylock(lock, &root.mutex_fast));
-	CHECK(!native_fast_eligible(&root, KD_OPERATION_MUTEX_LOCK));
+	CHECK(!kd_task_mutex_fast_root(true));
 	kd_mutex_fast_unlock(&root.mutex_fast);
 }
 static void check_lifetime(void)
@@ -391,6 +395,14 @@ static void check_native_checks(void)
 	struct kd_execution_binding *binding = &root.initial_native;
 	struct kd_episode_resources resources = { .pool = &root.pool };
 	CHECK(!kd_task_validate_native(&root, binding));
+	struct kd_execution_binding other = *binding;
+	CHECK(kd_task_validate_native(&root, &other) == -EPERM);
+	binding->state = NULL;
+	CHECK(kd_task_validate_native(&root, binding) == -EPERM);
+	binding->state = &root.core;
+	root.core.origin = &waiter;
+	CHECK(kd_task_validate_native(&root, binding) == -EPERM);
+	root.core.origin = &owner;
 	root.mutex_resources = &resources;
 	CHECK(!kd_task_validate_native(&root, binding));
 	resources.pool = NULL;
@@ -485,7 +497,8 @@ static int kd_episode_prepare_root_admitted(struct kd_episode_resources *resourc
 		struct kd_jit_image_use *admitted, struct kd_episode_frame **frame)
 {
 	CHECK(resources == &entry_resources && binding == &root.initial_native);
-	CHECK(operation == KD_OPERATION_RWSEM_DOWN_READ || operation == KD_OPERATION_RWSEM_DOWN_WRITE);
+	CHECK(operation == KD_OPERATION_MUTEX_LOCK || operation == KD_OPERATION_RWSEM_DOWN_READ ||
+	      operation == KD_OPERATION_RWSEM_DOWN_WRITE);
 	CHECK(admitted == expected_admitted);
 	++frame_prepares; *frame = &entry_frame; return 0;
 }
@@ -497,6 +510,8 @@ static int kd_mutex_prepare_entry(struct kd_mutex_entry *entry, struct kd_execut
 	      context == &entry_frame && required_control_bytes == root.mutex_control_bytes);
 	++captures; return 0;
 }
+#define kd_mutex_lock_entry_asm KD_OPERATION_MUTEX_LOCK
+#define kd_mutex_unlock_entry_asm KD_OPERATION_MUTEX_UNLOCK
 #include "entry_functions.h"
 
 static void setup_entry(bool retained_owner, bool drain)
@@ -508,6 +523,23 @@ static void setup_entry(bool retained_owner, bool drain)
 	if (retained_owner) root.owners.batches.next = &retained_marker;
 	entry_progress = frame_prepares = captures = 0;
 	progress_clears_owner = drain; expected_admitted = NULL;
+}
+static void check_typed_mutex(void)
+{
+	setup_entry(false, false);
+	entry_resources.config.family = KD_LOCK_FAMILY_MUTEX;
+	CHECK(!kd_mutex_prepare_lock_current(lock));
+	CHECK(lock->tail == &root.mutex_fast.head);
+	root.source_closing = true;
+	kd_mutex_prepare_unlock_current(lock);
+	CHECK(!lock->tail && !root.mutex_fast.lock && !entry_progress && !frame_prepares && !captures);
+	check_pair(0);
+	root.source_closing = false;
+	lock->tail = successor;
+	CHECK(kd_mutex_prepare_lock_current(lock) == &entry_slot.entry);
+	CHECK(entry_progress == 1 && frame_prepares == 1 && captures == 1);
+	CHECK(lock->tail == successor && !root.mutex_fast.lock);
+	CHECK(entry_frame.source_target == KD_OPERATION_MUTEX_LOCK);
 }
 static struct kd_mutex_entry *enter_read(void)
 {
@@ -563,6 +595,7 @@ int main(int argc, char **argv)
 	else if (!strcmp(argv[1], "eligibility")) check_eligibility();
 	else if (!strcmp(argv[1], "lifetime")) check_lifetime();
 	else if (!strcmp(argv[1], "native_checks")) check_native_checks();
+	else if (!strcmp(argv[1], "typed_mutex")) check_typed_mutex();
 	else if (!strcmp(argv[1], "read_fallback")) check_read_fallback();
 	else if (!strcmp(argv[1], "rwsem_root")) check_rwsem_root();
 	else CHECK(false);

@@ -19,8 +19,8 @@ receipts. The measured baseline remains `0d3fc6fb` on kernel10.
 
 ## Eligibility and ownership
 
-`prepare_current()` retains the existing attached-root, exact native binding,
-family, source admission and typed-target checks. Fast acquisition additionally
+The typed entry fixes the ordinary mutex operation and checks the attached root,
+exact native binding, family and source admission. Fast acquisition additionally
 requires ordinary mutex lock, TASK_RUNNING in sleepable task context with IRQs
 enabled, no auxiliary entry, no active fast owner, no logical grants, no tracked
 physical batches, no native compatibility grants, no pending exit users and an
@@ -29,6 +29,12 @@ native endpoint; fast entry neither collects nor reuses that storage.
 Fast acquire and release call the same native validation as the progress path,
 including exact pool/state/resource and physical-owner-task consistency. Only
 the progress work is skipped. Pending metadata includes a held fast record.
+
+The ordinary mutex entry checks its attached task, native binding and resources
+once before the empty-tail claim. A busy tail or an ineligible acquisition
+enters the persistent route with the source lock operation still pending.
+The native unlock entry completes on its caller's stack and needs only the
+lock argument. Both original typed CALL addresses remain fragment boundaries.
 
 Each attached root has one `kd_mutex_fast` record. Its embedded queue head has
 no source grant, release batch or second packet. Cold attachment initializes

@@ -139,26 +139,6 @@ static void run_native(struct kd_mutex_entry *entry, struct kd_mutex *lock,
 	kd_mutex_resume_entry(entry, native, kd_episode_native_done, frame);
 }
 
-static bool native_fast_eligible(struct kd_task_root_context *root,
-				enum kd_operation_kind operation)
-{
-	struct kd_thread_state *state = &root->core;
-
-	/* Called only after the ordinary native-root and source-target checks.
-	 * Finished request storage may still retain the current native endpoint;
-	 * it stays retained until normal collection/detach, without per-call use.
-	 */
-	return operation == KD_OPERATION_MUTEX_LOCK &&
-		!root->mutex_fast.lock && !root->rwsem_fast.lock &&
-		in_task() && !irqs_disabled() && !in_atomic() &&
-		READ_ONCE(current->__state) == TASK_RUNNING &&
-		list_empty(&state->grants) && list_empty(&root->owners.batches) &&
-		list_empty(&root->native_grants) &&
-		!state->exit_image && !state->exit_use && !state->exit_holder &&
-		(state->operation.phase == KD_OPERATION_IDLE ||
-		 state->operation.phase == KD_OPERATION_RESUMABLE);
-}
-
 static struct kd_mutex_entry *prepare_current_with_image(struct kd_mutex *lock,
 					      enum kd_operation_kind operation,
 					      unsigned long api_target,
@@ -168,7 +148,6 @@ static struct kd_mutex_entry *prepare_current_with_image(struct kd_mutex *lock,
 	struct kd_execution_binding *native;
 	struct kd_episode_frame *frame;
 	bool atomic_context = kd_operation_is_atomic(operation);
-	bool fast_eligible;
 	bool pending;
 	int result;
 
@@ -195,12 +174,6 @@ static struct kd_mutex_entry *prepare_current_with_image(struct kd_mutex *lock,
 	native = kd_state_current_binding(&root->core);
 	BUG_ON(!kd_state_is_current(&root->core, native) ||
 	       native->kind != KD_EXECUTION_NATIVE);
-	if (operation == KD_OPERATION_MUTEX_UNLOCK && root->mutex_fast.lock == lock) {
-		result = kd_task_validate_native(root, native);
-		BUG_ON(result);
-		kd_mutex_fast_unlock(&root->mutex_fast);
-		return NULL;
-	}
 	if (operation == KD_OPERATION_RWSEM_UP_READ &&
 	    kd_rw_fast_read_is_last(&root->rwsem_fast, container_of(lock, struct kd_rw, queue), current)) {
 		result = kd_task_validate_native(root, native);
@@ -208,13 +181,6 @@ static struct kd_mutex_entry *prepare_current_with_image(struct kd_mutex *lock,
 		result = kd_rw_fast_read_release(&root->rwsem_fast, &root->core, native);
 		BUG_ON(result);
 		return NULL;
-	}
-	fast_eligible = native_fast_eligible(root, operation);
-	if (fast_eligible) {
-		result = kd_task_validate_native(root, native);
-		BUG_ON(result);
-		if (kd_mutex_fast_trylock(lock, &root->mutex_fast))
-			return NULL;
 	}
 	result = kd_task_progress_native(root, native, &pending);
 	BUG_ON(result);
@@ -252,13 +218,24 @@ static struct kd_mutex_entry *prepare_current(struct kd_mutex *lock,
 
 struct kd_mutex_entry *kd_mutex_prepare_lock_current(struct kd_mutex *lock)
 {
+	struct kd_task_root_context *root = kd_task_mutex_fast_root(true);
+
+	if (root && kd_mutex_fast_trylock(lock, &root->mutex_fast))
+		return NULL;
 	return prepare_current(lock, KD_OPERATION_MUTEX_LOCK,
 		(unsigned long)kd_mutex_lock_entry_asm);
 }
 
-struct kd_mutex_entry *kd_mutex_prepare_unlock_current(struct kd_mutex *lock)
+void kd_mutex_prepare_unlock_current(struct kd_mutex *lock)
 {
-	return prepare_current(lock, KD_OPERATION_MUTEX_UNLOCK,
+	struct kd_task_root_context *root = kd_task_mutex_fast_root(false);
+
+	if (root && lock && root->mutex_fast.lock == lock) {
+		kd_mutex_fast_unlock(&root->mutex_fast);
+		return;
+	}
+	/* Native unlock completes its own source operation in both routes. */
+	prepare_current(lock, KD_OPERATION_MUTEX_UNLOCK,
 		(unsigned long)kd_mutex_unlock_entry_asm);
 }
 

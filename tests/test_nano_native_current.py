@@ -55,6 +55,28 @@ class NativeCurrentPlan(unittest.TestCase):
                 nano_run.phase_recording('native-current', 'kdlock', 'unavailable')
             self.assertEqual(control.call_count, 2)
 
+    def test_mutex_only_rounds_require_both_matched_backends(self):
+        scope = 'mutex-uncontended'
+        rows = self.receipts()[:2]
+        for row in rows:
+            row.update(scope=scope, collector_cpu=39,
+                       kd_delegation='on' if row['backend'] == 'kdlock' else None)
+            plan = nano_run.measurement_plan(scope, 'timing', row['backend'])
+            self.assertEqual(plan, nano_run.measurement_plan('native-current', 'timing', row['backend']))
+        def check(prior):
+            nano_run.validate_prerequisites(prior, scope, 'mutex', 'build', 'boot', 'runner', 39)
+        check(rows)
+        with self.assertRaises(ValueError):
+            check(rows[:1])
+        for field, value in (('collector_cpu', 38), ('family', 'rwsem'), ('kd_delegation', 'off'),
+                             ('recorder_modes', ['on']), ('runner_sha256', 'other')):
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                check([rows[0], dict(rows[1], **{field: value})])
+        with mock.patch.object(nano_run, 'set_recording') as control:
+            nano_run.phase_recording(scope, 'native', 'unavailable')
+            nano_run.phase_recording(scope, 'kdlock', 'off')
+            control.assert_called_once_with(False)
+
     def test_all_four_distinct_functional_lanes_are_required(self):
         rows = self.receipts()
         self.validate(rows)
