@@ -16,7 +16,8 @@ void kd_task_root_context_init(struct kd_task_root_context *context)
 	kd_owner_progress_init(&context->owners, NULL);
 	INIT_LIST_HEAD(&context->native_grants);
 	INIT_LIST_HEAD(&context->rwsem_reads);
-	context->mutex_fast.lock = NULL;
+	context->mutex_fast.held = 0;
+	context->mutex_fast.misses = 0;
 	context->rwsem_fast.lock = NULL;
 	context->mutex_resources = NULL;
 	context->mutex_control_bytes = 0;
@@ -64,7 +65,7 @@ static int attach_task(struct kd_task_root_context *context,
 		return -EEXIST;
 	/* Private initialized storage cannot be shared/reused by another task. */
 	if (context->attached || context->task || context->aux_entry ||
-	    context->mutex_fast.lock || context->rwsem_fast.lock)
+	    context->mutex_fast.held || context->rwsem_fast.lock)
 		return -EBUSY;
 	result = kd_execution_binding_init(&context->initial_native, &context->core,
 					   task, context, KD_EXECUTION_NATIVE);
@@ -81,7 +82,7 @@ static int attach_task(struct kd_task_root_context *context,
 	kd_owner_progress_init(&context->owners, task);
 	get_task_struct(task);
 	context->task = task;
-	kd_mutex_fast_init(&context->mutex_fast, task, &context->core);
+	context->mutex_fast.misses = 0;
 	kd_rw_fast_read_init(&context->rwsem_fast, &context->core);
 	context->aux_low = aux_low;
 	context->aux_high = aux_high;
@@ -124,7 +125,7 @@ int kd_task_root_detach_unpublished(struct kd_task_root_context *context,
 	    !context->attached || context->task != child)
 		return -EINVAL;
 	state = &context->core;
-	if (context->aux_entry || context->mutex_fast.lock || context->rwsem_fast.lock ||
+	if (context->aux_entry || context->mutex_fast.held || context->rwsem_fast.lock ||
 	    !list_empty(&context->native_grants) || !list_empty(&context->rwsem_reads) ||
 	    !list_empty(&context->owners.batches) ||
 	    state->origin != child || !state->requests ||
@@ -173,7 +174,7 @@ int kd_task_root_detach(struct kd_task_root_context *context,
 		return -ESTALE;
 	if (!context->attached || context->task != current)
 		return -EPERM;
-	if (context->aux_entry || context->mutex_fast.lock || context->rwsem_fast.lock ||
+	if (context->aux_entry || context->mutex_fast.held || context->rwsem_fast.lock ||
 	    !list_empty(&context->owners.batches))
 		return -EBUSY;
 	/* Caller has stopped/drained auxiliary and borrowed work before this
@@ -237,7 +238,7 @@ int kd_task_root_revoke_cancelled(struct kd_task_root_context *context,
 	    context->task != current)
 		return -EPERM;
 	if (!context->source_closing || context->aux_entry ||
-	    context->mutex_fast.lock || context->rwsem_fast.lock ||
+	    context->mutex_fast.held || context->rwsem_fast.lock ||
 	    context->native_spin_depth || !list_empty(&context->owners.batches) ||
 	    !list_empty(&context->native_grants) || !list_empty(&context->rwsem_reads))
 		return -EBUSY;

@@ -6,6 +6,7 @@
 #include "mutex_release.h"
 
 struct kd_thread_state;
+struct kd_task_root_context;
 struct kd_mutex_node;
 struct kd_mutex_batch;
 struct task_struct;
@@ -17,9 +18,16 @@ struct kd_rw_native_record;
 struct kd_mutex {
 	struct kd_mutex_node *tail;
 	struct kd_mutex_batch *owner;
+	/* The ordinary owner shares the MCS tail with prepared requests. */
+	struct kd_mutex_node *plain_next;
+	struct kd_task_root_context *plain_owner;
+	atomic_t plain_waiters;
 };
 
-#define KD_MUTEX_INITIALIZER { .tail = NULL, .owner = NULL }
+#define KD_MUTEX_INITIALIZER { .plain_waiters = ATOMIC_INIT(0) }
+
+#define KD_MUTEX_SAMPLE_INTERVAL 4U
+#define KD_MUTEX_MIN_WAITERS 2
 
 enum kd_mutex_selection {
 	KD_MUTEX_PRIVATE,
@@ -184,19 +192,14 @@ struct kd_mutex_node {
 	struct kd_mutex_release release;
 };
 
-/* One task-owned, nondelegatable mutex head. It can only replace an empty
- * tail, never queue behind another node. Other tasks access head.next only,
- * through their final predecessor-link store. The enclosing attached root
- * retains storage and the requester through unlock's completed handoff.
- * No source grant, release batch or captured packet belongs to this record.
+/* Only this task changes these fields. A local grant prevents lending the
+ * continuation and detaching the root, including across non-LIFO unlocks.
  */
 struct kd_mutex_fast {
-	struct kd_mutex_node head;
-	struct kd_mutex *lock;
+	unsigned int held;
+	unsigned int misses;
 };
 
-void kd_mutex_fast_init(struct kd_mutex_fast *fast, struct task_struct *task,
-		       struct kd_thread_state *state);
 /*
  * One physical MCS owner/batch. This storage survives finish_physical until
  * reap succeeds, even if the originating source scope or C frame has ended.

@@ -64,7 +64,7 @@ struct kd_task_root_context *kd_rw_local_root(void)
 		if (!list_empty(&root->owners.batches) || !list_empty(&root->core.grants))
 			return NULL;
 	}
-	if (root->mutex_fast.lock || root->rwsem_fast.lock || root->core.exit_image ||
+	if (root->mutex_fast.held || root->rwsem_fast.lock || root->core.exit_image ||
 	    root->core.exit_use || root->core.exit_holder ||
 	    (root->core.operation.phase != KD_OPERATION_IDLE &&
 	     root->core.operation.phase != KD_OPERATION_RESUMABLE))

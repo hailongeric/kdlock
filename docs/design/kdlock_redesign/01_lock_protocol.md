@@ -175,13 +175,11 @@ Materialization before source transfer, one active executor, optional selection 
 
 **Selected C05 storage:** the ordinary local/proxy path uses task-owned preallocated persistent request records rather than allocating request storage at each lock. Each simultaneously live request/control has a distinct record pointing directly to its original S_W. W's core/regs stays singular and is never copied into a request record. Normal local selection remains part of this unified path.
 
-The later [native mutex fast-path candidate](../../../tests/mutex_fast/README.md)
-adds one cold task-owned head for eligible top-level empty-queue acquisition.
-It completes no delegation setup and has no image/source grant; a failed claim
-uses the ordinary persistent path. Its exact original task retains the physical
-owner and record through normal successor handoff. Nested requests remain local
-while that fast owner is held. This is a scoped source candidate requiring its
-own kernel/runtime evidence, not a change to persistent delegated lifetimes.
+The [ordinary native mutex path](../../../tests/mutex_fast/README.md) claims
+the empty MCS tail directly. A busy caller normally queues a local waiter.
+Only sampled misses with an existing backlog consult the caller's delegation
+eligibility and enter source preparation. An ordinary holder keeps its
+continuation local through matching unlock.
 
 The subsequent [rwsem reader candidate](../../../tests/rwsem_fast/README.md)
 uses one task-owned shared credit on the existing family gate and exact active

@@ -36,6 +36,11 @@ static void after_cmpxchg(const void *pointer, bool removed);
 })
 #define cmpxchg_release cmpxchg
 typedef int atomic_t;
+#define xchg(ptr, val) __atomic_exchange_n((ptr), (val), __ATOMIC_SEQ_CST)
+#define atomic_inc(ptr) ((void)__atomic_add_fetch((ptr), 1, __ATOMIC_RELAXED))
+#define atomic_dec(ptr) ((void)__atomic_sub_fetch((ptr), 1, __ATOMIC_RELAXED))
+#define atomic_set(ptr, val) __atomic_store_n((ptr), (val), __ATOMIC_RELAXED)
+#define atomic_read(ptr) __atomic_load_n((ptr), __ATOMIC_RELAXED)
 #define atomic_read_acquire(ptr) __atomic_load_n((ptr), __ATOMIC_ACQUIRE)
 static atomic_t *observed_selection;
 static unsigned int selection_attempts;
@@ -79,7 +84,7 @@ struct kd_execution_binding {
 struct kd_request_pool { struct kd_thread_state *state; };
 struct kd_episode_resources {
 	struct kd_request_pool *pool;
-	struct { enum kd_lock_family family; } config;
+	struct { enum kd_lock_family family; unsigned int proxy_limit; } config;
 };
 struct test_fast_read { void *lock; };
 struct kd_thread_state {
@@ -90,11 +95,12 @@ struct kd_thread_state {
 	struct list_head grants;
 	struct { enum kd_operation_phase phase; } operation;
 };
+struct kd_owner_progress { struct list_head batches; struct task_struct *task; bool atomic_spin; };
 struct kd_task_root_context {
 	struct kd_thread_state core;
 	struct kd_execution_binding initial_native;
 	struct task_struct *task;
-	struct { struct list_head batches; struct task_struct *task; bool atomic_spin; } owners;
+	struct kd_owner_progress owners;
 	struct list_head native_grants;
 	struct list_head rwsem_reads;
 	struct kd_mutex_fast mutex_fast;
@@ -108,7 +114,8 @@ struct kd_task_root_context {
 };
 static _Thread_local struct task_struct *current;
 static bool task_context = true, irq_off, atomic_context;
-static bool in_task(void) { return task_context; }
+static unsigned int context_reads;
+static bool in_task(void) { ++context_reads; return task_context; }
 static bool irqs_disabled(void) { return irq_off; }
 static bool in_atomic(void) { return atomic_context; }
 static void get_task_struct(struct task_struct *task) { CHECK(task->refs > 0); ++task->refs; }
@@ -156,6 +163,15 @@ static int kd_request_pool_revoke_cancelled(void *pool, struct kd_execution_bind
 struct kd_task_root_context *kd_task_root_context_current(void);
 static int kd_task_progress_native(struct kd_task_root_context *context,
 		struct kd_execution_binding *binding, bool *pending);
+static struct kd_mutex_node plain_head;
+#define set_current_state(s) (current->__state = (s))
+#define __set_current_state(s) set_current_state(s)
+static void (*on_schedule)(void);
+static void schedule(void) { CHECK(on_schedule); on_schedule(); }
+static int kd_owner_progress_run(struct kd_owner_progress *owners, bool *blocked)
+{ CHECK(owners->task == current); *blocked = false; return 0; }
+static bool kd_owner_progress_ready(struct kd_owner_progress *owners)
+{ CHECK(owners->task == current); return false; }
 #include "fast_functions.h"
 
 static struct task_struct owner = { .refs = 1 }, waiter = { .refs = 1 };
@@ -202,7 +218,6 @@ static void setup_root(struct kd_task_root_context *context, struct task_struct 
 	INIT_LIST_HEAD(&context->owners.batches);
 	INIT_LIST_HEAD(&context->native_grants);
 	INIT_LIST_HEAD(&context->rwsem_reads);
-	kd_mutex_fast_init(&context->mutex_fast, task, &context->core);
 	task->kd_root_context = context;
 }
 static void setup(void)
@@ -225,24 +240,24 @@ static void check_pair(unsigned int start)
 	CHECK(acquire->kind == KD_OBS_FAST_ACQUIRE && release->kind == KD_OBS_FAST_RELEASE);
 	CHECK(acquire->task == (unsigned long)&owner && release->task == acquire->task);
 	CHECK(acquire->state == (unsigned long)&root.core && release->state == acquire->state);
-	CHECK(acquire->node == (unsigned long)&root.mutex_fast.head && release->node == acquire->node);
+	CHECK(acquire->node == (unsigned long)lock && release->node == acquire->node);
 	CHECK(acquire->object == (unsigned long)lock && release->object == acquire->object);
 	CHECK(acquire->acquisition == (unsigned long)&root.mutex_fast && release->acquisition == acquire->acquisition);
 	CHECK(acquire->flags == KD_OBS_FLAG_ENQUEUED);
 	CHECK(release->flags == (KD_OBS_FLAG_QUEUE_DONE | KD_OBS_FLAG_NODE_RETIRABLE));
-	CHECK(!root.mutex_fast.head.next);
-	CHECK(!root.mutex_fast.lock && !release->source_user && !release->return_user && !release->notifier);
+	if (!object_inaccessible) CHECK(!lock->plain_next);
+	CHECK(!root.mutex_fast.held && !release->source_user && !release->return_user && !release->notifier);
 }
 static void check_reuse(void)
 {
-	CHECK(kd_mutex_fast_trylock(lock, &root.mutex_fast));
-	CHECK(lock->tail == &root.mutex_fast.head && !lock->owner);
-	kd_mutex_fast_unlock(&root.mutex_fast);
+	CHECK(kd_mutex_fast_trylock(lock, &root));
+	CHECK(lock->tail == &plain_head && !lock->owner);
+	kd_mutex_fast_unlock(lock, &root);
 	CHECK(!lock->tail);
 	check_pair(0);
-	CHECK(kd_mutex_fast_trylock(lock, &root.mutex_fast));
+	CHECK(kd_mutex_fast_trylock(lock, &root));
 	retire_tail = &lock->tail;
-	kd_mutex_fast_unlock(&root.mutex_fast);
+	kd_mutex_fast_unlock(lock, &root);
 	CHECK(object_inaccessible);
 	check_pair(2);
 }
@@ -267,18 +282,16 @@ static void check_spin_selection(void)
 static void check_failed(void)
 {
 	lock->tail = successor;
-	CHECK(!kd_mutex_fast_trylock(lock, &root.mutex_fast));
-	CHECK(lock->tail == successor && !successor->next && !root.mutex_fast.lock && !event_count);
+	CHECK(!kd_mutex_fast_trylock(lock, &root));
+	CHECK(lock->tail == successor && !successor->next && !root.mutex_fast.held && !event_count);
 	CHECK(successor->selection == KD_MUTEX_OFFERED && !successor->turn && waiter.refs == 1);
 }
 static void check_linked(void)
 {
-	CHECK(kd_mutex_fast_trylock(lock, &root.mutex_fast));
-	struct kd_mutex_node *previous = __atomic_exchange_n(&lock->tail, successor, __ATOMIC_SEQ_CST);
-	CHECK(previous == &root.mutex_fast.head);
-	smp_store_release(&previous->next, successor);
+	CHECK(kd_mutex_fast_trylock(lock, &root));
+	CHECK(link_tail(lock, successor) == &plain_head);
 	retire_turn = &successor->turn;
-	kd_mutex_fast_unlock(&root.mutex_fast);
+	kd_mutex_fast_unlock(lock, &root);
 	CHECK(object_inaccessible && successor_inaccessible && waiter.wakes == 1 && waiter.refs == 1);
 	check_pair(0);
 	CHECK(events[1].related == (unsigned long)successor);
@@ -287,11 +300,11 @@ static void *publish_delayed(void *unused)
 {
 	(void)unused;
 	struct kd_mutex_node *previous = __atomic_exchange_n(&lock->tail, successor, __ATOMIC_SEQ_CST);
-	CHECK(previous == &root.mutex_fast.head);
+	CHECK(previous == &plain_head);
 	__atomic_store_n(&exchanged, 1, __ATOMIC_RELEASE);
 	while (!__atomic_load_n(&allow_link, __ATOMIC_ACQUIRE))
 		sched_yield();
-	smp_store_release(&previous->next, successor);
+	smp_store_release(&lock->plain_next, successor);
 	/* No predecessor access after this actual final link store. */
 	__atomic_store_n(&producer_done, 1, __ATOMIC_RELEASE);
 	return NULL;
@@ -299,89 +312,96 @@ static void *publish_delayed(void *unused)
 static void check_delayed(void)
 {
 	pthread_t producer;
-	CHECK(kd_mutex_fast_trylock(lock, &root.mutex_fast));
+	CHECK(kd_mutex_fast_trylock(lock, &root));
 	successor->selection = KD_MUTEX_SELECTED_LOCAL;
 	CHECK(!pthread_create(&producer, NULL, publish_delayed, NULL));
 	while (!__atomic_load_n(&exchanged, __ATOMIC_ACQUIRE))
 		sched_yield();
-	CHECK(!smp_load_acquire(&root.mutex_fast.head.next));
-	kd_mutex_fast_unlock(&root.mutex_fast);
+	CHECK(!smp_load_acquire(&lock->plain_next));
+	kd_mutex_fast_unlock(lock, &root);
 	CHECK(!pthread_join(producer, NULL));
 	CHECK(producer_done && poll_count && successor->turn == 1 && waiter.wakes == 1 && waiter.refs == 1);
 	CHECK(lock->tail == successor);
 	check_pair(0);
+}
+static bool hot_sample(void)
+{
+	root.mutex_fast.misses = KD_MUTEX_SAMPLE_INTERVAL - 1;
+	atomic_set(&lock->plain_waiters, KD_MUTEX_MIN_WAITERS);
+	return sample_proxy(lock, &root);
 }
 static void check_eligibility(void)
 {
 	struct kd_episode_resources resources = { .pool = &root.pool };
 	root.mutex_resources = &resources;
 	resources.config.family = KD_LOCK_FAMILY_RWSEM;
-	CHECK(!kd_task_mutex_fast_root(true));
+	resources.config.proxy_limit = 16;
+	CHECK(!hot_sample());
 	resources.config.family = KD_LOCK_FAMILY_MUTEX;
-	CHECK(kd_task_mutex_fast_root(true) == &root);
+	CHECK(hot_sample());
 	root.source_closing = true;
-	CHECK(!kd_task_mutex_fast_root(true) && kd_task_mutex_fast_root(false) == &root);
+	CHECK(!hot_sample());
 	root.source_closing = false;
 	root.rwsem_fast.lock = lock;
-	CHECK(!kd_task_mutex_fast_root(true));
+	CHECK(!hot_sample());
 	root.rwsem_fast.lock = NULL;
 	root.core.operation.phase = KD_OPERATION_RESUMABLE;
-	CHECK(kd_task_mutex_fast_root(true));
+	CHECK(hot_sample());
 	for (int phase = KD_OPERATION_TARGET_READY; phase <= KD_OPERATION_DONE; ++phase) {
 		root.core.operation.phase = phase;
-		CHECK(!kd_task_mutex_fast_root(true));
+		CHECK(!hot_sample());
 	}
 	root.core.operation.phase = KD_OPERATION_IDLE;
 	bool *contexts[] = { &irq_off, &atomic_context };
 	for (unsigned int index = 0; index < sizeof(contexts) / sizeof(contexts[0]); ++index) {
 		*contexts[index] = true;
-		CHECK(!kd_task_mutex_fast_root(true));
+		CHECK(!hot_sample());
 		*contexts[index] = false;
 	}
 	task_context = false;
-	CHECK(!kd_task_mutex_fast_root(true));
+	CHECK(!hot_sample());
 	task_context = true;
 	owner.__state = TASK_UNINTERRUPTIBLE;
-	CHECK(!kd_task_mutex_fast_root(true));
+	CHECK(!hot_sample());
 	owner.__state = TASK_RUNNING;
 	struct list_head marker, *lists[] = { &root.core.grants, &root.owners.batches, &root.native_grants };
 	for (unsigned int index = 0; index < sizeof(lists) / sizeof(lists[0]); ++index) {
 		lists[index]->next = &marker;
-		CHECK(!kd_task_mutex_fast_root(true));
+		CHECK(!hot_sample());
 		INIT_LIST_HEAD(lists[index]);
 	}
 	void **actors[] = { &root.core.exit_image, &root.core.exit_use, &root.core.exit_holder };
 	for (unsigned int index = 0; index < sizeof(actors) / sizeof(actors[0]); ++index) {
 		*actors[index] = &marker;
-		CHECK(!kd_task_mutex_fast_root(true));
+		CHECK(!hot_sample());
 		*actors[index] = NULL;
 	}
-	CHECK(kd_mutex_fast_trylock(lock, &root.mutex_fast));
-	CHECK(!kd_task_mutex_fast_root(true));
-	kd_mutex_fast_unlock(&root.mutex_fast);
+	CHECK(kd_mutex_fast_trylock(lock, &root));
+	CHECK(!hot_sample());
+	kd_mutex_fast_unlock(lock, &root);
 }
 static void check_lifetime(void)
 {
 	struct kd_task_root_context child;
 	struct list_head actors;
 	INIT_LIST_HEAD(&actors);
-	CHECK(kd_mutex_fast_trylock(lock, &root.mutex_fast));
+	CHECK(kd_mutex_fast_trylock(lock, &root));
 	CHECK(kd_task_root_detach(&root, &root.initial_native) == -EBUSY);
 	root.source_closing = true;
 	CHECK(kd_task_root_revoke_cancelled(&root, &root.initial_native, &actors) == -EBUSY);
 	CHECK(root.attached && owner.refs == 1 && owner.kd_root_context == &root);
 	CHECK(root.core.binding == &root.initial_native);
 	setup_root(&child, &waiter);
-	child.mutex_fast.lock = lock;
+	child.mutex_fast.held = 1;
 	CHECK(kd_task_root_detach_unpublished(&child, &waiter) == -EBUSY);
 	CHECK(child.attached && waiter.refs == 1 && waiter.kd_root_context == &child);
-	child.mutex_fast.lock = NULL;
+	child.mutex_fast.held = 0;
 	child.rwsem_fast.lock = lock;
 	CHECK(kd_task_root_detach_unpublished(&child, &waiter) == -EBUSY);
 	child.rwsem_fast.lock = NULL;
 	CHECK(!kd_task_root_detach_unpublished(&child, &waiter));
 	CHECK(!waiter.kd_root_context && !waiter.refs);
-	kd_mutex_fast_unlock(&root.mutex_fast);
+	kd_mutex_fast_unlock(lock, &root);
 	root.rwsem_fast.lock = lock;
 	CHECK(kd_task_root_detach(&root, &root.initial_native) == -EBUSY);
 	CHECK(kd_task_root_revoke_cancelled(&root, &root.initial_native, &actors) == -EBUSY);
@@ -527,26 +547,65 @@ static void setup_entry(bool retained_owner, bool drain)
 	entry_progress = frame_prepares = captures = 0;
 	progress_clears_owner = drain; expected_admitted = NULL;
 }
+static struct kd_mutex_node follower;
+
+static void hand_waiter_turn(void)
+{
+	struct kd_mutex_node *node = smp_load_acquire(&successor->next);
+
+	CHECK(node && atomic_read(&node->selection) == KD_MUTEX_SELECTED_LOCAL);
+	CHECK(link_tail(lock, &follower) == node);
+	publish_condition(node, &node->turn);
+	on_schedule = NULL;
+}
+
 static void check_typed_mutex(void)
 {
+	struct kd_mutex second = { 0 };
 	setup_entry(false, false);
 	entry_resources.config.family = KD_LOCK_FAMILY_MUTEX;
-	CHECK(!kd_mutex_prepare_lock_current(lock));
-	CHECK(lock->tail == &root.mutex_fast.head);
+	entry_resources.config.proxy_limit = 16;
+	CHECK(!kd_mutex_prepare_lock_current(lock) && lock->tail == &plain_head);
 	root.source_closing = true;
 	kd_mutex_prepare_unlock_current(lock);
-	CHECK(!lock->tail && !root.mutex_fast.lock && !entry_progress && !frame_prepares && !captures);
+	CHECK(!lock->tail && !root.mutex_fast.held && !entry_progress && !frame_prepares && !captures);
 	check_pair(0);
 	root.source_closing = false;
 	recording = false;
-	CHECK(!kd_mutex_prepare_lock_current(lock) && lock->tail == &root.mutex_fast.head);
+	CHECK(!kd_mutex_prepare_lock_current(lock));
+	CHECK(!kd_mutex_prepare_lock_current(&second) && root.mutex_fast.held == 2);
 	kd_mutex_prepare_unlock_current(lock);
-	CHECK(!lock->tail && !root.mutex_fast.lock && !entry_progress && event_count == 2);
+	CHECK(!lock->tail && root.mutex_fast.held == 1 && second.plain_owner == &root);
+	kd_mutex_prepare_unlock_current(&second);
+	CHECK(!second.tail && !root.mutex_fast.held && !context_reads && !entry_progress && event_count == 2);
+	CHECK(!root.mutex_fast.misses);
+
+	/* A sampled shallow miss and unsampled deep misses cannot consult the
+	 * native binding. Simulate a predecessor, then append a follower while
+	 * the real stack waiter is still parked. Its link must survive return.
+	 */
+	for (unsigned int i = 0; i < KD_MUTEX_SAMPLE_INTERVAL; ++i) {
+		unsigned int depth = i ? KD_MUTEX_MIN_WAITERS : 0;
+		root.mutex_fast.misses = i ? i - 1 : KD_MUTEX_SAMPLE_INTERVAL - 1;
+		atomic_set(&lock->plain_waiters, depth);
+		lock->tail = successor;
+		follower = (struct kd_mutex_node){ .requester = &waiter,
+			.wait_state = TASK_UNINTERRUPTIBLE, .selection = KD_MUTEX_SELECTED_LOCAL };
+		on_schedule = hand_waiter_turn;
+		CHECK(!kd_mutex_prepare_lock_current(lock) && !on_schedule);
+		CHECK((unsigned int)atomic_read(&lock->plain_waiters) == depth && lock->plain_next == &follower);
+		kd_mutex_prepare_unlock_current(lock);
+		CHECK(follower.turn && !root.mutex_fast.held && !context_reads && !captures);
+		lock->tail = NULL;
+		successor->next = NULL;
+	}
 	recording = true;
+	root.mutex_fast.misses = KD_MUTEX_SAMPLE_INTERVAL - 1;
+	atomic_set(&lock->plain_waiters, KD_MUTEX_MIN_WAITERS);
 	lock->tail = successor;
 	CHECK(kd_mutex_prepare_lock_current(lock) == &entry_slot.entry);
-	CHECK(entry_progress == 1 && frame_prepares == 1 && captures == 1);
-	CHECK(lock->tail == successor && !root.mutex_fast.lock);
+	CHECK(context_reads && entry_progress == 1 && frame_prepares == 1 && captures == 1);
+	CHECK(lock->tail == successor && !root.mutex_fast.held);
 	CHECK(entry_frame.source_target == KD_OPERATION_MUTEX_LOCK);
 }
 static struct kd_mutex_entry *enter_read(void)

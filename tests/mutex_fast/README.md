@@ -1,4 +1,4 @@
-# Task-owned mutex fast path
+# Ordinary mutex acquisition and optional delegation
 
 The subsequent [rwsem eligibility recheck](../../bench/nano/RWSEM_READ_RECHECK.md)
 adds one controlled case using the actual native wrapper and operation
@@ -17,79 +17,37 @@ delegation preparation. Source review is complete only when recorded with the
 frozen commit; compilation, execution and performance require separate VM
 receipts. The measured baseline remains `0d3fc6fb` on kernel10.
 
-## Eligibility and ownership
+## Ordinary acquisition and contention sampling
 
-The typed entry fixes the ordinary mutex operation and checks the attached root,
-exact native binding, family and source admission. Fast acquisition additionally
-requires ordinary mutex lock, TASK_RUNNING in sleepable task context with IRQs
-enabled, no auxiliary entry, no active fast owner, no logical grants, no tracked
-physical batches, no native compatibility grants, no pending exit users and an
-IDLE or RESUMABLE operation. Finished pool storage may still retain the current
-native endpoint; fast entry neither collects nor reuses that storage.
-Fast acquire and release call the same native validation as the progress path,
-including exact pool/state/resource and physical-owner-task consistency. Only
-the progress work is skipped. Pending metadata includes a held fast record.
+The native typed mutex pair requires a task enrolled before entry. A new source
+call checks that admission is open. It first tries to replace the empty MCS tail
+with the ordinary head tag. Success gives the caller physical ownership. Each
+lock has its own successor link and owner. A task may hold several such mutexes
+and release them in any order. Its ordinary ownership count prevents lending
+its continuation or detaching the root until all its local grants are released.
 
-The ordinary mutex entry checks its attached task, native binding and resources
-once before the empty-tail claim. A busy tail or an ineligible acquisition
-enters the persistent route with the source lock operation still pending.
-The native unlock entry completes on its caller's stack and needs only the
-lock argument. Event construction and successor wakeup have separate call frames,
-so the empty queue with recording disabled needs neither frame. Both original typed CALL addresses remain fragment boundaries.
+Only a failed empty-tail claim advances the task's sampling counter. Every
+fourth miss reads this lock's count of ordinary waiters. With at least two
+already waiting, and delegation enabled, the sampled caller can check its
+native binding, execution context and retained duties and prepare a managed
+request. Unsampled or shallow misses enqueue a local-only waiter on the same
+MCS queue. A predecessor can select this waiter only for local execution.
+While blocked, a physical owner continues to service its existing duties.
 
-Each attached root has one `kd_mutex_fast` record. Its embedded queue head has
-no source grant, release batch or second packet. Cold attachment initializes
-the only fields used by this lane. The root retains both storage and its exact
-task until matching unlock completes; every root detach route refuses a held
-record. The existing task enrollment retains the native source lease. A native
-fast body needs no image use or per-operation source capture.
-
-A compare/exchange from NULL to that head in the existing `lock->tail` is the
-unique execution selection and actual physical acquisition. A failed compare
-publishes nothing and falls through to the ordinary persistent-request path
-before any source operation completes. A fast head is never queued behind a
-predecessor, offered, combined, canceled or selected as another head's successor.
-Only a later producer's final `head.next` store exposes the fast record to
-another task. The mutex object remains the same two-pointer layout; the task
-root layout changes and requires rebuilding the kernel and dependent modules.
-
-Matching native unlock checks the exact record/object/task. It either removes
-that head from tail or waits for the producer's final predecessor-link store,
-selects the normal mutex successor locally, clears its own link and publishes
-the successor's MCS turn. The head therefore starts each acquisition with an
-empty link, including after a delayed link publication. It uses
-the existing condition publisher, which retains the successor task before
-publication and does not read its node afterward. No lock-object access follows
-tail removal or turn publication. Only then can this root reuse its fast record.
-The lock's batch owner pointer remains NULL during this local grant; tail is
-the physical queue authority. All users must use this same mutex protocol.
-
-## Nested and excluded paths
-
-A fast owner stays on its original task. While it is held, nested acquisitions
-use the existing persistent local queue path with proxy readiness disabled and
-local service limit zero. Thus the owner neither lends its own continuation
-nor serves another origin while holding this untransferred record. Distinct
-nested grants retain their ordinary records and exact source state. Non-LIFO
-fast A unlock physically releases A while local B remains held. Reacquiring A
-while B is held uses the ordinary path; sequential A unlock/reacquire can reuse
-the fast record only after the first handoff's final access.
-
-Rwsem/read grants, spin/rwlock, mode changes, killable/cancelable operations,
-compatibility APIs and existing delegated/deferred duties are not accelerated.
-Their queue, cancellation, downgrade and retirement protocols remain in place.
-This candidate adds no transfer of fast owners, mixed-family support, arbitrary
-nesting/progress result, or general kernel replacement claim. Existing typed
-pre-operation boundaries, UB-derived JIT/GS lowering and exact native handback
-remain unchanged. Recursive locking of an already-held nonrecursive mutex is
-not given a new success path.
+The local waiter stays on the caller's stack until it receives its turn and
+moves the physical head to the lock's permanent link. If another producer
+has exchanged the tail, the caller acquires that producer's final link store
+before returning. Unlock either clears an empty tail or publishes the next
+waiter's turn. The releasing task accesses only its own root and scalar
+identities after either publication. Managed source operations and handback
+continue to use the persistent request, image and release protocol.
 
 ## Focused checks for the VM session
 
 `test_mutex_fast.py` extracts the actual fast helpers, native eligibility and
 three root detach functions and the shared native validation. The C fixture
 supplies controlled surrounding task/queue interfaces, records input hashes
-and runs seven bounded cases:
+and exercises the following bounded cases:
 
 | Case | Required result |
 |---|---|
@@ -97,7 +55,8 @@ and runs seven bounded cases:
 | `failed` | Existing tail, successor selection and source operation remain untouched by failed fast claim. |
 | `linked` | An offered successor receives local selection/turn; its node and object can become inaccessible immediately at publication. |
 | `delayed` | Producer pauses after exchange; unlock waits for the final predecessor link, then preserves the already-local selection. |
-| `eligibility` | Nested owners, pending source/physical/native duties, other families/modes/cancellation and unsupported contexts decline fast entry. |
+| `eligibility` | A hot sample declines a proxy offer with nested owners, pending duties, unsupported modes or an invalid native binding. |
+| `typed_mutex` | Empty and nested claims, non-LIFO release, shallow and unsampled deep waits bypass native eligibility and capture. A hot sample reaches preparation. |
 | `lifetime` | Normal detach, unpublished-child detach and canceled-root revoke retain a held record; ordinary cleanup succeeds after release. |
 | `native_checks` | Source/context, exact binding, pool/state/resources and physical-task consistency checks remain required. |
 

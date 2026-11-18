@@ -17,9 +17,9 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 FUNCTIONS = {
     'kernel/native_status.h': ('kd_task_native_status',),
-    'kernel/mutex.c': ('claim_offered', 'publish_condition', 'wait_link', 'kd_mutex_fast_init',
-                       'record_fast', 'observe_fast', 'kd_mutex_fast_trylock', 'handoff_fast',
-                       'kd_mutex_fast_unlock', 'kd_task_mutex_fast_root'),
+    'kernel/mutex.c': ('claim_offered', 'publish_condition', 'wait_link', 'record_fast',
+                       'observe_fast', 'plain_acquired', 'kd_mutex_fast_trylock', 'link_tail', 'handoff_fast',
+                       'kd_mutex_fast_unlock', 'sample_proxy', 'plain_wait'),
     'kernel/rw_local.c': ('kd_rw_local_root',),
     'kernel/task_state.c': ('kd_task_root_context_current', 'kd_task_root_detach_unpublished',
                             'kd_task_root_detach', 'kd_task_root_revoke_cancelled'),
@@ -75,6 +75,8 @@ class MutexFastTests(unittest.TestCase):
                 if match is None:
                     raise ValueError('missing production type ' + name)
                 types.append(match.group())
+            if relative == 'kernel/mutex.h':
+                types.extend(re.findall(r'^#define KD_MUTEX_(?:SAMPLE_INTERVAL|MIN_WAITERS) .*$', source, re.M))
             if relative == 'kernel/observation.h':
                 types.extend(re.findall(r'^#define KD_OBS_FLAG_.*$', source, re.M))
         (cls.output / 'fast_functions.h').write_text('\n'.join(functions) + '\n')
@@ -122,7 +124,7 @@ class MutexFastTests(unittest.TestCase):
     def test_tail_exchange_before_delayed_predecessor_link(self):
         self.check_case('delayed')
 
-    def test_modes_context_and_retained_duties_decline_fast_entry(self):
+    def test_sampled_proxy_requires_native_binding_and_no_retained_duties(self):
         self.check_case('eligibility')
 
     def test_all_root_detach_routes_retain_a_held_fast_owner(self):
@@ -131,7 +133,7 @@ class MutexFastTests(unittest.TestCase):
     def test_shared_native_validation_retains_structural_checks(self):
         self.check_case('native_checks')
 
-    def test_typed_mutex_enters_capture_only_after_failed_claim(self):
+    def test_typed_mutex_captures_only_hot_sampled_misses(self):
         self.check_case('typed_mutex')
 
     def test_retained_read_route_still_prepares_and_forwards_exact_image_use(self):
