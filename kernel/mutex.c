@@ -23,6 +23,8 @@
 #include <asm/processor.h>
 
 #include "mutex.h"
+#include "mutex_api.h"
+#include "native_status.h"
 #include "observation.h"
 #include "state.h"
 #include "rw.h"
@@ -280,7 +282,7 @@ void kd_mutex_fast_init(struct kd_mutex_fast *fast, struct task_struct *task,
 	fast->head.state = state;
 }
 
-static __always_inline void observe_fast(unsigned long kind, struct kd_mutex_fast *fast,
+static noinline void record_fast(unsigned long kind, struct kd_mutex_fast *fast,
 			 unsigned long object, unsigned long next, unsigned long flags)
 {
 	kd_observe(kind, .state = (unsigned long)fast->head.state,
@@ -291,7 +293,15 @@ static __always_inline void observe_fast(unsigned long kind, struct kd_mutex_fas
 		.flags = flags);
 }
 
-bool kd_mutex_fast_trylock(struct kd_mutex *lock, struct kd_mutex_fast *fast)
+static __always_inline void observe_fast(unsigned long kind, struct kd_mutex_fast *fast,
+			 unsigned long object, unsigned long next, unsigned long flags)
+{
+	/* Allocate the event frame only when the tracepoint has a listener. */
+	if (trace_kdlock_observe_tp_enabled())
+		record_fast(kind, fast, object, next, flags);
+}
+
+static __always_inline bool kd_mutex_fast_trylock(struct kd_mutex *lock, struct kd_mutex_fast *fast)
 {
 	BUG_ON(!lock || fast->lock || fast->head.requester != current);
 	/* The empty-tail claim is both execution selection and physical grant.
@@ -306,34 +316,42 @@ bool kd_mutex_fast_trylock(struct kd_mutex *lock, struct kd_mutex_fast *fast)
 	return true;
 }
 
-void kd_mutex_fast_unlock(struct kd_mutex_fast *fast)
+static noinline unsigned long handoff_fast(struct kd_mutex_fast *fast,
+					  struct kd_mutex_node *next)
+{
+	unsigned long successor;
+	int selection;
+
+	/* A producer can be preempted between exchange and link. Its final
+	 * release store must precede reuse of our task-owned head.
+	 */
+	if (!next)
+		next = wait_link(&fast->head);
+	BUG_ON(next->native_local || next->atomic_spin || next->rw ||
+	       next->wait_state != TASK_UNINTERRUPTIBLE);
+	selection = atomic_cmpxchg(&next->selection, KD_MUTEX_OFFERED,
+				  KD_MUTEX_SELECTED_LOCAL);
+	BUG_ON(selection != KD_MUTEX_OFFERED && selection != KD_MUTEX_SELECTED_LOCAL);
+	successor = (unsigned long)next;
+	/* The producer's final link store has been acquired. Restore the
+	 * idle head here so an empty-queue claim needs no link reset.
+	 */
+	WRITE_ONCE(fast->head.next, NULL);
+	publish_condition(next, &next->turn);
+	/* No successor access follows turn publication. */
+	return successor;
+}
+
+static __always_inline void kd_mutex_fast_unlock(struct kd_mutex_fast *fast)
 {
 	struct kd_mutex *lock = fast->lock;
 	struct kd_mutex_node *next;
 	unsigned long successor = 0;
-	int selection;
 
 	BUG_ON(!lock || fast->head.requester != current || READ_ONCE(lock->owner));
 	next = smp_load_acquire(&fast->head.next);
-	if (next || cmpxchg(&lock->tail, &fast->head, NULL) != &fast->head) {
-		/* A producer can be preempted between exchange and link. Its final
-		 * release store must precede reuse of our task-owned head.
-		 */
-		if (!next)
-			next = wait_link(&fast->head);
-		BUG_ON(next->native_local || next->atomic_spin || next->rw ||
-		       next->wait_state != TASK_UNINTERRUPTIBLE);
-		selection = atomic_cmpxchg(&next->selection, KD_MUTEX_OFFERED,
-					  KD_MUTEX_SELECTED_LOCAL);
-		BUG_ON(selection != KD_MUTEX_OFFERED && selection != KD_MUTEX_SELECTED_LOCAL);
-		successor = (unsigned long)next;
-		/* The producer's final link store has been acquired. Restore the
-		 * idle head here so an empty-queue claim needs no link reset.
-		 */
-		WRITE_ONCE(fast->head.next, NULL);
-		publish_condition(next, &next->turn);
-		/* No successor access follows turn publication. */
-	}
+	if (next || cmpxchg(&lock->tail, &fast->head, NULL) != &fast->head)
+		successor = handoff_fast(fast, next);
 	/* No object access follows tail removal or turn publication: the next
 	 * owner may already have released and destroyed it. Only scalar identity
 	 * and this still-attached task's private header remain accessible.
@@ -341,6 +359,47 @@ void kd_mutex_fast_unlock(struct kd_mutex_fast *fast)
 	fast->lock = NULL;
 	observe_fast(KD_OBS_FAST_RELEASE, fast, (unsigned long)lock, successor,
 		     KD_OBS_FLAG_QUEUE_DONE | KD_OBS_FLAG_NODE_RETIRABLE);
+}
+
+static __always_inline struct kd_task_root_context *kd_task_mutex_fast_root(bool acquire)
+{
+	struct kd_task_root_context *root = smp_load_acquire(&current->kd_root_context);
+
+	if (!root || root->aux_entry || !root->mutex_resources ||
+	    root->mutex_resources->config.family != KD_LOCK_FAMILY_MUTEX ||
+	    root->owners.atomic_spin || kd_task_native_status(root, root, NULL))
+		return NULL;
+	/* A matching local release remains legal during close or with nested
+	 * grants. Only a new top-level acquisition needs an unused fast head.
+	 */
+	if (acquire && (root->source_closing || root->mutex_fast.lock || root->rwsem_fast.lock ||
+			!list_empty(&root->core.grants) || !list_empty(&root->owners.batches) ||
+			!list_empty(&root->native_grants)))
+		return NULL;
+	return root;
+}
+
+struct kd_mutex_entry *kd_mutex_prepare_lock_current(struct kd_mutex *lock)
+{
+	struct kd_task_root_context *root = kd_task_mutex_fast_root(true);
+
+	if (root && kd_mutex_fast_trylock(lock, &root->mutex_fast))
+		return NULL;
+	return kd_mutex_prepare_slow_current(lock, KD_OPERATION_MUTEX_LOCK,
+		(unsigned long)kd_mutex_lock_entry_asm);
+}
+
+void kd_mutex_prepare_unlock_current(struct kd_mutex *lock)
+{
+	struct kd_task_root_context *root = kd_task_mutex_fast_root(false);
+
+	if (root && lock && root->mutex_fast.lock == lock) {
+		kd_mutex_fast_unlock(&root->mutex_fast);
+		return;
+	}
+	/* Native unlock completes its own source operation in both routes. */
+	kd_mutex_prepare_slow_current(lock, KD_OPERATION_MUTEX_UNLOCK,
+		(unsigned long)kd_mutex_unlock_entry_asm);
 }
 
 static bool progress_wait(struct kd_mutex_node *node)

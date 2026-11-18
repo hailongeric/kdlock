@@ -16,12 +16,14 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FUNCTIONS = {
+    'kernel/native_status.h': ('kd_task_native_status',),
     'kernel/mutex.c': ('claim_offered', 'publish_condition', 'wait_link', 'kd_mutex_fast_init',
-                       'observe_fast', 'kd_mutex_fast_trylock', 'kd_mutex_fast_unlock'),
+                       'record_fast', 'observe_fast', 'kd_mutex_fast_trylock', 'handoff_fast',
+                       'kd_mutex_fast_unlock', 'kd_task_mutex_fast_root'),
     'kernel/rw_local.c': ('kd_rw_local_root',),
     'kernel/task_state.c': ('kd_task_root_context_current', 'kd_task_root_detach_unpublished',
                             'kd_task_root_detach', 'kd_task_root_revoke_cancelled'),
-    'kernel/task_progress.c': ('native_status', 'kd_task_validate_native', 'kd_task_mutex_fast_root'),
+    'kernel/task_progress.c': ('kd_task_validate_native',),
 }
 TYPES = {
     'kernel/state.h': ('enum kd_execution_kind', 'enum kd_operation_kind', 'enum kd_operation_phase',
@@ -32,8 +34,8 @@ TYPES = {
 ENTRY_FUNCTIONS = {
     'kernel/state.h': ('kd_operation_is_lock', 'kd_operation_is_unlock', 'kd_operation_is_mode_change',
                        'kd_operation_family', 'kd_lock_family_is_atomic', 'kd_operation_is_atomic'),
-    'kernel/mutex_api.c': ('prepare_current_with_image', 'prepare_current',
-                           'kd_mutex_prepare_lock_current', 'kd_mutex_prepare_unlock_current'),
+    'kernel/mutex_api.c': ('prepare_current_with_image', 'kd_mutex_prepare_slow_current'),
+    'kernel/mutex.c': ('kd_mutex_prepare_lock_current', 'kd_mutex_prepare_unlock_current'),
 }
 
 
@@ -56,7 +58,7 @@ class MutexFastTests(unittest.TestCase):
             inputs[relative] = hashlib.sha256(raw).hexdigest()
             source = raw.decode()
             for name in FUNCTIONS.get(relative, ()):
-                match = re.search(r'^(?:static )?(?:(?:__always_inline|inline) )?(?:void|int|bool|struct \w+\s*\*)\s*'
+                match = re.search(r'^(?:static )?(?:(?:__always_inline|inline|noinline) )?(?:void|int|bool|unsigned long|struct \w+\s*\*)\s*'
                                   + name + r'\(', source, re.M)
                 if match is None:
                     raise ValueError('missing production function ' + name)

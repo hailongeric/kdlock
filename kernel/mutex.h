@@ -197,13 +197,6 @@ struct kd_mutex_fast {
 
 void kd_mutex_fast_init(struct kd_mutex_fast *fast, struct task_struct *task,
 		       struct kd_thread_state *state);
-/* Current native task only, after source/context/ownership eligibility checks.
- * Failure has not enqueued or completed any operation. Matching unlock is
- * mandatory before root detach, record reuse or task/source storage release.
- */
-bool kd_mutex_fast_trylock(struct kd_mutex *lock, struct kd_mutex_fast *fast);
-void kd_mutex_fast_unlock(struct kd_mutex_fast *fast);
-
 /*
  * One physical MCS owner/batch. This storage survives finish_physical until
  * reap succeeds, even if the originating source scope or C frame has ended.

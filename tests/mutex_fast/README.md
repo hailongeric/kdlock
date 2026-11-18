@@ -5,7 +5,7 @@ adds one controlled case using the actual native wrapper and operation
 predicates. It checks that completed owner progress can enable a read before
 frame preparation, while retained duties and failed physical admission keep
 the ordinary path. Its progress/gate endpoints are stand-ins, not a runtime
-owner-retirement proof. The focused runner now defines eight cases.
+owner-retirement proof. The focused runner also exercises typed local mutex entry with the recorder enabled and disabled.
 
 The fixed mutex checkpoint is `a1ad50e5`; its kernel11 report is referenced by
 the [subsequent rwsem reader handoff](../../bench/nano/RWSEM_FAST.md). The original
@@ -34,7 +34,8 @@ The ordinary mutex entry checks its attached task, native binding and resources
 once before the empty-tail claim. A busy tail or an ineligible acquisition
 enters the persistent route with the source lock operation still pending.
 The native unlock entry completes on its caller's stack and needs only the
-lock argument. Both original typed CALL addresses remain fragment boundaries.
+lock argument. Event construction and successor wakeup have separate call frames,
+so the empty queue with recording disabled needs neither frame. Both original typed CALL addresses remain fragment boundaries.
 
 Each attached root has one `kd_mutex_fast` record. Its embedded queue head has
 no source grant, release batch or second packet. Cold attachment initializes

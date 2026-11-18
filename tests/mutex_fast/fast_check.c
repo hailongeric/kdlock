@@ -14,6 +14,7 @@
 #define CHECK(value) do { if (!(value)) { \
 	fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #value); exit(1); \
 } } while (0)
+#define noinline __attribute__((noinline))
 #define BUG_ON(value) CHECK(!(value))
 #define TASK_RUNNING 0
 #define TASK_UNINTERRUPTIBLE 2
@@ -123,6 +124,8 @@ static void cond_resched(void)
 }
 static struct kd_observation events[64];
 static unsigned int event_count;
+static bool recording = true;
+static bool trace_kdlock_observe_tp_enabled(void) { return recording; }
 #define kd_observe(event_kind, ...) do { \
 	CHECK(event_count < 64); \
 	events[event_count++] = (struct kd_observation) { \
@@ -535,6 +538,11 @@ static void check_typed_mutex(void)
 	CHECK(!lock->tail && !root.mutex_fast.lock && !entry_progress && !frame_prepares && !captures);
 	check_pair(0);
 	root.source_closing = false;
+	recording = false;
+	CHECK(!kd_mutex_prepare_lock_current(lock) && lock->tail == &root.mutex_fast.head);
+	kd_mutex_prepare_unlock_current(lock);
+	CHECK(!lock->tail && !root.mutex_fast.lock && !entry_progress && event_count == 2);
+	recording = true;
 	lock->tail = successor;
 	CHECK(kd_mutex_prepare_lock_current(lock) == &entry_slot.entry);
 	CHECK(entry_progress == 1 && frame_prepares == 1 && captures == 1);
@@ -543,7 +551,7 @@ static void check_typed_mutex(void)
 }
 static struct kd_mutex_entry *enter_read(void)
 {
-	return prepare_current(&entry_rw.queue, KD_OPERATION_RWSEM_DOWN_READ,
+	return kd_mutex_prepare_slow_current(&entry_rw.queue, KD_OPERATION_RWSEM_DOWN_READ,
 		(unsigned long)KD_OPERATION_RWSEM_DOWN_READ);
 }
 static void check_read_fallback(void)

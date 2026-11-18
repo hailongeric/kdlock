@@ -14,11 +14,6 @@ struct kd_execution_binding;
 int kd_task_validate_native(struct kd_task_root_context *root,
 			   struct kd_execution_binding *expected_native);
 
-/* Ordinary native mutex entry only. A successful lookup owns a checked
- * native endpoint. The lock's queue still decides physical ownership.
- */
-struct kd_task_root_context *kd_task_mutex_fast_root(bool acquire);
-
 /*
  * One private native progress pass on the attached current task/root. Caller
  * retains root, the exact expected_native endpoint and all backing through the
