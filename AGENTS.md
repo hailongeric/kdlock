@@ -2,6 +2,16 @@
 
 ## Scope and authority
 
+Work in `/home/eric/vm/vm-shared/kdlock-main` on `main`. The user
+reserves `master` for a separate implementation and prohibits accessing
+its code, documents and working tree.
+
+Use only a VM hosted locally on 380G10. Verify its QEMU process, disks and
+connection endpoint before connecting. Access to the VM on 10.176.26.71
+is prohibited, including read-only access, tunnels, shared mounts, monitor
+commands and access through another agent. If the local VM is unavailable,
+report the local blocker.
+
 The maintained branch is `main`. Rebuild kdlock incrementally for Linux kernel
 7.0 on x86_64 without PREEMPT_RT. Pin the exact source revision, configuration
 and supported API/context lanes before implementation validation. No other
