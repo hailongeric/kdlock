@@ -1,0 +1,33 @@
+quick off start 11:53:36 7.0.0-38-kdall10 workers: 1 64
+quick off wis 11:53:36
+quick off fxmark 11:55:31
+quick off leveldb 11:56:02
+quick off metis 11:56:10
+quick off psearchy 11:57:28
+quick off apache 12:02:03
+quick off done 12:02:27
+g1 off start 12:03:01 7.0.0-38-kdall10 workers: 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64
+g1 off wis 12:03:01
+g1 off fxmark 12:44:32
+g1 off leveldb 13:05:28
+g1 off metis 13:16:53
+g1 off psearchy 13:22:45
+g1 off apache 13:37:47
+g1 off done 13:43:40
+g1 on start 13:43:50 7.0.0-38-kdall10 workers: 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64
+g1 on wis 13:43:50
+g1 on fxmark 14:25:22
+g1 on leveldb 14:46:23
+g1 on metis 14:57:48
+g1 on psearchy 15:03:41
+g1 on apache 15:18:41
+g1 on done 15:24:35
+g1 native start 16:33:39 7.0.0-38-kdnat9 workers: 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64
+g1 native wis 16:33:39
+g1 native fxmark 17:15:23
+g1 native leveldb 17:36:35
+g1 native metis 17:47:59
+g1 native psearchy 17:53:50
+g1 native apache 18:08:52
+g1 native done 18:13:57
+NAT_BOOT_DONE 18:13:57

@@ -76,6 +76,9 @@ Current validation limits:
 * `CONFIG_KDLOCK_ALL` has been tested with delegation off, and with
   delegation for allow-listed lock users (`bench/results/kdclaude/kdall-*`).
 * `ww_mutex` applies wait-die to both classes and is never delegated.
+* Open failure: a delegated munmap with the kept downgrade (`kd_vdown=1`)
+  can leave an mmap lock write-held when Apache's worker processes exit
+  (LOCKS.md 5, `bench/results/kdclaude/appgrid-20261118-64cpu/` section 6).
 * Call-depth tracking (`CONFIG_MITIGATION_CALL_DEPTH_TRACKING`) is built into
   the kdlock kernels. It is active only on CPUs affected by `retbleed`, which
   the VM's CPU is not, so translated code has not run with it active.

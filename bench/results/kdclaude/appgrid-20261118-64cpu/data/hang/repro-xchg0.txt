@@ -1,0 +1,8 @@
+7.0.0-38-kdall10 #13 SMP PREEMPT_DYNAMIC Wed Nov 18 07:11:45 UTC 2026
+kd_vdown=1 kd_xchg=0 allow: __do_sys_brk vm_mmap_pgoff __vm_munmap
+cycle 1 req/s 51286.59 left 4 | delegated 93464 handback 92928 nested_delegated 14 xchg_taken 0 vdown 93077 vdown_hb 92908 
+[   79.621414] kd_mmdump: pid 3461 mm ff110003449f2300 count 0x5 m.q 0x101 wait_lock 0x0 owner 3473(httpd) parked 1 users 27
+[   79.621494] kd_mmdump: pid 3463 mm ff1100034fe09c00 count 0x5 m.q 0x101 wait_lock 0x0 owner 3542(httpd) parked 1 users 27
+[   79.621570] kd_mmdump: pid 3579 mm ff1100034fe0bf00 count 0x5 m.q 0x301 wait_lock 0x0 owner 3596(httpd) parked 1 users 27
+[   79.621643] kd_mmdump: pid 3651 mm ff110003441e0700 count 0x5 m.q 0x101 wait_lock 0x0 owner 3667(httpd) parked 1 users 27
+HUNG

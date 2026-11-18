@@ -1,0 +1,23 @@
+7.0.0-38-kdall10 #13 SMP PREEMPT_DYNAMIC Wed Nov 18 07:11:45 UTC 2026
+apache httpd-mpm-single-process.conf 1 req/s 14414.15 left 0 fatal 0 | delegated 97 handback 0 
+apache httpd-mpm-single-process.conf 2 req/s 27137.74 left 0 fatal 0 | delegated 97 handback 0 
+apache httpd-mpm-single-process.conf 3 req/s 41040.20 left 0 fatal 0 | delegated 1002 handback 2348 
+apache httpd-mpm-single-process.conf 4 req/s 49706.69 left 0 fatal 0 | delegated 4768 handback 29503 
+apache httpd-mpm-single-process.conf 5 req/s 53803.02 left 0 fatal 0 | delegated 36709 handback 94434 
+apache httpd-mpm-single-process.conf 6 req/s 52665.94 left 0 fatal 0 | delegated 123066 handback 190385 
+apache httpd-mpm-single-process.conf 7 req/s 49517.40 left 0 fatal 0 | delegated 238254 handback 309235 
+apache httpd-mpm-single-process.conf 8 req/s 49099.00 left 0 fatal 0 | delegated 373583 handback 445667 
+apache httpd-mpm-single-process.conf 12 req/s 47387.96 left 0 fatal 0 | delegated 518926 handback 590756 
+apache httpd-mpm-single-process.conf 16 req/s 47130.49 left 0 fatal 0 | delegated 663608 handback 735163 
+apache httpd-mpm-single-process.conf 20 req/s 44192.13 left 0 fatal 0 | delegated 796464 handback 867901 
+apache httpd-mpm-single-process.conf 24 req/s 45630.43 left 0 fatal 0 | delegated 934147 handback 1005146 
+apache httpd-mpm-single-process.conf 28 req/s 46046.20 left 0 fatal 0 | delegated 1074698 handback 1145440 
+apache httpd-mpm-single-process.conf 32 req/s 46790.82 left 0 fatal 0 | delegated 1216572 handback 1287212 
+apache httpd-mpm-single-process.conf 36 req/s 45491.79 left 0 fatal 0 | delegated 1355461 handback 1425867 
+apache httpd-mpm-single-process.conf 40 req/s 44256.63 left 0 fatal 0 | delegated 1491308 handback 1561607 
+apache httpd-mpm-single-process.conf 44 req/s 44402.47 left 0 fatal 0 | delegated 1627582 handback 1697650 
+apache httpd-mpm-single-process.conf 48 req/s 45118.14 left 0 fatal 0 | delegated 1765508 handback 1835348 
+apache httpd-mpm-single-process.conf 52 req/s 44267.66 left 0 fatal 0 | delegated 1900479 handback 1970116 
+apache httpd-mpm-single-process.conf 56 req/s 41827.78 left 0 fatal 0 | delegated 2029230 handback 2098540 
+apache httpd-mpm-single-process.conf 60 req/s 44620.26 left 0 fatal 0 | delegated 2165659 handback 2234682 
+apache httpd-mpm-single-process.conf 64 req/s 43951.46 left 0 fatal 0 | delegated 2300501 handback 2369311 

@@ -1,0 +1,181 @@
+# Full grid: nano (cachelines 1 and 8) and application benchmarks
+
+Done on 2026-11-18 in the kdclaude VM: 64 vCPUs as 2 nodes of 32, 24 GiB,
+host fixed at 2.7 GHz, `nokaslr nopvspin`. Workers 1-8 one by one, then
+every fourth to 64 (22 points).
+
+## 1. Kernels and modes
+
+| kernel | role |
+|---|---|
+| `7.0.0-38-kdnat9` #9 | **native**: native locks, kdlock built in (`CONFIG_KDLOCK_ALL` off); also the nano kernel, where native, kd and TCLock run side by side as bench backends |
+| `7.0.0-38-kdall10` #13 | **kd**: every lock a kdlock; the committed state (`787264dc`, kdall-native-20261117-64cpu section 8) |
+
+- **kd off:** kdall10 without the daemon (plain mode, nothing delegated).
+- **kd on:** kdall10 with `jit/kd_daemon.py`, the allow lists of the native
+  comparison (`bench/allow/api.txt`, `torture.txt`, `mm.txt`: the syscall
+  locks, locktorture, and the mmap lock writers of brk, mmap and munmap) and
+  the knowledge learned for this build (`/root/kds_cmp.json`, boot learn10).
+  Nothing else is on the allow lists: file-system, socket and futex locks
+  run in plain mode in "on" as well.
+- **TCLock** only in the nano grid. Its whole-kernel form is a patched Linux
+  5.14.16 (`TCLocks/src/kernel/linux-5.14.16`); it cannot be booted as a
+  7.0 kernel, and a 5.14 kernel would not compare with these, so the
+  application benchmarks have no TCLock column.
+
+Boots: kdall10 (kd off, then kd on: `app_grid.sh`), then kdnat9 (nano grid,
+then native: `nat_boot.sh`). One run per application point, so one boot per
+mode: application ratios within about 5% of 1 are within run-to-run noise
+(section 5 of kdall-native-20261117-64cpu has the spread of 3-boot series).
+
+## 2. Benchmarks and how they run
+
+Sources, built in the guest (`build_apps.sh`); the guest has no access to
+GitHub or to the Ubuntu archive (a proxy answers), so sources were fetched
+on 380G10 and the missing packages (libpcre2-dev, libtool, unzip,
+libdb-dev) installed from their `.deb` files:
+
+| benchmark | source | run as |
+|---|---|---|
+| nano | `bench/kd_bench.c`, `run_grid.py --profiles appgrid` | spin, mutex, rwsem (1% and 20% writes), rwlock (1% and 20% writes), each with 1 and 8 cache lines in the section: 12 profiles; 1 s per point after 0.5 s warm-up, 2 rounds |
+| will-it-scale | TCLock's copy (`TCLocks/src/benchmarks/will-it-scale`) | threads, `-n 32` (cores per socket, as TCLock's `runtest.py`), 10 s per point; `lock1` and `mmap1` (TCLock's set), `mmap2`, `brk1`, `page_fault1-3`; our own `page_fault_shared*` are not run |
+| FxMark | TCLock's copy | MWRM and MRDM on tmpfs, 30 s, as TCLock's `run-fxmark.py` |
+| LevelDB | TCLock's `leveldb-1.20` | `fillseq` (1 thread) into a tmpfs database, then `readrandom` with N pinned threads (`--pin_threads=1`, `taskset 0..N-1`) for 30 s, as `run_db_bench.sh` |
+| Metis | IntervalVM's copy (`kaist-cp/interval-vm`, `metis/`) | `wrmem -p N` under `taskset 0..N-1`, default input, as TCLock's vbench (model default); wall time |
+| Psearchy | IntervalVM's copy (`psearchy/`) | `pedsort -t /tmp/db/db -c N -m 128 -l 200000` over the 93 283 files of the kernel source tree (page cache), index on tmpfs, as TCLock's vbench (mode thread) |
+| Apache | IntervalVM's copy: httpd 2.4.62, `mpm_event`, its configurations | 64 KiB static page, `wrk -t64 -c100 -d10s` on the same machine, as in "Scalable Address Spaces using Concurrent Interval Skiplist" (SOSP '25): one server process with N threads, and the default configuration (3-12 processes of 25 threads) once per mode |
+
+Local changes to the benchmark sources (all under `/home/eric/vm/vm-shared/appbench`, not in this repository):
+- FxMark's helper scripts (`bin/cpu-sequences`, `set-cpus`, `gen_corepolicy`, `cpuinfo.py`) ported to Python 3 (2to3, `file()` -> `open()`, tabs).
+- Metis `lib/bench.h`: without cpufreq in sysfs, `get_cpu_freq()` returns `METIS_CPU_HZ` or 2.7 GHz instead of 0 (only reported times use it; the grid measures wall time). The unpatched binary died with SIGILL.
+- LevelDB built without jemalloc (`db_bench` does not link it; the copy lacks jemalloc's doc templates).
+- Psearchy: only the indexer (`mkdb`); the query tool needs Berkeley DB.
+
+## 3. Nano grid (kdnat9, one boot)
+
+`nano_grid.sh`, `data/g1-nano*.jsonl`; 1584 points with the daemon (native,
+kd, TCLock) and 528 kd points without it, 0 failed data checks, no kernel
+complaint. With the daemon kd delegated in every profile (median 4 k to
+6.6 M sections per point, no handbacks); without it, nothing.
+`nano_ranges.py` (below), `data/nano-g1.md` (every point,
+`bench/grid_table.py`), `data/nano-g1-plain.md`.
+
+Ratios per point (median of 2 rounds), min-max within the worker range;
+"plain" is kd without the daemon against the same boot's native:
+
+| profile | kd/native 1-8 | 12-32 | 36-64 | kd/TCLock 1-8 | 12-32 | 36-64 | plain kd/native 1-8 | 12-32 | 36-64 | kd Mops/s at 32 / 64 | native | TCLock |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| spin_c01 | 0.60-1.00 | 1.17-1.91 | 2.18-3.05 | 1.00-2.03 | 1.36-1.40 | 1.40-1.46 | 0.60-1.08 | 1.22-1.77 | 1.47-1.87 | 6.69 / 6.50 | 3.50 / 2.13 | 4.77 / 4.45 |
+| spin_c08 | 0.56-1.00 | 0.93-1.56 | 1.78-2.40 | 1.00-1.52 | 1.55-1.60 | 1.60-1.65 | 0.57-1.00 | 0.89-1.45 | 1.16-1.41 | 5.18 / 5.13 | 3.32 / 2.14 | 3.26 / 3.10 |
+| mutex_c01 | 0.94-1.13 | 0.94-0.97 | 1.14-1.67 | 0.99-1.97 | 1.05-1.27 | 1.04-1.14 | 0.99-1.18 | 1.09-1.17 | 1.13-1.45 | 3.84 / 3.69 | 4.10 / 2.22 | 3.67 / 3.53 |
+| mutex_c08 | 1.00-1.14 | 1.10-1.15 | 1.24-1.59 | 1.00-1.73 | 1.53-1.58 | 1.49-1.53 | 1.00-1.10 | 1.01-1.09 | 1.01-1.39 | 3.71 / 3.58 | 3.36 / 2.32 | 2.43 / 2.41 |
+| rwsem_c01_w1 | 1.00-2.15 | 2.30-2.92 | 3.02-4.20 | 1.00-1.06 | 0.75-1.10 | 0.81-0.99 | 1.00-2.15 | 2.26-2.90 | 3.21-4.33 | 10.58 / 10.26 | 4.56 / 2.45 | 14.14 / 12.65 |
+| rwsem_c08_w1 | 1.00-1.51 | 1.92-2.22 | 2.92-3.98 | 1.00-1.22 | 1.00-1.17 | 1.10-1.21 | 1.00-1.51 | 1.88-2.20 | 2.85-3.74 | 9.85 / 9.52 | 4.44 / 2.39 | 9.88 / 8.67 |
+| rwsem_c01_w20 | 1.00-3.39 | 2.18-2.24 | 3.07-5.53 | 1.00-1.37 | 0.94-1.08 | 1.17-1.25 | 1.00-3.19 | 2.26-2.40 | 3.06-5.65 | 7.01 / 6.80 | 3.13 / 1.31 | 7.46 / 5.82 |
+| rwsem_c08_w20 | 1.00-2.18 | 2.28-2.37 | 2.96-5.04 | 0.93-1.21 | 0.99-1.09 | 1.25-1.30 | 1.00-1.93 | 1.87-1.90 | 2.40-4.04 | 6.05 / 5.85 | 2.55 / 1.24 | 6.13 / 4.68 |
+| rwlock_c01_w1 | 1.00-1.14 | 1.32-2.13 | 2.64-3.83 | 1.00-1.13 | 1.02-1.24 | 0.97-1.03 | 1.00-1.14 | 1.31-2.11 | 2.32-3.33 | 14.12 / 13.43 | 6.63 / 3.51 | 13.82 / 13.87 |
+| rwlock_c08_w1 | 0.96-1.00 | 1.06-2.24 | 2.49-3.59 | 1.00-1.13 | 0.97-1.02 | 0.94-0.97 | 0.96-1.00 | 1.05-2.20 | 2.45-3.53 | 8.85 / 8.71 | 3.95 / 2.42 | 9.10 / 9.22 |
+| rwlock_c01_w20 | 1.00-1.37 | 1.63-2.90 | 3.63-4.48 | 1.00-1.50 | 1.23-1.25 | 1.21-1.30 | 1.00-1.34 | 1.63-2.85 | 2.95-3.34 | 6.22 / 6.09 | 2.15 / 1.36 | 5.04 / 5.02 |
+| rwlock_c08_w20 | 0.88-1.53 | 1.89-3.30 | 4.17-5.09 | 0.93-1.17 | 1.08-1.11 | 1.09-1.12 | 0.85-1.35 | 1.66-2.92 | 2.72-3.05 | 4.90 / 4.78 | 1.49 / 0.94 | 4.40 / 4.33 |
+
+- **Across nodes (36-64 workers) kd is ahead of native everywhere,** 1.14-5.53
+  delegated and 1.01-5.65 plain: native falls by 31-58% from 32 to 64
+  workers in every profile, kd by 1-5%.
+- **Against TCLock** kd is ahead in spin (1.36-1.65), mutex (1.04-1.58)
+  and the writer-heavy rw profiles (rwlock 20% writes 1.08-1.30, rwsem 20%
+  writes 1.17-1.30 across nodes). TCLock is ahead in rwsem with 1% writes
+  and 1 cache line (kd/TCLock 0.75-1.10 at 12-32, 0.81-0.99 at 36-64) and
+  close in rwlock with 1% writes (0.94-1.24).
+- **One node, few workers:** spin is behind native at 2-8 workers, c01
+  0.60-0.95 and c08 0.56-0.77, lowest at 3 workers; c01 is ahead from 12
+  workers and c08 from 16. Not analysed in this round. mutex c01 is at
+  0.94-0.97 of native at 12-32 workers.
+
+## 4. Application grid (native kdnat9, kd off and on kdall10)
+
+`app_grid.sh`, `data/runs.txt` (one line per point with the kd counters
+before and after), `data/app-g1.md` (every point, `app_summary.py`),
+`data/app-g1.csv`, `app_ranges.py` (below). One run per point and mode;
+287 points per mode; no kernel complaint in the three passes; the native
+pass also counted 0 fatal signals (the counter was added after kd off and
+on, section 6).
+
+| benchmark | off/native 1-8 | 12-32 | 36-64 | on/native 1-8 | 12-32 | 36-64 | native / off / on at 32 | at 64 | delegated at 64 |
+|---|---|---|---|---|---|---|---|---|---|
+| wis lock1 | 0.47-0.97 | 1.29-3.67 | 2.37-3.75 | 0.47-0.98 | 1.26-3.75 | 2.30-3.64 | 2.49M / 9.14M / 9.36M | 1.54M / 5.77M / 5.61M | 0 |
+| wis mmap1 | 0.97-1.01 | 0.98-1.01 | 1.14-1.78 | 1.00-1.25 | 1.23-1.28 | 1.61-2.18 | 297k / 299k / 380k | 177k / 315k / 374k | 11758576 |
+| wis mmap2 | 0.98-1.04 | 0.96-0.98 | 1.20-1.71 | 0.97-1.19 | 1.07-1.13 | 1.31-1.79 | 354k / 344k / 382k | 211k / 351k / 366k | 11775657 |
+| wis brk1 | 0.73-1.05 | 0.96-1.06 | 1.03-2.12 | 0.93-1.43 | 1.49-1.78 | 1.88-2.85 | 709k / 694k / 1.16M | 402k / 753k / 876k | 14054843 |
+| wis page_fault1 | 0.74-0.93 | 0.72-0.98 | 0.97-1.01 | 0.79-0.96 | 0.81-1.05 | 0.99-1.07 | 2.80M / 2.74M / 2.93M | 4.13M / 4.16M / 4.31M | 40 |
+| wis page_fault2 | 0.82-0.95 | 0.83-0.99 | 0.80-0.95 | 0.88-0.97 | 0.85-0.90 | 0.81-0.92 | 2.01M / 1.99M / 1.82M | 3.65M / 2.92M / 2.96M | 38 |
+| wis page_fault3 | 0.81-0.98 | 0.66-0.93 | 0.96-0.97 | 0.83-1.00 | 0.71-0.98 | 0.98-1.00 | 12.63M / 11.76M / 12.33M | 12.19M / 11.77M / 11.98M | 35 |
+| fxmark MWRM | 1.01-1.07 | 1.01-1.05 | 1.04-1.16 | 1.00-1.06 | 1.00-1.04 | 1.03-1.14 | 335k / 347k / 336k | 274k / 305k / 310k | 113 |
+| fxmark MRDM | 1.00-1.30 | 1.23-4.23 | 2.74-4.30 | 0.93-1.21 | 1.18-3.98 | 2.95-3.84 | 1.17M / 4.97M / 4.66M | 736k / 3.16M / 2.74M | 0 |
+| leveldb readrandom | 0.93-1.06 | 1.01-1.16 | 0.87-1.19 | 0.91-1.02 | 0.98-1.13 | 0.87-1.19 | 1.02M / 1.15M / 1.13M | 697k / 612k / 605k | 103 |
+| metis wrmem | 0.97-1.03 | 0.98-1.00 | 0.98-1.19 | 0.96-1.04 | 0.95-1.01 | 0.99-1.18 | 7.73 / 7.85 / 7.67 | 6.34 / 6.17 / 6.19 | 288 |
+| psearchy pedsort | 0.99-1.00 | 0.99-1.00 | 0.97-1.01 | 0.99-1.00 | 0.99-1.01 | 0.98-1.01 | 296 / 291 / 293 | 531 / 530 / 529 | 1242 |
+| apache single | 1.03-1.15 | 0.97-1.26 | 0.73-0.91 | 1.01-1.14 | 1.28-1.37 | 1.28-1.41 | 33k / 32k / 45k | 31k / 23k / 44k | 439345 |
+| apache default (once) | 1.13 | | | 0.58 | | | 143k / 162k / 83k | | 187539 |
+
+Notes on the table:
+- **Metis** is wall time (s) for the default input, ratios native/kd.
+  **Psearchy** is jobs per hour over all cores. **Apache default** is one
+  run per mode (section 6: the kd-on value belongs to the failure there).
+- "delegated at 64": sections completed by a combiner in the 64-worker
+  point of kd on; 0 means the workload's locks are not on the allow lists.
+
+What the numbers say (one run per point, so a ratio within about 0.05 of 1
+is not a result):
+
+- **Large gains without delegation, where native collapses across nodes:**
+  - FxMark MRDM (directory reads in a shared directory) 2.74-4.30 at 36-64 workers and 1.23-4.23 at 12-32.
+  - will-it-scale `lock1` 2.37-3.75 at 36-64. Native peaks at 19.9 M ops/s with 8 threads and falls to 1.5 M at 64; kd stays between 5.8 and 9.4 M from 8 threads on. So kd is at 0.47 at 8 threads, native's peak, and ahead from 12.
+  - mmap1, mmap2 and brk1 at 64 threads: 1.78, 1.66 and 1.87 without delegation, as in kdall-native-20261117-64cpu.
+- **Delegation adds on the mmap lock:**
+  - mmap1 1.61-2.18 at 36-64 (on), 1.23-1.28 at 12-32;
+  - brk1 1.88-2.85 and 1.49-1.78;
+  - Apache single process (one mm, every request maps and unmaps its file) 1.28-1.41 at 12-64 workers, against 0.73-1.26 without delegation.
+- **Losses:**
+  - page_fault1 and page_fault3 at 1-32 threads (0.66-0.98, worst page_fault3 at 12-32), at parity from 36. page_fault2 stays at 0.80-0.95 throughout.
+  - Apache single process without delegation at 36-64 (0.73-0.91).
+  - LevelDB `readrandom` at 64 threads (0.87, around 1.0 elsewhere).
+  - These were not profiled in this round.
+- **Small or no difference:** Metis, Psearchy, LevelDB below 64 threads, FxMark MWRM (1.00-1.16).
+
+## 5. TCLock
+
+Only in section 3. Its kernel form (TCLocks' `linux-5.14.16`) is a
+different kernel version; booting it here would compare kernels, not
+locks, and its scripts target its own 5.14 tree. The application rows
+therefore compare kd with the same kernel's native locks only.
+
+## 6. Failures found
+
+1. **kd on: exiting httpd processes hang on their mmap lock (reproduced,
+   root cause open).**
+   - **Where it showed:** the reboot after the g1 kd-on pass hung (`../../../../serial-kdall10-hang-20261118.log` on 10.176.26.71, httpd threads "blocked by coredump"); then reproduced in `crash_check.sh on`, at the first cycle of Apache's default configuration.
+   - **State** (`data/hang/`: stacks, counters, `diag_kd_mmdump.c` output in `mmdump.txt`):
+     - 3-4 httpd worker processes, all threads in `do_exit` waiting for their mm's mmap lock in read mode;
+     - each mm's count is `0x5` (writer bit and NEEDWAKE, no reader), while the holder of the queue mutex is a reader that had added its bias (`lock addq $0x100` before it slept);
+     - so a reader bias was subtracted that was not that reader's own, and the writer bit is never cleared.
+   - **Narrowed down** (`vdown_ab.sh`, `repro_variant.sh`, `drivers/repro_drive.sh`, `data/hang/repro-*.txt`, `g1-vdown.txt`):
+     - `kd_vdown=0`: 8 of 8 cycles clean (150-157 k req/s);
+     - `kd_vdown=1` (default): hang at the first cycle, also with `kd_xchg=0`, and also with only `__vm_munmap` allowed.
+     - With only munmap delegated, every munmap section kept its downgrade and handed the read part back with a real downgrade (`vdown` 100 182, `vdown_hb` 100 164, 21 sections completed in the combiner). The defect is in that path, in the kept downgrade of a delegated rwsem section (`kd_exec_one()` in `kernel/kd_core.c`, LOCKS.md 5); the code was not changed here.
+   - **Effect on the data:** Apache default in kd on (0.58, one run) ran with the defect: its stop hung that boot. The single-process Apache points did not hang: 22 cycles in the pass, 22 in `crash_check.sh`. mmap1, mmap2, brk1, page faults and `mm_stress` with delegated munmap did not hang either: their munmap read parts mostly complete in the combiner, or their processes do not exit while sections are handed back.
+   - **Workaround:** `kd_vdown=0`.
+2. **One segfault of `page_fault2_threads` in kd on** (14:19 in g1 on, glibc, a 16-bit counter increment at address `0xf70` during process teardown, after the measurement: every point has its value). Not reproduced: 90 runs of page_fault2, page_fault1 and mmap1 at 16-64 threads with the daemon (`wis_exit_check.sh`, `data/hang/g1-wisexit.txt`), and 60 runs each in native and kd off (`data/g1-*-crash.txt`), all without a fatal signal.
+3. **Setup:** the unpatched Metis binary died with SIGILL (`wrmem` with no cpufreq), fixed before the grid (section 2); the native and kd-off crash checks are clean (no fatal signal, no leftover httpd).
+
+## 7. Files
+
+| file | what |
+|---|---|
+| `build_apps.sh`, `prep_text.sh` | building the benchmarks in the guest; the Psearchy input |
+| `app_grid.sh` | the application grid, one mode per pass; `app_summary.py`, `app_ranges.py` |
+| `nano_grid.sh`, `nat_boot.sh` | the nano grid on a kdnat kernel with TCLock; the kdnat boot; `nano_ranges.py` |
+| `crash_check.sh`, `vdown_ab.sh`, `repro_variant.sh`, `wis_exit_check.sh`, `drivers/` | section 6 |
+| `diag_kd_mmdump.c`, `dstate.sh`, `hangdump.sh` | diagnostics: the mmap lock state of named processes (module, never left loaded), D-state stacks without reading command lines |
+| `data/runs.txt`, `data/app-g1.*`, `data/nano-g1*` | results |
+| `data/hang/` | the hang: stacks, counters, lock states, reproductions |
+

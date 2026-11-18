@@ -400,6 +400,12 @@ paths were exercised only by the ordinary load; CPU hotplug was not tested.
     32 threads (0.83), page_fault1 at 16 threads (0.87; its threads sleep
     in the mmap lock, the reader spin time trades it against reader-heavy
     locks), page_fault_shared1 (0.93), xattr (0.94-0.97).
+- **Application grid** (2026-11-18, `bench/results/kdclaude/appgrid-20261118-64cpu/`):
+  will-it-scale, FxMark, LevelDB, Metis, Psearchy and Apache over 1-64
+  workers, native against kd off and on, plus the nano grid with TCLock.
+  It found an open failure: Apache's default configuration with delegated
+  munmap and `kd_vdown=1` leaves an mmap lock write-held when the worker
+  processes exit (LOCKS 5).
 
 ## 5. Symbols and memory the code depends on
 

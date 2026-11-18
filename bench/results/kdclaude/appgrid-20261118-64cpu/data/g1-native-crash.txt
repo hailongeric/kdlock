@@ -1,0 +1,36 @@
+7.0.0-38-kdnat9 #9 SMP PREEMPT_DYNAMIC Wed Nov 18 07:13:29 UTC 2026
+apache httpd-mpm-single-process.conf 1 req/s 14553.78 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 2 req/s 27354.20 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 3 req/s 40518.08 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 4 req/s 49221.67 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 5 req/s 44381.16 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 6 req/s 48999.15 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 7 req/s 49610.56 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 8 req/s 50865.62 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 12 req/s 43278.21 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 16 req/s 35712.53 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 20 req/s 35278.58 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 24 req/s 35664.63 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 28 req/s 34394.78 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 32 req/s 33975.89 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 36 req/s 33350.35 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 40 req/s 33171.31 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 44 req/s 32390.57 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 48 req/s 32012.40 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 52 req/s 31728.78 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 56 req/s 31346.27 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 60 req/s 31793.53 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-single-process.conf 64 req/s 31533.31 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-default.conf default req/s 126655.91 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-default.conf default req/s 125199.20 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-default.conf default req/s 124594.50 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-default.conf default req/s 141087.79 left 0 fatal 0 | delegated 1132183692 handback 0 
+apache httpd-mpm-default.conf default req/s 124220.21 left 0 fatal 0 | delegated 1132183692 handback 0 
+wis page_fault2 16 runs 10 without_result 0 fatal 0 | delegated 1132183692 handback 0 
+wis page_fault2 32 runs 10 without_result 0 fatal 0 | delegated 1132183692 handback 0 
+wis page_fault2 64 runs 10 without_result 0 fatal 0 | delegated 1132183692 handback 0 
+wis page_fault1 16 runs 10 without_result 0 fatal 0 | delegated 1132183692 handback 0 
+wis page_fault1 32 runs 10 without_result 0 fatal 0 | delegated 1132183692 handback 0 
+wis page_fault1 64 runs 10 without_result 0 fatal 0 | delegated 1132183692 handback 0 
+-- fatal signal lines
+CRASH_DONE

@@ -1,0 +1,11 @@
+7.0.0-38-kdall10 #13 SMP PREEMPT_DYNAMIC Wed Nov 18 07:11:45 UTC 2026
+wis page_fault2 16 runs 10 without_result 0 fatal 0
+wis page_fault2 32 runs 10 without_result 0 fatal 0
+wis page_fault2 64 runs 10 without_result 0 fatal 0
+wis page_fault1 16 runs 10 without_result 0 fatal 0
+wis page_fault1 32 runs 10 without_result 0 fatal 0
+wis page_fault1 64 runs 10 without_result 0 fatal 0
+wis mmap1 16 runs 10 without_result 0 fatal 0
+wis mmap1 32 runs 10 without_result 0 fatal 0
+wis mmap1 64 runs 10 without_result 0 fatal 0
+WISEXIT_DONE

@@ -1,0 +1,9 @@
+7.0.0-38-kdall10 #13 SMP PREEMPT_DYNAMIC Wed Nov 18 07:11:45 UTC 2026
+kd_vdown=0 cycle 1 req/s 150230.48 left 0 | delegated 323474 handback 312021 nested_delegated 2292 xchg_taken 9 vdown 11 vdown_hb 0 
+kd_vdown=0 cycle 2 req/s 151885.59 left 0 | delegated 647713 handback 627701 nested_delegated 4731 xchg_taken 9 vdown 11 vdown_hb 0 
+kd_vdown=0 cycle 3 req/s 150327.84 left 0 | delegated 947478 handback 913502 nested_delegated 7013 xchg_taken 9 vdown 11 vdown_hb 0 
+kd_vdown=0 cycle 4 req/s 155993.42 left 0 | delegated 1260563 handback 1215151 nested_delegated 9321 xchg_taken 10 vdown 11 vdown_hb 0 
+kd_vdown=0 cycle 5 req/s 156887.08 left 0 | delegated 1576132 handback 1519378 nested_delegated 11817 xchg_taken 10 vdown 11 vdown_hb 0 
+kd_vdown=0 cycle 6 req/s 152004.44 left 0 | delegated 1891777 handback 1823877 nested_delegated 14117 xchg_taken 10 vdown 11 vdown_hb 0 
+kd_vdown=0 cycle 7 req/s 155502.43 left 0 | delegated 2203535 handback 2124861 nested_delegated 16435 xchg_taken 11 vdown 11 vdown_hb 0 
+kd_vdown=0 cycle 8 req/s 154314.69 left 0 | delegated 2522878 handback 2432321 nested_delegated 18932 xchg_taken 11 vdown 11 vdown_hb 0 

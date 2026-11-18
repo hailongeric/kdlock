@@ -1,0 +1,36 @@
+7.0.0-38-kdall10 #13 SMP PREEMPT_DYNAMIC Wed Nov 18 07:11:45 UTC 2026
+apache httpd-mpm-single-process.conf 1 req/s 14313.14 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 2 req/s 27358.84 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 3 req/s 41594.72 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 4 req/s 50415.70 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 5 req/s 53361.88 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 6 req/s 52249.80 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 7 req/s 50635.29 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 8 req/s 49362.95 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 12 req/s 45759.32 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 16 req/s 42136.01 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 20 req/s 39925.12 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 24 req/s 37290.16 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 28 req/s 34703.67 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 32 req/s 33354.09 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 36 req/s 30576.81 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 40 req/s 29833.24 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 44 req/s 27436.39 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 48 req/s 26275.40 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 52 req/s 24348.25 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 56 req/s 23370.11 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 60 req/s 23310.98 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-single-process.conf 64 req/s 24596.94 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-default.conf default req/s 156171.67 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-default.conf default req/s 159106.48 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-default.conf default req/s 157138.16 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-default.conf default req/s 154819.36 left 0 fatal 0 | delegated 0 handback 0 
+apache httpd-mpm-default.conf default req/s 155731.71 left 0 fatal 0 | delegated 0 handback 0 
+wis page_fault2 16 runs 10 without_result 0 fatal 0 | delegated 0 handback 0 
+wis page_fault2 32 runs 10 without_result 0 fatal 0 | delegated 0 handback 0 
+wis page_fault2 64 runs 10 without_result 0 fatal 0 | delegated 0 handback 0 
+wis page_fault1 16 runs 10 without_result 0 fatal 0 | delegated 0 handback 0 
+wis page_fault1 32 runs 10 without_result 0 fatal 0 | delegated 0 handback 0 
+wis page_fault1 64 runs 10 without_result 0 fatal 0 | delegated 0 handback 0 
+-- fatal signal lines
+CRASH_DONE
