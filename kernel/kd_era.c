@@ -40,7 +40,8 @@
  *    a tick.
  *  - The lock's time is divided between the nodes by the number of their
  *    callers (kd_rw_era_bound()).
- *  - The wait is bounded, at most twice kd_rw_era_ns, and ends at
+ *  - The wait is bounded, at most twice the family's bound (kd_rw_era_ns
+ *    for the rwlock, kd_rwsem_era_ns for the rwsem), and ends at
  *    need_resched(). An rwlock caller with interrupts or bottom halves off,
  *    or outside task context, does not wait at all.
  *
@@ -66,9 +67,11 @@
 #include "kd_internal.h"
 
 /*
- * The bound of both families. An rwlock waits with preemption off, which
- * would speak for a shorter one, but its wait ends at need_resched() like
- * the rwsem's, and a shorter bound costs twice. Measured (build #79, rwlock,
+ * The rwlock's bound, and the switch for both families: 0 means no eras.
+ * The rwsem has a longer bound of its own (kd_rwsem_era_ns in kd_rwsem.c).
+ * An rwlock waits with preemption off, which would speak for a shorter one,
+ * but its wait ends at need_resched() like the rwsem's, and a shorter bound
+ * costs twice. Measured (build #79, rwlock,
  * 32 workers, 50 us against 200 us): 3-12% of the rate across nodes, and
  * with 28 workers on one node and 4 on the other the least-served worker
  * got 0.30-0.42 of the most-served one's operations instead of 0.76-0.93,

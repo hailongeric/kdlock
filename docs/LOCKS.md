@@ -258,8 +258,9 @@ call.
   pressure the rwsem serves one node at a time.
   * Who waits for its node's era: a reader that meets a writer, and a
     writer whose fast path failed. They wait before touching `count`
-    again, polling the era word only, for at most twice `kd_rw_era_ns`,
-    and the wait ends at `need_resched()`.
+    again, polling the era word only, for at most twice
+    `kd_rwsem_era_ns` (1 ms; the rwlock's bound is 200 us, ARCHITECTURE
+    7b), and the wait ends at `need_resched()`.
   * A reader that finds no writer is never held back, and its fast path
     does not look at the era. A check there (whenever two readers were in)
     cost every reader 3-12% on one node and gained nothing across nodes
@@ -364,7 +365,8 @@ sees neither effect.
 | `kd_numa` (core param, 0644) | 1 | NUMA-ordered sessions |
 | `kd_numa_after` (core param, 0644) | 32 | rwsem: waiters a session serves in queue order before it defers other nodes' (ARCHITECTURE 7) |
 | `kd_numa_plain` (core param, 0644) | 16 | mutex and rwsem writer queue in plain mode: how often a waiter may be passed by a queue head that moves a waiter of its own node to the front (at most 255); 0: arrival order (ARCHITECTURE 7a) |
-| `kd_rw_era_ns` (core param, 0644) | 200000 | rwsem and rwlock: the era bound (a waiter waits at most twice this); 0: no eras, and the queue heads measure nothing (ARCHITECTURE 7b) |
+| `kd_rw_era_ns` (core param, 0644) | 200000 | rwlock: the era bound (a waiter waits at most twice this); 0: no eras in either family, and the queue heads measure nothing (ARCHITECTURE 7b) |
+| `kd_rwsem_era_ns` (core param, 0644) | 1000000 | rwsem: the era bound; 0: use `kd_rw_era_ns` (ARCHITECTURE 7b) |
 | `kd_rw_era_press` (core param, 0644) | 225 | hundredths of a caller: average company a queue-head writer must find (readers in + up to 2 queued behind) for an era to start or be renewed |
 | `kd_rw_era_drain_ns` (core param, 0644) | 5000 | no era while the readers a queue head finds take longer than this to leave, on average |
 | `kd_rw_era_dbg_drain`, `kd_rw_era_dbg_press` (0444) | - | the last averages a queue head computed (ns; sixteenths of a caller) |

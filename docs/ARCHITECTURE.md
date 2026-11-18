@@ -436,12 +436,24 @@ Three properties make it safe to leave on:
   count themselves in a line only they write; the bound of a waiter is
   `2 x bound x theirs / (theirs + ours)`, where *theirs* is how many callers
   of the era's node waited when it took the era. Equal numbers give the plain
-  bound (`kd_rw_era_ns`, 200 us, for both families). A bound is never under a
+  bound: `kd_rw_era_ns` (200 us) for the rwlock, `kd_rwsem_era_ns` (1 ms)
+  for the rwsem. A bound is never under a
   quarter of that: an era begins with the lock still full of the other node's
   callers, and its node gets nothing done until they have left. An rwlock
   waiter spins with preemption off, as it would in the queue; its wait ends
   at `need_resched()` like the rwsem's, and it does not wait at all with
   interrupts or bottom halves off.
+* **Why the rwsem's bound is longer.** An rwsem caller waits for its era
+  with preemption enabled, and an era of the mmap lock is one session of
+  delegated writers of one node. At 200 us such a session ended after about
+  136 mmap1 sections, and every new era moved the mm's data to the other
+  node. With 1 ms, will-it-scale mmap1 at 48-64 threads ran 1.11-1.15 times
+  faster in one boot, at the cost of the share of a node with very few
+  callers (31 workers on one node and 1 on the other: the least-served
+  worker got 0.68 instead of 0.85 of the most-served one's operations). The
+  rwlock gained nothing from a longer bound and lost that share as well.
+  Measurements: `bench/results/kdclaude/kdall-native-20261117-64cpu/`,
+  section 8.
 
 A waiter never looks at the lock itself. One look per waiter, taking the era
 over if the lock was idle, was tried (#77, #78) and removed: it ended the eras

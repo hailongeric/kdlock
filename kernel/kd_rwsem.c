@@ -53,6 +53,38 @@ core_param(kd_rwsem_wspin_ns, kd_rwsem_wspin_ns, uint, 0644);
 static unsigned int kd_rwsem_rspin_ns __read_mostly = 50000;
 core_param(kd_rwsem_rspin_ns, kd_rwsem_rspin_ns, uint, 0644);
 
+/*
+ * The era bound of the rwsem (kd_era.c); 0 uses kd_rw_era_ns, the rwlock's,
+ * and kd_rw_era_ns=0 switches eras off for both families.
+ *
+ * Longer than the rwlock's 200 us. An rwsem caller waits for its era with
+ * preemption enabled, and an era of the mmap lock is one session of
+ * delegated writers of one node: at 200 us it ended after about 136 mmap1
+ * sections, and every new era moved the mm's data to the other node.
+ * Measured on kdall3 in one boot (3 rounds, the whole kd_rw_era_ns at 200 us,
+ * 500 us and 1 ms): will-it-scale mmap1 at 48 / 60 / 64 threads 1.12 / 1.14 /
+ * 1.11 times the rate at 200 us with 1 ms, mmap2 1.17 / 1.07 / 1.12, brk1
+ * 1.05 / 1.08 / 1.04; the rwsem nano bodies with 20% writes at 48 and 64
+ * workers 1.08-1.22 in plain mode and 1.06-1.09 delegated, 1% writes up to
+ * 1.19, writers only unchanged within the spread, one node unchanged. The
+ * cost is the share of a node with very few callers: with 31 workers on one
+ * node and 1 on the other, the least-served worker got 0.68 instead of 0.85
+ * of the most-served one's operations (1 line, 20% writes, plain), 0.72
+ * instead of 0.94 delegated; at 28+4 it went from 0.49 to 0.86 with 16
+ * lines. The rwlock gained nothing (0-2%) and lost that share as well, so
+ * it keeps the shorter bound, which also bounds how long it spins with
+ * preemption off.
+ */
+static unsigned int kd_rwsem_era_ns __read_mostly = 1000000;
+core_param(kd_rwsem_era_ns, kd_rwsem_era_ns, uint, 0644);
+
+static __always_inline unsigned int kd_rwsem_era_bound(void)
+{
+	unsigned int ns = READ_ONCE(kd_rwsem_era_ns);
+
+	return ns ? ns : READ_ONCE(kd_rw_era_ns);
+}
+
 static __always_inline bool kd_rwsem_readers(long c)
 {
 	return (c >> KD_RWSEM_RSHIFT) != 0;
@@ -383,7 +415,7 @@ static __always_inline int __kd_down_write_slow(struct kd_rwsem *sem, unsigned l
 	might_sleep();
 	/* The lock is in use and serves another node: wait for our era (kd_era.c). */
 	if (kd_rw_era_other(sem)) {
-		kd_rw_era_wait(sem, READ_ONCE(kd_rw_era_ns));
+		kd_rw_era_wait(sem, kd_rwsem_era_bound());
 		if (kd_down_write_trylock_raw(sem))
 			return 0;
 	}
@@ -606,7 +638,7 @@ static noinline int kd_down_read_slow(struct kd_rwsem *sem, unsigned int state, 
 		kd_rwsem_read_undo(sem);
 	/* Not in yet, and the lock serves another node: wait for our era. */
 	if (!reg && kd_rw_era_other(sem))
-		kd_rw_era_wait(sem, READ_ONCE(kd_rw_era_ns));
+		kd_rw_era_wait(sem, kd_rwsem_era_bound());
 	if (kd_down_read_admit(sem, c, reg))
 		return 0;
 
