@@ -132,6 +132,53 @@ static void kd_mutex_spin_first(struct kd_mutex *m, struct kd_mutex_waiter *w,
 }
 
 /*
+ * KD_QF_WOKEN: the first parked task is awake, so a release leaves the
+ * wait lock alone instead of waking it again. Without the flag every
+ * release took the wait lock, which shares the mutex's cache line, while
+ * any task was parked, to wake a first task that had been woken already
+ * and was still on its way to the CPU or spinning (locktorture mutex_lock,
+ * 64 writers on 64 CPUs, kdall7, counted with kprobes: 183 000 such
+ * wakeups per second, 260 per parked wait, 98% of them queued behind each
+ * other on the wait lock; 15.8% of all samples were in that wait, 0.3% in
+ * the native kernel). With the flag (kdall9, one boot, against
+ * kd_mutex_woken=0): wake_up_q() calls 350 000 -> 3 800 per second, the
+ * wait lock 0.08% of the samples, writes 1.30x with 64 writers and 1.85x
+ * with 128.
+ *
+ * Every change of the flag is made under ->wait_lock:
+ *  - whoever wakes the first parked task sets it (kd_mutex_wake_first(),
+ *    kd_mutex_handoff()), and so does the first task itself when it starts
+ *    to spin;
+ *  - the first task clears it before it sleeps again and then, after a full
+ *    barrier, tries the lock once more. A release that skipped its wakeup
+ *    read the flag with the atomic operation that released the lock, so it
+ *    comes before the clear and that try sees the release; every later
+ *    release sees the flag clear and wakes as before;
+ *  - the first task leaving the list with the lock clears it: its own
+ *    release then wakes the next task. Leaving without the lock (signal,
+ *    ww back-off), it wakes the next task itself and leaves the flag set
+ *    for it, because a release that skipped may have left the lock free
+ *    with nobody else to wake that task.
+ *
+ * kd_mutex_woken=0 stops setting the flag (every release with parked tasks
+ * wakes the first one, as before); the clear-and-recheck rule always holds.
+ */
+static unsigned int kd_mutex_woken __read_mostly = 1;
+core_param(kd_mutex_woken, kd_mutex_woken, uint, 0644);
+
+static __always_inline bool kd_mutex_is_woken(struct kd_mutex *m)
+{
+	return READ_ONCE(m->q.flags) & KD_QF_WOKEN;
+}
+
+/* Under ->wait_lock: the first parked task is awake from now on. */
+static __always_inline void kd_mutex_mark_woken(struct kd_mutex *m)
+{
+	if (READ_ONCE(kd_mutex_woken) && !kd_mutex_is_woken(m))
+		atomic_or(KD_QF_WOKEN << KD_QF_SHIFT, &m->q.val);
+}
+
+/*
  * Sleeping acquisition. Also the complete lock path for callers that never
  * spin (rwsem readers queueing behind writers, ww mutexes).
  *
@@ -141,8 +188,9 @@ static void kd_mutex_spin_first(struct kd_mutex *m, struct kd_mutex_waiter *w,
 int kd_mutex_sleep(struct kd_mutex *m, unsigned int state, struct kd_ww_wait *ww)
 {
 	struct kd_mutex_waiter w = { .task = current, .ww_ctx = ww ? ww->ctx : NULL };
+	DEFINE_WAKE_Q(wake_q);
 	unsigned long flags;
-	bool asked_handoff = false;
+	bool asked_handoff = false, first;
 	int tries = 0, ret = 0;
 
 	if (kd_mutex_trylock_as(m, current))
@@ -154,8 +202,6 @@ int kd_mutex_sleep(struct kd_mutex *m, unsigned int state, struct kd_ww_wait *ww
 	atomic_or(KD_QF_SLEEPERS << KD_QF_SHIFT, &m->q.val);
 
 	for (;;) {
-		bool first;
-
 		if (w.granted)
 			break;
 		if (kd_mutex_trylock_as(m, current))
@@ -185,12 +231,20 @@ int kd_mutex_sleep(struct kd_mutex *m, unsigned int state, struct kd_ww_wait *ww
 			 * spinning stopped for need_resched(), the next pass does
 			 * not spin (kd_mutex_can_spin() is false) and sleeps.
 			 */
+			kd_mutex_mark_woken(m);
 			kd_wait_unlock(m, flags);
 			kd_mutex_spin_first(m, &w, ww);
 			flags = kd_wait_lock(m);
 			continue;
 		}
 		set_current_state(state);
+		if (first && kd_mutex_is_woken(m)) {
+			/* Releases may have skipped this task (KD_QF_WOKEN). */
+			atomic_andnot(KD_QF_WOKEN << KD_QF_SHIFT, &m->q.val);
+			smp_mb__after_atomic();
+			if (kd_mutex_trylock_as(m, current))
+				break;
+		}
 		kd_wait_unlock(m, flags);
 		raw_cpu_inc(kd_cpu.stat[KD_STAT_PARKED]);	/* approximate */
 		schedule();
@@ -198,6 +252,7 @@ int kd_mutex_sleep(struct kd_mutex *m, unsigned int state, struct kd_ww_wait *ww
 	}
 	__set_current_state(TASK_RUNNING);
 
+	first = list_first_entry(&m->waiters, struct kd_mutex_waiter, list) == &w;
 	list_del(&w.list);
 	/*
 	 * A handoff request that was not consumed by a release must not
@@ -206,9 +261,18 @@ int kd_mutex_sleep(struct kd_mutex *m, unsigned int state, struct kd_ww_wait *ww
 	 */
 	if (asked_handoff && !w.granted)
 		atomic_andnot(KD_QF_HANDOFF << KD_QF_SHIFT, &m->q.val);
-	if (list_empty(&m->waiters))
-		atomic_andnot(KD_QF_SLEEPERS << KD_QF_SHIFT, &m->q.val);
+	if (list_empty(&m->waiters)) {
+		atomic_andnot((KD_QF_SLEEPERS | KD_QF_WOKEN) << KD_QF_SHIFT, &m->q.val);
+	} else if (first && kd_mutex_is_woken(m)) {
+		/* The flag passes to the next task; see KD_QF_WOKEN. */
+		if (ret)
+			wake_q_add(&wake_q, list_first_entry(&m->waiters,
+					struct kd_mutex_waiter, list)->task);
+		else
+			atomic_andnot(KD_QF_WOKEN << KD_QF_SHIFT, &m->q.val);
+	}
 	kd_wait_unlock(m, flags);
+	wake_up_q(&wake_q);
 	return ret;
 }
 
@@ -402,8 +466,11 @@ static noinline void kd_mutex_wake_first(struct kd_mutex *m)
 
 	flags = kd_wait_lock(m);
 	w = list_first_entry_or_null(&m->waiters, struct kd_mutex_waiter, list);
-	if (w)
+	/* Another release may have woken it since this one read the flags. */
+	if (w && !kd_mutex_is_woken(m)) {
+		kd_mutex_mark_woken(m);
 		wake_q_add(&wake_q, w->task);
+	}
 	kd_wait_unlock(m, flags);
 	wake_up_q(&wake_q);
 }
@@ -458,8 +525,10 @@ static noinline void kd_mutex_handoff(struct kd_mutex *m)
 		w->granted = true;
 		WRITE_ONCE(m->owner, w->task);
 	}
-	if (w)
+	if (w) {
+		kd_mutex_mark_woken(m);
 		wake_q_add(&wake_q, w->task);
+	}
 	kd_wait_unlock(m, flags);
 	wake_up_q(&wake_q);
 }
@@ -490,8 +559,9 @@ static noinline void kd_mutex_unlock_slow(struct kd_mutex *m, int old)
 		}
 		if (old & (KD_QF_HANDOFF << KD_QF_SHIFT))
 			kd_mutex_handoff(m);
-		else if (old & (KD_QF_SLEEPERS << KD_QF_SHIFT))
-			kd_mutex_wake_first(m);
+		else if ((old & ((KD_QF_SLEEPERS | KD_QF_WOKEN) << KD_QF_SHIFT)) ==
+			 (KD_QF_SLEEPERS << KD_QF_SHIFT))
+			kd_mutex_wake_first(m);		/* not when awake: KD_QF_WOKEN */
 		return;
 	}
 }

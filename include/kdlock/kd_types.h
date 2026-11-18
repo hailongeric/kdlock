@@ -67,6 +67,13 @@ struct kd_qlock {
  * head role over (role exchange, kd_release_combine() in kd_core.c).
  */
 #define KD_QF_XHEAD		0x08
+/*
+ * The first parked task has been woken, or is spinning, and has not gone
+ * back to sleep since: it looks at the lock again before it sleeps, so a
+ * release need not wake it (kd_mutex_sleep() in kd_mutex.c). Set and
+ * cleared under ->wait_lock only.
+ */
+#define KD_QF_WOKEN		0x10
 #define KD_QF_SHIFT		8
 
 #define __KD_QLOCK_UNLOCKED	{ { .val = ATOMIC_INIT(0) } }

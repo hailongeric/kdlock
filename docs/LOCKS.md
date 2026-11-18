@@ -189,6 +189,27 @@ call.
   release and nothing is read after it (either costs a cache transfer on
   the handover path); what a flag asks for (`SLEEPERS`, `HANDOFF`, `XHEAD`)
   is done after the release, with the lock taken again where needed.
+* **A parked waiter is woken once** (`KD_QF_WOKEN`, `kd_mutex_woken`,
+  default 1). A release that finds `SLEEPERS` wakes the first parked task
+  and sets `WOKEN`; a release that finds both does nothing more. The first
+  parked task sets the flag itself when it starts to spin, and before it
+  sleeps again it clears the flag under `wait_lock` and, after a full
+  barrier, tries the lock once more: a release that skipped its wakeup
+  read the flag with the atomic operation that released the lock, so that
+  try sees the release. A first task that leaves the list with the lock
+  clears the flag; one that leaves without it (signal, ww back-off) wakes
+  the next one and leaves the flag set for it. All flag changes are made
+  under `wait_lock`. Before, every release took `wait_lock`, in the mutex's
+  own cache line, while any task was parked, to wake a first task that was
+  usually woken already and on its way to its CPU or spinning: locktorture
+  mutex_lock with 64 writers made 350 000 `wake_up_q()` calls per second
+  (ftrace function profiler), 98% of those wakeup passes found `wait_lock`
+  taken by another one (kprobe counts), and 15.8% of all samples were in
+  that wait (native: 0.3% in its spinlock slow path). With the flag: 3 800 calls per second and
+  0.08% of the samples. kdall9, one boot, 3 rounds, `kd_mutex_woken` 1
+  against 0, writes per 30 s: mutex_lock 1.30x with 64 writers and 1.85x
+  with 128, ww_mutex_lock 1.09x with 64 (128 and rwsem_lock within the
+  spread) (`bench/results/kdclaude/kdall-native-20261117-64cpu/`, 8.4).
 * `owner` is the **logical** owner (the origin, also for delegated sections).
   `kd_mutex_nested` takes it for `r->task`.
 * Signals: while a waiter spins in the queue it does not observe signals
@@ -373,6 +394,7 @@ sees neither effect.
 | `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
 | `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |
 | `kd_handoff_running` (core param, 0644) | 1 | mutex handoff only to a parked waiter that is running; 0: also to a sleeping one |
+| `kd_mutex_woken` (core param, 0644) | 1 | mutex: a release does not wake a first parked waiter that is awake already (`KD_QF_WOKEN`); 0: the flag is no longer set, and every release with parked waiters wakes the first one |
 | `kd_adapt` (core param, 0644) | 1 | plain mode below the queue depths that follow; 0: always delegation mode |
 | `kd_deleg_enter` (core param, 0644) | 5 | spinlock: waiters behind a queue head that switch the lock to delegation mode |
 | `kd_deleg_enter_sleep` (core param, 0644) | 3 | the same for a mutex |
