@@ -16,7 +16,7 @@ import os
 import re
 
 NATIVE_LOCK = re.compile(
-    r"^(native_queued_spin_lock_slowpath|queued_(read|write)_lock_slowpath|osq_lock|"
+    r"^((native_)?queued_spin_lock_slowpath|queued_(read|write)_lock_slowpath|osq_lock|"
     r"mutex_spin_on_owner|__mutex_lock.*|mutex_lock.*|rwsem_spin_on_owner|"
     r"rwsem_down_(read|write)_slowpath|rwsem_optimistic_spin|"
     r"_raw_spin_lock.*|_raw_read_lock.*|_raw_write_lock.*|__pv_queued_spin_lock_slowpath)$")
