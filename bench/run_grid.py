@@ -41,6 +41,12 @@ PROFILES = {
     "rwlock_c01_w20": ("rwlock", 1, 20, 256),
     "rwlock_c16_w1": ("rwlock", 16, 1, 256),
     "rwlock_c16_w20": ("rwlock", 16, 20, 256),
+    # 8 lines: the c01/c08 grid of the application round (appgrid-20261118).
+    "mutex_c08": ("mutex", 8, 100, 256),
+    "rwsem_c08_w1": ("rwsem", 8, 1, 256),
+    "rwsem_c08_w20": ("rwsem", 8, 20, 256),
+    "rwlock_c08_w1": ("rwlock", 8, 1, 256),
+    "rwlock_c08_w20": ("rwlock", 8, 20, 256),
     # Writers only: the delegation path of the rw families without readers.
     "rwsem_c01_w100": ("rwsem", 1, 100, 256),
     "rwlock_c01_w100": ("rwlock", 1, 100, 256),
@@ -67,7 +73,13 @@ PROFILES = {
     "rwsem_c16_w20_cl": ("rwsem_cl", 16, 20, 256),
 }
 # The default grid; the other profiles are run on request.
-GRID = [p for p in PROFILES if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100", "_cl"))]
+C08 = ["mutex_c08", "rwsem_c08_w1", "rwsem_c08_w20", "rwlock_c08_w1", "rwlock_c08_w20"]
+GRID = [p for p in PROFILES
+        if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100", "_cl")) and p not in C08]
+# Cachelines 1 and 8 of every family (--profiles appgrid).
+APPGRID = ["spin_c01", "spin_c08", "mutex_c01", "mutex_c08",
+           "rwsem_c01_w1", "rwsem_c08_w1", "rwsem_c01_w20", "rwsem_c08_w20",
+           "rwlock_c01_w1", "rwlock_c08_w1", "rwlock_c01_w20", "rwlock_c08_w20"]
 # 1-8 one by one, then every fourth up to 64 (the user asked for this grid on
 # 2026-11-15; rounds up to 9 had 40, 48, 56, 64 instead of every fourth).
 WORKERS = [1, 2, 3, 4, 5, 6, 7, 8] + list(range(12, 65, 4))
@@ -92,7 +104,7 @@ def identity():
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", required=True, help="JSON lines file (appended)")
-    ap.add_argument("--profiles", nargs="+", default=GRID, choices=PROFILES)
+    ap.add_argument("--profiles", nargs="+", default=GRID, choices=list(PROFILES) + ["appgrid"])
     ap.add_argument("--workers", type=int, nargs="+", default=WORKERS)
     ap.add_argument("--rounds", type=int, default=1)
     ap.add_argument("--ms", type=int, default=2000)
@@ -102,6 +114,8 @@ def main():
     ap.add_argument("--backends", nargs="+", default=["native", "kd"],
                     choices=list(run_nano.BACKEND))
     args = ap.parse_args()
+    if "appgrid" in args.profiles:
+        args.profiles = [p for p in args.profiles if p != "appgrid"] + APPGRID
 
     ident = identity()
     if args.commit:
