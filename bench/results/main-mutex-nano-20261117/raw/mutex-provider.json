@@ -1,0 +1,14 @@
+{
+  "batch_size": "1024",
+  "clobber_fixture_address": "ffffffffc0015130",
+  "kd_bench:kmix_mix": "ffffffffc00173f0",
+  "kd_bench:kmutex_w": "ffffffffc0015420",
+  "kd_bench:nmutex_w": "ffffffffc0014640",
+  "kd_bench:t_mutex": "ffffffffc0627980",
+  "kd_bench:tmutex_w": "ffffffffc00170c0",
+  "target_lock": "0xffffffffc0627980",
+  "tclock_mutex_backend_km:komb_mutex_lock": "ffffffffc000f390",
+  "tclock_mutex_backend_km:komb_mutex_unlock": "ffffffffc000e6d0",
+  "tclock_mutex_backend_km:tc_mutex_worker_register": "ffffffffc000e540",
+  "tclock_mutex_backend_km:tc_mutex_workers_drain": "ffffffffc000e3e0"
+}

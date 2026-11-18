@@ -1,0 +1,476 @@
+{
+  "build_id": "7a0b931c3fd02792c24a0ced99af882727b6d151",
+  "points": {
+    "kd-3": [
+      [
+        "ffffffff8142c449",
+        "kd_wait_sleepable",
+        125
+      ],
+      [
+        "ffffffff8142c1f2",
+        "kd_wait_sleepable",
+        86
+      ],
+      [
+        "ffffffff8142e623",
+        "kd_mutex_can_spin",
+        84
+      ],
+      [
+        "ffffffff8142c440",
+        "kd_wait_sleepable",
+        77
+      ]
+    ],
+    "kd-5": [
+      [
+        "ffffffff8142c268",
+        "kd_wait_sleepable",
+        857
+      ],
+      [
+        "ffffffff8142c26c",
+        "kd_wait_sleepable",
+        344
+      ],
+      [
+        "ffffffff8142c449",
+        "kd_wait_sleepable",
+        138
+      ],
+      [
+        "ffffffff8142c440",
+        "kd_wait_sleepable",
+        121
+      ]
+    ],
+    "native-3": [
+      [
+        "ffffffff814261c6",
+        "mutex_spin_on_owner",
+        114
+      ],
+      [
+        "ffffffff8260f196",
+        "__mutex_lock.constprop.0",
+        88
+      ],
+      [
+        "ffffffff81427630",
+        "osq_lock",
+        52
+      ],
+      [
+        "ffffffff8260f1c4",
+        "__mutex_lock.constprop.0",
+        52
+      ]
+    ],
+    "native-5": [
+      [
+        "ffffffff81427690",
+        "osq_lock",
+        623
+      ],
+      [
+        "ffffffff8142767e",
+        "osq_lock",
+        210
+      ],
+      [
+        "ffffffff81427693",
+        "osq_lock",
+        189
+      ],
+      [
+        "ffffffff814261c6",
+        "mutex_spin_on_owner",
+        137
+      ]
+    ]
+  },
+  "instructions": {
+    "__mutex_lock.constprop.0": {
+      "elf_start": "0xffffffff8260eb10",
+      "live_start": "0xffffffff8260eb10",
+      "symbols": {
+        "0xffffffff8260f196": {
+          "offset": "0x686",
+          "elf_addr": "0xffffffff8260f196",
+          "instruction": "jne    ffffffff8260f1c4 <__mutex_lock.constprop.0+0x6b4>",
+          "before_after": [
+            [
+              "0xffffffff8260f18d",
+              "or     %rcx,%rdx"
+            ],
+            [
+              "0xffffffff8260f190",
+              "lock cmpxchg %rdx,0x0(%r13)"
+            ],
+            [
+              "0xffffffff8260f196",
+              "jne    ffffffff8260f1c4 <__mutex_lock.constprop.0+0x6b4>"
+            ],
+            [
+              "0xffffffff8260f198",
+              "cmp    %rcx,%rbx"
+            ],
+            [
+              "0xffffffff8260f19b",
+              "je     ffffffff8260f3f4 <__mutex_lock.constprop.0+0x8e4>"
+            ]
+          ]
+        },
+        "0xffffffff8260f1c4": {
+          "offset": "0x6b4",
+          "elf_addr": "0xffffffff8260f1c4",
+          "instruction": "mov    %rax,%rsi",
+          "before_after": [
+            [
+              "0xffffffff8260f1be",
+              "pause"
+            ],
+            [
+              "0xffffffff8260f1c0",
+              "mov    0x0(%r13),%rax"
+            ],
+            [
+              "0xffffffff8260f1c4",
+              "mov    %rax,%rsi"
+            ],
+            [
+              "0xffffffff8260f1c7",
+              "and    $0xfffffffffffffff8,%rsi"
+            ],
+            [
+              "0xffffffff8260f1cb",
+              "jne    ffffffff8260f17b <__mutex_lock.constprop.0+0x66b>"
+            ]
+          ]
+        }
+      }
+    },
+    "kd_mutex_can_spin": {
+      "elf_start": "0xffffffff8142e610",
+      "live_start": "0xffffffff8142e610",
+      "symbols": {
+        "0xffffffff8142e623": {
+          "offset": "0x13",
+          "elf_addr": "0xffffffff8142e623",
+          "instruction": "mov    $0x1,%eax",
+          "before_after": [
+            [
+              "0xffffffff8142e61d",
+              "jne    ffffffff8142e663 <kd_mutex_can_spin+0x53>"
+            ],
+            [
+              "0xffffffff8142e61f",
+              "mov    0x8(%rdi),%rdx"
+            ],
+            [
+              "0xffffffff8142e623",
+              "mov    $0x1,%eax"
+            ],
+            [
+              "0xffffffff8142e628",
+              "test   %rdx,%rdx"
+            ],
+            [
+              "0xffffffff8142e62b",
+              "je     ffffffff8142e636 <kd_mutex_can_spin+0x26>"
+            ]
+          ]
+        }
+      }
+    },
+    "kd_wait_sleepable": {
+      "elf_start": "0xffffffff8142c0f0",
+      "live_start": "0xffffffff8142c0f0",
+      "symbols": {
+        "0xffffffff8142c1f2": {
+          "offset": "0x102",
+          "elf_addr": "0xffffffff8142c1f2",
+          "instruction": "test   %ax,%ax",
+          "before_after": [
+            [
+              "0xffffffff8142c1e9",
+              "movzwl 0xc(%r13),%eax"
+            ],
+            [
+              "0xffffffff8142c1ee",
+              "xchg   %ax,0x2(%rbx)"
+            ],
+            [
+              "0xffffffff8142c1f2",
+              "test   %ax,%ax"
+            ],
+            [
+              "0xffffffff8142c1f5",
+              "je     ffffffff8142c2e9 <kd_wait_sleepable+0x1f9>"
+            ],
+            [
+              "0xffffffff8142c1fb",
+              "mov    %eax,%ecx"
+            ]
+          ]
+        },
+        "0xffffffff8142c268": {
+          "offset": "0x178",
+          "elf_addr": "0xffffffff8142c268",
+          "instruction": "mov    0x8(%r13),%eax",
+          "before_after": [
+            [
+              "0xffffffff8142c264",
+              "jmp    ffffffff8142c279 <kd_wait_sleepable+0x189>"
+            ],
+            [
+              "0xffffffff8142c266",
+              "pause"
+            ],
+            [
+              "0xffffffff8142c268",
+              "mov    0x8(%r13),%eax"
+            ],
+            [
+              "0xffffffff8142c26c",
+              "add    $0x1,%r15d"
+            ],
+            [
+              "0xffffffff8142c270",
+              "cmp    $0x1,%eax"
+            ]
+          ]
+        },
+        "0xffffffff8142c26c": {
+          "offset": "0x17c",
+          "elf_addr": "0xffffffff8142c26c",
+          "instruction": "add    $0x1,%r15d",
+          "before_after": [
+            [
+              "0xffffffff8142c266",
+              "pause"
+            ],
+            [
+              "0xffffffff8142c268",
+              "mov    0x8(%r13),%eax"
+            ],
+            [
+              "0xffffffff8142c26c",
+              "add    $0x1,%r15d"
+            ],
+            [
+              "0xffffffff8142c270",
+              "cmp    $0x1,%eax"
+            ],
+            [
+              "0xffffffff8142c273",
+              "jne    ffffffff8142c6b3 <kd_wait_sleepable+0x5c3>"
+            ]
+          ]
+        },
+        "0xffffffff8142c440": {
+          "offset": "0x350",
+          "elf_addr": "0xffffffff8142c440",
+          "instruction": "test   %al,%al",
+          "before_after": [
+            [
+              "0xffffffff8142c437",
+              "jne    ffffffff8142c333 <kd_wait_sleepable+0x243>"
+            ],
+            [
+              "0xffffffff8142c43d",
+              "movzbl (%rbx),%eax"
+            ],
+            [
+              "0xffffffff8142c440",
+              "test   %al,%al"
+            ],
+            [
+              "0xffffffff8142c442",
+              "jne    ffffffff8142c4bd <kd_wait_sleepable+0x3cd>"
+            ],
+            [
+              "0xffffffff8142c444",
+              "lock cmpxchg %r14b,(%rbx)"
+            ]
+          ]
+        },
+        "0xffffffff8142c449": {
+          "offset": "0x359",
+          "elf_addr": "0xffffffff8142c449",
+          "instruction": "test   %al,%al",
+          "before_after": [
+            [
+              "0xffffffff8142c442",
+              "jne    ffffffff8142c4bd <kd_wait_sleepable+0x3cd>"
+            ],
+            [
+              "0xffffffff8142c444",
+              "lock cmpxchg %r14b,(%rbx)"
+            ],
+            [
+              "0xffffffff8142c449",
+              "test   %al,%al"
+            ],
+            [
+              "0xffffffff8142c44b",
+              "jne    ffffffff8142c4bd <kd_wait_sleepable+0x3cd>"
+            ],
+            [
+              "0xffffffff8142c44d",
+              "mov    %gs:0x27a2bc3(%rip),%rax        # ffffffff83bcf018 <current_task>"
+            ]
+          ]
+        }
+      }
+    },
+    "mutex_spin_on_owner": {
+      "elf_start": "0xffffffff814261a0",
+      "live_start": "0xffffffff814261a0",
+      "symbols": {
+        "0xffffffff814261c6": {
+          "offset": "0x26",
+          "elf_addr": "0xffffffff814261c6",
+          "instruction": "and    $0xfffffffffffffff8,%rax",
+          "before_after": [
+            [
+              "0xffffffff814261c1",
+              "je     ffffffff81426234 <mutex_spin_on_owner+0x94>"
+            ],
+            [
+              "0xffffffff814261c3",
+              "mov    (%r8),%rax"
+            ],
+            [
+              "0xffffffff814261c6",
+              "and    $0xfffffffffffffff8,%rax"
+            ],
+            [
+              "0xffffffff814261ca",
+              "cmp    %rax,%r9"
+            ],
+            [
+              "0xffffffff814261cd",
+              "jne    ffffffff8142623b <mutex_spin_on_owner+0x9b>"
+            ]
+          ]
+        }
+      }
+    },
+    "osq_lock": {
+      "elf_start": "0xffffffff814275f0",
+      "live_start": "0xffffffff814275f0",
+      "symbols": {
+        "0xffffffff81427630": {
+          "offset": "0x40",
+          "elf_addr": "0xffffffff81427630",
+          "instruction": "test   %eax,%eax",
+          "before_after": [
+            [
+              "0xffffffff8142762b",
+              "mov    %eax,0x14(%rbx)"
+            ],
+            [
+              "0xffffffff8142762e",
+              "xchg   %eax,(%rdi)"
+            ],
+            [
+              "0xffffffff81427630",
+              "test   %eax,%eax"
+            ],
+            [
+              "0xffffffff81427632",
+              "je     ffffffff814276fe <osq_lock+0x10e>"
+            ],
+            [
+              "0xffffffff81427638",
+              "sub    $0x1,%eax"
+            ]
+          ]
+        },
+        "0xffffffff8142767e": {
+          "offset": "0x8e",
+          "elf_addr": "0xffffffff8142767e",
+          "instruction": "sub    $0x1,%edi",
+          "before_after": [
+            [
+              "0xffffffff81427677",
+              "mov    0x8(%rbx),%rax"
+            ],
+            [
+              "0xffffffff8142767b",
+              "mov    0x14(%rax),%edi"
+            ],
+            [
+              "0xffffffff8142767e",
+              "sub    $0x1,%edi"
+            ],
+            [
+              "0xffffffff81427681",
+              "movslq %edi,%rdi"
+            ],
+            [
+              "0xffffffff81427684",
+              "call   *0x1e3dff6(%rip)        # ffffffff83265680 <pv_ops_lock+0x20>"
+            ]
+          ]
+        },
+        "0xffffffff81427690": {
+          "offset": "0xa0",
+          "elf_addr": "0xffffffff81427690",
+          "instruction": "mov    0x10(%rbx),%eax",
+          "before_after": [
+            [
+              "0xffffffff8142768c",
+              "jne    ffffffff8142769e <osq_lock+0xae>"
+            ],
+            [
+              "0xffffffff8142768e",
+              "pause"
+            ],
+            [
+              "0xffffffff81427690",
+              "mov    0x10(%rbx),%eax"
+            ],
+            [
+              "0xffffffff81427693",
+              "test   %eax,%eax"
+            ],
+            [
+              "0xffffffff81427695",
+              "jne    ffffffff814276fe <osq_lock+0x10e>"
+            ]
+          ]
+        },
+        "0xffffffff81427693": {
+          "offset": "0xa3",
+          "elf_addr": "0xffffffff81427693",
+          "instruction": "test   %eax,%eax",
+          "before_after": [
+            [
+              "0xffffffff8142768e",
+              "pause"
+            ],
+            [
+              "0xffffffff81427690",
+              "mov    0x10(%rbx),%eax"
+            ],
+            [
+              "0xffffffff81427693",
+              "test   %eax,%eax"
+            ],
+            [
+              "0xffffffff81427695",
+              "jne    ffffffff814276fe <osq_lock+0x10e>"
+            ],
+            [
+              "0xffffffff81427697",
+              "mov    (%r9),%rax"
+            ]
+          ]
+        }
+      }
+    }
+  }
+}

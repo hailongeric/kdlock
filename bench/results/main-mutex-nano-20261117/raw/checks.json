@@ -1,0 +1,82 @@
+{
+  "mix": [
+    {
+      "cl_done": 0,
+      "cl_offered": 0,
+      "delegated": 1079114,
+      "handback": 72143,
+      "handoff": 8,
+      "hb_acquire": 0,
+      "hb_frontier": 71881,
+      "hb_miss": 262,
+      "head_sleep": 24,
+      "mode_enter": 40,
+      "mode_exit": 40,
+      "numa_deferred": 0,
+      "offered": 1151389,
+      "parked": 26,
+      "plain": 625314,
+      "sessions": 72186,
+      "stop_plain": 1
+    },
+    {
+      "cl_done": 0,
+      "cl_offered": 0,
+      "delegated": 1689169,
+      "handback": 112653,
+      "handoff": 38,
+      "hb_acquire": 0,
+      "hb_frontier": 112653,
+      "hb_miss": 0,
+      "head_sleep": 64,
+      "mode_enter": 4,
+      "mode_exit": 4,
+      "numa_deferred": 1080574,
+      "offered": 1802186,
+      "parked": 136,
+      "plain": 890,
+      "sessions": 112721,
+      "stop_plain": 0
+    }
+  ],
+  "mutex_cl": [
+    {
+      "cl_done": 0,
+      "cl_offered": 0,
+      "delegated": 809619,
+      "handback": 0,
+      "handoff": 1,
+      "hb_acquire": 0,
+      "hb_frontier": 0,
+      "hb_miss": 0,
+      "head_sleep": 6,
+      "mode_enter": 3498,
+      "mode_exit": 3498,
+      "numa_deferred": 0,
+      "offered": 825677,
+      "parked": 8,
+      "plain": 776119,
+      "sessions": 3529,
+      "stop_plain": 62
+    },
+    {
+      "cl_done": 0,
+      "cl_offered": 0,
+      "delegated": 3959770,
+      "handback": 0,
+      "handoff": 14,
+      "hb_acquire": 0,
+      "hb_frontier": 0,
+      "hb_miss": 0,
+      "head_sleep": 0,
+      "mode_enter": 1,
+      "mode_exit": 1,
+      "numa_deferred": 23433,
+      "offered": 3961374,
+      "parked": 33,
+      "plain": 328,
+      "sessions": 1488,
+      "stop_plain": 0
+    }
+  ]
+}

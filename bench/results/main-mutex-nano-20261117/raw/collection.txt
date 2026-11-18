@@ -1,0 +1,12 @@
+result {'rc': 0, 'start': 1794971513.7466636, 'finish': 1794971903.0382226, 'boot_id': 'fc8104fd-5e0c-406f-b93e-e7c6e6cabf6d'} log tail KDMAIN_MUTEX_PROGRESS learning
+KDMAIN_MUTEX_PROGRESS three-way round=0
+KDMAIN_MUTEX_PROGRESS three-way round=1
+KDMAIN_MUTEX_PROGRESS three-way round=2
+KDMAIN_MUTEX_PROGRESS threshold round=0
+KDMAIN_MUTEX_PROGRESS threshold round=1
+KDMAIN_MUTEX_PROGRESS threshold round=2
+KDMAIN_MUTEX_PROGRESS mutex functional checks
+KDMAIN_MUTEX_PROGRESS cleanup
+KDMAIN_MUTEX_RESULT {"status": "completed", "error": null, "cleanup_errors": [], "start": 1794971513.8311603, "finish": 1794971903.009694, "boot_id": "fc8104fd-5e0c-406f-b93e-e7c6e6cabf6d"}
+
+ARCHIVE {"bytes": 260799, "sha256": "dd70c3b0258dd36170c0d80244af02d7b1c59e20d128f0b369e4034417aa2693"}

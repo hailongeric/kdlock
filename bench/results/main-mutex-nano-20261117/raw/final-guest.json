@@ -1,0 +1,18 @@
+{
+  "boot": "fc8104fd-5e0c-406f-b93e-e7c6e6cabf6d",
+  "kernel": "7.0.0-38-kdlocalspin6",
+  "modules": "nls_iso8859_1 12288 1 - Live 0xffffffffc000a000 (O)",
+  "jobs": "",
+  "processes": [],
+  "params": {
+    "kd_adapt": "Y",
+    "kd_deleg_enter_sleep": "3",
+    "kd_deleg_exit": "2",
+    "kd_batch": "4096",
+    "kd_handoff_running": "1",
+    "kd_numa": "Y",
+    "kd_numa_after": "32"
+  },
+  "warnings": [],
+  "taint": "4096"
+}

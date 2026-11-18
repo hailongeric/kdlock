@@ -1,0 +1,32 @@
+{
+  "archive_sha256": "dd70c3b0258dd36170c0d80244af02d7b1c59e20d128f0b369e4034417aa2693",
+  "archive_bytes": 260799,
+  "archive_regular_files_verified": 31,
+  "runner_sha256": "a1de723056f7ffafe26ed566b3790f8626acc6ff258b20154dc80abf680ae609",
+  "points_sha256": "4772e4aeb8114f68d69a1e8e766bf93d3731a8b99694c5715e0c9c9b70f2bb17",
+  "kernel_build_image_sha256": "36e0153ae0f05b0fd19b0266aec780f9b34bbad319d9a818de16a053249b2089",
+  "config_sha256": "1395ae1ff15c215ab680dbb5a4a8af074044cc7de35be82004ddf2647f01ca64",
+  "signed_loaded_inputs": {
+    "kd_bench.ko": "9750268c6704b94450075a2b5349eb8efd1e759da56081fce64556e37e8e0c43",
+    "tclock_mutex_backend_km.ko": "c517980c429f8e170c6364d80f766d51b86b2154693dcc4976dca935701a3915",
+    "tclock_rwlock_backend_km.ko": "eff99768b48f34dcb30043af287ad6bcb3ea9da5d995114f707a8fbca9dddb55",
+    "tclock_rwsem_backend_km.ko": "7afb97ab1db61e694847e036084d535cf8f26a22cd533a53d344c778a350ded7",
+    "tclock_backend_km.ko": "8ddc08680eb7caa9df985249c1560195afd7de58c71b460442137c12829e1e13"
+  },
+  "frozen_source_files_checked_in_checkout": 131,
+  "phase_counts": {
+    "functional-control": 2,
+    "functional-kd": 4,
+    "learning": 1,
+    "three-way": 162,
+    "three-way-warmup": 162,
+    "threshold": 120,
+    "threshold-warmup": 120
+  },
+  "points": 571,
+  "raw_oracle_and_coverage_discrepancies": [],
+  "global_kd_activity_during_reference_points": {},
+  "api_failed_checks": 0,
+  "result": "completed",
+  "elapsed_seconds": 389.1785337924957
+}

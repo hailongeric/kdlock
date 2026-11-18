@@ -205,6 +205,14 @@ call.
 * A mutex section that blocks (calls anything that can sleep) is handed back
   to its origin at that call; the origin continues as the ordinary owner.
 
+On the 380G10 mutex nano, keeping entry depth 3 and lowering exit depth
+from 2 to 1 kept delegation active through short dips in queue depth.
+At 6 workers writing 16 cache lines, throughput rose from 2.684 to 3.087
+Mops/s. At 8 workers writing one line, it rose from 3.785 to 4.428
+Mops/s. Exit depth 1 lost 1.4% at 16 workers on one line and 1.9% at
+32 workers on 16 lines. The shared `kd_deleg_exit` default is 2.
+[Mutex nano comparison and execution counts](../bench/results/main-mutex-nano-20261117/README.md)
+
 ## 5. Rwsem
 
 * `count`: writer bit, waiting-writer bit, need-wake bit, reader bias. A

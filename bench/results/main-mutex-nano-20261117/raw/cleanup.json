@@ -1,0 +1,50 @@
+{
+  "boot_id": "fc8104fd-5e0c-406f-b93e-e7c6e6cabf6d",
+  "cleanup_errors": [],
+  "daemon_rc": 0,
+  "final_params": {
+    "kd_adapt": "Y",
+    "kd_api": "0",
+    "kd_batch": "4096",
+    "kd_cldemote": "3",
+    "kd_deleg_enter": "5",
+    "kd_deleg_enter_sleep": "3",
+    "kd_deleg_exit": "2",
+    "kd_handoff_running": "1",
+    "kd_mm": "N",
+    "kd_numa": "Y",
+    "kd_numa_after": "32",
+    "kd_spin_phase_wait": "0",
+    "kd_spin_queue_phase": "Y",
+    "kd_vdown": "1",
+    "kd_xchg": "1"
+  },
+  "initial_params": {
+    "kd_adapt": "Y",
+    "kd_api": "0",
+    "kd_batch": "4096",
+    "kd_cldemote": "3",
+    "kd_deleg_enter": "5",
+    "kd_deleg_enter_sleep": "3",
+    "kd_deleg_exit": "2",
+    "kd_handoff_running": "1",
+    "kd_mm": "N",
+    "kd_numa": "Y",
+    "kd_numa_after": "32",
+    "kd_spin_phase_wait": "0",
+    "kd_spin_queue_phase": "Y",
+    "kd_vdown": "1",
+    "kd_xchg": "1"
+  },
+  "modules": [
+    "nls_iso8859_1"
+  ],
+  "taint": "4096",
+  "unloaded": [
+    "kd_bench",
+    "tclock_rwsem_backend_km",
+    "tclock_rwlock_backend_km",
+    "tclock_mutex_backend_km",
+    "tclock_backend_km"
+  ]
+}
