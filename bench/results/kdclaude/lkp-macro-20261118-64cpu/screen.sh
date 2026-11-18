@@ -89,11 +89,11 @@ point() {
 }
 
 # will-it-scale: thread (wis) and process (wisp) models.
-W=$B/wis-upstream/build
+W=$B/wis-upstream
 wis1() { cd $O/tmp && timeout $((DUR + 30)) $W/$1 -t $2 -s $DUR | grep "^average:" | cut -d: -f2; }
 g_wis() {
 	local t n
-	for t in brk1 brk2 malloc1 mmap1 mmap2 page_fault1 page_fault2 page_fault3 \
+	for t in brk1 brk2 mmap1 mmap2 page_fault1 page_fault2 page_fault3 \
 		 tlb_flush1 tlb_flush2 tlb_flush3 signal1 dup1 lock2 open1 open3 unlink1 \
 		 pwrite2 pwrite3 writeseek3 readseek2 lseek2 read2 pread2 futex1 futex2 \
 		 pthread_mutex1 pthread_mutex3 pthread_mutex4 posix_semaphore1 \
@@ -109,20 +109,26 @@ g_wisp() {
 }
 
 # stress-ng, lkp's options (--times --verify --metrics), one stressor at a time.
+# Work files on tmpfs (lkp gives the file stressors a mounted test
+# directory); a fresh YAML file per run, so a stressor that fails reports 0.
+SNGD=/root/lkpsng
 sng1() {
-	cd $O/tmp && timeout $((DUR + 60)) $B/stress-ng/stress-ng --$1 $2 --timeout $DUR \
-		--verify --metrics --no-rand-seed --yaml $O/tmp/sng.yaml > /dev/null 2>&1
-	awk '/bogo-ops-per-second-real-time/ {print $2}' $O/tmp/sng.yaml | head -1
+	rm -f $O/tmp/sng.yaml
+	cd $SNGD && timeout $((DUR + 60)) $B/stress-ng/stress-ng --$1 $2 --timeout $DUR \
+		--verify --metrics --no-rand-seed --temp-path $SNGD --yaml $O/tmp/sng.yaml > /dev/null 2>&1
+	[ -f $O/tmp/sng.yaml ] && awk '/bogo-ops-per-second-real-time/ {print $2}' $O/tmp/sng.yaml | head -1
 }
 g_sng() {
 	local s n
+	mkdir -p $SNGD; mountpoint -q $SNGD || mount -t tmpfs -o size=8G tmpfs $SNGD
 	for s in dentry dir link rename unlink getdent filerace open dup close inotify \
-		 fork vfork clone exit zombie wait kill signal sigq \
-		 sem semsysv msg mq shm shmsysv futex pipe pipeherd sock sockpair udp \
+		 fork vfork clone exit-group zombie wait kill signal sigq \
+		 sem sem-sysv msg mq shm shm-sysv futex pipe pipeherd sock sockpair udp \
 		 epoll eventfd switch vm mmap mmapfork mremap mprotect madvise brk vma \
 		 flock fcntl lockf lockofd tmpfs; do
 		for n in $NS; do point sng-$s $n bogo/s sng1 $s $n; done
 	done
+	cd /; umount $SNGD
 }
 
 # vm-scalability, cases with usemem only; throughput is the sum over tasks.
@@ -155,7 +161,8 @@ g_hackbench() {
 
 # perf bench futex (lkp's tests), ops/s.
 pbf1() { timeout $((DUR + 60)) perf bench futex $1 -t $2 -r $DUR 2>&1 | awk '/Averaged/ {print $2}' | tail -1; }
-pbf_wake() { timeout 120 perf bench futex wake-parallel -t $1 2>&1 | awk '/Averaged/ {for (i = 1; i <= NF; i++) if ($i ~ /ms/) print 1000 / $(i-1)}' | tail -1; }
+# wake-parallel prints the average per-thread wake latency; the rate is its inverse.
+pbf_wake() { timeout 120 perf bench futex wake-parallel -t $1 2>&1 | sed -n 's/^Avg per-thread latency.* in \([0-9.]*\) ms.*/\1/p' | tail -1 | awk '{print ($1 > 0) ? 1 / $1 : 0}'; }
 g_futex() {
 	local t n
 	for t in hash lock-pi; do for n in $NS; do point pbf-$t $n ops/s pbf1 $t $n; done; done
@@ -174,8 +181,8 @@ g_tlbflush() { local n; for n in $NS; do point tlbflush $n per-thread/ms tlb1 $n
 aim1() {
 	local d=$B/aim7/run; rm -rf $d; mkdir -p $d /fs/shm
 	mountpoint -q /fs/shm || mount -t tmpfs /dev/shm /fs/shm
-	cp -r $B/aim7/s7110/* $d/ 2>/dev/null || cp -r $B/aim7/*/* $d/
-	cd $d && printf 'FILESIZE: 1M\nPOOLSIZE: 10M\n10 %s\n' $1 > workfile && echo /fs/shm > config
+	cp -r $B/aim7/aim7/* $d/
+	cd $d && tar -xf fakeh.tar && printf 'FILESIZE: 1M\nPOOLSIZE: 10M\n10 %s\n' $1 > workfile && echo /fs/shm > config
 	echo "500 32000 128 512" > /proc/sys/kernel/sem
 	printf 'lkp\n%s\n1\n%s\n2\n%s\n1\n' $1 $2 $2 | timeout 600 ./multitask -t 2>&1 | \
 		awk '/^ *[0-9]+ +[0-9.]+/ {v = $2} END {print v + 0}'
@@ -192,22 +199,22 @@ fsm1() {
 	local M=/root/lkpfs; mkdir -p $M; mount -t tmpfs -o size=8G tmpfs $M
 	local d="" i; for i in $(seq 1 $1); do mkdir -p $M/d$i; d="$d -d $M/d$i"; done
 	cd /root && timeout 300 $B/fs_mark/fs_mark $d -n 2000 -s 4096 -L 3 -k 2>&1 | \
-		awk '$1 ~ /^[0-9]+$/ && NF >= 4 {v = $4} END {print v + 0}'
+		awk '/^Average Files\/sec:/ {print $3}'
 	umount $M
 }
 g_fsmark() { local n; for n in $NS; do point fsmark $n files/s fsm1 $n; done; }
 
 dbn1() {
 	local M=/root/lkpfs; mkdir -p $M; mount -t tmpfs -o size=8G tmpfs $M
-	timeout $((DUR + 60)) $B/dbench/dbench -c $B/dbench/loadfiles/client.txt -D $M -t $DUR $1 2>&1 | \
+	timeout $((DUR + 60)) $B/dbench/dbench -B fileio -c $B/dbench/loadfiles/client.load -D $M -t $DUR $1 2>&1 | \
 		awk '/^Throughput/ {print $2}'
 	umount $M
 }
 g_dbench() { local n; for n in $NS; do point dbench $n MB/s dbn1 $n; done; }
 
 ub1() {
-	cd $B/byte-unixbench/UnixBench && timeout 600 ./Run -q -c $2 -i 1 $1 2>&1 | \
-		awk '/^[A-Za-z].*[0-9.]+ +(lps|lpm|KBps)/ {v = $(NF - 1)} END {print v + 0}'
+	cd $B/byte-unixbench/UnixBench && timeout 600 ./Run -c $2 -i 1 $1 2>&1 | \
+		awk '/ (lps|lpm|KBps) +\(/ {for (i = 1; i < NF; i++) if ($(i + 1) ~ /^(lps|lpm|KBps)$/) v = $i} END {print v + 0}'
 }
 g_unixbench() {
 	local t n
