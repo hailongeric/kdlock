@@ -430,7 +430,17 @@ its learning pass in a degraded boot: its rates for memcg-heavy workloads
 are invalid, and the gains of 6.3 are, if anything, understated. The
 earlier rounds' kd on runs used api, torture and mm only; the bisection's
 first step (those three lists, `data/bisect/bisect-b1.out`) showed no
-slowdown, but the per-CPU bytes were not read there.
+slowdown, but the per-CPU bytes were not read there. The appgrid session
+then read them with `tools/pcpu.py` on a fresh kdall10 boot with api,
+torture and mm (master `b6041b6f`): 0 of 64 CPUs after delegated mmap1 and
+mmap2 (11-23 M sections, about 50 handbacks), **57 of 64 after delegated
+will-it-scale brk1** (1.06 M handbacks, all misses). So the fault is not
+specific to `lkp.txt`: any lock user with many misses inside accounted
+allocations triggers it. In its data, the appgrid kd on pass ran with the
+bytes set after brk1 (its on/off medians stay at 0.99-1.04, FxMark MRDM
+0.95), and the native comparison's c4/a4 boots (on before off) have off
+values within 0.94-1.06 of the clean boots. AGENTS.md on master now says to
+measure kd off before kd on within a boot.
 
 **Fix options** (not done here; a translator and kernel change for the
 maintained branch):
