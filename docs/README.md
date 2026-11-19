@@ -28,6 +28,7 @@ NUMA node at a time (ARCHITECTURE 7b). See
 | [MMAP_LOCKS.md](MMAP_LOCKS.md) | every lock inside the mmap write section, which of them kdlock can own, and what the will-it-scale counters say about each |
 | [DIFFERENCES.md](DIFFERENCES.md) | where goals or effects differ from the earlier kdlock documents and `AGENTS.md`, with priorities |
 | [PERF_PLAN.md](PERF_PLAN.md) | what stands between this state and defensible nano/micro numbers, split into tasks |
+| [HANDOFF.md](HANDOFF.md) | state of the work at the move to the cloud host (2026-11-19), how to work from there, what is next |
 
 Source layout (relative to the repository root):
 

@@ -90,9 +90,12 @@ Current validation limits:
 
 1. Read source and Git status before editing. Preserve unrelated work. Prose
    and comments are in English. Explain protocol purpose and ordering.
-2. Source edits, Git, static inspection and read-only checks run on `380G10`.
-   All builds, unit tests, modules, daemons and timing run only in the VM
-   described in BUILD_AND_TEST.md.
+2. Source edits, Git, static inspection and read-only checks run on the
+   cloud host in `/root/kdlock` (since 2026-11-19; it was `380G10`, whose
+   copy is now frozen; [MACHINES.md](MACHINES.md)). All builds, unit tests,
+   modules, daemons and timing run only in the VM described in
+   BUILD_AND_TEST.md. The state of the work and the next steps are in
+   [docs/HANDOFF.md](docs/HANDOFF.md).
 3. Run basic checks plus the directly affected ones. Full suites need an
    explicit user request. Missing dependencies, skips and compile failures are
    not passes.

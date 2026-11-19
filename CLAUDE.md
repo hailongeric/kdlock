@@ -1,0 +1,3 @@
+@AGENTS.md
+@MACHINES.md
+@docs/HANDOFF.md
