@@ -490,21 +490,76 @@ static int kd_rwsem_write_sleep_on(struct kd_rwsem *sem, unsigned int state)
 	return ret;
 }
 
+/*
+ * Plain mode: should a writer that has to wait do so asleep (parked on ->m)
+ * instead of spinning in the queue?
+ *
+ * A queued writer spins for as long as the holder of ->m runs, and that
+ * holder may itself only be waiting for readers. When the readers stay
+ * long, a queue of spinning writers is pure cost, and for the mmap lock it
+ * is more than that: every spinning thread keeps its mm live on a CPU, and
+ * the TLB flush of each munmap, made in the read part after the downgrade,
+ * has to interrupt all of them and wait for their answers. Apache with one
+ * process of 60 threads on kdall15: the server's threads occupied 34 CPUs,
+ * 77% of their time in kd_wait_sleepable(), at 23 k requests per second; on
+ * the native kernel, whose rwsem waiters sleep behind a reader-held lock,
+ * 3.5 CPUs and 31.5 k.
+ *
+ * The queue heads already measure how long the readers they find take to
+ * leave (kd_rw_era_writer(), an average per lock by hash). Above
+ * kd_rwsem_park_drain_ns a writer parks. 0: never (always queue).
+ *
+ * Measured on kdall16, no daemon, one boot, thresholds off / 5 us / 20 us,
+ * mean of 2 runs, against the native twin (another boot): Apache single
+ * process at 16, 32, 48 and 60 threads 1.05, 0.93, 0.76, 0.71 of native
+ * without it, 1.10, 1.27, 1.32, 1.31 with 5 us, 1.09, 0.91, 0.81, 0.79 with
+ * 20 us; Apache's default configuration 1.23 -> 1.37. will-it-scale with
+ * 5 us against none: mmap1 0.95-0.98, brk1 0.90-0.99 (the average crosses
+ * the threshold at times: 48 000 parked waits in 10 s at 16 threads against
+ * 4 000), page_fault1 and page_fault3 unchanged. The threshold is the one
+ * above which a lock gets no era either (kd_rw_era_drain_ns).
+ */
+static unsigned int kd_rwsem_park_drain_ns __read_mostly = 5000;
+core_param(kd_rwsem_park_drain_ns, kd_rwsem_park_drain_ns, uint, 0644);
+
+static __always_inline bool kd_rwsem_park(struct kd_rwsem *sem)
+{
+	unsigned int ns = READ_ONCE(kd_rwsem_park_drain_ns);
+
+	return ns && READ_ONCE(kd_rw_era_ns) && kd_rw_era_drain(sem) > ns;
+}
+
 static int __kd_down_write_sleep(struct kd_rwsem *sem, int why, unsigned int state)
 {
 	int ret;
 
 	might_sleep();
 	if (why != KD_WAIT_SLEEP_HELD) {
+		bool era = READ_ONCE(kd_rw_era_ns);
+		u64 t0 = 0;
+		long nr;
+
 		ret = kd_mutex_sleep(&sem->m, state, NULL);
 		if (ret)
 			return ret;
-		atomic_long_or(KD_RWSEM_WWAIT, &sem->count);
+		/*
+		 * A parked writer that got ->m is a queue head like the one in
+		 * kd_rwsem_post() and reports the same measurements; otherwise a
+		 * lock whose writers all park (kd_rwsem_park()) would keep the
+		 * average that sent them there.
+		 */
+		nr = atomic_long_fetch_or(KD_RWSEM_WWAIT, &sem->count) >> KD_RWSEM_RSHIFT;
+		if (era && nr)
+			t0 = local_clock();
 		if (kd_rwsem_spin_for(sem, true)) {
+			if (era)
+				kd_rw_era_writer(sem, nr, 0, t0 ? local_clock() - t0 : 0);
 			kd_rwsem_phase_change(sem);
 			kd_mutex_unlock(&sem->m);
 			return 0;
 		}
+		if (era)
+			kd_rw_era_writer(sem, nr, 0, READ_ONCE(kd_rwsem_wspin_ns));
 	}
 	ret = kd_rwsem_write_sleep_on(sem, state);
 	if (ret) {
@@ -550,6 +605,11 @@ static __always_inline int __kd_down_write_slow(struct kd_rwsem *sem, unsigned l
 	preempt_disable();
 	if (kd_can_offer(site))
 		return KD_SLOW_OFFER;
+	if (kd_rwsem_park(sem)) {
+		/* Readers stay long in this lock: wait asleep, not in the queue. */
+		preempt_enable();
+		return __kd_down_write_sleep(sem, KD_WAIT_SLEEP, state);
+	}
 	ret = kd_wait_sleepable(&sem->m, sem, &kd_rwsem_family, NULL, NULL, false);
 	preempt_enable();
 	if (ret == KD_WAIT_LOCAL)

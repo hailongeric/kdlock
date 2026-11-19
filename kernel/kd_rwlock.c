@@ -39,17 +39,27 @@
 static bool kd_rw_post(void *root, struct kd_node *head)
 {
 	struct kd_rwlock *rw = root;
-	/* Without eras nothing is measured: kd_rw_era_ns=0 costs this one load. */
-	bool era = READ_ONCE(kd_rw_era_ns);
-	int c, nr;
+	/*
+	 * Without eras nothing is measured: kd_rw_era_ns=0 costs this one load.
+	 * With them, one acquisition in kd_rw_era_sample of this CPU measures.
+	 */
+	bool era = READ_ONCE(kd_rw_era_ns) && kd_rw_era_sampled();
+	int c = 0, nr = 0;
 	u64 t0 = 0;
 
-	nr = atomic_fetch_or(KD_RW_WWAIT, &rw->cnts) >> KD_RW_RSHIFT;
-	if (era && nr)
-		t0 = local_clock();
-	do {
-		c = atomic_cond_read_relaxed(&rw->cnts, VAL == KD_RW_WWAIT);
-	} while (!atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED));
+	/*
+	 * Nobody in: take the lock with one operation, as the native slow
+	 * path does, instead of announcing the wait first.
+	 */
+	if (atomic_read(&rw->cnts) ||
+	    !atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED)) {
+		nr = atomic_fetch_or(KD_RW_WWAIT, &rw->cnts) >> KD_RW_RSHIFT;
+		if (era && nr)
+			t0 = local_clock();
+		do {
+			c = atomic_cond_read_relaxed(&rw->cnts, VAL == KD_RW_WWAIT);
+		} while (!atomic_try_cmpxchg_acquire(&rw->cnts, &c, KD_RW_WLOCKED));
+	}
 	if (era)
 		kd_rw_era_writer(rw, nr, head ? kd_q_depth(head, KD_POST_DEPTH) : 0,
 				 t0 ? local_clock() - t0 : 0);

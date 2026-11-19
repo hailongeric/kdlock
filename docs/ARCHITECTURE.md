@@ -524,6 +524,18 @@ continuation, which is more than the native lock pays.
   still waits for the holder so that the walk delays nobody). At
   `kd_deleg_enter` (spinlock, 5) or `kd_deleg_enter_sleep` (mutex, 3) the
   lock goes to delegation mode.
+* **A spinlock also needs a waiter of another NUMA node among the sampled
+  ones** (`kd_deleg_numa`, default 1; every queue node carries its CPU's
+  node). What a combiner saves a spinlock is the transfer of the lock's data
+  from holder to holder. Within one node that costs about as much as the
+  transfer of a continuation, across nodes several times more. Against the
+  native queued spinlock (kdnat12 and kdnat13, nano, daemon running,
+  kd/native): entering by depth alone 0.88-0.92 at 6-16 workers with one
+  cache line in the section and 0.92-0.96 with eight in one boot, 0.92-1.27
+  and 0.92-0.94 in another (the plain and native rates at 6-16 workers
+  differ by a third between boots, the delegated rate does not); with the
+  node condition 0.94-1.00 in every case and no section delegated; at 48-60
+  workers on two nodes 1.39-1.71 either way. The mutex keeps its depth rule.
 * **Where the mode lives.** Spin class: the bit `KD_Q_DELEG` in the lock
   byte, which only the holder writes and a release clears. It travels with
   the head role (`HEAD_D`), also through waiters that do not take part, and

@@ -1,0 +1,72 @@
+k16 1 park0 mmap1 16 309269 | plain+10322797 no_spin+1 head_sleep+1989 parked+2022 wr_steal+3421
+k16 1 park0 mmap1 32 305484 | plain+10390254 no_spin+2 head_sleep+2065 parked+2233 wr_steal+5249
+k16 1 park0 mmap1 60 319289 | plain+10327496 no_spin+308 head_sleep+1365 parked+1870 wr_steal+1004
+k16 1 park0 brk1 16 761502 | plain+12381612 no_spin+3 head_sleep+1804 parked+1840 wr_steal+2820
+k16 1 park0 brk1 32 740705 | plain+12374072 no_spin+10 head_sleep+1281 parked+1522 wr_steal+2503
+k16 1 park0 brk1 60 785555 | plain+12639079 no_spin+281 head_sleep+838 parked+1290 wr_steal+628
+k16 1 park0 page_fault1 16 3036667 | plain+380124 no_spin+135 head_sleep+2 parked+240 wr_steal+1110 wr_handoff+467
+k16 1 park0 page_fault1 32 2871486 | plain+356228 no_spin+1426 head_sleep+18 parked+1573 wr_steal+1403 wr_handoff+996
+k16 1 park0 page_fault1 60 4468863 | plain+290364 no_spin+2243 head_sleep+56 parked+2488 wr_steal+2216 wr_handoff+1311
+k16 1 park0 page_fault3 16 13108600 | plain+286596 no_spin+6292 head_sleep+11 parked+6328 wr_steal+6299
+k16 1 park0 page_fault3 32 13100517 | plain+964968 no_spin+6269 head_sleep+1 parked+6316 wr_steal+6209
+k16 1 park0 page_fault3 60 12646848 | plain+2171354 no_spin+5865 parked+5920 wr_steal+5779
+k16 1 park5000 mmap1 16 298343 | plain+9956319 no_spin+1 head_sleep+1671 parked+6592 wr_steal+2737
+k16 1 park5000 mmap1 32 299770 | plain+10207131 no_spin+2 head_sleep+1524 parked+2378 wr_steal+3718
+k16 1 park5000 mmap1 60 303415 | plain+9919487 no_spin+232 head_sleep+1271 parked+1869 wr_steal+887
+k16 1 park5000 brk1 16 739605 | plain+11819062 head_sleep+1572 parked+41037 wr_steal+2324
+k16 1 park5000 brk1 32 655185 | plain+11306318 no_spin+5 head_sleep+1124 parked+2771 wr_steal+2193
+k16 1 park5000 brk1 60 738109 | plain+11903932 no_spin+397 head_sleep+1320 parked+1959 wr_steal+799
+k16 1 park5000 page_fault1 16 3039128 | plain+389210 parked+449 wr_steal+807 wr_handoff+183
+k16 1 park5000 page_fault1 32 2872027 | plain+356210 parked+1595 wr_steal+1416 wr_handoff+961
+k16 1 park5000 page_fault1 60 4482808 | plain+296877 head_sleep+10 parked+2413 wr_steal+2239 wr_handoff+1413
+k16 1 park5000 page_fault3 16 13153910 | plain+278241 parked+6352 wr_steal+6331
+k16 1 park5000 page_fault3 32 13147965 | plain+970506 parked+6375 wr_steal+6236 wr_handoff+1
+k16 1 park5000 page_fault3 60 12600545 | plain+2173852 parked+5889 wr_steal+5773
+k16 1 park20000 mmap1 16 299817 | plain+9983597 no_spin+4 head_sleep+1854 parked+1903 wr_steal+2682
+k16 1 park20000 mmap1 32 288617 | plain+9882639 no_spin+3 head_sleep+1295 parked+1758 wr_steal+2995
+k16 1 park20000 mmap1 60 308112 | plain+10037786 no_spin+121 head_sleep+1022 parked+1358 wr_steal+752
+k16 1 park20000 brk1 16 733607 | plain+11962350 no_spin+1 head_sleep+1770 parked+1804 wr_steal+3651
+k16 1 park20000 brk1 32 708391 | plain+11869516 no_spin+3 head_sleep+1416 parked+1787 wr_steal+3370
+k16 1 park20000 brk1 60 762931 | plain+12181914 no_spin+559 head_sleep+1610 parked+2375 wr_steal+1954
+k16 1 park20000 page_fault1 16 3042465 | plain+384072 no_spin+14 parked+326 wr_steal+858 wr_handoff+121
+k16 1 park20000 page_fault1 32 2874798 | plain+363666 no_spin+30 parked+1543 wr_steal+1424 wr_handoff+948
+k16 1 park20000 page_fault1 60 4506546 | plain+294014 no_spin+52 head_sleep+1 parked+2359 wr_steal+2234 wr_handoff+1224
+k16 1 park20000 page_fault3 16 13188507 | plain+288293 no_spin+13 head_sleep+1 parked+6361 wr_steal+6330
+k16 1 park20000 page_fault3 32 13060169 | plain+964105 no_spin+30 parked+6296 wr_steal+6227
+k16 1 park20000 page_fault3 60 12665349 | plain+2178214 no_spin+58 head_sleep+1 parked+5975 wr_steal+5820 wr_handoff+1
+k16 2 park0 mmap1 16 308331 | plain+10252269 no_spin+2 head_sleep+2295 parked+2338 wr_steal+3468
+k16 2 park0 mmap1 32 305015 | plain+10452491 no_spin+1 head_sleep+1520 parked+1707 wr_steal+5679
+k16 2 park0 mmap1 60 315733 | plain+10263261 no_spin+205 head_sleep+1081 parked+1569 wr_steal+709
+k16 2 park0 brk1 16 745236 | plain+12130979 no_spin+2 head_sleep+2014 parked+2053 wr_steal+3553
+k16 2 park0 brk1 32 741405 | plain+12353533 no_spin+4 head_sleep+1528 parked+1761 wr_steal+3178
+k16 2 park0 brk1 60 789474 | plain+12545536 no_spin+233 head_sleep+1101 parked+1546 wr_steal+1260
+k16 2 park0 page_fault1 16 3037784 | plain+390372 no_spin+71 head_sleep+9 parked+257 wr_steal+930 wr_handoff+129
+k16 2 park0 page_fault1 32 2872875 | plain+363861 no_spin+1435 head_sleep+15 parked+1581 wr_steal+1413 wr_handoff+957
+k16 2 park0 page_fault1 60 4486722 | plain+292442 no_spin+2281 head_sleep+53 parked+2484 wr_steal+2249 wr_handoff+1381
+k16 2 park0 page_fault3 16 13141386 | plain+279810 no_spin+6318 head_sleep+8 parked+6351 wr_steal+6322
+k16 2 park0 page_fault3 32 13094349 | plain+969584 no_spin+6248 head_sleep+4 parked+6285 wr_steal+6229
+k16 2 park0 page_fault3 60 12589595 | plain+2177380 no_spin+5832 head_sleep+26 parked+5924 wr_steal+5743
+k16 2 park5000 mmap1 16 301086 | plain+9840289 no_spin+3 head_sleep+1941 parked+41807 wr_steal+2313
+k16 2 park5000 mmap1 32 296195 | plain+10108901 no_spin+3 head_sleep+2011 parked+2176 wr_steal+4966
+k16 2 park5000 mmap1 60 301913 | plain+9870339 no_spin+206 head_sleep+894 parked+2378 wr_steal+501
+k16 2 park5000 brk1 16 747575 | plain+12133237 no_spin+4 head_sleep+1636 parked+8801 wr_steal+2857
+k16 2 park5000 brk1 32 674059 | plain+11405836 no_spin+9 head_sleep+1309 parked+3122 wr_steal+2299
+k16 2 park5000 brk1 60 793805 | plain+12671675 no_spin+364 head_sleep+1189 parked+2228 wr_steal+1031
+k16 2 park5000 page_fault1 16 3022383 | plain+392946 head_sleep+1 parked+245 wr_steal+905 wr_handoff+174
+k16 2 park5000 page_fault1 32 2874982 | plain+365805 head_sleep+5 parked+1573 wr_steal+1412 wr_handoff+1009
+k16 2 park5000 page_fault1 60 4476366 | plain+294153 parked+2416 wr_steal+2195 wr_handoff+1445
+k16 2 park5000 page_fault3 16 13089957 | plain+287237 parked+6329 wr_steal+6298
+k16 2 park5000 page_fault3 32 12959595 | plain+983553 head_sleep+30 parked+6304 wr_steal+6124
+k16 2 park5000 page_fault3 60 12560032 | plain+2173551 parked+5898 wr_steal+5757
+k16 2 park20000 mmap1 16 299312 | plain+9964280 no_spin+1 head_sleep+2004 parked+2050 wr_steal+3453
+k16 2 park20000 mmap1 32 292773 | plain+10000041 no_spin+1 head_sleep+1631 parked+1824 wr_steal+3623
+k16 2 park20000 mmap1 60 312415 | plain+9956799 no_spin+321 head_sleep+892 parked+1437 wr_steal+542
+k16 2 park20000 brk1 16 717225 | plain+11699950 no_spin+1 head_sleep+1615 parked+1661 wr_steal+3616
+k16 2 park20000 brk1 32 714974 | plain+11914940 no_spin+13 head_sleep+1063 parked+1326 wr_steal+1566
+k16 2 park20000 brk1 60 780713 | plain+12409280 no_spin+273 head_sleep+715 parked+1169 wr_steal+499
+k16 2 park20000 page_fault1 16 3036400 | plain+388690 head_sleep+10 parked+327 wr_steal+954 wr_handoff+180
+k16 2 park20000 page_fault1 32 2861659 | plain+353545 parked+1611 wr_steal+1400 wr_handoff+972
+k16 2 park20000 page_fault1 60 4485759 | plain+285065 no_spin+12 head_sleep+2 parked+2425 wr_steal+2212 wr_handoff+1494
+k16 2 park20000 page_fault3 16 13242113 | plain+282411 no_spin+14 parked+6392 wr_steal+6359
+k16 2 park20000 page_fault3 32 13085550 | plain+974083 no_spin+30 parked+6312 wr_steal+6247
+k16 2 park20000 page_fault3 60 12555682 | plain+2172587 no_spin+56 parked+5832 wr_steal+5696

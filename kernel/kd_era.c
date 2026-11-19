@@ -79,6 +79,12 @@
  */
 unsigned int kd_rw_era_ns __read_mostly = 200000;
 core_param(kd_rw_era_ns, kd_rw_era_ns, uint, 0644);
+/*
+ * rwlock: the queue heads of a CPU take the era measurements at one write
+ * acquisition in this many (kd_rw_era_sampled()); 1: at every one.
+ */
+unsigned int kd_rw_era_sample __read_mostly = 16;
+core_param(kd_rw_era_sample, kd_rw_era_sample, uint, 0644);
 static unsigned int kd_rw_era_drain_ns __read_mostly = 5000;
 core_param(kd_rw_era_drain_ns, kd_rw_era_drain_ns, uint, 0644);
 /* In hundredths of a caller; see kd_rw_era_writer(). */
@@ -109,6 +115,12 @@ static struct kd_rw_era_wq {
 	atomic_t	cur[KD_ERA_WQ_NODES];
 	u32		last[KD_ERA_WQ_NODES];
 } ____cacheline_aligned_in_smp kd_rw_era_wqs[1 << KD_RW_ERA_BITS];
+
+/* The average time the readers a queue head found took to leave (ns). */
+u32 kd_rw_era_drain(const void *lock)
+{
+	return READ_ONCE(kd_rw_era_avgs[hash_ptr((void *)lock, KD_RW_ERA_BITS)].drain);
+}
 
 /*
  * How long callers of node slot @mine wait before they take the era from

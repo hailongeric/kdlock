@@ -57,6 +57,10 @@ PROFILES = {
     "mutex_c01_curw": ("mutex_curw", 1, 100, 256),
     # The plain path alone, and sections that are handed back.
     "spin_c01_raw": ("spin_raw", 1, 100, 64),
+    # No work between the operations: the lock is saturated and the rate is
+    # the handover time (as will-it-scale lock1 on files->file_lock).
+    "spin_c01_sat": ("spin", 1, 100, 0),
+    "spin_c01_raw_sat": ("spin_raw", 1, 100, 0),
     "spin_c01_hb": ("spin_hb", 1, 100, 64),
     "rwlock_c01_hb": ("rwlock_hb", 1, 100, 256),
     "rwsem_c01_hb": ("rwsem_hb", 1, 100, 256),
@@ -65,7 +69,7 @@ PROFILES = {
 # The default grid; the other profiles are run on request.
 C08 = ["mutex_c08", "rwsem_c08_w1", "rwsem_c08_w20", "rwlock_c08_w1", "rwlock_c08_w20"]
 GRID = [p for p in PROFILES
-        if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100")) and p not in C08]
+        if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100", "_sat")) and p not in C08]
 # Cachelines 1 and 8 of every family (--profiles appgrid).
 APPGRID = ["spin_c01", "spin_c08", "mutex_c01", "mutex_c08",
            "rwsem_c01_w1", "rwsem_c08_w1", "rwsem_c01_w20", "rwsem_c08_w20",

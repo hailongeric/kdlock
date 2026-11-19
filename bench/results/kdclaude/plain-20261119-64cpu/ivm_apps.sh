@@ -19,7 +19,8 @@
 #           Variant "open50k" adds --open_files=50000: every table stays
 #           open and mapped, so no mmap/munmap per lookup.
 # Threads are pinned as in the grid (taskset 0..N-1); the artifact does not
-# pin. One line per point in /root/plainprof/ivm-runs.txt, app_grid.sh's
+# pin. PS_VARIANTS (big m1024 m128l) and LDB_VARIANTS (ivm open50k) select
+# the variants. One line per point in /root/plainprof/ivm-runs.txt, app_grid.sh's
 # format: TAG MODE BENCH VARIANT N VALUE UNIT [extra] | counters | counters
 MODE=${1:?mode}; TAG=${2:?tag}; shift 2
 BENCHES=${*:-psearchy leveldb}
@@ -41,9 +42,11 @@ line() { echo "$TAG $MODE $*" >> $OUT; }
 d_on() {
 	ps -e -o cmd | grep -q "^/root/kdvenv/bin/python -u kd_daemon.py" && { echo "a daemon is running"; exit 1; }
 	cat $AL/api.txt $AL/torture.txt $AL/mm.txt > /root/allow_cmp.txt
+	# KD_ALLOW and KD_STATE replace the allow list and the state file (a
+	# comparison of allow lists in one boot needs a state of its own).
 	(cd /root/host_fs/kdlock/jit || exit 1
-	 setsid nohup /root/kdvenv/bin/python -u kd_daemon.py --state /root/kds_cmp.json \
-		--allow /root/allow_cmp.txt -v >> $O/kdd-$TAG.log 2>&1 < /dev/null &
+	 setsid nohup /root/kdvenv/bin/python -u kd_daemon.py --state ${KD_STATE:-/root/kds_cmp.json} \
+		--allow ${KD_ALLOW:-/root/allow_cmp.txt} -v >> $O/kdd-$TAG.log 2>&1 < /dev/null &
 	 echo $! > /root/kdd_ivm.pid)
 	sleep 10
 }
@@ -68,19 +71,35 @@ b_psearchy() {
 	local n
 	[ -s $A/text-files.txt ] || { echo "no psearchy input"; return 1; }
 	$A/ivm/psearchy/prefetch -r $A/text > /dev/null 2>&1
-	for n in $WORKERS; do ps1 m$PS_M $n -m $PS_M; done
-	for n in $WORKERS; do [ $n -le 16 ] && ps1 m1024 $n -m 1024; done
-	for n in $WORKERS; do ps1 m128l $n -m 128 -l 200000; done
+	local v
+	for v in ${PS_VARIANTS:-big m1024 m128l}; do
+		case $v in
+		big)   for n in $WORKERS; do ps1 m$PS_M $n -m $PS_M; done ;;
+		m1024) for n in $WORKERS; do [ $n -le 16 ] && ps1 m1024 $n -m 1024; done ;;
+		m128l) for n in $WORKERS; do ps1 m128l $n -m 128 -l 200000; done ;;
+		esac
+	done
 }
 
 b_leveldb() {
 	local n v o s0 r d D=/root/ldb_ivm B=$A/tclocks/leveldb-1.20/out-static/db_bench
 	mkdir -p $D; mountpoint -q $D && umount $D
 	mount -t tmpfs -o size=14G tmpfs $D || return 1
-	echo "$TAG $MODE leveldb fill $(date +%T)" >> $O/progress.txt
-	$B --db=$D/db --benchmarks=fillrandom --num=2000000 --value_size=4096 > $O/tmp-ldbfill.out 2>&1
+	# The same database for every pass and kernel: how fillrandom and its
+	# compactions leave the tables differs from fill to fill, and with it
+	# how many tables a lookup opens. The first fill is kept on disk
+	# (LDB_PRISTINE) and copied to tmpfs from then on.
+	local PR=${LDB_PRISTINE:-/root/ldb_ivm_pristine}
+	if [ -d $PR/db ]; then
+		echo "$TAG $MODE leveldb copy of $PR $(date +%T)" >> $O/progress.txt
+		cp -a $PR/db $D/db
+	else
+		echo "$TAG $MODE leveldb fill $(date +%T)" >> $O/progress.txt
+		$B --db=$D/db --benchmarks=fillrandom --num=2000000 --value_size=4096 > $O/tmp-ldbfill.out 2>&1
+		mkdir -p $PR && cp -a $D/db $PR/db && sync
+	fi
 	echo "$TAG $MODE leveldb db: $(ls $D/db | grep -cE '\.(ldb|sst)$') tables, $(du -sh $D/db | cut -f1) $(date +%T)" >> $O/progress.txt
-	for v in ivm open50k; do
+	for v in ${LDB_VARIANTS:-ivm open50k}; do
 		o=""; [ $v = open50k ] && o="--open_files=50000"
 		for n in $WORKERS; do
 			s0=$(st)

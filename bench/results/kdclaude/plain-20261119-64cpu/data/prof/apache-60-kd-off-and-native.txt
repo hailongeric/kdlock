@@ -1,0 +1,143 @@
+## k15off apache single 60 7.0.0-38-kdall15
+httpd threads 62, window 6.0 s: on CPU 34.3 CPUs, waiting for a CPU 0.1, voluntary switches 18481/s in all
+## by comm
+    96.22%  httpd          
+     2.36%  wrk            
+     1.38%  swapper        
+     0.01%  perf           
+     0.01%  rcu_preempt    
+     0.00%  kworker/u258:0-
+## flat by symbol, httpd only
+    77.26%  [k] kd_wait_sleepable
+     4.35%  [k] native_flush_tlb_one_user
+     2.84%  [k] kd_rwsem_spin_for
+     1.16%  [k] kd_mutex_sleep
+     0.86%  [k] kd_down_read_slow
+     0.82%  [k] smp_call_function_many_cond
+     0.65%  [k] asm_sysvec_call_function
+     0.33%  [k] kernel_init_pages
+     0.29%  [k] native_apic_msr_eoi
+     0.26%  [k] __flush_smp_call_function_queue
+     0.26%  [k] flush_tlb_func
+     0.20%  [k] _copy_from_iter
+     0.19%  [k] llist_reverse_order
+     0.15%  [k] kd_mutex_can_spin
+     0.15%  [k] pvclock_clocksource_read_nowd
+     0.14%  [k] task_cputime
+     0.09%  [k] update_cfs_group
+     0.07%  [k] thread_group_cputime
+     0.06%  [k] sched_core_idle_cpu
+     0.06%  [k] x2apic_send_IPI
+     0.06%  [k] mas_empty_area_rev
+     0.06%  [k] vma_interval_tree_insert
+     0.06%  [k] task_tick_fair
+     0.06%  [.] apr_palloc
+     0.05%  [k] kd_arch_spin_lock
+     0.05%  [k] kvm_flush_tlb_multi
+     0.05%  [k] should_flush_tlb
+     0.05%  [k] __send_ipi_mask
+     0.05%  [k] asm_exc_page_fault
+     0.05%  [k] sysvec_call_function
+## task switches of httpd by call chain (3 s)
+    25.00%  [k] __schedule
+            |          
+             --53282--schedule
+                       |          
+                       |--35671--kd_mutex_sleep
+                       |          |          
+                       |           --35061--__kd_down_write_sleep
+                       |                     kd_down_write_slow_killable
+                       |                     kd_down_write_killable
+                       |                     |          
+                       |                     |--18182--__x64_sys_munmap
+                       |                     |          x64_sys_call
+                       |                     |          do_syscall_64
+                       |                     |          
+                       |                      --16879--ksys_mmap_pgoff
+                       |                                __x64_sys_mmap
+                       |                                x64_sys_call
+                       |          
+                        --11009--exit_to_user_mode_loop
+                                  do_syscall_64
+                                  entry_SYSCALL_64_after_hwframe
+                                  |          
+                                   --8829--0x7e4d8aeac7c2
+                                             |          
+                                              --8753--writev
+                                                        apr_socket_sendv
+## result: 23187.12 req/s
+## n12 apache single 60 7.0.0-38-kdnat12
+httpd threads 62, window 5.7 s: on CPU 3.5 CPUs, waiting for a CPU 0.0, voluntary switches 77115/s in all
+## by comm
+    62.10%  httpd          
+    19.73%  swapper        
+    17.96%  wrk            
+     0.09%  perf           
+     0.02%  rcu_preempt    
+     0.01%  ksoftirqd/0    
+## flat by symbol, httpd only
+     3.47%  [k] native_flush_tlb_one_user
+     2.94%  [k] native_queued_spin_lock_slowpath
+     2.66%  [k] smp_call_function_many_cond
+     2.46%  [k] kernel_init_pages
+     1.61%  [k] _copy_from_iter
+     1.49%  [k] rwsem_down_write_slowpath
+     1.07%  [k] osq_lock
+     0.94%  [k] task_cputime
+     0.93%  [k] rwsem_spin_on_owner
+     0.83%  [k] x2apic_send_IPI
+     0.71%  [k] thread_group_cputime
+     0.63%  [k] _raw_spin_lock_irqsave
+     0.58%  [k] should_flush_tlb
+     0.52%  [k] pvclock_clocksource_read_nowd
+     0.45%  [k] vma_interval_tree_insert
+     0.42%  [k] _raw_spin_lock
+     0.38%  [k] kvm_flush_tlb_multi
+     0.36%  [k] mas_empty_area_rev
+     0.34%  [k] do_syscall_64
+     0.33%  [.] apr_palloc
+     0.33%  [k] try_to_wake_up
+     0.33%  [k] tcp_sendmsg_locked
+     0.32%  [k] asm_exc_page_fault
+     0.32%  [k] __schedule
+     0.31%  [k] __d_lookup_rcu
+     0.31%  [k] ttwu_queue_wakelist
+     0.31%  [k] asm_sysvec_call_function
+     0.29%  [k] rwsem_mark_wake
+     0.29%  [k] flush_tlb_func
+     0.27%  [k] clear_bhb_loop
+## task switches of httpd by call chain (3 s)
+    37.08%  [k] __schedule
+            |          
+             --281102--schedule
+                       |          
+                       |--206267--schedule_preempt_disabled
+                       |          |          
+                       |          |--132189--rwsem_down_write_slowpath
+                       |          |          down_write_killable
+                       |          |          |          
+                       |          |          |--93239--__vm_munmap
+                       |          |          |          __x64_sys_munmap
+                       |          |          |          x64_sys_call
+                       |          |          |          do_syscall_64
+                       |          |          |          
+                       |          |           --38950--vm_mmap_pgoff
+                       |          |                     ksys_mmap_pgoff
+                       |          |                     __x64_sys_mmap
+                       |          |                     x64_sys_call
+                       |          |          
+                       |           --74078--rwsem_down_read_slowpath
+                       |                     down_read_killable
+                       |                     lock_mm_and_find_vma
+                       |                     do_user_addr_fault
+                       |                     exc_page_fault
+                       |                     asm_exc_page_fault
+                       |          
+                        --35861--io_schedule
+                                  folio_wait_bit_common
+                                  filemap_fault
+                                  __do_fault
+                                  do_fault
+                                  __handle_mm_fault
+                                  handle_mm_fault
+## result: 31508.97 req/s

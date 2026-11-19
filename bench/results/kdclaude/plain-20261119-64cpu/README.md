@@ -231,31 +231,234 @@ can show, and it is not redesigned for the rwsem. (For the rwlock see
 section 6: its queue heads run the same measurements once per write
 acquisition in plain mode, and that family is below native.)
 
-## 5. Psearchy and LevelDB in other published configurations
+## 5. rwlock without delegation
 
-Not measured yet (`ivm_apps.sh`; desk research in section 5 of the
-session's notes: the curves that turn over at 36 and at 4 threads are the
-IntervalVM configurations, `pedsort -m 2048` and an 8 GB LevelDB whose
-table cache thrashes, both bound on mmap lock writers).
+In plain mode every contended writer is a queue head of its own, and
+`kd_rw_post()` (a) announced its wait with one locked operation before
+taking the lock with another, where the native slow path takes a lock that
+is free with one, and (b) took the era measurements every time: two clock
+reads and a store of the averages into a line all writers of the lock
+share. Now a head that finds nobody in takes the lock at once, and a CPU's
+heads measure at one write acquisition in `kd_rw_era_sample` (16).
 
-## 6. Open
+`nano_ab.sh n12-rwera` on kdnat12 (the new code; no daemon; native rwlock
+alongside; 2 rounds; `data/n12-rwera.md`), sampling 1 (measure every time,
+as before), 16 and 64:
 
-1. **rwlock, plain:** 0.83-0.91 of native with 20% writes (section 1).
-2. **lock1** (`files->file_lock`, a spinlock, not on an allow list):
-   0.86-0.94 from 8 threads on; both kernels spend 91% in their spinlock
-   slow path there (`data/prof/p1-*-lock1-32.txt`).
-3. **spin, delegated, one node, one cache line:** below the plain lock.
-4. Delegation on kdall14 (the daemon state is per build), Apache and the
-   other applications against a kdnat11 baseline, the lkp screening on
-   kdnat11, sections 4 and 5, the handback analysis.
+| profile | workers | native | kd kd_rw_era_sample=1 | /native | delegated | kd kd_rw_era_sample=16 | /native | delegated | kd kd_rw_era_sample=64 | /native | delegated |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| rwlock_c01_w20 | 4 | 10.03 | 10.05 | 1.00 | 0 | 10.10 | 1.01 | 0 | 10.10 | 1.01 | 0 |
+| rwlock_c01_w20 | 8 | 6.95 | 6.89 | 0.99 | 0 | 7.09 | 1.02 | 0 | 7.10 | 1.02 | 0 |
+| rwlock_c01_w20 | 16 | 6.99 | 6.66 | 0.95 | 0 | 6.85 | 0.98 | 0 | 6.86 | 0.98 | 0 |
+| rwlock_c01_w20 | 32 | 6.83 | 6.70 | 0.98 | 0 | 6.85 | 1.00 | 0 | 6.86 | 1.00 | 0 |
+| rwlock_c01_w20 | 48 | 5.30 | 5.06 | 0.96 | 0 | 5.09 | 0.96 | 0 | 5.11 | 0.96 | 0 |
+| rwlock_c01_w20 | 60 | 5.12 | 4.91 | 0.96 | 0 | 4.95 | 0.97 | 0 | 4.97 | 0.97 | 0 |
+| rwlock_c08_w20 | 4 | 5.72 | 5.31 | 0.93 | 0 | 5.58 | 0.98 | 0 | 5.61 | 0.98 | 0 |
+| rwlock_c08_w20 | 8 | 4.89 | 4.46 | 0.91 | 0 | 4.64 | 0.95 | 0 | 4.62 | 0.95 | 0 |
+| rwlock_c08_w20 | 16 | 4.89 | 4.54 | 0.93 | 0 | 4.71 | 0.96 | 0 | 4.73 | 0.97 | 0 |
+| rwlock_c08_w20 | 32 | 4.71 | 4.51 | 0.96 | 0 | 4.71 | 1.00 | 0 | 4.70 | 1.00 | 0 |
+| rwlock_c08_w20 | 48 | 3.31 | 3.07 | 0.93 | 0 | 3.13 | 0.94 | 0 | 3.13 | 0.94 | 0 |
+| rwlock_c08_w20 | 60 | 3.15 | 2.96 | 0.94 | 0 | 3.00 | 0.95 | 0 | 3.00 | 0.95 | 0 |
+| rwlock_c08_w1 | 4 | 10.08 | 10.03 | 1.00 | 0 | 10.04 | 1.00 | 0 | 10.04 | 1.00 | 0 |
+| rwlock_c08_w1 | 8 | 9.66 | 9.00 | 0.93 | 0 | 9.06 | 0.94 | 0 | 9.07 | 0.94 | 0 |
+| rwlock_c08_w1 | 16 | 8.84 | 8.91 | 1.01 | 0 | 8.96 | 1.01 | 0 | 8.97 | 1.01 | 0 |
+| rwlock_c08_w1 | 32 | 8.91 | 9.18 | 1.03 | 0 | 9.21 | 1.03 | 0 | 9.22 | 1.03 | 0 |
+| rwlock_c08_w1 | 48 | 8.20 | 8.83 | 1.08 | 0 | 8.80 | 1.07 | 0 | 8.58 | 1.05 | 0 |
+| rwlock_c08_w1 | 60 | 7.98 | 8.73 | 1.09 | 0 | 8.66 | 1.09 | 0 | 8.39 | 1.05 | 0 |
 
-## 7. Files
+- 0.94-1.09 of native everywhere with 16 (g3 on the old code: 0.83-0.87
+  with 20% writes from 6 workers on, 0.82-0.91 for c08 with 1% writes).
+  Most of it is the single operation (sampling 1 already gives 0.91-1.00);
+  sampling adds 2-4%.
+- `kd_rw_era_ns=0` gives the same rates as sampling 16
+  (`data/n12-rwnoera.md`): the measurements no longer show.
+
+## 6. Spinlock: when delegation pays, and the plain handover
+
+**Entering delegation mode.** `nano_ab.sh n12-enter` (daemon running,
+`kd_deleg_enter` 5, 12 and 1000, kdnat12; `data/n12-enter.md`):
+
+| profile | workers | native | kd kd_deleg_enter=5 | /native | delegated | kd kd_deleg_enter=12 | /native | delegated | kd kd_deleg_enter=1000 | /native | delegated |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| spin_c01 | 4 | 6.59 | 6.06 | 0.92 | 0 | 6.05 | 0.92 | 0 | 6.11 | 0.93 | 0 |
+| spin_c01 | 6 | 6.87 | 6.04 | 0.88 | 931852 | 6.53 | 0.95 | 0 | 6.57 | 0.96 | 0 |
+| spin_c01 | 8 | 7.01 | 6.18 | 0.88 | 4842445 | 6.78 | 0.97 | 0 | 6.77 | 0.97 | 0 |
+| spin_c01 | 16 | 7.23 | 6.63 | 0.92 | 7006732 | 6.68 | 0.92 | 6979792 | 7.04 | 0.97 | 0 |
+| spin_c01 | 32 | 6.65 | 6.50 | 0.98 | 6754551 | 6.52 | 0.98 | 6741490 | 6.58 | 0.99 | 0 |
+| spin_c01 | 48 | 4.38 | 6.50 | 1.48 | 6618072 | 6.51 | 1.48 | 6843087 | 3.92 | 0.89 | 0 |
+| spin_c01 | 60 | 4.11 | 6.40 | 1.56 | 6691193 | 6.41 | 1.56 | 6591623 | 3.57 | 0.87 | 0 |
+| spin_c08 | 4 | 4.69 | 4.45 | 0.95 | 0 | 4.45 | 0.95 | 0 | 4.45 | 0.95 | 0 |
+| spin_c08 | 6 | 4.57 | 4.30 | 0.94 | 1888425 | 4.53 | 0.99 | 0 | 4.52 | 0.99 | 0 |
+| spin_c08 | 8 | 4.58 | 4.40 | 0.96 | 4386467 | 4.59 | 1.00 | 0 | 4.60 | 1.00 | 0 |
+| spin_c08 | 16 | 4.72 | 4.33 | 0.92 | 4506320 | 4.35 | 0.92 | 4581398 | 4.57 | 0.97 | 0 |
+| spin_c08 | 32 | 4.72 | 4.36 | 0.92 | 4507103 | 4.36 | 0.92 | 4383840 | 4.40 | 0.93 | 0 |
+| spin_c08 | 48 | 3.12 | 4.34 | 1.39 | 4576593 | 4.33 | 1.39 | 4519529 | 2.81 | 0.90 | 0 |
+| spin_c08 | 60 | 3.05 | 4.29 | 1.41 | 4452783 | 4.30 | 1.41 | 4492439 | 2.66 | 0.87 | 0 |
+| spin_c01_sat | 4 | 6.61 | 6.24 | 0.94 | 0 | 6.24 | 0.94 | 0 | 6.24 | 0.94 | 0 |
+| spin_c01_sat | 6 | 6.81 | 5.94 | 0.87 | 2520425 | 6.63 | 0.97 | 0 | 6.61 | 0.97 | 0 |
+| spin_c01_sat | 8 | 6.84 | 6.63 | 0.97 | 6722612 | 6.78 | 0.99 | 0 | 6.80 | 0.99 | 0 |
+| spin_c01_sat | 16 | 7.21 | 6.64 | 0.92 | 6962444 | 6.64 | 0.92 | 6978209 | 7.01 | 0.97 | 0 |
+| spin_c01_sat | 32 | 6.69 | 6.53 | 0.98 | 6800116 | 6.50 | 0.97 | 6595049 | 6.59 | 0.99 | 0 |
+| spin_c01_sat | 48 | 4.41 | 6.48 | 1.47 | 6748651 | 6.47 | 1.47 | 6628820 | 3.85 | 0.87 | 0 |
+| spin_c01_sat | 60 | 4.28 | 6.40 | 1.49 | 6612177 | 6.38 | 1.49 | 6615566 | 3.63 | 0.85 | 0 |
+
+On one node a lock that delegates is at or below the plain lock in this
+boot whatever the depth it enters at; on two nodes delegation gives
+1.39-1.56 and the plain lock 0.85-0.90. So the entry rule got a second
+condition: a waiter of another NUMA node among the ones the queue head
+samples (`kd_deleg_numa`, ARCHITECTURE 7a). `nano_ab.sh n13-numa` (kdnat13,
+0 = by depth alone, 1 = the new default; `data/n13-numa.md`):
+
+| profile | workers | native | kd kd_deleg_numa=0 | /native | delegated | kd kd_deleg_numa=1 | /native | delegated |
+|---|---|---|---|---|---|---|---|---|
+| spin_c01 | 6 | 5.36 | 4.90 | 0.92 | 704046 | 5.05 | 0.94 | 0 |
+| spin_c01 | 8 | 5.28 | 5.60 | 1.06 | 4028564 | 5.05 | 0.96 | 0 |
+| spin_c01 | 16 | 5.20 | 6.62 | 1.27 | 7015885 | 4.96 | 0.95 | 0 |
+| spin_c01 | 32 | 6.42 | 6.62 | 1.03 | 6780342 | 6.20 | 0.97 | 0 |
+| spin_c01 | 48 | 3.81 | 6.51 | 1.71 | 6754757 | 6.53 | 1.71 | 6829421 |
+| spin_c01 | 60 | 3.83 | 6.48 | 1.69 | 6786874 | 6.50 | 1.70 | 6667083 |
+| spin_c08 | 6 | 4.65 | 4.30 | 0.93 | 1797209 | 4.65 | 1.00 | 0 |
+| spin_c08 | 8 | 4.67 | 4.30 | 0.92 | 4368436 | 4.66 | 1.00 | 0 |
+| spin_c08 | 16 | 4.60 | 4.34 | 0.94 | 4533637 | 4.63 | 1.00 | 0 |
+| spin_c08 | 32 | 4.74 | 4.42 | 0.93 | 4609263 | 4.64 | 0.98 | 0 |
+| spin_c08 | 48 | 3.09 | 4.32 | 1.40 | 4442651 | 4.29 | 1.39 | 4346050 |
+| spin_c08 | 60 | 3.02 | 4.31 | 1.43 | 4405819 | 4.33 | 1.43 | 4468678 |
+
+- With the condition nothing is delegated on one node and kd is at
+  0.94-1.00 of native; on two nodes it is unchanged (1.39-1.71).
+- In this boot entering by depth alone looks better at 8-16 workers with
+  one cache line (1.06-1.27): native and plain kd run at 5.0-5.4 Mops/s
+  there, where the boot before had them at 6.5-7.2; the delegated rate is
+  6.6 in both. The plain and native rates at 6-16 workers are bimodal
+  between boots (not explained); the condition makes kd follow native.
+
+**The plain handover.** A new queue head asked for its successor's node
+line for writing while it still waited for the holder. The successor polls
+that line and takes it back at once, so the handover paid the transfer
+twice. `nano_ab.sh n13-dbg` with a temporary switch (0 = with the prefetch,
+1 = without, 3 = also without the plain path's statistics and mode note;
+plain mode, 3 rounds; `data/n13-dbg.md`):
+
+| profile | workers | native | kd kd_dbg=0 | /native | delegated | kd kd_dbg=1 | /native | delegated | kd kd_dbg=3 | /native | delegated |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| spin_c01_sat | 8 | 5.24 | 5.09 | 0.97 | 0 | 5.34 | 1.02 | 0 | 5.39 | 1.03 | 0 |
+| spin_c01_sat | 16 | 5.12 | 5.00 | 0.97 | 0 | 5.39 | 1.05 | 0 | 5.38 | 1.05 | 0 |
+| spin_c01_sat | 32 | 6.39 | 6.28 | 0.98 | 0 | 6.65 | 1.04 | 0 | 6.59 | 1.03 | 0 |
+| spin_c01_sat | 48 | 3.84 | 3.90 | 1.01 | 0 | 4.05 | 1.06 | 0 | 3.89 | 1.01 | 0 |
+| spin_c01_sat | 60 | 3.89 | 3.92 | 1.01 | 0 | 3.98 | 1.02 | 0 | 3.89 | 1.00 | 0 |
+| spin_c01 | 8 | 5.28 | 5.13 | 0.97 | 0 | 5.43 | 1.03 | 0 | 5.40 | 1.02 | 0 |
+| spin_c01 | 16 | 5.19 | 5.01 | 0.97 | 0 | 5.42 | 1.04 | 0 | 5.40 | 1.04 | 0 |
+| spin_c01 | 32 | 6.44 | 6.32 | 0.98 | 0 | 6.64 | 1.03 | 0 | 6.61 | 1.03 | 0 |
+| spin_c01 | 48 | 3.84 | 3.84 | 1.00 | 0 | 3.84 | 1.00 | 0 | 3.86 | 1.00 | 0 |
+| spin_c01 | 60 | 3.69 | 3.92 | 1.06 | 0 | 3.93 | 1.06 | 0 | 3.90 | 1.06 | 0 |
+
+Without the prefetch the plain lock is 5-8% faster at 8-32 workers, with
+and without work between the operations; the statistics and the mode note
+cost nothing measurable. The prefetch is removed, the switch as well.
+
+**lock1** (`files->file_lock` in `fcntl`, saturated; 0.82-0.94 of native in
+the passes on kdall13 and kdall14): with the same switches on kdall16,
+median of 3, at 16 / 32 / 60 threads: 0.94 / 0.90 / 0.92 as it was, 0.96 /
+0.92 / 1.00 with both (`data/k16-dbg.txt`; single settings scatter by 4%).
+Remeasured on kdall17 in section 9.
+
+## 7. Apache without delegation: writers that spin for a reader-held lock
+
+Native on kdnat12: 50.6 k, 41.7 k, 35.7 k, 34.2 k, 33.8 k requests per
+second at 4, 16, 32, 48, 60 threads of one process; kd off on kdall14:
+1.03, 1.06, 0.90, 0.73, 0.71 of that (`data/n12-native-apache-runs.txt`).
+Eras are not the reason: on, off and with a 200 us bound give the same
+rates (`data/k15-apache-era-runs.txt`).
+
+`data/prof/apache-60-kd-off-and-native.txt`, 60 threads:
+
+| | native (kdnat12) | kd off (kdall15) |
+|---|---|---|
+| CPUs the server's threads occupy | 3.5 | 34.3 |
+| where their time goes | asleep in `rwsem_down_write_slowpath` (44 k sleeps/s), `rwsem_down_read_slowpath`, `folio_wait_bit` | 77% in `kd_wait_sleepable` (queue spinning), 12 k sleeps/s in `kd_mutex_sleep` |
+| requests per second | 31.5 k | 23.2 k |
+
+A queued kd writer spins while the holder of `m` runs, also when that
+holder only waits for readers; the native rwsem's writers sleep behind a
+reader-held lock. Spinning threads keep their mm live on their CPUs, so the
+TLB flush of every munmap (in its read part) interrupts 34 CPUs instead of
+3 and waits for them. Fix: `kd_rwsem_park_drain_ns` (LOCKS.md 5): in plain
+mode a writer that has to wait parks when the readers of the lock take
+longer than 5 us to leave on average.
+
+In-boot comparison on kdall16 (threshold off / 5 us / 20 us, mean of 2;
+`data/k16-park*.txt`), against native:
+
+| | off | 5 us | 20 us |
+|---|---|---|---|
+| Apache single, 16 threads | 1.05 | 1.10 | 1.09 |
+| 32 | 0.93 | 1.27 | 0.91 |
+| 48 | 0.76 | 1.32 | 0.81 |
+| 60 | 0.71 | 1.31 | 0.79 |
+| Apache default configuration | 1.23 | 1.37 | 1.23 |
+| mmap1 16 / 32 / 60 | 1.00 / 1.01 / 1.86 | 0.97 / 0.99 / 1.77 | 0.97 / 0.96 / 1.82 |
+| brk1 16 / 32 / 60 | 1.07 / 1.09 / 2.06 | 1.06 / 0.97 / 2.00 | 1.03 / 1.04 / 2.01 |
+| page_fault1, page_fault3 16-60 | 0.99-1.09 | 0.99-1.10 | 1.00-1.10 |
+
+## 8. Psearchy and LevelDB in the IntervalVM configurations
+
+The curves that turn over at about 36 threads (Psearchy) and at 4 (LevelDB)
+are those of the IntervalVM paper (SOSP '25, Linux 6.8) and its artifact:
+`pedsort -m 2048` without `-l`, and LevelDB `readrandom` on a database of
+2 M entries of 4 KiB. The grid runs the TCLocks lines (`-m 128 -l 200000`; a
+110 MB database). `ivm_apps.sh`, `data/ivm-runs.txt`; desk research with
+the sources: `/root/kdwork/research-psearchy-leveldb.md` on the cloud host.
+
+**LevelDB.** Native (kdnat12, tag i1): 19.6 k, 114 k, 126 k, 103 k, 81 k,
+62 k, 52 k operations per second at 1, 4, 8, 16, 32, 40, 60 threads: the
+peak at 4-8 threads and the decline. The 6 GB database is 3229 table files
+of 2 MB against a table cache of 990, so a lookup opens and maps a table
+and evicts and unmaps another: 40 k mmap and 40 k munmap per second at 4
+threads. With `--open_files=50000` the same database gives 306 k, 926 k,
+1.29 M, 1.30 M, 1.31 M, 783 k, 678 k: ten times the rate and the shape of
+the grid's LevelDB line, whose limit is LevelDB's own mutex (futex). So the
+collapse elsewhere is an mmap lock writer collapse made by table cache
+thrashing, and it is absent from the TCLocks configuration because all
+tables stay mapped there.
+
+*Comparing kernels needs one database.* How `fillrandom` and its
+compactions leave the levels differs from fill to fill, and with it how
+many tables a lookup opens: native did 114 k at 4 threads on one fill
+(i1) and 62-63 k on another (i4, two passes within 3% of each other),
+while kd did 66-69 k on its own fills. The first comparison (kd off at
+0.61 of native at 4 threads) was between different databases and is void.
+`ivm_apps.sh` now keeps the first fill on disk and copies it for every
+pass; section 9 has the comparison on one database.
+
+**Psearchy.** Native (kdnat12), jobs per hour at 1 / 16 / 32 / 60 threads:
+`-m 128 -l 200000` 13.5 / 197 / 289 / 514; `-m 256` 13.7 / 189 / 248 / 407;
+`-m 1024` 13.9 / 155 at 16 (four 256 MB arrays per thread: no more fit
+into 24 GiB). No peak up to 60 threads; the larger the per-thread tables,
+the less it scales (at 16 threads 12.3, 11.8 and 9.7 jobs per hour and
+core). kd on kdall16: 0.99-1.06 of native without the daemon and 0.91-1.05
+with it; at most 35 sections were delegated in a run, so the mmap lock is
+hardly contended in these configurations. `-m 2048` on 36 and more threads,
+where the paper's curve turns, needs about 1.5 GB per thread and cannot be
+run in this VM. What the published sources give as the reasons for the
+turn (kernel generation with and without per-VMA locks, glibc's stdio
+buffers by mmap before 2.23, the table size) is in the research notes.
+
+## 9. kdall17: everything together
+
+Pending (`k17_exp.sh` in the guest): correctness is in
+`data/k17-check.out` (locktorture 6 of 6, `run_corr.py` plain and with the
+daemon 240 points each 0 failed, API check 0 failed, test-ww_mutex,
+`mm_stress` 16/32/64, 0 kernel complaints).
+
+## 11. Files
 
 | file | what |
 |---|---|
 | `prof.sh` | profile of single grid points; `data/prof/` (tag p1: native on kdnat11, off on kdall13) |
 | `steal_ab.sh`, `steal_summary.py` | section 3; `data/k14-steal.*` |
 | `era_ab.sh`, `data/k14-era.*` | section 4 |
-| `ivm_apps.sh` | section 5 |
+| `nano_ab.sh`, `nano_ab_summary.py`, `data/n12-*`, `data/n13-*` | sections 5 and 6 |
+| `data/k15-apache-era-runs.txt`, `data/k16-park*`, `data/prof/apache-60-*` | section 7 |
+| `ivm_apps.sh`, `data/ivm-runs.txt` | section 8 |
 | `data/g3-*`, `data/nano-g3-ranges.md`, `data/app-g2kd-g3native*` | section 1 |
 | `data/k14-check.out` | correctness of kdall14 |

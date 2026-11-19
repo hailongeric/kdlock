@@ -278,6 +278,11 @@ struct kd_cpu {
 	 */
 	u32		probe;
 	/*
+	 * Write acquisitions of an rwlock until this CPU's next queue head
+	 * takes the era measurements (kd_rw_era_sampled()).
+	 */
+	u32		era_tick;
+	/*
 	 * Spin-class locks the task on this CPU holds for which a queue head
 	 * waits to be taken over (role exchange). A spin-class holder cannot
 	 * leave its CPU, so its release finds out here, without a look at the
@@ -328,6 +333,7 @@ struct kd_rw_era_word {
 
 extern struct kd_rw_era_word kd_rw_eras[1 << KD_RW_ERA_BITS];
 extern unsigned int kd_rw_era_ns;
+extern unsigned int kd_rw_era_sample;
 
 static __always_inline u32 *kd_rw_era(const void *lock)
 {
@@ -355,6 +361,28 @@ static __always_inline bool kd_rw_era_other(const void *lock)
 
 void kd_rw_era_wait(const void *lock, unsigned int max_ns);
 void kd_rw_era_writer(const void *lock, long nr, int queued, u64 drain_ns);
+u32 kd_rw_era_drain(const void *lock);
+
+/*
+ * Does this rwlock queue head take the era measurements? One write
+ * acquisition in kd_rw_era_sample per CPU does. In plain mode every
+ * contended writer is a queue head of its own, and kd_rw_era_writer()
+ * stores its averages in a line all writers of the lock share: one more
+ * cache transfer per write acquisition, on top of the two clock reads.
+ * Preemption is off.
+ */
+static __always_inline bool kd_rw_era_sampled(void)
+{
+	u32 t = raw_cpu_read(kd_cpu.era_tick);
+
+	if (t) {
+		raw_cpu_write(kd_cpu.era_tick, t - 1);
+		return false;
+	}
+	t = READ_ONCE(kd_rw_era_sample);
+	raw_cpu_write(kd_cpu.era_tick, t ? t - 1 : 0);
+	return true;
+}
 
 /*
  * Family glue used by the generic wait/session code.

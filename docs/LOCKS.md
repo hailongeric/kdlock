@@ -83,6 +83,10 @@ call.
 * In delegation mode a contended caller of a delegable entry publishes its
   continuation and queues the same way; the queue head, once it holds the
   lock, serves the waiters behind it and then hands the head role on.
+* **A spinlock enters delegation mode only when its queue is deep and
+  holds a waiter of another NUMA node** (`kd_deleg_numa`, default 1;
+  ARCHITECTURE 7a). Within one node the plain lock is the native queued
+  spinlock and a combiner gains nothing over it.
 * `kd_raw_spin_lock*` and the `kd_arch_spin_*` level use the same word but
   **never publish** (scheduler, timers, lock internals) and never combine.
 * `_irq`, `_irqsave` and `_bh` entries are delegable: the section runs with
@@ -109,6 +113,17 @@ call.
   qrwlock), so an interrupted reader cannot deadlock.
 * Cost note: delegation only helps writers. Reader-heavy mixes are
   determined by the reader path and the writer-wait bit.
+* **The plain writer slow path is the native one** (`kd_rw_post()`): a
+  queue head that finds nobody in takes the lock with one operation and
+  announces its wait (`WWAIT`) only otherwise, and it takes the era
+  measurements at one write acquisition in `kd_rw_era_sample` (16) per CPU.
+  Until 2026-11-19 it announced first and measured every time, and in plain
+  mode, where every contended writer is a queue head of its own, each
+  measurement stored averages in a line all writers of the lock share. The
+  rwlock was at 0.83-0.87 of the native rwlock with 20% writes from 6
+  workers on (nano, kdnat11); with both changes 0.94-1.02 (kdnat12, in-boot:
+  measuring every time 0.91-0.99, one in 16 as with no eras at all)
+  (`bench/results/kdclaude/plain-20261119-64cpu/`).
 * **Across NUMA nodes** a session's own order cannot help while readers are
   present, because each queued reader ends the session (round 10: 1.4-1.8
   sections per session with 20% writes). Under pressure the lock therefore
@@ -380,6 +395,31 @@ call.
     at 4-16; mmap1 and brk1 0.97-1.05 of their rate without it; parked waits
     fall by 50-99% (`bench/results/kdclaude/plain-20261119-64cpu/`).
   * Counters: `wr_steal`, `wr_handoff`.
+* **Writers wait asleep when the readers stay long**
+  (`kd_rwsem_park_drain_ns`, default 5000). Plain mode only: a writer that
+  has to wait and cannot publish parks on `m` instead of spinning in the
+  queue when the average time the readers of this lock take to leave (the
+  queue heads' measurement for the eras, per lock by hash) is above the
+  threshold.
+  * **Why.** A queued writer spins for as long as the holder of `m` runs,
+    and that holder may only be waiting for readers itself. For the mmap
+    lock a queue of spinning writers is worse than idle: every one keeps
+    its mm live on a CPU, and the TLB flush each munmap makes in its read
+    part has to interrupt all of them. Apache with one process of 60
+    threads on kdall15: its threads occupied 34 CPUs, 77% of their time in
+    `kd_wait_sleepable()`, at 23 k requests per second; on the native
+    kernel, whose writers sleep behind a reader-held lock, 3.5 CPUs and
+    31.5 k.
+  * **Measured** (kdall16, no daemon, one boot, threshold off / 5 us /
+    20 us, mean of 2 runs; native in another boot): Apache single process at
+    16 / 32 / 48 / 60 threads 1.05 / 0.93 / 0.76 / 0.71 of native without
+    it, 1.10 / 1.27 / 1.32 / 1.31 with 5 us, 1.09 / 0.91 / 0.81 / 0.79 with
+    20 us; default configuration 1.23 -> 1.37. will-it-scale mmap1 0.95-0.98
+    and brk1 0.90-0.99 of their rate without it (the average crosses the
+    threshold at times), page_fault1 and 3 unchanged. LevelDB with a
+    thrashing table cache: 0.84-0.92 at 4-8 threads, 1.03-1.11 at 16-60.
+  * A parked writer that gets `m` reports the same measurements as a queue
+    head, so the average stays current when everybody parks.
 * Writers publish whenever they can; there is no plain mode for the writer
   queue (ARCHITECTURE 7a).
 * A nested rwsem writer acquire inside a section is queued and spun for like
@@ -434,17 +474,20 @@ sees neither effect.
 | `kd_numa_plain` (core param, 0644) | 16 | mutex and rwsem writer queue in plain mode: how often a waiter may be passed by a queue head that moves a waiter of its own node to the front (at most 255); 0: arrival order (ARCHITECTURE 7a) |
 | `kd_rw_era_ns` (core param, 0644) | 200000 | rwlock: the era bound (a waiter waits at most twice this); 0: no eras in either family, and the queue heads measure nothing (ARCHITECTURE 7b) |
 | `kd_rwsem_era_ns` (core param, 0644) | 1000000 | rwsem: the era bound; 0: use `kd_rw_era_ns` (ARCHITECTURE 7b) |
+| `kd_rw_era_sample` (core param, 0644) | 16 | rwlock: a CPU's queue heads take the era measurements at one write acquisition in this many (section 3); 1: at every one |
 | `kd_rw_era_press` (core param, 0644) | 225 | hundredths of a caller: average company a queue-head writer must find (readers in + up to 2 queued behind) for an era to start or be renewed |
 | `kd_rw_era_drain_ns` (core param, 0644) | 5000 | no era while the readers a queue head finds take longer than this to leave, on average |
 | `kd_rw_era_dbg_drain`, `kd_rw_era_dbg_press` (0444) | - | the last averages a queue head computed (ns; sixteenths of a caller) |
 | `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
 | `kd_rwsem_steal` (core param, 0644) | 1 | rwsem: a running writer takes a free lock past a holder of `m` that sleeps on `count` (section 5); 0: the lock waits for the sleeper |
 | `kd_rwsem_handoff_ms` (core param, 0644) | 4 | how long a sleeping holder of `m` lets writers steal before it forbids it |
+| `kd_rwsem_park_drain_ns` (core param, 0644) | 5000 | rwsem, plain mode: a waiting writer parks instead of spinning in the queue while the readers of the lock take longer than this to leave, on average (section 5); 0: never |
 | `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |
 | `kd_handoff_running` (core param, 0644) | 1 | mutex handoff only to a parked waiter that is running; 0: also to a sleeping one |
 | `kd_mutex_woken` (core param, 0644) | 1 | mutex: a release does not wake a first parked waiter that is awake already (`KD_QF_WOKEN`); 0: the flag is no longer set, and every release with parked waiters wakes the first one |
 | `kd_adapt` (core param, 0644) | 1 | plain mode below the queue depths that follow; 0: always delegation mode |
 | `kd_deleg_enter` (core param, 0644) | 5 | spinlock: waiters behind a queue head that switch the lock to delegation mode |
+| `kd_deleg_numa` (core param, 0644) | 1 | spinlock: ... and only if one of them is on another NUMA node than the queue head; 0: by depth alone |
 | `kd_deleg_enter_sleep` (core param, 0644) | 3 | the same for a mutex |
 | `kd_deleg_exit` (core param, 0644) | 2 | a session leaves delegation mode with fewer waiters queued behind it |
 | `kd_xchg` (core param, 0644) | 1 | role exchange after a handback: 0 never, 1 mutex and rwsem writer, 2 every family |

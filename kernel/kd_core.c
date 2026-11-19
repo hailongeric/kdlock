@@ -101,6 +101,21 @@ unsigned int kd_deleg_enter_sleep __read_mostly = 3;
 core_param(kd_deleg_enter_sleep, kd_deleg_enter_sleep, uint, 0644);
 unsigned int kd_deleg_exit __read_mostly = 2;
 core_param(kd_deleg_exit, kd_deleg_exit, uint, 0644);
+/*
+ * Spin class: a deep queue switches the lock to delegation mode only if a
+ * waiter of another NUMA node is among the waiters the queue head sampled.
+ * What a combiner saves a spinlock is the transfer of the lock's data from
+ * holder to holder; within one node that costs about what the transfer of a
+ * continuation costs, across nodes several times more. Measured on kdnat12
+ * (nano, native queued spinlock alongside, kd/native): with one cache line
+ * in the section a lock that delegates is at 0.88 at 6-8 workers and 0.92
+ * at 16 where the plain lock is at 0.96-0.97, with eight lines 0.92-0.96
+ * against 0.93-1.00; at 48-60 workers on two nodes delegation gives
+ * 1.39-1.56 where the plain lock is at 0.87-0.90
+ * (bench/results/kdclaude/plain-20261119-64cpu). 0: by depth alone.
+ */
+static bool kd_deleg_numa __read_mostly = true;
+core_param(kd_deleg_numa, kd_deleg_numa, bool, 0644);
 
 /*
  * Measuring the queue means reading other waiters' nodes, which the plain
@@ -889,14 +904,23 @@ static void kd_mode_set(struct kd_qlock *q, bool sleepable, bool on)
 static __always_inline bool kd_probe_enter(struct kd_cpu *kc, struct kd_node *me,
 					   bool sleepable)
 {
-	int enter;
+	struct kd_node *n = me;
+	bool remote = false;
+	int enter, d = 0;
 
 	if (!static_branch_likely(&kd_delegation))
 		return false;
 	if (kc->probe++ & (KD_PROBE_PERIOD - 1))
 		return false;
 	enter = sleepable ? READ_ONCE(kd_deleg_enter_sleep) : READ_ONCE(kd_deleg_enter);
-	return kd_q_depth(me, enter) >= enter;
+	if (sleepable || !READ_ONCE(kd_deleg_numa))
+		return kd_q_depth(me, enter) >= enter;
+	/* Spin class: deep enough, and not all of one node (kd_deleg_numa). */
+	while (d < enter && (n = READ_ONCE(n->next))) {
+		d++;
+		remote |= READ_ONCE(n->nid) != me->nid;
+	}
+	return d >= enter && remote;
 }
 
 /*
@@ -1252,6 +1276,7 @@ static __always_inline void kd_node_init(struct kd_node *n, int cpu, int idx)
 {
 	n->next = NULL;
 	n->tail = kd_tail(cpu, idx);
+	n->nid = numa_node_id();
 	n->claim = false;
 	n->passed = 0;
 	WRITE_ONCE(n->state, KD_N_WAIT);
@@ -1300,12 +1325,16 @@ static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe)
 		if (smp_cond_load_acquire(&me->state, VAL != KD_N_WAIT) == KD_N_HEAD_D)
 			lv |= KD_Q_DELEG;
 		/*
-		 * The successor's node is written when the head role is passed
-		 * on; ask for it now, while this CPU still waits for the lock.
+		 * The successor's node is not asked for here. It is written
+		 * when the head role is passed on, and a prefetch for writing
+		 * at this point (the new head still waits for the holder) was
+		 * here until 2026-11-19: the successor polls that very line,
+		 * takes it back at once, and the handover then pays the same
+		 * transfer again. Without it the plain path is 5-8% faster at
+		 * 8-32 workers (kdnat13, nano spin with one cache line, with
+		 * and without work between the operations, in-boot A/B, 3
+		 * rounds: 0.97-0.98 of native with it, 1.02-1.05 without).
 		 */
-		next = READ_ONCE(me->next);
-		if (next)
-			prefetchw(next);
 		/*
 		 * Measure the queue here, as the new head that still waits for
 		 * the holder: the walk then costs nobody anything. Done after
