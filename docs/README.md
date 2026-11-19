@@ -19,7 +19,7 @@ NUMA node at a time (ARCHITECTURE 7b). See
 | Read this | For |
 | --- | --- |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | mechanism end to end: objects, wait, session, executor, handback, context transfer, NUMA order, nesting, images, invariants, limits |
-| [LOCKS.md](LOCKS.md) | per-family protocol, API, semantics, tunables, the clobber entries (`kd_*_cl()`) |
+| [LOCKS.md](LOCKS.md) | per-family protocol, API, semantics, tunables |
 | [TRANSLATOR.md](TRANSLATOR.md) | what the userspace translator copies and rewrites, exits, learning loop |
 | [INTERFACES.md](INTERFACES.md) | `/dev/kdlock`, debugfs counters, kernel parameters, benchmark device |
 | [KERNEL_INTEGRATION.md](KERNEL_INTEGRATION.md) | putting kdlock into a kernel tree; configuration; what is and is not replaced |

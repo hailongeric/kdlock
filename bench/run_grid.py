@@ -61,21 +61,11 @@ PROFILES = {
     "rwlock_c01_hb": ("rwlock_hb", 1, 100, 256),
     "rwsem_c01_hb": ("rwsem_hb", 1, 100, 256),
     "mutex_c01_hb": ("mix", 1, 100, 256),
-    # The clobber entries (kd_api.h kd_*_cl()); Native and TCLock run their
-    # ordinary bodies, so these compare with the profiles without _cl.
-    "spin_c01_cl": ("spin_cl", 1, 100, 64),
-    "spin_c08_cl": ("spin_cl", 8, 100, 64),
-    "mutex_c01_cl": ("mutex_cl", 1, 100, 256),
-    "mutex_c16_cl": ("mutex_cl", 16, 100, 256),
-    "rwlock_c01_w100_cl": ("rwlock_cl", 1, 100, 256),
-    "rwlock_c16_w20_cl": ("rwlock_cl", 16, 20, 256),
-    "rwsem_c01_w100_cl": ("rwsem_cl", 1, 100, 256),
-    "rwsem_c16_w20_cl": ("rwsem_cl", 16, 20, 256),
 }
 # The default grid; the other profiles are run on request.
 C08 = ["mutex_c08", "rwsem_c08_w1", "rwsem_c08_w20", "rwlock_c08_w1", "rwlock_c08_w20"]
 GRID = [p for p in PROFILES
-        if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100", "_cl")) and p not in C08]
+        if not p.endswith(("_curr", "_curw", "_raw", "_hb", "_w100")) and p not in C08]
 # Cachelines 1 and 8 of every family (--profiles appgrid).
 APPGRID = ["spin_c01", "spin_c08", "mutex_c01", "mutex_c08",
            "rwsem_c01_w1", "rwsem_c08_w1", "rwsem_c01_w20", "rwsem_c08_w20",

@@ -207,16 +207,12 @@ The executor prepares and enters generated code:
 4. `kd_jit_enter(packet, entry)` loads the packet's registers, installs the
    origin's logical flags with `popfq`, switches `rsp` to the origin's stack
    and jumps into the image. Execution is real machine code on the origin's
-   real stack. A packet whose kind is compact (a clobber entry, LOCKS 8)
-   has only `rsp`, `rbp`, `rax` and the flags; those are loaded and the
-   other registers cleared.
+   real stack.
 
 The image leaves through an **exit stub** (`mov` only, to
 `gs:[kd_cpu.exit_ip / resume / exit_code / aux]`, then `jmp kd_jit_exit`).
 `kd_jit_exit` saves the full state back into the packet and returns to
-`kd_exec_one`. The one exception is the root release at a clobber call site,
-whose stub jumps to `kd_jit_exit_cl`: it saves `rsp`, `rbp` and the flags and
-marks the packet compact. `kd_exec_one` decides by exit kind:
+`kd_exec_one`, which decides by exit kind:
 
 | Exit | Meaning | Action |
 | --- | --- | --- |

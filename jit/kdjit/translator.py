@@ -46,7 +46,7 @@ import capstone
 from capstone import x86_const as X
 
 from .kernel import (MASK64, KD_X_REGION, KD_SYM_ACQUIRE, KD_SYM_LOCAL, KD_SYM_NESTED, KD_SYM_UNLOCK,
-                     KD_SYM_UNLOCK_CL, KD_X_ACQUIRE,
+                     KD_X_ACQUIRE,
                      KD_X_FRONTIER, KD_X_MISS_CODE, KD_X_MISS_IND, KD_X_MISS_RET, KD_X_TAIL,
                      KD_X_UNLOCK, KD_X_UNLOCK_ANC)
 
@@ -278,7 +278,7 @@ def _loc(addr):
 
 class Ins:
     __slots__ = ("addr", "size", "raw", "kind", "target", "op", "falls", "depth",
-                 "reg", "mem", "patch", "compact", "pcpu", "plevel", "pdec", "orig")
+                 "reg", "mem", "patch", "pcpu", "plevel", "pdec", "orig")
 
     def __init__(self, addr, raw, depth):
         self.addr = addr
@@ -292,7 +292,6 @@ class Ins:
         self.reg = None         # indirect branch through this register number
         self.mem = None         # indirect branch through memory: (prefixes, rex, tail, riprel_target)
         self.patch = None       # (disp_offset, new_target, absolute) for plain instructions
-        self.compact = False    # root release of a clobber call site (KD_SYM_UNLOCK_CL)
         self.pcpu = False       # derives this CPU's identity (per-CPU base or CPU number)
         self.plevel = 0         # +1 opens a preempt/IRQ-off region, -1 closes one
         self.orig = None        # native target of a nested-class lock call
@@ -362,8 +361,6 @@ class Translator:
             cls, op, alt = sym
             if cls == KD_SYM_UNLOCK:
                 return "unlock", op
-            if cls == KD_SYM_UNLOCK_CL:
-                return "unlock_cl", op
             if cls == KD_SYM_ACQUIRE:
                 return "acquire", op
             if cls == KD_SYM_NESTED:
@@ -469,13 +466,10 @@ class Translator:
                         ins.falls = True
                     else:
                         ins.kind = "ret"
-                elif cls in ("unlock", "unlock_cl"):
+                elif cls == "unlock":
                     ins.kind = "unlock_call" if is_call else "unlock_tail"
                     ins.op = detail
                     ins.falls = is_call
-                    # Only a call returns to code that keeps nothing but
-                    # rsp and rbp; a sibling call returns to its caller's.
-                    ins.compact = cls == "unlock_cl" and is_call
                 elif cls == "acquire":
                     ins.kind = "acquire_call" if is_call else "acquire_tail"
                     ins.op = detail
@@ -1184,15 +1178,13 @@ class Translator:
             self.asm.raw(b"\x48\x83\xec\x08" + b"\xc7\x04\x24" + struct.pack("<I", lo) +
                          b"\xc7\x44\x24\x04" + struct.pack("<I", hi), cold)
 
-    def _exit(self, code, ip, resume=None, cold=False, aux=None, compact=False):
+    def _exit(self, code, ip, resume=None, cold=False, aux=None):
         """Exit stub: record why and where, then leave through kd_jit_exit.
 
         Uses only mov, so the source program's flags reach the packet.
-        compact: leave through kd_jit_exit_cl, which records rsp, rbp and
-        the flags only (the root release of a clobber call site).
         """
         info = self.info
-        target = info.jit_exit_cl if compact and info.jit_exit_cl else info.jit_exit
+        target = info.jit_exit
         if ip in self.region_addrs and ip not in self.pcpu_starts:
             # A region start that became a frontier hands back before its
             # own region: not flagged (its own increment raises the count).
@@ -1250,8 +1242,7 @@ class Translator:
         self.asm.raw(b"\x65\x48\x3b\x3c\x25" + _simm32(self.info.pcpu_root))
         self._jcc(0x4, label)
         self.asm.label(label, cold=True)
-        self._exit(KD_X_UNLOCK | flags, ins.addr, resume=resume, cold=True,
-                   compact=ins.compact and not tail)
+        self._exit(KD_X_UNLOCK | flags, ins.addr, resume=resume, cold=True)
 
         label = "unlockanc_%x" % ins.addr
         self.asm.raw(b"\x65\x83\x3c\x25" + _simm32(self.info.pcpu_anc) + b"\x00")

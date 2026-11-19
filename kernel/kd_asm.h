@@ -7,13 +7,12 @@
 #ifndef KD_ASM_H
 #define KD_ASM_H
 
-/* struct kd_regs: lines 0 and 1 are what a compact state uses */
+/* struct kd_regs */
 #define KD_R_rsp		0
 #define KD_R_rbp		8
 #define KD_R_rip		16
 #define KD_R_rflags		24
 #define KD_R_rax		32
-#define KD_R_kind		106
 #define KD_R_rbx		144
 #define KD_R_rcx		152
 #define KD_R_rdx		160
@@ -28,11 +27,6 @@
 #define KD_R_r14		232
 #define KD_R_r15		240
 #define KD_R_SIZE		248
-#define KD_R_COMPACT_SIZE	128	/* the lines a compact state touches */
-
-/* struct kd_regs.kind */
-#define KD_RS_FULL		0
-#define KD_RS_COMPACT		1
 
 /* struct kd_cpu */
 #define KD_CPU_task		0

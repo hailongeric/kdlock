@@ -163,34 +163,6 @@ DEFINE_CUR(krwl_hb, kd_write_lock(&k_rwl), kd_write_unlock(&k_rwl), KDB_HB_FIXUP
 DEFINE_CUR(nrwsem_hb, down_write(&n_rwsem), up_write(&n_rwsem), KDB_HB_YIELD)
 DEFINE_CUR(krwsem_hb, kd_down_write(&k_rwsem), kd_up_write(&k_rwsem), KDB_HB_YIELD)
 
-/*
- * The same bodies through the clobber entries (kd_api.h). Each macro use is
- * a call site of its own, as with the ordinary calls.
- */
-DEFINE_OPS(kspin_cl, kd_spin_lock_cl(&k_spin), kd_spin_unlock_cl(&k_spin),
-	   kd_spin_lock_cl(&k_spin), kd_spin_unlock_cl(&k_spin))
-DEFINE_OPS(kmutex_cl, kd_mutex_lock_cl(&k_mutex), kd_mutex_unlock_cl(&k_mutex),
-	   kd_mutex_lock_cl(&k_mutex), kd_mutex_unlock_cl(&k_mutex))
-DEFINE_OPS(krwl_cl, kd_write_lock_cl(&k_rwl), kd_write_unlock_cl(&k_rwl),
-	   kd_read_lock(&k_rwl), kd_read_unlock(&k_rwl))
-DEFINE_OPS(krwsem_cl, kd_down_write_cl(&k_rwsem), kd_up_write_cl(&k_rwsem),
-	   kd_down_read(&k_rwsem), kd_up_read(&k_rwsem))
-DEFINE_CUR(kspin_hb_cl, kd_spin_lock_cl(&k_spin), kd_spin_unlock_cl(&k_spin), KDB_HB_FIXUP)
-DEFINE_CUR(krwsem_hb_cl, kd_down_write_cl(&k_rwsem), kd_up_write_cl(&k_rwsem), KDB_HB_YIELD)
-
-/* One end of the section through a clobber entry, the other ordinary. */
-DEFINE_CUR(kspin_me1, kd_spin_lock_cl(&k_spin), kd_spin_unlock(&k_spin), do { } while (0))
-DEFINE_CUR(kspin_me2, kd_spin_lock(&k_spin), kd_spin_unlock_cl(&k_spin), do { } while (0))
-
-static void kspin_mixend_w(void)
-{
-	/* Read outside the lock only to alternate; any value will do. */
-	if (READ_ONCE(cnt[0].v) & 1)
-		kspin_me1_w();
-	else
-		kspin_me2_w();
-}
-
 #ifdef KDB_WITH_TCLOCK
 /*
  * Original TCLock (tclock_backend/, upstream rs3lab/TCLocks RCUHT locks).
@@ -310,8 +282,6 @@ DEFINE_NEST(knest_spin, kd_spin_lock(&k_spin), kd_spin_unlock(&k_spin),
 	    kd_spin_lock(&k_spin2), kd_spin_unlock(&k_spin2))
 DEFINE_NEST(knest_mutex, kd_mutex_lock(&k_mutex), kd_mutex_unlock(&k_mutex),
 	    kd_spin_lock(&k_spin2), kd_spin_unlock(&k_spin2))
-DEFINE_NEST(knest_spin_cl, kd_spin_lock_cl(&k_spin), kd_spin_unlock_cl(&k_spin),
-	    kd_spin_lock(&k_spin2), kd_spin_unlock(&k_spin2))
 
 /*
  * A section that leaves delegated code in several ways. `me` is read before
@@ -400,10 +370,6 @@ static u32 knest_spin_t(u32 r, u32 pct)
 {
 	return r % 100 < pct ? knest_spin_outer() : knest_spin_inner();
 }
-static u32 knest_spin_cl_t(u32 r, u32 pct)
-{
-	return (r % 100 < pct) ? knest_spin_cl_outer() : knest_spin_cl_inner();
-}
 static u32 knest_mutex_t(u32 r, u32 pct)
 {
 	return r % 100 < pct ? knest_mutex_outer() : knest_mutex_inner();
@@ -434,12 +400,7 @@ static const struct ops op_table[3][KDB_NR_FAMILY] = {
 			 { nmutex_curr_w, nmutex_r }, { nmutex_curw_w, nmutex_r },
 			 { }, { nkspin_w, nkspin_r },
 			 { nspin_hb_w, nspin_r }, { nrwl_hb_w, nrwl_r },
-			 { nrwsem_hb_w, nrwsem_r },
-			 /* The clobber families: the ordinary native bodies. */
-			 [KDB_SPIN_CL] = { nspin_w, nspin_r }, { nmutex_w, nmutex_r },
-			 { nrwl_w, nrwl_r }, { nrwsem_w, nrwsem_r },
-			 { nspin_hb_w, nspin_r }, { nrwsem_hb_w, nrwsem_r },
-			 { nspin_w, nspin_r }, { .t = nnest_spin_t } },
+			 { nrwsem_hb_w, nrwsem_r } },
 	[KDB_KD]     = { { kspin_w, kspin_r }, { kmutex_w, kmutex_r },
 			 { krwl_w, krwl_r }, { krwsem_w, krwsem_r },
 			 { .t = knest_spin_t }, { .t = knest_mutex_t },
@@ -448,20 +409,9 @@ static const struct ops op_table[3][KDB_NR_FAMILY] = {
 			 { kmutex_curr_w, kmutex_r }, { kmutex_curw_w, kmutex_r },
 			 { .t = kww_t }, { kspin_raw_w, kspin_raw_r },
 			 { kspin_hb_w, kspin_r }, { krwl_hb_w, krwl_r },
-			 { krwsem_hb_w, krwsem_r },
-			 [KDB_SPIN_CL] = { kspin_cl_w, kspin_cl_r }, { kmutex_cl_w, kmutex_cl_r },
-			 { krwl_cl_w, krwl_cl_r }, { krwsem_cl_w, krwsem_cl_r },
-			 { kspin_hb_cl_w, kspin_r }, { krwsem_hb_cl_w, krwsem_r },
-			 { kspin_mixend_w, kspin_r }, { .t = knest_spin_cl_t } },
+			 { krwsem_hb_w, krwsem_r } },
 #ifdef KDB_WITH_TCLOCK
 	[KDB_TCLOCK] = { { tspin_w, tspin_r },
-			 { tmutex_w, tmutex_r, .reg = tc_mutex_worker_register,
-			   .drain = tc_mutex_workers_drain },
-			 { trwl_w, trwl_r },
-			 { trwsem_w, trwsem_r, .reg = tc_rwsem_worker_register,
-			   .drain = tc_rwsem_workers_drain },
-			 /* The clobber families: TCLock's ordinary bodies. */
-			 [KDB_SPIN_CL] = { tspin_w, tspin_r },
 			 { tmutex_w, tmutex_r, .reg = tc_mutex_worker_register,
 			   .drain = tc_mutex_workers_drain },
 			 { trwl_w, trwl_r },
@@ -605,9 +555,7 @@ static int do_run(struct kdb_run *r)
 		w->ops = ops;
 		w->pct = (r->family == KDB_RWLOCK || r->family == KDB_RWSEM ||
 			  r->family == KDB_NEST_SPIN || r->family == KDB_NEST_MUTEX ||
-			  r->family == KDB_RWLOCK_HB || r->family == KDB_RWSEM_HB ||
-			  r->family == KDB_RWLOCK_CL || r->family == KDB_RWSEM_CL ||
-			  r->family == KDB_RWSEM_HB_CL || r->family == KDB_NEST_SPIN_CL) ?
+			  r->family == KDB_RWLOCK_HB || r->family == KDB_RWSEM_HB) ?
 			 r->write_pct : 100;
 		w->post = r->post;
 		init_completion(&w->done);

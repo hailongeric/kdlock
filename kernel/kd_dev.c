@@ -89,8 +89,6 @@ static const char * const kd_stat_names[KD_STAT_NR] = {
 	[KD_STAT_ERA_GATE]		= "era_gate",
 	[KD_STAT_ERA_CLAIM]		= "era_claim",
 	[KD_STAT_ERA_START]		= "era_start",
-	[KD_STAT_CL_OFFERED]		= "cl_offered",
-	[KD_STAT_CL_DONE]		= "cl_done",
 };
 
 static int kd_stats_show(struct seq_file *m, void *v)

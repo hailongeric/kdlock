@@ -1,12 +1,15 @@
 #!/bin/bash
 # buildk.sh NAME OUTDIR: guest helper (kdclaude VM). Copy the kdlock sources
-# from /root/host_fs/kdlock into the kernel tree /mnt/kdlock-builds/kda/src,
+# (C, headers, the entry assembly, Kconfig and Makefile of kernel/, and
+# include/kdlock) from /root/host_fs/kdlock into the kernel tree
+# /mnt/kdlock-builds/kda/src,
 # build 7.0.0-38-NAME into ../OUTDIR, then modules_install and install.
 # Prints BUILDK_DONE at the end. Boot the result with grub-reboot
 # (docs/HANDOFF.md section 2).
 k=${1:?name}; o=${2:?outdir}; r=7.0.0-38-$k
 cd /mnt/kdlock-builds/kda || exit 1
-for f in /root/host_fs/kdlock/kernel/*.c /root/host_fs/kdlock/kernel/*.h; do
+for f in /root/host_fs/kdlock/kernel/*.c /root/host_fs/kdlock/kernel/*.h /root/host_fs/kdlock/kernel/*.S \
+	 /root/host_fs/kdlock/kernel/Kconfig /root/host_fs/kdlock/kernel/Makefile; do
 	cmp -s $f src/kernel/locking/kdlock/$(basename $f) || { cp $f src/kernel/locking/kdlock/; echo "copied $(basename $f)"; }
 done
 for f in /root/host_fs/kdlock/include/kdlock/*.h; do

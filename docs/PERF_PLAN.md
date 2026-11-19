@@ -348,14 +348,17 @@ Data: `tune-20261115-2700MHz/` (in-boot A/B, builds #67-#71) and
     (BUILD_AND_TEST 5a).
   * All of it, step by step, with what was tried and removed:
     `bench/results/kdclaude/era-20261115-64cpu/`.
-* **Clobber entries** (#83, #84; LOCKS 8): the `kd_*_cl()` macros declare
-  every register but `rsp` and `rbp` lost across the lock and release
-  calls, so the continuation is two packet lines instead of four. In-boot
-  A/B: +2-4% for one-line spin and rwlock writer sections, +0.5-2% for the
-  rwsem, up to +2% for the mutex, -0.5 to -0.8% for the mutex with sixteen
-  lines. Two packet lines cost about 2.5 ns each per section, so moving the
-  rest of the continuation into the queue node would be worth about 1.5%
-  and is not done (`bench/results/kdclaude/clobber-20261116-64cpu/`).
+* **Clobber entries** (#83, #84; removed 2026-11-19): `kd_*_cl()` macros
+  that declared every register but `rsp` and `rbp` lost across the lock and
+  release calls, so that a continuation was two packet lines instead of
+  four. In-boot A/B: +2-4% for one-line spin and rwlock writer sections,
+  +0.5-2% for the rwsem, up to +2% for the mutex, -0.5 to -0.8% for the
+  mutex with sixteen lines
+  (`bench/results/kdclaude/clobber-20261116-64cpu/`). No kernel call site
+  used them (they need the macros at the call), the option was off by
+  default, and the second kind of entry, exit, packet state and release
+  class was carried by every path; the code was deleted at the user's
+  request. Two packet lines cost about 2.5 ns each per section.
 * **More threads than CPUs** (#82): the spin class is unaffected; the
   sleepable class loses less than Native (kd/Native 1.16-1.62), but rwsem
   writer sessions collapse to 11-33 sections because a queue head waits out

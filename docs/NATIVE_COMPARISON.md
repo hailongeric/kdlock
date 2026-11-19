@@ -35,7 +35,7 @@ Everything below is the consequence of that one row.
 | rwsem | `struct rw_semaphore`, 40 bytes: `count`, `owner`, OSQ pointer, `wait_lock`, `wait_list` | `struct kd_rwsem`, 40 bytes: `count` + a `kd_mutex m` used as the writer queue |
 | Queue node | `struct mcs_spinlock` = `{next, locked, count}`, 16 bytes, from `qnodes[4]` per CPU (`_Q_MAX_NODES` = 4); mutex/rwsem spinners use `struct optimistic_spin_node` = `{next, prev, locked, cpu}` | `struct kd_node`, one cache line: `{next, state, tail, nid, regs, entry, claim}` plus, in `nodes[0]`, the per-CPU counters the plain path needs; `nodes[4]` and `mnodes[4]` per CPU (`KD_MAX_NODES` = 4) |
 | Sleeping waiter record | `struct mutex_waiter` / `struct rwsem_waiter` **on the waiter's own stack**, linked into `wait_list` | `struct kd_mutex_waiter` on the waiter's own stack, linked into `waiters` (same idea) |
-| Continuation record | none | `struct kd_regs`, 248 bytes (4 cache lines), one per CPU, in `kd_cpu.regs`; lines 0-1 are all a compact state (clobber entries) uses |
+| Continuation record | none | `struct kd_regs`, 248 bytes (4 cache lines), one per CPU, in `kd_cpu.regs` |
 | Extra per-CPU memory | `qnodes[4]`, `osq_node` | `kd_cpu`: packet, `nodes[4]`, `mnodes[4]`, a 16 KiB wait stack, counters |
 
 The lock objects have the native sizes on purpose, so containers that embed
@@ -80,13 +80,10 @@ the compiler left it.
 | **`kd_jit_exit`** (section ends or hands back) | **16 GPRs + `rsp` + `rflags` = 18 words stored**, then `rsp` restored from `host_rsp` and **6 popped** | packet, then executor stack | exit stubs use only `mov`, so the flags stored are the section's own |
 | **`kd_nested_exit`** (contended inner lock inside a section) | **8 GPRs stored** (`rax`, `rbx`, `rbp`, `rdi`, `r12`-`r15`) + `rsp` + `rflags` + the resume address = **11 words** | the same packet, no copy | again only callee-saved plus `rdi`/`rax`, because the inner lock call has already returned-in-effect |
 | combiner per served section | the 18 + 16 words above, plus one `claim` store one section ahead and one `smp_mb()` | — | no atomic per waiter since build #57 (LOCKS 4) |
-| **clobber entries** (`kd_*_cl()`, LOCKS 8), offer | **5 words stored** (`rbp`, `rax`, `rsp`, `rip`, `rflags`) and the kind | packet lines 0 and 1 | the caller declared `rbx`, `r12`-`r15` and every caller-saved register lost across the call |
-| clobber entries, `kd_jit_enter` / `kd_jit_exit_cl` / `kd_resume` | **4 loaded** (`rsp`, `rbp`, `rax`, flags), the others cleared / **3 stored** (`rsp`, `rbp`, flags) / **5 loaded**, the others cleared | lines 0 and 1 | only where both ends of the section are clobber calls; every other exit keeps the full state |
 | blocking wait (`kd_mutex_sleep`, rwsem sleep) | exactly the native cost: `__switch_to_asm` 6 + 6, `__switch_to` | — | kdlock does not change how a task blocks; it tries not to get there |
 
 So a delegated acquisition costs the origin **10 words out, 19 words back**, and
-no task switch; through the clobber entries **5 out, 5 back**, and the
-combiner fetches two of the packet's lines instead of four. A native blocking acquisition costs two task switches of 6
+no task switch. A native blocking acquisition costs two task switches of 6
 callee-saved registers each plus everything `__switch_to` does, and the critical
 section still runs on the waiter's own cold cache.
 

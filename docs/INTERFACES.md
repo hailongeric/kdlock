@@ -19,7 +19,7 @@ device. Structures are in `include/kdlock/kd_uapi.h` and
 | `KD_IOC_ENABLE` | global delegation switch (static key) |
 | `KD_IOC_TEXT` | for an address: the text region holding it (core kernel text, or one module's text / init text while it is coming), every instruction in that region with an exception-table entry, and the current text generation. Address 0 reads only the generation |
 
-ABI version is `KD_ABI_VERSION` (3); the translator refuses a mismatch.
+ABI version is `KD_ABI_VERSION` (5; version 4 had a release class and an exit for the clobber entries, removed 2026-11-19); the translator refuses a mismatch.
 
 ### Text generation
 
@@ -85,7 +85,6 @@ Read-only, `/sys/kernel/debug/kdlock_stats`. One `name value` line each:
 | `mode_enter`, `mode_exit` | locks switched to delegation mode by a queue head / back to plain mode by a combiner |
 | `xchg_offer`, `xchg_taken`, `xchg_declined`, `xchg_retract` | role exchange: combiners that offered themselves after a handback, releases that took the head role over, releases that could not, offers withdrawn because the holder stopped running |
 | `era_start`, `era_gate`, `era_claim` | eras of the rw families (ARCHITECTURE 7b): eras started by a queue head, callers that waited for their node's era, waits that ended by taking the era over |
-| `cl_offered`, `cl_done` | clobber entries (LOCKS 8): waiters that queued with a compact state, sections that ended at a clobber release with a compact state |
 
 Counters are per-CPU, summed on read, non-atomic and approximate by design.
 

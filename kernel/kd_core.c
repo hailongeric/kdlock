@@ -137,11 +137,7 @@ KD_CHECK(struct kd_regs, r14, KD_R_r14);
 KD_CHECK(struct kd_regs, r15, KD_R_r15);
 KD_CHECK(struct kd_regs, rip, KD_R_rip);
 KD_CHECK(struct kd_regs, rflags, KD_R_rflags);
-KD_CHECK(struct kd_regs, kind, KD_R_kind);
 static_assert(sizeof(struct kd_regs) == KD_R_SIZE);
-/* What a compact state needs, and nothing a full one alone needs, in lines 0 and 1. */
-static_assert(offsetof(struct kd_regs, roots[2]) == KD_R_COMPACT_SIZE);
-static_assert(KD_R_rbx >= KD_R_COMPACT_SIZE && KD_R_kind < KD_R_COMPACT_SIZE);
 KD_CHECK(struct kd_cpu, task, KD_CPU_task);
 KD_CHECK(struct kd_cpu, canary, KD_CPU_canary);
 KD_CHECK(struct kd_cpu, stack_top, KD_CPU_stack_top);
@@ -405,7 +401,7 @@ static __always_inline void kd_demote(const void *p, long len)
 static __always_inline void kd_demote_packet(struct kd_regs *r, unsigned int how)
 {
 	if (how & 1)
-		kd_demote(r, r->kind == KD_RS_COMPACT ? KD_R_COMPACT_SIZE : sizeof(*r));
+		kd_demote(r, sizeof(*r));
 	if (how & 2)
 		kd_demote((void *)(r->rsp - 128), 448);
 }
@@ -678,8 +674,6 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	}
 
 	kd_stat_inc(kc, native ? KD_STAT_HANDBACK : KD_STAT_DELEGATED);
-	if (done && !native && r->kind == KD_RS_COMPACT)
-		kd_stat_inc(kc, KD_STAT_CL_DONE);
 	kd_site_account(r->site, !native || planned);
 	return done;
 }
@@ -707,15 +701,13 @@ static __always_inline struct kd_regs *kd_packet_guess(struct kd_node *n)
 	return &container_of(n, struct kd_cpu, nodes[0])->regs;
 }
 
-/* The packet lines a section uses: two for a compact state, four for a full one. */
-static __always_inline void kd_prefetch_packet(struct kd_regs *r, bool full)
+/* The four packet lines a section uses. */
+static __always_inline void kd_prefetch_packet(struct kd_regs *r)
 {
 	prefetchw(r);
 	prefetchw((void *)r + 64);
-	if (full) {
-		prefetchw((void *)r + 128);
-		prefetchw((void *)r + 192);
-	}
+	prefetchw((void *)r + 128);
+	prefetchw((void *)r + 192);
 }
 
 /* ---- role exchange after a handback ----------------------------------------- */
@@ -962,7 +954,6 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 	unsigned int served = 0, passed = 0;
 	int exit_below = READ_ONCE(kd_deleg_exit);
 	struct kd_regs *guess;
-	bool guess_full;
 	struct kd_irq_hold hold = { .held = false };
 
 	if (!static_branch_likely(&kd_delegation) || !in_task() ||
@@ -1057,13 +1048,6 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 		 */
 		nn = READ_ONCE(n->next);
 		guess = NULL;
-		/*
-		 * Whether the next packet is full is only known once its node
-		 * has arrived; until then the waiter being served is the
-		 * guess (a call site uses one kind of entry, and the waiters
-		 * of one lock mostly come from the same sites).
-		 */
-		guess_full = READ_ONCE(n->full);
 		if (nn && sleepable) {
 			/*
 			 * Announce the next waiter instead of prefetching its
@@ -1081,7 +1065,7 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 			 * from mnodes[0]: -2 to +1%).
 			 */
 			guess = kd_packet_guess(nn);
-			kd_prefetch_packet(guess, guess_full);
+			kd_prefetch_packet(guess);
 		}
 		/*
 		 * Requesting more than this ahead loses (build #68, in-boot
@@ -1097,14 +1081,9 @@ static bool kd_session(struct kd_qlock *q, struct kd_node *me, void *root,
 		handed = !kd_exec_one(root, n, f, &hold);
 		if (nn) {
 			struct kd_regs *nr = READ_ONCE(nn->regs);
-			bool full = READ_ONCE(nn->full);
 
-			if (nr && nr != guess) {
-				kd_prefetch_packet(nr, full);
-			} else if (nr && full && !guess_full) {
-				prefetchw((void *)nr + 128);
-				prefetchw((void *)nr + 192);
-			}
+			if (nr && nr != guess)
+				kd_prefetch_packet(nr);
 		}
 		kd_q_detach(q, me, n);
 		if (handed) {
@@ -1225,8 +1204,6 @@ static void kd_prepare_offer(struct kd_cpu *kc, struct kd_node *me)
 	r->rcu_depth = rcu_preempt_depth();
 	me->regs = r;
 	kd_stat_inc(kc, KD_STAT_OFFERED);
-	if (r->kind == KD_RS_COMPACT)
-		kd_stat_inc(kc, KD_STAT_CL_OFFERED);
 	return;
 plain:
 	kd_stat_inc(kc, KD_STAT_PLAIN);
@@ -1242,8 +1219,6 @@ static void kd_node_offer(struct kd_cpu *kc, struct kd_node *me,
 		me->entry = entry;
 		me->regs = entry ? nested : NULL;
 	}
-	/* The entry stub, or the exit that left generated code, set the kind. */
-	me->full = me->regs && me->regs->kind != KD_RS_COMPACT;
 }
 
 /*

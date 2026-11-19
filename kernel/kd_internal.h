@@ -61,18 +61,11 @@ struct kd_site;
  *
  * Layout by use. The waiter writes the packet when it queues and the
  * combiner reads it from the waiter's cache, so every line in use is a
- * transfer per section. Lines 0 and 1 hold what every section needs; the
- * general registers that only a full state needs are in lines 2 and 3.
- *
- * ->kind says which registers are valid:
- *  KD_RS_FULL     all of them. Written by the ordinary entries, which keep
- *                 the C calling convention, and by every exit from
- *                 generated code except the one below.
- *  KD_RS_COMPACT  rsp, rbp, rip, rflags and rax only. Written by the clobber
- *                 entries (kd_api.h), whose callers have declared every
- *                 other general register lost across the call, and by the
- *                 exit at a clobber release. Lines 0 and 1 only.
- * Full is always a correct substitute for compact, never the reverse.
+ * transfer per section. Lines 0 and 1 hold the stack and instruction
+ * pointers and the execution bookkeeping, lines 2 and 3 the other general
+ * registers. An entry stub records the callee-saved registers and the
+ * return value (the C calling convention leaves nothing else live across
+ * the lock call); every exit from generated code records all of them.
  */
 struct kd_regs {
 	/* ---- line 0 ---- */
@@ -119,9 +112,8 @@ struct kd_regs {
 	 * combiner kept the write side; see kd_vdown in kd_core.c.
 	 */
 	u8 vdown;
-	u8 kind;			/* KD_RS_* */
 	void *roots[KD_MAX_ROOTS];	/* the first two in line 1 */
-	/* ---- lines 2 and 3: full state only ---- */
+	/* ---- lines 2 and 3 ---- */
 	unsigned long rbx, rcx, rdx, rsi, rdi;
 	unsigned long r8, r9, r10, r11, r12, r13, r14, r15;
 };
@@ -172,11 +164,6 @@ struct kd_node {
 	 * waiter's section. See kd_node_abandon().
 	 */
 	bool		claim;
-	/*
-	 * The published packet holds a full state (struct kd_regs). Only a
-	 * hint, for how many packet lines the combiner requests ahead.
-	 */
-	bool		full;
 	/*
 	 * Sleepable class, plain mode: how often a queue head put a waiter of
 	 * its own node in front of this one (kd_q_local_first()).
@@ -238,9 +225,6 @@ enum {
 	KD_STAT_ERA_GATE,	/* callers that waited for their node's era */
 	KD_STAT_ERA_CLAIM,	/* ... and took the era over after the bound */
 	KD_STAT_ERA_START,	/* eras started by a queue head */
-	/* Clobber entries (kd_api.h kd_*_cl()). */
-	KD_STAT_CL_OFFERED,	/* waiters queued with a compact state */
-	KD_STAT_CL_DONE,	/* sections that ended at a clobber release, compact */
 	KD_STAT_NR,
 };
 
@@ -418,7 +402,6 @@ struct kd_family {
 /* kd_entry.S */
 void kd_jit_enter(struct kd_regs *regs, void *code);
 void kd_jit_exit(void);
-void kd_jit_exit_cl(void);
 
 /* kd_core.c */
 int kd_wait_spin(struct kd_qlock *q, void *root, const struct kd_family *f,

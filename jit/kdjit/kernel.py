@@ -39,7 +39,7 @@ KD_IOC_SITE_DROP = _ioc(_IOC_WRITE, 5, struct.calcsize(SITE_FMT))
 KD_IOC_ENABLE = _ioc(_IOC_WRITE, 6, 4)
 KD_IOC_TEXT = _ioc(_IOC_READ | _IOC_WRITE, 7, struct.calcsize(TEXT_FMT))
 
-KD_ABI_VERSION = 4
+KD_ABI_VERSION = 5
 
 # Exit codes (kd_uapi.h).
 KD_X_UNLOCK, KD_X_ACQUIRE, KD_X_MISS_CODE, KD_X_MISS_IND = 1, 2, 3, 4
@@ -48,7 +48,7 @@ KD_X_UNLOCK_ANC, KD_X_NESTED = 8, 9
 KD_X_TAIL = 0x10000
 KD_X_REGION = 0x20000    # exit inside a walked per-CPU region
 
-KD_SYM_UNLOCK, KD_SYM_ACQUIRE, KD_SYM_NESTED, KD_SYM_LOCAL, KD_SYM_UNLOCK_CL = 1, 2, 3, 4, 5
+KD_SYM_UNLOCK, KD_SYM_ACQUIRE, KD_SYM_NESTED, KD_SYM_LOCAL = 1, 2, 3, 4
 
 KD_EV_REQUEST, KD_EV_MISS_CODE, KD_EV_MISS_IND, KD_EV_MISS_RET, KD_EV_SITE_OFF = 1, 2, 3, 4, 5
 KD_EV_TEXT_GONE = 6
@@ -64,7 +64,7 @@ class Info:
         (self.jit_exit, self.pcpu_task, self.pcpu_canary, self.pcpu_stack_top,
          self.pcpu_root, self.pcpu_exit_ip, self.pcpu_resume, self.pcpu_aux,
          self.pcpu_exit_code, self.src_current_task, self.src_stack_canary,
-         self.src_stack_top, self.pcpu_anc, self.jit_exit_cl) = f[2:16]
+         self.src_stack_top, self.pcpu_anc) = f[2:15]
         syms = f[19:]
         # addr -> (class, op, alternative entry for generated code)
         self.syms = {syms[4 * i]: (syms[4 * i + 2], syms[4 * i + 3], syms[4 * i + 1])
