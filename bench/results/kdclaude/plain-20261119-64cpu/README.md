@@ -406,8 +406,9 @@ The curves that turn over at about 36 threads (Psearchy) and at 4 (LevelDB)
 are those of the IntervalVM paper (SOSP '25, Linux 6.8) and its artifact:
 `pedsort -m 2048` without `-l`, and LevelDB `readrandom` on a database of
 2 M entries of 4 KiB. The grid runs the TCLocks lines (`-m 128 -l 200000`; a
-110 MB database). `ivm_apps.sh`, `data/ivm-runs.txt`; desk research with
-the sources: `/root/kdwork/research-psearchy-leveldb.md` on the cloud host.
+110 MB database). `ivm_apps.sh`, `data/ivm-runs.txt`; the desk research
+with every source, what each published curve ran and why it turns:
+[psearchy-leveldb-published-curves.md](psearchy-leveldb-published-curves.md).
 
 **LevelDB.** Native (kdnat12, tag i1): 19.6 k, 114 k, 126 k, 103 k, 81 k,
 62 k, 52 k operations per second at 1, 4, 8, 16, 32, 40, 60 threads: the
@@ -441,7 +442,7 @@ hardly contended in these configurations. `-m 2048` on 36 and more threads,
 where the paper's curve turns, needs about 1.5 GB per thread and cannot be
 run in this VM. What the published sources give as the reasons for the
 turn (kernel generation with and without per-VMA locks, glibc's stdio
-buffers by mmap before 2.23, the table size) is in the research notes.
+buffers by mmap before 2.23, the table size) is in that file.
 
 ## 9. kdall17: everything together
 

@@ -1,5 +1,18 @@
 # lkp-tests workloads as kdlock macro benchmarks, second round
 
+> **Baseline caveat (found 2026-11-19).** The native kernel of this round
+> was built without `CONFIG_PARAVIRT_SPINLOCKS`. In a KVM guest such a
+> kernel leaves `virt_spin_lock_key` on and every contended native spinlock
+> (and with it the native rwlock's writer queue) is a test-and-set lock,
+> not the queued one; `nopvspin` does not change that without the option.
+> Every "native" figure here that depends on a contended spinlock or rwlock
+> is therefore against a slower lock than bare-metal Linux runs: ratios of
+> kd spinlock and rwlock cases, lock1, the FxMark directory cases and the
+> like overstate kd. Cases whose contention is on a mutex or an rwsem (the
+> mmap lock) are much less affected. The corrected twins are kdnat11 and
+> later; see
+> [../plain-20261119-64cpu/](../plain-20261119-64cpu/README.md) section 1.
+
 Started 2026-11-19 on the cloud host. The first round
 ([../lkp-macro-20261118-64cpu/](../lkp-macro-20261118-64cpu/README.md),
 merged into `master` with this round) holds the analysis of lkp-tests by
