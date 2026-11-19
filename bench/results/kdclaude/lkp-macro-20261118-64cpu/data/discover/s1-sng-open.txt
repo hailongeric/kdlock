@@ -1,0 +1,15 @@
+refused 14 sites outside the allow list:
+     445  0xffffffff818da081 inode_sb_list_add+0x21
+     432  0xffffffff818dbd6c evict+0x7c
+      66  0xffffffff817afe5e list_lru_add+0x8e
+      47  0xffffffff8190d165 vfs_utimes+0x135
+       4  0xffffffff818d4204 d_alloc+0x34
+       4  0xffffffff818d6b5b dput.part.0+0xeb
+       3  0xffffffff818d57b1 __dentry_kill+0xb1
+       2  0xffffffff81c68661 lockref_get_not_dead+0x61
+       1  0xffffffff81f4efb6 ptmx_open+0xd6
+       1  0xffffffff818b155f __iterate_supers+0x6f
+       1  0xffffffff819066a7 sync_inodes_sb+0xe7
+       1  0xffffffff818d4369 d_mark_tmpfile+0x49
+       1  0xffffffff817b0504 __list_lru_walk_one+0x1a4
+       1  0xffffffff818b5274 chrdev_open+0x34

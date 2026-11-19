@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+       1  0xffffffff81431f92 do_exit+0x72

@@ -1,0 +1,6 @@
+do_send_sig_info
+set_current_blocked
+get_signal
+signal_setup_done
+futex_wake
+futex_q_lock

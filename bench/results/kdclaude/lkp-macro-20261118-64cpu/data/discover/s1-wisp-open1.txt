@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+       1  0xffffffff81430bc3 release_task+0x93

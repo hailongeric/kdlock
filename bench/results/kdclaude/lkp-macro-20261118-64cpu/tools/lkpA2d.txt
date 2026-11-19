@@ -1,0 +1,4 @@
+shmem_file_write_iter
+filename_unlinkat
+path_openat
+filename_create

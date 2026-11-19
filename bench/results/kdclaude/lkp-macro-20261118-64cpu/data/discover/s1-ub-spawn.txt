@@ -1,0 +1,13 @@
+refused 12 sites outside the allow list:
+    1360  0xffffffff817d416e dup_mmap+0x32e
+     531  0xffffffff81429349 copy_process+0x1519
+     527  0xffffffff8143223c do_exit+0x31c
+     480  0xffffffff81430bc3 release_task+0x93
+     389  0xffffffff8179f389 pcpu_alloc_noprof+0x569
+     237  0xffffffff817f3cb2 unlink_file_vma_batch_final+0x42
+     102  0xffffffff817f3b9c unlink_file_vma_batch_add+0x5c
+       5  0xffffffff81745572 uprobe_clear_state+0x22
+       1  0xffffffff817916f7 vm_mmap_pgoff+0xe7
+       1  0xffffffff815d8c84 taskstats_exit+0x94
+       1  0xffffffff8179ea54 free_percpu+0x84
+       1  0xffffffff8179ef53 pcpu_alloc_noprof+0x133

@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+      61  0xffffffff81801c14 get_page_from_freelist+0x4e4
+      61  0xffffffff817ff043 __rmqueue_pcplist+0x283
+       1  0xffffffff817c3b00 __pmd_alloc+0xb0
+       1  0xffffffff817916f7 vm_mmap_pgoff+0xe7

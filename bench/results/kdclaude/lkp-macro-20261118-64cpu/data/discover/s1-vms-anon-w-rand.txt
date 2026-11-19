@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+      15  0xffffffff81884cbf folio_lruvec_lock_irq+0x5f
+       5  0xffffffff81884d64 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffff817f01d3 vma_prepare+0x63
+       1  0xffffffff817f9509 free_pcppages_bulk+0x39

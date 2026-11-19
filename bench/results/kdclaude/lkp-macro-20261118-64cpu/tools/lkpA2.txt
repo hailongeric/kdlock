@@ -1,0 +1,7 @@
+shmem_file_write_iter
+filename_unlinkat
+path_openat
+filename_create
+folio_wake_bit
+folio_wait_bit_common
+dquot_add_space

@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+     256  0xffffffff817916f7 vm_mmap_pgoff+0xe7

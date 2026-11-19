@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    1635  0xffffffff817d1a39 __do_sys_brk+0x69
+       1  0xffffffff81816c75 __slab_free+0x195
+       1  0xffffffff8181822a __refill_objects_node+0xaa
+       1  0xffffffff81818629 __refill_objects_node+0x4a9

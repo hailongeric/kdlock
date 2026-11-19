@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    2682  0xffffffff8159847b cgroup_leave_frozen+0x1b
+    2673  0xffffffff8159840f cgroup_enter_frozen+0x2f
+       1  0xffffffff815929b6 cgroup_task_dead+0x26
+       1  0xffffffff817e494d unlink_anon_vmas+0x5d

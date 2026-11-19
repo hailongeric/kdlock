@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    9350  0xffffffff8195be35 posix_lock_inode+0xa5
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2
+       1  0xffffffff8195dfe9 fcntl_setlk+0x3a9

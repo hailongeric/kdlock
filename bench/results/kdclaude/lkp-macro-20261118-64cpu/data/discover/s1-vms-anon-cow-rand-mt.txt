@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2
+       1  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff81884cbf folio_lruvec_lock_irq+0x5f
+       1  0xffffffff817ff043 __rmqueue_pcplist+0x283

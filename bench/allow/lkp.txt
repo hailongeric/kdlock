@@ -1,0 +1,50 @@
+# The lock users of the lkp-tests candidates (bench/results/kdclaude/
+# lkp-macro-20261118-64cpu), found with an empty allow list on kdall10
+# (screen.sh discover, data/discover/), for the screening with delegation.
+# Use together with api.txt (files->file_lock, flc_lock, f_pos_lock, pipe
+# mutex) and mm.txt (brk, mmap, munmap). Tier B entries (sections that may
+# sleep or copy user memory) are here to be measured; the screening decides
+# which stay.
+# sighand->siglock (will-it-scale signal1)
+do_send_sig_info
+set_current_blocked
+get_signal
+signal_setup_done
+# futex hash bucket lock (will-it-scale pthread_mutex*, perf bench futex)
+futex_wake
+futex_q_lock
+# shmem inode i_rwsem, writers (will-it-scale pwrite2/3, writeseek3; tier B)
+shmem_file_write_iter
+# directory i_rwsem, writers (will-it-scale unlink1, aim7, stress-ng unlink; tier B)
+filename_unlinkat
+path_openat
+filename_create
+# page wait queue lock (will-it-scale pread2, readseek2)
+folio_wake_bit
+folio_wait_bit_common
+# quota accounting of tmpfs (will-it-scale page_fault2/3)
+dquot_add_space
+# mapping->i_mmap_rwsem, writers (unixbench execl, shell; vm-scalability small-allocs; tier B)
+vma_prepare
+vma_link_file
+unlink_file_vma_batch_final
+unlink_file_vma_batch_add
+# anon_vma rwsem, writers (fork-heavy: stress-ng fork, dup; unixbench spawn)
+anon_vma_fork
+anon_vma_clone
+unlink_anon_vmas
+# tasklist_lock writers (fork, exit, setpgid)
+copy_process
+release_task
+__do_sys_setpgid
+# sb->s_inode_list_lock (stress-ng open, unlink, filerace)
+inode_sb_list_add
+evict
+# SysV IPC (stress-ng shm-sysv, msg)
+ipcget
+do_shmat
+__shm_close
+shmctl_down
+msgctl_down
+# epoll ep->mtx (stress-ng epoll)
+do_epoll_ctl

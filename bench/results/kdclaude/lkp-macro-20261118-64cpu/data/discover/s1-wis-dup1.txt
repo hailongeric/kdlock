@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    4439  0xffffffff818e06e9 alloc_fd+0x39
+    4435  0xffffffff818e1aed file_close_fd+0x2d
+      23  0xffffffff818df7b0 fd_install_slowpath+0x30

@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+       6  0xffffffff818c8779 path_openat+0xc69
+       4  0xffffffff818ca010 filename_unlinkat+0x180
+       1  0xffffffff81429349 copy_process+0x1519
+       1  0xffffffff8143223c do_exit+0x31c
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2

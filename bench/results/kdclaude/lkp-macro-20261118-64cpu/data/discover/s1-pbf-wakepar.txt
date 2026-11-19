@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+       1  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff817e72c0 free_vmap_area_noflush+0xc0
+       1  0xffffffff8157b860 acct_collect+0x60

@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+      13  0xffffffff817f9509 free_pcppages_bulk+0x39
+       2  0xffffffff817ff043 __rmqueue_pcplist+0x283
+       1  0xffffffff823a7555 rtnl_lock+0x15

@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2

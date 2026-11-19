@@ -1,0 +1,7 @@
+refused 6 sites outside the allow list:
+     505  0xffffffff8197ca33 dquot_add_space+0x33
+      16  0xffffffff81801c14 get_page_from_freelist+0x4e4
+      15  0xffffffff817ff043 __rmqueue_pcplist+0x283
+       1  0xffffffff818c8779 path_openat+0xc69
+       1  0xffffffff817f9509 free_pcppages_bulk+0x39
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2

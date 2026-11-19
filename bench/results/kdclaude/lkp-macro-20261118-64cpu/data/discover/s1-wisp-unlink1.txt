@@ -1,0 +1,3 @@
+refused 2 sites outside the allow list:
+     712  0xffffffff818c8779 path_openat+0xc69
+     712  0xffffffff818ca010 filename_unlinkat+0x180

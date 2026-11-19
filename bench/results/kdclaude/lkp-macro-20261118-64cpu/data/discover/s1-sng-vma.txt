@@ -1,0 +1,13 @@
+refused 12 sites outside the allow list:
+     251  0xffffffff817ce01b __x64_sys_munlock+0x3b
+     218  0xffffffff817f5538 __vm_munmap+0x88
+     181  0xffffffff817cdadd do_mlock+0x6d
+     131  0xffffffff817d7972 do_mprotect_pkey+0xf2
+      61  0xffffffff81821964 madvise_lock+0x84
+      18  0xffffffff818dbd6c evict+0x7c
+       8  0xffffffff817916f7 vm_mmap_pgoff+0xe7
+       5  0xffffffff8144642e force_sig_info_to_task+0x2e
+       5  0xffffffff81447508 signal_setup_done+0xd8
+       5  0xffffffff81447b90 get_signal+0xc0
+       5  0xffffffff814445eb set_current_blocked+0x3b
+       1  0xffffffff81431f92 do_exit+0x72

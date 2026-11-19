@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+       3  0xffffffff818b155f __iterate_supers+0x6f
+       1  0xffffffff819066a7 sync_inodes_sb+0xe7
+       1  0xffffffff818b151f __iterate_supers+0x2f
+       1  0xffffffff8199c9d7 proc_sys_permission+0x97
+       1  0xffffffff8199c988 proc_sys_permission+0x48

@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+       1  0xffffffff814c25d3 prepare_to_wait+0x23
+       1  0xffffffff814c1fae finish_wait+0x3e
+       1  0xffffffff81816c75 __slab_free+0x195

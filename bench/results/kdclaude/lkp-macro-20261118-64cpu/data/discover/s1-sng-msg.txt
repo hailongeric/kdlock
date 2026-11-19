@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+      38  0xffffffff81ab6a43 msgctl_down+0x43
+       1  0xffffffff81ab541d ipcget+0x3d
+       1  0xffffffff8181822a __refill_objects_node+0xaa
+       1  0xffffffff81818a69 alloc_from_new_slab+0x169
+       1  0xffffffff817e494d unlink_anon_vmas+0x5d

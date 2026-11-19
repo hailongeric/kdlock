@@ -1,0 +1,8 @@
+refused 7 sites outside the allow list:
+     993  0xffffffff81821964 madvise_lock+0x84
+      38  0xffffffff8158502f cgroup_file_notify+0x1f
+       1  0xffffffff81884d64 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffff817de50f pte_offset_map_lock+0x7f
+       1  0xffffffff817ce01b __x64_sys_munlock+0x3b
+       1  0xffffffff817cdadd do_mlock+0x6d
+       1  0xffffffff817916f7 vm_mmap_pgoff+0xe7

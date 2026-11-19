@@ -1,0 +1,15 @@
+refused 14 sites outside the allow list:
+     240  0xffffffff817723bd lru_gen_rotate_memcg+0x3d
+     230  0xffffffff8174f981 __filemap_add_folio+0x181
+      44  0xffffffff8177215f __remove_mapping+0x5f
+      25  0xffffffff818d57b1 __dentry_kill+0xb1
+       3  0xffffffff818dbd6c evict+0x7c
+       2  0xffffffff81772169 __remove_mapping+0x69
+       2  0xffffffff81a4284a jbd2_journal_shrink_checkpoint_list+0x5a
+       1  0xffffffff8177b0b6 evict_folios+0x646
+       1  0xffffffff8177ab12 evict_folios+0xa2
+       1  0xffffffff8177bb9e try_to_inc_max_seq+0xde
+       1  0xffffffff817db703 page_vma_mapped_walk+0x653
+       1  0xffffffff817f9509 free_pcppages_bulk+0x39
+       1  0xffffffff8174ff6d folio_wake_bit+0x5d
+       1  0xffffffff8191c5be try_to_free_buffers+0x5e

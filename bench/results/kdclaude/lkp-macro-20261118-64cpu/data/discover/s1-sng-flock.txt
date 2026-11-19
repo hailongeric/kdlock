@@ -1,0 +1,8 @@
+refused 7 sites outside the allow list:
+     141  0xffffffff814d045f percpu_rwsem_wait+0x5f
+      38  0xffffffff8195b971 flock_lock_inode+0x391
+      31  0xffffffff8195a5ad locks_unlink_lock_ctx+0xbd
+       9  0xffffffff8174f981 __filemap_add_folio+0x181
+       9  0xffffffff81958cdd locks_move_blocks+0x2d
+       6  0xffffffff814c0e62 __wake_up+0x22
+       1  0xffffffff817e4880 anon_vma_fork+0x150

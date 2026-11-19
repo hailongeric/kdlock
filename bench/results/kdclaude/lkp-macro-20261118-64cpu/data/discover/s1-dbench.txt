@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+       3  0xffffffff81884d64 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffff81c68735 lockref_get+0x55
+       1  0xffffffff818f5f78 find_positive_dentry+0x28
+       1  0xffffffff817f9509 free_pcppages_bulk+0x39

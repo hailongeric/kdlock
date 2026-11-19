@@ -1,0 +1,8 @@
+refused 7 sites outside the allow list:
+      42  0xffffffff81816c75 __slab_free+0x195
+      37  0xffffffff8181822a __refill_objects_node+0xaa
+      22  0xffffffff81818629 __refill_objects_node+0x4a9
+      13  0xffffffff81884cbf folio_lruvec_lock_irq+0x5f
+       4  0xffffffff81884d64 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffff817d416e dup_mmap+0x32e
+       1  0xffffffff81818a69 alloc_from_new_slab+0x169

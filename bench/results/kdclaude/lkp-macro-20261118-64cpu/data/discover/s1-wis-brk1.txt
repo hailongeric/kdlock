@@ -1,0 +1,14 @@
+refused 13 sites outside the allow list:
+    2980  0xffffffff817d1a39 __do_sys_brk+0x69
+       1  0xffffffff817916f7 vm_mmap_pgoff+0xe7
+       1  0xffffffff817d7972 do_mprotect_pkey+0xf2
+       1  0xffffffff815d8c84 taskstats_exit+0x94
+       1  0xffffffff8143223c do_exit+0x31c
+       1  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff817f5538 __vm_munmap+0x88
+       1  0xffffffff8157b860 acct_collect+0x60
+       1  0xffffffff817f01d3 vma_prepare+0x63
+       1  0xffffffff81431f92 do_exit+0x72
+       1  0xffffffff81447b90 get_signal+0xc0
+       1  0xffffffff817f3cb2 unlink_file_vma_batch_final+0x42
+       1  0xffffffff817efc86 vma_link_file+0x46

@@ -1,0 +1,2 @@
+folio_wake_bit
+folio_wait_bit_common
