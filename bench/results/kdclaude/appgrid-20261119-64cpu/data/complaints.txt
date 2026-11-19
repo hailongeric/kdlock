@@ -1,0 +1,6 @@
+k13-learn1 on complaints 0 fatal signals 0
+k13-learn2 on complaints 0 fatal signals 0
+quick-g2 off complaints 0 fatal signals 0
+g2 off complaints 0 fatal signals 0
+g2 on complaints 0 fatal signals 0
+g2 native complaints 0 fatal signals 0

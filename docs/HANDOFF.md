@@ -111,17 +111,14 @@ result READMEs it points to are the maintained record.
 
 ## 4. What is next, in order
 
-1. **Rerun the measurement grid on kdall13.** The user's instruction was
-   "fix those bugs then reboot the VM before measuring again"; the bugs are
-   fixed and the focused checks done, but the grid of
-   `appgrid-20261118-64cpu` (sections 3-4) has not been rerun. Its kd-on
-   columns from kdall10 ran with the per-CPU damage after brk1 and with the
-   munmap hang (Apache default could not be measured with `kd_vdown=1`).
-   Run the same scripts (`nano_grid.sh`, `app_grid.sh off|on`, kdnat9 for
-   native) on a fresh kdall13 boot, kd off before kd on, and report
-   `hb_region`, `done_in_region` and the per-CPU bytes (`pcpu.py`) with the
-   kd-on rates. Ask the user before starting it (several hours of VM time;
-   AGENTS.md working rule 3).
+1. **Rerun the measurement grid on kdall13: done 2026-11-19**
+   (`bench/results/kdclaude/appgrid-20261119-64cpu/`, round g2: kdall13
+   and its native twin `kdnat10`, 14 worker counts and one round at the
+   user's request). No kernel complaint, no fatal signal, the per-CPU lock
+   bytes at 0 of 64 after every benchmark of kd on, Apache's default
+   configuration measurable with `kd_vdown=1`. Its open points: brk1 at 2
+   workers (1.6 M in both kd modes, 1.0 M native), FxMark MRDM on below
+   off at 48-56 workers with nothing delegated.
 2. **`hb_region` precision.** It is an upper bound (684 in the A/B's new
    mode with no damage): an inner lock held at a flagged exit counts too.
    Separating the two (for example the translator also recording the region
@@ -135,8 +132,11 @@ result READMEs it points to are the maintained record.
    value correlation for trylock helpers. Images grew (mm sites 45-65 k
    instructions); measure build time and whether `pcpu_walk_depth` 3 keeps
    the bytes clean.
-4. **lkp-macro**: merge or rebase that branch's results with the user, and
-   redo its delegated runs on kdall13 (section 1).
+4. **lkp-macro**: the branch is merged into `master` (2026-11-19). Its
+   second round, `bench/results/kdclaude/lkp-macro-20261119-64cpu/`, adds
+   the applications and file systems the first one left out and repeats
+   the measurements on kdnat10 and kdall13; its README section 5 has the
+   state.
 5. **Open losses** from the grid: page_fault1/3 at 1-32 threads,
    page_fault2, LevelDB readrandom at 64, Apache single process without
    delegation at 36-64. Not profiled yet.

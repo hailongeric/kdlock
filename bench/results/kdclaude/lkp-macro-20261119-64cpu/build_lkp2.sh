@@ -19,7 +19,7 @@ build() {
 }
 b_netperf() {
 	copy netperf; cd $B/netperf && ./autogen.sh && \
-		./configure CFLAGS="-O2 -fcommon -std=gnu89 -Wno-error" --enable-demo --disable-sctp && make -j$J
+		./configure CFLAGS="-O2 -fcommon -std=gnu89 -Wno-error" --enable-demo --disable-sctp && make -j$J -C src
 }
 b_redis() { copy redis; cd $B/redis && make -j$J MALLOC=libc BUILD_TLS=no; }
 b_libevent() {

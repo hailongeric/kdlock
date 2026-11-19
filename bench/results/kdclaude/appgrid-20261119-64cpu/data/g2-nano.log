@@ -1,0 +1,9 @@
+7.0.0-38-kdnat10 #10 SMP PREEMPT_DYNAMIC Thu Nov 19 08:38:49 UTC 2026
+workers: 1 2 3 4 6 8 12 16 24 32 40 48 56 60; rounds: 1
+== plain 11:52:38
+plain exit 0
+== warm-up 11:57:10
+== delegated, native kd tclock 11:57:50
+grid exit 0
+complaints 0
+NANO_DONE 12:11:10
