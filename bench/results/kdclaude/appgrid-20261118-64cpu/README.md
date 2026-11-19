@@ -165,7 +165,32 @@ therefore compare kd with the same kernel's native locks only.
    - **Effect on the data:** Apache default in kd on (0.58, one run) ran with the defect: its stop hung that boot. The single-process Apache points did not hang: 22 cycles in the pass, 22 in `crash_check.sh`. mmap1, mmap2, brk1, page faults and `mm_stress` with delegated munmap did not hang either: their munmap read parts mostly complete in the combiner, or their processes do not exit while sections are handed back.
    - **Workaround:** `kd_vdown=0`.
 2. **One segfault of `page_fault2_threads` in kd on** (14:19 in g1 on, glibc, a 16-bit counter increment at address `0xf70` during process teardown, after the measurement: every point has its value). Not reproduced: 90 runs of page_fault2, page_fault1 and mmap1 at 16-64 threads with the daemon (`wis_exit_check.sh`, `data/hang/g1-wisexit.txt`), and 60 runs each in native and kd off (`data/g1-*-crash.txt`), all without a fatal signal.
-3. **Setup:** the unpatched Metis binary died with SIGILL (`wrmem` with no cpufreq), fixed before the grid (section 2); the native and kd-off crash checks are clean (no fatal signal, no leftover httpd).
+3. **A per-CPU lock byte left set by handbacks (found by the lkp-tests
+   session, branch `lkp-macro`, its README section 7; checked here).**
+   - **What:** a delegated section that takes memcg's per-CPU
+     `obj_stock` local trylock on the executor and is handed back before
+     the unlock leaves `acquired` set on the executor's CPU for the rest of
+     the boot. The origin's unlock clears its own CPU's byte. Every later
+     accounted slab allocation on those CPUs takes the slow path, for all
+     tasks.
+   - **Checked here** (`pcpu_check.sh`, `data/hang/g1-pcpu.txt`, the
+     reading tool is that session's `tools/pcpu.py`): fresh kdall10 boot 0
+     of 64 CPUs; after delegated mmap1 and mmap2 still 0; after delegated
+     brk1 (1.06 M handbacks at translation misses) **57 of 64**; unchanged
+     by page_fault1 and Apache afterwards; `memcg_stock` stays clean.
+   - **Effect on this grid:** in the kd-on pass, everything after
+     will-it-scale brk1 ran with the bytes set: page_fault1-3, FxMark,
+     LevelDB, Metis, Psearchy and Apache. Their on/off ratios in the same
+     boot (off ran first) are 0.99-1.04 at the median, except FxMark MRDM
+     at 0.95 (0.87-1.07). MRDM allocates accounted dentries and inodes, so
+     its kd-on column may be low by about 5%. Apache's on values include
+     the effect.
+   - **Effect on kdall-native-20261117-64cpu:** boots c4 and a4 ran kd on
+     before kd off. Their off values agree with the clean off boots
+     (c2/c6, a2/a6) within 0.94-1.06, with two exceptions: pf write at 32
+     threads (c4 0.81, a noisy point) and locktorture rwsem (a4 0.92).
+     The medians there are not affected.
+4. **Setup:** the unpatched Metis binary died with SIGILL (`wrmem` with no cpufreq), fixed before the grid (section 2); the native and kd-off crash checks are clean (no fatal signal, no leftover httpd).
 
 ## 7. Files
 

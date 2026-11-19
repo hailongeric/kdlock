@@ -1,0 +1,15 @@
+7.0.0-38-kdall10 #13 SMP PREEMPT_DYNAMIC Wed Nov 18 07:11:45 UTC 2026
+ 02:37:00 up 0 min,  1 user,  load average: 0.14, 0.04, 0.01
+-- fresh boot: obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+-- daemon started: obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+average:366328:182726:183601
+-- after mmap1 | delegated 11721926 handback 31 hb_frontier 29 hb_miss 2 vdown_hb 8 : obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+average:364591:180826:183764
+-- after mmap2 | delegated 22895363 handback 49 hb_frontier 47 hb_miss 2 vdown_hb 17 : obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+average:509998:252070:257928
+-- after brk1 | delegated 25293842 handback 1056828 hb_frontier 49 hb_miss 1056779 vdown_hb 2884 : obj_stock: acquired set on 57 of 64 CPUs: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 40, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 55, 56, 57, 59, 60, 61, 62, 63] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+average:4309214:2182799:2126415
+-- after page_fault1 | delegated 25293967 handback 1056850 hb_frontier 71 hb_miss 1056779 vdown_hb 2884 : obj_stock: acquired set on 57 of 64 CPUs: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 40, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 55, 56, 57, 59, 60, 61, 62, 63] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+Requests/sec:  41737.38
+-- after apache single | delegated 25711114 handback 1473412 hb_frontier 416633 hb_miss 1056779 vdown_hb 419441 : obj_stock: acquired set on 57 of 64 CPUs: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 40, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 55, 56, 57, 59, 60, 61, 62, 63] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+PCPU_DONE

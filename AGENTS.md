@@ -79,6 +79,10 @@ Current validation limits:
 * Open failure: a delegated munmap with the kept downgrade (`kd_vdown=1`)
   can leave an mmap lock write-held when Apache's worker processes exit
   (LOCKS.md 5, `bench/results/kdclaude/appgrid-20261118-64cpu/` section 6).
+* Open failure: a section handed back inside a per-CPU local trylock region
+  leaves the executor CPU's lock byte set (memcg `obj_stock`, 57 of 64 CPUs
+  after a delegated brk1 run); accounted allocations stay slow on those
+  CPUs for the rest of the boot. Measure kd off before kd on in a boot.
 * Call-depth tracking (`CONFIG_MITIGATION_CALL_DEPTH_TRACKING`) is built into
   the kdlock kernels. It is active only on CPUs affected by `retbleed`, which
   the VM's CPU is not, so translated code has not run with it active.
