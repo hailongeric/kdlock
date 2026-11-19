@@ -538,13 +538,24 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 				/* Another combiner advanced the packet; read its verdict. */
 				kd_rcu_sync(rcu0, r->rcu_depth);
 				kd_stat_inc(kc, KD_STAT_NESTED_DELEGATED);
-				native = r->stop == KD_STOP_HANDBACK || !r->jit_resume;
+				/*
+				 * Set the verdict only when this level ends on it.
+				 * When the packet goes on here, a later exit of
+				 * this loop is judged on its own: a handback after
+				 * this point must still downgrade a kept write hold,
+				 * suppress the offer and tell outer levels to stop.
+				 * (Leaving native false here made such a handback
+				 * look completed: the origin went on as a reader of
+				 * an mmap lock that was still write-held, and its
+				 * read release left the writer bit set.)
+				 */
 				if (r->released & BIT(level)) {
+					native = r->stop == KD_STOP_HANDBACK || !r->jit_resume;
 					done = true;
 					break;
 				}
-				if (native)
-					break;
+				if (r->stop == KD_STOP_HANDBACK || !r->jit_resume)
+					break;		/* native stays true */
 				code = r->jit_resume;
 				continue;
 			}

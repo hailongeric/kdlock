@@ -453,6 +453,20 @@ int kd_down_write_trylock(struct kd_rwsem *sem)
 EXPORT_SYMBOL(kd_down_write_trylock);
 
 /*
+ * The count says a release does not match what the caller holds: a write
+ * release or downgrade without the writer bit, or a read release while the
+ * writer bit is set (an admitted reader never coexists with it; readers
+ * registered behind a writer leave through kd_rwsem_read_undo()). Each of
+ * them corrupts ->count for good, so say where it happened.
+ */
+static noinline void kd_rwsem_bad_release(struct kd_rwsem *sem, const char *what, long c)
+{
+	WARN_ONCE(1, "kdlock: %s of rwsem %px with count %#lx\n", what, sem, c);
+	pr_err_ratelimited("kdlock: %s of rwsem %px with count %#lx by %s/%d\n",
+			   what, sem, c, current->comm, current->pid);
+}
+
+/*
  * One locked subtraction, and no look at ->count before it; see
  * kd_mutex_unlock(). The writer bit is set, so subtracting it clears it.
  *
@@ -472,6 +486,8 @@ void kd_up_write(struct kd_rwsem *sem)
 			return;
 	}
 	c = atomic_long_fetch_sub_release(KD_RWSEM_WLOCKED, &sem->count);
+	if (unlikely(!(c & KD_RWSEM_WLOCKED)))
+		kd_rwsem_bad_release(sem, "write release", c);
 	if (kd_rwsem_readers(c))
 		kd_rwsem_phase_change(sem);
 
@@ -500,6 +516,8 @@ void kd_downgrade_write(struct kd_rwsem *sem)
 {
 	long c = atomic_long_fetch_add(KD_RWSEM_RBIAS - KD_RWSEM_WLOCKED, &sem->count);
 
+	if (unlikely(!(c & KD_RWSEM_WLOCKED)))
+		kd_rwsem_bad_release(sem, "downgrade", c);
 	if (kd_rwsem_readers(c))
 		kd_rwsem_phase_change(sem);
 	/* The caller stays in as a reader, so it cannot serve writers here. */
@@ -722,6 +740,8 @@ void kd_up_read(struct kd_rwsem *sem)
 {
 	long c = atomic_long_sub_return_release(KD_RWSEM_RBIAS, &sem->count);
 
+	if (unlikely(c & KD_RWSEM_WLOCKED))
+		kd_rwsem_bad_release(sem, "read release", c);
 	if (unlikely((c & KD_RWSEM_NEEDWAKE) && !kd_rwsem_readers(c)))
 		kd_rwsem_wake(sem);
 }

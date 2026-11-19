@@ -324,16 +324,21 @@ call.
     kept downgrades and those whose read part was handed back.
   * The first seconds after the daemon starts are slower: until the read
     part is learned it is handed back (248000-270000 in the first run).
-  * **Known failure, open (2026-11-18):** with `__vm_munmap` delegated and
-    `kd_vdown=1`, Apache's default configuration (several processes, each
-    mapping and unmapping its file per request, read parts handed back on
-    nearly every munmap) leaves an mm's lock with the writer bit set and a
-    reader's bias missing (count `0x5`) when its processes stop; their
-    exiting threads then wait for the read side forever. Reproduced at the
-    first stop in 4 of 4 runs, also with `kd_xchg=0`; clean in 8 of 8 with
-    `kd_vdown=0`. Root cause not found
-    (`bench/results/kdclaude/appgrid-20261118-64cpu/`, section 6).
-    Workaround: `kd_vdown=0`.
+  * **Fixed failure (2026-11-18, fixed 2026-11-19):** with `__vm_munmap`
+    delegated and `kd_vdown=1`, Apache's default configuration left an mm's
+    lock with the writer bit set and a reader's bias missing (count `0x5`)
+    when its processes stopped; their exiting threads waited for the read
+    side forever. Cause: after a nested acquisition inside the read part was
+    run by another combiner and the packet came back to continue here
+    (`KD_WAIT_RESUMED`), `kd_exec_one()` kept that combiner's verdict, so a
+    later miss in the read part was treated as a completed section: no
+    downgrade, the origin went on as a reader of a write-held lock, and its
+    `up_read` subtracted a bias it never had (ARCHITECTURE.md section 8).
+    The release assertions in `kd_rwsem.c` (a write release or downgrade
+    without the writer bit, a read release with it) found the place. After
+    the fix: 20 of 20 cycles clean; before it every run hung (kdall10 at
+    the first stop in 4 of 4, kdall11 at cycle 4, its diagnostic build at
+    cycle 5) (`bench/results/kdclaude/appgrid-20261118-64cpu/`, section 8).
 * **Write release** (`kd_up_write`) is one locked subtraction, as for the
   mutex.
 * **Every holder of `m` spins before it sleeps on `count`**, bounded by
