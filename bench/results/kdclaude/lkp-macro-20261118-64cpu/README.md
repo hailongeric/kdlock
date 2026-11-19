@@ -290,6 +290,160 @@ cause, as the bad cases of the native comparison were.
 | step | state |
 |---|---|
 | analysis (sections 1-3) | done |
-| sources on the host | done (section 4.1) |
-| build in the guest | waiting for the VM |
-| phases 1-4 | waiting for the VM |
+| sources on the host, build in the guest | done (all but re-aim: its configure fails, AIM7 covers its file system tests) |
+| phase 1 native, phase 2 kd off | done, one boot each (section 6) |
+| phase 3 discover, allow list, kd on | done once; kd on is partly invalid, see section 7 |
+| a per-CPU state bug found by phase 3 | located, not fixed (section 7) |
+| phase 4 | waiting for the fix |
+
+## 6. Screening results (s1, one run per point)
+
+Kernels kdnat9 (native) and kdall10 (kd), 16 and 64 workers, 10 s per
+point, one boot per mode (`screen.sh`, `data/screen.txt`, profiles in
+`data/prof/`). No kernel complaint and no fatal signal of a benchmark
+process in any of them.
+
+- `data/s1-native-off.md`: native rates, native lock share at 64 workers,
+  kd off / native (`screen_summary.py`).
+- `data/s1-off.md`: the kd profiles.
+- `data/s1-on.md`: native, kd off and kd on with delegated sections,
+  sessions and handbacks per point (`on_summary.py`); kd on with
+  `kd_vdown=0` (`data/s1-on.knobs`) and the allow lists api, torture, mm
+  and `bench/allow/lkp.txt`, after a learning pass.
+- `data/discover/`: the contended lock users per candidate, from the
+  discover pass (empty allow list), which `bench/allow/lkp.txt` was made from.
+
+"Busy" and the lock share are only meaningful where the benchmark ran
+longer than the profile window; AIM7, fs_mark, hackbench and the
+vm-scalability cases were over before it.
+
+### 6.1 Where native is lock-bound
+
+Native spends 86-97% of its time in `queued_spin_lock_slowpath` at 64
+workers in will-it-scale signal1, dup1, lock2, open1, open3, readseek2,
+pread2 and pthread_mutex1/3/4, and in stress-ng zombie and shm; 97-99% in
+the rwsem/mutex spin (`osq_lock`) for brk1/2, mmap1/2, unlink1, pwrite2/3,
+writeseek3 and vm-scalability small-allocs. Most of these run slower at 64
+workers than at 16 (signal1 0.38, dup1 0.41, lock2 0.38, open1 0.36).
+
+### 6.2 kd without delegation against native (64 workers)
+
+| | kd off / native |
+|---|---|
+| far ahead | signal1 3.06, dup1 3.27, lock2 3.38, open1 2.87, open3 3.36; stress-ng zombie 3.59, mremap 3.52, shm 2.60, unlink 2.23 |
+| ahead | brk1/2 1.88, mmap1/2 1.63-1.66, readseek2 1.60, pread2 1.48; stress-ng rename 1.68, open 1.67, vfork 1.67, dentry 1.51, shm-sysv 1.47; fs_mark 1.44 |
+| behind | pthread_mutex1/3/4 0.55-0.57 (futex bucket); process-mode lock2 0.38; hackbench socket 0.44-0.46, stress-ng sock 0.52, perf sched messaging 0.61; pwrite3 0.76, writeseek3 0.84; stress-ng epoll 0.76 |
+
+### 6.3 kd with delegation against native (64 workers)
+
+Valid for the lock users that do not allocate memory (section 7):
+
+| workload | native | kd on | on/native | delegated sections, handbacks |
+|---|---|---|---|---|
+| will-it-scale lock2 | 655 k | 4.87 M | **7.44** | 78.6 M, 121 |
+| will-it-scale dup1 | 328 k | 2.42 M | **7.37** | 76.5 M, 214 |
+| will-it-scale open3 | 336 k | 2.36 M | **7.02** | 74.7 M, 129 |
+| will-it-scale open1 | 331 k | 2.32 M | **7.00** | 73.6 M, 84 |
+| stress-ng zombie | 372 k | 2.24 M | **6.02** | 13.2 M, 115 |
+| stress-ng shm | 1196 | 5144 | **4.30** | 25.9 M, 232 |
+| will-it-scale signal1 | 182 k | 515 k | **2.83** | 20.4 M, 1987 |
+| vm-scalability small-allocs | 19.8 M | 52.0 M | **2.62** | 13.9 M, 77 |
+| unixbench execl | 29 k | 40 k | **1.38** | 27.9 M, 131 |
+
+The first four are `files->file_lock` and `flc_lock` users already in
+`api.txt`; zombie is `tasklist_lock` (`__do_sys_setpgid`), shm the tmpfs
+quota lock (`dquot_add_space`), signal1 `siglock`, small-allocs and execl
+`i_mmap_rwsem` writers. At 16 workers the same lock users give 2.3-3.3
+(file locks, zombie) and 1.38 (signal1).
+
+Where delegation does not help (yet):
+
+- mmap1/2, brk1/2: on/native 0.87-1.04. With `kd_vdown=0` every munmap
+  section is handed back at its downgrade (sessions = handbacks); with
+  `kd_vdown=1` they were 2.06 in the native comparison, but that setting
+  leaks the mmap lock (appgrid round, open).
+- pread2, readseek2: 1.45 M handbacks at a frontier in `folio_wait_bit`
+  (the section sleeps on a folio): on/off 0.33-0.38. Those two lock users
+  leave the allow list.
+- pthread_mutex1/3/4: on = off (0.57 of native): the futex bucket sections
+  are delegated (5.6 M) but do not beat native's lock here.
+- stress-ng shm-sysv: 475 k handbacks at misses.
+
+## 7. A per-CPU state bug in delegation
+
+The kd on pass ran slower than kd off on memcg-heavy stress-ng and
+hackbench tests by 2-5x and on stress-ng dup by 240x, although they
+delegated almost nothing. It was not the daemon: in the same boot, kd off
+was as slow (`chk1`, `chk2` in `data/screen.txt`), and from a fresh cgroup
+as well. In a fresh boot, kd off ran fast again, and after a delegated
+pass the same boot stayed slow (`data/bisect/degrade.out`):
+
+| stress-ng, 64 workers, kd off | fresh boot | after a delegated pass |
+|---|---|---|
+| dup | 3.61 M | 27.6 k |
+| msg | 27.6 M | 9.2 M |
+| epoll | 1.09 M | 0.51 M |
+| eventfd | 5.05 M | 2.39 M |
+
+The profile of the slow runs is memcg object accounting:
+`refill_obj_stock` and `obj_cgroup_charge_account` take 50-54% (6-8% when
+fast).
+
+**Bisection by allow list** (`tools/bisect.sh`, a fresh boot per step,
+`data/bisect/`): api, torture and mm alone are clean; of `lkp.txt`, the
+half with the file system users triggers it; within it, the page wait
+queue users, the quota user, `shmem_file_write_iter` and
+`filename_unlinkat` are clean, and **`path_openat` alone triggers it**.
+
+**The state left behind** (`tools/pcpu.py` reads per-CPU memory through
+`/proc/kcore`): memcg's per-CPU object stock is guarded by a
+`local_trylock_t`, whose `acquired` byte lives in per-CPU memory. A fresh
+boot has it clear on every CPU. After one 10 s run of will-it-scale
+unlink1 with only `path_openat` delegated (3856 handbacks, all at misses),
+it was set on 14 of 64 CPUs, with no task inside (`data/bisect/stuck.out`);
+after the full kd on pass, on 28. On those CPUs every later charge fails
+the trylock and takes the slow path, for every task, for the rest of the
+boot.
+
+**Mechanism.** A delegated section runs on the combiner's CPU; per-CPU
+accesses in it go to the combiner's CPU (ARCHITECTURE: only the three
+task-identity symbols are the waiter's). `path_openat` creates an inode
+under the directory lock, and the slab allocation's memcg hook takes the
+combiner CPU's `obj_stock` lock (sets `acquired`). When the translator
+meets unlearned code before the matching unlock, the section is handed
+back, and the waiter continues on its own CPU: its `local_unlock`
+re-derives the per-CPU address and clears its own CPU's byte. The
+combiner's byte stays set. The preemption count is transferred at a
+handback; per-CPU memory is not.
+
+**Scope.** Any delegated section that takes a local lock (the per-CPU
+`acquired` byte of `local_trylock_t`, re-derived at release) and is handed
+back before the release leaves this behind; memcg object accounting is the
+case seen. Lock users whose sections allocate accounted memory are exposed
+while their code is still being learned (misses); once learned, the
+section does not hand back inside the stock's few instructions, so steady
+state is less exposed but not safe. This is the open AGENTS.md goal step 3
+(classification of per-CPU `%gs` accesses) showing as a fault.
+
+**Consequences for this round.** The kd on pass (section 6.3) ran after
+its learning pass in a degraded boot: its rates for memcg-heavy workloads
+are invalid, and the gains of 6.3 are, if anything, understated. The
+earlier rounds' kd on runs used api, torture and mm only; the bisection's
+first step (those three lists, `data/bisect/bisect-b1.out`) showed no
+slowdown, but the per-CPU bytes were not read there.
+
+**Fix options** (not done here; a translator and kernel change for the
+maintained branch):
+
+1. A frontier before every local lock acquisition: the translator ends
+   the delegation before a section takes a `local_trylock`/`local_lock`,
+   so the waiter takes it on its own CPU. Needs the translator to
+   recognise the acquisition (a `%gs`-relative access to a local lock
+   object), which is the per-CPU classification of goal step 3.
+2. As an interim policy: the memcg charge entry points
+   (`__memcg_slab_post_alloc_hook`, `__memcg_slab_free_hook`,
+   `obj_cgroup_charge*`, the page charge functions) as frontiers in the
+   translator's policy lists, so no section reaches the stock locks.
+3. A check at every handback that no local lock of the combiner's CPU was
+   taken since the section began (the `acquired` bytes of the known
+   local locks), with a kernel warning, as a guard while 1 is built.
