@@ -1,0 +1,8 @@
+7.0.0-38-kdall11 #14 SMP PREEMPT_DYNAMIC Thu Nov 19 04:59:22 UTC 2026
+kd_vdown=1 kd_xchg=1 allow: __vm_munmap
+cycle 1 req/s 159414.70 left 0 | delegated 0 handback 40064 nested_delegated 0 xchg_taken 0 vdown 28302 vdown_hb 28302 
+cycle 2 req/s 154111.88 left 0 | delegated 0 handback 188440 nested_delegated 0 xchg_taken 0 vdown 170749 vdown_hb 170749 
+cycle 3 req/s 153445.36 left 0 | delegated 0 handback 332105 nested_delegated 0 xchg_taken 0 vdown 313875 vdown_hb 313875 
+cycle 4 req/s 151350.55 left 1 | delegated 3 handback 476670 nested_delegated 603 xchg_taken 301 vdown 457611 vdown_hb 457609 
+[   99.173489] kd_mmdump: pid 5405 mm ff1100010d283100 count 0x5 m.q 0x101 wait_lock 0x0 owner 5477(httpd) parked 1 users 27
+HUNG

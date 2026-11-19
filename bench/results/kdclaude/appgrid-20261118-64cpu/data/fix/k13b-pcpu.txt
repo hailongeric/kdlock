@@ -1,0 +1,15 @@
+7.0.0-38-kdall13 #18 SMP PREEMPT_DYNAMIC Thu Nov 19 06:06:37 UTC 2026
+ 06:14:34 up 1 min,  1 user,  load average: 0.22, 0.11, 0.04
+-- fresh boot: obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+-- daemon started: obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+average:318992:159443:159549
+-- after mmap1 | delegated 0 handback 4565 done_in_region 0 hb_region 0 hb_frontier 0 hb_miss 4565 vdown_hb 1 : obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+average:266322:133323:132999
+-- after mmap2 | delegated 0 handback 1994785 done_in_region 0 hb_region 27 hb_frontier 0 hb_miss 1994785 vdown_hb 1844575 : obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+average:673460:335488:337971
+-- after brk1 | delegated 1928378 handback 2727526 done_in_region 0 hb_region 42 hb_frontier 1 hb_miss 2727525 vdown_hb 2051546 : obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+average:4451886:2219587:2232299
+-- after page_fault1 | delegated 1928388 handback 2727605 done_in_region 0 hb_region 44 hb_frontier 17 hb_miss 2727588 vdown_hb 2051556 : obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+Requests/sec:  23202.70
+-- after apache single | delegated 1928434 handback 2811731 done_in_region 0 hb_region 153 hb_frontier 24 hb_miss 2811707 vdown_hb 2133410 : obj_stock: acquired set on 0 of 64 CPUs: [] memcg_stock: acquired set on 0 of 64 CPUs: [] 
+PCPU_DONE

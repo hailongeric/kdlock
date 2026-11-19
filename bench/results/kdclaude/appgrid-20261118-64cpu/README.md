@@ -151,8 +151,8 @@ therefore compare kd with the same kernel's native locks only.
 
 ## 6. Failures found
 
-1. **kd on: exiting httpd processes hang on their mmap lock (reproduced,
-   root cause open).**
+1. **kd on: exiting httpd processes hang on their mmap lock (reproduced;
+   fixed 2026-11-19, section 8).**
    - **Where it showed:** the reboot after the g1 kd-on pass hung (`../../../../serial-kdall10-hang-20261118.log` on 10.176.26.71, httpd threads "blocked by coredump"); then reproduced in `crash_check.sh on`, at the first cycle of Apache's default configuration.
    - **State** (`data/hang/`: stacks, counters, `diag_kd_mmdump.c` output in `mmdump.txt`):
      - 3-4 httpd worker processes, all threads in `do_exit` waiting for their mm's mmap lock in read mode;
@@ -165,7 +165,8 @@ therefore compare kd with the same kernel's native locks only.
    - **Effect on the data:** Apache default in kd on (0.58, one run) ran with the defect: its stop hung that boot. The single-process Apache points did not hang: 22 cycles in the pass, 22 in `crash_check.sh`. mmap1, mmap2, brk1, page faults and `mm_stress` with delegated munmap did not hang either: their munmap read parts mostly complete in the combiner, or their processes do not exit while sections are handed back.
    - **Workaround:** `kd_vdown=0`.
 2. **One segfault of `page_fault2_threads` in kd on** (14:19 in g1 on, glibc, a 16-bit counter increment at address `0xf70` during process teardown, after the measurement: every point has its value). Not reproduced: 90 runs of page_fault2, page_fault1 and mmap1 at 16-64 threads with the daemon (`wis_exit_check.sh`, `data/hang/g1-wisexit.txt`), and 60 runs each in native and kd off (`data/g1-*-crash.txt`), all without a fatal signal.
-3. **A per-CPU lock byte left set by handbacks (found by the lkp-tests
+3. **A per-CPU lock byte left set by handbacks (fixed in the translator
+   2026-11-19, section 8; found by the lkp-tests
    session, branch `lkp-macro`, its README section 7; checked here).**
    - **What:** a delegated section that takes memcg's per-CPU
      `obj_stock` local trylock on the executor and is handed back before
@@ -192,6 +193,117 @@ therefore compare kd with the same kernel's native locks only.
      The medians there are not affected.
 4. **Setup:** the unpatched Metis binary died with SIGILL (`wrmem` with no cpufreq), fixed before the grid (section 2); the native and kd-off crash checks are clean (no fatal signal, no leftover httpd).
 
+## 8. Fixes of failures 1 and 3 (2026-11-19)
+
+Both are fixed in kdall13 (`7.0.0-38-kdall13 #18`, commits `a26a8578` and
+`3a909d50`); every check below ran on a fresh boot of it unless named
+otherwise. Data in `data/fix/`.
+
+### 8.1 Failure 1: the mmap lock left write-held
+
+- **Located** with release assertions in `kd_rwsem.c` (a write release or
+  downgrade without the writer bit, a read release with it) on kdall11:
+  the munmap origin's `up_read` from `vms_complete_munmap_vmas()` ran with
+  count `0x109` (writer bit set). A temporary ring of `kd_exec_one()`
+  decisions (kdall11d, not committed) showed for every failing task: a
+  nested acquisition (the i_mmap rwsem in `unlink_file_vma_batch_final()`)
+  ran on another combiner, the packet came back (`KD_WAIT_RESUMED`) and
+  went on in generated code, and a later miss was then handled with that
+  combiner's verdict, as a completed section: no kept downgrade, no
+  suppressed offer (`data/fix/k11-dmesg-excerpt.txt`).
+- **Fix:** the verdict counts only when the level ends on it
+  (LOCKS.md 5, ARCHITECTURE.md 8).
+- **Checks** (`repro_variant.sh`, now with `CYCLES` and `KERNEL`; Apache
+  default configuration, only `__vm_munmap` delegated, `kd_vdown=1`,
+  `kd_xchg=1`):
+
+| kernel | cycles | result |
+|---|---:|---|
+| kdall11 (assertions) | 4 | hung (`repro-k11munmap.txt`) |
+| kdall11d (assertions, decision ring) | 5 | hung (`repro-k11dmunmap.txt`) |
+| kdall11e (fix, ring, old translator) | 20 | clean, 0 assertions (`repro-k11efix.txt`) |
+| kdall13 (both fixes) | 20 | clean, 0 assertions, 12 165 nested delegations (`repro-k13munmap.txt`) |
+
+### 8.2 Failure 3: per-CPU lock bytes
+
+- **Fix:** per-CPU regions in the translator (TRANSLATOR.md 3a). Counters
+  `hb_region` (an exit left inside a walked region, taken with the
+  section's preempt count or IRQ-off raised; an upper bound, an inner lock
+  held counts too) and `done_in_region`.
+- **Policies tried** (`pcpu_check.sh`, delegated will-it-scale at 64
+  threads 10 s, then Apache single process; bytes of `obj_stock` /
+  `memcg_stock` after the last workload):
+
+| run | policy | mmap1 delegated / handback | brk1 delegated (that point) | hb_region | bytes |
+|---|---|---|---|---:|---|
+| kdall10 (`data/hang/g1-pcpu.txt`) | none | 11 721 926 / 31 | 2 398 479, 1 056 779 misses | - | 57 / 0 |
+| `k12-pcpu.txt` | every exit a frontier, kernel waits nested in regions | 0 / 6 871 | 451 362 | - | 0 / 0 |
+| `k13-pcpu.txt` | exits to depth 2, 60 000-instruction budget | 0 / 2 113 | 265 | 668 (region starts, counter since corrected) | 0 / 0 |
+| `k13b-pcpu.txt` | depth 0, budget 60 000 | 0 / 4 565 | 1 928 378, 2.7 M misses (budget) | 153 | 0 / 0 |
+| `k13c-pcpu.txt` | depth 0, budget 250 000 | 10 879 599 / 344 509 | 5 535 327 | 15 033 | 0 / **7** |
+| `k13d-pcpu.txt` | as committed (reads found during walks also walked) | 11 293 649 / 46 | 14 086 420 / 68 | 99 | 0 / 0 |
+
+  k13c is the one that leaked: identity reads that a walk decoded were not
+  walked themselves, so `refill_stock()`'s region missed into
+  `drain_stock()`; `hb_region` showed it. The committed loop repeats until
+  no new read turns up.
+- **In-boot A/B** (`fix_ab.sh k13v2`, `data/fix/k13v2-fixab.txt`,
+  `fixab_summary.py`): kd off, then this translator, then the previous one
+  (`b6041b6f`) last; each daemon mode starts from no images
+  (`drop_sites.py`; a daemon that exits leaves its images loaded) and
+  warms up until a pass adds fewer than 1000 misses. Mean of 2 rounds, ops
+  per second:
+
+| benchmark | threads | off | new | old | new/off | old/off | new/old |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| mmap1 | 1 | 501290 | 498097 | 473651 | 0.99 | 0.94 | 1.05 |
+| mmap1 | 8 | 314278 | 390136 | 378886 | 1.24 | 1.21 | 1.03 |
+| mmap1 | 32 | 315056 | 392146 | 381344 | 1.24 | 1.21 | 1.03 |
+| mmap1 | 64 | 325545 | 371582 | 359399 | 1.14 | 1.10 | 1.03 |
+| mmap2 | 1 | 417773 | 408826 | 403783 | 0.98 | 0.97 | 1.01 |
+| mmap2 | 8 | 300660 | 350016 | 383992 | 1.16 | 1.28 | 0.91 |
+| mmap2 | 32 | 361546 | 386025 | 380936 | 1.07 | 1.05 | 1.01 |
+| mmap2 | 64 | 348870 | 331226 | 341183 | 0.95 | 0.98 | 0.97 |
+| brk1 | 1 | 1050308 | 1028617 | 927628 | 0.98 | 0.88 | 1.11 |
+| brk1 | 8 | 770924 | 1017129 | 877506 | 1.32 | 1.14 | 1.16 |
+| brk1 | 32 | 779614 | 1145152 | 1001758 | 1.47 | 1.28 | 1.14 |
+| brk1 | 64 | 812986 | 1015228 | 818172 | 1.25 | 1.01 | 1.24 |
+| page_fault1 | 1 | 641142 | 637596 | 628866 | 0.99 | 0.98 | 1.01 |
+| page_fault1 | 8 | 2153946 | 2360815 | 2381829 | 1.10 | 1.11 | 0.99 |
+| page_fault1 | 32 | 3002054 | 2983251 | 2922690 | 0.99 | 0.97 | 1.02 |
+| page_fault1 | 64 | 4465746 | 4464916 | 4303556 | 1.00 | 0.96 | 1.04 |
+
+| mode | delegated | handback | hb_miss | hb_frontier | hb_region | done_in_region | bytes after (obj_stock, memcg_stock) |
+|---|---:|---:|---:|---:|---:|---:|---|
+| off | 0 | 0 | 0 | 0 | 0 | 0 | 0 / 0 |
+| new | 242 511 697 | 975 | 2 | 973 | 684 | 0 | 0 / 0 |
+| old | 228 471 705 | 1 455 | 449 | 1 006 | 0 | 0 | 46 / 6 |
+
+  - The old translator set 46 obj_stock and 5 memcg_stock bytes already in
+    its warm-up, so its measured points ran with those CPUs on the slow
+    accounted-allocation path: new/old mixes the translation change with
+    the damage the old one does. brk1 gains most (1.14-1.24), mmap1 1.03,
+    mmap2 0.91 at 8 threads and 0.97-1.01 elsewhere; page_fault1 is not
+    delegated. One boot, 2 rounds: at mmap2 8 threads the old rounds are
+    369 k and 399 k, the new ones 353 k and 347 k; the gap is about the
+    old round-to-round spread, so a loss there is not established either
+    way.
+  - `hb_region` 684 in the new mode with no byte set: the counter's upper
+    bound includes exits taken with an inner lock held.
+  - A first A/B (`k13-fixab-v1.txt`) did not drop images between modes and
+    measured the new mode before learning converged; it is kept for the
+    old translator's damage in one boot (obj_stock 32 of 64), not for the
+    rates.
+- **Correctness on kdall13** (`kdall_check.sh` without the era step,
+  `data/fix/k13.out`): locktorture ww_mutex, mutex and rwsem 2 runs each,
+  all SUCCESS; `run_corr.py` plain and delegated 442 points, 0 failed, 0
+  kernel complaints; test-ww_mutex passes (the `stress_inorder_work -35`
+  line is in every earlier run too); `mm_stress` 16/32/64 threads ok; 0
+  complaints in the kernel log.
+- **Limits:** far exits are not proven unreachable with a region open
+  (TRANSLATOR.md 3a); report `hb_region` and the bytes with delegated runs.
+  The grid of sections 3-4 was not rerun on kdall13.
+
 ## 7. Files
 
 | file | what |
@@ -203,4 +315,5 @@ therefore compare kd with the same kernel's native locks only.
 | `diag_kd_mmdump.c`, `dstate.sh`, `hangdump.sh` | diagnostics: the mmap lock state of named processes (module, never left loaded), D-state stacks without reading command lines |
 | `data/runs.txt`, `data/app-g1.*`, `data/nano-g1*` | results |
 | `data/hang/` | the hang: stacks, counters, lock states, reproductions |
+| `pcpu_check.sh`, `fix_ab.sh`, `drop_sites.py`, `fixab_summary.py`, `data/fix/` | section 8 |
 

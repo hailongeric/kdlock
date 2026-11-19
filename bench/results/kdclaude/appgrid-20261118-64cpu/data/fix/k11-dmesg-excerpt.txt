@@ -1,0 +1,36 @@
+Excerpts of the guest kernel log from the two diagnostic boots (the boots
+themselves are gone; lines copied from the session output, unchanged).
+
+== kdall11 (release assertions in kd_rwsem.c), repro_variant.sh k11munmap 1 1 __vm_munmap
+[   68.669697] kdlock: read release of rwsem ff1100010d283290 with count 0x109
+[   68.669712] WARNING: kernel/locking/kdlock/kd_rwsem.c:464 at kd_rwsem_bad_release+0x19/0x60, CPU#32: httpd/5446
+[   68.700435] Call Trace:
+[   68.701147]  kd_up_read+0x4a/0x90
+[   68.701649]  vms_complete_munmap_vmas+0x20f/0x280
+[   68.702355]  do_vmi_align_munmap+0x185/0x210
+[   68.702976]  do_vmi_munmap+0xd1/0x1b0
+[   68.703528]  __vm_munmap+0xc1/0x190
+[   68.704048]  __x64_sys_munmap+0x1b/0x30
+[   68.729324] kdlock: read release of rwsem ff1100010d283290 with count 0x109 by httpd/5446
+[   99.173489] kd_mmdump: pid 5405 mm ff1100010d283100 count 0x5 m.q 0x101 wait_lock 0x0 owner 5477(httpd) parked 1 users 27
+
+== kdall11d (kdall11 + a temporary ring of kd_exec_one() decisions, not committed;
+== newest first, per pid). kind 3 = KD_X_MISS_CODE, kind 1 = KD_X_UNLOCK.
+[   71.852174] kdlock: read release of rwsem ff11000345006a90 with count 0x9
+[   71.914540] kdhb: pid 3931 cpu 22 root ff11000345006a90 ip free_pgd_range+0x0/0x7e0 level 0 vdown 1 down 0 done 0 native 0 released 0x0 resumed 1 kind 3
+[   71.914698] kdhb: pid 3931 cpu 18 root ff11000118cae400 ip unlink_file_vma_batch_final+0x72/0xc0 level 1 vdown 1 down 0 done 1 native 0 released 0x0 resumed 0 kind 1
+[   71.915126] kdhb: pid 3931 cpu 23 root ff11000345006a90 ip __rb_erase_color+0x0/0x300 level 0 vdown 1 down 1 done 0 native 1 released 0x0 resumed 0 kind 3
+[   71.957610] kdlock: read release of rwsem ff1100034e5ec790 with count 0x9 by httpd/3946
+[   71.957873] kdhb: pid 3946 cpu 53 root ff1100034e5ec790 ip free_pgd_range+0x0/0x7e0 level 0 vdown 1 down 0 done 0 native 0 released 0x0 resumed 1 kind 3
+[   71.958054] kdhb: pid 3946 cpu 11 root ff11000118cae400 ip unlink_file_vma_batch_final+0x72/0xc0 level 1 vdown 1 down 0 done 1 native 0 released 0x0 resumed 0 kind 1
+[   72.915808] kdlock: read release of rwsem ff11000345004e90 with count 0xffffffffffffff09 by httpd/4032
+[   72.916194] kdhb: pid 4032 cpu 18 root ff11000345004e90 ip tlb_flush_mmu_tlbonly+0x0/0x170 level 0 vdown 1 down 0 done 0 native 0 released 0x0 resumed 1 kind 3
+[   72.916704] kdhb: pid 4032 cpu 16 root ff11000118cae400 ip unlink_file_vma_batch_final+0x72/0xc0 level 1 vdown 1 down 0 done 1 native 0 released 0x0 resumed 0 kind 1
+[  105.527892] kd_mmdump: pid 3906 mm ff11000345006900 count 0x5 m.q 0x301 wait_lock 0x0 owner 3906(httpd) parked 1 users 27
+
+Reading: for each failing pid the last decision is a miss (kind 3) handled
+with native 0 and down 0 after a nested acquisition (i_mmap rwsem in
+unlink_file_vma_batch_final, level 1) was run by another combiner and the
+packet came back (resumed 1). The handback was treated as a completion: the
+kept downgrade was not done, so the origin read part ran as a reader of a
+lock still write-held, and its up_read left 0x9 / 0x5 behind.

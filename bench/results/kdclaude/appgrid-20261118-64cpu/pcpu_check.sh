@@ -10,7 +10,7 @@ O=/root/appgrid; exec > $O/$TAG-pcpu.txt 2>&1
 AL=/root/host_fs/kdlock/bench/allow; A=/root/appbench; H=/usr/local/apache2; I=$A/ivm/apache
 ulimit -c 0; ulimit -n 65536
 pc() { echo "-- $1: $(python3 /root/pcpu.py obj_stock memcg_stock | tr '\n' ' ')"; }
-st() { awk '$1 ~ /^(delegated|handback|hb_miss|hb_frontier|vdown_hb)$/ {printf "%s %s ", $1, $2}' /sys/kernel/debug/kdlock_stats; }
+st() { awk '$1 ~ /^(delegated|handback|hb_miss|hb_frontier|vdown_hb|hb_region|done_in_region)$/ {printf "%s %s ", $1, $2}' /sys/kernel/debug/kdlock_stats; }
 uname -rv; uptime
 pc "fresh boot"
 cat $AL/api.txt $AL/torture.txt $AL/mm.txt > /root/allow_cmp.txt

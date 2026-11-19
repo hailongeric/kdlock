@@ -1,0 +1,113 @@
+7.0.0-38-kdall13 #18 SMP PREEMPT_DYNAMIC Thu Nov 19 06:06:37 UTC 2026
+old translator: b6041b6f (b6041b6f)
+-- fresh: obj_stock: 0 of 64 memcg_stock: 0 of 64 
+-- off warm 1: delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0
+-- off warm done: obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 mmap1 1 505141 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 mmap1 8 318918 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 mmap1 32 317709 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 mmap1 64 322623 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 mmap2 1 417834 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 mmap2 8 301060 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 mmap2 32 358679 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 mmap2 64 361233 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 brk1 1 1051493 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 brk1 8 760726 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 brk1 32 778264 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 brk1 64 847728 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 page_fault1 1 641584 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 page_fault1 8 2156995 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 page_fault1 32 2957314 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 1 page_fault1 64 4527919 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 mmap1 1 497438 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 mmap1 8 309637 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 mmap1 32 312402 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 mmap1 64 328467 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 mmap2 1 417712 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 mmap2 8 300261 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 mmap2 32 364413 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 mmap2 64 336508 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 brk1 1 1049122 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 brk1 8 781122 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 brk1 32 780964 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 brk1 64 778244 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 page_fault1 1 640700 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 page_fault1 8 2150897 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 page_fault1 32 3046793 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 off 2 page_fault1 64 4403573 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+-- new warm 1: delegated+2442967 handback+4313924 done_in_region+0 hb_region+26 hb_frontier+0 hb_miss+4313924 vdown_hb+3847698
+-- new warm 2: delegated+27096393 handback+9208966 done_in_region+0 hb_region+238 hb_frontier+67 hb_miss+9208899 vdown_hb+9003276
+-- new warm 3: delegated+82286674 handback+1864 done_in_region+0 hb_region+444 hb_frontier+456 hb_miss+1408 vdown_hb+77
+-- new warm 4: delegated+85270039 handback+643 done_in_region+0 hb_region+577 hb_frontier+641 hb_miss+2 vdown_hb+64
+-- new warm done: obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 mmap1 1 496940 | delegated+53 handback+2 done_in_region+0 hb_region+0 hb_frontier+1 hb_miss+1 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 mmap1 8 390057 | delegated+12445715 handback+103 done_in_region+0 hb_region+88 hb_frontier+103 hb_miss+0 vdown_hb+15 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 mmap1 32 387528 | delegated+12423742 handback+34 done_in_region+0 hb_region+24 hb_frontier+34 hb_miss+0 vdown_hb+9 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 mmap1 64 379875 | delegated+11957879 handback+6 done_in_region+0 hb_region+4 hb_frontier+6 hb_miss+0 vdown_hb+2 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 mmap2 1 410533 | delegated+65 handback+1 done_in_region+0 hb_region+0 hb_frontier+1 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 mmap2 8 352993 | delegated+11310183 handback+116 done_in_region+0 hb_region+96 hb_frontier+116 hb_miss+0 vdown_hb+20 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 mmap2 32 382911 | delegated+12269943 handback+19 done_in_region+0 hb_region+6 hb_frontier+19 hb_miss+0 vdown_hb+13 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 mmap2 64 349884 | delegated+10665224 handback+10 done_in_region+0 hb_region+4 hb_frontier+10 hb_miss+0 vdown_hb+6 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 brk1 1 1034741 | delegated+59 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 brk1 8 1099653 | delegated+17579797 handback+118 done_in_region+0 hb_region+106 hb_frontier+118 hb_miss+0 vdown_hb+11 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 brk1 32 1196448 | delegated+19154372 handback+29 done_in_region+0 hb_region+12 hb_frontier+29 hb_miss+0 vdown_hb+16 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 brk1 64 984195 | delegated+15033918 handback+38 done_in_region+0 hb_region+15 hb_frontier+38 hb_miss+0 vdown_hb+23 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 page_fault1 1 638633 | delegated+45 handback+2 done_in_region+0 hb_region+0 hb_frontier+2 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 page_fault1 8 2325263 | delegated+52 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 page_fault1 32 2987397 | delegated+20 handback+11 done_in_region+0 hb_region+0 hb_frontier+11 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 1 page_fault1 64 4493838 | delegated+82 handback+27 done_in_region+0 hb_region+0 hb_frontier+27 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 mmap1 1 499254 | delegated+2 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 mmap1 8 390216 | delegated+12528901 handback+63 done_in_region+0 hb_region+55 hb_frontier+63 hb_miss+0 vdown_hb+8 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 mmap1 32 396763 | delegated+12668103 handback+27 done_in_region+0 hb_region+22 hb_frontier+27 hb_miss+0 vdown_hb+5 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 mmap1 64 363289 | delegated+11828763 handback+19 done_in_region+0 hb_region+15 hb_frontier+19 hb_miss+0 vdown_hb+4 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 mmap2 1 407118 | delegated+2 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 mmap2 8 347040 | delegated+11133799 handback+117 done_in_region+0 hb_region+96 hb_frontier+116 hb_miss+1 vdown_hb+20 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 mmap2 32 389139 | delegated+12455808 handback+10 done_in_region+0 hb_region+1 hb_frontier+10 hb_miss+0 vdown_hb+9 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 mmap2 64 312568 | delegated+10086849 handback+28 done_in_region+0 hb_region+16 hb_frontier+28 hb_miss+0 vdown_hb+12 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 brk1 1 1022493 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 brk1 8 934605 | delegated+14818181 handback+127 done_in_region+0 hb_region+113 hb_frontier+127 hb_miss+0 vdown_hb+14 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 brk1 32 1093857 | delegated+17556201 handback+23 done_in_region+0 hb_region+9 hb_frontier+23 hb_miss+0 vdown_hb+14 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 brk1 64 1046260 | delegated+16593798 handback+11 done_in_region+0 hb_region+2 hb_frontier+11 hb_miss+0 vdown_hb+9 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 page_fault1 1 636559 | delegated+53 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 page_fault1 8 2396367 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 page_fault1 32 2979105 | delegated+50 handback+12 done_in_region+0 hb_region+0 hb_frontier+12 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+k13v2 new 2 page_fault1 64 4435994 | delegated+38 handback+22 done_in_region+0 hb_region+0 hb_frontier+22 hb_miss+0 vdown_hb+0 | obj_stock: 0 of 64 memcg_stock: 0 of 64 
+dropped 3 sites
+-- old warm 1: delegated+36718622 handback+3773353 done_in_region+0 hb_region+0 hb_frontier+12 hb_miss+3773341 vdown_hb+2891777
+-- old warm 2: delegated+82809597 handback+116105 done_in_region+0 hb_region+0 hb_frontier+56 hb_miss+116049 vdown_hb+53
+-- old warm 3: delegated+82064686 handback+602 done_in_region+0 hb_region+0 hb_frontier+376 hb_miss+226 vdown_hb+84
+-- old warm done: obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 mmap1 1 474182 | delegated+55 handback+1 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+1 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 mmap1 8 379839 | delegated+12146512 handback+90 done_in_region+0 hb_region+0 hb_frontier+84 hb_miss+6 vdown_hb+6 | obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 mmap1 32 381887 | delegated+12201200 handback+49 done_in_region+0 hb_region+0 hb_frontier+46 hb_miss+3 vdown_hb+8 | obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 mmap1 64 362401 | delegated+11276852 handback+17 done_in_region+0 hb_region+0 hb_frontier+14 hb_miss+3 vdown_hb+6 | obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 mmap2 1 385201 | delegated+52 handback+4 done_in_region+0 hb_region+0 hb_frontier+3 hb_miss+1 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 mmap2 8 368763 | delegated+11844329 handback+141 done_in_region+0 hb_region+0 hb_frontier+138 hb_miss+3 vdown_hb+3 | obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 mmap2 32 378279 | delegated+12108641 handback+23 done_in_region+0 hb_region+0 hb_frontier+21 hb_miss+2 vdown_hb+8 | obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 mmap2 64 339808 | delegated+10827376 handback+9 done_in_region+0 hb_region+0 hb_frontier+9 hb_miss+0 vdown_hb+5 | obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 brk1 1 924037 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 5 of 64 
+k13v2 old 1 brk1 8 883418 | delegated+14180600 handback+176 done_in_region+0 hb_region+0 hb_frontier+175 hb_miss+1 vdown_hb+10 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 1 brk1 32 958126 | delegated+15434111 handback+37 done_in_region+0 hb_region+0 hb_frontier+37 hb_miss+0 vdown_hb+20 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 1 brk1 64 733742 | delegated+12345494 handback+67 done_in_region+0 hb_region+0 hb_frontier+67 hb_miss+0 vdown_hb+45 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 1 page_fault1 1 628743 | delegated+0 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 1 page_fault1 8 2370069 | delegated+35 handback+1 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+1 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 1 page_fault1 32 2955250 | delegated+6 handback+2 done_in_region+0 hb_region+0 hb_frontier+2 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 1 page_fault1 64 4293330 | delegated+76 handback+20 done_in_region+0 hb_region+0 hb_frontier+20 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 mmap1 1 473120 | delegated+1 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 mmap1 8 377934 | delegated+12036542 handback+109 done_in_region+0 hb_region+0 hb_frontier+105 hb_miss+4 vdown_hb+5 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 mmap1 32 380801 | delegated+12221119 handback+19 done_in_region+0 hb_region+0 hb_frontier+19 hb_miss+0 vdown_hb+2 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 mmap1 64 356397 | delegated+11155390 handback+21 done_in_region+0 hb_region+0 hb_frontier+21 hb_miss+0 vdown_hb+3 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 mmap2 1 422365 | delegated+44 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 mmap2 8 399221 | delegated+12773361 handback+38 done_in_region+0 hb_region+0 hb_frontier+38 hb_miss+0 vdown_hb+1 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 mmap2 32 383594 | delegated+12288094 handback+8 done_in_region+0 hb_region+0 hb_frontier+8 hb_miss+0 vdown_hb+5 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 mmap2 64 342558 | delegated+10705208 handback+18 done_in_region+0 hb_region+0 hb_frontier+18 hb_miss+0 vdown_hb+10 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 brk1 1 931220 | delegated+35 handback+0 done_in_region+0 hb_region+0 hb_frontier+0 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 brk1 8 871593 | delegated+13943075 handback+84 done_in_region+0 hb_region+0 hb_frontier+84 hb_miss+0 vdown_hb+16 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 brk1 32 1045389 | delegated+16862733 handback+460 done_in_region+0 hb_region+0 hb_frontier+36 hb_miss+424 vdown_hb+21 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 brk1 64 902603 | delegated+14120634 handback+21 done_in_region+0 hb_region+0 hb_frontier+21 hb_miss+0 vdown_hb+11 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 page_fault1 1 628990 | delegated+51 handback+1 done_in_region+0 hb_region+0 hb_frontier+1 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 page_fault1 8 2393589 | delegated+2 handback+1 done_in_region+0 hb_region+0 hb_frontier+1 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 page_fault1 32 2890129 | delegated+41 handback+13 done_in_region+0 hb_region+0 hb_frontier+13 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+k13v2 old 2 page_fault1 64 4313782 | delegated+36 handback+25 done_in_region+0 hb_region+0 hb_frontier+25 hb_miss+0 vdown_hb+0 | obj_stock: 46 of 64 memcg_stock: 6 of 64 
+dropped 3 sites
+FIXAB_DONE

@@ -1,0 +1,23 @@
+7.0.0-38-kdall13 #18 SMP PREEMPT_DYNAMIC Thu Nov 19 06:06:37 UTC 2026
+kd_vdown=1 kd_xchg=1 allow: __vm_munmap
+cycle 1 req/s 162782.50 left 0 | delegated 627 handback 162206 nested_delegated 632 xchg_taken 9 vdown 162201 vdown_hb 162197 
+cycle 2 req/s 162132.16 left 0 | delegated 1149 handback 316639 nested_delegated 1152 xchg_taken 9 vdown 316634 vdown_hb 316628 
+cycle 3 req/s 163972.58 left 0 | delegated 1907 handback 494849 nested_delegated 1906 xchg_taken 9 vdown 494848 vdown_hb 494838 
+cycle 4 req/s 163191.85 left 0 | delegated 2445 handback 651492 nested_delegated 2440 xchg_taken 9 vdown 651495 vdown_hb 651481 
+cycle 5 req/s 164482.68 left 0 | delegated 3072 handback 812194 nested_delegated 3066 xchg_taken 9 vdown 812198 vdown_hb 812183 
+cycle 6 req/s 166076.30 left 0 | delegated 3785 handback 985147 nested_delegated 3775 xchg_taken 9 vdown 985155 vdown_hb 985136 
+cycle 7 req/s 161478.47 left 0 | delegated 4374 handback 1144046 nested_delegated 4360 xchg_taken 9 vdown 1144058 vdown_hb 1144035 
+cycle 8 req/s 164352.65 left 0 | delegated 5005 handback 1311822 nested_delegated 4991 xchg_taken 9 vdown 1311834 vdown_hb 1311811 
+cycle 9 req/s 163340.04 left 0 | delegated 5676 handback 1478467 nested_delegated 5660 xchg_taken 9 vdown 1478481 vdown_hb 1478456 
+cycle 10 req/s 165118.75 left 0 | delegated 6312 handback 1651036 nested_delegated 6288 xchg_taken 9 vdown 1651058 vdown_hb 1651025 
+cycle 11 req/s 168717.39 left 0 | delegated 7030 handback 1828342 nested_delegated 7002 xchg_taken 9 vdown 1828368 vdown_hb 1828331 
+cycle 12 req/s 165826.16 left 0 | delegated 7673 handback 2000380 nested_delegated 7641 xchg_taken 9 vdown 2000410 vdown_hb 2000369 
+cycle 13 req/s 161857.80 left 0 | delegated 8204 handback 2155446 nested_delegated 8170 xchg_taken 9 vdown 2155478 vdown_hb 2155435 
+cycle 14 req/s 163350.32 left 0 | delegated 8811 handback 2317150 nested_delegated 8775 xchg_taken 9 vdown 2317184 vdown_hb 2317139 
+cycle 15 req/s 161521.91 left 0 | delegated 9368 handback 2474422 nested_delegated 9325 xchg_taken 9 vdown 2474463 vdown_hb 2474411 
+cycle 16 req/s 159929.81 left 0 | delegated 9988 handback 2641707 nested_delegated 9941 xchg_taken 9 vdown 2641752 vdown_hb 2641696 
+cycle 17 req/s 163580.04 left 0 | delegated 10471 handback 2793180 nested_delegated 10421 xchg_taken 9 vdown 2793228 vdown_hb 2793169 
+cycle 18 req/s 161565.68 left 0 | delegated 11067 handback 2950763 nested_delegated 11014 xchg_taken 9 vdown 2950814 vdown_hb 2950752 
+cycle 19 req/s 160491.61 left 0 | delegated 11594 handback 3105515 nested_delegated 11537 xchg_taken 9 vdown 3105570 vdown_hb 3105504 
+cycle 20 req/s 167374.36 left 0 | delegated 12225 handback 3270989 nested_delegated 12165 xchg_taken 9 vdown 3271047 vdown_hb 3270978 
+CLEAN
