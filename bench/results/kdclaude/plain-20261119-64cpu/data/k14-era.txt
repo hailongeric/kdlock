@@ -1,0 +1,64 @@
+7.0.0-38-kdall14 #19 SMP PREEMPT_DYNAMIC Thu Nov 19 16:26:07 UTC 2026
+defaults: kd_rw_era_ns=200000 kd_rwsem_era_ns=1000000 kd_rwsem_rphase_ns=1000
+k14 1 norph mmap1 4 349926 | plain+11354053 no_spin+1 abandon+9 head_sleep+1066 parked+1073 rd_behind+6 era_start+71
+k14 1 era mmap1 4 352979 | plain+11475788 no_spin+3 abandon+9 head_sleep+1137 parked+1146 rd_behind+4 era_start+66
+k14 1 noera mmap1 4 360162 | plain+11694438 no_spin+5 abandon+7 head_sleep+1220 parked+1230 rd_behind+1
+k14 1 norph mmap1 16 313613 | plain+10500871 no_spin+9 abandon+71 head_sleep+2074 parked+2143 rd_behind+17 era_start+91
+k14 1 era mmap1 16 312455 | plain+10446616 no_spin+9 abandon+73 head_sleep+2220 parked+2286 rd_behind+12 era_start+97
+k14 1 noera mmap1 16 316690 | plain+10563818 no_spin+1 abandon+71 head_sleep+2085 parked+2151 rd_behind+16
+k14 1 era mmap1 32 308453 | plain+10552706 no_spin+2 abandon+265 head_sleep+1645 parked+1842 rd_behind+28 era_gate+34 era_claim+2 era_start+104
+k14 1 noera mmap1 32 311014 | plain+10624783 no_spin+5 abandon+257 head_sleep+1576 parked+1771 rd_behind+25
+k14 1 norph mmap1 32 302631 | plain+10370332 no_spin+4 abandon+315 head_sleep+1523 parked+1763 rd_behind+28 era_gate+34 era_claim+2 era_start+96
+k14 1 noera mmap1 48 202966 | plain+6865324 numa_local+1844 no_spin+2 abandon+842 head_sleep+1851 parked+2506 rd_behind+50
+k14 1 norph mmap1 48 312420 | plain+10173980 numa_local+367 no_spin+306 abandon+189 head_sleep+2855 parked+3307 rd_behind+48 era_gate+284671 era_claim+11864 era_start+103
+k14 1 era mmap1 48 309535 | plain+10242281 numa_local+203 no_spin+239 abandon+183 head_sleep+2016 parked+2394 rd_behind+16 era_gate+297704 era_claim+12396 era_start+104
+k14 1 noera mmap1 60 190774 | plain+6474951 numa_local+2379 no_spin+3 abandon+1402 head_sleep+2120 parked+3329 rd_behind+90
+k14 1 norph mmap1 60 327005 | plain+10605415 numa_local+72 no_spin+403 abandon+223 head_sleep+964 parked+1534 rd_behind+23 era_gate+446862 era_claim+14960 era_start+43
+k14 1 era mmap1 60 325798 | plain+10466025 numa_local+119 no_spin+368 abandon+223 head_sleep+949 parked+1482 rd_behind+27 era_gate+436111 era_claim+14591 era_start+54
+k14 1 norph mmap2 4 348155 | plain+11228859 no_spin+1 abandon+9 head_sleep+630 parked+637 rd_behind+1 era_start+579
+k14 1 era mmap2 4 348945 | plain+11261387 abandon+5 head_sleep+732 parked+737 rd_behind+5 era_start+599
+k14 1 noera mmap2 4 350463 | plain+11313515 no_spin+3 abandon+11 head_sleep+689 parked+703 rd_behind+6
+k14 1 norph mmap2 16 330801 | plain+10746289 abandon+67 head_sleep+1924 parked+1976 rd_behind+16 era_start+131
+k14 1 era mmap2 16 326705 | plain+10622778 no_spin+1 abandon+66 head_sleep+2070 parked+2118 rd_behind+18 era_start+150
+k14 1 noera mmap2 16 333793 | plain+10911912 no_spin+3 abandon+64 head_sleep+1749 parked+1807 rd_behind+15
+k14 1 era mmap2 32 357862 | plain+11649080 no_spin+1 abandon+264 head_sleep+1220 parked+1421 rd_behind+29 era_start+66
+k14 1 noera mmap2 32 359983 | plain+11683432 no_spin+4 abandon+248 head_sleep+1476 parked+1671 rd_behind+24
+k14 1 norph mmap2 32 357400 | plain+11654310 no_spin+3 abandon+271 head_sleep+1207 parked+1425 rd_behind+30 era_start+65
+k14 1 noera mmap2 48 231997 | plain+7488259 numa_local+818 no_spin+2 abandon+803 head_sleep+697 parked+1343 rd_behind+46
+k14 1 norph mmap2 48 371406 | plain+11941789 numa_local+1 no_spin+171 abandon+141 head_sleep+756 parked+1029 rd_behind+47 era_gate+381289 era_claim+16048 era_start+13
+k14 1 era mmap2 48 369398 | plain+11905240 numa_local+1 no_spin+101 abandon+109 head_sleep+591 parked+767 rd_behind+29 rd_queue+1 era_gate+381974 era_claim+16070 era_start+15
+k14 1 noera mmap2 60 221585 | plain+7175200 numa_local+1567 no_spin+1 abandon+1475 head_sleep+1113 parked+2353 rd_behind+56
+k14 1 norph mmap2 60 362816 | plain+11634187 numa_local+5 no_spin+39 abandon+121 head_sleep+301 parked+429 rd_behind+64 era_gate+477376 era_claim+16032 era_start+9
+k14 1 era mmap2 60 364991 | plain+11705774 no_spin+64 abandon+115 head_sleep+240 parked+389 rd_behind+27 era_gate+477856 era_claim+16053 era_start+5
+k14 1 norph brk1 4 821273 | plain+13097984 no_spin+4 abandon+8 head_sleep+1132 parked+1146 rd_behind+8 rd_queue+2 era_start+19
+k14 1 era brk1 4 788478 | plain+12518467 no_spin+1 abandon+11 head_sleep+1144 parked+1155 rd_behind+1 era_start+24
+k14 1 noera brk1 4 752563 | plain+11988897 no_spin+2 abandon+11 head_sleep+1185 parked+1196 rd_behind+7
+k14 1 norph brk1 16 765961 | plain+12508228 no_spin+2 abandon+72 head_sleep+1782 parked+1845 era_gate+17 era_claim+2 era_start+97
+k14 1 era brk1 16 769811 | plain+12556880 no_spin+4 abandon+72 head_sleep+2169 parked+2232 rd_behind+21 rd_queue+3 era_gate+16 era_claim+2 era_start+107
+k14 1 noera brk1 16 740260 | plain+12096374 no_spin+3 abandon+70 head_sleep+1796 parked+1863 rd_behind+3
+k14 1 era brk1 32 721747 | plain+12024093 no_spin+11 abandon+323 head_sleep+1442 parked+1677 rd_behind+9 era_gate+41 era_claim+4 era_start+76
+k14 1 noera brk1 32 692473 | plain+11478266 no_spin+4 abandon+335 head_sleep+1583 parked+1834 rd_behind+22
+k14 1 norph brk1 32 722260 | plain+12092515 no_spin+7 abandon+347 head_sleep+1381 parked+1632 rd_behind+26 era_gate+34 era_claim+2 era_start+88
+k14 1 noera brk1 48 445086 | plain+7341232 numa_local+1820 no_spin+5 abandon+904 head_sleep+1829 parked+2576 rd_behind+43
+k14 1 norph brk1 48 835594 | plain+13380730 numa_local+83 no_spin+385 abandon+172 head_sleep+1597 parked+2093 rd_behind+76 era_gate+353160 era_claim+14923 era_start+71
+k14 1 era brk1 48 771488 | plain+12490374 numa_local+89 no_spin+400 abandon+158 head_sleep+2038 parked+2544 rd_behind+42 era_gate+344656 era_claim+14548 era_start+85
+k14 1 noera brk1 60 419627 | plain+6981046 numa_local+2737 no_spin+7 abandon+1642 head_sleep+2352 parked+3780 rd_behind+55
+k14 1 norph brk1 60 834842 | plain+13331016 numa_local+21 no_spin+181 abandon+201 head_sleep+554 parked+874 rd_behind+56 era_gate+458591 era_claim+15623 era_start+26
+k14 1 era brk1 60 822640 | plain+13256916 numa_local+97 no_spin+315 abandon+167 head_sleep+1139 parked+1577 rd_behind+72 era_gate+453795 era_claim+15386 era_start+41
+k14 1 norph page_fault1 4 1962335 | plain+20218 no_spin+7 parked+16 rd_behind+3043 rd_queue+15
+k14 1 era page_fault1 4 1953008 | plain+18717 no_spin+4 parked+12 rd_behind+3319 rd_queue+18
+k14 1 noera page_fault1 4 1954277 | plain+23204 no_spin+8 parked+18 rd_behind+2288 rd_queue+15
+k14 1 norph page_fault1 16 3032957 | plain+396851 no_spin+65 head_sleep+2 parked+328 rd_behind+10541 rd_queue+336
+k14 1 era page_fault1 16 3028126 | plain+401203 no_spin+96 head_sleep+2 parked+312 rd_behind+8876 rd_queue+303
+k14 1 noera page_fault1 16 3029964 | plain+381904 no_spin+100 head_sleep+2 parked+272 rd_behind+7891 rd_queue+250
+k14 1 era page_fault1 32 2855674 | plain+364326 no_spin+1447 head_sleep+23 parked+1602 rd_behind+3813 rd_queue+84
+k14 1 noera page_fault1 32 2847271 | plain+347732 no_spin+1432 head_sleep+14 parked+1600 rd_behind+4663 rd_queue+124
+k14 1 norph page_fault1 32 2846645 | plain+343388 no_spin+1414 head_sleep+16 parked+1541 rd_behind+3616 rd_queue+66
+k14 1 noera page_fault1 48 4073026 | plain+295817 no_spin+2061 head_sleep+22 parked+2315 rd_behind+4930 rd_queue+177
+k14 1 norph page_fault1 48 4127340 | plain+297662 numa_local+2 no_spin+2060 head_sleep+41 parked+2274 rd_behind+5330 rd_queue+121
+k14 1 era page_fault1 48 4127833 | plain+298174 numa_local+10 no_spin+2072 head_sleep+49 parked+2256 rd_behind+5128 rd_queue+118
+k14 1 noera page_fault1 60 4460393 | plain+288863 numa_local+5 no_spin+2219 head_sleep+42 parked+2396 rd_behind+6357 rd_queue+169
+k14 1 norph page_fault1 60 4455059 | plain+290141 numa_local+3 no_spin+2183 head_sleep+39 parked+2365 rd_behind+5866 rd_queue+95
+k14 1 era page_fault1 60 4425184 | plain+292466 numa_local+2 no_spin+2167 head_sleep+50 parked+2299 rd_behind+5902 rd_queue+37
+restored: kd_rw_era_ns=200000 kd_rwsem_rphase_ns=1000
+ERA_AB_DONE
