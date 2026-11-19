@@ -247,7 +247,9 @@ g_unixbench() {
 # The will-it-scale tests of lkp's jobs that the first round left out.
 g_wis2() {
 	local t n
-	for t in eventfd1 fallocate1 fallocate2 futex3 futex4 lock1 lseek1 malloc1 malloc2 \
+	# malloc1 has a process mode only (lkp's job runs it so; its thread
+	# binary reports 0).
+	for t in eventfd1 fallocate1 fallocate2 futex3 futex4 lock1 lseek1 malloc2 \
 		 open2 pipe1 poll1 poll2 pread1 pread3 pthread_mutex2 pthread_mutex5 pwrite1 \
 		 read3 read4 readseek1 readseek3 unix1 unlink2 write1 writeseek1 writeseek2; do
 		[ -x $W/${t}_threads ] || continue
@@ -305,7 +307,9 @@ g_sng2() {
 }
 
 # vm-scalability cases that need its sparse files and tmpfs (hw_vars), in a
-# size that fits the guest; lkp's sizes (16-256 G) do not.
+# size that fits the guest; lkp's sizes (16-256 G) do not. Left out:
+# lru-file-readonce and lru-file-readtwice (dd, no usemem rate) and truncate
+# (it reads all of memory first and reports one time).
 vms2() {
 	cd $B/vm-scalability || return 1
 	(
@@ -320,10 +324,10 @@ vms2() {
 }
 g_vms2() {
 	local c n
-	for c in lru-file-readonce lru-file-readtwice lru-file-mmap-read lru-file-mmap-read-rand \
+	for c in lru-file-mmap-read lru-file-mmap-read-rand \
 		 mmap-pread-rand-mt mmap-pread-seq-mt mmap-xread-rand-mt mmap-xread-seq-mt \
 		 mremap-xread-rand-mt shm-pread-rand-mt shm-xread-rand-mt lru-shm-rand \
-		 truncate msync-mt anon-r-seq-mt anon-rx-rand-mt; do
+		 msync-mt anon-r-seq-mt anon-rx-rand-mt; do
 		[ -f $B/vm-scalability/case-$c ] || continue
 		for n in $NS; do point vms-$c $n KB/s vms2 $c $n; done
 	done
@@ -340,7 +344,7 @@ g_perfb() {
 }
 
 # pft (page faults of one mapping, threads), faults per second.
-pft1() { cd $B/pft && timeout $((DUR + 120)) ./pft -m 4g -n $1 -t 2>&1 | awk '/^ *[0-9.]+Gb/ {v = $NF} END {print v + 0}'; }
+pft1() { cd $B/pft && timeout $((DUR + 120)) ./pft -m 4G -t $1 2>&1 | awk 'NF >= 8 && $NF + 0 > 0 {v = $NF} END {print v + 0}'; }
 g_pft() { local n; for n in $NS; do point pft $n faults/s pft1 $n; done; }
 
 # schbench, lkp's second form: 2 message threads, N workers; requests/s.
@@ -363,6 +367,18 @@ fs_up() {	# fs_up FS
 	mount /dev/ram0 $M
 }
 fs_down() { cd /; umount $M 2>/dev/null; rmmod brd 2>/dev/null; }
+aim_load() {	# aim_load FS TEST N: lkp's load for a 64-worker point (aim7-fs-1brd), scaled to N
+	local l
+	case $2 in
+	disk_cp|disk_rr) [ $1 = btrfs ] && l=1500 || l=3000 ;;
+	disk_rw|disk_src) [ $1 = btrfs ] && l=500 || l=3000 ;;
+	sync_disk_rw) [ $1 = btrfs ] && l=10 || l=600 ;;
+	creat-clo) case $1 in btrfs) l=4 ;; ext4) l=1000 ;; *) l=1500 ;; esac ;;
+	*) l=9000 ;;
+	esac
+	l=$((l * $3 / 64)); [ $l -lt 2 ] && l=2
+	echo $l
+}
 aimx() {	# aimx FS TEST LOAD
 	local d=$B/aim7/run; rm -rf $d; mkdir -p $d
 	fs_up $1 || { echo 0; return; }
@@ -390,7 +406,7 @@ g_fsx() {
 	local f t n
 	for f in ${FSX:-ext4 xfs btrfs}; do
 		for t in disk_cp disk_rr disk_rw disk_src creat-clo sync_disk_rw disk_rd; do
-			for n in $NS; do point aim7-$f-$t $n jobs/min aimx $f $t $((n * 50)); done
+			for n in $NS; do point aim7-$f-$t $n jobs/min aimx $f $t $(aim_load $f $t $n); done
 		done
 		for n in $NS; do point fsmark-$f-nosync $n files/s fsmx $f 0 $n; done
 		for n in $NS; do point fsmark-$f-fsync $n files/s fsmx $f 1 $n; done
@@ -411,9 +427,10 @@ g_net() {
 	local t n
 	[ -x $B/netperf/src/netserver ] || { echo "netperf not built"; return; }
 	pkill -x netserver 2>/dev/null; $B/netperf/src/netserver -4 -p 12865 > /dev/null 2>&1; sleep 1
-	for t in TCP_RR TCP_CRR UDP_RR TCP_STREAM; do
+	for t in TCP_RR TCP_CRR UDP_RR; do
 		for n in $NS; do point netperf-$t $n trans/s np1 $t $n; done
 	done
+	for n in $NS; do point netperf-TCP_STREAM $n Mbit/s np1 TCP_STREAM $n; done
 	pkill -x netserver
 	if [ -x $B/dbench/tbench_srv ]; then
 		( $B/dbench/tbench_srv > /dev/null 2>&1 & ); sleep 1
@@ -451,16 +468,18 @@ g_memcached() {
 	for n in $NS; do point memcached $n ops/s mc1 $n; done
 }
 
-# sysbench mutex and threads, lkp's parameters; events per second.
+# sysbench mutex and threads, lkp's parameters, but 500 lock rounds per
+# event instead of 50000 (an event then takes about 10 ms, not a second, so
+# a 10 s point counts enough of them); events per second.
 sb1() {	# sb1 N ARGS...
 	local n=$1; shift
 	timeout $((DUR + 120)) $B/sysbench/src/sysbench --threads=$n "$@" run 2>&1 | \
-		awk '/total time:/ {t = $3 + 0} /total number of events:/ {e = $5} END {print (t > 0) ? e / t : 0}'
+		awk '/events\/s \(eps\):/ {print $NF}' | tail -1
 }
 g_sysbench() {
 	local n
 	[ -x $B/sysbench/src/sysbench ] || return
-	for n in $NS; do point sysbench-mutex $n events/s sb1 $n --time=0 --events=0 mutex --mutex-num=4096 --mutex-locks=50000 --mutex-loops=10000; done
+	for n in $NS; do point sysbench-mutex $n events/s sb1 $n --time=$DUR mutex --mutex-num=4096 --mutex-locks=500 --mutex-loops=10000; done
 	for n in $NS; do point sysbench-threads $n events/s sb1 $n --time=$DUR threads --thread-yields=1000 --thread-locks=8; done
 }
 
@@ -484,7 +503,7 @@ g_kbuild() { local n; [ -d /root/appbench/text/linux ] || return; for n in ${KB_
 bb1() {	# bb1 writes|reads N
 	local d=/root/lkpfs k=$(($2 / 8 + 1))
 	mkdir -p $d; mountpoint -q $d && umount $d; mount -t tmpfs -o size=8G tmpfs $d
-	timeout 300 $B/blogbench-1.2/src/blogbench -d $d -i 3 -R $2 -W $k -r $k -c $k 2>&1 | awk -v w=$1 '$0 ~ "Final score for " w {print $NF}'
+	timeout 300 $B/blogbench-1.2/src/blogbench -d $d -i 3 -r $2 -w $k -W $k -c $k 2>&1 | awk -v w=$1 '$0 ~ "Final score for " w {print $NF}'
 	cd /; umount $d
 }
 g_blogbench() {

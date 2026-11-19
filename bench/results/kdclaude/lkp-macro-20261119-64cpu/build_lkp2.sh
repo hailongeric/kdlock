@@ -44,6 +44,9 @@ b_blogbench() {
 	./configure CFLAGS="-O2 -std=gnu89 -Wno-error" && make -j$J
 }
 b_filebench() {
+	# Without _FORTIFY_SOURCE: with it filebench 1.5-alpha3 ends at "Pre-
+	# allocating directories" with "buffer overflow detected" (a checked
+	# copy into one of its fixed path buffers).
 	copy filebench; cd $B/filebench || return 1
 	patch -p1 < $P/filebench/pkg/filebench01.patch; patch -p1 < $P/filebench/pkg/filebench02.patch
 	# As lkp's PKGBUILD: a run command where a workload has none, and no
@@ -54,13 +57,13 @@ b_filebench() {
 		sed -ri 's/(.*),cached=\$cached/\1/g' $f
 	done
 	libtoolize && aclocal && autoheader && automake --add-missing && autoconf && \
-		./configure CFLAGS="-O2 -fcommon -std=gnu89 -Wno-error" --prefix=$B/filebench/inst && make -j$J && make install
+		./configure CFLAGS="-O2 -fcommon -std=gnu89 -Wno-error -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0" --prefix=$B/filebench/inst && make -j$J && make install
 }
 b_fio() { copy fio; cd $B/fio && ./configure && make -j$J; }
 b_pgsql() {
 	rm -rf $B/postgresql-17.6 && tar -xjf $S/postgresql-17.6.tar.bz2 -C $B && cd $B/postgresql-17.6 || return 1
 	./configure --prefix=/opt/lkp-pgsql --without-readline --without-icu --without-zlib && \
-		make -j$J && make install && make -C contrib/pgbench install
+		make -j$J && make install	# pgbench is part of src/bin since PostgreSQL 9.5
 }
 b_adrestia() { copy adrestia; cd $B/adrestia && make; }
 b_sockperf() { copy sockperf; cd $B/sockperf && ./autogen.sh && ./configure && make -j$J; }
