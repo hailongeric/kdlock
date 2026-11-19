@@ -27,6 +27,11 @@
 #             threads, and the default configuration once per pass
 # One line per point is appended to /root/appgrid/runs.txt:
 #   TAG MODE BENCH VARIANT N VALUE UNIT [extra] | kd counters before | after
+# The counters are: delegated handback hb_frontier hb_miss offered plain
+# sessions hb_region done_in_region (the last two since the g2 pass; a
+# kernel without them prints nothing there).
+# After each benchmark the memcg per-CPU lock bytes (bench/vm/pcpu.py) and
+# the counters go to /root/appgrid/pcpu.txt (README section 6, failure 3).
 MODE=${1:?mode}; TAG=${2:?tag}; shift 2
 BENCHES=${*:-wis fxmark leveldb metis psearchy apache}
 O=/root/appgrid; mkdir -p $O
@@ -46,7 +51,7 @@ ulimit -n 65536
 ulimit -c 0
 sysctl -q kernel.print-fatal-signals=1
 fatal() { dmesg | grep -cE "potentially unexpected fatal signal|segfault at|trap invalid opcode"; }
-C="delegated handback hb_frontier hb_miss offered plain sessions"
+C="delegated handback hb_frontier hb_miss offered plain sessions hb_region done_in_region"
 st() {
 	[ -r /sys/kernel/debug/kdlock_stats ] || { echo -n "- "; return; }
 	local k
@@ -54,6 +59,10 @@ st() {
 }
 complaints() { dmesg | grep -ciE "BUG:|lockup|hung_task|blocked for more|rcu.*stall"; }
 line() { echo "$TAG $MODE $*" >> $OUT; }
+pc() {	# pc WHEN: the per-CPU lock bytes now
+	echo "$TAG $MODE $1 $(date +%T): $(python3 /root/host_fs/kdlock/bench/vm/pcpu.py obj_stock memcg_stock 2>&1 |
+		sed 's/: acquired set on / /; s/ of [0-9]* CPUs: /:/' | tr '\n' ' ')| $(st)" >> $O/pcpu.txt
+}
 
 d_on() {
 	ps -e -o cmd | grep -q "^/root/kdvenv/bin/python -u kd_daemon.py" && { echo "a daemon is running"; exit 1; }
@@ -177,9 +186,11 @@ b_apache() {
 [ $MODE = on ] && d_on
 c0=$(complaints); f0=$(fatal)
 echo "$TAG $MODE start $(date +%T) $(uname -r) workers: $WORKERS" >> $O/progress.txt
+pc start
 for b in $BENCHES; do
 	echo "$TAG $MODE $b $(date +%T)" >> $O/progress.txt
 	b_$b
+	pc "after-$b"
 done
 [ $MODE = on ] && d_off
 echo "$TAG $MODE complaints $(( $(complaints) - c0 )) fatal signals $(( $(fatal) - f0 ))" >> $O/complaints.txt

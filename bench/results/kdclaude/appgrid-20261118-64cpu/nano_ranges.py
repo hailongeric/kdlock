@@ -27,6 +27,7 @@ for (prof, _, _) in g:
     if prof not in profiles:
         profiles.append(prof)
 ranges = [("1-8", range(1, 9)), ("12-32", range(12, 33)), ("36-64", range(36, 65))]
+top = max(n for (_, n, _) in g)	# 64 in g1, 60 in g2
 
 def span(prof, num, den, src_num, src_den):
     out = []
@@ -36,12 +37,12 @@ def span(prof, num, den, src_num, src_den):
         out.append("%.2f-%.2f" % (min(rs), max(rs)) if rs else "-")
     return out
 
-print("| profile | kd/native 1-8 | 12-32 | 36-64 | kd/TCLock 1-8 | 12-32 | 36-64 | plain kd/native 1-8 | 12-32 | 36-64 | kd Mops/s at 32 / 64 | native | TCLock |")
+print("| profile | kd/native 1-8 | 12-32 | 36-64 | kd/TCLock 1-8 | 12-32 | 36-64 | plain kd/native 1-8 | 12-32 | 36-64 | kd Mops/s at 32 / %d | native | TCLock |" % top)
 print("|---|" + "---|" * 12)
 for prof in profiles:
     a = span(prof, "kd", "native", g, g)
     b = span(prof, "kd", "tclock", g, g)
     c = span(prof, "kd", "native", p, g)
-    at = lambda be: "%.2f / %.2f" % (g.get((prof, 32, be), 0), g.get((prof, 64, be), 0))
+    at = lambda be: "%.2f / %.2f" % (g.get((prof, 32, be), 0), g.get((prof, top, be), 0))
     print("| %s | %s | %s | %s | %s | %s | %s |" % (prof, " | ".join(a), " | ".join(b), " | ".join(c),
                                                    at("kd"), at("native"), at("tclock")))

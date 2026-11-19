@@ -8,12 +8,17 @@
 # Builds the four TCLock modules (TCLOCK_NUMA=1) and the bench module with
 # KDB_TCLOCK=1 against this kernel first. TCLock runs one worker per CPU
 # at most, which the grid never exceeds.
+# WORKERS and ROUNDS override the worker counts and the rounds (g2 of
+# appgrid-20261119-64cpu ran 14 worker counts, 1 round).
 # Output: /root/appgrid/TAG-nano-plain.jsonl, TAG-nano.jsonl, TAG-nano.log
 TAG=${1:?tag}
+WORKERS=${WORKERS:-"1 2 3 4 5 6 7 8 $(seq -s ' ' 12 4 64)"}
+ROUNDS=${ROUNDS:-2}
 O=/root/appgrid; mkdir -p $O; exec > $O/$TAG-nano.log 2>&1
 K=/lib/modules/$(uname -r)/build
 S=/root/host_fs/kdlock
 uname -rv
+echo "workers: $WORKERS; rounds: $ROUNDS"
 set -e
 for f in spin mutex rwlock rwsem; do
 	rm -rf /root/tc/$f; mkdir -p /root/tc/$f
@@ -37,7 +42,7 @@ c0=$(dmesg | grep -ciE "BUG:|lockup|hung_task|rcu.*stall")
 cd $S/bench
 echo "== plain $(date +%T)"
 python3 run_grid.py --out $O/$TAG-nano-plain.jsonl --profiles appgrid --backends kd \
-	--rounds 2 --ms 1000 --commit "$(uname -r)-plain" > $O/$TAG-nano-plain.out 2>&1; echo "plain exit $?"
+	--workers $WORKERS --rounds $ROUNDS --ms 1000 --commit "$(uname -r)-plain" > $O/$TAG-nano-plain.out 2>&1; echo "plain exit $?"
 (cd $S/jit || exit 1
  setsid nohup /root/kdvenv/bin/python -u kd_daemon.py --state "" \
 	--allow $S/bench/allow/kd_bench.txt -v > $O/$TAG-nano.kdd 2>&1 < /dev/null &
@@ -48,7 +53,7 @@ python3 run_grid.py --out $O/$TAG-nano-warm.jsonl --profiles appgrid --backends 
 	--workers 8 32 64 --rounds 1 --ms 500 --commit warm > /dev/null 2>&1
 echo "== delegated, native kd tclock $(date +%T)"
 python3 run_grid.py --out $O/$TAG-nano.jsonl --profiles appgrid --backends native kd tclock \
-	--rounds 2 --ms 1000 --commit "$(uname -r)" > $O/$TAG-nano.out 2>&1; echo "grid exit $?"
+	--workers $WORKERS --rounds $ROUNDS --ms 1000 --commit "$(uname -r)" > $O/$TAG-nano.out 2>&1; echo "grid exit $?"
 P=$(cat /root/kdd_nano.pid); kill -INT $P
 for i in $(seq 60); do kill -0 $P 2>/dev/null || break; sleep 1; done
 echo "complaints $(( $(dmesg | grep -ciE "BUG:|lockup|hung_task|rcu.*stall") - c0 ))"

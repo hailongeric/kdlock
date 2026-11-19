@@ -3,7 +3,7 @@
 # (nano_grid.sh), then the application grid with native locks
 # (app_grid.sh native). Output in /root/appgrid.
 TAG=${1:?tag}
-D=/root/host_fs/kdlock/bench/results/kdclaude/appgrid-20261118-64cpu
+D=$(cd "$(dirname "$0")" && pwd)
 bash $D/nano_grid.sh $TAG
 rmmod kd_bench 2>/dev/null
 for m in tclock_rwsem_backend_km tclock_rwlock_backend_km tclock_mutex_backend_km tclock_backend_km; do
