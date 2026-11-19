@@ -1,0 +1,91 @@
+## p1 native wis:lock1:16 7.0.0-38-kdnat11 16:01:03
+## context switches, migrations (2 s)
+               500      context-switches                                                      
+                64      cpu-migrations                                                        
+## system calls by number (3 s, comm lock1_threads)
+## by object
+# Samples: 40K of event 'cpu/cycles/P'
+    98.33%  [kernel.kallsyms]
+     1.52%  libc.so.6        
+     0.15%  lock1_threads    
+## flat by symbol
+    79.53%  [k] native_queued_spin_lock_slowpath
+     2.91%  [k] _raw_spin_lock
+     1.85%  [k] kmem_cache_alloc_noprof
+     1.84%  [k] fput
+     1.51%  [k] entry_SYSCALL_64
+     1.39%  [k] do_syscall_64
+     1.18%  [k] clear_bhb_loop
+     0.94%  [k] _copy_from_user
+     0.83%  [k] kmem_cache_free
+     0.81%  [k] memset
+     0.81%  [k] fdget_raw
+     0.71%  [.] 0x00000000000ac7c2
+     0.66%  [k] posix_lock_inode
+     0.52%  [k] fcntl_setlk
+     0.33%  [k] __init_waitqueue_head
+     0.28%  [k] locks_release_private
+     0.22%  [k] entry_SYSCALL_64_safe_stack
+     0.22%  [k] syscall_return_via_sysret
+     0.19%  [k] begin_current_label_crit_section
+     0.19%  [k] do_fcntl
+     0.18%  [.] fcntl64
+     0.16%  [.] 0x00000000000a0360
+     0.16%  [k] flock64_to_posix_lock
+     0.15%  [.] 0x00000000000a035c
+     0.15%  [k] entry_SYSCALL_64_after_hwframe
+     0.14%  [k] apparmor_file_lock
+     0.14%  [.] testcase
+     0.14%  [k] __x64_sys_fcntl
+     0.13%  [k] fpregs_assert_state_consistent
+     0.12%  [k] x64_sys_call
+     0.11%  [.] 0x00000000000a036a
+     0.10%  [k] __rcu_read_lock
+     0.09%  [k] __rcu_read_unlock
+     0.09%  [k] aa_file_perm
+     0.08%  [k] _raw_spin_unlock
+     0.07%  [k] security_file_lock
+     0.07%  [k] locks_insert_lock_ctx
+     0.07%  [k] locks_get_lock_context
+     0.06%  [k] its_return_thunk
+     0.06%  [k] __locks_delete_block
+     0.06%  [k] locks_unlink_lock_ctx
+     0.06%  [k] security_file_fcntl
+     0.05%  [k] entry_SYSRETQ_unsafe_stack
+     0.04%  [k] update_se
+     0.04%  [k] account_system_index_time
+## call chains of symbols above 1.5%
+    79.53%  [k] native_queued_spin_lock_slowpath
+            |          
+             --79.29%--_raw_spin_lock
+                       fcntl_setlk
+                       do_fcntl
+                       __x64_sys_fcntl
+                       x64_sys_call
+                       do_syscall_64
+     2.91%  [k] _raw_spin_lock
+            |          
+             --2.04%--do_fcntl
+                       __x64_sys_fcntl
+                       x64_sys_call
+                       do_syscall_64
+                       entry_SYSCALL_64_after_hwframe
+                       0x7ffff7cac7c2
+     1.85%  [k] kmem_cache_alloc_noprof
+     1.84%  [k] fput
+            |          
+             --1.80%--__x64_sys_fcntl
+                       x64_sys_call
+                       do_syscall_64
+                       entry_SYSCALL_64_after_hwframe
+                       0x7ffff7cac7c2
+                       fcntl64
+     1.51%  [k] entry_SYSCALL_64
+            |
+            ---0x7ffff7cac7c2
+               fcntl64
+               testcase
+               pre_trampoline
+               0x7ffff7ca3dba
+               0x7ffff7d3758c
+## result: 10312497 ops/s | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 

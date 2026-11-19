@@ -218,6 +218,9 @@ enum {
 	/* Rwsem readers that missed the fast path. */
 	KD_STAT_RD_BEHIND,	/* registered behind an active writer and waited for it */
 	KD_STAT_RD_QUEUE,	/* gave up spinning and queued on ->m */
+	/* Rwsem writers while the holder of ->m sleeps on ->count. */
+	KD_STAT_WR_STEAL,	/* took the free write side past the sleeping queue holder */
+	KD_STAT_WR_HANDOFF,	/* sleeping queue holders that asked for the stealing to stop */
 	KD_STAT_VDOWN,		/* downgrades executed with the write side kept */
 	KD_STAT_VDOWN_HB,	/* ... whose read part was then handed back */
 	KD_STAT_SITE_RETRY,	/* switched-off sites switched on again for a trial */

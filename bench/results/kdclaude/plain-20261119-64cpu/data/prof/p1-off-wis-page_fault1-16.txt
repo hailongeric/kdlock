@@ -1,0 +1,129 @@
+## p1 off wis:page_fault1:16 7.0.0-38-kdall13 16:03:52
+## context switches, migrations (2 s)
+              2315      context-switches                                                      
+                66      cpu-migrations                                                        
+## system calls by number (3 s, comm page_fault1_threads)
+## by object
+# Samples: 30K of event 'cpu/cycles/P'
+    96.28%  [kernel.kallsyms]   
+     3.71%  page_fault1_threads 
+     0.01%  [unknown]           
+     0.00%  libc.so.6           
+     0.00%  ld-linux-x86-64.so.2
+## flat by symbol
+    35.37%  [k] kd_spin_lock
+    16.06%  [k] charge_memcg
+     7.28%  [k] pte_offset_map_lock
+     6.30%  [k] asm_exc_page_fault
+     3.71%  [.] testcase
+     3.43%  [k] sync_regs
+     3.36%  [k] __pte_offset_map
+     1.59%  [k] kernel_init_pages
+     1.54%  [k] lock_vma_under_rcu
+     1.53%  [k] do_anonymous_page
+     1.35%  [k] do_user_addr_fault
+     1.33%  [k] __rmqueue_pcplist
+     1.06%  [k] page_counter_try_charge
+     0.98%  [k] __rcu_read_lock
+     0.98%  [k] kd_q_lock_slow
+     0.81%  [k] lru_gen_add_folio
+     0.79%  [k] get_mem_cgroup_from_mm
+     0.65%  [k] lru_gen_del_folio.constprop.0
+     0.64%  [k] unmap_page_range
+     0.64%  [k] get_page_from_freelist
+     0.54%  [k] irqentry_exit
+     0.54%  [k] mod_node_page_state
+     0.51%  [k] mas_walk
+     0.48%  [k] folios_put_refs
+     0.39%  [k] lruvec_stat_mod_folio
+     0.38%  [k] mod_memcg_lruvec_state
+     0.37%  [k] lru_add
+     0.36%  [k] __free_one_page
+     0.34%  [k] __handle_mm_fault
+     0.34%  [k] folio_add_new_anon_rmap
+     0.29%  [k] __rcu_read_unlock
+     0.24%  [k] kd_spin_trylock
+     0.23%  [k] error_entry
+     0.23%  [k] folio_remove_rmap_ptes
+     0.22%  [k] __folio_batch_add_and_move
+     0.22%  [k] __css_rstat_updated
+     0.20%  [k] __alloc_frozen_pages_noprof
+     0.20%  [k] folio_batch_move_lru
+     0.19%  [k] pte_mkwrite
+     0.19%  [k] try_charge_memcg
+     0.19%  [k] free_frozen_page_commit.isra.0
+     0.18%  [k] free_unref_folios
+     0.17%  [k] __mod_zone_page_state
+     0.17%  [k] folio_add_lru
+     0.17%  [k] alloc_pages_mpol
+## call chains of symbols above 1.5%
+    35.37%  [k] kd_spin_lock
+            |          
+             --35.32%--do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+    16.06%  [k] charge_memcg
+            |          
+             --16.03%--__mem_cgroup_charge
+                       do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+     7.28%  [k] pte_offset_map_lock
+            |          
+             --6.90%--do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+     6.30%  [k] asm_exc_page_fault
+            |
+            ---testcase
+               |          
+                --6.28%--pre_trampoline
+                          0x7ffff7ca3dba
+                          0x7ffff7d3758c
+     3.71%  [.] testcase
+            |          
+             --3.71%--pre_trampoline
+                       0x7ffff7ca3dba
+                       0x7ffff7d3758c
+     3.43%  [k] sync_regs
+            |          
+             --3.43%--testcase
+                       |          
+                        --3.41%--pre_trampoline
+                                  0x7ffff7ca3dba
+                                  0x7ffff7d3758c
+     3.36%  [k] __pte_offset_map
+            |          
+             --2.01%--do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+     1.59%  [k] kernel_init_pages
+     1.54%  [k] lock_vma_under_rcu
+            |          
+             --1.54%--do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+                       |          
+                        --1.53%--pre_trampoline
+                                  0x7ffff7ca3dba
+     1.53%  [k] do_anonymous_page
+            |          
+             --1.51%--__handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+## result: 2515251 ops/s | sessions=0 delegated=0 handback=0 plain=212561 numa_local=11 no_spin=3299 abandon=5 head_sleep=128 parked=3542 rd_behind=12541 rd_queue=124 era_gate=41 | sessions=0 delegated=0 handback=0 plain=613682 numa_local=11 no_spin=7308 abandon=5 head_sleep=150 parked=8167 rd_behind=29783 rd_queue=766 era_gate=41 

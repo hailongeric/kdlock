@@ -1,0 +1,53 @@
+7.0.0-38-kdall14 #19 SMP PREEMPT_DYNAMIC Thu Nov 19 16:26:07 UTC 2026
+k14 1 steal1 page_fault1 4 1985255 | plain+20539 no_spin+4 parked+10 rd_behind+3209 rd_queue+9 wr_steal+137
+k14 1 steal0 page_fault1 4 1594037 | plain+5532 no_spin+1023 head_sleep+78 parked+1107 rd_behind+1851 rd_queue+3
+k14 1 steal0 page_fault1 8 2072451 | plain+53094 no_spin+1683 head_sleep+35 parked+1742 rd_behind+4638 rd_queue+27
+k14 1 steal1 page_fault1 8 2796647 | plain+131908 no_spin+22 head_sleep+1 parked+157 rd_behind+9911 rd_queue+168 wr_steal+361 wr_handoff+25
+k14 1 steal0 page_fault1 16 2660162 | plain+212459 no_spin+2132 head_sleep+19 parked+2399 rd_behind+8090 rd_queue+278
+k14 1 steal1 page_fault1 16 3038694 | plain+389777 no_spin+121 head_sleep+2 parked+334 rd_behind+8570 rd_queue+292 wr_steal+1037 wr_handoff+440
+k14 1 steal0 page_fault1 32 2987033 | plain+413426 no_spin+2814 head_sleep+27 parked+3925 rd_behind+12456 rd_queue+1112
+k14 1 steal1 page_fault1 32 2849157 | plain+331908 no_spin+1430 head_sleep+15 parked+1550 rd_behind+4601 rd_queue+84 wr_steal+1411 wr_handoff+946
+k14 1 steal1 page_fault1 60 4441153 | plain+293946 numa_local+20 no_spin+2184 head_sleep+47 parked+2404 rd_behind+4595 rd_queue+104 wr_steal+2161 wr_handoff+1367 era_gate+31
+k14 1 steal0 page_fault1 60 4422805 | plain+297361 numa_local+19 no_spin+4249 head_sleep+57 parked+4628 rd_behind+10308 rd_queue+350
+k14 1 steal1 page_fault2 4 1503579 | plain+7119 no_spin+2 head_sleep+1 parked+32 rd_behind+73 rd_queue+29 wr_steal+102 wr_handoff+1
+k14 1 steal0 page_fault2 4 1361313 | plain+3771 no_spin+637 head_sleep+52 parked+701 rd_behind+145
+k14 1 steal0 page_fault2 8 1669347 | plain+41517 no_spin+1150 head_sleep+35 parked+1206 rd_behind+185
+k14 1 steal1 page_fault2 8 1908736 | plain+66068 no_spin+12 parked+70 rd_behind+150 rd_queue+59 wr_steal+209 wr_handoff+5
+k14 1 steal0 page_fault2 16 1900241 | plain+197991 no_spin+1490 head_sleep+14 parked+1527 rd_behind+252 rd_queue+11
+k14 1 steal1 page_fault2 16 2018884 | plain+267602 no_spin+22 parked+87 rd_behind+714 rd_queue+82 wr_steal+784 wr_handoff+10
+k14 1 steal0 page_fault2 32 1936616 | plain+668904 no_spin+1727 head_sleep+17 parked+1783 rd_behind+138 rd_queue+29
+k14 1 steal1 page_fault2 32 1991721 | plain+905475 no_spin+974 head_sleep+6 parked+1057 rd_behind+902 rd_queue+117 wr_steal+957 wr_handoff+389
+k14 1 steal1 page_fault2 60 3694991 | plain+2282382 numa_local+3 no_spin+1725 head_sleep+33 parked+1919 rd_behind+1604 rd_queue+129 wr_steal+1688 wr_handoff+956
+k14 1 steal0 page_fault2 60 3444852 | plain+2321441 numa_local+7 no_spin+3026 head_sleep+21 parked+3135 rd_behind+181 rd_queue+54
+k14 1 steal1 page_fault3 4 3756095 | plain+8449 no_spin+9 parked+9 wr_steal+535
+k14 1 steal0 page_fault3 4 3493914 | plain+9128 no_spin+1784 head_sleep+43 parked+1837 rd_behind+1 rd_queue+1
+k14 1 steal0 page_fault3 8 6004682 | plain+62560 no_spin+3869 head_sleep+247 parked+4161 rd_queue+7
+k14 1 steal1 page_fault3 8 7383297 | plain+77294 no_spin+39 head_sleep+7 parked+46 wr_steal+1454
+k14 1 steal0 page_fault3 16 9278399 | plain+248321 no_spin+7104 head_sleep+390 parked+7570 rd_behind+2 rd_queue+17
+k14 1 steal1 page_fault3 16 13354594 | plain+315961 no_spin+3395 head_sleep+217 parked+3650 rd_queue+7 wr_steal+6063 wr_handoff+6
+k14 1 steal0 page_fault3 32 12519720 | plain+960055 no_spin+10883 head_sleep+164 parked+11209 rd_behind+1 rd_queue+36
+k14 1 steal1 page_fault3 32 13186019 | plain+979037 numa_local+1 no_spin+5798 head_sleep+151 parked+6294 rd_queue+3 wr_steal+6293 wr_handoff+2
+k14 1 steal1 page_fault3 60 12777471 | plain+2177595 no_spin+5842 head_sleep+12 parked+5943 rd_queue+28 wr_steal+5818
+k14 1 steal0 page_fault3 60 12192113 | plain+2156999 numa_local+6 no_spin+10696 head_sleep+110 parked+11079 rd_behind+2 rd_queue+55
+k14 1 steal1 mmap1 4 354318 | plain+11518204 no_spin+1 abandon+2 head_sleep+1201 parked+1203 rd_behind+5 wr_steal+11563 era_gate+5
+k14 1 steal0 mmap1 4 356694 | plain+11600381 no_spin+637 abandon+3 head_sleep+1036 parked+1676 rd_behind+2 era_gate+4
+k14 1 steal0 mmap1 8 306058 | plain+10035219 no_spin+344 abandon+17 head_sleep+1701 parked+2052 rd_behind+2
+k14 1 steal1 mmap1 8 305352 | plain+9983594 no_spin+3 abandon+16 head_sleep+2221 parked+2233 rd_behind+8 wr_steal+6560
+k14 1 steal0 mmap1 16 312104 | plain+10413561 no_spin+188 abandon+58 head_sleep+1841 parked+2074 rd_behind+26 era_gate+18
+k14 1 steal1 mmap1 16 312211 | plain+10418519 no_spin+1 abandon+50 head_sleep+2278 parked+2319 rd_behind+30 wr_steal+4305
+k14 1 steal0 mmap1 32 309387 | plain+10537191 no_spin+94 abandon+273 head_sleep+1365 parked+1668 rd_behind+29 rd_queue+1 era_gate+34
+k14 1 steal1 mmap1 32 310362 | plain+10595957 no_spin+2 abandon+295 head_sleep+1738 parked+1968 rd_behind+30 wr_steal+4083 era_gate+34
+k14 1 steal1 mmap1 60 319761 | plain+10409930 numa_local+79 no_spin+220 abandon+190 head_sleep+951 parked+1304 rd_behind+35 wr_steal+933 era_gate+439831
+k14 1 steal0 mmap1 60 330556 | plain+10711053 numa_local+59 no_spin+146 abandon+226 head_sleep+461 parked+782 rd_behind+56 era_gate+448333
+k14 1 steal1 brk1 4 758362 | plain+12117669 no_spin+2 abandon+4 head_sleep+1121 parked+1126 rd_behind+8 wr_steal+11593
+k14 1 steal0 brk1 4 758264 | plain+12141698 no_spin+620 abandon+3 head_sleep+1148 parked+1769 rd_behind+11
+k14 1 steal0 brk1 8 735785 | plain+11898527 no_spin+251 abandon+11 head_sleep+1649 parked+1903 era_gate+9
+k14 1 steal1 brk1 8 742999 | plain+11958225 no_spin+3 abandon+16 head_sleep+1839 parked+1855 rd_behind+2 wr_steal+6357
+k14 1 steal0 brk1 16 747078 | plain+12194299 no_spin+118 abandon+54 head_sleep+1553 parked+1717 rd_behind+2 era_gate+17
+k14 1 steal1 brk1 16 766840 | plain+12529398 no_spin+2 abandon+58 head_sleep+1976 parked+2019 rd_behind+12 wr_steal+3787 era_gate+18
+k14 1 steal0 brk1 32 719949 | plain+11945888 no_spin+96 abandon+355 head_sleep+1705 parked+2047 rd_behind+15 era_gate+33
+k14 1 steal1 brk1 32 759505 | plain+12642088 no_spin+4 abandon+324 head_sleep+1594 parked+1823 rd_behind+1 wr_steal+3099 era_gate+33
+k14 1 steal1 brk1 60 779624 | plain+12634152 numa_local+62 no_spin+329 abandon+259 head_sleep+817 parked+1347 rd_behind+53 wr_steal+682 era_gate+451669
+k14 1 steal0 brk1 60 778517 | plain+12526900 numa_local+22 no_spin+339 abandon+165 head_sleep+781 parked+1239 rd_behind+63 era_gate+445719
+kernel complaints added: 0
+STEAL_AB_DONE

@@ -349,6 +349,37 @@ call.
   unmap runs as a reader after a downgrade: 0.33 of Native at 4 threads
   before, 0.98 after. Nano rwsem: unchanged at 4-16 workers, 20% writers at
   32 workers +74-87%.
+* **Write stealing** (`kd_rwsem_steal`, default 1). While the holder of `m`
+  sleeps on `count` (`NEEDWAKE`), a writer that finds no reader and no
+  writer in takes the writer bit past it, without `m`
+  (`kd_rwsem_write_steal()`); a writer that arrives while readers are still
+  in waits up to `kd_rwsem_wspin_ns` for that before it queues.
+  * **Why.** A free lock used to be reserved for the sleeping holder of `m`:
+    the last reader's release woke it, and until it ran the lock stood idle
+    while every other writer was parked behind `m`. munmap makes this the
+    usual state of the mmap lock, because it downgrades and then unmaps as a
+    reader for milliseconds. A thread whose munmap had just returned waited
+    for its next mmap behind all the sleeping writers. will-it-scale
+    page_fault3 with 16 threads, kdall13 against the native kernel: mmap
+    took 1.6 ms on average against 0.15 ms, the threads were blocked 12.8%
+    of the time against 7.7%, the rate was 0.71 of native's; the CPU
+    profiles were the same. The native rwsem does not reserve a free lock
+    for a sleeping waiter either.
+  * **Bound.** A holder of `m` that has slept `kd_rwsem_handoff_ms` (4)
+    sets `KD_RWSEM_HANDOFF`; nobody steals after that until it has had the
+    lock. Every release while `NEEDWAKE` is set wakes it, as before.
+  * **What it leaves alone.** Nothing is stolen from a holder of `m` that is
+    awake: it is about to take the lock, and in delegation mode it is the
+    combiner the other writers queue behind. Readers see no change: `WWAIT`
+    keeps new ones out, and those registered behind a stealing writer enter
+    when it leaves.
+  * **Measured** (kdall14, no daemon, one boot, stealing off -> on, one 10 s
+    run per point; against the native twin kdnat11 in another boot):
+    page_fault1 0.75-0.88 -> 1.00-1.01 of native at 4-16 threads,
+    page_fault2 0.88-0.97 -> 1.00 at 4-60, page_fault3 0.70-0.93 -> 1.00-1.01
+    at 4-16; mmap1 and brk1 0.97-1.05 of their rate without it; parked waits
+    fall by 50-99% (`bench/results/kdclaude/plain-20261119-64cpu/`).
+  * Counters: `wr_steal`, `wr_handoff`.
 * Writers publish whenever they can; there is no plain mode for the writer
   queue (ARCHITECTURE 7a).
 * A nested rwsem writer acquire inside a section is queued and spun for like
@@ -407,6 +438,8 @@ sees neither effect.
 | `kd_rw_era_drain_ns` (core param, 0644) | 5000 | no era while the readers a queue head finds take longer than this to leave, on average |
 | `kd_rw_era_dbg_drain`, `kd_rw_era_dbg_press` (0444) | - | the last averages a queue head computed (ns; sixteenths of a caller) |
 | `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |
+| `kd_rwsem_steal` (core param, 0644) | 1 | rwsem: a running writer takes a free lock past a holder of `m` that sleeps on `count` (section 5); 0: the lock waits for the sleeper |
+| `kd_rwsem_handoff_ms` (core param, 0644) | 4 | how long a sleeping holder of `m` lets writers steal before it forbids it |
 | `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |
 | `kd_handoff_running` (core param, 0644) | 1 | mutex handoff only to a parked waiter that is running; 0: also to a sleeping one |
 | `kd_mutex_woken` (core param, 0644) | 1 | mutex: a release does not wake a first parked waiter that is awake already (`KD_QF_WOKEN`); 0: the flag is no longer set, and every release with parked waiters wakes the first one |

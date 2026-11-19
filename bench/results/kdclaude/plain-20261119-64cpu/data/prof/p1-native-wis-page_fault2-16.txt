@@ -1,0 +1,130 @@
+## p1 native wis:page_fault2:16 7.0.0-38-kdnat11 16:00:32
+## context switches, migrations (2 s)
+              1411      context-switches                                                      
+                64      cpu-migrations                                                        
+## system calls by number (3 s, comm page_fault2_threads)
+## by object
+# Samples: 40K of event 'cpu/cycles/P'
+    97.15%  [kernel.kallsyms]       
+     2.66%  page_fault2_threads     
+     0.16%  [unknown]               
+     0.01%  ld-linux-x86-64.so.2    
+     0.01%  libc.so.6               
+     0.00%  libsystemd-shared-259.so
+     0.00%  libsystemd-core-259.so  
+## flat by symbol
+    33.28%  [k] copy_mc_enhanced_fast_string
+    19.15%  [k] xas_load
+     7.13%  [k] shmem_get_folio_gfp
+     6.14%  [k] charge_memcg
+     4.85%  [k] __rcu_read_unlock
+     3.67%  [k] asm_exc_page_fault
+     2.66%  [.] testcase
+     2.36%  [k] filemap_get_entry
+     2.01%  [k] sync_regs
+     1.35%  [k] shmem_fault
+     1.33%  [k] unmap_page_range
+     1.32%  [k] kernel_init_pages
+     0.96%  [k] __rmqueue_pcplist
+     0.79%  [k] __free_one_page
+     0.73%  [k] page_counter_try_charge
+     0.70%  [k] __rcu_read_lock
+     0.67%  [k] native_queued_spin_lock_slowpath
+     0.65%  [k] xas_start
+     0.52%  [k] lru_gen_del_folio.constprop.0
+     0.47%  [k] get_page_from_freelist
+     0.46%  [k] get_mem_cgroup_from_mm
+     0.44%  [k] lru_gen_add_folio
+     0.44%  [k] __handle_mm_fault
+     0.33%  [k] free_pages_and_swap_cache
+     0.31%  [k] irqentry_exit
+     0.28%  [k] mas_walk
+     0.27%  [k] mod_node_page_state
+     0.26%  [k] lruvec_stat_mod_folio
+     0.26%  [k] folios_put_refs
+     0.23%  [k] mod_memcg_lruvec_state
+     0.22%  [k] lru_add
+     0.21%  [k] lock_vma_under_rcu
+     0.21%  [k] _raw_spin_lock
+     0.20%  [k] do_user_addr_fault
+     0.18%  [k] error_entry
+     0.18%  [k] free_pcppages_bulk
+     0.16%  [k] finish_fault
+     0.15%  [k] 0xffffffffc0001be0
+     0.15%  [k] alloc_pages_mpol
+     0.14%  [k] __alloc_frozen_pages_noprof
+     0.14%  [k] folio_add_new_anon_rmap
+     0.14%  [k] __folio_batch_add_and_move
+     0.14%  [k] free_unref_folios
+     0.13%  [k] __do_fault
+     0.13%  [k] folio_remove_rmap_ptes
+## call chains of symbols above 1.5%
+    33.28%  [k] copy_mc_enhanced_fast_string
+            |
+            ---do_fault
+               __handle_mm_fault
+               handle_mm_fault
+               do_user_addr_fault
+               exc_page_fault
+               asm_exc_page_fault
+    19.15%  [k] xas_load
+            |          
+             --18.95%--filemap_get_entry
+                       |          
+                        --18.95%--shmem_get_folio_gfp
+                                  shmem_fault
+                                  __do_fault
+                                  do_fault
+                                  __handle_mm_fault
+     7.13%  [k] shmem_get_folio_gfp
+            |          
+             --6.24%--shmem_fault
+                       __do_fault
+                       do_fault
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+     6.14%  [k] charge_memcg
+            |          
+             --6.13%--__mem_cgroup_charge
+                       do_fault
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+     4.85%  [k] __rcu_read_unlock
+            |          
+             --4.71%--__mem_cgroup_charge
+                       do_fault
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+     3.67%  [k] asm_exc_page_fault
+            |
+            ---testcase
+               |          
+                --3.65%--pre_trampoline
+                          0x7ffff7ca3dba
+                          0x7ffff7d3758c
+     2.66%  [.] testcase
+            |          
+             --2.66%--pre_trampoline
+                       0x7ffff7ca3dba
+                       0x7ffff7d3758c
+     2.36%  [k] filemap_get_entry
+            |          
+             --2.14%--shmem_get_folio_gfp
+                       shmem_fault
+                       __do_fault
+                       do_fault
+                       __handle_mm_fault
+                       handle_mm_fault
+     2.01%  [k] sync_regs
+            |          
+             --2.00%--testcase
+                       |          
+                        --1.99%--pre_trampoline
+                                  0x7ffff7ca3dba
+                                  0x7ffff7d3758c
+## result: 2021599 ops/s | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 

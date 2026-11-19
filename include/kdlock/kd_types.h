@@ -141,6 +141,7 @@ struct kd_rwsem {
 #define KD_RWSEM_WWAIT		0x02L	/* queue holder is a writer waiting for readers */
 #define KD_RWSEM_NEEDWAKE	0x04L	/* queue holder sleeps on count */
 #define KD_RWSEM_XHEAD		0x08L	/* as KD_QF_XHEAD, for the write holder */
+#define KD_RWSEM_HANDOFF	0x10L	/* the sleeping queue holder waited long: no write stealing */
 #define KD_RWSEM_WMASK		(KD_RWSEM_WLOCKED | KD_RWSEM_WWAIT)
 #define KD_RWSEM_RSHIFT		8
 #define KD_RWSEM_RBIAS		(1L << KD_RWSEM_RSHIFT)

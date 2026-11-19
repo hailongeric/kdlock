@@ -1,0 +1,129 @@
+## p1 native wis:page_fault1:16 7.0.0-38-kdnat11 15:59:30
+## context switches, migrations (2 s)
+              5757      context-switches                                                      
+                64      cpu-migrations                                                        
+## system calls by number (3 s, comm page_fault1_threads)
+## by object
+# Samples: 38K of event 'cpu/cycles/P'
+    96.24%  [kernel.kallsyms]       
+     3.74%  page_fault1_threads     
+     0.01%  [unknown]               
+     0.00%  ld-linux-x86-64.so.2    
+     0.00%  sshd-session            
+     0.00%  libsystemd-shared-259.so
+     0.00%  systemd-journald        
+## flat by symbol
+    36.77%  [k] _raw_spin_lock
+    15.12%  [k] charge_memcg
+     7.01%  [k] pte_offset_map_lock
+     5.97%  [k] asm_exc_page_fault
+     3.74%  [.] testcase
+     3.00%  [k] __pte_offset_map
+     2.69%  [k] sync_regs
+     1.77%  [k] unmap_page_range
+     1.75%  [k] kernel_init_pages
+     1.35%  [k] __rmqueue_pcplist
+     1.30%  [k] native_queued_spin_lock_slowpath
+     1.29%  [k] do_anonymous_page
+     1.21%  [k] lock_vma_under_rcu
+     1.20%  [k] do_user_addr_fault
+     1.13%  [k] page_counter_try_charge
+     0.90%  [k] __rcu_read_lock
+     0.74%  [k] get_page_from_freelist
+     0.71%  [k] lru_gen_add_folio
+     0.70%  [k] lru_gen_del_folio.constprop.0
+     0.63%  [k] get_mem_cgroup_from_mm
+     0.62%  [k] __free_one_page
+     0.58%  [k] pte_mkwrite
+     0.55%  [k] irqentry_exit
+     0.53%  [k] mod_node_page_state
+     0.41%  [k] folios_put_refs
+     0.40%  [k] mas_walk
+     0.38%  [k] __handle_mm_fault
+     0.36%  [k] lru_add
+     0.35%  [k] lruvec_stat_mod_folio
+     0.34%  [k] mod_memcg_lruvec_state
+     0.27%  [k] folio_remove_rmap_ptes
+     0.27%  [k] free_pages_and_swap_cache
+     0.26%  [k] folio_add_new_anon_rmap
+     0.26%  [k] error_entry
+     0.23%  [k] __folio_batch_add_and_move
+     0.23%  [k] __rcu_read_unlock
+     0.23%  [k] _raw_spin_trylock
+     0.22%  [k] try_charge_memcg
+     0.22%  [k] free_pcppages_bulk
+     0.21%  [k] __alloc_frozen_pages_noprof
+     0.19%  [k] free_unref_folios
+     0.19%  [k] free_frozen_page_commit.isra.0
+     0.17%  [k] folio_add_lru
+     0.17%  [k] folio_batch_move_lru
+     0.16%  [k] _raw_spin_lock_irqsave
+## call chains of symbols above 1.5%
+    36.77%  [k] _raw_spin_lock
+            |          
+             --36.69%--do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+    15.12%  [k] charge_memcg
+            |          
+             --15.10%--__mem_cgroup_charge
+                       do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+     7.01%  [k] pte_offset_map_lock
+            |          
+             --6.57%--do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+     5.97%  [k] asm_exc_page_fault
+            |
+            ---testcase
+               pre_trampoline
+               0x7ffff7ca3dba
+               0x7ffff7d3758c
+     3.74%  [.] testcase
+            |
+            ---pre_trampoline
+               0x7ffff7ca3dba
+               0x7ffff7d3758c
+     3.00%  [k] __pte_offset_map
+            |          
+             --1.84%--do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+     2.69%  [k] sync_regs
+            |
+            ---testcase
+               pre_trampoline
+               0x7ffff7ca3dba
+               0x7ffff7d3758c
+     1.77%  [k] unmap_page_range
+            |
+            ---unmap_single_vma
+               unmap_vmas
+               unmap_region
+               vms_complete_munmap_vmas
+               do_vmi_align_munmap
+               do_vmi_munmap
+     1.75%  [k] kernel_init_pages
+            |          
+             --1.63%--post_alloc_hook
+                       get_page_from_freelist
+                       __alloc_frozen_pages_noprof
+                       alloc_pages_mpol
+                       |          
+                        --1.62%--vma_alloc_folio_noprof
+                                  |          
+                                   --1.62%--do_anonymous_page
+## result: 2970495 ops/s | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 

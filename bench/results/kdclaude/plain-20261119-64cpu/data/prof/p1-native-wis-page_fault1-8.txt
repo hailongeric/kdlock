@@ -1,0 +1,148 @@
+## p1 native wis:page_fault1:8 7.0.0-38-kdnat11 15:58:59
+## context switches, migrations (2 s)
+              3771      context-switches                                                      
+                64      cpu-migrations                                                        
+## system calls by number (3 s, comm page_fault1_threads)
+## by object
+# Samples: 20K of event 'cpu/cycles/P'
+    95.31%  [kernel.kallsyms]       
+     4.66%  page_fault1_threads     
+     0.01%  [unknown]               
+     0.01%  libc.so.6               
+     0.01%  [kvm]                   
+     0.00%  zsh                     
+     0.00%  libsystemd-shared-259.so
+## flat by symbol
+    25.64%  [k] _raw_spin_lock
+    12.11%  [k] charge_memcg
+    10.12%  [k] asm_exc_page_fault
+     5.92%  [k] pte_offset_map_lock
+     5.07%  [k] sync_regs
+     4.66%  [.] testcase
+     2.98%  [k] __pte_offset_map
+     2.26%  [k] lock_vma_under_rcu
+     2.03%  [k] kernel_init_pages
+     1.98%  [k] do_user_addr_fault
+     1.65%  [k] do_anonymous_page
+     1.46%  [k] native_queued_spin_lock_slowpath
+     1.31%  [k] __rcu_read_lock
+     1.23%  [k] __rmqueue_pcplist
+     1.11%  [k] lru_gen_add_folio
+     0.99%  [k] irqentry_exit
+     0.95%  [k] unmap_page_range
+     0.91%  [k] lru_gen_del_folio.constprop.0
+     0.89%  [k] page_counter_try_charge
+     0.88%  [k] get_page_from_freelist
+     0.81%  [k] mas_walk
+     0.79%  [k] mod_node_page_state
+     0.67%  [k] get_mem_cgroup_from_mm
+     0.65%  [k] lruvec_stat_mod_folio
+     0.63%  [k] lru_add
+     0.63%  [k] folios_put_refs
+     0.61%  [k] __handle_mm_fault
+     0.58%  [k] mod_memcg_lruvec_state
+     0.53%  [k] __free_one_page
+     0.52%  [k] pte_mkwrite
+     0.46%  [k] __folio_batch_add_and_move
+     0.44%  [k] folio_add_new_anon_rmap
+     0.42%  [k] folio_remove_rmap_ptes
+     0.41%  [k] __rcu_read_unlock
+     0.39%  [k] error_entry
+     0.34%  [k] free_unref_folios
+     0.32%  [k] folio_batch_move_lru
+     0.29%  [k] try_charge_memcg
+     0.29%  [k] free_frozen_page_commit.isra.0
+     0.28%  [k] _raw_spin_trylock
+     0.28%  [k] _raw_spin_lock_irqsave
+     0.27%  [k] handle_mm_fault
+     0.25%  [k] __mod_zone_page_state
+     0.25%  [k] folio_add_lru
+     0.24%  [k] __css_rstat_updated
+## call chains of symbols above 1.5%
+    25.64%  [k] _raw_spin_lock
+            |          
+             --25.57%--do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+    12.11%  [k] charge_memcg
+            |          
+             --12.08%--__mem_cgroup_charge
+                       do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+    10.12%  [k] asm_exc_page_fault
+            |          
+             --10.12%--testcase
+                       |          
+                        --10.10%--pre_trampoline
+                                  0x7ffff7ca3dba
+                                  0x7ffff7d3758c
+     5.92%  [k] pte_offset_map_lock
+            |          
+             --5.56%--do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+     5.07%  [k] sync_regs
+            |          
+             --5.07%--testcase
+                       |          
+                        --5.07%--pre_trampoline
+                                  0x7ffff7ca3dba
+                                  0x7ffff7d3758c
+     4.66%  [.] testcase
+            |          
+             --4.66%--pre_trampoline
+                       0x7ffff7ca3dba
+                       0x7ffff7d3758c
+     2.98%  [k] __pte_offset_map
+            |          
+             --1.67%--do_anonymous_page
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+     2.26%  [k] lock_vma_under_rcu
+            |          
+             --2.24%--do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+                       |          
+                        --2.23%--pre_trampoline
+                                  0x7ffff7ca3dba
+     2.03%  [k] kernel_init_pages
+            |          
+             --1.89%--post_alloc_hook
+                       get_page_from_freelist
+                       __alloc_frozen_pages_noprof
+                       alloc_pages_mpol
+                       |          
+                        --1.88%--vma_alloc_folio_noprof
+                                  do_anonymous_page
+     1.98%  [k] do_user_addr_fault
+            |          
+             --1.94%--exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+                       |          
+                        --1.93%--pre_trampoline
+                                  0x7ffff7ca3dba
+                                  0x7ffff7d3758c
+     1.65%  [k] do_anonymous_page
+            |          
+             --1.59%--__handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+## result: 2774693 ops/s | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 

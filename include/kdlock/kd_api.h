@@ -227,7 +227,8 @@ static inline void kd_rwsem_init(struct kd_rwsem *sem)
 
 static inline int kd_rwsem_is_locked(struct kd_rwsem *sem)
 {
-	return (atomic_long_read(&sem->count) & ~(KD_RWSEM_WWAIT | KD_RWSEM_NEEDWAKE)) != 0;
+	return (atomic_long_read(&sem->count) &
+		~(KD_RWSEM_WWAIT | KD_RWSEM_NEEDWAKE | KD_RWSEM_HANDOFF)) != 0;
 }
 
 /* Held for writing (rwsem_assert_held_write()). */

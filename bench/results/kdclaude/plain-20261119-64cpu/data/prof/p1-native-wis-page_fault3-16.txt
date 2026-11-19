@@ -1,0 +1,124 @@
+## p1 native wis:page_fault3:16 7.0.0-38-kdnat11 16:00:01
+## context switches, migrations (2 s)
+              3528      context-switches                                                      
+                65      cpu-migrations                                                        
+## system calls by number (3 s, comm page_fault3_threads)
+## by object
+# Samples: 35K of event 'cpu/cycles/P'
+    88.06%  [kernel.kallsyms]  
+    11.90%  page_fault3_threads
+     0.04%  [unknown]          
+## flat by symbol
+    36.49%  [k] asm_exc_page_fault
+    13.03%  [k] sync_regs
+    11.90%  [.] testcase
+     3.08%  [k] __handle_mm_fault
+     2.22%  [k] irqentry_exit
+     1.84%  [k] xas_load
+     1.71%  [k] do_user_addr_fault
+     1.67%  [k] unmap_page_range
+     1.67%  [k] mas_walk
+     1.49%  [k] shmem_get_folio_gfp
+     1.35%  [k] filemap_get_entry
+     1.29%  [k] lock_vma_under_rcu
+     1.28%  [k] finish_fault
+     1.12%  [k] error_entry
+     0.94%  [k] folio_add_file_rmap_ptes
+     0.92%  [k] __rcu_read_lock
+     0.88%  [k] folio_remove_rmap_ptes
+     0.79%  [k] _raw_spin_lock
+     0.75%  [k] folios_put_refs
+     0.75%  [k] smp_call_function_many_cond
+     0.71%  [k] mod_memcg_lruvec_state
+     0.70%  [k] handle_mm_fault
+     0.66%  [k] folio_unlock
+     0.65%  [k] __rcu_read_unlock
+     0.59%  [k] asm_sysvec_call_function
+     0.57%  [k] mod_node_page_state
+     0.53%  [k] percpu_counter_add_batch
+     0.51%  [k] __css_rstat_updated
+     0.44%  [k] count_memcg_events
+     0.44%  [k] __pte_offset_map
+     0.44%  [k] lruvec_stat_mod_folio
+     0.43%  [k] set_pte_range
+     0.40%  [k] exc_page_fault
+     0.35%  [k] native_apic_msr_eoi
+     0.32%  [k] fault_dirty_shared_page
+     0.31%  [k] xas_start
+     0.30%  [k] pte_offset_map_lock
+     0.29%  [k] folio_mark_dirty
+     0.29%  [k] pte_offset_map_rw_nolock
+     0.29%  [k] its_return_thunk
+     0.28%  [k] shmem_fault
+     0.26%  [k] do_fault
+     0.22%  [k] current_time
+     0.20%  [k] __flush_smp_call_function_queue
+     0.20%  [k] folio_mapping
+## call chains of symbols above 1.5%
+    36.49%  [k] asm_exc_page_fault
+            |
+            ---testcase
+               pre_trampoline
+               0x7ffff7ca3dba
+               0x7ffff7d3758c
+    13.03%  [k] sync_regs
+            |
+            ---testcase
+               pre_trampoline
+               0x7ffff7ca3dba
+               0x7ffff7d3758c
+    11.90%  [.] testcase
+            |
+            ---pre_trampoline
+               0x7ffff7ca3dba
+               0x7ffff7d3758c
+     3.08%  [k] __handle_mm_fault
+            |          
+             --2.98%--handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+                       |          
+                        --2.97%--testcase
+                                  pre_trampoline
+     2.22%  [k] irqentry_exit
+            |          
+             --2.12%--exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+                       pre_trampoline
+                       0x7ffff7ca3dba
+                       0x7ffff7d3758c
+     1.84%  [k] xas_load
+            |          
+             --1.76%--filemap_get_entry
+                       shmem_get_folio_gfp
+                       shmem_fault
+                       __do_fault
+                       do_fault
+                       __handle_mm_fault
+     1.71%  [k] do_user_addr_fault
+            |          
+             --1.64%--exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+                       pre_trampoline
+                       0x7ffff7ca3dba
+                       0x7ffff7d3758c
+     1.67%  [k] unmap_page_range
+            |
+            ---unmap_single_vma
+               unmap_vmas
+               unmap_region
+               vms_complete_munmap_vmas
+               do_vmi_align_munmap
+               do_vmi_munmap
+     1.67%  [k] mas_walk
+            |          
+             --1.60%--lock_vma_under_rcu
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+                       pre_trampoline
+## result: 12810560 ops/s | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 | sessions=10213802 delegated=365030833 handback=0 plain=368985654 numa_local=760158 no_spin=939 abandon=6471 head_sleep=3900 parked=10760 rd_behind=130839824 rd_queue=572 era_gate=5808753 

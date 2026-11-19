@@ -136,17 +136,105 @@ static void kd_rwsem_wake(struct kd_rwsem *sem)
 	rcu_read_unlock();
 }
 
-/* Writer holding ->m: take the writer bit if no reader and no writer is in. */
+/*
+ * Writer holding ->m: take the writer bit if no reader and no writer is in.
+ * Its waiting marks (WWAIT, and HANDOFF if it had to ask for one) go with it.
+ */
 static __always_inline bool kd_rwsem_write_try(struct kd_rwsem *sem)
 {
 	long c = atomic_long_read(&sem->count);
 
 	while (!(c & KD_RWSEM_WLOCKED) && !kd_rwsem_readers(c)) {
 		if (atomic_long_try_cmpxchg_acquire(&sem->count, &c,
-				(c & ~KD_RWSEM_WWAIT) | KD_RWSEM_WLOCKED))
+				(c & ~(KD_RWSEM_WWAIT | KD_RWSEM_HANDOFF)) | KD_RWSEM_WLOCKED))
 			return true;
 	}
 	return false;
+}
+
+/*
+ * Write stealing.
+ *
+ * The holder of ->m is the only task that may wait for ->count, and when the
+ * readers it waits for stay long it sleeps there (KD_RWSEM_NEEDWAKE). From
+ * then on the write side used to be reserved for that sleeper: the last
+ * reader's release woke it, and until it ran again the lock stood free while
+ * every other writer waited behind ->m, asleep as well, since they saw its
+ * owner off the CPU. munmap makes this the common case for the mmap lock:
+ * it takes the write side, downgrades and unmaps as a reader for
+ * milliseconds. A thread whose munmap had just returned then waited for
+ * its next mmap behind all the sleeping writers (will-it-scale page_fault3
+ * with 16 threads on kdall13: mmap took 1.6 ms on average against 0.15 ms
+ * on the native kernel, the threads were blocked 12.8% of the time against
+ * 7.7%, and the rate was 0.71 of native's).
+ *
+ * The native rwsem does not reserve a free lock for a sleeping waiter: a
+ * writer that is running takes it, and a waiter that keeps losing asks for a
+ * handoff after a few milliseconds. The same here: while the holder of ->m
+ * sleeps on ->count, a writer that finds no reader and no writer in takes
+ * the writer bit past it, without ->m. Its release wakes the sleeper as any
+ * release does while NEEDWAKE is set, and the sleeper tries again. A sleeper
+ * that has waited kd_rwsem_handoff_ms sets KD_RWSEM_HANDOFF, after which
+ * nobody steals until it has had the lock.
+ *
+ * Nothing is stolen from a holder of ->m that is awake: it is about to take
+ * the lock itself, and in delegation mode it is the combiner the other
+ * writers are queued behind. Readers are not affected: WWAIT keeps new
+ * ones out as before, and those that register behind a stealing writer
+ * enter when it leaves, like behind any writer.
+ *
+ * kd_rwsem_steal=0 switches it off (for comparisons within one boot).
+ */
+static unsigned int kd_rwsem_steal __read_mostly = 1;
+core_param(kd_rwsem_steal, kd_rwsem_steal, uint, 0644);
+
+static unsigned int kd_rwsem_handoff_ms __read_mostly = 4;
+core_param(kd_rwsem_handoff_ms, kd_rwsem_handoff_ms, uint, 0644);
+
+#define KD_RWSEM_NOSTEAL	(KD_RWSEM_WLOCKED | KD_RWSEM_HANDOFF | KD_RWSEM_XHEAD)
+
+static __always_inline bool kd_rwsem_write_steal(struct kd_rwsem *sem)
+{
+	long c = atomic_long_read(&sem->count);
+
+	while ((c & KD_RWSEM_NEEDWAKE) && !(c & KD_RWSEM_NOSTEAL) && !kd_rwsem_readers(c)) {
+		if (atomic_long_try_cmpxchg_acquire(&sem->count, &c, c | KD_RWSEM_WLOCKED)) {
+			kd_stat_inc(raw_cpu_ptr(&kd_cpu), KD_STAT_WR_STEAL);
+			return true;
+		}
+	}
+	return false;
+}
+
+/*
+ * A writer that missed the fast path, before it queues: while the holder of
+ * ->m sleeps, wait a bounded time for the lock to become free and take it.
+ * Returns false at once when the holder of ->m is awake or wants a handoff.
+ */
+static bool kd_rwsem_steal_wait(struct kd_rwsem *sem)
+{
+	u64 end = 0;
+	int i;
+
+	for (i = 0;; i++) {
+		long c = atomic_long_read(&sem->count);
+
+		if (!(c & KD_RWSEM_NEEDWAKE) || (c & (KD_RWSEM_HANDOFF | KD_RWSEM_XHEAD)))
+			return false;
+		if (kd_rwsem_write_steal(sem))
+			return true;
+		if (need_resched())
+			return false;
+		if (!(i & 63)) {
+			u64 now = local_clock();
+
+			if (!end)
+				end = now + READ_ONCE(kd_rwsem_wspin_ns);
+			else if (now > end)
+				return false;
+		}
+		cpu_relax();
+	}
 }
 
 /*
@@ -365,6 +453,43 @@ int kd_down_write_nested(struct kd_rwsem *sem, struct kd_regs *r, void *entry)
 	__ret;								\
 })
 
+/*
+ * The holder of ->m sleeps until it has the writer bit. Writers may steal
+ * the lock meanwhile (kd_rwsem_write_steal()); once this one has waited
+ * kd_rwsem_handoff_ms it forbids that. HANDOFF is set before the lock is
+ * looked at again, so a release that follows finds it, and every release
+ * while NEEDWAKE is set wakes this task.
+ */
+static int kd_rwsem_write_sleep_on(struct kd_rwsem *sem, unsigned int state)
+{
+	unsigned long handoff_at = jiffies + msecs_to_jiffies(READ_ONCE(kd_rwsem_handoff_ms)) + 1;
+	bool asked = false;
+	int ret = 0;
+
+	atomic_long_or(KD_RWSEM_NEEDWAKE, &sem->count);
+	for (;;) {
+		set_current_state(state);
+		if (kd_rwsem_write_try(sem))
+			break;
+		if (signal_pending_state(state, current)) {
+			ret = -EINTR;
+			break;
+		}
+		if (!asked && time_after(jiffies, handoff_at)) {
+			atomic_long_or(KD_RWSEM_HANDOFF, &sem->count);
+			kd_stat_inc(raw_cpu_ptr(&kd_cpu), KD_STAT_WR_HANDOFF);
+			asked = true;
+			continue;
+		}
+		schedule();
+	}
+	__set_current_state(TASK_RUNNING);
+	/* kd_rwsem_write_try() cleared HANDOFF with the lock; after a signal it is still set. */
+	atomic_long_andnot(ret ? KD_RWSEM_NEEDWAKE | KD_RWSEM_HANDOFF : KD_RWSEM_NEEDWAKE,
+			   &sem->count);
+	return ret;
+}
+
 static int __kd_down_write_sleep(struct kd_rwsem *sem, int why, unsigned int state)
 {
 	int ret;
@@ -381,7 +506,7 @@ static int __kd_down_write_sleep(struct kd_rwsem *sem, int why, unsigned int sta
 			return 0;
 		}
 	}
-	ret = kd_rwsem_sleep_on(sem, state, kd_rwsem_write_try(sem));
+	ret = kd_rwsem_write_sleep_on(sem, state);
 	if (ret) {
 		/* Give up: let queued readers use the fast path again. */
 		atomic_long_andnot(KD_RWSEM_WWAIT, &sem->count);
@@ -413,6 +538,9 @@ static __always_inline int __kd_down_write_slow(struct kd_rwsem *sem, unsigned l
 	int ret;
 
 	might_sleep();
+	/* The holder of the queue sleeps: do not queue behind it for a free lock. */
+	if (READ_ONCE(kd_rwsem_steal) && kd_rwsem_steal_wait(sem))
+		return 0;
 	/* The lock is in use and serves another node: wait for our era (kd_era.c). */
 	if (kd_rw_era_other(sem)) {
 		kd_rw_era_wait(sem, kd_rwsem_era_bound());

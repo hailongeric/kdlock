@@ -1,0 +1,124 @@
+## p1 off wis:page_fault3:16 7.0.0-38-kdall13 16:04:23
+## context switches, migrations (2 s)
+              4571      context-switches                                                      
+                64      cpu-migrations                                                        
+## system calls by number (3 s, comm page_fault3_threads)
+## by object
+# Samples: 30K of event 'cpu/cycles/P'
+    88.44%  [kernel.kallsyms]   
+    11.53%  page_fault3_threads 
+     0.02%  [unknown]           
+     0.00%  libc.so.6           
+     0.00%  perf                
+     0.00%  ld-linux-x86-64.so.2
+## flat by symbol
+    37.05%  [k] asm_exc_page_fault
+    12.79%  [k] sync_regs
+    11.53%  [.] testcase
+     3.08%  [k] __handle_mm_fault
+     2.42%  [k] irqentry_exit
+     1.68%  [k] mas_walk
+     1.68%  [k] xas_load
+     1.60%  [k] unmap_page_range
+     1.55%  [k] do_user_addr_fault
+     1.49%  [k] lock_vma_under_rcu
+     1.44%  [k] shmem_get_folio_gfp
+     1.27%  [k] finish_fault
+     1.22%  [k] filemap_get_entry
+     1.09%  [k] error_entry
+     1.07%  [k] folio_remove_rmap_ptes
+     0.94%  [k] __rcu_read_lock
+     0.93%  [k] handle_mm_fault
+     0.90%  [k] folios_put_refs
+     0.83%  [k] folio_add_file_rmap_ptes
+     0.79%  [k] folio_unlock
+     0.69%  [k] mod_memcg_lruvec_state
+     0.69%  [k] kd_spin_lock
+     0.69%  [k] __rcu_read_unlock
+     0.57%  [k] mod_node_page_state
+     0.57%  [k] count_memcg_events
+     0.57%  [k] __css_rstat_updated
+     0.49%  [k] lruvec_stat_mod_folio
+     0.47%  [k] smp_call_function_many_cond
+     0.43%  [k] __pte_offset_map
+     0.43%  [k] shmem_fault
+     0.43%  [k] pte_offset_map_lock
+     0.42%  [k] percpu_counter_add_batch
+     0.40%  [k] set_pte_range
+     0.39%  [k] exc_page_fault
+     0.38%  [k] asm_sysvec_call_function
+     0.37%  [k] folio_mark_dirty
+     0.33%  [k] its_return_thunk
+     0.31%  [k] fault_dirty_shared_page
+     0.29%  [k] current_time
+     0.26%  [k] xas_start
+     0.26%  [k] do_fault
+     0.24%  [k] folio_mapping
+     0.22%  [k] pte_offset_map_rw_nolock
+     0.19%  [k] native_apic_msr_eoi
+     0.17%  [k] kd_q_lock_slow
+## call chains of symbols above 1.5%
+    37.05%  [k] asm_exc_page_fault
+            |          
+             --37.04%--testcase
+                       |          
+                        --37.00%--pre_trampoline
+                                  0x7ffff7ca3dba
+                                  0x7ffff7d3758c
+    12.79%  [k] sync_regs
+            |
+            ---testcase
+               |          
+                --12.76%--pre_trampoline
+                          0x7ffff7ca3dba
+                          0x7ffff7d3758c
+    11.53%  [.] testcase
+            |          
+             --11.51%--pre_trampoline
+                       0x7ffff7ca3dba
+                       0x7ffff7d3758c
+     3.08%  [k] __handle_mm_fault
+            |          
+             --3.01%--handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+                       |          
+                        --3.01%--pre_trampoline
+     2.42%  [k] irqentry_exit
+            |          
+             --2.32%--exc_page_fault
+                       asm_exc_page_fault
+                       testcase
+                       |          
+                        --2.32%--pre_trampoline
+                                  0x7ffff7ca3dba
+                                  0x7ffff7d3758c
+     1.68%  [k] mas_walk
+            |          
+             --1.58%--lock_vma_under_rcu
+                       do_user_addr_fault
+                       exc_page_fault
+                       asm_exc_page_fault
+                       |          
+                        --1.58%--testcase
+                                  pre_trampoline
+     1.68%  [k] xas_load
+            |          
+             --1.62%--filemap_get_entry
+                       shmem_get_folio_gfp
+                       shmem_fault
+                       __do_fault
+                       do_fault
+                       __handle_mm_fault
+     1.60%  [k] unmap_page_range
+            |
+            ---unmap_single_vma
+               unmap_vmas
+               unmap_region
+               vms_complete_munmap_vmas
+               do_vmi_align_munmap
+               do_vmi_munmap
+     1.55%  [k] do_user_addr_fault
+## result: 9101528 ops/s | sessions=0 delegated=0 handback=0 plain=613682 numa_local=11 no_spin=7308 abandon=5 head_sleep=150 parked=8167 rd_behind=29783 rd_queue=766 era_gate=41 | sessions=0 delegated=0 handback=0 plain=943849 numa_local=12 no_spin=21128 abandon=5 head_sleep=860 parked=22817 rd_behind=29825 rd_queue=789 era_gate=41 

@@ -1,0 +1,66 @@
+## p1 off wis:lock1:32 7.0.0-38-kdall13 16:05:57
+## context switches, migrations (2 s)
+               727      context-switches                                                      
+                67      cpu-migrations                                                        
+## system calls by number (3 s, comm lock1_threads)
+## by object
+# Samples: 80K of event 'cpu/cycles/P'
+    99.42%  [kernel.kallsyms]
+     0.51%  libc.so.6        
+     0.07%  lock1_threads    
+## flat by symbol
+    91.14%  [k] kd_q_lock_slow
+     1.20%  [k] kd_spin_lock
+     0.92%  [k] fput
+     0.68%  [k] kmem_cache_alloc_noprof
+     0.64%  [k] entry_SYSCALL_64
+     0.54%  [k] do_syscall_64
+     0.53%  [k] clear_bhb_loop
+     0.37%  [k] _copy_from_user
+     0.36%  [k] kmem_cache_free
+     0.33%  [k] memset
+     0.32%  [k] fdget_raw
+     0.28%  [k] posix_lock_inode
+     0.26%  [.] 0x00000000000ac7c2
+     0.23%  [k] fcntl_setlk
+     0.13%  [k] __init_waitqueue_head
+     0.12%  [k] entry_SYSCALL_64_safe_stack
+     0.11%  [k] locks_release_private
+     0.11%  [k] begin_current_label_crit_section
+     0.10%  [k] account_system_index_time
+     0.09%  [k] apparmor_file_lock
+     0.08%  [k] syscall_return_via_sysret
+     0.08%  [k] update_se
+     0.07%  [.] 0x00000000000a0360
+     0.07%  [k] do_fcntl
+     0.07%  [k] flock64_to_posix_lock
+     0.07%  [.] testcase
+     0.06%  [k] entry_SYSCALL_64_after_hwframe
+     0.06%  [k] x64_sys_call
+     0.06%  [k] fpregs_assert_state_consistent
+     0.05%  [.] fcntl64
+     0.05%  [k] kd_spin_unlock
+     0.05%  [.] 0x00000000000a035c
+     0.04%  [k] __rcu_read_unlock
+     0.04%  [k] __x64_sys_fcntl
+     0.04%  [k] lapic_next_deadline
+     0.03%  [k] aa_file_perm
+     0.03%  [.] 0x00000000000a036a
+     0.03%  [k] __rcu_read_lock
+     0.03%  [k] locks_unlink_lock_ctx
+     0.03%  [k] locks_get_lock_context
+     0.03%  [k] asm_sysvec_apic_timer_interrupt
+     0.03%  [k] security_file_fcntl
+     0.03%  [k] security_file_lock
+     0.03%  [k] locks_insert_lock_ctx
+     0.03%  [k] its_return_thunk
+## call chains of symbols above 1.5%
+    91.14%  [k] kd_q_lock_slow
+            |          
+             --90.94%--kd_spin_lock
+                       do_fcntl
+                       __x64_sys_fcntl
+                       x64_sys_call
+                       do_syscall_64
+                       entry_SYSCALL_64_after_hwframe
+## result: 9064664 ops/s | sessions=0 delegated=0 handback=0 plain=151789006 numa_local=12 no_spin=23932 abandon=5 head_sleep=881 parked=25685 rd_behind=30383 rd_queue=792 era_gate=41 | sessions=0 delegated=0 handback=0 plain=294296323 numa_local=12 no_spin=23932 abandon=5 head_sleep=881 parked=25685 rd_behind=30404 rd_queue=792 era_gate=41 

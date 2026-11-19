@@ -1,0 +1,125 @@
+## p1 off wis:page_fault2:16 7.0.0-38-kdall13 16:04:54
+## context switches, migrations (2 s)
+              1537      context-switches                                                      
+                64      cpu-migrations                                                        
+## system calls by number (3 s, comm page_fault2_threads)
+## by object
+# Samples: 33K of event 'cpu/cycles/P'
+    97.26%  [kernel.kallsyms]  
+     2.62%  page_fault2_threads
+     0.12%  [unknown]          
+## flat by symbol
+    34.15%  [k] copy_mc_enhanced_fast_string
+    18.63%  [k] xas_load
+     7.27%  [k] shmem_get_folio_gfp
+     6.82%  [k] charge_memcg
+     4.52%  [k] __rcu_read_unlock
+     4.10%  [k] asm_exc_page_fault
+     2.62%  [.] testcase
+     2.29%  [k] filemap_get_entry
+     1.98%  [k] sync_regs
+     1.38%  [k] shmem_fault
+     1.35%  [k] kernel_init_pages
+     1.21%  [k] __rmqueue_pcplist
+     0.72%  [k] page_counter_try_charge
+     0.67%  [k] xas_start
+     0.66%  [k] __rcu_read_lock
+     0.53%  [k] get_mem_cgroup_from_mm
+     0.51%  [k] kd_q_lock_slow
+     0.51%  [k] get_page_from_freelist
+     0.47%  [k] unmap_page_range
+     0.46%  [k] __handle_mm_fault
+     0.43%  [k] lru_gen_add_folio
+     0.39%  [k] irqentry_exit
+     0.34%  [k] mod_node_page_state
+     0.31%  [k] lruvec_stat_mod_folio
+     0.30%  [k] lru_gen_del_folio.constprop.0
+     0.30%  [k] folios_put_refs
+     0.28%  [k] __free_one_page
+     0.25%  [k] mod_memcg_lruvec_state
+     0.25%  [k] lock_vma_under_rcu
+     0.23%  [k] lru_add
+     0.23%  [k] mas_walk
+     0.23%  [k] do_user_addr_fault
+     0.20%  [k] __do_fault
+     0.20%  [k] finish_fault
+     0.19%  [k] kd_spin_lock
+     0.18%  [k] error_entry
+     0.17%  [k] folio_add_new_anon_rmap
+     0.17%  [k] __alloc_frozen_pages_noprof
+     0.16%  [k] try_charge_memcg
+     0.16%  [k] free_frozen_page_commit.isra.0
+     0.15%  [k] folio_remove_rmap_ptes
+     0.15%  [k] alloc_pages_mpol
+     0.14%  [k] __folio_batch_add_and_move
+     0.14%  [k] kd_spin_trylock
+     0.13%  [k] folio_batch_move_lru
+## call chains of symbols above 1.5%
+    34.15%  [k] copy_mc_enhanced_fast_string
+            |
+            ---do_fault
+               __handle_mm_fault
+               handle_mm_fault
+               do_user_addr_fault
+               exc_page_fault
+               asm_exc_page_fault
+    18.63%  [k] xas_load
+            |          
+             --18.43%--filemap_get_entry
+                       shmem_get_folio_gfp
+                       shmem_fault
+                       __do_fault
+                       do_fault
+                       __handle_mm_fault
+     7.27%  [k] shmem_get_folio_gfp
+            |          
+             --6.47%--shmem_fault
+                       __do_fault
+                       do_fault
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+     6.82%  [k] charge_memcg
+            |          
+             --6.80%--__mem_cgroup_charge
+                       do_fault
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+     4.52%  [k] __rcu_read_unlock
+            |          
+             --4.43%--__mem_cgroup_charge
+                       do_fault
+                       __handle_mm_fault
+                       handle_mm_fault
+                       do_user_addr_fault
+                       exc_page_fault
+     4.10%  [k] asm_exc_page_fault
+            |
+            ---testcase
+               |          
+                --4.08%--pre_trampoline
+                          0x7ffff7ca3dba
+                          0x7ffff7d3758c
+     2.62%  [.] testcase
+            |          
+             --2.61%--pre_trampoline
+                       0x7ffff7ca3dba
+                       0x7ffff7d3758c
+     2.29%  [k] filemap_get_entry
+            |          
+             --2.09%--shmem_get_folio_gfp
+                       shmem_fault
+                       __do_fault
+                       do_fault
+                       __handle_mm_fault
+                       handle_mm_fault
+     1.98%  [k] sync_regs
+            |
+            ---testcase
+               |          
+                --1.97%--pre_trampoline
+                          0x7ffff7ca3dba
+                          0x7ffff7d3758c
+## result: 1781054 ops/s | sessions=0 delegated=0 handback=0 plain=943849 numa_local=12 no_spin=21128 abandon=5 head_sleep=860 parked=22817 rd_behind=29825 rd_queue=789 era_gate=41 | sessions=0 delegated=0 handback=0 plain=1279769 numa_local=12 no_spin=23932 abandon=5 head_sleep=881 parked=25685 rd_behind=30354 rd_queue=792 era_gate=41 
