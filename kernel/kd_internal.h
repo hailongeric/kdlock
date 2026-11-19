@@ -194,6 +194,8 @@ enum {
 	KD_STAT_DELEGATED,	/* sections completed in generated code */
 	KD_STAT_HANDBACK,	/* sections returned to their origin unfinished */
 	KD_STAT_HANDBACK_PINNED,/* ... while the section had preemption disabled */
+	KD_STAT_DONE_IN_REGION,	/* completed with the preempt count or IRQ-off raised by the section */
+	KD_STAT_HB_REGION,	/* handback at a KD_X_REGION exit with the region open */
 	KD_STAT_NESTED_LOCAL,	/* contended inner locks the executor obtained itself */
 	KD_STAT_NESTED_DELEGATED,/* inner sections advanced by the inner lock's combiner */
 	KD_STAT_OFFERED,	/* waiters queued with generated code */

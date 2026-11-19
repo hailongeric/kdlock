@@ -81,6 +81,10 @@ def main():
             print("%s site %s: %d insns, %d bytes, entry +%#x, kinds %s, missing %s" %
                   (func, describe(kv, site), image.insns, len(text), entry, kinds,
                    [describe(kv, a) for a in sorted(tr.missing)]))
+            for addr, why in image.pcpu_frontiers:
+                print("  per-CPU frontier at %s: %s" % (describe(kv, addr), why))
+            print("  per-CPU regions: %d instructions, %d far exits left in the copy" %
+                  (len(tr.region_addrs), tr.pcpu_far))
             if args.disasm:
                 for cs in md.disasm(text, base):
                     if cs.address == base + entry:

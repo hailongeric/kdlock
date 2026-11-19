@@ -100,8 +100,9 @@ session with preemption off, so a delegated `brk()` shrink spun there for
   brk1 at 64 threads fell to 0.54 of no delegation, and with the check
   it is at 1.10.
 
-The mmap paths need images of about 50 000 instructions after learning;
-run the daemon with `--config` `{"max_insns": 250000}` there.
+The mmap paths need images of about 50 000 instructions after learning,
+and the per-CPU regions (section 3a) add their code to that; `max_insns`
+is 250 000 by default.
 
 Handbacks for reasons the translator cannot learn are reported as
 `KD_EV_HANDBACK` events (256 per image) and counted by reason in debugfs
@@ -144,7 +145,7 @@ the base), so rel32 displacements are final.
 
 Starting from the return address of the lock call, the translator follows
 direct jumps and up to `call_depth` (5) direct-call edges. Deeper callees
-start as `MISS_CODE` exits. At most `max_insns` (60000) instructions go into
+start as `MISS_CODE` exits. At most `max_insns` (250000) instructions go into
 one image. Known return addresses (callers inside the image) feed the `ret`
 chains. Indirect branches start with an empty chain.
 
@@ -155,6 +156,75 @@ learned roots came first, the mmap and brk sites used up the budget before
 their own code was reached, after about 20-60 learned roots. The build then
 failed ("cannot decode site"), the daemon gave the site up, and the kernel
 kept running the image it had.
+
+## 3a. Per-CPU regions
+
+The copy runs on the executor's CPU, so its per-CPU accesses are the
+executor's (only task identity is redirected, section 2). That is right as
+long as a stretch of code that depends on staying on one CPU also ends on
+that CPU. Code that derives the CPU's identity (`this_cpu_ptr()` reads
+`this_cpu_off`, `smp_processor_id()` reads `cpu_number`) relies on it until
+it enables preemption or interrupts again: it keeps the pointer in
+registers, and a local lock (`local_trylock_t`) marks its acquisition in that
+CPU's memory and is released through a pointer derived again. An exit in
+between moves the rest to another CPU, the origin's after a handback or
+another combiner's after a published nested acquisition. Before this
+analysis, brk1 handbacks at misses inside memcg's `obj_stock` region left
+its `acquired` byte set on 57 of 64 CPUs for the rest of the boot
+(`bench/results/kdclaude/appgrid-20261118-64cpu/`, section 6).
+
+`Translator._pcpu_spans()` runs after discovery:
+
+* **Region edges.** An identity read starts a region. Increments of
+  `%gs:__preempt_count` and `cli` open a level, decrements, `sti` and `popf`
+  close one; so do the `_irq`/`_irqsave`/`_bh` lock calls and their
+  releases (`_lock_level()`), and a branch around `sti`
+  (`local_irq_restore()`) closes it on both paths.
+* **Walk.** Interprocedural through callee summaries per (entry, level,
+  depth). A callee returns at the level it was called at. Whether a callee
+  released the region is often decided by a result the walk does not
+  follow (a failed `local_trylock()`), and summing both branches would leave
+  regions open on paths that cannot run. In the read's own function a close
+  ends the path, and its return continues in its callers within the image.
+  At the site's own function the lock class decides: a sleepable-class
+  section runs preemptibly (no region is open there), a spin-class section
+  is itself one. Inside a callee a close does not end the walk (the slab
+  sheaf helpers drop and take their lock again and return with it), but
+  exits and calls are not followed while closed.
+* **Not exits:** native helpers; spin-class releases (whether one releases
+  the root is only known at run time; `kd_exec_one()` counts a completion
+  with the section's preempt count or IRQ-off still raised as
+  `done_in_region`); `preempt_schedule*()` calls, which in the copy are never
+  reached because the executor's `KD_EXEC_PIN` keeps the count above zero;
+  noreturn calls (`__stack_chk_fail`, `ud2`); reporting paths (printk, the
+  UBSAN handlers, the WARN `ud1` trap, `bad_page`, kfence and slab
+  out-of-memory reports, `_REPORT`): a handback inside a report can still
+  move a region, only after a report. Indirect calls are walked through their
+  learned targets (`pcpu_ind_exits`).
+* **Nested lock calls** inside a region call the native lock function
+  instead of its `*_jit` entry, so a contended one waits on the executor
+  (`kd_cpu.busy` stops it from publishing) instead of continuing on another
+  combiner.
+* **Policy.** An exit found in the read's own function
+  (`pcpu_near_depth`, 0) makes the read a frontier: the origin derives its
+  own identity there. Deeper exits stay in the copy and carry `KD_X_REGION`;
+  `kd_exec_one()` counts one taken with the section's preempt count or
+  IRQ-off raised as `hb_region` (an upper bound: an inner lock held at the
+  exit counts too). Region code is decoded `pcpu_walk_depth` (4) calls deep
+  whatever `call_depth` says, so regions do not miss there. The analysis is
+  repeated until no region changes and no new read turns up. With `-v` the
+  daemon prints each per-CPU frontier and its reason.
+* **Why not every exit:** without value analysis the walk cannot tell that
+  a slab or memcg slow path runs only after the lock was dropped. With every
+  exit a frontier (`pcpu_near_depth: null`) or the depth 1-2 tried first,
+  the slab and `obj_stock` regions became frontiers at every vma
+  allocation and the mmap sites were switched off: in the per-CPU check
+  (64 threads, 10 s each) mmap1 and mmap2 delegated 0 sections and brk1
+  451 362, against 11.29 M, 11.22 M and 14.09 M with this policy
+  (`bench/results/kdclaude/appgrid-20261118-64cpu/`, section 8).
+* **Limit:** the far exits are not proven unreachable with a region open.
+  `hb_region` shows whether any was taken; runs report it with the
+  per-CPU lock bytes (`pcpu_check.sh`).
 
 ## 4. Learning loop (daemon)
 
@@ -224,4 +294,5 @@ daemon: poll events (10 ms), add to cumulative knowledge, wait 50 ms (settle),
 Run: `python3 jit/kd_daemon.py [--config policy.json] [--state FILE] [--allow FILE] [-v]`.
 Policy lists and values (`native`, `skip`, `frontier`, `frontier_prefix`,
 `frontier_static_call`, `need_resched_offset`, `need_resched_mask`,
-`call_depth`, `max_insns`) are overridable from the JSON config.
+`call_depth`, `max_insns`, `pcpu_near_depth`, `pcpu_walk_depth`,
+`pcpu_ind_exits`) are overridable from the JSON config.

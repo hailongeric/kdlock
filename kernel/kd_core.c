@@ -417,7 +417,7 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	struct kd_regs *r = n->regs;
 	void *code = n->entry;
 	void *resume;
-	unsigned long flags, ip, aux;
+	unsigned long flags, ip, aux, if0;
 	unsigned int kind, op, level = r->nroots;
 	bool done = false, native = true, bh = false, planned = false;
 	int pc0, d, i, ret, rcu0;
@@ -440,6 +440,7 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	 */
 	__preempt_count_add(KD_EXEC_PIN);
 	pc0 = preempt_count();
+	if0 = r->rflags;	/* the section's interrupt state: kd_jit_enter installs it */
 	rcu0 = rcu_preempt_depth();
 	kd_rcu_sync(rcu0, r->rcu_depth);
 
@@ -481,6 +482,20 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 		if (kind == KD_X_UNLOCK && op != KD_OP_DOWNGRADE &&
 		    (op != KD_OP_UP_READ || (r->vdown & BIT(level)))) {
 			/* Release of our root: this level's section is complete. */
+			/*
+			 * The section ends with the preempt count raised or
+			 * interrupts disabled by its own code. Usually an inner
+			 * lock still held (hand-over-hand), which the origin
+			 * takes over through pc_delta. It can also be a per-CPU
+			 * region whose rest the origin then runs on its own CPU:
+			 * the translator lets spin-class releases into such
+			 * regions (_pcpu_spans() in jit/kdjit) because whether
+			 * one is the root's is only known here. Counted, so a
+			 * run can show that this does not happen.
+			 */
+			if (unlikely(preempt_count() != pc0 ||
+				     ((if0 & X86_EFLAGS_IF) && irqs_disabled())))
+				kd_stat_inc(kc, KD_STAT_DONE_IN_REGION);
 			r->vdown &= ~BIT(level);
 			kd_apply_unlock(r, op);
 			if (x & KD_X_TAIL) {
@@ -586,6 +601,19 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 		default:
 			kd_stat_inc(kc, planned ? KD_STAT_HB_DOWNGRADE : KD_STAT_HB_OTHER);
 		}
+		/*
+		 * An exit the translator left inside a per-CPU region (one it
+		 * found only on a slow path of the region; Translator.
+		 * _pcpu_spans() in jit/kdjit), taken while the section still
+		 * has a preempt-off or IRQ-off region of its own open: the rest
+		 * of that region now runs on the origin's CPU. Counted so every
+		 * run shows whether this happened (an upper bound: an inner
+		 * lock held at the exit also raises the count).
+		 */
+		if (unlikely(x & KD_X_REGION) &&
+		    (preempt_count() != pc0 ||
+		     ((if0 & X86_EFLAGS_IF) && irqs_disabled())))
+			kd_stat_inc(kc, KD_STAT_HB_REGION);
 		r->rip = ip;
 		kd_report_exit(r, x, ip, aux);
 		break;

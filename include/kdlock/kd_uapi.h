@@ -28,6 +28,12 @@
 #define KD_X_OP(code)		(((code) >> 8) & 0xff)
 /* The API was reached by a jmp (sibling call), not a call. */
 #define KD_X_TAIL		0x10000
+/*
+ * The exit lies inside a per-CPU region the translator walked (an exit it
+ * found only on a slow path of the region). kd_exec_one() counts it as
+ * hb_region when it is taken with the region actually open.
+ */
+#define KD_X_REGION		0x20000
 
 enum kd_op {
 	KD_OP_NONE = 0,

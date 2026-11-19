@@ -45,7 +45,7 @@ from collections import defaultdict
 import capstone
 from capstone import x86_const as X
 
-from .kernel import (MASK64, KD_SYM_ACQUIRE, KD_SYM_LOCAL, KD_SYM_NESTED, KD_SYM_UNLOCK,
+from .kernel import (MASK64, KD_X_REGION, KD_SYM_ACQUIRE, KD_SYM_LOCAL, KD_SYM_NESTED, KD_SYM_UNLOCK,
                      KD_SYM_UNLOCK_CL, KD_X_ACQUIRE,
                      KD_X_FRONTIER, KD_X_MISS_CODE, KD_X_MISS_IND, KD_X_MISS_RET, KD_X_TAIL,
                      KD_X_UNLOCK, KD_X_UNLOCK_ANC)
@@ -56,7 +56,23 @@ DEFAULT_CONFIG = {
     # Static discovery follows this many direct-call edges from the site.
     # Deeper callees start as learnable exits.
     "call_depth": 5,
-    "max_insns": 60000,
+    "max_insns": 250000,
+    # Per-CPU regions (Translator._pcpu_spans). An exit found in the
+    # region's own function or at most this many calls below it makes the
+    # region's start a frontier; deeper ones (slow paths: a slab page freed
+    # under a sheaf flush, kfence, memcg teardown) stay in the copy as
+    # KD_X_REGION exits, which kd_exec_one() counts as hb_region when one
+    # is taken with the region open. None makes every exit a frontier.
+    "pcpu_near_depth": 0,
+    # The walk decodes and follows a region this many calls deep (its code
+    # is decoded whatever "call_depth" says, so the region does not miss
+    # there) and steps over deeper calls; their exits are left to the copy.
+    "pcpu_walk_depth": 4,
+    # An indirect call inside a region is walked through its learned
+    # targets; its unknown-target exit (a target never seen before) is not
+    # treated as an exit of the region (KD_X_REGION covers it at run time).
+    # True treats it as an exit like any other.
+    "pcpu_ind_exits": False,
     # Callees run natively: leaf helpers that do not depend on the current
     # task or on return addresses. The kd_ functions that may be called
     # natively come from the kernel's own list (KD_SYM_LOCAL); they act for
@@ -262,7 +278,7 @@ def _loc(addr):
 
 class Ins:
     __slots__ = ("addr", "size", "raw", "kind", "target", "op", "falls", "depth",
-                 "reg", "mem", "patch", "compact")
+                 "reg", "mem", "patch", "compact", "pcpu", "plevel", "pdec", "orig")
 
     def __init__(self, addr, raw, depth):
         self.addr = addr
@@ -277,6 +293,10 @@ class Ins:
         self.mem = None         # indirect branch through memory: (prefixes, rex, tail, riprel_target)
         self.patch = None       # (disp_offset, new_target, absolute) for plain instructions
         self.compact = False    # root release of a clobber call site (KD_SYM_UNLOCK_CL)
+        self.pcpu = False       # derives this CPU's identity (per-CPU base or CPU number)
+        self.plevel = 0         # +1 opens a preempt/IRQ-off region, -1 closes one
+        self.orig = None        # native target of a nested-class lock call
+        self.pdec = False       # decrements the preempt count (sets ZF at zero)
 
 
 class Learned:
@@ -312,6 +332,14 @@ class Translator:
         self.frontier = set(self.cfg["frontier"])
         self.frontier_prefix = tuple(self.cfg["frontier_prefix"])
         self.subst = info.gs_substitutions()
+        # Per-CPU spans (_pcpu_spans): reads of these give the executor's CPU
+        # identity, and writes to the preempt count open and close regions.
+        self.pcpu_src = {a for a in (kv.addr_of.get("this_cpu_off"),
+                                     kv.addr_of.get("cpu_number")) if a}
+        self.preempt_count = kv.addr_of.get("__preempt_count")
+        self.region_addrs = set()
+        self.pcpu_starts = set()
+        self.pcpu_far = 0
         self.md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
         self.md.detail = True
         for name in ("pcpu_task", "pcpu_canary", "pcpu_stack_top", "pcpu_root",
@@ -460,6 +488,7 @@ class Translator:
                     # A real call, so a contended exit finds its continuation
                     # (the return address in this image) on the stack.
                     ins.kind = "native_call" if is_call else "native_tail"
+                    ins.orig = target
                     ins.target = detail
                     ins.falls = is_call
                 elif cls == "ret":
@@ -531,7 +560,39 @@ class Translator:
             # An operand that cannot be relocated: the origin runs this
             # instruction, the rest of the site stays delegable.
             return frontier()
+        self._pcpu_note(cs, ins)
         return ins, ()
+
+    # Opening and closing a preempt-off or IRQ-off region, for _pcpu_spans().
+    _PLEVEL = {X.X86_INS_INC: 1, X.X86_INS_DEC: -1, X.X86_INS_ADD: 1, X.X86_INS_SUB: -1}
+
+    def _pcpu_note(self, cs, ins):
+        """Mark per-CPU identity reads and preempt/IRQ region edges."""
+        if cs.id == X.X86_INS_CLI:
+            ins.plevel = 1
+            return
+        if cs.id in (X.X86_INS_STI, X.X86_INS_POPF, getattr(X, "X86_INS_POPFQ", -1)):
+            ins.plevel = -1
+            return
+        for i, op in enumerate(cs.operands):
+            if op.type != X.X86_OP_MEM or op.mem.segment != X.X86_REG_GS:
+                continue
+            mem = op.mem
+            if mem.base == X.X86_REG_RIP:
+                addr = (cs.address + cs.size + mem.disp) & MASK64
+            elif mem.base == 0 and mem.index == 0:
+                addr = mem.disp & MASK64
+            else:
+                continue
+            if addr in self.pcpu_src and i > 0:
+                ins.pcpu = True             # read: source operand
+            elif addr == self.preempt_count and i == 0 and cs.id in self._PLEVEL:
+                delta = self._PLEVEL[cs.id]
+                if cs.id in (X.X86_INS_ADD, X.X86_INS_SUB) and len(cs.operands) > 1 \
+                        and cs.operands[1].type == X.X86_OP_IMM and cs.operands[1].imm < 0:
+                    delta = -delta
+                ins.plevel = delta
+                ins.pdec = delta < 0
 
     @staticmethod
     def _condition_code(raw):
@@ -668,6 +729,433 @@ class Translator:
                 changed |= len(sites[dst]) != before
         return sites
 
+    # ---- per-CPU spans ----------------------------------------------------------
+    #
+    # The copy runs on the executor's CPU. Code that derives this CPU's
+    # identity (this_cpu_ptr() reads this_cpu_off, smp_processor_id() reads
+    # cpu_number) relies on it until it re-enables preemption or interrupts:
+    # it keeps the pointer or number in registers, and a local lock
+    # (local_trylock_t) marks its acquisition in this CPU's memory and is
+    # released through a pointer derived again. Any exit in between moves the
+    # rest of the region to another CPU: a handback to the origin's, or a
+    # published nested acquisition to another combiner's. The region then
+    # works on the executor's per-CPU data from that CPU, and a local lock
+    # is released on the wrong CPU and stays taken on the executor's for
+    # the rest of the boot (memcg's obj_stock on 57 of 64 CPUs after a
+    # delegated brk1 run, bench/results/kdclaude/appgrid-20261118-64cpu/).
+    #
+    # So an identity read whose region (to the matching preempt or IRQ
+    # re-enable, through calls) can exit becomes a frontier: the origin
+    # derives its own identity there. Callees inside a region are decoded
+    # whatever their depth, so learned regions do not exit through misses.
+    # Not exits: native helpers; nested lock acquisitions, which inside a
+    # region call the native lock function instead of its *_jit entry, so
+    # that a contended one waits here (kd_cpu.busy keeps the executor from
+    # publishing, kd_can_offer()) instead of continuing on another
+    # combiner; and spin-class releases, since whether one releases the
+    # root is only known at run time (kd_exec_one() counts a completion
+    # inside a region the section opened, done_in_region).
+
+    _SPIN_RELEASE_OPS = frozenset((1, 2, 3, 4))     # KD_OP_UNLOCK .. KD_OP_UNLOCK_BH
+    _FLOW = frozenset(("plain", "skip", "native_call", "jmp", "jcc", "jshort", "call", "ret"))
+    _SPAN_STEPS = 200000
+    _LEVEL_SAT = 4
+
+    def _ensure(self, addr, learned):
+        """The instruction at addr, decoding it now if needed (None: cannot)."""
+        ins = self.ins.get(addr)
+        if ins is None and len(self.ins) < self.cfg["max_insns"]:
+            ins, _succs = self._decode_one(addr, 0, learned)
+            if ins is not None:
+                self.ins[addr] = ins
+                if ins.plevel > 0:
+                    self._open_funcs.add(self.kv.func_of(addr))
+        return ins
+
+    def _callers(self, func, seen=None):
+        """Return addresses in this image of the calls that reach `func`,
+        directly or through sibling calls."""
+        seen = seen if seen is not None else set()
+        if func in seen:
+            return set()
+        seen.add(func)
+        out = {nxt for nxt, t in self.call_edges if self.kv.func_of(t) == func}
+        for a, b in self.tail_edges:
+            if b == func:
+                out |= self._callers(a, seen)
+        return out
+
+    def _span_exit(self, start, learned):
+        """Why the region begun at `start` may exit, or None if it cannot.
+
+        Levels count from the identity read. The walk is interprocedural
+        through summaries (_span_callee): a callee returns at the level it
+        was called at, so what a callee does for a region depends only on
+        the level it is entered at and on its depth. Whether a callee
+        releases the region is often decided by a result the walk does not
+        follow (a failed local_trylock() returns early); summing both
+        branches would leave regions open on paths that cannot run. This
+        only keeps more code inside a region. Inside a callee, a region
+        that closes does not end the walk (the callee may take it again and
+        return with it, as the slab sheaf helpers do), but exits and calls
+        are not followed while it is closed. In the read's own function a
+        close ends the path, and its return continues in its callers
+        (_span_return).
+
+        Exits found within "pcpu_near_depth" calls of the read make the
+        region a frontier; deeper ones are counted as far exits and left in
+        the copy, flagged KD_X_REGION.
+        """
+        return self._span_frame(start, 0, 0, learned, top=True)
+
+    def _span_callee(self, entry, level, depth, learned):
+        """Summary of a callee for a region: (why, far, addrs, nested)."""
+        key = (entry, min(level, 2), depth)
+        memo = self._span_memo
+        if key in memo:
+            return memo[key] or (None, 0, frozenset(), frozenset())   # recursion
+        memo[key] = None
+        saved = self._span_addrs, self._span_nested, self._span_far
+        self._span_addrs, self._span_nested, self._span_far = set(), set(), 0
+        why = self._span_frame(entry, level, depth, learned, top=False)
+        out = (why, self._span_far, frozenset(self._span_addrs), frozenset(self._span_nested))
+        self._span_addrs, self._span_nested, self._span_far = saved
+        memo[key] = out
+        return out
+
+    def _span_frame(self, start, level0, depth, learned, top):
+        """Walk one function frame from `start`. Returns a near exit's
+        reason or None; far exits, region addresses and nested lock calls
+        go to self._span_far, _span_addrs and _span_nested."""
+        near = self.cfg["pcpu_near_depth"]
+        seen = set()
+        work = [(start, level0)]
+
+        def push(addr, level):
+            if (addr, level) not in seen:
+                seen.add((addr, level))
+                work.append((addr, level))
+
+        def exit_(why):
+            if near is not None and depth > near:
+                self._span_far += 1
+                return None
+            return why
+
+        steps = 0
+        while work:
+            addr, level = work.pop()
+            steps += 1
+            if steps > self._SPAN_STEPS:
+                return "region too long"
+            ins = self._ensure(addr, learned)
+            if ins is None:
+                self._span_addrs.add(addr)      # its miss exit is in the region
+                why = exit_("undecodable code at %#x" % addr)
+                if why:
+                    return why
+                continue
+            if level < self._LEVEL_SAT:
+                # Above _LEVEL_SAT nesting the level saturates and stays
+                # (a loop that takes a region per pass, against a release
+                # the walk does not pair with it): the region stays open.
+                level = min(level + ins.plevel + self._lock_level(ins), self._LEVEL_SAT)
+            if level < 0 and top:
+                continue                # the region ends on this path
+            if level >= 0:
+                self._span_addrs.add(addr)
+            kind, nxt = ins.kind, addr + ins.size
+            if level < 0 and kind not in self._FLOW:
+                # Closed inside a callee: an exit here moves nothing (the
+                # origin takes the region again itself if the rest does).
+                continue
+            if ins.orig is not None:
+                self._span_nested.add(addr)
+            if ins.pdec:
+                # preempt_enable(): the decrement, then je/jne on reaching
+                # zero to preempt_schedule(). In the copy the count holds
+                # the executor's KD_EXEC_PIN (kd_exec_one()) and never
+                # reaches zero: only the other branch is taken.
+                j = self._ensure(nxt, learned)
+                if j is not None and j.kind == "jcc" and j.op in (4, 5):
+                    push(j.addr + j.size if j.op == 4 else j.target, level)
+                    continue
+            if kind in ("plain", "skip", "native_call") or \
+                    (kind == "unlock_call" and ins.op in self._SPIN_RELEASE_OPS):
+                push(nxt, level)
+            elif kind == "jmp":
+                push(ins.target, level)
+            elif kind in ("jcc", "jshort"):
+                taken = fall = level
+                if level > 0 and kind == "jcc":
+                    taken, fall = self._restore_skip(ins, level, learned)
+                push(ins.target, taken)
+                push(nxt, fall)
+            elif kind == "call" and (level < 0 or self._report_call(ins.target) or
+                                     self._resched_call(ins.target)):
+                # Closed (a callee's own region is its business), a report
+                # (_REPORT) or preempt_schedule() (_resched_call()).
+                push(nxt, level)
+            elif kind == "call":
+                why = self._span_call(ins.target, level, depth, learned)
+                if why:
+                    return why
+                push(nxt, level)
+            elif kind == "frontier" and (self._noreturn_call(ins) or self._trap(ins) == "bug"):
+                continue                # never comes back: nothing to move
+            elif kind == "frontier" and self._trap(ins) == "warn":
+                push(self._ud1_end(addr), level)            # WARN: see _REPORT
+            elif kind == "frontier" and self._call_target(ins) is not None and \
+                    (self._report_call(self._call_target(ins)) or
+                     self._resched_call(self._call_target(ins))):
+                push(nxt, level)
+            elif kind in ("ind_call", "ind_jmp") and not self.cfg["pcpu_ind_exits"]:
+                why = self._span_indirect(ins, level, depth, learned, push, exit_, top)
+                if why:
+                    return why
+            elif kind in ("ret", "native_tail") or \
+                    (kind == "unlock_tail" and ins.op in self._SPIN_RELEASE_OPS):
+                # A sibling call returns where a ret would.
+                if not top:
+                    continue            # back to the caller, at its level
+                why = self._span_return(addr, level, push)
+                if why:
+                    why = exit_(why)
+                    if why:
+                        return why
+            else:
+                why = exit_("%s at %#x" % (kind, addr))
+                if why:
+                    return why
+        return None
+
+    def _span_call(self, target, level, depth, learned):
+        """A direct call inside a region: merge the callee's summary."""
+        if depth + 1 > self.cfg["pcpu_walk_depth"]:
+            # Below the walk: a far part of the region. Its entry is marked
+            # so that a miss there carries KD_X_REGION.
+            self._span_addrs.add(target)
+            if self.cfg["pcpu_near_depth"] is None:
+                return "calls nested too deeply at %#x" % target
+            return None
+        why, far, addrs, nested = self._span_callee(target, level, depth + 1, learned)
+        self._span_far += far
+        self._span_addrs |= addrs
+        self._span_nested |= nested
+        if why:
+            names = self.kv.names(target)
+            why = "%s > %s" % (names[0] if names else "%#x" % target, why)
+        return why
+
+    # Frontier calls that do not return (the stack check's failure panics).
+    _NORETURN = frozenset(("__stack_chk_fail",))
+
+    # Reporting paths: printk and the UBSAN handlers run only when the
+    # kernel reports a problem, and walking into them (deep, recursive)
+    # would turn every region with a WARN or a UBSAN check into a frontier.
+    # The walk steps over these calls. Limit: a handback inside a report
+    # can still move the rest of a region to the origin's CPU.
+    _REPORT = ("_printk", "vprintk", "__warn_printk", "__ubsan_handle_", "__SCT__WARN_trap",
+               "bad_page", "add_taint", "refcount_warn_saturate", "kfence_report_error",
+               "slab_out_of_memory", "warn_alloc", "dump_stack")
+
+    _IRQ_RELEASE_OPS = frozenset((2, 3, 4))     # KD_OP_UNLOCK_IRQ, _IRQRESTORE, _BH
+
+    def _lock_level(self, ins):
+        """The region a lock call opens or closes inside the call: the
+        _irq, _irqsave and _bh acquisitions disable interrupts or softirqs,
+        and their releases enable them again (spin_unlock_irqrestore()
+        closes a local_irq_save() region the same way)."""
+        if ins.kind in ("unlock_call", "unlock_tail"):
+            return -1 if ins.op in self._IRQ_RELEASE_OPS else 0
+        if ins.kind not in ("native_call", "native_tail"):
+            return 0
+        # Native lock functions (raw spinlocks), or a nested lock call.
+        for n in self.kv.names(ins.orig if ins.orig is not None else ins.target):
+            if "lock" not in n:
+                continue
+            if n.endswith(("_unlock_irqrestore", "_unlock_irq", "_unlock_bh")):
+                return -1
+            if n.endswith(("_lock_irqsave", "_lock_irq", "_lock_bh")) and "trylock" not in n:
+                return 1
+        return 0
+
+    def _resched_call(self, target):
+        """preempt_enable() calls preempt_schedule() when the count reaches
+        zero, which in the copy it never does (KD_EXEC_PIN, kd_exec_one()):
+        such a call is not reached. The compiler often tests the zero flag
+        of the decrement later, through a register, so the call is
+        recognised by its target (the function, its thunks and the static
+        call trampolines of PREEMPT_DYNAMIC)."""
+        return any(n.startswith(("preempt_schedule", "__SCT__preempt_schedule"))
+                   for n in self.kv.names(target))
+
+    def _report_call(self, target):
+        return any(n.startswith(self._REPORT) for n in self.kv.names(target))
+
+    def _span_indirect(self, ins, level, depth, learned, push, exit_, top):
+        """Walk an indirect branch through its learned targets ("pcpu_ind_exits")."""
+        is_call = ins.kind == "ind_call"
+        nxt = ins.addr + ins.size
+        for target in learned.ind.get(ins.addr, ()):
+            cls, _ = self.classify(target)
+            if cls == "code" and is_call:
+                why = self._span_call(target, level, depth, learned)
+                if why:
+                    return why
+            elif cls == "code":
+                push(target, level)
+            elif cls == "native" and not is_call and top:
+                why = self._span_return(ins.addr, level, push)
+                if why and exit_(why):
+                    return why
+            elif cls not in ("native", "skip"):
+                why = exit_("%s through %s at %#x" % (cls, ins.kind, ins.addr))
+                if why:
+                    return why
+        if is_call:
+            push(nxt, level)            # an unknown target: a run-time exit
+        return None
+
+    @staticmethod
+    def _trap(ins):
+        """'warn' for the ud1 a WARN site is patched to (it reports and goes
+        on), 'bug' for ud2 (BUG: does not return), else None."""
+        raw = ins.raw
+        i = 0
+        while i < len(raw) and (raw[i] in _LEGACY_PREFIXES or 0x40 <= raw[i] <= 0x4F):
+            i += 1
+        if raw[i:i + 2] == b"\x0f\xb9":
+            return "warn"
+        if raw[i:i + 2] == b"\x0f\x0b":
+            return "bug"
+        return None
+
+    def _ud1_end(self, addr):
+        """End of the ud1 at addr. ud1 has a ModRM byte, which the decoder
+        leaves out (the kernel's WARN is 67 48 0f b9 3a)."""
+        raw = self.kv.read(addr, 16)
+        i = 0
+        while raw[i] in _LEGACY_PREFIXES or 0x40 <= raw[i] <= 0x4F:
+            i += 1
+        i += 2                      # 0f b9
+        modrm = raw[i]
+        i += 1
+        mod, rm = modrm >> 6, modrm & 7
+        if mod != 3 and rm == 4:    # SIB
+            sib = raw[i]
+            i += 1
+            if mod == 0 and (sib & 7) == 5:
+                i += 4
+        if mod == 1:
+            i += 1
+        elif mod == 2 or (mod == 0 and rm == 5):
+            i += 4
+        return addr + i
+
+    @staticmethod
+    def _call_target(ins):
+        """Target of a direct call rel32, or None."""
+        if ins.raw[:1] != b"\xe8" or ins.size != 5:
+            return None
+        return (ins.addr + 5 + int.from_bytes(ins.raw[1:5], "little", signed=True)) & MASK64
+
+    def _noreturn_call(self, ins):
+        target = self._call_target(ins)
+        return target is not None and any(n in self._NORETURN for n in self.kv.names(target))
+
+    def _span_return(self, addr, level, push):
+        """The function containing `addr` returns with the region open (as
+        far as the walk knows). Returns why that is an exit, or None after
+        queueing where the walk goes on."""
+        func = self.kv.func_of(addr)
+        if func in self._open_funcs:
+            return None             # it opened the region: closed by now
+        if func == self._root_func:
+            # The site's own function. A sleepable-class section runs with
+            # preemption on: no region is open here, and the read did not
+            # rely on staying on this CPU. A spin-class section is one.
+            return None if self._sleepable else \
+                "region continues past the section at %#x" % addr
+        callers = self._callers(func)
+        if not callers:
+            return "region continues past the return at %#x" % addr
+        for nxt in callers:
+            push(nxt, level)
+        return None
+
+    def _is_sti(self, addr, learned):
+        ins = self._ensure(addr, learned)
+        return ins is not None and ins.raw == b"\xfb", ins
+
+    def _restore_skip(self, ins, level, learned):
+        """local_irq_restore() enables interrupts only if the saved flags
+        had them on: a branch around sti. The path that skips it leaves
+        the region as well (levels for the taken and fall-through paths)."""
+        nxt = ins.addr + ins.size
+        sti, s_ins = self._is_sti(nxt, learned)
+        if sti and ins.target == nxt + 1:
+            return level - 1, level           # jcc over the sti that follows
+        sti, s_ins = self._is_sti(ins.target, learned)
+        if sti:
+            back = self._ensure(ins.target + 1, learned)
+            if back is not None and back.kind == "jmp" and back.target == nxt:
+                return level, level - 1       # sti out of line, then back
+        return level, level
+
+    def _pcpu_spans(self, learned):
+        """Turn identity reads whose region may exit into frontiers, and
+        make the nested lock calls of the other regions wait in place."""
+        out = []
+        done = set()
+        self.region_addrs = set()       # instructions inside walked regions
+        self.pcpu_far = 0               # far exits left in the copy (KD_X_REGION)
+        self._open_funcs = {self.kv.func_of(a) for a, ins in self.ins.items() if ins.plevel > 0}
+        self._root_func = self.kv.func_of(self.site)
+        raw = self.kv.read(self.site - 5, 5)
+        callee = (self.site + int.from_bytes(raw[1:], "little", signed=True)) & MASK64
+        self._sleepable = raw[0] == 0xE8 and \
+            self.info.syms.get(callee, (0,))[0] == KD_SYM_ACQUIRE
+        # A new frontier is an exit for the regions that contain it, and a
+        # walk decodes callees that can hold identity reads of their own:
+        # repeat until no region changes and no new read turned up.
+        changed = True
+        walked = set()
+        while changed:
+            changed = False
+            nested, regions, far = set(), set(), 0
+            self._span_memo = {}        # callee summaries; frontiers changed
+            reads = sorted(a for a, ins in self.ins.items() if ins.pcpu)
+            walked |= set(reads)
+            for addr in reads:
+                if addr in done:
+                    continue
+                self._span_nested = set()
+                self._span_addrs = set()
+                self._span_far = 0
+                why = self._span_exit(addr, learned)
+                if why:
+                    ins = self.ins[addr]
+                    ins.kind = "frontier"
+                    ins.falls = False
+                    out.append((addr, why))
+                    done.add(addr)
+                    changed = True
+                    continue
+                nested |= self._span_nested
+                regions |= self._span_addrs
+                far += self._span_far
+            if any(ins.pcpu and a not in walked for a, ins in self.ins.items()):
+                changed = True
+        for a in nested:
+            ins = self.ins[a]
+            ins.target = ins.orig
+            ins.orig = None
+        self.region_addrs = regions
+        self.pcpu_starts = done
+        self.pcpu_far = far
+        return out
+
     # ---- emission -------------------------------------------------------------
 
     def _ref(self, addr):
@@ -705,6 +1193,10 @@ class Translator:
         """
         info = self.info
         target = info.jit_exit_cl if compact and info.jit_exit_cl else info.jit_exit
+        if ip in self.region_addrs and ip not in self.pcpu_starts:
+            # A region start that became a frontier hands back before its
+            # own region: not flagged (its own increment raises the count).
+            code |= KD_X_REGION         # see _pcpu_spans(), hb_region
         if aux is not None:
             # mov qword gs:[aux], simm32
             self.asm.raw(b"\x65\x48\xc7" + _gs_abs_modrm(info.pcpu_aux) + _simm32(aux), cold)
@@ -907,7 +1399,9 @@ class Translator:
         known.
         """
         learned = learned or Learned()
+        self.site = site
         self._decode(site, learned)
+        self.pcpu_frontiers = self._pcpu_spans(learned)
         self.ret_sites = self._return_sites(learned)
         self.asm = Asm()
         self.missing = set()
@@ -930,7 +1424,9 @@ class Translator:
             self.asm.label("miss_%x" % addr, cold=True)
             self._exit(KD_X_MISS_CODE, addr, cold=True)
 
-        return Image(site, self.asm, len(self.ins))
+        image = Image(site, self.asm, len(self.ins))
+        image.pcpu_frontiers = self.pcpu_frontiers
+        return image
 
 
 class Image:

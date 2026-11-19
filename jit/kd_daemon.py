@@ -229,6 +229,10 @@ class Daemon:
         if self.args.verbose:
             print("site %#x: %d instructions, %d bytes at %#x" %
                   (site, image.insns, len(text), base))
+            # Per-CPU regions the origin runs (translator _pcpu_spans()).
+            for addr, why in image.pcpu_frontiers:
+                print("site %#x: per-CPU frontier at %s: %s" %
+                      (site, self._where(addr), why))
 
     def run(self):
         if self.args.enable:

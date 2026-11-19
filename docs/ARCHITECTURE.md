@@ -584,6 +584,17 @@ publishes the continuation it is running.
 * A handback from an inner executor propagates outwards through the node
   states: each level either keeps its lock (its root was already released) or
   passes it to W, and W resumes natively exactly once.
+* When C_A continues W's section in generated code after case 1, a later
+  exit of that section on C_A is judged on its own: the verdict C_B left
+  (`stop`) decides only if C_A's level ends on it. Keeping it as C_A's
+  verdict made a later handback look completed: a kept downgrade was not
+  done, so W went on as a reader of an mmap lock that C_A still held for
+  writing, and W's read release left the writer bit set (Apache's exiting
+  workers then waited forever; fixed 2026-11-19, results README
+  `appgrid-20261118-64cpu` section 8).
+* Inside a per-CPU region the translator calls the native lock function
+  instead of the `_jit` entry, so a contended inner lock is waited for on
+  C_A ([TRANSLATOR.md](TRANSLATOR.md) section 3a).
 
 Bounds: `KD_MAX_ROOTS` = 4 session locks per continuation, `KD_MAX_DEPTH` = 3
 open sessions per CPU. Beyond them the inner lock is only waited for (no
@@ -658,7 +669,10 @@ See also [DIFFERENCES.md](DIFFERENCES.md).
    while it has preemption disabled beyond its locks (counted as
    `handback_pinned`), the origin continues on a different CPU than the code
    before the exit ran on. The preempt count is transferred; per-CPU pointers
-   already taken are not.
+   already taken are not. The translator makes an identity read a frontier
+   when its region can exit in its own function and walks the rest
+   ([TRANSLATOR.md](TRANSLATOR.md) section 3a); exits it leaves deeper in a
+   region are counted when taken with the region open (`hb_region`).
 3. **Flags across call/ret.** Return and indirect-branch dispatch clobber
    flags; the System V rule that flags are dead there is assumed.
 4. **Text patching.** Images are built from live text. Later jump-label,
