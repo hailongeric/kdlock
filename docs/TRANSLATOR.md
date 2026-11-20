@@ -234,6 +234,23 @@ its `acquired` byte set on 57 of 64 CPUs for the rest of the boot
   `hb_region` shows whether any was taken; runs report it with the
   per-CPU lock bytes (`pcpu_check.sh`).
 
+### Which per-CPU data a section can touch
+
+Only three `%gs` accesses are redirected to the origin (section 2); the
+region analysis follows CPU identity and the preempt count; every other
+per-CPU access is the executor's. To see what "every other" is for the
+sites in use, `kd_daemon.py --gs-report FILE` appends one JSON line per
+image built (`Translator.gs_report()`): each per-CPU symbol the image
+accesses, its class (`origin`, `cpu`, `executor`, or `pointer` for `%gs`
+with a register), the reading and writing instructions and their
+functions. `jit/gs_summary.py FILE [--site NAME] [--all]` tabulates it. An
+`executor` symbol whose value belongs to the task and not to the CPU would
+be a defect of the redirection; the sites of the fork and exit paths
+(`copy_process`, `release_task`, the anon_vma and `i_mmap` sites) were
+read through on 2026-11-20 and have none (counters, softirq and preempt
+state, NUMA node, slab and page allocator caches, `int_active_memcg`).
+The list is static: it includes code the section never reaches.
+
 ## 4. Learning loop (daemon)
 
 ```

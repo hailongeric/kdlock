@@ -50,7 +50,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from kdjit.kernel import (Device, KernelView, KD_EV_MISS_CODE, KD_EV_MISS_IND,  # noqa: E402
                           KD_EV_MISS_RET, KD_EV_REQUEST, KD_EV_SITE_OFF, KD_EV_TEXT_GONE,
-                          KD_EV_HANDBACK)
+                          KD_EV_HANDBACK, KD_X_UNLOCK)
 from kdjit.translator import Learned, TranslationError, Translator  # noqa: E402
 
 
@@ -161,7 +161,12 @@ class Daemon:
             return
         if kind == KD_EV_HANDBACK:
             if self.args.verbose:
-                print("site %#x: handback at %s, exit %#x" % (site, self._where(ip), target))
+                # An exit of kind "unlock" is no handback: the section
+                # completed, with the preempt count or IRQ-off still raised
+                # by its own code (done_in_region).
+                what = "completed inside a region at" if target & 0xff == KD_X_UNLOCK \
+                    else "handback at"
+                print("site %#x: %s %s, exit %#x" % (site, what, self._where(ip), target))
             return
         if site in self.failed:
             return
@@ -233,6 +238,13 @@ class Daemon:
             for addr, why in image.pcpu_frontiers:
                 print("site %#x: per-CPU frontier at %s: %s" %
                       (site, self._where(addr), why))
+        if self.args.gs_report:
+            # What per-CPU data the image can touch (Translator.gs_report()),
+            # one JSON line per build; the last line of a site is its image.
+            with open(self.args.gs_report, "a") as f:
+                f.write(json.dumps({"site": "%#x" % site, "where": self._where(site),
+                                    "insns": image.insns,
+                                    "gs": self.translator.gs_report()}) + "\n")
 
     def run(self):
         if self.args.enable:
@@ -252,6 +264,12 @@ class Daemon:
                     del self.dirty[site]
                     if site in self.sites and site not in self.failed:
                         self.publish(site, gen)
+                    # A build takes seconds and a start republishes every
+                    # known site: read the ring in between, or the reports
+                    # of the images just loaded are overwritten unread (it
+                    # holds 4096 events) and their budgets are spent.
+                    for event in self.dev.events():
+                        self.handle(event)
                 self._save_state()
             if not events:
                 time.sleep(self.args.poll)
@@ -278,6 +296,10 @@ def main():
     ap.add_argument("--no-enable", dest="enable", action="store_false",
                     help="do not switch delegation on at start / off at exit")
     ap.add_argument("-v", "--verbose", action="store_true")
+    ap.add_argument("--gs-report", help="append to this file, per image built, the "
+                    "per-CPU (%%gs) data it can touch: symbol, class (origin: redirected "
+                    "to the origin; cpu: identity and preempt count; executor: the "
+                    "executor's copy; pointer: computed), reads, writes, functions")
     args = ap.parse_args()
 
     if args.state:

@@ -404,37 +404,34 @@ and per lock user as below; the counts are rate-limited request events).
   list, but its sections copy user memory and are handed back there
   (`copy_folio_from_iter_atomic`); the site account switches it off.
 
-### 6.4 Open: SIGSYS in stress-ng seccomp with the daemon
+### 6.4 SIGSYS in stress-ng seccomp: the stressor's own race, on every kernel
 
 The delegated pass logged one "potentially unexpected fatal signal 31" of a
-stress-ng seccomp child, at `getpid` (`data/seccomp-on-sigsys.txt`).
-Repeated, 64 instances for 6 s per run:
+stress-ng seccomp child, at `getpid` (`data/seccomp-on-sigsys.txt`), and
+repeated runs seemed to show it only with the daemon: 6 in 75 runs of 6 s
+against none in 41 without it or native (`secc_check.sh`, `secc_bisect.sh`,
+`secc_off.sh`, `secc_native.sh`, `secc_trace.sh`). It is not a failure of
+delegation:
 
-| setup | runs | runs with a SIGSYS kill logged |
-|---|---|---|
-| kdall21, daemon, lists api torture mm lkp (the passes; `secc_check.sh`) | 27 | 3 |
-| kdall21, daemon, the same lists without the four `sighand->siglock` users (`secc_bisect.sh` A) | 24 | 1 |
-| kdall21, daemon, only those four (`secc_bisect.sh` B) | 24 | 2 |
-| kdall21, daemon, only those four, with `perf record` on failed system calls (`secc_trace.sh`) | 40 | 0 |
-| kdall21, no daemon (`secc_off.sh` and the off passes) | 30 | 0 |
-| kdnat18, 6 s (the passes and `secc_native.sh`) | 5 | 0 |
-| kdnat18, 12 s and 20 s (two and three times the iterations) | 6 | 0 |
+- **It happens at the instant a run ends** (`secc_time.sh`,
+  `data/seccomp-run-end.txt`: 6.153 s after the start of a 6 s run, 7 ms
+  before stress-ng returned). The killed task runs on the alternate signal
+  stack (its `rsp` is in an mmap area): it is inside a signal handler, the
+  one for stress-ng's stop signal, which calls `getpid()`; a child that has
+  already installed its filter is killed there.
+- **Counted per run end, the rate is the same everywhere**
+  (`secc_ends.sh`, 150 runs of 1 s each): kdnat19, the native kernel, 2;
+  kdall21 without the daemon 2 and 2; kdall21 with the daemon 3. The 41
+  runs without the daemon had been too few to see a 1-2% event.
+- In a run with the kill the handback and region counters did not move
+  (`secc_gs.sh`: 36 runs, `hb_region`, `done_in_region` and every handback
+  kind 0 throughout), and no child of the stressor started life with a
+  filter (`secc_probe.sh`: a probe at `wake_up_new_task()` on
+  `task->seccomp.mode`, 40 runs).
 
-Six in 75 untraced runs with the daemon against none in 41 without. It is
-treated as a possible correctness failure of delegation until understood.
-What is known:
-
-- The stressor's child installs a SIGSYS handler and then a filter that
-  traps what it does not allow; a trapped call ends in the handler and
-  `_exit`, which is not logged. A logged kill needs SIGSYS blocked or at
-  its default action, or a filter that kills. The stressor calls `getpid`
-  after the filter only in its message functions, i.e. on an error path.
-- It is not a matter of more iterations in the same time (the random
-  sequence is fixed by `--no-rand-seed`): native runs of twice and three
-  times the length show none.
-- It does not follow one half of the allow list.
-- With every failed system call recorded it did not occur in 40 runs, so
-  the failing call is not known.
+The split of the allow list (`secc_bisect.sh`) meant less than it seemed
+for a second reason: images stay loaded when a daemon exits, so its
+variant B ran with the images of variant A as well.
 
 ### 6.5 Open: learning and short points
 
@@ -565,7 +562,8 @@ the cases are not looked at).
 
 ## 8. Open after this round
 
-1. SIGSYS in stress-ng seccomp with the daemon (6.4).
+1. (Closed: the SIGSYS in stress-ng seccomp is the stressor's own race at
+   the end of a run and occurs on the native kernel at the same rate, 6.4.)
 2. Learning: a miss counts against its site like any handback, so a site
    that is still being learned is switched off after 256 sections and
    tried again after 1-4 s; mmap1 needs more than a minute of contended

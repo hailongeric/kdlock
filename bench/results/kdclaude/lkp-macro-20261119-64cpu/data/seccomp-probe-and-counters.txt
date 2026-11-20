@@ -1,0 +1,45 @@
+on: 40 runs, SIGSYS logged 1, delegated 11590781
+new tasks with a seccomp mode set at their first wakeup, by the forking task's name:
+      1 systemd-journal
+PID: 66459 PID: 2852746 
+SECC_PROBE_DONE
+run 1 SIGSYS 0 | delegated+286078
+run 2 SIGSYS 0 | delegated+310784
+run 3 SIGSYS 0 | delegated+291865
+run 4 SIGSYS 0 | delegated+313842
+run 5 SIGSYS 0 | delegated+276269
+run 6 SIGSYS 0 | delegated+310034
+run 7 SIGSYS 0 | delegated+304013
+run 8 SIGSYS 0 | delegated+295132
+run 9 SIGSYS 0 | delegated+300011
+run 10 SIGSYS 0 | delegated+296542
+run 11 SIGSYS 0 | delegated+303663
+run 12 SIGSYS 0 | delegated+317409
+run 13 SIGSYS 0 | delegated+320803
+run 14 SIGSYS 0 | delegated+306331
+run 15 SIGSYS 0 | delegated+304696
+run 16 SIGSYS 0 | delegated+314634
+run 17 SIGSYS 0 | delegated+291282
+run 18 SIGSYS 0 | delegated+308302
+run 19 SIGSYS 0 | delegated+310924
+run 20 SIGSYS 0 | delegated+290575
+run 21 SIGSYS 0 | delegated+275075
+run 22 SIGSYS 0 | delegated+305450
+run 23 SIGSYS 0 | delegated+308407
+run 24 SIGSYS 0 | delegated+302142
+run 25 SIGSYS 0 | delegated+281439
+run 26 SIGSYS 0 | delegated+296291
+run 27 SIGSYS 0 | delegated+308352
+run 28 SIGSYS 0 | delegated+304471
+run 29 SIGSYS 0 | delegated+287046
+run 30 SIGSYS 0 | delegated+312312
+run 31 SIGSYS 0 | delegated+297264
+run 32 SIGSYS 0 | delegated+297270
+run 33 SIGSYS 0 | delegated+301084
+run 34 SIGSYS 1 | delegated+285546
+run 35 SIGSYS 0 | delegated+317070
+run 36 SIGSYS 0 | delegated+318905
+grep: /root/lkpres/gs-secc.jsonl: No such file or directory
+       2  0xffffffff817f98c9 free_pcppages_bulk+0x39
+       1  0xffffffff817eab95 alloc_vmap_area+0x8b5
+       1  0xffffffff8175032d folio_wake_bit+0x5d

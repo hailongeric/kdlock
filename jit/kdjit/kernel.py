@@ -178,6 +178,7 @@ class KernelView:
         self.names_at = {}      # addr -> [names]
         self.addr_of = {}       # name -> first addr (unique names only matter)
         text = set()
+        data = {}               # addr -> name of a data symbol (data_sym())
         with open(self.kallsyms) as f:
             for line in f:
                 parts = line.split()
@@ -190,9 +191,13 @@ class KernelView:
                 if kind in "tTwW":
                     self.names_at.setdefault(addr, []).append(name)
                     text.add(addr)
+                elif kind in "dDbBrRvV":
+                    data.setdefault(addr, name)
         if not text:
             raise RuntimeError("no kernel symbols; run as root with kptr_restrict=0")
         self.text_syms = sorted(text)
+        self.data_addrs = sorted(data)
+        self.data_names = data
 
     def read(self, addr, length):
         out = bytearray()
@@ -267,6 +272,15 @@ class KernelView:
 
     def names(self, addr):
         return self.names_at.get(addr, ())
+
+    def data_sym(self, addr):
+        """"name" or "name+0xoff" of the data symbol at or below addr (the
+        per-CPU variables are data symbols), or the address in hex."""
+        i = bisect.bisect_right(self.data_addrs, addr) - 1
+        if i < 0 or addr - self.data_addrs[i] > 0x4000:
+            return "%#x" % addr
+        base = self.data_addrs[i]
+        return self.data_names[base] + ("+%#x" % (addr - base) if addr != base else "")
 
     def _region(self, addr):
         for region in self.regions:

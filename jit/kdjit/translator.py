@@ -577,6 +577,15 @@ class Translator:
             elif mem.base == 0 and mem.index == 0:
                 addr = mem.disp & MASK64
             else:
+                addr = None         # %gs:(reg): a per-CPU pointer computed at run time
+            # Every %gs access of the image, for gs_report(): which per-CPU
+            # data a section can touch. Only the three identity variables
+            # are redirected to the origin (self.subst); all the rest is the
+            # executor's.
+            ref = self.gs_refs.setdefault(addr, [0, 0, set()])
+            ref[1 if op.access & capstone.CS_AC_WRITE else 0] += 1
+            ref[2].add(self.kv.func_of(cs.address))
+            if addr is None:
                 continue
             if addr in self.pcpu_src and i > 0:
                 ins.pcpu = True             # read: source operand
@@ -674,8 +683,30 @@ class Translator:
         if a != b:
             self.tail_edges.add((a, b))
 
+    def gs_report(self):
+        """The per-CPU data the last image can touch: a list of (symbol,
+        class, reads, writes, functions). Class "origin": redirected to the
+        origin's value; "cpu": CPU identity or the preempt count, which the
+        region analysis follows; "executor": everything else, the
+        executor's own copy; "pointer": %gs with a register, a per-CPU
+        pointer computed at run time."""
+        out = []
+        for addr, (rd, wr, funcs) in self.gs_refs.items():
+            if addr is None:
+                name, cls = "(computed)", "pointer"
+            else:
+                name = self.kv.data_sym(addr)
+                cls = ("origin" if addr in self.subst else
+                       "cpu" if addr in self.pcpu_src or addr == self.preempt_count else
+                       "executor")
+            fn = sorted((self.kv.names(f) or ("%#x" % (f or 0),))[0] for f in funcs)
+            out.append((name, cls, rd, wr, fn))
+        out.sort(key=lambda t: (t[1], t[0]))
+        return out
+
     def _decode(self, site, learned):
         self.ins = {}
+        self.gs_refs = {}           # address or None -> [reads, writes, functions]
         # Per build: the view is synchronised before each one.
         self.sched_sites = set()
         for name in self.cfg["frontier_static_call"]:
