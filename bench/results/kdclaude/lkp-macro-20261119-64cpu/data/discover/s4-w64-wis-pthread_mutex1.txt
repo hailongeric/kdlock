@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    3315  0xffffffff81575230 futex_wake+0xf0
+    2113  0xffffffff81570adc futex_q_lock+0x1c
+       1  0xffffffff81570bc5 futex_unqueue+0x25

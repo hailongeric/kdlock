@@ -87,8 +87,13 @@ point() {
 		pf=$O/prof/$TAG-$MODE-$id.txt
 		( "$@" > $O/tmp/out 2>&1 ) &
 		local p=$!
-		sleep $((DUR / 3 + 1))
-		{ perf stat -a -e context-switches,cpu-migrations -- sleep 2 2>&1 | grep -E "context|migr"
+		# The counters (2 s) and the profile (3 s) have to lie inside the
+		# run: with points shorter than 9 s they start after 1 s and the
+		# counters take 1 s (DUR must be 6 or more).
+		local w=$((DUR / 3 + 1)) cs=2
+		[ $DUR -lt 9 ] && { w=1; cs=1; }
+		sleep $w
+		{ perf stat -a -e context-switches,cpu-migrations -- sleep $cs 2>&1 | grep -E "context|migr"
 		  perf record -a -F 499 -o $O/tmp/p.data -- sleep 3 > /dev/null 2>&1
 		  perf report -i $O/tmp/p.data --sort sym --stdio 2>/dev/null | grep -E "^# Samples|^[^#]" | grep . | head -41
 		} > $pf
@@ -405,7 +410,9 @@ dbnx() {	# dbnx FS N
 g_fsx() {
 	local f t n
 	for f in ${FSX:-ext4 xfs btrfs}; do
-		for t in disk_cp disk_rr disk_rw disk_src creat-clo sync_disk_rw disk_rd; do
+		# FSX_AIM selects the AIM7 workfiles ("-": none).
+		for t in ${FSX_AIM:-disk_cp disk_rr disk_rw disk_src creat-clo sync_disk_rw disk_rd}; do
+			[ $t = - ] && continue
 			for n in $NS; do point aim7-$f-$t $n jobs/min aimx $f $t $(aim_load $f $t $n); done
 		done
 		for n in $NS; do point fsmark-$f-nosync $n files/s fsmx $f 0 $n; done

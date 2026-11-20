@@ -1,0 +1,9 @@
+refused 8 sites outside the allow list:
+       2  0xffffffff818e0305 fget_task_next+0x35
+       2  0xffffffff818f6338 find_positive_dentry+0x28
+       1  0xffffffff8199e6d6 get_proc_task_net+0x36
+       1  0xffffffff818d7c52 d_alloc_parallel+0x82
+       1  0xffffffff818d5b71 __dentry_kill+0xb1
+       1  0xffffffff8143dc22 ptrace_may_access+0x22
+       1  0xffffffff81427afc mm_access+0x5c
+       1  0xffffffff818d80aa __d_lookup+0x6a

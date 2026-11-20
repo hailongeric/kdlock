@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    1039  0xffffffff81570adc futex_q_lock+0x1c
+     898  0xffffffff81575230 futex_wake+0xf0
+       8  0xffffffff81786731 shmem_file_write_iter+0x31

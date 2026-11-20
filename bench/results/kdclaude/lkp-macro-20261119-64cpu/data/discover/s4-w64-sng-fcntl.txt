@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+    1106  0xffffffff8195c1f5 posix_lock_inode+0xa5
+     248  0xffffffff8195b001 posix_test_lock+0x61
+      21  0xffffffff818a75c8 do_truncate+0x88
+       1  0xffffffff818ca0ae filename_rmdir+0x17e
+       1  0xffffffff817e4d0d unlink_anon_vmas+0x5d

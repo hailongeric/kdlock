@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    1020  0xffffffff818da441 inode_sb_list_add+0x21
+    1012  0xffffffff818dc12c evict+0x7c
+       1  0xffffffff817e48ed __put_anon_vma+0x8d

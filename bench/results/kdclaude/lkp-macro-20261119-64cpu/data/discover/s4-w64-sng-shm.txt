@@ -1,0 +1,12 @@
+refused 11 sites outside the allow list:
+    3010  0xffffffff8197cdf3 dquot_add_space+0x33
+      16  0xffffffff8197d1de __dquot_free_space+0xfe
+       7  0xffffffff817e4d0d unlink_anon_vmas+0x5d
+       7  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64
+       6  0xffffffff8197d94b dquot_add_inodes+0x2b
+       6  0xffffffff8197cbfc dquot_free_inode+0xec
+       2  0xffffffff817e4c40 anon_vma_fork+0x150
+       2  0xffffffff817e0eb9 anon_vma_clone+0xd9
+       1  0xffffffff817f98c9 free_pcppages_bulk+0x39
+       1  0xffffffff818ca3d0 filename_unlinkat+0x180
+       1  0xffffffff818c8b39 path_openat+0xc69

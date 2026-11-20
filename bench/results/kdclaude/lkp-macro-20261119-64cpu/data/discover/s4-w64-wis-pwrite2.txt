@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    1696  0xffffffff81786731 shmem_file_write_iter+0x31
+       1  0xffffffff8143223c do_exit+0x31c
+       1  0xffffffff81430bc3 release_task+0x93

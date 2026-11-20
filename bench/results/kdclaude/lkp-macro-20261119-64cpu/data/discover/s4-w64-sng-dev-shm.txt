@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    2212  0xffffffff8197cdf3 dquot_add_space+0x33
+      28  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffff817ff403 __rmqueue_pcplist+0x283
+       1  0xffffffff81801fd4 get_page_from_freelist+0x4e4

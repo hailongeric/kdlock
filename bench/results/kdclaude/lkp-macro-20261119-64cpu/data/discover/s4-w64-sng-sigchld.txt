@@ -1,0 +1,14 @@
+refused 13 sites outside the allow list:
+    1095  0xffffffff817e4c40 anon_vma_fork+0x150
+    1041  0xffffffff817e0eb9 anon_vma_clone+0xd9
+     976  0xffffffff817e4d0d unlink_anon_vmas+0x5d
+     368  0xffffffff817d452e dup_mmap+0x32e
+      84  0xffffffff817e48ed __put_anon_vma+0x8d
+      54  0xffffffff8143223c do_exit+0x31c
+      52  0xffffffff81429349 copy_process+0x1519
+      49  0xffffffff81430bc3 release_task+0x93
+      48  0xffffffff817f3f5c unlink_file_vma_batch_add+0x5c
+      36  0xffffffff8179f749 pcpu_alloc_noprof+0x569
+      22  0xffffffff817d3ad5 exit_mmap+0x165
+      16  0xffffffff817f4072 unlink_file_vma_batch_final+0x42
+       1  0xffffffff8179ee14 free_percpu+0x84

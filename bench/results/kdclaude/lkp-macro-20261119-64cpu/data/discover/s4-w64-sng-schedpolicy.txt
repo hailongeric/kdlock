@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+     591  0xffffffff8159dc65 cpuset_lock+0x15

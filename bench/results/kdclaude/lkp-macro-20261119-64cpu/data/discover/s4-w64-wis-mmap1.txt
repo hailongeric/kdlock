@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+     731  0xffffffff81791ab7 vm_mmap_pgoff+0xe7
+     728  0xffffffff817f58f8 __vm_munmap+0x88
+       1  0xffffffff8143223c do_exit+0x31c
+       1  0xffffffff81430bc3 release_task+0x93

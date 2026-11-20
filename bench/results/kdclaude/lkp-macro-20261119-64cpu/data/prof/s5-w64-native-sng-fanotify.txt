@@ -1,0 +1,30 @@
+               480      context-switches                                                      
+                64      cpu-migrations                                                        
+# Samples: 31  of event 'cpu/cycles/P'
+     8.77%  [k] asm_sysvec_apic_timer_interrupt
+     7.67%  [k] refresh_cpu_vm_stats
+     6.72%  [k] sched_core_idle_cpu
+     5.61%  [k] do_syscall_64
+     5.53%  [k] __remove_hrtimer
+     5.53%  [k] _raw_spin_lock_irqsave
+     5.53%  [k] enqueue_timer
+     5.53%  [k] perf_swevent_start
+     5.53%  [k] pvclock_clocksource_read_nowd
+     5.53%  [k] tear_down_vmas
+     5.53%  [k] tick_check_oneshot_broadcast_this_cpu
+     5.53%  [k] tick_nohz_stop_tick
+     5.53%  [k] timer_base_try_to_set_idle
+     4.94%  [k] change_protection
+     1.97%  [k] _nohz_idle_balance.isra.0
+     1.96%  [k] psi_task_switch
+     1.95%  [k] enqueue_task_fair
+     1.81%  [k] tmigr_quick_check
+     1.79%  [k] __free_one_page
+     1.42%  [k] kfree
+     1.21%  [k] _find_next_bit
+     1.00%  [k] pick_next_task_fair
+     0.76%  [k] __run_timers
+     0.70%  [k] _raw_spin_lock
+     0.69%  [k] idle_cpu
+     0.68%  [k] lapic_next_deadline
+     0.63%  [k] free_pcppages_bulk

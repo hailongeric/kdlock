@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+      13  0xffffffff81817035 __slab_free+0x195

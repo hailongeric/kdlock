@@ -1,0 +1,31 @@
+               232      context-switches                                                      
+                64      cpu-migrations                                                        
+# Samples: 32  of event 'cpu/cycles/P'
+    10.07%  [k] irqentry_enter
+     7.27%  [.] 0x00000000001effa2
+     5.98%  [k] pv_native_safe_halt
+     5.41%  [k] asm_sysvec_reschedule_ipi
+     4.96%  [k] filemap_fault
+     4.25%  [k] __remove_hrtimer
+     4.25%  [k] __switch_to_asm
+     4.25%  [k] __vma_start_write
+     4.25%  [k] account_idle_ticks
+     4.25%  [k] collect_percpu_times
+     4.25%  [k] idle_cpu
+     4.25%  [k] memset
+     4.25%  [k] psi_task_change
+     4.25%  [k] smp_call_function_many_cond
+     4.25%  [k] timerqueue_add
+     4.07%  [k] perf_adjust_freq_unthr_context
+     3.81%  [k] kvfree_call_rcu
+     3.16%  [k] refresh_cpu_vm_stats
+     2.02%  [k] guarantee_active_cpus
+     1.74%  [k] irq_work_tick
+     1.36%  [k] psi_flags_change
+     1.25%  [k] cpu_util
+     1.20%  [k] dequeue_task
+     1.14%  [k] rb_insert_color
+     1.12%  [k] enqueue_hrtimer
+     1.03%  [k] pick_next_task_fair
+     0.96%  [k] update_rq_clock
+     0.90%  [k] kthread_is_per_cpu

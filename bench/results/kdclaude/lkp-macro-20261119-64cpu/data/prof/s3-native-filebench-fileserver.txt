@@ -1,0 +1,43 @@
+           1439732      context-switches                                                      
+             13200      cpu-migrations                                                        
+# Samples: 93K of event 'cpu/cycles/P'
+    76.70%  [k] native_queued_spin_lock_slowpath
+     2.37%  [k] _copy_to_iter
+     1.70%  [k] shmem_add_to_page_cache
+     1.51%  [k] copy_folio_from_iter_atomic
+     0.94%  [k] shmem_file_read_iter
+     0.77%  [.] filebench_log
+     0.52%  [k] _raw_spin_lock
+     0.47%  [k] __rcu_read_lock
+     0.43%  [k] futex_hash
+     0.31%  [.] pthread_mutex_unlock
+     0.29%  [.] pthread_mutex_lock
+     0.28%  [k] find_lock_entries
+     0.24%  [k] __rmqueue_pcplist
+     0.24%  [k] kernel_init_pages
+     0.23%  [.] fileset_entry_compare
+     0.22%  [k] try_grab_folio_fast
+     0.22%  [k] __d_lookup_rcu
+     0.22%  [k] filemap_get_entry
+     0.21%  [k] gup_fast_fallback
+     0.20%  [k] futex_wait_setup
+     0.19%  [k] pv_native_safe_halt
+     0.17%  [.] pkgCache::FindGrp(std::basic_string_view<char, std::char_traits<char> >)
+     0.17%  [k] free_pcppages_bulk
+     0.17%  [k] try_get_folio
+     0.15%  [k] pvclock_clocksource_read_nowd
+     0.15%  [.] 0x00000000000a08c5
+     0.15%  [k] futex_hash_put
+     0.15%  [k] asm_sysvec_call_function_single
+     0.15%  [k] x2apic_send_IPI
+     0.14%  [k] __futex_unqueue
+     0.14%  [k] __schedule
+     0.13%  [k] update_cfs_group
+     0.12%  [k] futex_wake_mark
+     0.12%  [k] futex_wake
+     0.12%  [k] enqueue_task_fair
+     0.12%  [k] do_syscall_64
+     0.12%  [k] switch_fpu_return
+     0.11%  [k] _raw_spin_lock_irqsave
+     0.11%  [k] futex_q_unlock
+     0.11%  [k] get_futex_key

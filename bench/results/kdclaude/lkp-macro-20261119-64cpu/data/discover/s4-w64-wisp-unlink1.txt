@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+     487  0xffffffff818ca3d0 filename_unlinkat+0x180
+     486  0xffffffff818c8b39 path_openat+0xc69
+       1  0xffffffff818dc12c evict+0x7c
+       1  0xffffffff81817035 __slab_free+0x195

@@ -1,0 +1,9 @@
+refused 8 sites outside the allow list:
+     911  0xffffffff81570adc futex_q_lock+0x1c
+     646  0xffffffff81575230 futex_wake+0xf0
+       8  0xffffffff818c8b39 path_openat+0xc69
+       5  0xffffffff818ca3d0 filename_unlinkat+0x180
+       1  0xffffffff8157bc20 acct_collect+0x60
+       1  0xffffffff815d9044 taskstats_exit+0x94
+       1  0xffffffff8143223c do_exit+0x31c
+       1  0xffffffff81430bc3 release_task+0x93

@@ -1,0 +1,3 @@
+refused 2 sites outside the allow list:
+    1929  0xffffffff818d6f1b dput.part.0+0xeb
+    1924  0xffffffff81c68a21 lockref_get_not_dead+0x61

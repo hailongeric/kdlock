@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+    2117  0xffffffff817d1df9 __do_sys_brk+0x69

@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+      12  0xffffffff81817035 __slab_free+0x195
+       4  0xffffffff818185ea __refill_objects_node+0xaa
+       1  0xffffffff818189e9 __refill_objects_node+0x4a9
+       1  0xffffffff81818e29 alloc_from_new_slab+0x169

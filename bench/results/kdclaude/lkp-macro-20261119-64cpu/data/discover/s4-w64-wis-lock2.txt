@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    7639  0xffffffff8195c1f5 posix_lock_inode+0xa5
+       1  0xffffffff8195e3a9 fcntl_setlk+0x3a9
+       1  0xffffffff815d9044 taskstats_exit+0x94
+       1  0xffffffff81430c2a release_task+0xfa

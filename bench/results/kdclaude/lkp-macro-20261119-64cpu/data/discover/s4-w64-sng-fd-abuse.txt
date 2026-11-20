@@ -1,0 +1,11 @@
+refused 10 sites outside the allow list:
+    1147  0xffffffff818dc12c evict+0x7c
+    1143  0xffffffff818da441 inode_sb_list_add+0x21
+      13  0xffffffff817867f3 shmem_file_llseek+0x43
+       7  0xffffffff81786731 shmem_file_write_iter+0x31
+       2  0xffffffff817f0046 vma_link_file+0x46
+       2  0xffffffff817f0593 vma_prepare+0x63
+       2  0xffffffff817e4d0d unlink_anon_vmas+0x5d
+       1  0xffffffff818d80aa __d_lookup+0x6a
+       1  0xffffffff817f4072 unlink_file_vma_batch_final+0x42
+       1  0xffffffff817f3f5c unlink_file_vma_batch_add+0x5c

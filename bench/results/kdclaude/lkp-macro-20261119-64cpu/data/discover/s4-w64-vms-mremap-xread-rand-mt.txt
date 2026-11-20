@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+   17526  0xffffffff8177251f __remove_mapping+0x5f
+    1835  0xffffffff8174fd41 __filemap_add_folio+0x181
+      52  0xffffffff81772529 __remove_mapping+0x69

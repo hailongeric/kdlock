@@ -1,0 +1,10 @@
+refused 9 sites outside the allow list:
+      45  0xffffffff8179ee14 free_percpu+0x84
+      30  0xffffffff8179f749 pcpu_alloc_noprof+0x569
+      18  0xffffffff818ea26c do_lock_mount.part.0+0x23c
+      18  0xffffffff818eab12 path_umount+0x112
+       6  0xffffffff8179f313 pcpu_alloc_noprof+0x133
+       1  0xffffffff818e3295 setup_mnt+0x55
+       1  0xffffffff818ea05c do_lock_mount.part.0+0x2c
+       1  0xffffffff8190759d propagate_mnt+0x9d
+       1  0xffffffff818e81d7 mntput_no_expire_slowpath+0x47

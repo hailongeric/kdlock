@@ -1,0 +1,17 @@
+refused 16 sites outside the allow list:
+     774  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64
+     239  0xffffffff8177277d lru_gen_rotate_memcg+0x3d
+     144  0xffffffff8188507f folio_lruvec_lock_irq+0x5f
+       8  0xffffffff8177251f __remove_mapping+0x5f
+       7  0xffffffff817e4d0d unlink_anon_vmas+0x5d
+       6  0xffffffff817f05ee vma_prepare+0xbe
+       5  0xffffffff817a8d79 compact_lock_irqsave.isra.0+0x39
+       4  0xffffffff817e0eb9 anon_vma_clone+0xd9
+       2  0xffffffff81817035 __slab_free+0x195
+       1  0xffffffff8177aed2 evict_folios+0xa2
+       1  0xffffffff817dbac3 page_vma_mapped_walk+0x653
+       1  0xffffffff8177bf5e try_to_inc_max_seq+0xde
+       1  0xffffffff81773dae inc_max_seq+0x3e
+       1  0xffffffff8177b476 evict_folios+0x646
+       1  0xffffffff8174fd41 __filemap_add_folio+0x181
+       1  0xffffffff81772529 __remove_mapping+0x69

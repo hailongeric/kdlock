@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+    3550  0xffffffff818e1ead file_close_fd+0x2d
+    3548  0xffffffff818e0aa9 alloc_fd+0x39
+      24  0xffffffff818dfb70 fd_install_slowpath+0x30
+       1  0xffffffff818c8b39 path_openat+0xc69
+       1  0xffffffff818ca3d0 filename_unlinkat+0x180

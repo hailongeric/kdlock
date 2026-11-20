@@ -1,0 +1,23 @@
+               260      context-switches                                                      
+                64      cpu-migrations                                                        
+# Samples: 22  of event 'cpu/cycles/P'
+     9.74%  [k] lapic_next_deadline
+     6.17%  [.] 0x000000000002c639
+     5.70%  [k] __rcu_read_unlock
+     5.70%  [k] __schedule
+     5.70%  [k] asm_sysvec_apic_timer_interrupt
+     5.70%  [k] clockevents_program_event
+     5.70%  [k] collect_percpu_times
+     5.70%  [k] get_random_u64
+     5.70%  [k] idle_cpu
+     5.70%  [k] perf_adjust_freq_unthr_context
+     5.70%  [k] perf_poll
+     5.70%  [k] start_dl_timer
+     5.70%  [k] uclamp_rq_inc_id
+     5.65%  [k] __sched_balance_update_blocked_averages
+     5.43%  [k] pv_native_safe_halt
+     3.45%  [k] _raw_spin_lock_irqsave
+     2.00%  [k] tsc_verify_tsc_adjust
+     1.87%  [k] __srcu_read_lock
+     1.65%  [k] strnlen
+     1.38%  [k] _raw_spin_lock_irq

@@ -1,0 +1,21 @@
+               256      context-switches                                                      
+                65      cpu-migrations                                                        
+# Samples: 20  of event 'cpu/cycles/P'
+    18.59%  [k] mod_memcg_lruvec_state
+     9.26%  [k] asm_exc_page_fault
+     7.79%  [k] _nohz_idle_balance.isra.0
+     6.37%  [k] filemap_get_entry
+     5.53%  [k] ct_kernel_enter_state
+     5.53%  [k] enqueue_task_fair
+     5.53%  [k] enter_lazy_tlb
+     5.53%  [k] folios_put_refs
+     5.53%  [k] lapic_next_deadline
+     5.53%  [k] psi_group_change
+     5.53%  [k] sched_balance_domains
+     5.53%  [k] smpboot_thread_fn
+     5.53%  [k] update_rq_clock
+     2.18%  [k] asm_sysvec_call_function_single
+     2.03%  [k] tick_check_oneshot_broadcast_this_cpu
+     1.39%  [k] free_pcppages_bulk
+     1.37%  [k] mt_destroy_walk.isra.0
+     1.21%  [k] __schedule

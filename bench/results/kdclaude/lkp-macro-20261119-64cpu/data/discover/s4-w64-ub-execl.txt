@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+    1582  0xffffffff817f0593 vma_prepare+0x63
+    1208  0xffffffff817f0046 vma_link_file+0x46
+    1089  0xffffffff817f4072 unlink_file_vma_batch_final+0x42
+     185  0xffffffff817f3f5c unlink_file_vma_batch_add+0x5c
+      18  0xffffffff8179f749 pcpu_alloc_noprof+0x569

@@ -1,0 +1,7 @@
+refused 6 sites outside the allow list:
+   19880  0xffffffff8177251f __remove_mapping+0x5f
+    2613  0xffffffff8174fd41 __filemap_add_folio+0x181
+      95  0xffffffff81772529 __remove_mapping+0x69
+       4  0xffffffff8185b412 __folio_migrate_mapping+0x172
+       1  0xffffffff81791ab7 vm_mmap_pgoff+0xe7
+       1  0xffffffff817f58f8 __vm_munmap+0x88

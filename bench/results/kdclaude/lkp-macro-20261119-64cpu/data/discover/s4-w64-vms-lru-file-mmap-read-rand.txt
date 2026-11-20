@@ -1,0 +1,13 @@
+refused 12 sites outside the allow list:
+    1064  0xffffffff817b07d7 __list_lru_walk_one+0xb7
+     455  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64
+     298  0xffffffff8177b476 evict_folios+0x646
+     259  0xffffffff8177aed2 evict_folios+0xa2
+      66  0xffffffff8177251f __remove_mapping+0x5f
+      39  0xffffffff817b021e list_lru_add+0x8e
+      18  0xffffffff817ff403 __rmqueue_pcplist+0x283
+       3  0xffffffff817f98c9 free_pcppages_bulk+0x39
+       1  0xffffffff817f0046 vma_link_file+0x46
+       1  0xffffffff817aff9b list_lru_del+0x8b
+       1  0xffffffff81801fd4 get_page_from_freelist+0x4e4
+       1  0xffffffff8177277d lru_gen_rotate_memcg+0x3d

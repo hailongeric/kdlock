@@ -1,0 +1,29 @@
+             31599      context-switches                                                      
+               310      cpu-migrations                                                        
+# Samples: 30  of event 'cpu/cycles/P'
+     8.31%  [k] lapic_next_deadline
+     7.07%  [.] 0x00000000000fe357
+     6.05%  [k] _nohz_idle_balance.isra.0
+     5.99%  [.] 0x0000000000010e05
+     5.31%  [k] smp_call_function_many_cond
+     4.16%  [k] __free_one_page
+     4.16%  [k] __hrtimer_run_queues
+     4.16%  [.] affinity__set
+     4.16%  [k] asm_sysvec_call_function
+     4.16%  [k] dl_server_start
+     4.16%  [k] nr_iowait_cpu
+     4.16%  [k] pvclock_clocksource_read_nowd
+     4.16%  [k] sched_tick
+     4.16%  [k] switch_fpu_return
+     4.16%  [k] unmap_page_range
+     3.65%  [k] perf_adjust_freq_unthr_context
+     3.47%  [k] copy_mc_enhanced_fast_string
+     3.47%  [.] 0x000000000001ae38
+     3.27%  [k] wake_up_var
+     2.44%  [k] _raw_spin_lock_irqsave
+     1.93%  [k] rb_erase
+     1.71%  [k] rcu_sched_clock_irq
+     1.59%  [k] x2apic_send_IPI
+     1.47%  [k] __sched_balance_update_blocked_averages
+     1.36%  [k] pv_native_safe_halt
+     1.35%  [k] fdget

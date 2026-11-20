@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+    1394  0xffffffff818a866a chown_common+0x10a

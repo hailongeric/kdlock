@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    1127  0xffffffff818da441 inode_sb_list_add+0x21
+    1027  0xffffffff818dc12c evict+0x7c
+       1  0xffffffff8190256a locked_inode_to_wb_and_lock_list+0x5a

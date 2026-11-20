@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    3786  0xffffffff815a2733 cpuset_cpus_allowed+0x23
+       1  0xffffffff817e0eb9 anon_vma_clone+0xd9
+       1  0xffffffff817e4c40 anon_vma_fork+0x150
+       1  0xffffffff817d452e dup_mmap+0x32e

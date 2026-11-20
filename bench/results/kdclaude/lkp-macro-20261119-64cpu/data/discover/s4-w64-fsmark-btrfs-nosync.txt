@@ -1,0 +1,12 @@
+refused 11 sites outside the allow list:
+     236  0xffffffffc013f9d1 btrfs_tree_lock_nested+0x21
+      20  0xffffffffc01afab8 btrfs_block_rsv_release+0x1c8
+       9  0xffffffffc01ae346 reserve_bytes+0x66
+       2  0xffffffff818c5315 filename_create+0xb5
+       1  0xffffffffc01b83f6 btrfs_add_reserved_bytes+0x36
+       1  0xffffffffc01b7fd0 btrfs_update_block_group+0xa0
+       1  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffff814588cc workqueue_set_max_active+0x5c
+       1  0xffffffffc01adcfd do_async_reclaim_metadata_space+0x8d
+       1  0xffffffffc0170bd9 btrfs_async_run_delayed_root+0x69
+       1  0xffffffff817e4d0d unlink_anon_vmas+0x5d

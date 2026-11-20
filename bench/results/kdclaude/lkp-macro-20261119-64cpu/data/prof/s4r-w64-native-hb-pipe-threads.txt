@@ -1,0 +1,34 @@
+               246      context-switches                                                      
+                65      cpu-migrations                                                        
+# Samples: 32  of event 'cpu/cycles/P'
+     7.85%  [k] __tlb_remove_folio_pages
+     6.59%  [.] 0x00000000000708d7
+     4.38%  [k] __mod_timer
+     4.38%  [k] _nohz_idle_balance.isra.0
+     4.38%  [k] _raw_spin_lock
+     4.38%  [k] calc_global_load_tick
+     4.38%  [k] error_entry
+     4.38%  [k] free_unref_folios
+     4.38%  [k] hrtimer_update_next_event
+     4.38%  [k] pvclock_gtod_notify
+     4.38%  [k] sched_balance_rq
+     4.38%  [k] tmigr_handle_remote
+     4.38%  [k] update_group_capacity
+     4.38%  [k] update_rq_clock
+     4.12%  [k] __filemap_get_folio_mpol
+     4.12%  [k] __next_zones_zonelist
+     2.97%  [k] __irq_exit_rcu
+     2.79%  [k] perf_adjust_freq_unthr_context
+     2.78%  [k] __hrtimer_run_queues
+     1.93%  [k] update_load_avg
+     1.70%  [k] pv_native_safe_halt
+     1.58%  [k] update_sd_lb_stats.constprop.0
+     1.58%  [k] crc32c
+     1.44%  [k] lapic_next_deadline
+     1.43%  [k] update_other_load_avgs
+     1.28%  [k] pick_next_task_fair
+     1.23%  [k] switch_mm_irqs_off
+     1.07%  [k] psi_group_change
+     1.04%  [k] _perf_ioctl
+     0.99%  [k] __timekeeping_advance
+     0.94%  [k] native_apic_msr_eoi

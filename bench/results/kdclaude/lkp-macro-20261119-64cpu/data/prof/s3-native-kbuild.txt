@@ -1,0 +1,43 @@
+             12575      context-switches                                                      
+                88      cpu-migrations                                                        
+# Samples: 11K of event 'cpu/cycles/P'
+     2.92%  [.] expr_lookup
+     1.48%  [k] asm_exc_page_fault
+     1.15%  [.] bitmap_set_bit(bitmap_head*, int)
+     1.02%  [.] ht_lookup_with_hash(ht*, unsigned char const*, unsigned long, unsigned int, ht_lookup_option)
+     0.84%  [.] ggc_internal_alloc_no_dtor(unsigned long, void (*)(void*), unsigned long, unsigned long)
+     0.82%  [k] _raw_spin_lock
+     0.69%  [.] _cpp_lex_direct
+     0.66%  [k] sync_regs
+     0.59%  [.] bitmap_bit_p(bitmap_head const*, int)
+     0.52%  [.] cfree
+     0.52%  [k] unmap_page_range
+     0.47%  [k] next_uptodate_folio
+     0.46%  [.] htab_find_slot_with_hash
+     0.45%  [.] bitmap_clear_bit(bitmap_head*, int)
+     0.45%  [.] constrain_operands(int, unsigned long)
+     0.38%  [.] pre_and_rev_post_order_compute_fn(function*, int*, int*, bool)
+     0.36%  [.] walk_tree_1(tree_node**, tree_node* (*)(tree_node**, int*, void*), void*, hash_set<tree_node*, false, default_hash_traits<tree_node*> >*, tree_node* (*)(tree_node**, int*, tree_node* (*)(tree_node**, int*, void*), void*, hash_set<tree_node*, false, default_hash_traits<tree_node*> >*))
+     0.36%  [.] calculate_dominance_info(cdi_direction, bool)
+     0.36%  [k] __rmqueue_pcplist
+     0.35%  [k] aa_dfa_leftmatch
+     0.34%  [.] malloc
+     0.33%  [.] operand_compare::operand_equal_p(tree_node*, tree_node const*, tree_node*, tree_node const*, unsigned int)
+     0.30%  [k] __handle_mm_fault
+     0.30%  [.] VN_INFO(tree_node*)
+     0.30%  [.] linemap_position_for_column(line_maps*, unsigned int)
+     0.29%  [k] __rcu_read_lock
+     0.29%  [.] ira_init_register_move_cost(machine_mode)
+     0.28%  [k] charge_memcg
+     0.27%  [.] ira_init()
+     0.26%  [.] walk_stmt_load_store_addr_ops(gimple*, void*, bool (*)(gimple*, tree_node*, tree_node*, void*), bool (*)(gimple*, tree_node*, tree_node*, void*), bool (*)(gimple*, tree_node*, tree_node*, void*))
+     0.26%  [.] bitmap_clear(bitmap_head*)
+     0.26%  [.] __libc_calloc
+     0.24%  [.] get_ref_base_and_extent(tree_node*, poly_int<1u, long>*, poly_int<1u, long>*, poly_int<1u, long>*, bool*)
+     0.24%  [.] 0x00000000001aaa62
+     0.24%  [.] bfd_link_hash_traverse
+     0.23%  [.] volatile_refs_p(rtx_def const*)
+     0.21%  [k] folios_put_refs
+     0.21%  [.] _cpp_skip_block_comment
+     0.21%  [.] bitmap_ior_into(bitmap_head*, bitmap_head const*)
+     0.21%  [.] extract_insn(rtx_insn*)

@@ -1,0 +1,9 @@
+refused 8 sites outside the allow list:
+       6  0xffffffff818ca3d0 filename_unlinkat+0x180
+       4  0xffffffff818c8b39 path_openat+0xc69
+       2  0xffffffff818b191f __iterate_supers+0x6f
+       1  0xffffffff817d452e dup_mmap+0x32e
+       1  0xffffffff817e4d0d unlink_anon_vmas+0x5d
+       1  0xffffffff8143223c do_exit+0x31c
+       1  0xffffffff81906a67 sync_inodes_sb+0xe7
+       1  0xffffffff818b18df __iterate_supers+0x2f

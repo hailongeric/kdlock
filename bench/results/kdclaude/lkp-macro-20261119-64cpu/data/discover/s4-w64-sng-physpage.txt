@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+    1068  0xffffffff81f8dfd9 memory_lseek+0x29

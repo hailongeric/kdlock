@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    2063  0xffffffff8188507f folio_lruvec_lock_irq+0x5f
+      20  0xffffffff81817035 __slab_free+0x195
+       1  0xffffffff817f98c9 free_pcppages_bulk+0x39

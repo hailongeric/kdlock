@@ -1,0 +1,3 @@
+refused 2 sites outside the allow list:
+    3549  0xffffffff81575230 futex_wake+0xf0
+    2203  0xffffffff81570adc futex_q_lock+0x1c

@@ -1,0 +1,3 @@
+refused 2 sites outside the allow list:
+     509  0xffffffff818c8b39 path_openat+0xc69
+     507  0xffffffff818ca3d0 filename_unlinkat+0x180

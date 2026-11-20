@@ -1,0 +1,11 @@
+refused 10 sites outside the allow list:
+    2879  0xffffffff8178f7aa shmem_fallocate+0x8a
+     427  0xffffffff818ca3d0 filename_unlinkat+0x180
+     275  0xffffffff818c8b39 path_openat+0xc69
+     144  0xffffffff81786731 shmem_file_write_iter+0x31
+     131  0xffffffff8191967f vfs_fileattr_set+0x7f
+     121  0xffffffff818c3bfc vfs_unlink+0x4c
+       4  0xffffffff817f4072 unlink_file_vma_batch_final+0x42
+       1  0xffffffff818d6f1b dput.part.0+0xeb
+       1  0xffffffff818d45c4 d_alloc+0x34
+       1  0xffffffff81c68a21 lockref_get_not_dead+0x61

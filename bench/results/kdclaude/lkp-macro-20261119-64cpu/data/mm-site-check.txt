@@ -1,0 +1,31 @@
+11:08:13 round 1 brk1 757401 | delegated=294646719 handback=97973 offered=356786518 site_retry=77 | delegated=294646745 handback=97973 offered=356786590 site_retry=77 
+11:08:25 round 1 mmap1 191680 | delegated=294646745 handback=97973 offered=356786590 site_retry=77 | delegated=294646762 handback=100673 offered=356789375 site_retry=85 
+11:08:37 round 2 brk1 726552 | delegated=294646762 handback=100673 offered=356789375 site_retry=85 | delegated=294646795 handback=100673 offered=356789432 site_retry=86 
+11:08:49 round 2 mmap1 207912 | delegated=294646795 handback=100673 offered=356789432 site_retry=86 | delegated=294646809 handback=102826 offered=356792826 site_retry=92 
+11:09:02 round 3 brk1 779573 | delegated=294646809 handback=102826 offered=356792826 site_retry=92 | delegated=294646817 handback=102826 offered=356792856 site_retry=94 
+11:09:14 round 3 mmap1 214158 | delegated=294646817 handback=102826 offered=356792856 site_retry=94 | delegated=294646842 handback=104440 offered=356794535 site_retry=98 
+daemon stopped after 55 s
+0
+site 0xffffffff817f05ee: 62526 instructions, 378552 bytes at 0xffffffffc1503000
+site 0xffffffff817f05ee: per-CPU frontier at drain_all_stock.part.0+0x68: unlock_call at 0xffffffff81883774
+site 0xffffffff8144b65a: 38356 instructions, 236058 bytes at 0xffffffffc1561000
+site 0xffffffff8144b65a: per-CPU frontier at drain_all_stock.part.0+0x68: unlock_call at 0xffffffff81883774
+MM_CHECK_DONE
+upstream mmap1 64: 218524 | delegated+2 handback+2669 offered+4012 hb_miss+2669 site_retry+8
+tclocks mmap1 60: 302002 | delegated+13 handback+1596 offered+2702 hb_miss+1596 site_retry+6
+tclocks mmap1 16: 298264 | delegated+11 handback+1557 offered+2656 hb_miss+1557 site_retry+6
+upstream mmap1 16: 320702 | delegated+6 handback+1559 offered+3390 hb_miss+1559 site_retry+6
+MM_CHECK2_DONE
+11:14:06 run 1 mmap1 16: 297328 | delegated+8 handback+3892 offered+6075 hb_miss+3892 site_retry+9
+11:14:18 run 2 mmap1 16: 296292 | delegated+9 handback+2868 offered+5486 hb_miss+2868 vdown+689 vdown_hb+689 site_retry+7
+11:14:30 run 3 mmap1 16: 297159 | delegated+10 handback+2599 offered+4947 hb_miss+2599 vdown+1182 vdown_hb+1182 site_retry+7
+11:14:42 run 4 mmap1 16: 299942 | delegated+132 handback+2747 offered+5792 hb_miss+2747 vdown+1191 vdown_hb+1191 site_retry+7
+11:14:54 run 5 mmap1 16: 294631 | delegated+90 handback+2518 offered+4730 hb_miss+2518 vdown+1298 vdown_hb+1298 site_retry+7
+11:15:06 run 6 mmap1 16: 297585 | delegated+115587 handback+2780 offered+182120 hb_miss+2780 vdown+1562 vdown_hb+1562 site_retry+8
+    127 miss code at unmapped_area_topdown+0x0
+    112 miss code at anon_vma_name+0x0
+     74 miss code at mas_wr_node_store+0x0
+     69 miss code at mas_update_gap.part.0+0x0
+     64 miss ind at security_vm_enough_memory_mm+0x36
+25
+MM_CHECK3_DONE

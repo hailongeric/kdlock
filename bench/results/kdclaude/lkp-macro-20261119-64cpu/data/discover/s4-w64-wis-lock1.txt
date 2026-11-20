@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+    7550  0xffffffff8195e3a9 fcntl_setlk+0x3a9

@@ -1,0 +1,20 @@
+               420      context-switches                                                      
+                64      cpu-migrations                                                        
+# Samples: 17  of event 'cpu/cycles/P'
+     9.48%  [k] unmap_page_range
+     6.89%  [k] proc_misc_d_revalidate
+     6.78%  [k] flush_end_io
+     6.78%  [k] fput
+     6.78%  [k] intel_pmu_disable_all
+     6.78%  [k] irqentry_enter
+     6.78%  [k] psi_task_switch
+     6.78%  [k] rb_erase
+     6.78%  [k] rcu_sched_clock_irq
+     6.78%  [k] sched_balance_rq
+     6.78%  [k] tick_check_oneshot_broadcast_this_cpu
+     6.78%  [k] update_sd_lb_stats.constprop.0
+     6.09%  [.] 0x0000000000010f12
+     3.29%  [k] lapic_next_deadline
+     2.42%  [k] __percpu_counter_sum
+     2.16%  [k] pv_native_safe_halt
+     1.87%  [k] psi_group_change

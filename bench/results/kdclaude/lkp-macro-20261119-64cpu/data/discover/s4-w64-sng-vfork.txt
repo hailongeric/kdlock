@@ -1,0 +1,11 @@
+refused 10 sites outside the allow list:
+     246  0xffffffff81429349 copy_process+0x1519
+     246  0xffffffff8143223c do_exit+0x31c
+     240  0xffffffff81430bc3 release_task+0x93
+       3  0xffffffff8159883b cgroup_leave_frozen+0x1b
+       3  0xffffffff815987cf cgroup_enter_frozen+0x2f
+       2  0xffffffff815929ec cgroup_post_fork+0x3c
+       2  0xffffffff815932f0 cgroup_can_fork+0x80
+       2  0xffffffff81592d76 cgroup_task_dead+0x26
+       1  0xffffffff8146031e alloc_pid+0x2be
+       1  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64

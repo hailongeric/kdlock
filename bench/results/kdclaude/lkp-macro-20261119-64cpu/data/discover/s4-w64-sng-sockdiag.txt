@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+     322  0xffffffffc09954f6 unix_diag_dump+0x76
+     162  0xffffffff82433617 netlink_release+0x1c7
+       8  0xffffffff82430b77 netlink_table_grab.part.0+0x77
+       1  0xffffffff814c138b remove_wait_queue+0x1b

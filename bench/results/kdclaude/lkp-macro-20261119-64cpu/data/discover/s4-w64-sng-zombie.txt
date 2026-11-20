@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+    1222  0xffffffff8144b65a __do_sys_setpgid+0x7a

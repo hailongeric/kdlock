@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+    3184  0xffffffff81786731 shmem_file_write_iter+0x31

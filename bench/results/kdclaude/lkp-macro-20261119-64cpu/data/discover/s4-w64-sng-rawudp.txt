@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+     583  0xffffffff81817035 __slab_free+0x195
+     105  0xffffffff8247ac16 ip_ra_control+0x56
+      45  0xffffffff824c01a7 raw_hash_sk+0x47
+      32  0xffffffff824bf646 raw_unhash_sk+0x26
+       1  0xffffffff817f98c9 free_pcppages_bulk+0x39

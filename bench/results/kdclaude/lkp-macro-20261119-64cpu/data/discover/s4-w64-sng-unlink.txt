@@ -1,0 +1,10 @@
+refused 9 sites outside the allow list:
+     621  0xffffffff818da441 inode_sb_list_add+0x21
+     601  0xffffffff818dc12c evict+0x7c
+      93  0xffffffff818ca3d0 filename_unlinkat+0x180
+      45  0xffffffff818c8b39 path_openat+0xc69
+      18  0xffffffff818c5315 filename_create+0xb5
+       1  0xffffffff817e4c40 anon_vma_fork+0x150
+       1  0xffffffff817d452e dup_mmap+0x32e
+       1  0xffffffff817e0eb9 anon_vma_clone+0xd9
+       1  0xffffffff818a75c8 do_truncate+0x88

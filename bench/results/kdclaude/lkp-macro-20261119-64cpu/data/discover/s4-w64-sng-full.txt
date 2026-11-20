@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+    2806  0xffffffff818b5634 chrdev_open+0x34

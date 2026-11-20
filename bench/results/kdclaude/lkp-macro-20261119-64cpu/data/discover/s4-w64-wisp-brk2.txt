@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+       3  0xffffffff818185ea __refill_objects_node+0xaa
+       3  0xffffffff81817035 __slab_free+0x195
+       1  0xffffffff818189e9 __refill_objects_node+0x4a9

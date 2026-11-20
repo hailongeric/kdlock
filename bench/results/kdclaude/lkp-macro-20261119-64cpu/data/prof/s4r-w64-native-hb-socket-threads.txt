@@ -1,0 +1,24 @@
+            921039      context-switches                                                      
+            133725      cpu-migrations                                                        
+# Samples: 22  of event 'cpu/cycles/P'
+    12.38%  [k] folio_remove_rmap_ptes
+     8.38%  [k] filemap_map_pages
+     7.73%  [k] lapic_next_deadline
+     5.71%  [.] 0x000000000000b8a7
+     4.98%  [k] __switch_to
+     4.98%  [k] asm_sysvec_apic_timer_interrupt
+     4.98%  [k] irqentry_enter
+     4.98%  [k] need_update
+     4.98%  [k] perf_adjust_freq_unthr_events
+     4.98%  [.] perf_evsel__disable_cpu
+     4.98%  [k] restore_regs_and_return_to_kernel
+     4.98%  [k] sched_core_idle_cpu
+     4.98%  [k] schedule_hrtimeout_range_clock
+     4.98%  [k] unlink_anon_vmas
+     4.45%  [k] vma_interval_tree_insert
+     2.78%  [k] raw_spin_rq_lock_nested
+     2.54%  [k] kmem_cache_free
+     1.98%  [k] _raw_spin_lock
+     1.74%  [k] _find_next_bit
+     1.43%  [k] check_tsc_unstable
+     1.10%  [k] mutex_lock

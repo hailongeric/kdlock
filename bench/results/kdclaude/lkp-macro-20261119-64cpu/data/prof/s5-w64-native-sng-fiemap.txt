@@ -1,0 +1,26 @@
+               412      context-switches                                                      
+                64      cpu-migrations                                                        
+# Samples: 26  of event 'cpu/cycles/P'
+    11.01%  [k] collect_percpu_times
+     8.05%  [k] update_sd_lb_stats.constprop.0
+     7.07%  [k] asm_sysvec_apic_timer_interrupt
+     5.80%  [k] __rcu_read_unlock
+     5.80%  [k] __tmigr_cpu_activate
+     5.80%  [k] _raw_spin_lock
+     5.80%  [k] _raw_spin_lock_irqsave
+     5.80%  [k] intel_pmu_disable_all
+     5.80%  [k] irq_work_needs_cpu
+     5.80%  [k] kvm_flush_tlb_multi
+     5.80%  [k] lapic_next_deadline
+     5.80%  [k] update_fast_timekeeper
+     5.41%  [k] xas_load
+     2.84%  [k] next_timer_interrupt
+     2.31%  [k] tick_nohz_idle_exit
+     2.13%  [k] asm_sysvec_call_function_single
+     1.68%  [k] __schedule
+     1.56%  [k] list_add_leaf_cfs_rq
+     1.54%  [k] run_posix_cpu_timers
+     1.36%  [k] preempt_schedule_thunk
+     1.10%  [k] need_update
+     0.91%  [k] next_uptodate_folio
+     0.82%  [k] __percpu_counter_sum

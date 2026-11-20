@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+       2  0xffffffff818b191f __iterate_supers+0x6f
+       1  0xffffffff817f4072 unlink_file_vma_batch_final+0x42
+       1  0xffffffff8199cd97 proc_sys_permission+0x97
+       1  0xffffffff8199cd48 proc_sys_permission+0x48
+       1  0xffffffff817f3f5c unlink_file_vma_batch_add+0x5c

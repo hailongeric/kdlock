@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    7073  0xffffffff8197cdf3 dquot_add_space+0x33
+      26  0xffffffff8197d1de __dquot_free_space+0xfe
+       1  0xffffffff817f4072 unlink_file_vma_batch_final+0x42

@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    2683  0xffffffff818b5634 chrdev_open+0x34
+       8  0xffffffff817f5597 expand_downwards+0x137
+       1  0xffffffff817e4c40 anon_vma_fork+0x150

@@ -1,0 +1,26 @@
+              5489      context-switches                                                      
+               622      cpu-migrations                                                        
+# Samples: 26  of event 'cpu/cycles/P'
+    20.05%  [k] asm_sysvec_apic_timer_interrupt
+     8.36%  [.] __cxa_atexit
+     7.42%  [k] irqentry_enter
+     5.74%  [k] filemap_get_entry
+     5.43%  [k] __free_one_page
+     5.43%  [k] _raw_spin_lock
+     5.43%  [k] default_idle
+     5.43%  [k] kmem_cache_free
+     5.43%  [k] ntp_tick_length
+     5.43%  [k] tmigr_handle_remote
+     4.86%  [k] freader_init_from_file
+     3.40%  [k] update_rq_clock
+     2.84%  [k] default_idle_call
+     2.19%  [k] psi_task_switch
+     1.76%  [k] collect_percpu_times
+     1.56%  [k] __sched_balance_update_blocked_averages
+     1.54%  [k] blk_integrity_merge_bio
+     1.49%  [k] __intel_pmu_enable_all.isra.0
+     1.39%  [.] 0x0000000000006626
+     1.38%  [k] tick_nohz_stop_tick
+     1.30%  [k] __rcu_read_lock
+     1.09%  [k] intel_pmu_disable_all
+     1.06%  [k] __hrtimer_next_event_base

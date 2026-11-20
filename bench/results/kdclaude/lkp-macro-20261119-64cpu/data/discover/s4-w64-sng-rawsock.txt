@@ -1,0 +1,3 @@
+refused 2 sites outside the allow list:
+     996  0xffffffff81817035 __slab_free+0x195
+       1  0xffffffff82372e04 __skb_try_recv_datagram+0x74

@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+       2  0xffffffff8143223c do_exit+0x31c
+       2  0xffffffff81430bc3 release_task+0x93
+       1  0xffffffff81429349 copy_process+0x1519
+       1  0xffffffff818dc12c evict+0x7c

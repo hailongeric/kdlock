@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+       3  0xffffffff818bc614 anon_pipe_write+0x54
+       1  0xffffffff818bb92d anon_pipe_read+0x4d
+       1  0xffffffff818bbaff anon_pipe_read+0x21f

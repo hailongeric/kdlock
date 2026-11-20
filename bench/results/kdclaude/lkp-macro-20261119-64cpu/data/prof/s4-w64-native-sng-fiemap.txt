@@ -1,0 +1,30 @@
+               243      context-switches                                                      
+                64      cpu-migrations                                                        
+# Samples: 27  of event 'cpu/cycles/P'
+     8.58%  [.] 0x0000000000155a85
+     5.69%  [k] sync_regs
+     5.15%  [k] __switch_to_asm
+     5.15%  [k] folios_put_refs
+     5.15%  [k] insert_work
+     5.15%  [k] lapic_next_deadline
+     5.15%  [k] mem_cgroup_stat_aggregate
+     5.15%  [k] perf_swevent_stop
+     5.15%  [.] pthread_mutex_unlock
+     5.15%  [k] remove_entity_load_avg
+     5.15%  [k] run_posix_cpu_timers
+     5.15%  [k] sched_balance_rq
+     5.15%  [k] timekeeping_update_from_shadow
+     5.15%  [k] update_sd_lb_stats.constprop.0
+     4.08%  [.] 0x0000000000008ff7
+     3.24%  [k] check_tsc_unstable
+     2.14%  [k] asm_sysvec_apic_timer_interrupt
+     2.03%  [k] __hrtimer_next_event_base
+     1.82%  [k] tsc_verify_tsc_adjust
+     1.64%  [k] avg_vruntime
+     1.47%  [k] tick_nohz_idle_stop_tick
+     1.45%  [k] pick_task_fair
+     1.34%  [k] timerqueue_add
+     1.34%  [k] __smp_call_single_queue
+     1.24%  [k] pvclock_clocksource_read_nowd
+     1.11%  [k] idle_cpu
+     0.96%  [k] sched_clock_cpu

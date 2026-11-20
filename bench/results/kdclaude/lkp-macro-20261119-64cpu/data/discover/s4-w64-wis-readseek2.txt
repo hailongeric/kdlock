@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+    2437  0xffffffff8175032d folio_wake_bit+0x5d
+    1967  0xffffffff81751b0e folio_wait_bit_common+0xde
+       1  0xffffffff814c1fae finish_wait+0x3e

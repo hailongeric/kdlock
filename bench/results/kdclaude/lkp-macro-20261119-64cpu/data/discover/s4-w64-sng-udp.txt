@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+       1  0xffffffff817f0046 vma_link_file+0x46

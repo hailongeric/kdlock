@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    1041  0xffffffff81570adc futex_q_lock+0x1c
+     776  0xffffffff81575230 futex_wake+0xf0
+      21  0xffffffff818ca3d0 filename_unlinkat+0x180
+      20  0xffffffff818c8b39 path_openat+0xc69

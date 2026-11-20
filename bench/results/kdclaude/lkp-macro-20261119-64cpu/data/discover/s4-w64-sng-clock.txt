@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+     361  0xffffffff81f8ec9d add_device_randomness+0x3d
+       3  0xffffffff818d6f1b dput.part.0+0xeb
+       2  0xffffffff818d5b71 __dentry_kill+0xb1
+       1  0xffffffff818d7c52 d_alloc_parallel+0x82
+       1  0xffffffff81c68a21 lockref_get_not_dead+0x61

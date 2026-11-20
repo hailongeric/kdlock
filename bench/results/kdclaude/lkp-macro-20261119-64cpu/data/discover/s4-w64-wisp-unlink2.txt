@@ -1,0 +1,11 @@
+refused 10 sites outside the allow list:
+    1763  0xffffffff8197cbfc dquot_free_inode+0xec
+    1495  0xffffffff8197d94b dquot_add_inodes+0x2b
+     149  0xffffffff8197a2c9 dqget+0x109
+     110  0xffffffff81979834 dqput.part.0+0x34
+      16  0xffffffff8197a3f6 dqget+0x236
+       7  0xffffffff818dc12c evict+0x7c
+       6  0xffffffff818da441 inode_sb_list_add+0x21
+       1  0xffffffff8197b87e __dquot_initialize+0xee
+       1  0xffffffff8197b65a __dquot_drop+0x5a
+       1  0xffffffff817f3f5c unlink_file_vma_batch_add+0x5c

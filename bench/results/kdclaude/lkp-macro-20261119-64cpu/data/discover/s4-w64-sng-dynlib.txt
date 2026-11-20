@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+    1544  0xffffffff817f0593 vma_prepare+0x63
+    1499  0xffffffff817f4072 unlink_file_vma_batch_final+0x42
+    1096  0xffffffff817f0046 vma_link_file+0x46
+      17  0xffffffff8175032d folio_wake_bit+0x5d
+       8  0xffffffff81751b0e folio_wait_bit_common+0xde

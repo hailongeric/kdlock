@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    1408  0xffffffff8254424d unix_del_edges+0x1d
+    1393  0xffffffff82544016 unix_add_edges+0x26
+       1  0xffffffff817e4c40 anon_vma_fork+0x150
+       1  0xffffffff818b5634 chrdev_open+0x34

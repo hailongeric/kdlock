@@ -1,0 +1,27 @@
+               256      context-switches                                                      
+                64      cpu-migrations                                                        
+# Samples: 26  of event 'cpu/cycles/P'
+     9.28%  [k] lock_vma_under_rcu
+     7.34%  [k] seq_read_iter
+     6.67%  [k] asm_sysvec_apic_timer_interrupt
+     4.89%  [k] _nohz_idle_balance.isra.0
+     4.89%  [k] _raw_spin_lock
+     4.89%  [k] _raw_spin_lock_irqsave
+     4.89%  [k] default_idle
+     4.89%  [k] folios_put_refs
+     4.89%  [k] irq_enter_rcu
+     4.89%  [k] nr_iowait_cpu
+     4.89%  [k] perf_poll
+     4.89%  [k] sched_balance_rq
+     4.89%  [k] update_sd_lb_stats.constprop.0
+     4.06%  [k] filemap_get_read_batch
+     4.06%  [k] put_page
+     3.67%  [k] timer_base_try_to_set_idle
+     3.65%  [k] pick_task_fair
+     2.75%  [k] memset
+     2.37%  [k] tick_nohz_stop_tick
+     2.30%  [k] __update_load_avg_se
+     1.63%  [k] ktime_get
+     1.27%  [k] collect_percpu_times
+     1.17%  [k] psi_task_switch
+     0.82%  [k] lapic_next_deadline

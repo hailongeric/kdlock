@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+     955  0xffffffff81786731 shmem_file_write_iter+0x31
+       1  0xffffffff817f3f5c unlink_file_vma_batch_add+0x5c
+       1  0xffffffff817e4d0d unlink_anon_vmas+0x5d
+       1  0xffffffff81abfbd6 __shm_close+0x26

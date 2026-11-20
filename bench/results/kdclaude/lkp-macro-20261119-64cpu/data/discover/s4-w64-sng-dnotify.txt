@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+     488  0xffffffff81929f05 fcntl_dirnotify+0x1c5
+     487  0xffffffff81929bec dnotify_flush+0x6c
+       1  0xffffffff8192805c fsnotify_put_mark+0x10c

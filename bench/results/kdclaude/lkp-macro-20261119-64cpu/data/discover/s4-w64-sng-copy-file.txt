@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+       7  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64

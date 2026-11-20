@@ -1,0 +1,7 @@
+refused 6 sites outside the allow list:
+    1850  0xffffffff818d6f1b dput.part.0+0xeb
+    1163  0xffffffff81c68a21 lockref_get_not_dead+0x61
+     411  0xffffffff81c68af5 lockref_get+0x55
+     327  0xffffffff818dcd4e ilookup5+0x8e
+     113  0xffffffff818d40dd d_find_alias+0x5d
+       1  0xffffffff817f3f5c unlink_file_vma_batch_add+0x5c

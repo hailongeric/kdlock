@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+    3564  0xffffffff818e0aa9 alloc_fd+0x39
+    3547  0xffffffff818e1ead file_close_fd+0x2d
+       1  0xffffffff817f4072 unlink_file_vma_batch_final+0x42
+       1  0xffffffff8157bc20 acct_collect+0x60
+       1  0xffffffff81447922 exit_signals+0xe2

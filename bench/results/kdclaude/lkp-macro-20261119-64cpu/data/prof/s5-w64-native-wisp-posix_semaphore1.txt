@@ -1,0 +1,25 @@
+               440      context-switches                                                      
+                65      cpu-migrations                                                        
+# Samples: 97K of event 'cpu/cycles/P'
+    47.18%  [.] sem_post
+    44.00%  [.] sem_wait
+     4.26%  [.] testcase
+     1.60%  [.] sem_wait@plt
+     1.49%  [.] sem_post@plt
+     1.45%  [.] pthread_testcancel
+     0.01%  [k] asm_sysvec_apic_timer_interrupt
+     0.00%  [k] lapic_next_deadline
+     0.00%  [k] kernel_init_pages
+     0.00%  [k] ktime_get_update_offsets_now
+     0.00%  [k] __intel_pmu_enable_all.isra.0
+     0.00%  [k] kvm_clock_get_cycles
+     0.00%  [k] tick_nohz_handler
+     0.00%  [k] get_jiffies_update
+     0.00%  [k] fpu__clear_user_states
+     0.00%  [k] update_cfs_group
+     0.00%  [k] alloc_buffer_head
+     0.00%  [k] account_user_time
+     0.00%  [k] __rcu_read_lock
+     0.00%  [k] rcu_sched_clock_irq
+     0.00%  [k] sync_regs
+     0.00%  [k] update_process_times

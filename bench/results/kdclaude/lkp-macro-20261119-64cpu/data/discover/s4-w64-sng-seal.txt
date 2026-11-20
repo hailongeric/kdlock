@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    1133  0xffffffff818da441 inode_sb_list_add+0x21
+    1118  0xffffffff818dc12c evict+0x7c
+       1  0xffffffff817f58f8 __vm_munmap+0x88
+       1  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64

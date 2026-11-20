@@ -1,0 +1,9 @@
+refused 8 sites outside the allow list:
+    2791  0xffffffff818b191f __iterate_supers+0x6f
+      40  0xffffffff818b18df __iterate_supers+0x2f
+      17  0xffffffff81457197 __flush_workqueue+0xa7
+       4  0xffffffff81906a67 sync_inodes_sb+0xe7
+       1  0xffffffff817f5597 expand_downwards+0x137
+       1  0xffffffff81bd3ec7 sync_bdevs+0xd7
+       1  0xffffffff81bd3e18 sync_bdevs+0x28
+       1  0xffffffff81bd3e82 sync_bdevs+0x92

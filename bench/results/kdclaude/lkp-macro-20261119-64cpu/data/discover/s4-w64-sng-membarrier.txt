@@ -1,0 +1,4 @@
+refused 3 sites outside the allow list:
+      81  0xffffffff814bdd3c membarrier_private_expedited+0x15c
+      32  0xffffffff814c3f35 __do_sys_membarrier+0x265
+       1  0xffffffff814bdaa7 sync_runqueues_membarrier_state+0x77

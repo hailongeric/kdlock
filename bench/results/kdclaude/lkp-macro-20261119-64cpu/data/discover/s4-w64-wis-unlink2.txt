@@ -1,0 +1,13 @@
+refused 12 sites outside the allow list:
+    1540  0xffffffff8197cbfc dquot_free_inode+0xec
+    1371  0xffffffff8197d94b dquot_add_inodes+0x2b
+     408  0xffffffff8197a2c9 dqget+0x109
+     322  0xffffffff81979834 dqput.part.0+0x34
+      50  0xffffffff818e1ead file_close_fd+0x2d
+      47  0xffffffff818e0aa9 alloc_fd+0x39
+      43  0xffffffff818dc12c evict+0x7c
+      41  0xffffffff818da441 inode_sb_list_add+0x21
+      34  0xffffffff8197a3f6 dqget+0x236
+       3  0xffffffff818dfb70 fd_install_slowpath+0x30
+       1  0xffffffff8197b87e __dquot_initialize+0xee
+       1  0xffffffff8197b65a __dquot_drop+0x5a

@@ -1,0 +1,5 @@
+refused 4 sites outside the allow list:
+    3068  0xffffffff8188507f folio_lruvec_lock_irq+0x5f
+     389  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64
+      49  0xffffffff818dc12c evict+0x7c
+      10  0xffffffff818da441 inode_sb_list_add+0x21

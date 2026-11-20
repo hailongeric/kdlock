@@ -1,0 +1,8 @@
+refused 7 sites outside the allow list:
+    1709  0xffffffff814445eb set_current_blocked+0x3b
+    1704  0xffffffff81447b90 get_signal+0xc0
+    1703  0xffffffff81447508 signal_setup_done+0xd8
+    1698  0xffffffff81444dab do_send_sig_info+0x3b
+       1  0xffffffff817f0046 vma_link_file+0x46
+       1  0xffffffff81443cbf lock_task_sighand+0x2f
+       1  0xffffffff81442310 __x64_sys_rt_sigprocmask+0xc0

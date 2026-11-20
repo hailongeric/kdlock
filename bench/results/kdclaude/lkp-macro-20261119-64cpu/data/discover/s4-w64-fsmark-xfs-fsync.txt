@@ -1,0 +1,9 @@
+refused 8 sites outside the allow list:
+      89  0xffffffff81457197 __flush_workqueue+0xa7
+       9  0xffffffffc0fa0475 xlog_cil_push_work+0xd5
+       7  0xffffffff818c5315 filename_create+0xb5
+       2  0xffffffff8145728f __flush_workqueue+0x19f
+       1  0xffffffffc0fa2029 xlog_cil_force_seq+0x79
+       1  0xffffffffc0f9f952 xlog_cil_push_now.isra.0+0x32
+       1  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffffc0fa048a xlog_cil_push_work+0xea

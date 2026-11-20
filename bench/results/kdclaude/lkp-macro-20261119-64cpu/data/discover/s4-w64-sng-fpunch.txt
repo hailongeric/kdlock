@@ -1,0 +1,6 @@
+refused 5 sites outside the allow list:
+    2583  0xffffffff8178f7aa shmem_fallocate+0x8a
+    2423  0xffffffff81786731 shmem_file_write_iter+0x31
+     142  0xffffffff818a75c8 do_truncate+0x88
+      57  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffff817e4d0d unlink_anon_vmas+0x5d

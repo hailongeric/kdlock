@@ -1,0 +1,7 @@
+refused 6 sites outside the allow list:
+      60  0xffffffff81c03137 __do_sys_ioprio_get+0x2c7
+      22  0xffffffff81c03018 __do_sys_ioprio_get+0x1a8
+      14  0xffffffff81be6a1c set_task_ioprio+0x9c
+       2  0xffffffff81c02f06 __do_sys_ioprio_get+0x96
+       2  0xffffffff81885124 folio_lruvec_lock_irqsave+0x64
+       1  0xffffffff818c5315 filename_create+0xb5

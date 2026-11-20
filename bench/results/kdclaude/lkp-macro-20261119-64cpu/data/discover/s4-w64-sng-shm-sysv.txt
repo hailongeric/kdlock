@@ -1,0 +1,13 @@
+refused 12 sites outside the allow list:
+     113  0xffffffff81ab5844 ipcget+0xa4
+      57  0xffffffff81abff51 shmctl_down+0x31
+      56  0xffffffff81ac0ee1 do_shmat+0x341
+      53  0xffffffff81abfbd6 __shm_close+0x26
+      24  0xffffffff81ab57dd ipcget+0x3d
+      18  0xffffffff817e4d0d unlink_anon_vmas+0x5d
+      17  0xffffffff817e4c40 anon_vma_fork+0x150
+      13  0xffffffff817e0eb9 anon_vma_clone+0xd9
+       3  0xffffffff817d452e dup_mmap+0x32e
+       2  0xffffffff817e48ed __put_anon_vma+0x8d
+       1  0xffffffff817f3f5c unlink_file_vma_batch_add+0x5c
+       1  0xffffffff8143223c do_exit+0x31c

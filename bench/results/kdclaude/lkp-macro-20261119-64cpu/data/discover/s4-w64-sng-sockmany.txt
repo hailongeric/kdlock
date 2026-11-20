@@ -1,0 +1,2 @@
+refused 1 sites outside the allow list:
+       1  0xffffffff824af520 established_get_first+0x90
