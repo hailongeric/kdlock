@@ -131,6 +131,22 @@ result READMEs it points to are the maintained record.
     sources (`psearchy-leveldb-published-curves.md` there) and the
     IntervalVM configurations measured (README section 8).
 
+* **lkp-tests, second round, reduced** (2026-11-20,
+  `bench/results/kdclaude/lkp-macro-20261119-64cpu/` sections 6-8):
+  native screening on kdnat18 at 64 workers (143 candidates of 451
+  points), kd off / discover / learn / on for them on kdall21, and a macro
+  set of 16 workloads at five worker counts. Ahead with delegation after
+  proper learning: epoll ctl (2.4 at 48-64 workers), vm-scalability
+  small-allocs (2.6), fallocate1, open2, unixbench execl, stress-ng
+  fd-abuse and shm (1.5-1.8). At parity: filebench and sysbench threads
+  (futex hash bucket lock), dbench on ext4, vm-scalability file mmap reads.
+  Its section 8 lists what it left open; the two that matter first:
+  **a SIGSYS kill in stress-ng seccomp that only shows with the daemon (6
+  of 75 runs against 0 of 41)**, and **learning that is too slow for short
+  runs** (a miss counts against its site).
+  A native pass run in the boot in which a stuck pass had been killed gave
+  wrong rates; measure only in a fresh boot after killing a workload.
+
 ## 4. What is next, in order
 
 0. **Left from the plain-path round:** lock1 at 16 threads scatters around
@@ -138,9 +154,11 @@ result READMEs it points to are the maintained record.
    thread counts are at 0.93-1.05); page_fault2 at 60 threads with the
    daemon is at 0.84-0.90 with only about 35 sections delegated (not
    looked at); Apache with the daemon is 3-7% below Apache without it; the
-   nano grid, FxMark, Metis, Psearchy and the lkp workloads have not been
-   rerun on kdall21/kdnat18 (the lkp native screening has to be redone on
-   a twin with the real spinlocks).
+   nano grid, FxMark, Metis and Psearchy have not been rerun on
+   kdall21/kdnat18. From the lkp round (its README section 8): the seccomp
+   SIGSYS with the daemon, slow learning, fio on one file at 0.82-0.90
+   without delegation (inode rwsem writers), brk1's half-handed-back site,
+   `done_in_region` in stress-ng shm.
 
 1. **Rerun the measurement grid on kdall13: done 2026-11-19**
    (`bench/results/kdclaude/appgrid-20261119-64cpu/`, round g2: kdall13

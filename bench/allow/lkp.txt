@@ -19,9 +19,11 @@ shmem_file_write_iter
 filename_unlinkat
 path_openat
 filename_create
-# page wait queue lock (will-it-scale pread2, readseek2)
-folio_wake_bit
-folio_wait_bit_common
+# page wait queue lock (will-it-scale pread2, readseek2): taken out on
+# 2026-11-20. With these two (folio_wake_bit, folio_wait_bit_common) a
+# fifth of the sections is handed back inside a per-CPU region (hb_region)
+# and the tests run at a third to a half of their rate without delegation
+# (lkp-macro-20261119-64cpu, sections 6.2 and 7).
 # quota accounting of tmpfs (will-it-scale page_fault2/3)
 dquot_add_space
 # mapping->i_mmap_rwsem, writers (unixbench execl, shell; vm-scalability small-allocs; tier B)
