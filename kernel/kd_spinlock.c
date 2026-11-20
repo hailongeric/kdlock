@@ -59,7 +59,7 @@ int kd_spin_nested(struct kd_spinlock *l, struct kd_regs *r, void *entry)
 {
 	u32 val;
 
-	if (kd_q_pending(&l->q, &val))
+	if (kd_q_pending(&l->q, atomic_read(&l->q.val), &val))
 		return KD_WAIT_LOCAL;
 	if (!entry || !kd_q_deleg_mode(&l->q, val)) {
 		kd_q_queue(&l->q, true);

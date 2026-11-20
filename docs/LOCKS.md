@@ -87,6 +87,16 @@ call.
   holds a waiter of another NUMA node** (`kd_deleg_numa`, default 1;
   ARCHITECTURE 7a). Within one node the plain lock is the native queued
   spinlock and a combiner gains nothing over it.
+* **The slow path does not load the lock word on entry.** The entry stub
+  passes the value its failed fast path got, as the native slow path gets
+  it, and a caller that saw a queue there does not look at the word a
+  second time before it queues. Every load of the lock's line by an
+  arriving caller competes with the holder and the queue head, who pass the
+  lock on through that line. will-it-scale lock1 (`files->file_lock`, ten
+  million handovers a second; nothing is delegated) against the native
+  kernel at 8 / 16 / 32 threads, kdall19, one boot, 4 rounds: 0.91 / 0.85 /
+  0.92 with the load on entry, 0.97 / 0.93 / 0.97 with the value passed,
+  0.97 / 0.95 / 0.97 without the second look as well.
 * `kd_raw_spin_lock*` and the `kd_arch_spin_*` level use the same word but
   **never publish** (scheduler, timers, lock internals) and never combine.
 * `_irq`, `_irqsave` and `_bh` entries are delegable: the section runs with
@@ -395,12 +405,14 @@ call.
     at 4-16; mmap1 and brk1 0.97-1.05 of their rate without it; parked waits
     fall by 50-99% (`bench/results/kdclaude/plain-20261119-64cpu/`).
   * Counters: `wr_steal`, `wr_handoff`.
-* **Writers wait asleep when the readers stay long**
-  (`kd_rwsem_park_drain_ns`, default 5000). Plain mode only: a writer that
-  has to wait and cannot publish parks on `m` instead of spinning in the
-  queue when the average time the readers of this lock take to leave (the
-  queue heads' measurement for the eras, per lock by hash) is above the
-  threshold.
+* **Writers wait asleep when the readers stay long and many writers wait**
+  (`kd_rwsem_park_drain_ns`, default 5000; `kd_rwsem_park_queue`, default
+  6). Plain mode only: a writer that has to wait and cannot publish parks
+  on `m` instead of spinning in the queue when the average time the readers
+  of this lock take to leave (the queue heads' measurement for the eras,
+  per lock by hash) is above the threshold and, on average, 6 or more
+  writers wait behind the one that waits for the readers (spinning ones as
+  a queue head finds them, plus the parked ones).
   * **Why.** A queued writer spins for as long as the holder of `m` runs,
     and that holder may only be waiting for readers itself. For the mmap
     lock a queue of spinning writers is worse than idle: every one keeps
@@ -418,6 +430,18 @@ call.
     and brk1 0.90-0.99 of their rate without it (the average crosses the
     threshold at times), page_fault1 and 3 unchanged. LevelDB with a
     thrashing table cache: 0.84-0.92 at 4-8 threads, 1.03-1.11 at 16-60.
+  * **Why the second condition.** Parking pays through the CPUs it takes
+    out of the mm, and with a few threads there are few to take out while
+    every parked wait costs a wakeup: that LevelDB case at 4 threads.
+    kdall20, one boot, against native, never / by drain time alone / with
+    6 waiting writers: LevelDB at 4, 8, 16, 32 threads 1.06, 1.06, 1.10,
+    1.07 / 0.88, 0.98, 1.12, 1.15 / 1.08, 1.09, 1.10, 1.14; Apache single
+    process at 16, 32, 60 threads 1.07, 0.89, 0.70 / 1.09, 1.27, 1.28 /
+    1.12, 1.24, 1.27; default configuration 1.19 / 1.26 / 1.35; mmap1 and
+    brk1 at 8-32 threads 1.00-1.06 / 0.96-1.08 / 0.97-1.08. The parked
+    writers have to be counted: with the spinning ones alone the average
+    falls as soon as parking begins and ends it (Apache at 60 threads
+    0.78).
   * A parked writer that gets `m` reports the same measurements as a queue
     head, so the average stays current when everybody parks.
 * Writers publish whenever they can; there is no plain mode for the writer
@@ -482,6 +506,7 @@ sees neither effect.
 | `kd_rwsem_steal` (core param, 0644) | 1 | rwsem: a running writer takes a free lock past a holder of `m` that sleeps on `count` (section 5); 0: the lock waits for the sleeper |
 | `kd_rwsem_handoff_ms` (core param, 0644) | 4 | how long a sleeping holder of `m` lets writers steal before it forbids it |
 | `kd_rwsem_park_drain_ns` (core param, 0644) | 5000 | rwsem, plain mode: a waiting writer parks instead of spinning in the queue while the readers of the lock take longer than this to leave, on average (section 5); 0: never |
+| `kd_rwsem_park_queue` (core param, 0644) | 6 | ... and this many writers wait behind the one waiting for the readers, on average (spinning and parked); 0: the drain time alone decides |
 | `kd_rwsem_rphase_ns` (core param, 0644) | 1000 | time per reader found in that a rwsem queue head leaves the readers before it closes the read side (at most 50 us); 0: none |
 | `kd_handoff_running` (core param, 0644) | 1 | mutex handoff only to a parked waiter that is running; 0: also to a sleeping one |
 | `kd_mutex_woken` (core param, 0644) | 1 | mutex: a release does not wake a first parked waiter that is awake already (`KD_QF_WOKEN`); 0: the flag is no longer set, and every release with parked waiters wakes the first one |

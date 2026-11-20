@@ -629,7 +629,10 @@ sized for it; real stack use has not been measured.
   not listed is a frontier.
 * Usefulness: every 256 executions (`KD_SITE_WINDOW`) a site whose sections
   were mostly handed back is switched off (`KD_EV_SITE_OFF`) until a new image
-  arrives.
+  arrives or the kernel tries it again (after 1 to 4 s, `kd_site_retry()`).
+  A handback of the read part after a kept downgrade counts (since
+  2026-11-20): a `munmap` of mapped pages always ends at the TLB flush, and
+  delegating it costs 7 to 12% (TRANSLATOR.md section 3).
 * `KD_IOC_ENABLE` is the global switch (static key `kd_delegation`). With
   delegation off every lock behaves as a plain queued lock.
 * Text lifetime: an image copies text and embeds its addresses. A module

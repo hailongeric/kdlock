@@ -100,9 +100,9 @@ struct kd_rw_era_word kd_rw_eras[1 << KD_RW_ERA_BITS];
 static struct kd_rw_era_avg {
 	u32	drain;		/* ns */
 	u32	press;		/* callers, fixed point KD_ERA_PRESS_ONE */
+	u32	queue;		/* rwsem writers waiting behind a head, same fixed point */
+	atomic_t parked;	/* ... of which parked (kd_rwsem_park()), now */
 } ____cacheline_aligned_in_smp kd_rw_era_avgs[1 << KD_RW_ERA_BITS];
-
-#define KD_ERA_PRESS_ONE	16
 
 /*
  * Callers waiting for their era, by node, and how many there were when the
@@ -120,6 +120,34 @@ static struct kd_rw_era_wq {
 u32 kd_rw_era_drain(const void *lock)
 {
 	return READ_ONCE(kd_rw_era_avgs[hash_ptr((void *)lock, KD_RW_ERA_BITS)].drain);
+}
+
+/*
+ * rwsem: how many writers wait behind the one that waits for the readers,
+ * averaged like the pressure (kd_rwsem_park()): the ones that spin in the
+ * queue, which the caller counted, and the ones that parked, which are
+ * counted here. Without the parked ones the average would fall as soon as
+ * parking begins and end it again. Kept apart from the pressure: that one
+ * counts readers too and looks at most KD_POST_DEPTH callers deep.
+ */
+u32 kd_rw_era_queue(const void *lock)
+{
+	return READ_ONCE(kd_rw_era_avgs[hash_ptr((void *)lock, KD_RW_ERA_BITS)].queue);
+}
+
+void kd_rw_era_queue_note(const void *lock, int queued)
+{
+	struct kd_rw_era_avg *a = &kd_rw_era_avgs[hash_ptr((void *)lock, KD_RW_ERA_BITS)];
+	u32 q = READ_ONCE(a->queue);
+
+	queued = min(queued + atomic_read(&a->parked), 4 * KD_PARK_DEPTH);
+	WRITE_ONCE(a->queue, q - (q + 7) / 8 + queued * KD_ERA_PRESS_ONE / 8);
+}
+
+/* A writer parks (@d 1) or has stopped waiting (@d -1). */
+void kd_rw_era_parked(const void *lock, int d)
+{
+	atomic_add(d, &kd_rw_era_avgs[hash_ptr((void *)lock, KD_RW_ERA_BITS)].parked);
 }
 
 /*

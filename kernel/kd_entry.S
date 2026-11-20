@@ -146,8 +146,13 @@ SYM_FUNC_START(\name)
 .endif
 	RET
 .Lslow_\name:
-	/* \slowfn(lock, call site): true = acquired on this stack. */
+	/*
+	 * \slowfn(lock, call site, lock word): true = acquired on this
+	 * stack. The lock word is what the failed cmpxchg left in eax, so
+	 * the slow path starts without loading the lock's line again.
+	 */
 	movq	(%rsp), %rsi
+	movl	%eax, %edx
 	pushq	%rcx				/* irqsave result; unused otherwise */
 	pushq	%rdi
 	call	\slowfn

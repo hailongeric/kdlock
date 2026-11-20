@@ -1,0 +1,48 @@
+k20 1 off mmap1 8 304610 | no_spin+2 head_sleep+2286 parked+2304 wr_steal+5742
+k20 1 off mmap1 16 308177 | no_spin+2 head_sleep+2431 parked+2486 wr_steal+3006
+k20 1 off mmap1 32 304224 | no_spin+2 head_sleep+1808 parked+2009 wr_steal+3548
+k20 1 off brk1 8 748941 | no_spin+5 head_sleep+1713 parked+1736 wr_steal+3798
+k20 1 off brk1 16 736071 | head_sleep+1863 parked+1920 wr_steal+2557
+k20 1 off brk1 32 736336 | no_spin+9 head_sleep+1756 parked+2010 wr_steal+2461
+k20 1 q0 mmap1 8 289725 | no_spin+2 head_sleep+2041 parked+6050 wr_steal+4559
+k20 1 q0 mmap1 16 297643 | no_spin+1 head_sleep+2110 parked+4950 wr_steal+2223
+k20 1 q0 mmap1 32 298229 | no_spin+2 head_sleep+2063 parked+3902 wr_steal+3225
+k20 1 q0 brk1 8 756161 | no_spin+2 head_sleep+1656 parked+13849 wr_steal+3747
+k20 1 q0 brk1 16 742603 | no_spin+1 head_sleep+1544 parked+1598 wr_steal+2116
+k20 1 q0 brk1 32 744907 | no_spin+5 head_sleep+1709 parked+3978 wr_steal+1219
+k20 1 q4 mmap1 8 293003 | no_spin+3 head_sleep+1892 parked+1908 wr_steal+4456
+k20 1 q4 mmap1 16 302159 | head_sleep+2144 parked+2200 wr_steal+3169
+k20 1 q4 mmap1 32 296799 | no_spin+4 head_sleep+1864 parked+2584 wr_steal+3593
+k20 1 q4 brk1 8 761239 | no_spin+2 head_sleep+1468 parked+1484 wr_steal+3702
+k20 1 q4 brk1 16 716959 | no_spin+2 head_sleep+1421 parked+1791 wr_steal+1993
+k20 1 q4 brk1 32 719746 | no_spin+7 head_sleep+1486 parked+1922 wr_steal+2393
+k20 1 q6 mmap1 8 290633 | head_sleep+2028 parked+2049 wr_steal+4509
+k20 1 q6 mmap1 16 295680 | no_spin+2 head_sleep+1864 parked+1927 wr_steal+2482
+k20 1 q6 mmap1 32 296869 | no_spin+2 head_sleep+1945 parked+2171 wr_steal+3469
+k20 1 q6 brk1 8 739802 | no_spin+2 head_sleep+1573 parked+1590 wr_steal+3424
+k20 1 q6 brk1 16 741282 | no_spin+1 head_sleep+1869 parked+1927 wr_steal+2136
+k20 1 q6 brk1 32 742472 | no_spin+6 head_sleep+1222 parked+1494 wr_steal+1431
+k20 2 off mmap1 8 301996 | no_spin+2 head_sleep+2048 parked+2064 wr_steal+5179
+k20 2 off mmap1 16 308196 | no_spin+3 head_sleep+1972 parked+2042 wr_steal+3020
+k20 2 off mmap1 32 302732 | no_spin+3 head_sleep+1404 parked+1609 wr_steal+3448
+k20 2 off brk1 8 789306 | no_spin+3 head_sleep+1658 parked+1681 wr_steal+4822
+k20 2 off brk1 16 755026 | no_spin+1 head_sleep+2022 parked+2082 wr_steal+1728
+k20 2 off brk1 32 708786 | no_spin+12 head_sleep+1249 parked+1490 wr_steal+2349
+k20 2 q0 mmap1 8 290765 | no_spin+4 head_sleep+1911 parked+1935 wr_steal+4598
+k20 2 q0 mmap1 16 302660 | no_spin+2 head_sleep+2194 parked+3456 wr_steal+2677
+k20 2 q0 mmap1 32 298797 | no_spin+4 head_sleep+1668 parked+2163 wr_steal+3291
+k20 2 q0 brk1 8 739268 | head_sleep+1431 parked+14417 wr_steal+2809
+k20 2 q0 brk1 16 760240 | no_spin+2 head_sleep+1888 parked+12182 wr_steal+1679
+k20 2 q0 brk1 32 733376 | no_spin+5 head_sleep+1296 parked+1723 wr_steal+1696
+k20 2 q4 mmap1 8 293851 | no_spin+1 head_sleep+1788 parked+11195 wr_steal+4435
+k20 2 q4 mmap1 16 303237 | no_spin+1 head_sleep+1964 parked+2027 wr_steal+3098
+k20 2 q4 mmap1 32 295991 | no_spin+7 head_sleep+1780 parked+2114 wr_steal+3899
+k20 2 q4 brk1 8 738998 | no_spin+3 head_sleep+1352 parked+1372 wr_steal+3299
+k20 2 q4 brk1 16 759204 | no_spin+3 head_sleep+1656 parked+1721 wr_steal+1810
+k20 2 q4 brk1 32 714384 | no_spin+14 head_sleep+1210 parked+1821 wr_steal+2043
+k20 2 q6 mmap1 8 291561 | no_spin+1 head_sleep+1988 parked+2000 wr_steal+5945
+k20 2 q6 mmap1 16 301439 | no_spin+1 head_sleep+1947 parked+2011 wr_steal+2876
+k20 2 q6 mmap1 32 298548 | head_sleep+1441 parked+1656 wr_steal+2997
+k20 2 q6 brk1 8 754152 | no_spin+2 head_sleep+1601 parked+1619 wr_steal+4076
+k20 2 q6 brk1 16 739348 | head_sleep+1624 parked+1673 wr_steal+2753
+k20 2 q6 brk1 32 723754 | no_spin+8 head_sleep+1676 parked+1971 wr_steal+2074

@@ -109,7 +109,38 @@ result READMEs it points to are the maintained record.
     locktorture 6/6, run_corr plain and delegated 442 points 0 failed,
     test-ww_mutex, mm_stress 16/32/64, 0 kernel complaints.
 
+* **Plain paths against the real native locks, and the handback policy**
+  (2026-11-19/20, `bench/results/kdclaude/plain-20261119-64cpu/`, the
+  user's task list of 2026-11-19):
+  * The native twins up to kdnat10 ran test-and-set spinlocks (no
+    `CONFIG_PARAVIRT_SPINLOCKS`, so `virt_spin_lock_key` stayed on in the
+    guest). Every earlier "native" column is against those; the READMEs of
+    those rounds say so at the top. kdnat11 and later are right
+    (`python3 /root/skey.py virt_spin_lock_key` in the guest must print 0).
+  * Changes, each measured in one boot (README sections 2-10): the clobber
+    entries removed; rwsem write stealing; rwlock direct take and sampled
+    era measurements; spinlock delegation mode only with a waiter of another
+    node; no successor prefetch; the slow path takes the lock word from the
+    failed fast path; rwsem writers park when readers stay long and 6 or
+    more writers wait; a handback after a kept downgrade counts against the
+    site, retry after 1-4 s. `kd_vdown` stays 1.
+  * kdall21 against its twin kdnat18 (README section 11, reduced grid, one
+    run per point): without the daemon every point at 0.93 of native or
+    above, with it at 0.90 or above; correctness clean.
+  * Psearchy and LevelDB: why the published stock curves turn over, with
+    sources (`psearchy-leveldb-published-curves.md` there) and the
+    IntervalVM configurations measured (README section 8).
+
 ## 4. What is next, in order
+
+0. **Left from the plain-path round:** lock1 at 16 threads scatters around
+   0.91-1.03 of native between rounds and boots (not explained; the other
+   thread counts are at 0.93-1.05); page_fault2 at 60 threads with the
+   daemon is at 0.84-0.90 with only about 35 sections delegated (not
+   looked at); Apache with the daemon is 3-7% below Apache without it; the
+   nano grid, FxMark, Metis, Psearchy and the lkp workloads have not been
+   rerun on kdall21/kdnat18 (the lkp native screening has to be redone on
+   a twin with the real spinlocks).
 
 1. **Rerun the measurement grid on kdall13: done 2026-11-19**
    (`bench/results/kdclaude/appgrid-20261119-64cpu/`, round g2: kdall13
@@ -137,9 +168,10 @@ result READMEs it points to are the maintained record.
    the applications and file systems the first one left out and repeats
    the measurements on kdnat10 and kdall13; its README section 5 has the
    state.
-5. **Open losses** from the grid: page_fault1/3 at 1-32 threads,
+5. **Open losses** from the grid (page_fault1/3 at 1-32 threads,
    page_fault2, LevelDB readrandom at 64, Apache single process without
-   delegation at 36-64. Not profiled yet.
+   delegation at 36-64): profiled and fixed in the plain-path round
+   (section 3).
 6. **Whole-kernel steps** (AGENTS.md goal): images that follow runtime text
    patching (step 2), then delegation lock user by lock user from allow
    lists (step 4). Step 3 (per-CPU classification) now has the region

@@ -116,15 +116,19 @@ void kd_site_request(unsigned long rip)
  */
 static DEFINE_RAW_SPINLOCK(kd_site_switch);
 
-#define KD_SITE_RETRY_MAX	6	/* longest wait: HZ << 6 */
+#define KD_SITE_RETRY_MAX	2	/* longest wait: HZ << 2 */
 
 /*
  * A switched-off site is tried again after a while: what it executes may
  * have changed. mmap and munmap were switched off by a test that unmaps
  * touched memory (most sections end at a frontier there) and then stayed
  * off for a workload they would have served completely. The wait doubles
- * with every switch-off in a row, from 1 s to 64 s, so a site that stays
- * bad costs one window of handed-back sections per wait.
+ * with every switch-off in a row, from 1 s to 4 s, so a site that stays
+ * bad costs one window of handed-back sections per wait. (It went up to
+ * 64 s until 2026-11-20. Since then a munmap of mapped pages switches its
+ * site off as well (kd_exec_one(), kept downgrade), the same site serves
+ * one process after another, and a window of 256 sections every 4 s is
+ * nothing against the minute a workload that completes would wait.)
  *
  * Called by a contended caller that found the site off; preemption is
  * off. Whoever gets the lock decides; the others go on without.

@@ -107,16 +107,24 @@ is 250 000 by default.
 Handbacks for reasons the translator cannot learn are reported as
 `KD_EV_HANDBACK` events (256 per image) and counted by reason in debugfs
 (`hb_frontier`, `hb_miss`, `hb_acquire`, `hb_downgrade`, `hb_other`); the
-daemon logs them with `-v`. A handback at a downgrade, or of the read part
-after a downgrade the combiner kept (`kd_vdown`), counts as useful for the
-site's usefulness account: the write part ran on the combiner.
+daemon logs them with `-v`. A handback at a downgrade (`kd_vdown=0`) counts
+as useful for the site's usefulness account: the write part ran on the
+combiner. A handback of the read part after a downgrade the combiner kept
+(`kd_vdown=1`, the default; counter `vdown_hb`) counts as a handback since
+2026-11-20: a `munmap` of mapped pages always ends that way, at the TLB
+flush, and delegating it loses 7 to 12% against not delegating it
+(LevelDB with a thrashing table cache, 2.4 M sections in 20 s of which
+0.2% completed; `kd_exec_one()` has the numbers and
+`bench/results/kdclaude/plain-20261119-64cpu/` the runs).
 
 A site that the kernel switched off (most executions handed back) is
 switched on again by the kernel after a wait, 1 s at first and doubled
-with each switch-off in a row up to 64 s (`kd_site_retry()`, counter
-`site_retry`). What a site executes changes with the workload: `mmap` and
-`munmap` were switched off by a test that unmaps touched memory and stayed
-off for mmap1 until build #71.
+with each switch-off in a row up to 4 s (`kd_site_retry()`, counter
+`site_retry`; up to 64 s until 2026-11-20). What a site executes changes
+with the workload: `mmap` and `munmap` were switched off by a test that
+unmaps touched memory and stayed off for mmap1 until build #71; with the
+short wait the `munmap` site follows the workload, off for one that unmaps
+mapped pages and on within seconds for one whose sections complete.
 
 The daemon's stored knowledge is keyed by release and build (`uname -r`
 and `uname -v`). It is addresses; a rebuild under the same release moves

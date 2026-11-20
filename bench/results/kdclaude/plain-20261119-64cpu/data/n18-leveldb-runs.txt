@@ -1,0 +1,5 @@
+n18 native leveldb ivm 4 60787 ops/s 65.811us/op | 0 0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 0 
+n18 native leveldb ivm 8 100493 ops/s 79.609us/op | 0 0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 0 
+n18 native leveldb ivm 16 104443 ops/s 153.194us/op | 0 0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 0 
+n18 native leveldb ivm 32 82164 ops/s 389.470us/op | 0 0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 0 
+n18 native leveldb ivm 60 53837 ops/s 1114.500us/op | 0 0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 0 

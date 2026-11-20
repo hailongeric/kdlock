@@ -324,6 +324,8 @@ extern unsigned int kd_xchg;
  */
 #define KD_RW_ERA_BITS		8
 #define KD_POST_DEPTH		2	/* callers queued behind a head that count as pressure */
+#define KD_PARK_DEPTH		8	/* ... and how deep kd_rwsem_park() has the queue measured */
+#define KD_ERA_PRESS_ONE	16	/* fixed point of the pressure and queue averages */
 #define KD_ERA_NODE(v)		((v) & 0xffU)
 #define KD_ERA_STAMP_MAX	0xffffffU
 
@@ -362,6 +364,9 @@ static __always_inline bool kd_rw_era_other(const void *lock)
 void kd_rw_era_wait(const void *lock, unsigned int max_ns);
 void kd_rw_era_writer(const void *lock, long nr, int queued, u64 drain_ns);
 u32 kd_rw_era_drain(const void *lock);
+u32 kd_rw_era_queue(const void *lock);
+void kd_rw_era_queue_note(const void *lock, int queued);
+void kd_rw_era_parked(const void *lock, int d);
 
 /*
  * Does this rwlock queue head take the era measurements? One write
@@ -442,7 +447,7 @@ int kd_wait_sleepable(struct kd_mutex *m, void *root, const struct kd_family *f,
 void kd_finish_resume(int pin);
 void kd_q_lock_plain(struct kd_qlock *q);
 bool kd_q_queue(struct kd_qlock *q, bool probe);
-bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site);
+bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site, u32 val);
 bool kd_can_offer(unsigned long rip);
 bool kd_release_combine(struct kd_qlock *q, struct kd_mutex *m, void *root,
 			const struct kd_family *f);
@@ -636,12 +641,21 @@ static __always_inline u32 kd_q_fetch_set_pending(struct kd_qlock *q)
  * the lock with a plain store, because nobody else can: the fast path needs
  * the whole word zero and a queue head waits for the pending bit to clear.
  *
+ * @val is the lock word as the caller last saw it: for the entry stubs the
+ * value their failed fast path returned. The native slow path gets it the
+ * same way. Loading the word again here was one more access to the lock's
+ * line by every arriving caller, at the moment the holder and the queue
+ * head pass the lock on through that very line: will-it-scale lock1
+ * (files->file_lock, ten million handovers a second) on kdall19, in one
+ * boot, 4 rounds, at 8 / 16 / 32 threads: 9.06 / 9.34 / 9.51 M operations
+ * per second with the load, 9.69 / 10.16 / 10.12 M without, which is 0.91 /
+ * 0.85 / 0.92 and 0.97 / 0.93 / 0.97 of the native kernel.
+ *
  * Returns true with the lock held. Otherwise the caller must queue; *@valp
  * is the last value read.
  */
-static __always_inline bool kd_q_pending(struct kd_qlock *q, u32 *valp)
+static __always_inline bool kd_q_pending(struct kd_qlock *q, u32 val, u32 *valp)
 {
-	u32 val = atomic_read(&q->val);
 
 	/* A pending waiter is about to take the free lock: let it (bounded). */
 	if (val == KD_Q_PENDING_VAL) {

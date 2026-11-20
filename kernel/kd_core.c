@@ -590,10 +590,10 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 
 		/*
 		 * Handback: the origin executes the instruction at @ip itself.
-		 * A downgrade is a planned one: the write part of the section
-		 * was executed here, and only the read-side remainder belongs
-		 * to the origin (munmap does this on every call). It counts as
-		 * useful for the site, or such sites would be switched off.
+		 * A downgrade is a planned one (kd_vdown=0): the write part of
+		 * the section was executed here, and only the read-side
+		 * remainder belongs to the origin. It counts as useful for the
+		 * site, or such sites would be switched off.
 		 */
 		planned = kind == KD_X_UNLOCK && op == KD_OP_DOWNGRADE;
 		switch (kind) {
@@ -649,10 +649,31 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 	if (r->vdown & BIT(level)) {
 		r->vdown &= ~BIT(level);
 		if (native && !done) {
-			/* The read part goes back: the origin gets a read hold. */
+			/*
+			 * The read part goes back: the origin gets a read hold.
+			 *
+			 * For the site this counts as a handback like any
+			 * other (it did not until 2026-11-20). A munmap of
+			 * mapped pages always ends this way, at the TLB flush,
+			 * and delegating it then loses: the combiner has run
+			 * the write part and the zapping of every waiter one
+			 * after the other, and each of them still has to be
+			 * resumed for the rest. kdall20, one boot, against
+			 * the native kernel, without the daemon / with it:
+			 * LevelDB readrandom with a thrashing table cache at
+			 * 4, 8, 16, 32 threads 1.08, 1.09, 1.10, 1.14 / 1.01,
+			 * 0.96, 0.98, 1.03 (2.4 M sections in 20 s, all but
+			 * 0.2% handed back); Apache's default configuration
+			 * 1.35 / 1.22. Handing back at the downgrade instead
+			 * (kd_vdown=0) is no better (1.04, 1.01, 1.05, 1.07
+			 * and 1.10) and takes mmap1 from 1.24 to 0.89. So a
+			 * site whose sections mostly end like this is switched
+			 * off by kd_site_account() and tried again after
+			 * kd_site_retry()'s wait; a munmap of untouched memory
+			 * (mmap1) completes and keeps its site on.
+			 */
 			f->downgrade(root);
 			hold->no_offer = true;
-			planned = true;
 			kd_stat_inc(kc, KD_STAT_VDOWN_HB);
 		}
 	}
@@ -1293,12 +1314,13 @@ static __always_inline void kd_node_init(struct kd_node *n, int cpu, int idx)
  * a session ends at its node (->entry is NULL: kd_wait_spin() clears it
  * again whenever it gives a node back).
  *
+ * @val: the lock word as the caller last saw it (0: not known).
  * @probe: the lock is a delegable one, so this head may switch it to
  * delegation mode. The mode otherwise travels with the head role
  * (KD_N_HEAD_D), also through waiters that do not take part in it.
  * Returns whether the lock was taken in delegation mode.
  */
-static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe)
+static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe, u32 val)
 {
 	struct kd_cpu *kc = this_cpu_ptr(&kd_cpu);
 	struct kd_node *me, *next;
@@ -1317,8 +1339,14 @@ static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe)
 	me = &kc->nodes[idx];
 	kd_node_init(me, smp_processor_id(), idx);
 
-	/* The node line may have been cold: the lock may be free by now. */
-	if (kd_q_trylock_fifo_read(q))
+	/*
+	 * The node line may have been cold: the lock may be free by now. Not
+	 * looked at when @val, the lock word the caller saw, had a queue: the
+	 * lock is then free for this caller only if that whole queue has gone
+	 * since, and the load is one more access to the lock's line by every
+	 * arriving caller (see kd_q_pending()).
+	 */
+	if (!(val >> KD_Q_TAIL_SHIFT) && kd_q_trylock_fifo_read(q))
 		goto out;
 
 	if (kd_q_enqueue(q, me, false)) {
@@ -1333,7 +1361,9 @@ static __always_inline bool __kd_q_queue(struct kd_qlock *q, bool probe)
 		 * transfer again. Without it the plain path is 5-8% faster at
 		 * 8-32 workers (kdnat13, nano spin with one cache line, with
 		 * and without work between the operations, in-boot A/B, 3
-		 * rounds: 0.97-0.98 of native with it, 1.02-1.05 without).
+		 * rounds: 0.97-0.98 of native with it, 1.02-1.05 without);
+		 * will-it-scale lock1 on kdall19, 4 rounds: 9.2-10.0 M
+		 * operations per second with it, 9.7-10.2 M without.
 		 */
 		/*
 		 * Measure the queue here, as the new head that still waits for
@@ -1365,7 +1395,7 @@ out:
 
 bool kd_q_queue(struct kd_qlock *q, bool probe)
 {
-	return __kd_q_queue(q, probe);
+	return __kd_q_queue(q, probe, 0);
 }
 
 /* Contended acquisition for callers that are never delegated. */
@@ -1373,30 +1403,28 @@ void kd_q_lock_plain(struct kd_qlock *q)
 {
 	u32 val;
 
-	if (!kd_q_pending(q, &val))
-		__kd_q_queue(q, false);
+	if (!kd_q_pending(q, atomic_read(&q->val), &val))
+		__kd_q_queue(q, false, val);
 }
 
 /*
  * Slow path of the delegable spinlock entries, called by the entry stub on
  * the caller's stack with preemption off. @site is the caller's return
- * address. One function, like the native slow path it stands for in plain
- * mode.
+ * address and @val the lock word its fast path found. One function, like
+ * the native slow path it stands for in plain mode.
  *
  * Returns true with the lock held. Returns false, with nothing queued,
  * when the lock is in delegation mode and this caller can publish its
  * continuation; the stub then goes on to the wait stack and kd_wait_spin().
  */
-bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site)
+bool kd_q_lock_slow(struct kd_qlock *q, unsigned long site, u32 val)
 {
-	u32 val;
-
-	if (kd_q_pending(q, &val))
+	if (kd_q_pending(q, val, &val))
 		return true;
 	if (kd_q_deleg_mode(q, val) && kd_can_offer(site))
 		return false;
 	raw_cpu_inc(kd_cpu.nodes[0].nplain);
-	kd_mode_note(q, __kd_q_queue(q, true));
+	kd_mode_note(q, __kd_q_queue(q, true, val));
 	return true;
 }
 

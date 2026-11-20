@@ -307,6 +307,24 @@ static unsigned int kd_rwsem_rphase_ns __read_mostly = 1000;
 core_param(kd_rwsem_rphase_ns, kd_rwsem_rphase_ns, uint, 0644);
 #define KD_RWSEM_RPHASE_MAX_NS	50000
 
+/*
+ * Parking of plain-mode writers (kd_rwsem_park(), below): the readers of
+ * this lock take longer than kd_rwsem_park_drain_ns to leave on average
+ * (0: never park) ...
+ */
+static unsigned int kd_rwsem_park_drain_ns __read_mostly = 5000;
+core_param(kd_rwsem_park_drain_ns, kd_rwsem_park_drain_ns, uint, 0644);
+/* ... and this many writers spin in the queue already, on average. */
+static unsigned int kd_rwsem_park_queue __read_mostly = 6;
+core_param(kd_rwsem_park_queue, kd_rwsem_park_queue, uint, 0644);
+
+static __always_inline bool kd_rwsem_park_slow(struct kd_rwsem *sem)
+{
+	unsigned int ns = READ_ONCE(kd_rwsem_park_drain_ns);
+
+	return ns && READ_ONCE(kd_rw_era_ns) && kd_rw_era_drain(sem) > ns;
+}
+
 static bool kd_rwsem_post(void *root, struct kd_node *head)
 {
 	struct kd_rwsem *sem = root;
@@ -340,8 +358,16 @@ static bool kd_rwsem_post(void *root, struct kd_node *head)
 		}
 	}
 	nr = atomic_long_fetch_or(KD_RWSEM_WWAIT, &sem->count) >> KD_RWSEM_RSHIFT;
-	if (era && nr)
+	if (era && nr) {
 		t0 = local_clock();
+		/*
+		 * For kd_rwsem_park(): the writers that spin behind this one.
+		 * Looked at here, before the wait for the readers and only
+		 * when there is one, so that the walk delays nobody.
+		 */
+		if (kd_rwsem_park_slow(sem))
+			kd_rw_era_queue_note(sem, head ? kd_q_depth(head, KD_PARK_DEPTH) : 0);
+	}
 	if (!kd_rwsem_spin_for(sem, true)) {
 		/* The readers stay longer than the spin budget: no eras. */
 		if (era)
@@ -507,7 +533,22 @@ static int kd_rwsem_write_sleep_on(struct kd_rwsem *sem, unsigned int state)
  *
  * The queue heads already measure how long the readers they find take to
  * leave (kd_rw_era_writer(), an average per lock by hash). Above
- * kd_rwsem_park_drain_ns a writer parks. 0: never (always queue).
+ * kd_rwsem_park_drain_ns a writer parks (0: never, always queue), if on
+ * average kd_rwsem_park_queue writers or more wait behind the one that
+ * waits for the readers: the ones a queue head finds spinning behind it
+ * (up to KD_PARK_DEPTH) plus the ones parked at that moment.
+ *
+ * The second condition is for few threads. Parking pays through the CPUs
+ * it takes out of the mm; with four threads there are at most three to
+ * take out, and each parked wait costs a wakeup. LevelDB readrandom with a
+ * thrashing table cache (40 000 munmap a second at 4 threads) against the
+ * native kernel, kdall20, one boot, mean of 2: never parking 1.06 / 1.06 /
+ * 1.10 / 1.07 at 4 / 8 / 16 / 32 threads, parking by the drain time alone
+ * 0.88 / 0.98 / 1.12 / 1.15, with 6 waiting writers 1.08 / 1.09 / 1.10 /
+ * 1.14; Apache single process at 16 / 32 / 60 threads 1.07 / 0.89 / 0.70,
+ * 1.09 / 1.27 / 1.28 and 1.12 / 1.24 / 1.27. Counting only the spinning
+ * writers does not work: once writers park the queue is short, the
+ * average falls and parking ends (kdall18: Apache at 60 threads 0.78).
  *
  * Measured on kdall16, no daemon, one boot, thresholds off / 5 us / 20 us,
  * mean of 2 runs, against the native twin (another boot): Apache single
@@ -519,14 +560,12 @@ static int kd_rwsem_write_sleep_on(struct kd_rwsem *sem, unsigned int state)
  * 4 000), page_fault1 and page_fault3 unchanged. The threshold is the one
  * above which a lock gets no era either (kd_rw_era_drain_ns).
  */
-static unsigned int kd_rwsem_park_drain_ns __read_mostly = 5000;
-core_param(kd_rwsem_park_drain_ns, kd_rwsem_park_drain_ns, uint, 0644);
-
 static __always_inline bool kd_rwsem_park(struct kd_rwsem *sem)
 {
-	unsigned int ns = READ_ONCE(kd_rwsem_park_drain_ns);
+	unsigned int n = READ_ONCE(kd_rwsem_park_queue);
 
-	return ns && READ_ONCE(kd_rw_era_ns) && kd_rw_era_drain(sem) > ns;
+	return kd_rwsem_park_slow(sem) &&
+	       kd_rw_era_queue(sem) >= n * KD_ERA_PRESS_ONE;
 }
 
 static int __kd_down_write_sleep(struct kd_rwsem *sem, int why, unsigned int state)
@@ -549,8 +588,12 @@ static int __kd_down_write_sleep(struct kd_rwsem *sem, int why, unsigned int sta
 		 * average that sent them there.
 		 */
 		nr = atomic_long_fetch_or(KD_RWSEM_WWAIT, &sem->count) >> KD_RWSEM_RSHIFT;
-		if (era && nr)
+		if (era && nr) {
 			t0 = local_clock();
+			/* Nobody spins behind a writer that slept; the parked ones are added. */
+			if (kd_rwsem_park_slow(sem))
+				kd_rw_era_queue_note(sem, 0);
+		}
 		if (kd_rwsem_spin_for(sem, true)) {
 			if (era)
 				kd_rw_era_writer(sem, nr, 0, t0 ? local_clock() - t0 : 0);
@@ -608,7 +651,10 @@ static __always_inline int __kd_down_write_slow(struct kd_rwsem *sem, unsigned l
 	if (kd_rwsem_park(sem)) {
 		/* Readers stay long in this lock: wait asleep, not in the queue. */
 		preempt_enable();
-		return __kd_down_write_sleep(sem, KD_WAIT_SLEEP, state);
+		kd_rw_era_parked(sem, 1);
+		ret = __kd_down_write_sleep(sem, KD_WAIT_SLEEP, state);
+		kd_rw_era_parked(sem, -1);
+		return ret;
 	}
 	ret = kd_wait_sleepable(&sem->m, sem, &kd_rwsem_family, NULL, NULL, false);
 	preempt_enable();

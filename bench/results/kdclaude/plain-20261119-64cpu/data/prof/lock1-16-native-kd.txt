@@ -1,0 +1,126 @@
+## n14 7.0.0-38-kdnat14
+## 16 threads: average:9286074:4639185:4646888
+      172408738109      cycles                                                                
+      102305658974      instructions                                                          
+            456211      cache-misses                                                          
+         177121814      cache-references                                                      
+          93158618      L1-dcache-load-misses                                                 
+          25844734      branch-misses                                                         
+## 32 threads: average:10708640:5350978:5357662
+      344170695314      cycles                                                                
+      111014308525      instructions                                                          
+            145644      cache-misses                                                          
+         177493236      cache-references                                                      
+         101169536      L1-dcache-load-misses                                                 
+          26287843      branch-misses                                                         
+## flat
+    81.28%  [k] native_queued_spin_lock_slowpath
+     2.72%  [k] _raw_spin_lock
+     1.63%  [k] kmem_cache_alloc_noprof
+     1.42%  [k] entry_SYSCALL_64
+     1.41%  [k] fput
+     1.32%  [k] do_syscall_64
+     1.11%  [k] clear_bhb_loop
+     0.88%  [k] _copy_from_user
+## annotate native_queued_spin_lock_slowpath
+    0.00 :   ffffffff826a9e09:       lock cmpxchg %edx,(%rcx)
+    0.00 :   ffffffff826a9e42:       lock btsl $0x8,(%rcx)
+    0.00 :   ffffffff826a9e68:       pause
+    0.00 :   ffffffff826a9eaa:       pause
+    0.00 :   ffffffff826a9f33:       lock cmpxchg %esi,(%rcx)
+    0.01 :   ffffffff826a9f3d:       xchg   %ax,%ax
+    0.00 :   ffffffff826a9f62:       pause
+    0.00 :   ffffffff826aa05d:       xchg   %ax,0x2(%rcx)
+    1.40 :   ffffffff826aa061:       mov    %eax,%esi
+    0.00 :   ffffffff826aa072:       pause
+    2.09 :   ffffffff826aa076:       test   %ax,%ax
+    0.00 :   ffffffff826aa098:       pause
+    0.00 :   ffffffff826aa0aa:       lock cmpxchg %edx,(%rcx)
+    0.00 :   ffffffff826aa0b4:       pause
+    1.31 :   ffffffff826aa0ef:       pause
+   77.87 :   ffffffff826aa0f1:       mov    0x8(%rdx),%eax
+   16.34 :   ffffffff826aa0f4:       test   %eax,%eax
+    0.00 :   ffffffff826aa111:       lock cmpxchg %edi,(%rcx)
+
+## k18 7.0.0-38-kdall18
+## 16 threads: average:7921522:3961300:3960222
+      172238670794      cycles                                                                
+       88560210969      instructions                                                          
+            210873      cache-misses                                                          
+         162055463      cache-references                                                      
+          93392683      L1-dcache-load-misses                                                 
+          31764880      branch-misses                                                         
+## 32 threads: average:9905392:4952747:4952644
+      344136045077      cycles                                                                
+      104075058665      instructions                                                          
+            339489      cache-misses                                                          
+         169824170      cache-references                                                      
+         107888432      L1-dcache-load-misses                                                 
+          33327289      branch-misses                                                         
+## flat
+    81.03%  [k] kd_q_lock_slow
+     2.94%  [k] kd_spin_lock
+     1.90%  [k] fput
+     1.64%  [k] kmem_cache_alloc_noprof
+     1.41%  [k] entry_SYSCALL_64
+     1.26%  [k] do_syscall_64
+     1.07%  [k] clear_bhb_loop
+     0.79%  [k] _copy_from_user
+## annotate kd_q_lock_slow
+    0.00 :   ffffffff814d422f:       lock btsl $0x8,(%rdx)
+    0.00 :   ffffffff814d4255:       pause
+    1.42 :   ffffffff814d433c:       test   %eax,%eax
+    0.00 :   ffffffff814d434b:       xchg   %ax,0x2(%rdx)
+    1.28 :   ffffffff814d434f:       test   %ax,%ax
+    1.32 :   ffffffff814d4392:       pause
+   76.51 :   ffffffff814d4394:       mov    0x188(%rcx),%eax
+   15.87 :   ffffffff814d439a:       cmp    $0x1,%eax
+    0.00 :   ffffffff814d4460:       pause
+    0.00 :   ffffffff814d44be:       pause
+    0.00 :   ffffffff814d44c6:       lock cmpxchg %ecx,(%rdx)
+    0.00 :   ffffffff814d44d5:       lock cmpxchg %esi,(%rdx)
+    0.01 :   ffffffff814d4536:       pause
+    2.57 :   ffffffff814d453a:       test   %ax,%ax
+    0.00 :   ffffffff814d4577:       pause
+    0.00 :   ffffffff814d458b:       lock cmpxchg %r9d,(%rdx)
+
+## k20 7.0.0-38-kdall20
+## 16 threads: average:8543498:4268797:4274701
+      172225329596      cycles                                                                
+       92820959384      instructions                                                          
+            176849      cache-misses                                                          
+         166412312      cache-references                                                      
+          81745187      L1-dcache-load-misses                                                 
+          31736504      branch-misses                                                         
+## 32 threads: average:10109354:5053838:5055516
+      344233859459      cycles                                                                
+      105629652995      instructions                                                          
+            138893      cache-misses                                                          
+         166462246      cache-references                                                      
+          91600133      L1-dcache-load-misses                                                 
+          32502226      branch-misses                                                         
+## flat
+    83.87%  [k] kd_q_lock_slow
+     2.41%  [k] kd_spin_lock
+     1.44%  [k] fput
+     1.33%  [k] kmem_cache_alloc_noprof
+     1.24%  [k] entry_SYSCALL_64
+     1.11%  [k] do_syscall_64
+     0.89%  [k] clear_bhb_loop
+     0.73%  [k] _copy_from_user
+## annotate kd_q_lock_slow
+    0.00 :   ffffffff814d4252:       lock btsl $0x8,(%rcx)
+    0.00 :   ffffffff814d4279:       pause
+    0.00 :   ffffffff814d4375:       lock cmpxchg %edx,(%rcx)
+    0.00 :   ffffffff814d43d3:       pause
+    0.01 :   ffffffff814d4426:       xchg   %ax,0x2(%rcx)
+    1.40 :   ffffffff814d442a:       test   %ax,%ax
+    1.30 :   ffffffff814d446d:       pause
+   78.98 :   ffffffff814d446f:       mov    0x188(%rsi),%eax
+   15.55 :   ffffffff814d4475:       cmp    $0x1,%eax
+    0.00 :   ffffffff814d456c:       pause
+    2.00 :   ffffffff814d4570:       test   %ax,%ax
+    0.00 :   ffffffff814d45ae:       pause
+    0.00 :   ffffffff814d45c2:       lock cmpxchg %r9d,(%rcx)
+    0.00 :   ffffffff814d4649:       pause
+    0.00 :   ffffffff814d4651:       lock cmpxchg %edx,(%rcx)

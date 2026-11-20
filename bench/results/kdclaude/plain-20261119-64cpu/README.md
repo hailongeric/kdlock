@@ -446,12 +446,249 @@ buffers by mmap before 2.23, the table size) is in that file.
 
 ## 9. kdall17: everything together
 
-Pending (`k17_exp.sh` in the guest): correctness is in
-`data/k17-check.out` (locktorture 6 of 6, `run_corr.py` plain and with the
-daemon 240 points each 0 failed, API check 0 failed, test-ww_mutex,
-`mm_stress` 16/32/64, 0 kernel complaints).
+`k17_exp.sh` in the guest (on the cloud host in `/root/kdwork/`): the
+correctness checks, then a reduced grid off, two learning passes, on, and
+on again with an allow list without `__vm_munmap`. One run per point;
+native from g3 (will-it-scale, kdnat11), kdnat12 (Apache) and kdnat13
+(LevelDB, mean of 2, the saved database). `data/k17-check.out`,
+`data/k17-runs.txt`, `data/ivm-runs.txt` (tags i4, i5, i5nm),
+`data/k17-summary.md`:
 
-## 11. Files
+| bench | variant | workers | native | off/native | on/native | on without munmap/native | on: delegated, handbacks | without munmap: delegated, handbacks |
+|---|---|---|---|---|---|---|---|---|
+| wis | lock1 | 4 | 9.742e+06 | 1.00 | 0.99 | 0.99 | 0, 0 | 0, 0 |
+| wis | lock1 | 16 | 1.064e+07 | 0.81 | 0.87 | 0.90 | 0, 0 | 0, 0 |
+| wis | lock1 | 32 | 1.08e+07 | 0.87 | 0.87 | 0.87 | 0, 0 | 0, 0 |
+| wis | lock1 | 48 | 6.347e+06 | 0.94 | 0.91 | 0.94 | 0, 0 | 0, 0 |
+| wis | lock1 | 60 | 5.981e+06 | 0.92 | 0.94 | 0.86 | 0, 0 | 0, 0 |
+| wis | mmap1 | 4 | 3.468e+05 | 0.99 | 1.17 | 0.97 | 12962925, 99 | 3094082, 24 |
+| wis | mmap1 | 16 | 3.084e+05 | 0.98 | 1.24 | 0.95 | 12272085, 10 | 2757050, 1 |
+| wis | mmap1 | 32 | 3.019e+05 | 0.99 | 1.28 | 0.95 | 12361947, 3 | 2522212, 0 |
+| wis | mmap1 | 48 | 1.783e+05 | 1.63 | 1.77 | 1.58 | 10184158, 43 | 2346714, 0 |
+| wis | mmap1 | 60 | 1.708e+05 | 1.81 | 1.82 | 1.74 | 10114410, 69 | 2428463, 0 |
+| wis | mmap2 | 4 | 3.506e+05 | 1.00 | 1.09 | 0.95 | 12183361, 384 | 2968148, 31 |
+| wis | mmap2 | 16 | 3.339e+05 | 0.99 | 1.13 | 0.94 | 12044463, 28 | 2717818, 0 |
+| wis | mmap2 | 32 | 3.591e+05 | 0.96 | 1.07 | 0.91 | 12344918, 10 | 2752202, 0 |
+| wis | mmap2 | 48 | 2.131e+05 | 1.67 | 1.50 | 1.58 | 10336747, 38 | 2749056, 0 |
+| wis | mmap2 | 60 | 1.977e+05 | 1.79 | 1.58 | 1.70 | 10047287, 29 | 2715989, 0 |
+| wis | brk1 | 4 | 7.107e+05 | 1.11 | 1.10 | 1.25 | 12267457, 356 | 13243673, 635 |
+| wis | brk1 | 16 | 7.026e+05 | 1.05 | 1.63 | 1.55 | 18309469, 19 | 17386549, 170 |
+| wis | brk1 | 32 | 6.819e+05 | 1.09 | 1.64 | 1.66 | 17924852, 20 | 18163189, 54 |
+| wis | brk1 | 48 | 4.035e+05 | 1.83 | 2.00 | 1.98 | 13044933, 98 | 12931266, 114 |
+| wis | brk1 | 60 | 3.832e+05 | 1.94 | 2.28 | 1.92 | 13961339, 88 | 12035315, 84 |
+| wis | page_fault1 | 4 | 1.978e+06 | 1.00 | 0.98 | 0.98 | 0, 0 | 1, 0 |
+| wis | page_fault1 | 16 | 3.025e+06 | 1.00 | 0.99 | 0.99 | 7, 2 | 4, 2 |
+| wis | page_fault1 | 32 | 2.795e+06 | 1.03 | 1.02 | 1.02 | 18, 13 | 18, 12 |
+| wis | page_fault1 | 48 | 3.961e+06 | 1.03 | 1.01 | 1.02 | 27, 15 | 30, 15 |
+| wis | page_fault1 | 60 | 4.091e+06 | 1.09 | 1.07 | 1.07 | 33, 23 | 34, 19 |
+| wis | page_fault2 | 4 | 1.507e+06 | 0.99 | 0.99 | 0.99 | 0, 0 | 0, 0 |
+| wis | page_fault2 | 16 | 2.021e+06 | 1.00 | 1.00 | 1.00 | 11, 0 | 8, 0 |
+| wis | page_fault2 | 32 | 2e+06 | 1.00 | 0.99 | 0.99 | 21, 0 | 22, 0 |
+| wis | page_fault2 | 48 | 3.299e+06 | 1.01 | 0.98 | 0.97 | 32, 0 | 37, 0 |
+| wis | page_fault2 | 60 | 3.682e+06 | 1.00 | 0.84 | 0.90 | 35, 0 | 35, 0 |
+| wis | page_fault3 | 4 | 3.771e+06 | 0.99 | 1.00 | 0.99 | 0, 0 | 0, 0 |
+| wis | page_fault3 | 16 | 1.324e+07 | 1.00 | 0.98 | 0.98 | 12, 0 | 8, 0 |
+| wis | page_fault3 | 32 | 1.256e+07 | 1.04 | 1.01 | 1.01 | 18, 0 | 20, 0 |
+| wis | page_fault3 | 48 | 1.221e+07 | 1.03 | 1.02 | 1.02 | 30, 0 | 35, 0 |
+| wis | page_fault3 | 60 | 1.215e+07 | 1.03 | 1.03 | 1.03 | 36, 0 | 31, 0 |
+| apache | single | 4 | 5.061e+04 | 1.09 | 1.04 | 1.03 | 21073, 72007 | 6719, 0 |
+| apache | single | 16 | 4.166e+04 | 1.06 | 1.11 | 1.08 | 462857, 462384 | 110213, 0 |
+| apache | single | 32 | 3.567e+04 | 1.24 | 1.24 | 1.19 | 445793, 444865 | 118556, 0 |
+| apache | single | 48 | 3.423e+04 | 1.27 | 1.31 | 1.23 | 450125, 449742 | 124488, 0 |
+| apache | single | 60 | 3.382e+04 | 1.27 | 1.31 | 1.23 | 444490, 443722 | 123407, 0 |
+| apache | default | 0 | 1.391e+05 | 1.27 | 1.20 | 1.22 | 1228391, 1140249 | 445593, 1 |
+| leveldb | ivm | 4 | 6.258e+04 | 0.86 | 1.00 | 0.83 | 298305, 174768 | 91828, 2005 |
+| leveldb | ivm | 8 | 1.003e+05 | 0.98 | 0.95 | 0.98 | 1239799, 1181887 | 644027, 1289 |
+| leveldb | ivm | 16 | 1.028e+05 | 1.13 | 1.00 | 1.15 | 1242837, 1240573 | 831698, 17 |
+| leveldb | ivm | 32 | 8.101e+04 | 1.15 | 1.04 | 1.22 | 1007777, 1005592 | 707366, 30 |
+| leveldb | ivm | 60 | 5.265e+04 | 1.16 | 1.17 | 1.21 | 718086, 711981 | 378995, 52 |
+
+Correctness: locktorture 6 of 6, `run_corr.py` plain and with the daemon
+240 points each 0 failed, API check 0 failed, test-ww_mutex, `mm_stress`
+16/32/64; no kernel complaint and no fatal signal in any pass; per-CPU
+lock bytes 0 of 64 after each benchmark of the delegated pass; `hb_region`
+(upper bound) 1658 over the boot.
+
+Without delegation everything is at 0.96 or above except
+
+- **lock1 at 16-32 threads, 0.81-0.87** (section 10), and
+- **LevelDB at 4 threads, 0.86**: the parking of section 7. In one boot of
+  kdall16 the same point is 16% lower with the threshold than without, and
+  8% lower at 8 threads (`data/ivm-runs.txt`, tags i3-park5000 and
+  i3-park0); section 10.
+
+`page_fault2` at 60 threads with the daemon (0.84, 35 sections delegated,
+0.90 with the other allow list) is one run and not explained.
+
+## 10. After kdall17: lock1, parking with few threads, handbacks
+
+**lock1.** Three boots each of kdall17 and kdnat14, three rounds per boot
+(`lock1_boot.sh`, `data/lock1-boots.txt`; median per boot, in M operations
+per second):
+
+| threads | native, 3 boots | kd, 3 boots | kd/native |
+|---|---|---|---|
+| 8 | 9.99-10.35 | 9.05-9.48 | 0.93 |
+| 16 | 10.73-11.01 | 9.47-9.70 | 0.88 |
+| 32 | 10.18-10.70 | 9.46-9.56 | 0.91 |
+| 48 | 5.97-6.51 | 5.99-6.18 | 0.95 |
+| 60 | 5.83-6.16 | 5.45-6.00 | 0.98 |
+
+The native rate does not move between boots, so the gap on one node was
+real. `files->file_lock` is passed on ten million times a second (93 ns
+per handover on native) and nothing else in the benchmark is contended.
+The two slow paths are the same algorithm step by step; the profiles
+(`lock1_perf.sh`, `data/prof/lock1-16-native-kd.txt`) differ in one place:
+kd has 1.4% of its slow-path samples on a load of the lock word before
+the enqueue where native has none, and 2.95 L1 misses per operation
+against 2.51. kd loaded the lock word on entry to the slow path, where
+the native slow path is given the value the failed fast path returned, and
+every such load by an arriving caller competes for the lock's line with
+the holder and the queue head. In one boot of kdall19 with temporary
+switches (`k19_lock1.sh`, `data/k19-dbg.txt`, 4 rounds, median, against
+the native medians above):
+
+| | 8 | 16 | 32 |
+|---|---|---|---|
+| load on entry (as before) | 9.06 M, 0.91 | 9.34 M, 0.85 | 9.51 M, 0.92 |
+| value passed by the entry stub | 9.69 M, 0.97 | 10.16 M, 0.93 | 10.12 M, 0.97 |
+| ... and no second look when a queue was seen | 9.73 M, 0.97 | 10.45 M, 0.95 | 10.05 M, 0.97 |
+| ... with the successor prefetch again | 10.05 M, 1.00 | 9.83 M, 0.90 | 9.95 M, 0.96 |
+
+The third line is the code now (LOCKS.md 2). On kdall20, nine rounds
+(`data/k20-lock1.txt`): 0.98, 0.91, 0.98, 0.98, 1.05 at 8, 16, 32, 48, 60
+threads against those native medians; the runs at 16 threads scatter from
+8.9 to 10.6 M (native 10.0 to 11.0 M). L1 misses per operation there are
+2.39 now; what is left at 16 threads is not explained.
+
+**Parking with few threads.** Parking by the drain time alone (section 7)
+cost LevelDB in the IntervalVM configuration 16% at 4 threads and 8% at 8
+(kdall16, in one boot). A first second condition, the average number of
+writers spinning behind the one that waits for the readers, did not hold:
+once writers park the queue is short, the average falls and parking ends
+(`k18_exp.sh`, `data/k18-park*`: Apache at 60 threads 0.78 with a
+threshold of 4, 0.70 with 8, 1.28 without the condition). Counting the
+parked writers too does (`k20_exp.sh`, `data/k20-park*`, kdall20, no
+daemon, one boot, mean of 2, against native):
+
+| | threads | never | by drain time alone | 4 waiting | 6 waiting (default) |
+|---|---|---|---|---|---|
+| Apache single | 16 / 32 / 60 | 1.07 / 0.89 / 0.70 | 1.09 / 1.27 / 1.28 | 1.09 / 1.24 / 1.27 | 1.12 / 1.24 / 1.27 |
+| Apache default | | 1.19 | 1.26 | 1.35 | 1.35 |
+| LevelDB ivm | 4 / 8 | 1.06 / 1.06 | 0.88 / 0.98 | 1.07 / 1.09 | 1.08 / 1.09 |
+| | 16 / 32 | 1.10 / 1.07 | 1.12 / 1.15 | 1.11 / 1.14 | 1.10 / 1.14 |
+| mmap1 | 8 / 16 / 32 | 1.01 / 1.00 / 1.01 | 0.96 / 0.97 / 0.99 | 0.97 / 0.98 / 0.98 | 0.97 / 0.97 / 0.99 |
+| brk1 | 8 / 16 / 32 | 1.02 / 1.06 / 1.06 | 0.99 / 1.07 / 1.08 | 1.00 / 1.05 / 1.05 | 0.99 / 1.05 / 1.08 |
+
+**Handbacks.** The only sections that are handed back almost every time
+are those of `munmap` when it unmaps mapped pages: the combiner keeps the
+downgrade (`kd_vdown=1`), zaps, and reaches the TLB flush, a frontier.
+With `__vm_munmap` out of the allow list on kdall17 (section 9, last two
+columns) LevelDB was at 1.15-1.22 where the full list gave 1.00-1.04 at
+16-32 threads. In one boot of kdall20 (`k20b_exp.sh`, `data/k20-vdown*`,
+mean of 2, against native; "off" from the parking comparison of the same
+boot):
+
+| | threads | off | on, kept downgrade | on, `kd_vdown=0` |
+|---|---|---|---|---|
+| LevelDB ivm | 4 / 8 / 16 / 32 | 1.08 / 1.09 / 1.10 / 1.14 | 1.01 / 0.96 / 0.98 / 1.03 | 1.04 / 1.01 / 1.05 / 1.07 |
+| Apache single | 16 / 32 / 60 | 1.12 / 1.24 / 1.27 | 1.12 / 1.23 / 1.30 | 1.07 / 1.19 / 1.22 |
+| Apache default | | 1.35 | 1.22 | 1.10 |
+| mmap1 | 16 / 60 | | 1.24 / 1.83 | 0.89 / 0.99 |
+| brk1 | 16 / 60 | | 1.32 / 2.23 | 1.07 / 1.27 |
+
+LevelDB: 2.4 M sections in 20 s, 99.8% handed back, 7-12% below off.
+Handing back at the downgrade instead is no better and takes away what
+mmap1 and brk1 gain. So frequent handbacks do cost, and the site account
+now counts a handback after a kept downgrade as one (it counted as useful
+before): a `munmap` site whose sections mostly end that way is switched
+off, and tried again after 1 to 4 s (64 s before: the same site serves
+mmap1, whose sections complete). TRANSLATOR.md section 3.
+
+## 11. kdall21 against its native twin
+
+`k21_exp.sh` (kdall21: correctness, off, two learning passes, on, and the
+will-it-scale tests once more right after LevelDB) and `n18_exp.sh`
+(kdnat18, the twin built from the same source; `virt_spin_lock_key` 0).
+One run per point. `data/k21-check.out`, `data/k21-runs.txt`,
+`data/k21-leveldb-runs.txt`, `data/n18-*.txt`, `k21_summary.py`:
+
+| bench | variant | workers | native | off/native | on/native | on/off | on: delegated, handbacks | on, after LevelDB / native |
+|---|---|---|---|---|---|---|---|---|
+| wis | lock1 | 4 | 9.825e+06 | 1.00 | 0.99 | 1.00 | 0, 0 | - |
+| wis | lock1 | 16 | 1.024e+07 | 1.03 | 0.97 | 0.94 | 0, 0 | 1.01 |
+| wis | lock1 | 32 | 1.065e+07 | 0.93 | 0.92 | 0.99 | 0, 0 | - |
+| wis | lock1 | 48 | 6.172e+06 | 0.93 | 1.01 | 1.08 | 0, 0 | - |
+| wis | lock1 | 60 | 5.813e+06 | 1.04 | 1.04 | 1.00 | 0, 0 | 0.92 |
+| wis | mmap1 | 4 | 3.364e+05 | 1.04 | 1.21 | 1.16 | 12971714, 187 | - |
+| wis | mmap1 | 16 | 2.926e+05 | 1.04 | 1.31 | 1.26 | 12252743, 30 | 1.31 |
+| wis | mmap1 | 32 | 2.893e+05 | 1.04 | 1.33 | 1.27 | 12388256, 15 | - |
+| wis | mmap1 | 48 | 1.715e+05 | 1.72 | 1.90 | 1.10 | 10413530, 83 | - |
+| wis | mmap1 | 60 | 1.651e+05 | 1.85 | 1.83 | 0.99 | 9748476, 75 | 1.89 |
+| wis | mmap2 | 4 | 3.381e+05 | 1.01 | 1.12 | 1.10 | 12067817, 433 | - |
+| wis | mmap2 | 16 | 3.35e+05 | 0.98 | 1.12 | 1.14 | 12024735, 18 | 1.13 |
+| wis | mmap2 | 32 | 3.538e+05 | 0.97 | 1.09 | 1.12 | 12355307, 9 | - |
+| wis | mmap2 | 48 | 2.125e+05 | 1.68 | 1.53 | 0.91 | 10461673, 31 | - |
+| wis | mmap2 | 60 | 2.029e+05 | 1.75 | 1.55 | 0.89 | 10122163, 27 | 1.48 |
+| wis | brk1 | 4 | 6.934e+05 | 1.26 | 1.14 | 0.90 | 12538830, 430 | - |
+| wis | brk1 | 16 | 6.929e+05 | 1.06 | 1.59 | 1.50 | 17599832, 32 | 1.53 |
+| wis | brk1 | 32 | 6.708e+05 | 1.11 | 1.66 | 1.50 | 17918987, 26 | - |
+| wis | brk1 | 48 | 4.177e+05 | 1.86 | 1.94 | 1.05 | 12965822, 97 | - |
+| wis | brk1 | 60 | 3.666e+05 | 2.09 | 2.17 | 1.04 | 12705838, 71 | 2.53 |
+| wis | page_fault1 | 4 | 1.953e+06 | 1.02 | 1.00 | 0.98 | 0, 0 | - |
+| wis | page_fault1 | 16 | 2.991e+06 | 1.02 | 1.01 | 1.00 | 7, 2 | 1.01 |
+| wis | page_fault1 | 32 | 2.854e+06 | 1.00 | 1.00 | 1.00 | 14, 12 | - |
+| wis | page_fault1 | 48 | 3.993e+06 | 1.02 | 1.01 | 0.99 | 32, 13 | - |
+| wis | page_fault1 | 60 | 4.187e+06 | 1.06 | 1.06 | 1.00 | 28, 23 | 1.07 |
+| wis | page_fault2 | 4 | 1.511e+06 | 0.99 | 0.99 | 1.00 | 0, 0 | - |
+| wis | page_fault2 | 16 | 2.019e+06 | 1.00 | 0.99 | 1.00 | 11, 0 | 1.00 |
+| wis | page_fault2 | 32 | 1.995e+06 | 1.00 | 1.00 | 1.00 | 23, 0 | - |
+| wis | page_fault2 | 48 | 3.274e+06 | 1.01 | 1.00 | 1.00 | 23, 0 | - |
+| wis | page_fault2 | 60 | 3.666e+06 | 1.00 | 0.90 | 0.90 | 33, 0 | 0.91 |
+| wis | page_fault3 | 4 | 3.744e+06 | 1.01 | 1.00 | 1.00 | 0, 0 | - |
+| wis | page_fault3 | 16 | 1.306e+07 | 1.01 | 1.00 | 0.99 | 9, 0 | 1.00 |
+| wis | page_fault3 | 32 | 1.251e+07 | 1.05 | 1.03 | 0.99 | 21, 0 | - |
+| wis | page_fault3 | 48 | 1.214e+07 | 1.04 | 1.03 | 0.99 | 29, 0 | - |
+| wis | page_fault3 | 60 | 1.214e+07 | 1.05 | 1.04 | 0.98 | 35, 0 | 1.02 |
+| apache | single | 4 | 5.118e+04 | 1.03 | 0.98 | 0.95 | 11354, 918 | - |
+| apache | single | 16 | 3.963e+04 | 1.15 | 1.11 | 0.96 | 106834, 769 | - |
+| apache | single | 32 | 3.582e+04 | 1.22 | 1.19 | 0.97 | 119439, 774 | - |
+| apache | single | 48 | 3.382e+04 | 1.29 | 1.24 | 0.96 | 125071, 781 | - |
+| apache | single | 60 | 3.322e+04 | 1.30 | 1.25 | 0.96 | 126850, 775 | - |
+| apache | default | 0 | 1.411e+05 | 1.33 | 1.23 | 0.93 | 497260, 772 | - |
+| leveldb | ivm | 4 | 6.079e+04 | 1.08 | 1.06 | 0.99 | 140812, 1794 | - |
+| leveldb | ivm | 8 | 1.005e+05 | 1.08 | 1.05 | 0.97 | 731900, 1538 | - |
+| leveldb | ivm | 16 | 1.044e+05 | 1.10 | 1.08 | 0.98 | 780118, 1301 | - |
+| leveldb | ivm | 32 | 8.216e+04 | 1.12 | 1.09 | 0.97 | 602188, 1305 | - |
+| leveldb | ivm | 60 | 5.384e+04 | 1.10 | 1.04 | 0.94 | 230575, 1302 | - |
+
+below the bounds (off 0.93, on 0.90): wis lock1 32 off 0.93
+
+- Correctness: locktorture 6 of 6, `run_corr.py` plain and with the daemon
+  240 points each 0 failed, API check 0 failed, test-ww_mutex, `mm_stress`
+  16/32/64; no kernel complaint and no fatal signal in any pass; per-CPU
+  lock bytes 0 of 64 after every benchmark of the delegated pass.
+- Counters over the boot (`data/k21-on-stats.txt`): 455.6 M sections
+  delegated, 1.33 M handed back (0.3%; the same passes on kdall20 with the
+  old account: 264 M and 65.8 M), `vdown` 168.8 M of which handed back
+  0.52 M, `site_retry` 207, `hb_region` (upper bound) 3757,
+  `done_in_region` 0.
+- Without delegation every point is at 0.93 of native or above (the
+  lowest: lock1 at 32 and 48 threads, 0.93); with it at 0.90 or above
+  (page_fault2 at 60 threads 0.90 with 33 sections delegated, as in
+  section 9; lock1 at 32 threads 0.92).
+- With the daemon LevelDB is at 1.04-1.09 (1.00-1.04 at 16-32 threads on
+  kdall17), the `munmap` site off: 1300-1800 handbacks per run instead of
+  one per section. Apache is 3-5% below its rate without the daemon (7% in
+  the default configuration); on kdall17, where every munmap was delegated
+  and handed back, single-process Apache was level with off.
+- The last column is the pass right after LevelDB had switched the
+  `munmap` site off: mmap1 1.31 and 1.89, as in the pass before it.
+
+Not covered by this round: Psearchy, Metis, FxMark and the nano grid on
+kdall21; the lkp workloads.
+
+## 12. Files
 
 | file | what |
 |---|---|
@@ -461,5 +698,8 @@ daemon 240 points each 0 failed, API check 0 failed, test-ww_mutex,
 | `nano_ab.sh`, `nano_ab_summary.py`, `data/n12-*`, `data/n13-*` | sections 5 and 6 |
 | `data/k15-apache-era-runs.txt`, `data/k16-park*`, `data/prof/apache-60-*` | section 7 |
 | `ivm_apps.sh`, `data/ivm-runs.txt` | section 8 |
+| `k17_exp.sh`, `data/k17-*` | section 9 |
+| `lock1_boot.sh`, `lock1_perf.sh`, `k19_lock1.sh`, `k18_exp.sh`, `k20*_exp.sh`, `data/lock1-boots.txt`, `data/k18-*`, `data/k19-dbg.txt`, `data/k20-*` | section 10 |
+| `k21_exp.sh`, `n18_exp.sh`, `k21_summary.py`, `data/k21-*`, `data/n18-*` | section 11 |
 | `data/g3-*`, `data/nano-g3-ranges.md`, `data/app-g2kd-g3native*` | section 1 |
 | `data/k14-check.out` | correctness of kdall14 |
