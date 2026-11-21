@@ -1,0 +1,243 @@
+## k21off fio randwrite shared 16 7.0.0-38-kdall21
+              2706      context-switches                                                      
+                66      cpu-migrations                                                        
+      129174364939      cycles                                                                
+       26556143949      instructions                                                          
+## run queue: 17 running
+## by comm
+    99.92%  fio            
+     0.05%  swapper        
+     0.03%  perf           
+     0.00%  rcu_preempt    
+## flat by symbol
+    91.68%  [k] kd_wait_sleepable
+     1.54%  [k] kd_rwsem_spin_for
+     1.12%  [k] folio_unlock
+     0.72%  [k] kd_rwsem_post
+     0.41%  [k] kd_down_write
+     0.38%  [k] filemap_get_entry
+     0.33%  [.] 0x000000000000087b
+     0.27%  [k] kd_up_write
+     0.24%  [k] copy_folio_from_iter_atomic
+     0.23%  [k] kd_rw_era_writer
+     0.13%  [.] get_io_u
+     0.13%  [k] current_time
+     0.12%  [k] entry_SYSCALL_64
+     0.12%  [k] kd_mutex_can_spin
+     0.11%  [k] kd_mutex_unlock
+     0.11%  [k] do_syscall_64
+     0.10%  [k] clear_bhb_loop
+     0.08%  [k] pvclock_clocksource_read_nowd
+     0.08%  [k] xas_load
+     0.08%  [k] vfs_write
+     0.07%  [k] fdget
+     0.06%  [.] __vdso_clock_gettime
+## callers of the top lock symbols
+    91.68%  [k] kd_wait_sleepable
+            |          
+             --91.67%--kd_down_write_slow
+                       kd_down_write
+                       vfs_write
+                       __x64_sys_pwrite64
+                       x64_sys_call
+     1.54%  [k] kd_rwsem_spin_for
+            |          
+             --1.53%--kd_rwsem_post
+                       kd_wait_sleepable
+                       kd_down_write_slow
+                       kd_down_write
+                       vfs_write
+     1.12%  [k] folio_unlock
+            |
+            ---generic_perform_write
+               shmem_file_write_iter
+               vfs_write
+               __x64_sys_pwrite64
+               x64_sys_call
+     0.72%  [k] kd_rwsem_post
+            |          
+             --0.71%--kd_wait_sleepable
+                       kd_down_write_slow
+                       kd_down_write
+                       vfs_write
+                       __x64_sys_pwrite64
+     0.41%  [k] kd_down_write
+     0.38%  [k] filemap_get_entry
+     0.33%  [.] 0x000000000000087b
+     0.27%  [k] kd_up_write
+     0.24%  [k] copy_folio_from_iter_atomic
+     0.23%  [k] kd_rw_era_writer
+     0.13%  [.] get_io_u
+     0.13%  [k] current_time
+     0.12%  [k] entry_SYSCALL_64
+     0.12%  [k] kd_mutex_can_spin
+     0.11%  [k] kd_mutex_unlock
+     0.11%  [k] do_syscall_64
+     0.10%  [k] clear_bhb_loop
+     0.08%  [k] pvclock_clocksource_read_nowd
+     0.08%  [k] xas_load
+     0.08%  [k] vfs_write
+     0.07%  [k] fdget
+## result: 726601 iops
+## n19 fio randwrite shared 16 7.0.0-38-kdnat19
+             15485      context-switches                                                      
+                78      cpu-migrations                                                        
+      127617658080      cycles                                                                
+       34555813726      instructions                                                          
+## run queue: 17 running
+## by comm
+    99.80%  fio            
+     0.13%  swapper        
+     0.03%  perf           
+     0.01%  zsh            
+## flat by symbol
+    75.24%  [k] osq_lock
+    10.72%  [k] __raw_callee_save___kvm_vcpu_is_preempted
+     3.12%  [k] rwsem_spin_on_owner
+     1.91%  [k] folio_unlock
+     0.80%  [k] osq_unlock
+     0.74%  [k] down_write
+     0.73%  [k] filemap_get_entry
+     0.62%  [k] up_write
+     0.58%  [k] do_syscall_64
+     0.52%  [k] rwsem_down_write_slowpath
+     0.46%  [k] copy_folio_from_iter_atomic
+     0.46%  [.] 0x000000000000087b
+     0.20%  [.] add_clat_sample
+     0.20%  [k] entry_SYSCALL_64
+     0.17%  [k] vfs_write
+     0.16%  [.] get_io_u
+     0.16%  [k] xas_load
+     0.11%  [k] clear_bhb_loop
+     0.09%  [k] fdget
+     0.08%  [k] generic_perform_write
+     0.08%  [.] add_lat_sample
+     0.08%  [.] account_io_completion
+## callers of the top lock symbols
+    75.24%  [k] osq_lock
+            |          
+            |--74.58%--rwsem_down_write_slowpath
+            |          down_write
+            |          shmem_file_write_iter
+            |          vfs_write
+            |          __x64_sys_pwrite64
+            |          
+             --0.66%--down_write
+                       shmem_file_write_iter
+                       vfs_write
+                       __x64_sys_pwrite64
+                       x64_sys_call
+    10.72%  [k] __raw_callee_save___kvm_vcpu_is_preempted
+            |          
+             --10.70%--rwsem_down_write_slowpath
+                       down_write
+                       shmem_file_write_iter
+                       vfs_write
+                       __x64_sys_pwrite64
+     3.12%  [k] rwsem_spin_on_owner
+            |          
+            |--2.22%--rwsem_down_write_slowpath
+            |          down_write
+            |          shmem_file_write_iter
+            |          vfs_write
+            |          __x64_sys_pwrite64
+            |          
+             --0.90%--down_write
+                       shmem_file_write_iter
+                       vfs_write
+                       __x64_sys_pwrite64
+                       x64_sys_call
+     1.91%  [k] folio_unlock
+            |
+            ---generic_perform_write
+               shmem_file_write_iter
+               vfs_write
+               __x64_sys_pwrite64
+               x64_sys_call
+     0.80%  [k] osq_unlock
+            |          
+             --0.80%--rwsem_down_write_slowpath
+                       down_write
+                       shmem_file_write_iter
+## result: 896752 iops
+## k22off fio randwrite shared 16 7.0.0-38-kdall22
+              2802      context-switches                                                      
+                65      cpu-migrations                                                        
+      129175042371      cycles                                                                
+       29088958326      instructions                                                          
+## run queue: 17 running
+## by comm
+    99.88%  fio            
+     0.07%  swapper        
+     0.03%  perf           
+     0.00%  sleep          
+## flat by symbol
+    89.18%  [k] kd_wait_sleepable
+     2.36%  [k] kd_rwsem_spin_for
+     1.55%  [k] folio_unlock
+     0.54%  [k] filemap_get_entry
+     0.51%  [k] kd_down_write
+     0.46%  [k] copy_folio_from_iter_atomic
+     0.40%  [.] 0x000000000000087b
+     0.37%  [k] kd_up_write
+     0.36%  [k] kd_mutex_unlock
+     0.28%  [k] kd_mutex_can_spin
+     0.26%  [k] do_syscall_64
+     0.20%  [k] kd_rwsem_post
+     0.18%  [k] pvclock_clocksource_read_nowd
+     0.18%  [k] entry_SYSCALL_64
+     0.16%  [k] vfs_write
+     0.16%  [k] xas_load
+     0.13%  [.] get_io_u
+     0.12%  [.] __vdso_clock_gettime
+     0.12%  [k] clear_bhb_loop
+     0.08%  [k] shmem_write_end
+     0.07%  [.] td_io_queue
+     0.06%  [k] shmem_get_folio_gfp
+## callers of the top lock symbols
+    89.18%  [k] kd_wait_sleepable
+            |
+            ---kd_down_write_slow
+               kd_down_write
+               vfs_write
+               __x64_sys_pwrite64
+               x64_sys_call
+     2.36%  [k] kd_rwsem_spin_for
+            |          
+             --2.35%--kd_rwsem_post
+                       kd_wait_sleepable
+                       kd_down_write_slow
+                       kd_down_write
+                       vfs_write
+     1.55%  [k] folio_unlock
+            |
+            ---generic_perform_write
+               shmem_file_write_iter
+               vfs_write
+               __x64_sys_pwrite64
+               x64_sys_call
+     0.54%  [k] filemap_get_entry
+            |          
+             --0.54%--shmem_get_folio_gfp
+                       shmem_write_begin
+                       generic_perform_write
+                       shmem_file_write_iter
+                       vfs_write
+     0.51%  [k] kd_down_write
+            |          
+             --0.51%--vfs_write
+                       __x64_sys_pwrite64
+                       x64_sys_call
+                       do_syscall_64
+                       entry_SYSCALL_64_after_hwframe
+     0.46%  [k] copy_folio_from_iter_atomic
+     0.40%  [.] 0x000000000000087b
+     0.37%  [k] kd_up_write
+     0.36%  [k] kd_mutex_unlock
+     0.28%  [k] kd_mutex_can_spin
+     0.26%  [k] do_syscall_64
+     0.20%  [k] kd_rwsem_post
+     0.18%  [k] pvclock_clocksource_read_nowd
+     0.18%  [k] entry_SYSCALL_64
+     0.16%  [k] vfs_write
+## result: 880520 iops

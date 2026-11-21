@@ -505,8 +505,12 @@ static bool kd_exec_one(void *root, struct kd_node *n, const struct kd_family *f
 			 * run can show that this does not happen.
 			 */
 			if (unlikely(preempt_count() != pc0 ||
-				     ((if0 & X86_EFLAGS_IF) && irqs_disabled())))
+				     ((if0 & X86_EFLAGS_IF) && irqs_disabled()))) {
 				kd_stat_inc(kc, KD_STAT_DONE_IN_REGION);
+				/* Say where, like a handback (same budget). */
+				if (atomic_add_unless(&r->site->hb_budget, -1, 0))
+					kd_event_push(KD_EV_HANDBACK, r->site->rip, ip, x);
+			}
 			r->vdown &= ~BIT(level);
 			kd_apply_unlock(r, op);
 			if (x & KD_X_TAIL) {

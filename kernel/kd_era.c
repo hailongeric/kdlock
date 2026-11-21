@@ -87,8 +87,23 @@ unsigned int kd_rw_era_sample __read_mostly = 16;
 core_param(kd_rw_era_sample, kd_rw_era_sample, uint, 0644);
 static unsigned int kd_rw_era_drain_ns __read_mostly = 5000;
 core_param(kd_rw_era_drain_ns, kd_rw_era_drain_ns, uint, 0644);
-/* In hundredths of a caller; see kd_rw_era_writer(). */
-static unsigned int kd_rw_era_press __read_mostly = 225;
+/*
+ * In hundredths of a caller; see kd_rw_era_writer(). 190 since 2026-11-20
+ * (225 before). A queue head counts at most KD_POST_DEPTH (2) callers
+ * behind it, so writers alone give a pressure of 2.0 at most, just under
+ * the old threshold: whether a lock with writers only had eras depended on
+ * a stray reader count lifting the average, which then stuck (the average
+ * is kept in integers and 32-39 sixteenths are all fixed points of an input
+ * of 2). With the measurements taken at one acquisition in 16 that no
+ * longer happened, and the plain rwsem lost its lead across the nodes:
+ * kdall22 without the daemon, mean of 2, against native, at 48 / 60
+ * threads, threshold 225 with every acquisition measured, 225 sampled, 190
+ * sampled: mmap1 1.75 / 1.85, 1.30 / 1.17, 1.93 / 2.02; brk1 1.77 / 2.06,
+ * 1.10 / 1.29, 1.74 / 2.00; fio writing one tmpfs file with 64 jobs 0.97,
+ * 1.07, 1.20; no difference at 16 and 32 threads on one node. Two callers
+ * in all still cannot reach it.
+ */
+static unsigned int kd_rw_era_press __read_mostly = 190;
 core_param(kd_rw_era_press, kd_rw_era_press, uint, 0644);
 /* The last averages a queue head computed, to look at from outside. */
 static unsigned int kd_rw_era_dbg_drain, kd_rw_era_dbg_press;

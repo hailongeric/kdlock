@@ -1,0 +1,20 @@
+[ 1913.209898] audit: type=1400 audit(1795232428.599:241): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=137321 comm="who" requested_m
+[ 1913.209904] audit: type=1400 audit(1795232428.599:242): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=137321 comm="who" requested_mask="r"
+[ 2437.260930] page_fault2_thr[139511]: segfault at f70 ip 00007ffff7d3a4a4 sp 00007ffff73fd0b8 error 6
+[ 2437.260971] page_fault2_thr[139532]: segfault at f70 ip 00007ffff7d3a4a4 sp 00007fffecbe80b8 error 6
+[ 2437.260998]  in libc.so.6[13a4a4,7ffff7c28000+198000]
+[ 2437.260993]  in libc.so.6[13a4a4,7ffff7c28000+198000]
+[ 2437.261014]  likely on CPU 1 (core 1, socket 0)
+[ 2437.261160]  likely on CPU 22 (core 22, socket 0)
+
+
+[ 2437.261174] Code: 00 48 c1 e8 11 48 d1 ea 0f b7 d2 48 0f af c1 48 0f af d1 48 c1 ea 10 48 01 d0 48 3b 05 95 fd 0d 00 73 0c 48 8b 15 94 fd 0d 00 <66> 83 04 42 01 c3 66 0f 1f 44 0
+[ 2437.261176] Code: 00 48 c1 e8 11 48 d1 ea 0f b7 d2 48 0f af c1 48 0f af d1 48 c1 ea 10 48 01 d0 48 3b 05 95 fd 0d 00 73 0c 48 8b 15 94 fd 0d 00 <66> 83 04 42 01 c3 66 0f 1f 44 0
+[ 2437.261223] page_fault2_threads: page_fault2_thr: potentially unexpected fatal signal 11.
+[ 2437.261264] CPU: 1 UID: 0 PID: 139511 Comm: page_fault2_thr Tainted: G           OE       7.0.0-38-kdall23 #28 PREEMPT(lazy) 
+[ 2437.261280] Tainted: [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
+[ 2437.261287] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[ 2437.261307] RIP: 0033:0x7ffff7d3a4a4
+[ 2437.261328] Code: 00 48 c1 e8 11 48 d1 ea 0f b7 d2 48 0f af c1 48 0f af d1 48 c1 ea 10 48 01 d0 48 3b 05 95 fd 0d 00 73 0c 48 8b 15 94 fd 0d 00 <66> 83 04 42 01 c3 66 0f 1f 44 0
+[ 2437.261331] RSP: 002b:00007ffff73fd0b8 EFLAGS: 00010287
+[ 2437.261357] RAX: 00000000000007b8 RBX: 00007ffff7fb3080 RCX: 0000000000008000

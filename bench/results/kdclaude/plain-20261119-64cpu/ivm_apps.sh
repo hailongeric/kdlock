@@ -19,7 +19,7 @@
 #           Variant "open50k" adds --open_files=50000: every table stays
 #           open and mapped, so no mmap/munmap per lookup.
 # Threads are pinned as in the grid (taskset 0..N-1); the artifact does not
-# pin. PS_VARIANTS (big m1024 m128l) and LDB_VARIANTS (ivm open50k) select
+# pin. PS_VARIANTS (big m1024 m512 m128l) and LDB_VARIANTS (ivm open50k) select
 # the variants. One line per point in /root/plainprof/ivm-runs.txt, app_grid.sh's
 # format: TAG MODE BENCH VARIANT N VALUE UNIT [extra] | counters | counters
 MODE=${1:?mode}; TAG=${2:?tag}; shift 2
@@ -76,6 +76,7 @@ b_psearchy() {
 		case $v in
 		big)   for n in $WORKERS; do ps1 m$PS_M $n -m $PS_M; done ;;
 		m1024) for n in $WORKERS; do [ $n -le 16 ] && ps1 m1024 $n -m 1024; done ;;
+		m512)  for n in $WORKERS; do [ $n -le 32 ] && ps1 m512 $n -m 512; done ;;
 		m128l) for n in $WORKERS; do ps1 m128l $n -m 128 -l 200000; done ;;
 		esac
 	done

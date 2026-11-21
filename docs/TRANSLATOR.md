@@ -120,7 +120,13 @@ flush, and delegating it loses 7 to 12% against not delegating it
 A site that the kernel switched off (most executions handed back) is
 switched on again by the kernel after a wait, 1 s at first and doubled
 with each switch-off in a row up to 4 s (`kd_site_retry()`, counter
-`site_retry`; up to 64 s until 2026-11-20). What a site executes changes
+`site_retry`; up to 64 s until 2026-11-20). A trial starts with a full
+report budget, and so does every site when a daemon enables delegation:
+the reports of an image are bounded (64 misses), the event ring is lossy,
+and a daemon that rebuilds its known sites at start did not read it
+meanwhile, so an image could spend its budget unheard and then miss at
+every section for good. The daemon now also reads the ring between
+builds. What a site executes changes
 with the workload: `mmap` and `munmap` were switched off by a test that
 unmaps touched memory and stayed off for mmap1 until build #71; with the
 short wait the `munmap` site follows the workload, off for one that unmaps

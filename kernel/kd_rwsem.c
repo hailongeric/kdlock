@@ -107,21 +107,42 @@ static __always_inline bool kd_rwsem_readers(long c)
  * are shared between semaphores by hash, as the object has no room for
  * one; a collision costs an extra look. A reader also looks again once in
  * a while without a change, so a missed event only delays it.
+ *
+ * The counter is written only while a reader waits (->waiters, in the same
+ * line, counted by kd_down_read_admit()). Written at every change of the
+ * write side, it was a line every writer of a lock took from the one
+ * before, readers or not: one of three such lines that a write handover
+ * of this rwsem had and the native one has not (the others: the era
+ * averages and the queue nodes behind the head, kd_rwsem_post()). fio
+ * with N jobs writing one tmpfs file (inode rwsem, writers only) was at
+ * 0.82-0.90 of the native kernel without delegation
+ * (lkp-macro-20261119-64cpu, section 7). Order: the reader counts itself
+ * and then reads the counter and ->count; the writer changes ->count and
+ * then reads ->waiters; all four are locked operations or follow one.
  */
 #define KD_RWSEM_PHASE_BITS	8
 
 static struct kd_rwsem_phase {
 	atomic_t	seq;
+	atomic_t	waiters;	/* readers in kd_down_read_admit() */
 } ____cacheline_aligned_in_smp kd_rwsem_phases[1 << KD_RWSEM_PHASE_BITS];
+
+static __always_inline struct kd_rwsem_phase *kd_rwsem_phase_of(struct kd_rwsem *sem)
+{
+	return &kd_rwsem_phases[hash_ptr(sem, KD_RWSEM_PHASE_BITS)];
+}
 
 static __always_inline atomic_t *kd_rwsem_phase(struct kd_rwsem *sem)
 {
-	return &kd_rwsem_phases[hash_ptr(sem, KD_RWSEM_PHASE_BITS)].seq;
+	return &kd_rwsem_phase_of(sem)->seq;
 }
 
 static __always_inline void kd_rwsem_phase_change(struct kd_rwsem *sem)
 {
-	atomic_inc(kd_rwsem_phase(sem));
+	struct kd_rwsem_phase *p = kd_rwsem_phase_of(sem);
+
+	if (atomic_read(&p->waiters))
+		atomic_inc(&p->seq);
 }
 
 /* Wake the holder of ->m if it sleeps on ->count. */
@@ -329,8 +350,14 @@ static bool kd_rwsem_post(void *root, struct kd_node *head)
 {
 	struct kd_rwsem *sem = root;
 	u64 rphase = READ_ONCE(kd_rwsem_rphase_ns);
-	/* Without eras nothing is measured: kd_rw_era_ns=0 costs this one load. */
-	bool era = READ_ONCE(kd_rw_era_ns);
+	/*
+	 * Without eras nothing is measured: kd_rw_era_ns=0 costs this one
+	 * load. With them, a CPU's queue heads measure at one acquisition in
+	 * kd_rw_era_sample, as the rwlock's do (kd_rw_post()): the walk over
+	 * the nodes behind the head and the store into the averages are
+	 * lines that every writer of the lock otherwise takes in turn.
+	 */
+	bool era = READ_ONCE(kd_rw_era_ns) && kd_rw_era_sampled();
 	u64 t0 = 0;
 	long nr;
 
@@ -817,7 +844,21 @@ EXPORT_SYMBOL(kd_down_read_trylock);
  * @reg: the reader is registered (its increment is in ->count, behind an
  * active writer). Returns true with the read side held.
  */
+static bool __kd_down_read_admit(struct kd_rwsem *sem, long c, bool reg);
+
 static bool kd_down_read_admit(struct kd_rwsem *sem, long c, bool reg)
+{
+	struct kd_rwsem_phase *p = kd_rwsem_phase_of(sem);
+	bool ret;
+
+	/* Counted before the first look: see kd_rwsem_phase_change(). */
+	atomic_inc(&p->waiters);
+	ret = __kd_down_read_admit(sem, c, reg);
+	atomic_dec(&p->waiters);
+	return ret;
+}
+
+static bool __kd_down_read_admit(struct kd_rwsem *sem, long c, bool reg)
 {
 	atomic_t *phase = kd_rwsem_phase(sem);
 	u64 end = 0;

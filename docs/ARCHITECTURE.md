@@ -405,7 +405,7 @@ queue head, after taking the write side (kd_rwsem_post, kd_rw_post):
     pressure = readers it found in the lock + callers queued behind it (up to 2)
     drain    = how long those readers took to leave
     average both over the last sessions
-    if pressure >= kd_rw_era_press (2.25) and drain < kd_rw_era_drain_ns (5 us):
+    if pressure >= kd_rw_era_press (1.9) and drain < kd_rw_era_drain_ns (5 us):
         start an era for this node, or renew the stamp of the one that exists
 
 caller of another node that found the lock in use:
@@ -627,9 +627,11 @@ sized for it; real stack use has not been measured.
   code may meet with a class (release, sleeping acquire, spin-class acquire,
   or `KD_SYM_LOCAL`: never sleeps, call natively). A `kd_` function that is
   not listed is a frontier.
-* Usefulness: every 256 executions (`KD_SITE_WINDOW`) a site whose sections
-  were mostly handed back is switched off (`KD_EV_SITE_OFF`) until a new image
-  arrives or the kernel tries it again (after 1 to 4 s, `kd_site_retry()`).
+* Usefulness: every 256 executions (`KD_SITE_WINDOW`) a site of whose
+  sections more than `kd_site_bad_pct` percent (15; "more than half" until
+  2026-11-20) were handed back is switched off (`KD_EV_SITE_OFF`) until a
+  new image arrives or the kernel tries it again (after 1 to 4 s,
+  `kd_site_retry()`, which also gives the site its report budget back).
   A handback of the read part after a kept downgrade counts (since
   2026-11-20): a `munmap` of mapped pages always ends at the TLB flush, and
   delegating it costs 7 to 12% (TRANSLATOR.md section 3).

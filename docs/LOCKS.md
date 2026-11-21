@@ -444,6 +444,26 @@ call.
     0.78).
   * A parked writer that gets `m` reports the same measurements as a queue
     head, so the average stays current when everybody parks.
+* **A write handover touches no line the native one does not** (since
+  2026-11-20). The queue head's era measurements (the walk over the nodes
+  behind it, the store into the averages) are taken at one acquisition in
+  `kd_rw_era_sample` (16) per CPU, as for the rwlock, and the readers'
+  phase counter is written only while a reader waits
+  (`kd_rwsem_phases[].waiters`). Before, every writer took three such
+  lines from the one before it. fio with N jobs writing one tmpfs file
+  (inode rwsem, writers only), without delegation against native: 0.82,
+  0.86, 0.90, 0.89, 0.87 at 4, 16, 32, 48, 64 jobs before; 1.19, 1.17,
+  1.07, 1.19, 1.18 after (kdall23, with the era threshold below).
+* **Eras for writers alone** (`kd_rw_era_press` 190, was 225). A queue head
+  counts at most two callers behind it, so writers alone reach a pressure
+  of 2.0 and never met 2.25 except by accident; with sampled measurements
+  the accident stopped and mmap1 and brk1 lost their lead across the nodes
+  (1.2 instead of 1.9-2.0 of native at 48-60 threads, kdall22). With 190:
+  mmap1 1.94 / 2.02, brk1 1.84 / 2.06 at 48 / 60 threads without the
+  daemon; nano rwsem with writers only 1.81 / 2.00 (1.18 / 1.20 with 225);
+  the mixed read-write profiles of both families and the rwlock with
+  writers only are unchanged (`data/n20-press.md` of the plain-path
+  round).
 * Writers publish whenever they can; there is no plain mode for the writer
   queue (ARCHITECTURE 7a).
 * A nested rwsem writer acquire inside a section is queued and spun for like
@@ -499,7 +519,7 @@ sees neither effect.
 | `kd_rw_era_ns` (core param, 0644) | 200000 | rwlock: the era bound (a waiter waits at most twice this); 0: no eras in either family, and the queue heads measure nothing (ARCHITECTURE 7b) |
 | `kd_rwsem_era_ns` (core param, 0644) | 1000000 | rwsem: the era bound; 0: use `kd_rw_era_ns` (ARCHITECTURE 7b) |
 | `kd_rw_era_sample` (core param, 0644) | 16 | rwlock: a CPU's queue heads take the era measurements at one write acquisition in this many (section 3); 1: at every one |
-| `kd_rw_era_press` (core param, 0644) | 225 | hundredths of a caller: average company a queue-head writer must find (readers in + up to 2 queued behind) for an era to start or be renewed |
+| `kd_rw_era_press` (core param, 0644) | 190 (225 until 2026-11-20: writers alone, counted two deep, never reached it reliably) | hundredths of a caller: average company a queue-head writer must find (readers in + up to 2 queued behind) for an era to start or be renewed |
 | `kd_rw_era_drain_ns` (core param, 0644) | 5000 | no era while the readers a queue head finds take longer than this to leave, on average |
 | `kd_rw_era_dbg_drain`, `kd_rw_era_dbg_press` (0444) | - | the last averages a queue head computed (ns; sixteenths of a caller) |
 | `kd_rwsem_rspin_ns` (core param, 0644) | 50000 | how long a rwsem reader waits outside `m` before it queues there |

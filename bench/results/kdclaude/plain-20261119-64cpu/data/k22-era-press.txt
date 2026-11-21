@@ -1,0 +1,61 @@
+r1 sample 16 press 225 mmap1 16 306770 | parked=5448153 era_gate=3641761 era_start=2504 | parked=5449892 era_gate=3641761 era_start=2504 
+r1 sample 16 press 225 mmap1 32 305533 | parked=5449892 era_gate=3641761 era_start=2504 | parked=5451844 era_gate=3641761 era_start=2505 
+r1 sample 16 press 225 mmap1 48 220223 | parked=5451844 era_gate=3641761 era_start=2505 | parked=5453302 era_gate=3659505 era_start=2513 
+r1 sample 16 press 225 mmap1 60 192426 | parked=5453302 era_gate=3659505 era_start=2513 | parked=5455125 era_gate=3660313 era_start=2515 
+r1 sample 16 press 225 brk1 16 696425 | parked=5455125 era_gate=3660313 era_start=2515 | parked=5456475 era_gate=3660313 era_start=2517 
+r1 sample 16 press 225 brk1 32 686347 | parked=5456475 era_gate=3660313 era_start=2517 | parked=5457805 era_gate=3660313 era_start=2518 
+r1 sample 16 press 225 brk1 48 460601 | parked=5457805 era_gate=3660313 era_start=2518 | parked=5459665 era_gate=3664681 era_start=2520 
+r1 sample 16 press 225 brk1 60 457091 | parked=5459665 era_gate=3664681 era_start=2520 | parked=5462072 era_gate=3670897 era_start=2527 
+r1 sample 16 press 225 fio 16 930908
+r1 sample 16 press 225 fio 64 802951
+r1 sample 16 press 190 mmap1 16 308855 | parked=5462626 era_gate=3670897 era_start=2527 | parked=5464172 era_gate=3670897 era_start=2538 
+r1 sample 16 press 190 mmap1 32 305096 | parked=5464172 era_gate=3670897 era_start=2538 | parked=5465588 era_gate=3670931 era_start=2605 
+r1 sample 16 press 190 mmap1 48 332797 | parked=5465588 era_gate=3670931 era_start=2605 | parked=5467132 era_gate=3957704 era_start=2625 
+r1 sample 16 press 190 mmap1 60 333228 | parked=5467132 era_gate=3957704 era_start=2625 | parked=5467770 era_gate=4316324 era_start=2632 
+r1 sample 16 press 190 brk1 16 815655 | parked=5467770 era_gate=4316324 era_start=2632 | parked=5469335 era_gate=4316358 era_start=2636 
+r1 sample 16 press 190 brk1 32 663327 | parked=5469335 era_gate=4316358 era_start=2636 | parked=5470632 era_gate=4316392 era_start=2664 
+r1 sample 16 press 190 brk1 48 739617 | parked=5470632 era_gate=4316392 era_start=2664 | parked=5472130 era_gate=4602784 era_start=2680 
+r1 sample 16 press 190 brk1 60 735816 | parked=5472130 era_gate=4602784 era_start=2680 | parked=5473108 era_gate=4961468 era_start=2686 
+r1 sample 16 press 190 fio 16 1053963
+r1 sample 16 press 190 fio 64 969753
+r1 sample 1 press 225 mmap1 16 301217 | parked=5473416 era_gate=5181936 era_start=2693 | parked=5475056 era_gate=5181936 era_start=2767 
+r1 sample 1 press 225 mmap1 32 293641 | parked=5475056 era_gate=5181936 era_start=2767 | parked=5477177 era_gate=5181936 era_start=2843 
+r1 sample 1 press 225 mmap1 48 302709 | parked=5477177 era_gate=5181936 era_start=2843 | parked=5478314 era_gate=5414418 era_start=2888 
+r1 sample 1 press 225 mmap1 60 304287 | parked=5478314 era_gate=5414418 era_start=2888 | parked=5479237 era_gate=5720912 era_start=2931 
+r1 sample 1 press 225 brk1 16 741067 | parked=5479237 era_gate=5720912 era_start=2931 | parked=5480523 era_gate=5720912 era_start=3008 
+r1 sample 1 press 225 brk1 32 726789 | parked=5480523 era_gate=5720912 era_start=3008 | parked=5481613 era_gate=5720912 era_start=3094 
+r1 sample 1 press 225 brk1 48 746068 | parked=5481613 era_gate=5720912 era_start=3094 | parked=5483518 era_gate=5953687 era_start=3164 
+r1 sample 1 press 225 brk1 60 752990 | parked=5483518 era_gate=5953687 era_start=3164 | parked=5484442 era_gate=6270773 era_start=3202 
+r1 sample 1 press 225 fio 16 813307
+r1 sample 1 press 225 fio 64 735972
+r2 sample 16 press 225 mmap1 16 306690 | parked=5485014 era_gate=6270773 era_start=3202 | parked=5486698 era_gate=6270773 era_start=3204 
+r2 sample 16 press 225 mmap1 32 306083 | parked=5486698 era_gate=6270773 era_start=3204 | parked=5488457 era_gate=6270773 era_start=3208 
+r2 sample 16 press 225 mmap1 48 225449 | parked=5488457 era_gate=6270773 era_start=3208 | parked=5490583 era_gate=6291983 era_start=3221 
+r2 sample 16 press 225 mmap1 60 192369 | parked=5490583 era_gate=6291983 era_start=3221 | parked=5492835 era_gate=6336321 era_start=3228 
+r2 sample 16 press 225 brk1 16 703868 | parked=5492835 era_gate=6336321 era_start=3228 | parked=5494102 era_gate=6336321 era_start=3233 
+r2 sample 16 press 225 brk1 32 676323 | parked=5494102 era_gate=6336321 era_start=3233 | parked=5495495 era_gate=6336321 era_start=3236 
+r2 sample 16 press 225 brk1 48 454554 | parked=5495495 era_gate=6336321 era_start=3236 | parked=5496880 era_gate=6337684 era_start=3241 
+r2 sample 16 press 225 brk1 60 487392 | parked=5496880 era_gate=6337684 era_start=3241 | parked=5498717 era_gate=6368372 era_start=3249 
+r2 sample 16 press 225 fio 16 888182
+r2 sample 16 press 225 fio 64 812380
+r2 sample 16 press 190 mmap1 16 304090 | parked=5499362 era_gate=6368372 era_start=3249 | parked=5501012 era_gate=6368372 era_start=3263 
+r2 sample 16 press 190 mmap1 32 304663 | parked=5501012 era_gate=6368372 era_start=3263 | parked=5502381 era_gate=6368372 era_start=3335 
+r2 sample 16 press 190 mmap1 48 327506 | parked=5502381 era_gate=6368372 era_start=3335 | parked=5503948 era_gate=6655045 era_start=3352 
+r2 sample 16 press 190 mmap1 60 332356 | parked=5503948 era_gate=6655045 era_start=3352 | parked=5504776 era_gate=7013229 era_start=3364 
+r2 sample 16 press 190 brk1 16 779898 | parked=5504776 era_gate=7013229 era_start=3364 | parked=5506299 era_gate=7013247 era_start=3372 
+r2 sample 16 press 190 brk1 32 683086 | parked=5506299 era_gate=7013247 era_start=3372 | parked=5507774 era_gate=7013344 era_start=3410 
+r2 sample 16 press 190 brk1 48 712150 | parked=5507774 era_gate=7013344 era_start=3410 | parked=5509658 era_gate=7300086 era_start=3426 
+r2 sample 16 press 190 brk1 60 734085 | parked=5509658 era_gate=7300086 era_start=3426 | parked=5510659 era_gate=7623170 era_start=3435 
+r2 sample 16 press 190 fio 16 902842
+r2 sample 16 press 190 fio 64 829642
+r2 sample 1 press 225 mmap1 16 299001 | parked=5511380 era_gate=7623170 era_start=3435 | parked=5512750 era_gate=7623170 era_start=3506 
+r2 sample 1 press 225 mmap1 32 293106 | parked=5512750 era_gate=7623170 era_start=3506 | parked=5514012 era_gate=7623170 era_start=3596 
+r2 sample 1 press 225 mmap1 48 298559 | parked=5514012 era_gate=7623170 era_start=3596 | parked=5515418 era_gate=7836683 era_start=3665 
+r2 sample 1 press 225 mmap1 60 307559 | parked=5515418 era_gate=7836683 era_start=3665 | parked=5516260 era_gate=8162859 era_start=3699 
+r2 sample 1 press 225 brk1 16 747126 | parked=5516260 era_gate=8162859 era_start=3699 | parked=5517486 era_gate=8162875 era_start=3769 
+r2 sample 1 press 225 brk1 32 710643 | parked=5517486 era_gate=8162875 era_start=3769 | parked=5520066 era_gate=8162908 era_start=3856 
+r2 sample 1 press 225 brk1 48 734337 | parked=5520066 era_gate=8162908 era_start=3856 | parked=5521784 era_gate=8370540 era_start=3942 
+r2 sample 1 press 225 brk1 60 753766 | parked=5521784 era_gate=8370540 era_start=3942 | parked=5523046 era_gate=8671646 era_start=3993 
+r2 sample 1 press 225 fio 16 811383
+r2 sample 1 press 225 fio 64 716810
+ERA_PRESS_DONE

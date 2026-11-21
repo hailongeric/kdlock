@@ -688,7 +688,79 @@ below the bounds (off 0.93, on 0.90): wis lock1 32 off 0.93
 Not covered by this round: Psearchy, Metis, FxMark and the nano grid on
 kdall21; the lkp workloads.
 
-## 12. Files
+## 12. After the lkp round: kdall22 and kdall23 (2026-11-20/21)
+
+The lkp round (`../lkp-macro-20261119-64cpu/`, sections 7-8) left three
+things for the kernel: fio on one file at 0.82-0.90 without delegation, a
+`brk` site with half its sections handed back, and sites whose misses were
+never reported.
+
+**rwsem write handover** (LOCKS.md 5). `fio_prof.sh`: fio, random 4 KiB
+writes of N jobs to one tmpfs file, all writers spinning in the queue on
+both kernels (`data/prof/`: native in `osq_lock`, kd in
+`kd_wait_sleepable`); in thousands of IOPS 737, 727, 704 on kdall21
+against 904, 897, 752 native at 4, 16, 64 jobs, both with the profile
+running. Every handover took three lines from the
+previous writer: the era averages, the nodes behind the queue head (the
+depth walk), and the readers' phase counter. kdall22 samples the first two
+(one acquisition in 16) and writes the third only while a reader waits:
+827, 881, 822.
+
+**Era pressure.** kdall22 lost the plain rwsem's lead across the nodes
+(mmap1 1.23 / 1.21 of native at 48 / 60 threads, 1.72 / 1.85 before): with
+sampled measurements the eras of a lock with writers only no longer
+started (`era_gate` 5-14 k per run against 220-310 k). The pressure of
+writers alone is 2.0 at most (the head counts two callers behind it) and
+the threshold was 2.25. `data/k22-era-press.txt` (in-boot, mean of 2,
+against native):
+
+| | threads | sampled, 225 | sampled, 190 | every acquisition, 225 |
+|---|---|---|---|---|
+| mmap1 | 48 / 60 | 1.30 / 1.17 | 1.93 / 2.02 | 1.75 / 1.85 |
+| brk1 | 48 / 60 | 1.10 / 1.29 | 1.74 / 2.00 | 1.77 / 2.06 |
+| fio on one file | 16 / 64 | 1.01 / 1.07 | 1.09 / 1.20 | 0.91 / 0.97 |
+| mmap1, brk1 | 16 / 32 | 1.01-1.06 | 1.00-1.15 | 1.01-1.07 |
+
+`data/n20-press.md` (kdnat20, nano, kd plain against native in one boot,
+225 / 190): rwsem with writers only at 48 and 60 workers 1.18, 1.20 / 1.81,
+2.00; every other reader-writer profile the same with both.
+
+**kdall23** (all of it, with `kd_site_bad_pct` 15 and the report budgets
+given back at a retry and at a daemon start), against kdnat18, one run per
+point (`data/k23-check.out`, `data/k23-runs.txt`,
+`data/k23-leveldb-runs.txt`; the macro part in
+`../lkp-macro-20261119-64cpu/data/m2-screen.txt`):
+
+- Correctness: locktorture 6 of 6, `run_corr.py` plain and with the daemon
+  240 points each 0 failed, API check, test-ww_mutex, `mm_stress`; no
+  kernel complaint; per-CPU lock bytes 0 of 64; `done_in_region` 0,
+  `hb_region` (upper bound) 3271 and 3874 in the two delegated parts.
+- Without the daemon: mmap1 1.94 / 2.02 and brk1 1.84 / 2.06 at 48 / 60
+  threads, mmap2 1.71 / 1.79, lock1 0.99-1.09, page_fault1-3 0.99-1.07,
+  LevelDB 1.03-1.10, Apache single process 1.03-1.28 at 4-48 threads and
+  **0.92 at 60** (1.27-1.31 on every kernel before and 1.26 with the
+  daemon in this boot: one run, to be repeated), fio on one file 1.07-1.19,
+  vm-scalability small-allocs 1.22-1.57 from 32 workers (1.01-1.06 on
+  kdall21).
+- With the daemon: nothing under 0.90 in the application grid (lowest
+  lock1 at 32 threads and page_fault2 at 60, 0.95); mmap1 1.18-1.33 at
+  4-32 threads and 1.84-1.88 at 48-60, brk1 1.20-2.28, Apache 1.07-1.26,
+  LevelDB 1.05-1.08. Upstream will-it-scale brk1, whose site the 15% rule
+  switches off: 1.58 / 2.08 at 48 / 64 workers (1.09 / 1.72 on kdall21),
+  with one point at 0.67 (32 workers, not repeated).
+- **A segfault of `page_fault2_threads` in the first learning pass**
+  (`data/k23-page_fault2-segfault.txt`): two threads at address 0xf70 in
+  libc, the signature of the one seen in the g1 round
+  (`../appgrid-20261118-64cpu/README.md` section 6, item 2), again with
+  the daemon and again not in a measured pass. Twice in several hundred
+  runs with the daemon and never without it: open, and a correctness
+  question.
+- Learning from an empty state is as slow as before (mmap1 at 16 threads:
+  sections complete from the fifth 6 s run on): the time goes into
+  rebuilding the image, about 3 s each for the mm sites, once per newly
+  seen miss.
+
+## 13. Files
 
 | file | what |
 |---|---|

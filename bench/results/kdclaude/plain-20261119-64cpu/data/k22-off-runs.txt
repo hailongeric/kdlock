@@ -1,0 +1,111 @@
+k22 off wis lock1 4 9704808 ops/s 
+k22 off wis lock1 16 11093501 ops/s 
+k22 off wis lock1 32 10335526 ops/s 
+k22 off wis lock1 48 5852342 ops/s 
+k22 off wis lock1 60 5818350 ops/s 
+k22 off wis mmap1 4 347401 ops/s 
+k22 off wis mmap1 16 305723 ops/s 
+k22 off wis mmap1 32 305665 ops/s 
+k22 off wis mmap1 48 210589 ops/s 
+k22 off wis mmap1 60 199975 ops/s 
+k22 off wis mmap2 4 351973 ops/s 
+k22 off wis mmap2 16 333093 ops/s 
+k22 off wis mmap2 32 356399 ops/s 
+k22 off wis mmap2 48 354069 ops/s 
+k22 off wis mmap2 60 351751 ops/s 
+k22 off wis brk1 4 705084 ops/s 
+k22 off wis brk1 16 791305 ops/s 
+k22 off wis brk1 32 677406 ops/s 
+k22 off wis brk1 48 482068 ops/s 
+k22 off wis brk1 60 430542 ops/s 
+k22 off wis page_fault1 4 1949981 ops/s 
+k22 off wis page_fault1 16 3008420 ops/s 
+k22 off wis page_fault1 32 2845575 ops/s 
+k22 off wis page_fault1 48 4043082 ops/s 
+k22 off wis page_fault1 60 4429098 ops/s 
+k22 off wis page_fault2 4 1499497 ops/s 
+k22 off wis page_fault2 16 2013285 ops/s 
+k22 off wis page_fault2 32 1982153 ops/s 
+k22 off wis page_fault2 48 3294290 ops/s 
+k22 off wis page_fault2 60 3616208 ops/s 
+k22 off wis page_fault3 4 3718695 ops/s 
+k22 off wis page_fault3 16 13058061 ops/s 
+k22 off wis page_fault3 32 12912572 ops/s 
+k22 off wis page_fault3 48 12499242 ops/s 
+k22 off wis page_fault3 60 12594786 ops/s 
+k22 off apache single 4 52373.31 req/s 
+k22 off apache single 16 45347.92 req/s 
+k22 off apache single 32 43369.32 req/s 
+k22 off apache single 48 43855.20 req/s 
+k22 off apache single 60 43012.74 req/s 
+k22 off apache default 0 196437.09 req/s 
+k22 off leveldb ivm 4 65566 ops/s 61.010us/op 
+k22 off leveldb ivm 8 109869 ops/s 72.814us/op 
+k22 off leveldb ivm 16 115347 ops/s 138.712us/op 
+k22 off leveldb ivm 32 88490 ops/s 361.624us/op 
+k22 off leveldb ivm 60 56397 ops/s 1063.904us/op 
+m2 off pbe-ctl 4 810496 ops/s 
+m2 off pbe-ctl 16 180019 ops/s 
+m2 off pbe-ctl 32 81336 ops/s 
+m2 off pbe-ctl 48 45597 ops/s 
+m2 off pbe-ctl 64 33822 ops/s 
+m2 off sysbench-threads 4 8284.1377 events/s 
+m2 off sysbench-threads 16 6131.0916 events/s 
+m2 off sysbench-threads 32 6079.6100 events/s 
+m2 off sysbench-threads 48 5833.4026 events/s 
+m2 off sysbench-threads 64 5347.8708 events/s 
+m2 off filebench-webserver 4 695947.539 ops/s 
+m2 off filebench-webserver 16 728328.139 ops/s 
+m2 off filebench-webserver 32 740413.000 ops/s 
+m2 off filebench-webserver 48 719361.655 ops/s 
+m2 off filebench-webserver 64 666712.607 ops/s 
+m2 off fio-randwrite-shared 4 869122 iops 
+m2 off fio-randwrite-shared 16 962996 iops 
+m2 off fio-randwrite-shared 32 942022 iops 
+m2 off fio-randwrite-shared 48 838118 iops 
+m2 off fio-randwrite-shared 64 801125 iops 
+m2 off dbench-ext4 4 3749.36 MB/s 
+m2 off dbench-ext4 16 8668.5 MB/s 
+m2 off dbench-ext4 32 11750.1 MB/s 
+m2 off dbench-ext4 48 12007 MB/s 
+m2 off dbench-ext4 64 11234.3 MB/s 
+m2 off wis-brk1 4 942834 ops/s 
+m2 off wis-brk1 16 698631 ops/s 
+m2 off wis-brk1 32 708167 ops/s 
+m2 off wis-brk1 48 468997 ops/s 
+m2 off wis-brk1 64 464954 ops/s 
+m2 off wis-mmap1 4 310836 ops/s 
+m2 off wis-mmap1 16 306505 ops/s 
+m2 off wis-mmap1 32 262781 ops/s 
+m2 off wis-mmap1 48 164124 ops/s 
+m2 off wis-mmap1 64 152099 ops/s 
+m2 off sng-shm 4 1238.645763 bogo/s 
+m2 off sng-shm 16 3612.743681 bogo/s 
+m2 off sng-shm 32 3789.240893 bogo/s 
+m2 off sng-shm 48 3762.569816 bogo/s 
+m2 off sng-shm 64 3309.158108 bogo/s 
+m2 off vms-small-allocs 4 8340584 KB/s 
+m2 off vms-small-allocs 16 24855016 KB/s 
+m2 off vms-small-allocs 32 26463391 KB/s 
+m2 off vms-small-allocs 48 22386412 KB/s 
+m2 off vms-small-allocs 64 20497815 KB/s 
+m2 off ub-execl 4 9046.8 lps 
+m2 off ub-execl 16 28361.3 lps 
+m2 off ub-execl 32 34571.9 lps 
+m2 off ub-execl 48 31740.1 lps 
+m2 off ub-execl 64 29138.1 lps 
+m2 off wis-fallocate1 4 1953249 ops/s 
+m2 off wis-fallocate1 16 1890460 ops/s 
+m2 off wis-fallocate1 32 1986372 ops/s 
+m2 off wis-fallocate1 48 1101091 ops/s 
+m2 off wis-fallocate1 64 1042622 ops/s 
+m2 off wis-open2 4 1760070 ops/s 
+m2 off wis-open2 16 2084335 ops/s 
+m2 off wis-open2 32 2210902 ops/s 
+m2 off wis-open2 48 1411799 ops/s 
+m2 off wis-open2 64 1237122 ops/s 
+/root/appgrid/complaints.txt:k22 off complaints 0 fatal signals 0
+/root/plainprof/complaints.txt:k22 off complaints 0 fatal signals 0
+/root/lkpres/complaints.txt:m2 off complaints 0 fatal signals 0
+
+[exited with code 0]

@@ -148,6 +148,17 @@ void kd_site_retry(struct kd_site *site)
 	    !time_before(jiffies, READ_ONCE(site->retry_at))) {
 		WRITE_ONCE(site->ok, 0);
 		WRITE_ONCE(site->bad, 0);
+		/*
+		 * A trial may report again. The reports of an image are
+		 * bounded (KD_MISS_BUDGET), and they can be lost: the event
+		 * ring is lossy and a daemon that is busy building does not
+		 * read it. An image whose budget went that way missed at
+		 * every section from then on with nobody told (the mmap lock
+		 * sites in lkp-macro-20261119, section 6.5). One budget per
+		 * trial keeps the volume bounded, at most KD_MISS_BUDGET
+		 * reports per site and second.
+		 */
+		atomic_set(&site->miss_budget, KD_MISS_BUDGET);
 		smp_store_release(&site->entry, e);
 		raw_cpu_inc(kd_cpu.stat[KD_STAT_SITE_RETRY]);
 	}
@@ -155,14 +166,27 @@ void kd_site_retry(struct kd_site *site)
 }
 
 /*
- * Combiner-side accounting. A site whose sections are mostly handed back
- * costs more than it saves, so it is switched off until the translator
- * publishes a better image or the retry time has passed. Counters are
- * approximate by design.
+ * Combiner-side accounting. A site of whose sections more than
+ * kd_site_bad_pct percent are handed back costs more than it saves, so it
+ * is switched off until the translator publishes a better image or the
+ * retry time has passed. Counters are approximate by design.
+ *
+ * The share was "more than half" until 2026-11-20. A handed-back section
+ * costs more than a completed one saves: the combiner has run part of it,
+ * the origin has to be resumed and runs the rest alone. What was measured
+ * with the daemon against the same kernel without it (lkp-macro-20261119,
+ * 64 workers): 13% handed back (stress-ng fcntl) 1.07; 18-22% (will-it-scale
+ * pread2 and readseek2 in processes) 0.35-0.50; 28% (stress-ng chattr) 0.85;
+ * 46% (upstream will-it-scale brk1, whose shrinking half ends at the TLB
+ * flush) 0.79, with the site left on by the old rule.
  */
+static unsigned int kd_site_bad_pct __read_mostly = 15;
+core_param(kd_site_bad_pct, kd_site_bad_pct, uint, 0644);
+
 void kd_site_account(struct kd_site *site, bool done)
 {
 	u32 ok, bad;
+	bool off;
 
 	if (done)
 		WRITE_ONCE(site->ok, site->ok + 1);
@@ -174,7 +198,8 @@ void kd_site_account(struct kd_site *site, bool done)
 		return;
 	WRITE_ONCE(site->ok, 0);
 	WRITE_ONCE(site->bad, 0);
-	if (bad > ok && READ_ONCE(site->entry)) {
+	off = bad * 100 > (ok + bad) * READ_ONCE(kd_site_bad_pct);
+	if (off && READ_ONCE(site->entry)) {
 		u32 offs = READ_ONCE(site->offs);
 
 		WRITE_ONCE(site->retry_at, jiffies + (HZ << offs));
@@ -182,7 +207,7 @@ void kd_site_account(struct kd_site *site, bool done)
 			WRITE_ONCE(site->offs, offs + 1);
 		WRITE_ONCE(site->entry, NULL);
 		kd_event_push(KD_EV_SITE_OFF, site->rip, site->rip, bad);
-	} else if (bad <= ok && READ_ONCE(site->offs)) {
+	} else if (!off && READ_ONCE(site->offs)) {
 		WRITE_ONCE(site->offs, 0);
 	}
 }
@@ -724,10 +749,30 @@ static long kd_set_enable(u32 __user *uarg)
 
 	if (get_user(on, uarg))
 		return -EFAULT;
-	if (on)
+	if (on) {
+		struct kd_site *s;
+		unsigned int b;
+
+		/*
+		 * A daemon starts. Images of an earlier one may still be
+		 * loaded, with their report budgets used up: such a site
+		 * handed back at every miss and no daemon ever heard of it
+		 * again (seen with the mmap lock sites after several daemon
+		 * sessions in one boot, lkp-macro-20261119 section 6.5). Give
+		 * every site its budgets back, so the new daemon learns what
+		 * the image lacks and replaces it.
+		 */
+		mutex_lock(&kd_image_mutex);
+		for (b = 0; b < ARRAY_SIZE(kd_sites); b++)
+			hlist_for_each_entry(s, &kd_sites[b], hash) {
+				atomic_set(&s->miss_budget, KD_MISS_BUDGET);
+				atomic_set(&s->hb_budget, 256);
+			}
+		mutex_unlock(&kd_image_mutex);
 		static_branch_enable(&kd_delegation);
-	else
+	} else {
 		static_branch_disable(&kd_delegation);
+	}
 	return 0;
 }
 
