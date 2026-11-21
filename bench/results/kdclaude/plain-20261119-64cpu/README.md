@@ -751,10 +751,17 @@ point (`data/k23-check.out`, `data/k23-runs.txt`,
 - **A segfault of `page_fault2_threads` in the first learning pass**
   (`data/k23-page_fault2-segfault.txt`): two threads at address 0xf70 in
   libc, the signature of the one seen in the g1 round
-  (`../appgrid-20261118-64cpu/README.md` section 6, item 2), again with
-  the daemon and again not in a measured pass. Twice in several hundred
-  runs with the daemon and never without it: open, and a correctness
-  question.
+  (`../appgrid-20261118-64cpu/README.md` section 6, item 2). It is not the
+  kernel's: the faulting instruction (libc + 0x13a4a4, `addw $1,
+  (%rdx,%rax,2)`) is the sample counter of glibc's `profil()` SIGPROF
+  handler with a NULL sample buffer. TCLocks' will-it-scale copy is built
+  with `-pg` (its Makefile: `CFLAGS=-Wall -O2 -g -pg`), and gprof's
+  teardown at exit clears the buffer before it removes the handler, so a
+  SIGPROF delivered to another thread in between writes to `2 * index`.
+  A race of the benchmark binary at process exit; which kernel shows it is
+  a matter of timing. (It also means every will-it-scale test of the grid
+  runs with gprof's 100 Hz profiling signal and `mcount` calls, on every
+  kernel alike.)
 - Learning from an empty state is as slow as before (mmap1 at 16 threads:
   sections complete from the fifth 6 s run on): the time goes into
   rebuilding the image, about 3 s each for the mm sites, once per newly

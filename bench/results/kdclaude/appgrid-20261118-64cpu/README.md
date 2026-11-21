@@ -177,7 +177,10 @@ therefore compare kd with the same kernel's native locks only.
      - With only munmap delegated, every munmap section kept its downgrade and handed the read part back with a real downgrade (`vdown` 100 182, `vdown_hb` 100 164, 21 sections completed in the combiner). The defect is in that path, in the kept downgrade of a delegated rwsem section (`kd_exec_one()` in `kernel/kd_core.c`, LOCKS.md 5); the code was not changed here.
    - **Effect on the data:** Apache default in kd on (0.58, one run) ran with the defect: its stop hung that boot. The single-process Apache points did not hang: 22 cycles in the pass, 22 in `crash_check.sh`. mmap1, mmap2, brk1, page faults and `mm_stress` with delegated munmap did not hang either: their munmap read parts mostly complete in the combiner, or their processes do not exit while sections are handed back.
    - **Workaround:** `kd_vdown=0`.
-2. **One segfault of `page_fault2_threads` in kd on** (14:19 in g1 on, glibc, a 16-bit counter increment at address `0xf70` during process teardown, after the measurement: every point has its value). Not reproduced: 90 runs of page_fault2, page_fault1 and mmap1 at 16-64 threads with the daemon (`wis_exit_check.sh`, `data/hang/g1-wisexit.txt`), and 60 runs each in native and kd off (`data/g1-*-crash.txt`), all without a fatal signal.
+2. **One segfault of `page_fault2_threads` in kd on (explained 2026-11-21:
+   a race of the benchmark binary, which is built with `-pg`; the fault is
+   in glibc's `profil()` sample counter after gprof's teardown cleared its
+   buffer; `../plain-20261119-64cpu/README.md` section 12)** (14:19 in g1 on, glibc, a 16-bit counter increment at address `0xf70` during process teardown, after the measurement: every point has its value). Not reproduced: 90 runs of page_fault2, page_fault1 and mmap1 at 16-64 threads with the daemon (`wis_exit_check.sh`, `data/hang/g1-wisexit.txt`), and 60 runs each in native and kd off (`data/g1-*-crash.txt`), all without a fatal signal.
 3. **A per-CPU lock byte left set by handbacks (fixed in the translator
    2026-11-19, section 8; found by the lkp-tests
    session, branch `lkp-macro`, its README section 7; checked here).**
